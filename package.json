@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@icons-pack/react-simple-icons": "^10.1.0",
+    "@icons-pack/react-simple-icons": "^10.2.0",
     "@material-ui/icons": "^4.11.3",
     "@testing-library/jest-dom": "^6.6.2",
     "@testing-library/react": "^16.0.1",
