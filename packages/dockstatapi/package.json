@@ -1,0 +1,17 @@
+{
+  "name": "@dockstat/backend",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist",
+    "dev": "bun run src/index.ts",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

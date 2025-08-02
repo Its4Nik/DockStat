@@ -1,11 +1,12 @@
 {
-  "name": "docs",
+  "name": "dockstacks",
   "module": "index.ts",
   "type": "module",
   "private": true,
   "scripts": {
     "build": "bun build index.ts --outdir dist",
     "dev": "bun run index.ts",
+    "make": "cd .generator && bun run convert.ts",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "check-types": "tsc --noEmit",

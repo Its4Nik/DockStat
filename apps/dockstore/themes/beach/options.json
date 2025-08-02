@@ -1,0 +1,9 @@
+{
+  "backgroundAnimation": {
+    "enabled": true,
+    "from": ["#f97316", "#fdba74", "#facc15"],
+    "amplitude": 0.8,
+    "blend": 0.6,
+    "speed": 0.4
+  }
+}

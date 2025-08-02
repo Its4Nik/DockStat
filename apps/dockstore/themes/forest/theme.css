@@ -1,0 +1,24 @@
+/* @name Forest */
+/* @version 1 */
+/* @owner Its4Nik */
+/* @tags dark */
+
+.root,
+#root,
+#docs-root {
+  --accent: #4ade80;
+  --muted-bg: #0a160f;
+  --gradient-from: #1a2e21;
+  --gradient-to: #2d4535;
+  --border: #334d3c;
+  --border-accent: rgba(74, 222, 128, 0.3);
+  --text-primary: #f0fff4;
+  --text-secondary: #86efac;
+  --text-tertiary: #4d7c5e;
+  --state-success: #34d399;
+  --state-warning: #fbbf24;
+  --state-error: #f87171;
+  --state-info: #60a5fa;
+  --shadow-glow: 0 0 15px rgba(74, 222, 128, 0.5);
+  --background-gradient: linear-gradient(145deg, #0a160f 0%, #1a2e21 100%);
+}

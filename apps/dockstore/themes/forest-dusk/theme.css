@@ -1,0 +1,24 @@
+/* @name Forest Dusk */
+/* @version 1 */
+/* @owner Its4Nik */
+/* @tags dark */
+
+.root,
+#root,
+#docs-root {
+  --accent: #00b894;
+  --muted-bg: #2e3a24;
+  --gradient-from: #2e3a24;
+  --gradient-to: #4a5e3d;
+  --border: #4a5e3d;
+  --border-accent: rgba(0, 184, 148, 0.3);
+  --text-primary: #e0f2f1;
+  --text-secondary: #a3bfa8;
+  --text-tertiary: #7a8a7a;
+  --state-success: #4ade80;
+  --state-warning: #facc15;
+  --state-error: #f87171;
+  --state-info: #38bdf8;
+  --shadow-glow: 0 0 15px rgba(0, 184, 148, 0.5);
+  --background-gradient: linear-gradient(145deg, #2e3a24 0%, #4a5e3d 100%);
+}

@@ -1,0 +1,30 @@
+{
+  "name": "qCDN",
+  "version": 1,
+  "custom": false,
+  "source": "https://github.com/Its4Nik/DockStacks",
+  "compose_spec": {
+    "services": {
+      "qcdn": {
+        "image": "ghcr.io/arthur2500/qcdn:latest",
+        "container_name": "qcdn",
+        "environment": {
+          "DOMAIN": "localhost",
+          "USE_HTTPS": "false",
+          "PORT": 3000,
+          "PASSWORDS": "secret123,anotherPassword",
+          "API_KEYS": "secret123,anotherPassword",
+          "SESSION_SECRET": "choose_a_strong_secret_here",
+          "SECURITY": "enabled",
+          "NODE_ENV": "production",
+          "HEAD_TAGS": "<link rel=\"stylesheet\" href=\"https://cdn.example.com/styles.css\">,<script src=\"https://cdn.example.com/script.js\"></script>",
+          "PRIVACY_LINK": "https://example.com/privacy",
+          "TERMS_LINK": "https://example.com/terms",
+          "IMPRINT_LINK": "https://example.com/imprint"
+        },
+        "volumes": ["./data:/usr/src/app/data"],
+        "ports": ["3000:3000"]
+      }
+    }
+  }
+}

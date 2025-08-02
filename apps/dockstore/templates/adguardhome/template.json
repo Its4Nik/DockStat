@@ -1,0 +1,20 @@
+{
+  "name": "AdGuardHome",
+  "version": 1,
+  "custom": false,
+  "source": "https://github.com/Its4Nik/DockStacks",
+  "compose_spec": {
+    "services": {
+      "adguardhome": {
+        "image": "adguard/adguardhome:latest",
+        "container_name": "adguardhome",
+        "restart": "always",
+        "ports": ["53:53/tcp", "53:53/udp", "80:80", "3000:3000"],
+        "volumes": [
+          "./adguard-work:/opt/adguardhome/work",
+          "./adguard-conf:/opt/adguardhome/conf"
+        ]
+      }
+    }
+  }
+}

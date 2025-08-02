@@ -1,0 +1,24 @@
+/* @name Midnight Purple */
+/* @version 1 */
+/* @owner Its4Nik */
+/* @tags dark */
+
+.root,
+#root,
+#docs-root {
+  --accent: #a78bfa;
+  --muted-bg: #0f0a1a;
+  --gradient-from: #1e103b;
+  --gradient-to: #332155;
+  --border: #3e2a5a;
+  --border-accent: rgba(167, 139, 250, 0.3);
+  --text-primary: #f5f3ff;
+  --text-secondary: #a78bfa;
+  --text-tertiary: #6b46c1;
+  --state-success: #6ee7b7;
+  --state-warning: #fcd34d;
+  --state-error: #fca5a5;
+  --state-info: #7dd3fc;
+  --shadow-glow: 0 0 15px rgba(167, 139, 250, 0.5);
+  --background-gradient: linear-gradient(145deg, #0f0a1a 0%, #1e103b 100%);
+}

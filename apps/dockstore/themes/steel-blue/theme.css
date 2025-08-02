@@ -1,0 +1,24 @@
+/* @name Steel Blue */
+/* @version 1 */
+/* @owner Its4Nik */
+/* @tags dark */
+
+.root,
+#root,
+#docs-root {
+  --accent: #60a5fa;
+  --muted-bg: #0a1016;
+  --gradient-from: #1a2532;
+  --gradient-to: #2d3a4d;
+  --border: #3a4a5a;
+  --border-accent: rgba(96, 165, 250, 0.3);
+  --text-primary: #f0f7ff;
+  --text-secondary: #93c5fd;
+  --text-tertiary: #5d7c9e;
+  --state-success: #4ade80;
+  --state-warning: #facc15;
+  --state-error: #f87171;
+  --state-info: #38bdf8;
+  --shadow-glow: 0 0 15px rgba(96, 165, 250, 0.5);
+  --background-gradient: linear-gradient(145deg, #0a1016 0%, #1a2532 100%);
+}

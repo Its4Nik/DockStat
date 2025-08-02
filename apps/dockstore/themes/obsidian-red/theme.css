@@ -1,0 +1,24 @@
+/* @name Obsidian Red */
+/* @version 1 */
+/* @owner Its4Nik */
+/* @tags dark */
+
+.root,
+#root,
+#docs-root {
+  --accent: #f87171;
+  --muted-bg: #160a0a;
+  --gradient-from: #2e1a1a;
+  --gradient-to: #453232;
+  --border: #5a3a3a;
+  --border-accent: rgba(248, 113, 113, 0.3);
+  --text-primary: #fff0f0;
+  --text-secondary: #fca5a5;
+  --text-tertiary: #9e5d5d;
+  --state-success: #4ade80;
+  --state-warning: #facc15;
+  --state-error: #ef4444;
+  --state-info: #60a5fa;
+  --shadow-glow: 0 0 15px rgba(248, 113, 113, 0.5);
+  --background-gradient: linear-gradient(145deg, #160a0a 0%, #2e1a1a 100%);
+}
