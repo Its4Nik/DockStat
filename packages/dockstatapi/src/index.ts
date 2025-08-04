@@ -1,26 +1,21 @@
-import type { AppConfig } from '@dockstat/typings';
+import { ApiHandler } from "./handlers/config";
+import { DatabaseHandler } from "./handlers/database";
+import { BasicDockerHandler } from "./handlers/docker";
+import { LogHandler } from "./handlers/logs";
+import { Starter } from "./handlers/modules/starter";
+import { StackHandler } from "./handlers/stacks";
+import { StoreHandler } from "./handlers/store";
+import { ThemeHandler } from "./handlers/themes";
+import { CheckHealth } from "./handlers/utils";
 
-export interface ApiConfig extends AppConfig {
-  database?: {
-    url: string;
-    type: 'postgresql' | 'mysql' | 'sqlite';
-  };
-}
-
-export class DockstatApi {
-  private config: ApiConfig;
-
-  constructor(config: ApiConfig) {
-    this.config = config;
-  }
-
-  async start(): Promise<void> {
-    console.log(`Starting Dockstat API on port ${this.config.port || 3000}`);
-  }
-
-  async stop(): Promise<void> {
-    console.log('Stopping Dockstat API');
-  }
-}
-
-export default DockstatApi;
+export {
+  ApiHandler,
+  DatabaseHandler,
+  BasicDockerHandler,
+  LogHandler,
+  Starter,
+  StackHandler,
+  StoreHandler,
+  ThemeHandler,
+  CheckHealth,
+};

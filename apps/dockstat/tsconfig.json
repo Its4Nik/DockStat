@@ -1,4 +1,10 @@
 {
+  "extends": "../../tscofig.base.json",
+  "references": [
+    { "path": "../../packages/dockstatapi" },
+    { "path": "../../packages/typings" }
+  ],
+
   "include": [
     "**/*",
     "**/.server/**/*",
@@ -17,6 +23,7 @@
     "paths": {
       "~/*": ["./app/*"]
     },
+    "outDir": "./dist",
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,

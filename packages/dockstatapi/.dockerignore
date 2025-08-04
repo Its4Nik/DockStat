@@ -1,0 +1,13 @@
+*.db*
+/stacks
+/node_modules
+*.md
+/docker
+*.dot
+*.svg
+*.mmd
+*.lock
+src/tests
+.github
+.local-tests
+.gitai.json

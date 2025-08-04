@@ -1,18 +1,21 @@
 {
-  "name": "@dockstat/typings",
+  "name": "dockstat-typings",
   "version": "1.0.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "exports": {
+    "types": "./dist/index.d.ts"
+  },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "bun run ./build.ts",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "check-types": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
   "devDependencies": {
     "@types/bun": "latest",
-    "typescript": "^5.8.3"
+    "@types/dockerode": "^3.3.42"
   }
 }

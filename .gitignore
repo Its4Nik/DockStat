@@ -29,6 +29,9 @@ out/
 build
 dist
 
+# React Router
+.react-router/
+
 
 # Debug
 npm-debug.log*

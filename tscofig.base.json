@@ -8,12 +8,6 @@
     "strict": true,
     "skipLibCheck": true,
     "baseUrl": ".",
-    "paths": {
-      "@dockstat/typings": ["packages/typings/src/index.ts"],
-      "@dockstat/typings/*": ["packages/typings/src/*"],
-      "@dockstat/backend": ["packages/dockstatapi/src/index.ts"],
-      "@dockstat/backend/*": ["packages/dockstatapi/src/*"]
-    },
     "outDir": "dist",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,

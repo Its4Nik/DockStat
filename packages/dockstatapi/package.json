@@ -1,17 +1,61 @@
 {
-  "name": "@dockstat/backend",
-  "version": "1.0.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "name": "dockstatapi",
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "author": {
+    "email": "info@itsnik.de",
+    "name": "ItsNik",
+    "url": "https://github.com/Its4Nik"
+  },
+  "license": "CC BY-NC 4.0",
+  "contributors": [],
+  "description": "DockStatAPI is an API backend featuring plugins and more for DockStat",
+  "version": "3.0.0",
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist",
-    "dev": "bun run src/index.ts",
-    "lint": "biome lint .",
-    "lint:fix": "biome lint --write .",
-    "check-types": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "start": "cross-env NODE_ENV=production LOG_LEVEL=info bun run src/index.ts",
+    "start:docker": "bun run build:docker && docker run -p 3000:3000 --rm -d --name dockstatapi -v 'plugins:/DockStatAPI/src/plugins' dockstatapi:local",
+    "dev": "docker compose -f docker/docker-compose.dev.yaml up -d && cross-env NODE_ENV=dev bun run --watch src/index.ts",
+    "dev:clean": "bun dev ; echo '\nExiting...' ; bun clean",
+    "build": "bun run ./build.ts",
+    "build:docker": "docker build -f docker/Dockerfile . -t 'dockstatapi:local'",
+    "clean": "bun run clean:win || bun run clean:lin",
+    "clean:win": "node -e \"process.exit(process.platform === 'win32' ? 0 : 1)\" && cmd /c del /Q data/dockstatapi* && cmd /c del /Q stacks/* && cmd /c del /Q reports/markdown/*.md && echo 'success'",
+    "clean:lin": "node -e \"process.exit(process.platform !== 'win32' ? 0 : 1)\" && rm -f data/dockstatapi* && sudo rm -rf stacks/* && rm -f reports/markdown/*.md && echo 'success'",
+    "knip": "knip",
+    "lint": "biome check --formatter-enabled=true --linter-enabled=true --organize-imports-enabled=true --fix src"
+  },
+  "dependencies": {
+    "typings": "workspace:*",
+    "chalk": "^5.4.1",
+    "cpu-features": "^0.0.10",
+    "date-fns": "^4.1.0",
+    "docker-compose": "^1.2.0",
+    "dockerode": "^4.0.7",
+    "js-yaml": "^4.1.0",
+    "knip": "latest",
+    "split2": "^4.2.0",
+    "winston": "^3.17.0",
+    "yaml": "^2.8.0"
   },
   "devDependencies": {
-    "@types/bun": "latest"
-  }
+    "@biomejs/biome": "1.9.4",
+    "@its_4_nik/gitai": "^1.1.14",
+    "@types/bun": "latest",
+    "@types/dockerode": "^3.3.42",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.16.0",
+    "@types/split2": "^4.2.3",
+    "bun-plugin-dts": "^0.3.0",
+    "bun-types": "latest",
+    "cross-env": "^7.0.3",
+    "logform": "^2.7.0",
+    "typescript": "^5.8.3",
+    "wrap-ansi": "^9.0.0"
+  },
+  "module": "src/index.js",
+  "trustedDependencies": [
+    "protobufjs"
+  ],
+  "type": "module",
+  "private": true
 }
