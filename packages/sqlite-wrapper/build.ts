@@ -8,8 +8,9 @@ const NOW = now();
 
 console.info(`Start at ${NOW}`);
 
+// Build JavaScript with Bun and generate TypeScript declarations
 await Bun.build({
-  entrypoints: ["./src/index.ts"],
+  entrypoints: ["./index.ts"],
   outdir: "./dist",
   plugins: [dts()],
   minify: true,
@@ -18,5 +19,5 @@ await Bun.build({
 });
 
 console.info(
-  `Done at ${now()} - took ${new Date(now().getTime() - NOW.getTime()).getMilliseconds()}ms`,
+  `Done at ${now()} - took ${new Date(now().getTime() - NOW.getTime()).getSeconds()}`,
 );

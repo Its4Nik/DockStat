@@ -1,0 +1,29 @@
+{
+  "name": "@dockstat/db",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    "default": "./dist/index.js",
+    "types": "./dist/index.d.ts"
+  },
+  "scripts": {
+    "build": "bun run ./build.ts",
+    "dev": "bun build index.ts",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "check-types": "bunx tsc --noEmit",
+    "test": "bun run test.ts",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@dockstat/typings": "workspace:*",
+    "@dockstat/sqlite-wrapper": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

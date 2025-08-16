@@ -1,10 +1,10 @@
 {
   "extends": "../../tscofig.base.json",
   "references": [
-    { "path": "../../packages/dockstatapi" },
-    { "path": "../../packages/typings" }
+    { "path": "../../packages/typings" },
+    { "path": "../../packages/sqlite-wrapper" },
+    { "path": "../../packages/db" }
   ],
-
   "include": [
     "**/*",
     "**/.server/**/*",

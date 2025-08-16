@@ -1,3 +1,0 @@
-[submodule "src/typings"]
-	path = src/typings
-	url = git@github.com:Its4Nik/dockstat-types.git

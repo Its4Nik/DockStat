@@ -1,0 +1,11 @@
+{
+  "extends": "../../tscofig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDirs": ["./"],
+    "composite": true,
+    "moduleResolution": "bundler"
+  },
+  "include": ["index.ts", "default_theme.ts"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "../../tscofig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDirs": ["./"],
+    "composite": true
+  },
+  "include": ["index.ts", "types.ts", "query-builder/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
