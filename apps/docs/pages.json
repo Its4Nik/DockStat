@@ -3,7 +3,7 @@
   "pages": [
     {
       "title": "DockStat",
-      "file": "docs/dockstat.md",
+      "file": "../../../README.md",
       "id": "7dddd764-6483-4f84-96a3-988304e772d3",
       "children": [
         {
