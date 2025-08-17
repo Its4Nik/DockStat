@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+touch pages.json
+
 echo "Starting sync"
 echo "Previous page file:"
 cat pages.json
@@ -19,3 +21,5 @@ bunx @dockstat/outline-sync@latest \
     --collection-id="$OUTLINE_COLLECTION_ID" \
     --api-key="$OUTLINE_API_KEY" \
     --base-url="https://outline.itsnik.de"
+
+ls docs
