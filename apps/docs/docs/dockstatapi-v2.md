@@ -1,0 +1,65 @@
+# Major differences between v1 and v2
+
+| v1 | v2 |
+|----|----|
+| Single file JavaScript application | Multiple files (TypeScript) |
+| Hard to extend / implement new features | Since v2 is using multiple files and different routing setup we can guarantee a better extensibility. |
+| Unstructured and hard to follow coding style with minimal documentation | Better structure through, again, multiple files. And better on-the-fly documentation using swagger. |
+
+# How to read the project structure
+
+ ![](/api/attachments.redirect?id=50c0033d-dd14-410c-b24e-ce5691f3d5df "right-50 =586x292")
+
+The project structure graphs are all dynamically created when running `npm run dep` this will create files with the desired mermaid syntax for importing into the documentation.
+
+The boxes in yellow like these, are Folders, seen as from the root ('/') of the project. The violet boxes are JavaScript files and if there is an arrow between them, we're importing functions from that file.
+
+So in this example we can see that, `/routes/data/routes.js` is using a function of `/config/db.js`:
+
+
+:::warning
+The whole project structure gets a bit complex when looking at the graphs, that's why the script (`/utils/createDependencyGraph.sh`) will create graphs for each route file (`/routes/${ROUTE_NAME}/routes.js`).
+
+:::
+
+For more information about the script see: [How the dependency graphs are made](/doc/how-the-dependecy-graphs-are-made-svuZbEHH9g)
+
+# Project structure (Per route)
+
+
+:::info
+See  [⚙️ DockStatAPI v2](/doc/dockstatapi-v2-XRMDKRqMIg#h-project-structure-all) for entire dependency graph
+
+:::
+
+## API
+
+<https://mermaid.live/view#pako:eNptUlFr2zAQ%5Fivmnu0Qy3Ii62GQ0jAGbRnNnlaNoVoX29SRjCyzpSH%5FvWe7CS3bi07fp---O-50gtIZBAlJkihbOrtvKqlsFLX66IYgI2xfRkhhoqPIkv57q0s8oA274HXA6iiju28P283j79326%5F324cdO2clw37o%5FZa19iO4elVW2H54rr7s6Wj4p6H2p4NcHMiXSU1XsP%5FOM-ApDQD%5Fx2VW2CLMSrXk%5FrjmcRLW2pkU%5Fa3IidNdcUm5GE-w7Z3v8ZHN1WJGCBhK8a68m67HtskYzEHVJ2xC5x1DWtzro%5F3uJ2YuGOz0WBM3zv91nSfIlp1YprOdwQzUpFHPYULEZQQwH9AfdGNrdadyMglDTThRIuhrtXxQoeyadHoLbHW0JMvgB43F0VQ1yr9ue0NAZ2uBto6nRw0XSafvTuY8Q5An-gmRisUoF4-tC5CIrBOcxHIlmCy6WK5YxnrOsYLk4x%5FA6OSwXgnCRZmnBOU%5FZWsSApgnO388fb%5Fp%5F5zcoGNZY>
+
+## Auth
+
+<https://mermaid.live/view#pako:eNpdklFrgzAUhf-K3GeVNmqNeRgMVsagLaPuacsYmaYqtYnEyOZK%5F%5Ftute3aveTmHk6-mxyyh0znEhh4nsdVptWmKhhXjlOLXneWObLeHlssg-w4Cv3PtcjkTiqbWiOsLHrmLJ5W8%5Fv1Rzp%5FXM5XLylXA3BT66-sFMY6izVXXLXdZ2FEUzqTNw6tyTi8X4lTFA1Ole2tTlAXnS0HNbiYfDv6pMpPy-VEiKZSqLyWZvREJ8T5DD1SZNto1cobzgUxQwfmYY2uL5T4H-VvcuB5dxGOwRKPhXIFLuyk2Ykqx4D3x%5Fg42BKD48Bwmwuz5cDVAX1I1WmvMmDWdNI9vrAogW1E3WLXNTnG%5FFAJvNrubGmEetX6ugW2h29ghPqzKSVhnNCIBgkNQxd6lIkf0smMBCSMSJCQiB5c-BkIE59in0xJkpBpEkdx7ILMK6vNcvwdwyc5%5FAKWB7fK>
+
+## Conf
+
+<https://mermaid.live/view#pako:eNptUl1PwkAQ%5FCvNPrcE-gHXezCBQIyJEiM-6Rlz9Ja2sdyR6zWKhP%5FutgUi0ZdOZ252dtu9A2RGIXAIgkDozOhNmXOhPa-Se9M47mH10VKCTvY8Tf7HSma4Re1WzkqH-Z5793fLxfTpfbW4fVgsn1dCd4GbynxmhbTOu38SWui6WedW7gpv-CqgtpmAt1%5FiiERLXbG-1sPWjM6h7fToYhu43olanR6XmphMhdSqQtt7EhLa7zvXzNoUrHdG13iVc4kY9xXOmuqSMmlHyQpUDUnnsimJG3RZMZdO%5Fp%5FFTt3LvDtMiar13%5FGjILhJaFaCSQ8z6kmQ9jClZj0DH7Zot7JUtLxDuxoBrqClCOD0qqT9ECD0kXyycWa11xlwZxv023-XF8A3sqqJNTtFK5yXkgbdni07qV-M-U2BH-ALeMgG4xEL40nKEhalLI592JMcDmI2HIdRGCdhlIYJO%5Frw3SUMB4x4OqKjIUviMUt8QFU6Yx%5F6m9ddwOMPP33W0g>
+
+## Data
+
+<https://mermaid.live/view#pako:eNplUtFqwjAU%5FZVwn1vRtLVpHgaDyRioDN3TljFiG9tiTSRN2Trx33fbqih7yeWcnJx7c7hHSE2mgIPv-0KnRm%5FLnAtNSCVb0zhOVLXrIJaeJkSj%5FrWSqdor7dbOSqfylpP5y3L2uPpaz54Xs-XbWujecFuZ77SQ1pH5Smih62aTW3koyPhDQG1TAZ835ARJi11Vfc9T5DPpZM8GV9HIDTqls%5FNxfRGiqJA6q5QdNNHZ4vKGdS6qPhhdqzufq8UUFUMe%5FWXcGWz-twx8%5FyFCfyzxUJjQ4MFe2b0sM0z22OUmwBWYmABOukHsToDQJ9TJxpl1q1PgzjbK676WF8C3sqoRNQccWj2VEmfaXyQHqd-NuYXAj%5FADnLLRdMJoGCcsYkHCwtCDFmk6Ctl4SgMaRjRIaMROHvz2DuMRQ5xMaBxFQRzELPZAZaUzdjGsRb8dpz9FK7Rp>
+
+## Frontend
+
+<https://mermaid.live/view#pako:eNplUlFrwjAQ%5Fivlnm3RtNWYh8HYZAxUxtzTljGyNrXF9iJpytaJ%5F33XdoqyPORyH9%5F33eWSAyQm1SDA932JicGs2AqJnleq1jROeLrcdSmFHvY8JP5TqRJdaXQbZ5XT21Z4y8f14vb5Y7N4WC3WLxuJvWFWmq8kV9Z5y2eJEuvmc2vVPvfGbxJqm0h4vwAnBFqqqutrnBGeWYNOY3pHwZqy1LbnhGdJ4AYVcf62sz4iUq4wJdHAiS8MTzreOel6b7DWV15nmykxknP5gTG7bo2m19BECoP%5F2wl9%5Fyam2hRmQ-ASYQSVtpUqUnqDQzdhCS6n2UoQdEyV3UmQeCSeapzZtJiAcLbRo-7a2xxEpsqasmaf0kvcF4p6rU6UvcJXYy5TEAf4BsF4MJ1wFs3mPObhnEfRCFqCWRDx8ZSFLIpZOGcxP47gp3cYB5zy-YQRnVY0JYVOC2fsavhA%5FT86%5FgIUW8ZV>
+
+## Notification Service
+
+<https://mermaid.live/view#pako:eNplUV1LwzAU%5FSvlPrejTT%5FW5UEQHCJsQ1afNCKxTT9Ym5Q0RevYf%5Fe2dWPqS27uyTknl3OPkKpMAAXHcZhMlcyrgjJpWTUfVG-oJerD2GKZYMuSyH-seSoaIU1iNDeiGKi1editb%5Fdvyfp-u949JUxOhnmtPtKSa2Nt9kwy2fXvheZtabkvDDqdMni9Aj0ENf4qut84QVwqU-VVyk2l5PzsX9gLMyNCZj%5FHRRogqeQyq4WeOeEfr7M2Gt1E16K7-O%5FnO85NiGIsEZNgQyN0w6sMgzuOsTAwJQbCgOI14%5FrAgMkT8nhvVDLIFKjRvbDHgYsSaM7rDru-zTC-u4rjsM2Z0nL5rNR1C%5FQIn0CJv4i8mMQBIWEQ-XG0tGGY4CB2w3jpumHkhcQPTjZ8TQ7uIl6RcOWRVUSQEowKkVVG6e289Wn5p28JSaqR>
+
+## High Availability
+
+<https://mermaid.live/view#pako:eNptUl1v2yAU%5FSuIZzvyd2weJqWLNU1qq6nZ08ZUEZvYrAQsjLt5Uf57r3HrJlNfuLqHcw73gxOudM0xwb7vU1VpdRANoQohyUY9WIK4fJpSCA5GSAH%5Fm2QVP3Jld9Ywy5uRoNuv9-Xm4XFXfrkr77%5FvqHKGB6n%5FVC0zFt0-UEVVP-wbw7oWBT8p7k1F8a8LMATQwKu8v8YjwFvRtOyZCcn2Qgo7Oka8CFZ21nBVvx6LOpnUTNWSm5mTOuBNUU4evO-06vmVy2KQAQMmY42Wi8f6taTNRUkfq%5FNZDXN1lwWkz8wItpf%5FVb0oNkCpmWXu6uaK%5F7vX6gPFZyDZsROqmf22Vx2-zyT2%5FU8pDADCeg4ltAKhmMMW6oNwQxX28JGbIxM1%5FI3TtHl4oYWdU0zQVJ55opiqM%5FDYYPVuVBUm1gzcmxbStJgcmOwhGzpohW8Fg0qPb5SOqR9aX6aYnPBfTKJ4lYV5lCdRlCZZnGdrD48OTvIgzddBkGZhGsXJ2cP%5FnEOwyosoLcIoBzwsgONhXgurzd38sd3%5FPr8AAdz6aQ>
+
+# Project structure (From the root)
+
+<https://mermaid.live/view#pako:eNqFVVtv2jAU%5FiuRnwGRhECSh0m00Cv0Bms7lmkyiSEewUaO05ZV%5Fe87jp0UOiRe-Djfufj4XJx3FPOEoBA1m82IxZwt6DKMmGVleMsLGVokWykRoKQti4H9XYZjsiZMTqTAkiy3oTW6vBn2H35Phufj4c10ErEy4CLjr3GKhbSmJxGLWF7MlwJvUqv9M0K5iCP0K2K2-k%5FECxEtmZdMbeaACpKSgmcZEVrpApfSZdp%5FwTTDc5pRua0cT0G3EfytJgYqdpySpMg-w58BuSAyTgdY4oq8BxIXMq3kZ2Uk4GzCktOyLgXclXJWGQC%5Fk2lHZwpmpdID8QULiucZySuPEyApo%5FKM7pBDIJP54aBdpYMcS1VvL-SfnLMDHj4Yye2GsqWOF6hi4b3ofZPFf8U-B8WaJklGXrEgpe7CFGVc05XXtbpvSuLViMerihwBqQZiRNdUftZ7P8XLMiWW1A29Ul4k33CW1-HvvnRjaipRyU873ak4Ww0V3tBadvcub6tqMi7pgsZ7jbQD07vD-Y5VerAL5Eu5bkyKJXtbGx0O8rDbyckR4-%5F7o2emvzR8POL6A%5FRLIqUxnx0xt22zTHhnmXRRnGOunS%5FlNMX0jvn1ynWvU7T9ww6fP3az-c3V0If1B%5FA0BLBnAD2YaYATDacaBhouNFxrGGm41TDR8KhhpsF2DHoGfXhV9JEDgKGGM3hEtHQBcAXroOEW4A6mF-BeA5ATgCmMsHaYavIR4AnmGOBZA5AzdWBbTbK-QYlXqhlKoWrgmlq4RqHub3fVcBvCV0SghtqECLQCNdCaiDWmCTz27-oph4cihUc8QqGlZlOsIhSxD7CDoeaTLYtRKEVBGqo5yxSFC5zlIBUbmGMyoBjaua5MNpjNON8VUfiO3lDo-K2u7TudXuB7vhv4nU4DbYF2Wh2%5F3XVcp-M5buB4%5FkcD%5FS0jtFs-yIHtBI7bdXq9ntdAJKGSi7H-UpUfrI9%5F66BBMA>
