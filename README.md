@@ -2,6 +2,8 @@
 
 A modern monorepo built with Turborepo, Bun, and Biome for managing Docker container statistics and monitoring.
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Its4Nik/DockStat)
+
 ## 🚀 Tech Stack
 
 - **Monorepo**: Turborepo

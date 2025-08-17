@@ -1,0 +1,54 @@
+{
+  "name": "@dockstat/docker-client",
+  "version": "1.0.2",
+  "description": "A docker-client library powered by Dockerode for DockStat",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "bun run ./build.ts",
+    "dev": "bun run --watch index.ts",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "check-types": "bunx tsc --noEmit",
+    "test": "bun run test.ts",
+    "example:basic": "bun run examples/basic-usage.ts",
+    "example:websocket": "bun run examples/websocket-integration.ts",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "bun run clean && bun run build"
+  },
+  "author": "Its4Nik",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Its4Nik/DockStat",
+    "directory": "packages/docker-client"
+  },
+  "bugs": {
+    "url": "https://github.com/Its4Nik/DockStat/issues"
+  },
+  "homepage": "https://github.com/Its4Nik/DockStat/tree/main/packages/docker-client",
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "@dockstat/typings": "workspace:*",
+    "dockerode": "^4.0.7"
+  }
+}
