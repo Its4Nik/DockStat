@@ -131,7 +131,6 @@ Quick Links provide a way to add links to your container, so if you have a conta
  ![Container Card](/api/attachments.redirect?id=2cb2fd28-2185-4e53-a4f6-aaa6cc04bba1 "left-50 =337x185")
 
 
-\
 ### Code
 
 ```yaml
