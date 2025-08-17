@@ -1,0 +1,177 @@
+name: SQLite Wrapper Package Issue
+description: Report an issue specific to the SQLite Wrapper package
+title: "[SQLITE-WRAPPER] "
+labels: ["sqlite-wrapper", "package", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting an issue with the SQLite Wrapper package! This template is specifically for issues related to the TypeScript SQLite wrapper and query builder.
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What type of issue are you reporting?
+      options:
+        - Bug - Something isn't working correctly
+        - Performance - Slow query execution or memory issues
+        - Type Safety - TypeScript type issues or inference problems
+        - Query Builder - Issues with the query building functionality
+        - Database Operations - Problems with CRUD operations
+        - Transaction Handling - Issues with database transactions
+        - JSON Columns - Problems with JSON serialization/deserialization
+        - Migration/Schema - Issues with table creation or schema changes
+        - Documentation - Package documentation issues
+        - Feature Request - New functionality for the wrapper
+        - Compatibility - Issues with Bun or SQLite versions
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Issue Description
+      description: Provide a clear and detailed description of the issue
+      placeholder: Describe what's happening and what you expected to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: code-example
+    attributes:
+      label: Code Example
+      description: Provide a minimal code example that reproduces the issue
+      placeholder: |
+        ```typescript
+        import DB from '@dockstat/sqlite-wrapper';
+
+        const db = new DB(':memory:');
+
+        // Your code that demonstrates the issue
+        ```
+      render: typescript
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-vs-actual
+    attributes:
+      label: Expected vs Actual Behavior
+      description: What did you expect to happen vs what actually happened?
+      value: |
+        **Expected:**
+
+        **Actual:**
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Information
+      description: Information about your runtime environment
+      value: |
+        - Package version: [e.g. 1.0.0]
+        - Bun version: [e.g. 1.0.0]
+        - TypeScript version: [e.g. 5.2.0]
+        - OS: [e.g. macOS 14.0, Ubuntu 22.04, Windows 11]
+        - SQLite version: [e.g. 3.43.0] (if known)
+        - Node.js version: [e.g. 18.17.0] (if using Node instead of Bun)
+    validations:
+      required: true
+
+  - type: textarea
+    id: database-schema
+    attributes:
+      label: Database Schema
+      description: If relevant, provide the table schema you're working with
+      placeholder: |
+        ```sql
+        CREATE TABLE users (
+          id INTEGER PRIMARY KEY,
+          name TEXT NOT NULL,
+          email TEXT UNIQUE,
+          settings JSON
+        );
+        ```
+      render: sql
+
+  - type: textarea
+    id: error-output
+    attributes:
+      label: Error Output
+      description: Include any error messages, stack traces, or console output
+      placeholder: Paste the complete error message and stack trace here
+      render: shell
+
+  - type: textarea
+    id: query-details
+    attributes:
+      label: Query Details
+      description: If this involves specific queries, provide the generated SQL and parameters
+      placeholder: |
+        Generated SQL: SELECT * FROM users WHERE id = ?
+        Parameters: [123]
+        Query Builder chain: db.table('users').where({ id: 123 }).get()
+      render: text
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Issue Frequency
+      description: How often does this issue occur?
+      options:
+        - Always - Every time I try
+        - Often - Most of the time
+        - Sometimes - Occasionally
+        - Rarely - Once or twice
+        - Unknown - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround
+      description: Have you found any temporary workarounds for this issue?
+      placeholder: If you've found a way to work around this issue, please describe it
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Impact Severity
+      description: How severely does this issue impact your work?
+      options:
+        - Low - Minor inconvenience
+        - Medium - Affects some functionality
+        - High - Blocks important features
+        - Critical - Completely unusable
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context that might be helpful
+      placeholder: Related code, database size, concurrent usage patterns, etc.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following before submitting
+      options:
+        - label: I have searched existing issues to avoid duplicates
+          required: true
+        - label: I have provided a minimal code example that reproduces the issue
+          required: true
+        - label: I have included all relevant environment information
+          required: true
+        - label: This issue is specifically related to the SQLite Wrapper package
+          required: true
+        - label: I agree to follow this project's Code of Conduct
+          required: true

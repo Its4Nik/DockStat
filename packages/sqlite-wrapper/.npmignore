@@ -1,0 +1,54 @@
+# Source files
+*.ts
+!dist/**/*.d.ts
+
+# Build and development files
+build.ts
+tsconfig.json
+.turbo/
+.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Testing
+test.ts
+*.test.*
+*.spec.*
+__tests__/
+coverage/
+
+# Development dependencies
+node_modules/
+.pnpm-store/
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Cache directories
+.cache/
+.parcel-cache/
+
+# Temporary files
+*.tmp
+*.temp

@@ -1,0 +1,17 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discussion
+    url: https://github.com/Its4Nik/DockStat/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 📚 Documentation
+    url: https://dockstat.itsnik.de
+    about: Check our comprehensive documentation
+  - name: 💡 Feature Requests
+    url: https://github.com/Its4Nik/DockStat/discussions/categories/ideas
+    about: Share and discuss new feature ideas
+  - name: 🆘 Support
+    url: https://github.com/Its4Nik/DockStat/discussions/categories/q-a
+    about: Get help from the community
+  - name: 🐛 Security Issues
+    url: https://github.com/Its4Nik/DockStat/security
+    about: Report security vulnerabilities privately

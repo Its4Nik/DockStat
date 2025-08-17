@@ -1,12 +1,21 @@
 {
   "name": "@dockstat/sqlite-wrapper",
   "version": "1.0.0",
+  "description": "A TypeScript wrapper around bun:sqlite with type-safe query building",
   "type": "module",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    "default": "./dist/index.js",
-    "types": "./dist/index.d.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
   },
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
   "scripts": {
     "build": "bun run ./build.ts",
     "dev": "bun build index.ts",
@@ -14,10 +23,30 @@
     "lint:fix": "biome lint --write .",
     "check-types": "bunx tsc --noEmit",
     "test": "bun run test.ts",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
   },
-  "dependencies": {
-    "@dockstat/typings": "workspace:*"
+  "keywords": [
+    "sqlite",
+    "database",
+    "typescript",
+    "bun",
+    "query-builder",
+    "orm"
+  ],
+  "author": "Its4Nik",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Its4Nik/DockStat",
+    "directory": "packages/sqlite-wrapper"
+  },
+  "bugs": {
+    "url": "https://github.com/Its4Nik/DockStat/issues"
+  },
+  "homepage": "https://github.com/Its4Nik/DockStat/tree/main/packages/sqlite-wrapper",
+  "engines": {
+    "bun": ">=1.0.0"
   },
   "peerDependencies": {
     "typescript": "^5"

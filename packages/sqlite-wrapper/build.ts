@@ -8,7 +8,6 @@ const NOW = now();
 
 console.info(`Start at ${NOW}`);
 
-// Build JavaScript with Bun and generate TypeScript declarations
 await Bun.build({
   entrypoints: ["./index.ts"],
   outdir: "./dist",

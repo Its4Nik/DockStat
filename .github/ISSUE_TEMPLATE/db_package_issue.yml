@@ -1,0 +1,186 @@
+name: DB Package Issue
+description: Report an issue specific to the DB package
+title: "[DB] "
+labels: ["db", "package", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting an issue with the DB package! This template is specifically for issues related to the database utilities and management package.
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What type of issue are you reporting?
+      options:
+        - Bug - Something isn't working correctly
+        - Performance - Slow database operations or memory issues
+        - Migration - Issues with database migrations or schema changes
+        - Connection Management - Problems with database connections
+        - Query Performance - Slow or inefficient queries
+        - Data Integrity - Issues with data consistency or corruption
+        - Configuration - Setup or configuration problems
+        - Backup/Restore - Issues with database backup or restore operations
+        - Monitoring - Problems with database monitoring or logging
+        - Feature Request - New functionality for the DB package
+        - Compatibility - Issues with database versions or drivers
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Issue Description
+      description: Provide a clear and detailed description of the issue
+      placeholder: Describe what's happening and what you expected to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: code-example
+    attributes:
+      label: Code Example
+      description: Provide a minimal code example that reproduces the issue
+      placeholder: |
+        ```typescript
+        import { dbFunction } from '@dockstat/db';
+
+        // Your code that demonstrates the issue
+        ```
+      render: typescript
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-vs-actual
+    attributes:
+      label: Expected vs Actual Behavior
+      description: What did you expect to happen vs what actually happened?
+      value: |
+        **Expected:**
+
+        **Actual:**
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Information
+      description: Information about your runtime and database environment
+      value: |
+        - Package version: [e.g. 1.0.0]
+        - Database type: [e.g. SQLite, PostgreSQL, MySQL]
+        - Database version: [e.g. SQLite 3.43.0, PostgreSQL 15.3]
+        - Runtime: [e.g. Bun 1.0.0, Node.js 18.17.0]
+        - TypeScript version: [e.g. 5.2.0]
+        - OS: [e.g. macOS 14.0, Ubuntu 22.04, Windows 11]
+        - Database size: [e.g. 100MB, 5GB] (if relevant)
+    validations:
+      required: true
+
+  - type: textarea
+    id: database-schema
+    attributes:
+      label: Database Schema
+      description: If relevant, provide the database schema or table structures involved
+      placeholder: |
+        ```sql
+        CREATE TABLE example_table (
+          id INTEGER PRIMARY KEY,
+          name TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        ```
+      render: sql
+
+  - type: textarea
+    id: error-output
+    attributes:
+      label: Error Output
+      description: Include any error messages, stack traces, or console output
+      placeholder: Paste the complete error message and stack trace here
+      render: shell
+
+  - type: textarea
+    id: database-logs
+    attributes:
+      label: Database Logs
+      description: If available, include relevant database logs or query execution plans
+      placeholder: Database server logs, query plans, or performance metrics
+      render: text
+
+  - type: dropdown
+    id: data-volume
+    attributes:
+      label: Data Volume
+      description: How much data are you working with?
+      options:
+        - Small - Less than 1MB
+        - Medium - 1MB to 100MB
+        - Large - 100MB to 1GB
+        - Very Large - More than 1GB
+        - Unknown - Not sure
+    validations:
+      required: false
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Issue Frequency
+      description: How often does this issue occur?
+      options:
+        - Always - Every time I try
+        - Often - Most of the time
+        - Sometimes - Occasionally
+        - Rarely - Once or twice
+        - Unknown - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround
+      description: Have you found any temporary workarounds for this issue?
+      placeholder: If you've found a way to work around this issue, please describe it
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Impact Severity
+      description: How severely does this issue impact your work?
+      options:
+        - Low - Minor inconvenience
+        - Medium - Affects some functionality
+        - High - Blocks important features
+        - Critical - Data loss or corruption risk
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context that might be helpful
+      placeholder: Concurrent usage patterns, network configuration, related database tools, etc.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following before submitting
+      options:
+        - label: I have searched existing issues to avoid duplicates
+          required: true
+        - label: I have provided a minimal code example that reproduces the issue
+          required: true
+        - label: I have included all relevant environment and database information
+          required: true
+        - label: This issue is specifically related to the DB package
+          required: true
+        - label: I agree to follow this project's Code of Conduct
+          required: true
