@@ -1,6 +1,6 @@
 {
   "name": "@dockstat/outline-sync",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A simple outline git-sync library",
   "type": "module",
   "main": "./dist/sync.js",

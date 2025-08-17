@@ -1,3 +1,5 @@
+#!/usr/bin/env bun
+
 /**
  * Outline <> Git Markdown two-way sync (single-collection) + init
  * - Bun runtime (uses Bun.spawnSync, global fetch)
