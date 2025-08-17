@@ -1,5 +1,6 @@
 import { Database } from "bun:sqlite";
 import { QueryBuilder } from "./query-builder/index";
+import type { JsonColumnConfig } from "./types";
 
 /**
  * Re-export QueryBuilder and types so callers can import them directly:
@@ -15,6 +16,7 @@ export type {
   ColumnNames,
   WhereCondition,
   RegexCondition,
+  JsonColumnConfig,
 } from "./types";
 
 /**
@@ -87,6 +89,15 @@ class DB {
    *   .delete();
    * ```
    *
+   * For tables with JSON columns, you can specify which columns should be auto-serialized/deserialized:
+   * ```ts
+   * interface Config { id: number; settings: object; metadata: any[]; }
+   *
+   * const config = db.table<Config>("config", { jsonColumns: ["settings", "metadata"] })
+   *   .select(["*"])
+   *   .get(); // settings and metadata will be automatically parsed from JSON
+   * ```
+   *
    * `QueryBuilder` supports the following notable methods:
    *
    * **SELECT methods:**
@@ -116,13 +127,18 @@ class DB {
    * - When regex conditions are present, ordering/limit/offset are also applied client-side
    * - UPDATE and DELETE operations require at least one WHERE condition for safety
    * - All mutations return result objects with `changes` count and `insertId` (for INSERT)
+   * - JSON columns are automatically serialized on INSERT/UPDATE and deserialized on SELECT
    *
    * @typeParam T - Row type for the table.
    * @param tableName - The table name to operate on.
+   * @param jsonConfig - Optional configuration for JSON columns that should be auto-serialized/deserialized.
    * @returns QueryBuilder<T>
    */
-  table<T extends Record<string, any>>(tableName: string): QueryBuilder<T> {
-    return new QueryBuilder<T>(this.db, tableName);
+  table<T extends Record<string, any>>(
+    tableName: string,
+    jsonConfig?: JsonColumnConfig<T>,
+  ): QueryBuilder<T> {
+    return new QueryBuilder<T>(this.db, tableName, jsonConfig);
   }
 
   /**

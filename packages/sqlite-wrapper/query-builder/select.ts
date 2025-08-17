@@ -1,14 +1,13 @@
-import type {
-  ColumnNames,
-  OrderDirection,
-} from "../types";
+import type { ColumnNames, OrderDirection } from "../types";
 import { WhereQueryBuilder } from "./where";
 
 /**
  * Mixin class that adds SELECT-specific functionality to the QueryBuilder.
  * Handles column selection, ordering, limiting, and result execution methods.
  */
-export class SelectQueryBuilder<T extends Record<string, any>> extends WhereQueryBuilder<T> {
+export class SelectQueryBuilder<
+  T extends Record<string, any>,
+> extends WhereQueryBuilder<T> {
   private selectedColumns: ColumnNames<T> = ["*"];
   private orderColumn?: keyof T;
   private orderDirection: OrderDirection = "ASC";
@@ -94,9 +93,10 @@ export class SelectQueryBuilder<T extends Record<string, any>> extends WhereQuer
    * @returns Tuple of [query, parameters]
    */
   private buildSelectQuery(includeOrderAndLimit = true): [string, any[]] {
-    const cols = this.selectedColumns[0] === "*"
-      ? "*"
-      : (this.selectedColumns as string[]).join(", ");
+    const cols =
+      this.selectedColumns[0] === "*"
+        ? "*"
+        : (this.selectedColumns as string[]).join(", ");
 
     let query = `SELECT ${cols} FROM ${this.quoteIdentifier(this.getTableName())}`;
 
@@ -166,12 +166,18 @@ export class SelectQueryBuilder<T extends Record<string, any>> extends WhereQuer
   all(): T[] {
     if (!this.hasRegexConditions()) {
       const [query, params] = this.buildSelectQuery(true);
-      return this.getDb().prepare(query).all(...params) as T[];
+      const rows = this.getDb()
+        .prepare(query)
+        .all(...params) as T[];
+      return this.transformRowsFromDb(rows);
     }
 
     const [query, params] = this.buildSelectQuery(false);
-    const rows = this.getDb().prepare(query).all(...params) as T[];
-    return this.applyClientSideOperations(rows);
+    const rows = this.getDb()
+      .prepare(query)
+      .all(...params) as T[];
+    const transformedRows = this.transformRowsFromDb(rows);
+    return this.applyClientSideOperations(transformedRows);
   }
 
   /**
@@ -185,13 +191,19 @@ export class SelectQueryBuilder<T extends Record<string, any>> extends WhereQuer
       // No regex and no explicit limit, we can safely add LIMIT 1
       const [query, params] = this.buildSelectQuery(true);
       const q = query.includes("LIMIT") ? query : `${query} LIMIT 1`;
-      return this.getDb().prepare(q).get(...params) as T | null;
+      const row = this.getDb()
+        .prepare(q)
+        .get(...params) as T | null;
+      return row ? this.transformRowFromDb(row) : null;
     }
 
     if (!this.hasRegexConditions() && this.limitValue !== undefined) {
       // Limit is present; just use the query as-is
       const [query, params] = this.buildSelectQuery(true);
-      return this.getDb().prepare(query).get(...params) as T | null;
+      const row = this.getDb()
+        .prepare(query)
+        .get(...params) as T | null;
+      return row ? this.transformRowFromDb(row) : null;
     }
 
     // Has regex conditions, need to process client-side
@@ -226,9 +238,11 @@ export class SelectQueryBuilder<T extends Record<string, any>> extends WhereQuer
       const [baseQuery, params] = this.buildSelectQuery(true);
       const countQuery = baseQuery.replace(
         /SELECT (.+?) FROM/i,
-        "SELECT COUNT(*) AS __count FROM"
+        "SELECT COUNT(*) AS __count FROM",
       );
-      const result = this.getDb().prepare(countQuery).get(...params) as {
+      const result = this.getDb()
+        .prepare(countQuery)
+        .get(...params) as {
         __count: number;
       };
       return result?.__count ?? 0;
@@ -248,7 +262,9 @@ export class SelectQueryBuilder<T extends Record<string, any>> extends WhereQuer
       // Use EXISTS for efficiency
       const [baseQuery, params] = this.buildSelectQuery(true);
       const existsQuery = `SELECT EXISTS(${baseQuery}) AS __exists`;
-      const result = this.getDb().prepare(existsQuery).get(...params) as {
+      const result = this.getDb()
+        .prepare(existsQuery)
+        .get(...params) as {
         __exists: number;
       };
       return Boolean(result?.__exists);
@@ -278,6 +294,6 @@ export class SelectQueryBuilder<T extends Record<string, any>> extends WhereQuer
    */
   pluck<K extends keyof T>(column: K): T[K][] {
     const rows = this.all();
-    return rows.map(row => row[column]);
+    return rows.map((row) => row[column]);
   }
 }

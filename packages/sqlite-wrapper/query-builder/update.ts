@@ -18,14 +18,16 @@ export class UpdateQueryBuilder<
   update(data: Partial<T>): UpdateResult {
     this.requireWhereClause("UPDATE");
 
-    const updateColumns = Object.keys(data);
+    // Transform data to handle JSON serialization
+    const transformedData = this.transformRowToDb(data);
+    const updateColumns = Object.keys(transformedData);
     if (updateColumns.length === 0) {
       throw new Error("update: no columns to update");
     }
 
     // Handle regex conditions by first fetching matching rows
     if (this.hasRegexConditions()) {
-      return this.updateWithRegexConditions(data);
+      return this.updateWithRegexConditions(transformedData);
     }
 
     // Build UPDATE statement
@@ -36,9 +38,7 @@ export class UpdateQueryBuilder<
     const [whereClause, whereParams] = this.buildWhereClause();
     const query = `UPDATE ${this.quoteIdentifier(this.getTableName())} SET ${setClause}${whereClause}`;
 
-    const updateValues = updateColumns.map(
-      (col) => data[col as keyof typeof data],
-    );
+    const updateValues = updateColumns.map((col) => transformedData[col]);
     const allParams = [...updateValues, ...whereParams];
 
     const result = this.getDb()
@@ -54,7 +54,9 @@ export class UpdateQueryBuilder<
    * Handle UPDATE operations when regex conditions are present.
    * This requires client-side filtering and individual row updates.
    */
-  private updateWithRegexConditions(data: Partial<T>): UpdateResult {
+  private updateWithRegexConditions(
+    transformedData: Record<string, any>,
+  ): UpdateResult {
     // First, get all rows matching SQL conditions (without regex)
     const [selectQuery, selectParams] = this.buildWhereClause();
     const candidateRows = this.getDb()
@@ -71,7 +73,7 @@ export class UpdateQueryBuilder<
     }
 
     // Update each matching row by rowid
-    const updateColumns = Object.keys(data);
+    const updateColumns = Object.keys(transformedData);
     const setClause = updateColumns
       .map((col) => `${this.quoteIdentifier(col)} = ?`)
       .join(", ");
@@ -80,9 +82,7 @@ export class UpdateQueryBuilder<
     const stmt = this.getDb().prepare(updateQuery);
 
     let totalChanges = 0;
-    const updateValues = updateColumns.map(
-      (col) => data[col as keyof typeof data],
-    );
+    const updateValues = updateColumns.map((col) => transformedData[col]);
 
     for (const row of matchingRows) {
       const result = stmt.run(...updateValues, row.rowid);
@@ -101,7 +101,9 @@ export class UpdateQueryBuilder<
    * @returns Update result with changes count
    */
   upsert(data: Partial<T>): UpdateResult {
-    const columns = Object.keys(data);
+    // Transform data to handle JSON serialization
+    const transformedData = this.transformRowToDb(data);
+    const columns = Object.keys(transformedData);
     if (columns.length === 0) {
       throw new Error("upsert: no columns to upsert");
     }
@@ -113,7 +115,7 @@ export class UpdateQueryBuilder<
 
     const query = `INSERT OR REPLACE INTO ${this.quoteIdentifier(this.getTableName())} (${quotedColumns}) VALUES (${placeholders})`;
 
-    const values = columns.map((col) => data[col as keyof typeof data] ?? null);
+    const values = columns.map((col) => transformedData[col] ?? null);
     const result = this.getDb()
       .prepare(query)
       .run(...values);
@@ -203,7 +205,9 @@ export class UpdateQueryBuilder<
         let totalChanges = 0;
 
         for (const { where: whereData, data } of updatesToProcess) {
-          const updateColumns = Object.keys(data);
+          // Transform data to handle JSON serialization
+          const transformedUpdateData = this.transformRowToDb(data);
+          const updateColumns = Object.keys(transformedUpdateData);
           if (updateColumns.length === 0) {
             continue; // Skip empty updates
           }
@@ -236,7 +240,7 @@ export class UpdateQueryBuilder<
           const query = `UPDATE ${this.quoteIdentifier(this.getTableName())} SET ${setClause}${whereClause}`;
 
           const updateValues = updateColumns.map(
-            (col) => data[col as keyof typeof data] ?? null,
+            (col) => transformedUpdateData[col] ?? null,
           );
           const allParams = [...updateValues, ...whereParams];
 

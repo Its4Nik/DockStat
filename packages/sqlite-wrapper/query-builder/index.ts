@@ -7,6 +7,7 @@ import type {
   UpdateResult,
   DeleteResult,
   InsertOptions,
+  JsonColumnConfig,
 } from "../types";
 import { SelectQueryBuilder } from "./select";
 import { InsertQueryBuilder } from "./insert";
@@ -30,12 +31,16 @@ export class QueryBuilder<T extends Record<string, any>> {
   private updateBuilder: UpdateQueryBuilder<T>;
   private deleteBuilder: DeleteQueryBuilder<T>;
 
-  constructor(db: Database, tableName: string) {
+  constructor(
+    db: Database,
+    tableName: string,
+    jsonConfig?: JsonColumnConfig<T>,
+  ) {
     // Create instances of each specialized builder
-    this.selectBuilder = new SelectQueryBuilder<T>(db, tableName);
-    this.insertBuilder = new InsertQueryBuilder<T>(db, tableName);
-    this.updateBuilder = new UpdateQueryBuilder<T>(db, tableName);
-    this.deleteBuilder = new DeleteQueryBuilder<T>(db, tableName);
+    this.selectBuilder = new SelectQueryBuilder<T>(db, tableName, jsonConfig);
+    this.insertBuilder = new InsertQueryBuilder<T>(db, tableName, jsonConfig);
+    this.updateBuilder = new UpdateQueryBuilder<T>(db, tableName, jsonConfig);
+    this.deleteBuilder = new DeleteQueryBuilder<T>(db, tableName, jsonConfig);
 
     // Ensure all builders share the same state for WHERE conditions
     this.syncBuilderStates();

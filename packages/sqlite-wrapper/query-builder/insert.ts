@@ -1,14 +1,13 @@
-import type {
-  InsertResult,
-  InsertOptions,
-} from "../types";
+import type { InsertResult, InsertOptions } from "../types";
 import { WhereQueryBuilder } from "./where";
 
 /**
  * Mixin class that adds INSERT functionality to the QueryBuilder.
  * Handles single and bulk insert operations with conflict resolution.
  */
-export class InsertQueryBuilder<T extends Record<string, any>> extends WhereQueryBuilder<T> {
+export class InsertQueryBuilder<
+  T extends Record<string, any>,
+> extends WhereQueryBuilder<T> {
   /**
    * Insert a single row or multiple rows into the table.
    *
@@ -22,13 +21,16 @@ export class InsertQueryBuilder<T extends Record<string, any>> extends WhereQuer
   ): InsertResult {
     const rows = Array.isArray(data) ? data : [data];
 
-    if (rows.length === 0) {
+    // Transform rows to handle JSON serialization
+    const transformedRows = rows.map((row) => this.transformRowToDb(row));
+
+    if (transformedRows.length === 0) {
       throw new Error("insert: data cannot be empty");
     }
 
     // Get all unique columns from all rows
     const allColumns = new Set<string>();
-    for (const row of rows) {
+    for (const row of transformedRows) {
       for (const col of Object.keys(row)) {
         allColumns.add(col);
       }
@@ -59,7 +61,7 @@ export class InsertQueryBuilder<T extends Record<string, any>> extends WhereQuer
     let lastInsertId = 0;
 
     // Execute for each row
-    for (const row of rows) {
+    for (const row of transformedRows) {
       const values = columns.map((col) => row[col as keyof typeof row] ?? null);
       const result = stmt.run(...values);
       totalChanges += result.changes;
@@ -145,9 +147,12 @@ export class InsertQueryBuilder<T extends Record<string, any>> extends WhereQuer
     // If we have an insertId, try to fetch the inserted row
     if (result.insertId > 0) {
       try {
-        return this.getDb()
-          .prepare(`SELECT * FROM ${this.quoteIdentifier(this.getTableName())} WHERE rowid = ?`)
+        const row = this.getDb()
+          .prepare(
+            `SELECT * FROM ${this.quoteIdentifier(this.getTableName())} WHERE rowid = ?`,
+          )
           .get(result.insertId) as T | null;
+        return row ? this.transformRowFromDb(row) : null;
       } catch {
         // If fetching by rowid fails, return null
         return null;
@@ -178,9 +183,14 @@ export class InsertQueryBuilder<T extends Record<string, any>> extends WhereQuer
       let totalChanges = 0;
       let lastInsertId = 0;
 
+      // Transform rows to handle JSON serialization
+      const transformedRows = rowsToInsert.map((row) =>
+        this.transformRowToDb(row),
+      );
+
       // Get all unique columns from all rows
       const allColumns = new Set<string>();
-      for (const row of rowsToInsert) {
+      for (const row of transformedRows) {
         for (const col of Object.keys(row)) {
           allColumns.add(col);
         }
@@ -207,8 +217,10 @@ export class InsertQueryBuilder<T extends Record<string, any>> extends WhereQuer
       const query = `${insertType} INTO ${this.quoteIdentifier(this.getTableName())} (${quotedColumns}) VALUES (${placeholders})`;
       const stmt = db.prepare(query);
 
-      for (const row of rowsToInsert) {
-        const values = columns.map((col) => row[col as keyof typeof row] ?? null);
+      for (const row of transformedRows) {
+        const values = columns.map(
+          (col) => row[col as keyof typeof row] ?? null,
+        );
         const result = stmt.run(...values);
         totalChanges += result.changes;
         if (result.lastInsertRowid) {

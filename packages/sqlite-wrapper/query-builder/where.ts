@@ -1,14 +1,13 @@
-import type {
-  WhereCondition,
-  RegexCondition,
-} from "../types";
+import type { WhereCondition, RegexCondition } from "../types";
 import { BaseQueryBuilder } from "./base";
 
 /**
  * Mixin class that adds WHERE-related functionality to the QueryBuilder.
  * This includes all conditional filtering methods.
  */
-export class WhereQueryBuilder<T extends Record<string, any>> extends BaseQueryBuilder<T> {
+export class WhereQueryBuilder<
+  T extends Record<string, any>,
+> extends BaseQueryBuilder<T> {
   /**
    * Add simple equality conditions to the WHERE clause.
    * Handles null values appropriately with IS NULL / IS NOT NULL.
@@ -40,7 +39,7 @@ export class WhereQueryBuilder<T extends Record<string, any>> extends BaseQueryB
       if (value instanceof RegExp) {
         this.state.regexConditions.push({
           column: column as keyof T,
-          regex: value
+          regex: value,
         });
       } else if (typeof value === "string") {
         this.state.regexConditions.push({
@@ -111,7 +110,9 @@ export class WhereQueryBuilder<T extends Record<string, any>> extends BaseQueryB
       throw new Error("whereNotIn: values must be a non-empty array");
     }
     const placeholders = values.map(() => "?").join(", ");
-    this.state.whereConditions.push(`${String(column)} NOT IN (${placeholders})`);
+    this.state.whereConditions.push(
+      `${String(column)} NOT IN (${placeholders})`,
+    );
     this.state.whereParams.push(...values);
     return this;
   }
@@ -156,7 +157,9 @@ export class WhereQueryBuilder<T extends Record<string, any>> extends BaseQueryB
 
     if (
       (value === null || value === undefined) &&
-      (normalizedOp === "!=" || normalizedOp === "<>" || normalizedOp === "IS NOT")
+      (normalizedOp === "!=" ||
+        normalizedOp === "<>" ||
+        normalizedOp === "IS NOT")
     ) {
       this.state.whereConditions.push(`${String(column)} IS NOT NULL`);
       return this;

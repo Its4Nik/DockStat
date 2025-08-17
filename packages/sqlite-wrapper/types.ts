@@ -4,7 +4,9 @@ import type { Database } from "bun:sqlite";
  * Utility types for query building
  */
 export type ColumnNames<T> = Array<keyof T> | ["*"];
-export type WhereCondition<T> = Partial<Record<keyof T, string | number | boolean | null>>;
+export type WhereCondition<T> = Partial<
+  Record<keyof T, string | number | boolean | null>
+>;
 export type RegexCondition<T> = Partial<Record<keyof T, string | RegExp>>;
 export type OrderDirection = "ASC" | "DESC";
 
@@ -57,6 +59,14 @@ export interface BaseQueryBuilder<T> {
 }
 
 /**
+ * Configuration for JSON columns that should be automatically serialized/deserialized
+ */
+export interface JsonColumnConfig<T> {
+  /** Columns that contain JSON data and should be auto-serialized/deserialized */
+  jsonColumns?: Array<keyof T>;
+}
+
+/**
  * Internal state shared across query builders
  */
 export interface QueryBuilderState<T> {
@@ -65,4 +75,5 @@ export interface QueryBuilderState<T> {
   whereConditions: string[];
   whereParams: any[];
   regexConditions: Array<{ column: keyof T; regex: RegExp }>;
+  jsonColumns?: Array<keyof T>;
 }

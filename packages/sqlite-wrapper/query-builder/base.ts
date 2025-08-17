@@ -3,6 +3,7 @@ import type {
   ColumnNames,
   OrderDirection,
   QueryBuilderState,
+  JsonColumnConfig,
 } from "../types";
 
 /**
@@ -12,13 +13,18 @@ import type {
 export abstract class BaseQueryBuilder<T extends Record<string, any>> {
   protected state: QueryBuilderState<T>;
 
-  constructor(db: Database, tableName: string) {
+  constructor(
+    db: Database,
+    tableName: string,
+    jsonConfig?: JsonColumnConfig<T>,
+  ) {
     this.state = {
       db,
       tableName,
       whereConditions: [],
       whereParams: [],
       regexConditions: [],
+      jsonColumns: jsonConfig?.jsonColumns,
     };
   }
 
@@ -105,5 +111,57 @@ export abstract class BaseQueryBuilder<T extends Record<string, any>> {
     this.state.whereConditions = [];
     this.state.whereParams = [];
     this.state.regexConditions = [];
+  }
+
+  /**
+   * Transform row data after fetching from database (deserialize JSON columns).
+   */
+  protected transformRowFromDb(row: any): T {
+    if (!this.state.jsonColumns || !row) return row;
+
+    const transformed = { ...row };
+    for (const column of this.state.jsonColumns) {
+      const columnKey = String(column);
+      if (
+        transformed[columnKey] &&
+        typeof transformed[columnKey] === "string"
+      ) {
+        try {
+          transformed[columnKey] = JSON.parse(transformed[columnKey]);
+        } catch {
+          // Keep original value if JSON parsing fails
+        }
+      }
+    }
+    return transformed;
+  }
+
+  /**
+   * Transform multiple rows after fetching from database.
+   */
+  protected transformRowsFromDb(rows: any[]): T[] {
+    if (!this.state.jsonColumns) return rows;
+    return rows.map((row) => this.transformRowFromDb(row));
+  }
+
+  /**
+   * Transform row data before inserting/updating to database (serialize JSON columns).
+   */
+  protected transformRowToDb(row: Partial<T>): Record<string, any> {
+    if (!this.state.jsonColumns || !row) return row;
+
+    const transformed: Record<string, any> = { ...row };
+    for (const column of this.state.jsonColumns) {
+      const columnKey = String(column);
+      if (
+        transformed[columnKey] !== undefined &&
+        transformed[columnKey] !== null
+      ) {
+        if (typeof transformed[columnKey] === "object") {
+          transformed[columnKey] = JSON.stringify(transformed[columnKey]);
+        }
+      }
+    }
+    return transformed;
   }
 }

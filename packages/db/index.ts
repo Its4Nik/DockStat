@@ -41,8 +41,12 @@ class DockStatDB {
         withoutRowId: false,
       },
     );
-    this.config_table = this.DB.table<DATABASE.DB_config>("config");
-    this.theme_table = this.DB.table<THEME.THEME_config>("themes");
+    this.config_table = this.DB.table<DATABASE.DB_config>("config", {
+      jsonColumns: ["target_hosts", "theme_config"],
+    });
+    this.theme_table = this.DB.table<THEME.THEME_config>("themes", {
+      jsonColumns: ["vars"],
+    });
 
     // Initialize config table if empty, otherwise load existing config
     const existingConfig = this.config_table.select(["*"]).get();
@@ -50,15 +54,7 @@ class DockStatDB {
       this.updateConfigTable(this.config);
     } else {
       // Load existing config from database
-      this.config = {
-        fetch_interval: existingConfig.fetch_interval,
-        target_hosts: JSON.parse(
-          existingConfig.target_hosts as unknown as string,
-        ),
-        theme_config: JSON.parse(
-          existingConfig.theme_config as unknown as string,
-        ),
-      };
+      this.config = existingConfig;
     }
   }
 
@@ -69,65 +65,29 @@ class DockStatDB {
 
   public getConfig() {
     const stored = this.config_table.select(["*"]).get();
-    if (stored) {
-      return {
-        fetch_interval: stored.fetch_interval,
-        target_hosts: JSON.parse(stored.target_hosts as string),
-        theme_config: JSON.parse(stored.theme_config as string),
-      };
-    }
-    return this.config;
+    return stored || this.config;
   }
 
   private updateConfigTable(config: DATABASE.DB_config) {
-    const serializedConfig = {
+    const configWithId = {
       id: 1,
-      fetch_interval: config.fetch_interval,
-      target_hosts: JSON.stringify(config.target_hosts),
-      theme_config: JSON.stringify(config.theme_config),
+      ...config,
     };
 
     // Use upsert (insert or replace) to ensure only one config row exists
-    return this.config_table.insert(serializedConfig, { orReplace: true });
+    return this.config_table.insert(configWithId, { orReplace: true });
   }
 
   public addOrUpdateTheme(theme: THEME.THEME_config) {
-    const serializedTheme = {
-      name: theme.name,
-      version: theme.version,
-      creator: theme.creator,
-      license: theme.license,
-      vars: JSON.stringify(theme.vars),
-    };
-    return this.theme_table.insert(serializedTheme, { orReplace: true });
+    return this.theme_table.insert(theme, { orReplace: true });
   }
 
   public getTheme(themeName: string) {
-    const stored = this.theme_table
-      .select(["*"])
-      .where({ name: themeName })
-      .get();
-    if (stored) {
-      return {
-        name: stored.name,
-        version: stored.version,
-        creator: stored.creator,
-        license: stored.license,
-        vars: JSON.parse(stored.vars as string),
-      };
-    }
-    return stored;
+    return this.theme_table.select(["*"]).where({ name: themeName }).get();
   }
 
   public getThemes() {
-    const stored = this.theme_table.select(["*"]).all();
-    return stored.map((theme) => ({
-      name: theme.name,
-      version: theme.version,
-      creator: theme.creator,
-      license: theme.license,
-      vars: JSON.parse(theme.vars as string),
-    }));
+    return this.theme_table.select(["*"]).all();
   }
 
   public setTheme(themeName: string) {
