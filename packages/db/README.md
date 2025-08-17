@@ -1,15 +1,7 @@
-# db
+# @dockstat/db
 
-To install dependencies:
+A TypeScript database layer for Docker container statistics and monitoring data. Built on top of `@dockstat/sqlite-wrapper` with predefined models and data access patterns.
 
-```bash
-bun install
-```
+## 📄 License
 
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.2.20. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+Part of the DockStat monorepo - MIT License.

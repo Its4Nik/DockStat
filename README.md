@@ -18,9 +18,10 @@ dockstat/
 ├── apps/
 │   ├── dockstat/          # Frontend (React Router)
 │   ├── dockstore/         # Community made themes, stacks and plugins
-│   └── docs/              # Custom API plugin for [Outline Wiki](https://github.com/Outline/Outline) + Git sync
+│   └── docs/              # Documentation sync with Outline Wiki
 ├── packages/
 │   ├── db/                # Database layer and models
+│   ├── outline-sync/      # Bi-directional sync between Git and Outline Wiki
 │   ├── sqlite-wrapper/    # Type-safe SQLite wrapper
 │   └── typings/           # Shared TypeScript types
 └── turbo.json             # Turborepo configuration
@@ -147,8 +148,19 @@ Database layer with models and data access patterns for Docker container statist
 ### `@dockstat/sqlite-wrapper`
 A TypeScript wrapper around `bun:sqlite` with type-safe query building capabilities.
 
+### `@dockstat/outline-sync`
+A Bun CLI tool for bi-directional synchronization between Git-backed Markdown files and Outline Wiki collections.
+
 ### `@dockstat/typings`
 Shared TypeScript type definitions used across all applications and packages.
+
+## 📚 Documentation
+
+The project uses Outline Wiki for documentation with bi-directional sync:
+
+- Documentation files are stored in `apps/docs/docs/`
+- Use `@dockstat/outline-sync` package to sync with Outline Wiki
+- See `packages/outline-sync/README.md` for sync setup and usage
 
 ## 🧪 Testing
 
@@ -181,6 +193,7 @@ bun run build
 # The built artifacts will be in:
 # - apps/dockstat/build/
 # - packages/db/dist/
+# - packages/outline-sync/dist/
 # - packages/sqlite-wrapper/dist/
 # - packages/typings/dist/
 ```

@@ -121,11 +121,11 @@ class TestRunner {
 
     if (failedTests > 0) {
       console.log("\n❌ FAILED TESTS:");
-      this.results
-        .filter((r) => !r.success)
-        .forEach((r) => {
+      for (const r of this.results) {
+        if (!r.success) {
           console.log(`  ${r.section} - ${r.name}: ${r.error}`);
-        });
+        }
+      }
     }
 
     console.log("=".repeat(60));

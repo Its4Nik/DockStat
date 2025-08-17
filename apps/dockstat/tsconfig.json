@@ -1,5 +1,5 @@
 {
-  "extends": "../../tscofig.base.json",
+  "extends": "../../tsconfig.base.json",
   "references": [
     { "path": "../../packages/typings" },
     { "path": "../../packages/sqlite-wrapper" },

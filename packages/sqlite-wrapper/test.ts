@@ -924,12 +924,9 @@ async function runComprehensiveTests() {
         "Should insert into WITHOUT ROWID table",
       );
     });
-  } catch (error: any) {
+  } catch (error) {
     test.addError(error);
   } finally {
-    if (db) {
-      db.close();
-    }
     test.printSummary();
   }
 }

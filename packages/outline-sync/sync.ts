@@ -111,7 +111,7 @@ function slugifyTitle(title: string) {
   return title
     .toString()
     .normalize("NFKD")
-    .replace(/[\u0300-\u036F]/g, "") // remove diacritics
+    .replace(/\p{M}/gu, "") // remove diacritics
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "")
@@ -393,7 +393,12 @@ async function materializeDocsToFiles(
     const raw = node.raw || {};
     const parentId = raw.parentDocumentId ?? raw.parentId ?? null;
     if (parentId && map.has(parentId)) {
-      map.get(parentId)!.children!.push(node);
+      const parent = map.get(parentId);
+      if (!parent || !parent.children) {
+        throw new Error(`Invalid tree state: parent ${parentId} not found`);
+      }
+
+      parent.children.push(node);
     } else {
       roots.push(node);
     }

@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDirs": ["./"],
-    "composite": true
+    "composite": true,
+    "strict": false
   },
   "include": ["sync.ts"],
   "exclude": ["node_modules", "dist"]
