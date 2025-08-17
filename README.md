@@ -9,18 +9,19 @@ A modern monorepo built with Turborepo, Bun, and Biome for managing Docker conta
 - **Linting & Formatting**: Biome
 - **TypeScript**: Strict configuration
 - **Apps**: React Router, Node.js applications
-- **Packages**: Shared utilities and types
+- **Packages**: Shared utilities, database layer, and types
 
 ## 📁 Project Structure
 
 ```
 dockstat/
 ├── apps/
-│   ├── dockstat/          # Frontend
-│   ├── dockstore/         # Community made themes, stacks and plguins
+│   ├── dockstat/          # Frontend (React Router)
+│   ├── dockstore/         # Community made themes, stacks and plugins
 │   └── docs/              # Custom API plugin for [Outline Wiki](https://github.com/Outline/Outline) + Git sync
 ├── packages/
-│   ├── dockstatapi/       # Backend
+│   ├── db/                # Database layer and models
+│   ├── sqlite-wrapper/    # Type-safe SQLite wrapper
 │   └── typings/           # Shared TypeScript types
 └── turbo.json             # Turborepo configuration
 ```
@@ -105,7 +106,7 @@ Code formatting and linting is handled by Biome. Configuration in `biome.json`:
 
 ### TypeScript
 
-Shared TypeScript configuration in `tscofig.base.json`:
+Shared TypeScript configuration in `tsconfig.base.json`:
 
 - **Module**: ESNext
 - **Target**: ESNext
@@ -134,8 +135,20 @@ Use the `@dockstat/` prefix for internal packages:
 
 ```typescript
 import { BaseConfig } from '@dockstat/typings';
-import { DockstatApi } from '@dockstat/backend';
+import { Database } from '@dockstat/db';
+import { SQLiteWrapper } from '@dockstat/sqlite-wrapper';
 ```
+
+## 📦 Package Overview
+
+### `@dockstat/db`
+Database layer with models and data access patterns for Docker container statistics.
+
+### `@dockstat/sqlite-wrapper`
+A TypeScript wrapper around `bun:sqlite` with type-safe query building capabilities.
+
+### `@dockstat/typings`
+Shared TypeScript type definitions used across all applications and packages.
 
 ## 🧪 Testing
 
@@ -154,7 +167,7 @@ cd apps/dockstat && bun run test
 bun run build
 
 # Build a specific package
-cd packages/dockstatapi && bun run build
+cd packages/db && bun run build
 ```
 
 ## 🚀 Deployment
@@ -167,7 +180,8 @@ bun run build
 
 # The built artifacts will be in:
 # - apps/dockstat/build/
-# - packages/dockstatapi/dist/
+# - packages/db/dist/
+# - packages/sqlite-wrapper/dist/
 # - packages/typings/dist/
 ```
 
