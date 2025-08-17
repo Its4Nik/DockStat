@@ -1,4 +1,4 @@
-![](/api/attachments.redirect?id=f0ef5b94-2e4c-47a2-9a01-3dd799acb5cf " =708.5x156.25")       ![CC BY-NC 4.0 License](https://img.shields.io/badge/License-CC_BY--NC_4.0-lightgrey.svg " =238x34")
+![](/api/attachments.redirect?id=f0ef5b94-2e4c-47a2-9a01-3dd799acb5cf " =708.5x156.25")        ![CC BY-NC 4.0 License](https://img.shields.io/badge/License-CC_BY--NC_4.0-lightgrey.svg " =238x34")
 
 
 ---
@@ -84,7 +84,7 @@ Please see @[Contribute](mention://b08a3fa6-ab85-4684-a9e7-e0a93018c689/document
 
 ---
 
- ![SQLite Web](/api/attachments.redirect?id=2254c3a7-7d9f-4cda-bab3-cf7dbca364e7)       ![SQLite Web - Content Viewer](/api/attachments.redirect?id=a0bdd96c-5de8-4139-8b1a-679629344c0b)
+ ![SQLite Web](/api/attachments.redirect?id=2254c3a7-7d9f-4cda-bab3-cf7dbca364e7)        ![SQLite Web - Content Viewer](/api/attachments.redirect?id=a0bdd96c-5de8-4139-8b1a-679629344c0b)
 
 
 ---
