@@ -92,10 +92,3 @@ The screenshots are out of date but the themes still look like this!
 # 🏴 Amoled
 
 Work in Progress
-
-
-\
-
-\
-
-\
