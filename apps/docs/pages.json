@@ -7,6 +7,56 @@
       "id": "7dddd764-6483-4f84-96a3-988304e772d3",
       "children": [
         {
+          "title": "Monorepo Overview",
+          "file": "docs/monorepo-overview.md",
+          "id": null,
+          "children": [
+            {
+              "title": "DockStat Frontend",
+              "file": "docs/dockstat-frontend.md",
+              "id": null,
+              "children": []
+            },
+            {
+              "title": "DockStore Application",
+              "file": "docs/dockstore-app.md",
+              "id": null,
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "Packages",
+          "file": null,
+          "id": null,
+          "children": [
+            {
+              "title": "Database Package",
+              "file": "docs/database-package.md",
+              "id": null,
+              "children": []
+            },
+            {
+              "title": "Docker Client Package",
+              "file": "docs/docker-client-package.md",
+              "id": null,
+              "children": []
+            },
+            {
+              "title": "SQLite Wrapper Package",
+              "file": "docs/sqlite-wrapper-package.md",
+              "id": null,
+              "children": []
+            },
+            {
+              "title": "Typings Package",
+              "file": "docs/typings-package.md",
+              "id": null,
+              "children": []
+            }
+          ]
+        },
+        {
           "title": "Archive",
           "file": "docs/archive.md",
           "id": "280f8e0a-92e7-4825-8dc0-9a8c886e3d17",
