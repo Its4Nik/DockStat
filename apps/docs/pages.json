@@ -7,126 +7,31 @@
       "id": "7dddd764-6483-4f84-96a3-988304e772d3",
       "children": [
         {
-          "title": "Contribute",
-          "file": "docs/contribute.md",
-          "id": "af6ef73c-2e42-457f-bbf9-00ecb01a3833",
-          "children": []
-        },
-        {
           "title": "Archive",
           "file": "docs/archive.md",
           "id": "280f8e0a-92e7-4825-8dc0-9a8c886e3d17",
           "children": [
-            {
-              "title": "DockStat v2",
-              "file": "docs/dockstat-v2.md",
-              "id": "bd293acd-88bc-4d6a-93ab-d5a063895b48",
-              "children": []
-            },
-            {
-              "title": "DockStat v1",
-              "file": "docs/dockstat-v1.md",
-              "id": "cd021f56-395e-40fa-a2ea-5183d5718345",
-              "children": [
-                {
-                  "title": "Customization",
-                  "file": "docs/customization.md",
-                  "id": "1fe793d1-d8cd-4aec-b679-3922bb022550",
-                  "children": [
-                    {
-                      "title": "Themes",
-                      "file": "docs/themes.md",
-                      "id": "4eb89aa1-a388-4fc2-a583-3fdf2da528d5",
-                      "children": []
-                    }
-                  ]
-                },
-                {
-                  "title": "Installation",
-                  "file": "docs/installation.md",
-                  "id": "68fd3e9c-4036-493e-8b34-066cd621a597",
-                  "children": []
-                }
-              ]
-            },
-            {
-              "title": "DockStatAPI v2",
-              "file": "docs/dockstatapi-v2.md",
-              "id": "9550ca5f-3b09-4e4d-9ea9-634b4cc1553d",
-              "children": [
-                {
-                  "title": "Developing",
-                  "file": "docs/developing.md",
-                  "id": "d11138f5-1891-4498-b897-7365d5f74417",
-                  "children": []
-                },
-                {
-                  "title": "Maintaining functions",
-                  "file": "docs/maintaining-functions.md",
-                  "id": "16c1541b-03ec-4444-924b-d585c300b9fd",
-                  "children": []
-                },
-                {
-                  "title": "API reference",
-                  "file": "docs/api-reference.md",
-                  "id": "c85f4dd0-6855-418c-854d-062d86adb158",
-                  "children": []
-                },
-                {
-                  "title": "Notifications",
-                  "file": "docs/notifications.md",
-                  "id": "fc21da6e-6893-48a8-af83-b308012d6ac9",
-                  "children": []
-                }
-              ]
-            },
-            {
-              "title": "DockStatAPI v1",
-              "file": "docs/dockstatapi-v1.md",
-              "id": "88a86081-76f3-4056-985f-b0800ec2445f",
-              "children": [
-                {
-                  "title": "Backend API reference",
-                  "file": "docs/backend-api-reference.md",
-                  "id": "0adaab7d-0b53-4d3e-9667-0dd0a0f719fd",
-                  "children": []
-                },
-                {
-                  "title": "Integrations",
-                  "file": "docs/integrations.md",
-                  "id": "112822b1-97bd-4086-a9ae-87b095bc7c7b",
-                  "children": []
-                }
-              ]
-            },
             {
               "title": "DockStatAPI v3",
               "file": "docs/dockstatapi-v3.md",
               "id": "f33a7ed1-f6f9-48f9-a393-e150feb09d2f",
               "children": [
                 {
-                  "title": "Contributing",
-                  "file": "docs/contributing.md",
-                  "id": "19ddc854-ab6c-4d8b-93e7-9f8d2ced1a56",
+                  "title": "Web Sockets",
+                  "file": "docs/web-sockets.md",
+                  "id": "5a552211-a8fa-44ce-b816-de587a5caa64",
                   "children": []
                 },
                 {
-                  "title": "Stacks",
-                  "file": "docs/stacks.md",
-                  "id": "970cdf56-b108-4468-8d8a-4c9b7d71c2c3",
-                  "children": [
-                    {
-                      "title": "Usage",
-                      "file": "docs/usage.md",
-                      "id": "8e733b65-5df2-4d8f-90e1-da8b127b2b27",
-                      "children": []
-                    }
-                  ]
+                  "title": "Background Tasks",
+                  "file": "docs/background-tasks.md",
+                  "id": "3e9d366d-9001-4448-bad8-30f5ff4eb784",
+                  "children": []
                 },
                 {
-                  "title": "Authentication",
-                  "file": "docs/authentication.md",
-                  "id": "793112f8-b6d8-4e92-a20d-395995e84486",
+                  "title": "Database",
+                  "file": "docs/database.md",
+                  "id": "9d7c53bf-b335-4567-a4cc-76388a903020",
                   "children": []
                 },
                 {
@@ -143,26 +48,121 @@
                   ]
                 },
                 {
-                  "title": "Database",
-                  "file": "docs/database.md",
-                  "id": "9d7c53bf-b335-4567-a4cc-76388a903020",
+                  "title": "Authentication",
+                  "file": "docs/authentication.md",
+                  "id": "793112f8-b6d8-4e92-a20d-395995e84486",
                   "children": []
                 },
                 {
-                  "title": "Background Tasks",
-                  "file": "docs/background-tasks.md",
-                  "id": "3e9d366d-9001-4448-bad8-30f5ff4eb784",
-                  "children": []
+                  "title": "Stacks",
+                  "file": "docs/stacks.md",
+                  "id": "970cdf56-b108-4468-8d8a-4c9b7d71c2c3",
+                  "children": [
+                    {
+                      "title": "Usage",
+                      "file": "docs/usage.md",
+                      "id": "8e733b65-5df2-4d8f-90e1-da8b127b2b27",
+                      "children": []
+                    }
+                  ]
                 },
                 {
-                  "title": "Web Sockets",
-                  "file": "docs/web-sockets.md",
-                  "id": "5a552211-a8fa-44ce-b816-de587a5caa64",
+                  "title": "Contributing",
+                  "file": "docs/contributing.md",
+                  "id": "19ddc854-ab6c-4d8b-93e7-9f8d2ced1a56",
                   "children": []
                 }
               ]
+            },
+            {
+              "title": "DockStatAPI v1",
+              "file": "docs/dockstatapi-v1.md",
+              "id": "88a86081-76f3-4056-985f-b0800ec2445f",
+              "children": [
+                {
+                  "title": "Integrations",
+                  "file": "docs/integrations.md",
+                  "id": "112822b1-97bd-4086-a9ae-87b095bc7c7b",
+                  "children": []
+                },
+                {
+                  "title": "Backend API reference",
+                  "file": "docs/backend-api-reference.md",
+                  "id": "0adaab7d-0b53-4d3e-9667-0dd0a0f719fd",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "title": "DockStatAPI v2",
+              "file": "docs/dockstatapi-v2.md",
+              "id": "9550ca5f-3b09-4e4d-9ea9-634b4cc1553d",
+              "children": [
+                {
+                  "title": "Notifications",
+                  "file": "docs/notifications.md",
+                  "id": "fc21da6e-6893-48a8-af83-b308012d6ac9",
+                  "children": []
+                },
+                {
+                  "title": "API reference",
+                  "file": "docs/api-reference.md",
+                  "id": "c85f4dd0-6855-418c-854d-062d86adb158",
+                  "children": []
+                },
+                {
+                  "title": "Maintaining functions",
+                  "file": "docs/maintaining-functions.md",
+                  "id": "16c1541b-03ec-4444-924b-d585c300b9fd",
+                  "children": []
+                },
+                {
+                  "title": "Developing",
+                  "file": "docs/developing.md",
+                  "id": "d11138f5-1891-4498-b897-7365d5f74417",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "title": "DockStat v1",
+              "file": "docs/dockstat-v1.md",
+              "id": "cd021f56-395e-40fa-a2ea-5183d5718345",
+              "children": [
+                {
+                  "title": "Installation",
+                  "file": "docs/installation.md",
+                  "id": "68fd3e9c-4036-493e-8b34-066cd621a597",
+                  "children": []
+                },
+                {
+                  "title": "Customization",
+                  "file": "docs/customization.md",
+                  "id": "1fe793d1-d8cd-4aec-b679-3922bb022550",
+                  "children": [
+                    {
+                      "title": "Themes",
+                      "file": "docs/themes.md",
+                      "id": "4eb89aa1-a388-4fc2-a583-3fdf2da528d5",
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "DockStat v2",
+              "file": "docs/dockstat-v2.md",
+              "id": "bd293acd-88bc-4d6a-93ab-d5a063895b48",
+              "children": []
             }
           ]
+        },
+        {
+          "title": "Contribute",
+          "file": "docs/contribute.md",
+          "id": "af6ef73c-2e42-457f-bbf9-00ecb01a3833",
+          "children": []
         }
       ]
     }

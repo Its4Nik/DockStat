@@ -95,7 +95,3 @@ Work in Progress
 
 
 \
-
-\
-
-\

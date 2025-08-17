@@ -63,7 +63,6 @@ erDiagram
       NUMBER fetching_interval
       TEXT api_key
     }
-
 ```
 
 ### Table Operations

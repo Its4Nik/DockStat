@@ -132,8 +132,6 @@ Quick Links provide a way to add links to your container, so if you have a conta
 
 
 \
-
-\
 ### Code
 
 ```yaml
