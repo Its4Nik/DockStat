@@ -1,0 +1,61 @@
+{
+  "name": "@dockstat/outline-sync",
+  "version": "1.0.0",
+  "description": "A simple outline git-sync library",
+  "type": "module",
+  "main": "./dist/sync.js",
+  "types": "./dist/sync.d.ts",
+  "bin": {
+    "outline-sync": "./dist/sync.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/sync.d.ts",
+      "import": "./dist/sync.js",
+      "default": "./dist/sync.js"
+    }
+  },
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "bun run ./build.ts",
+    "dev": "bun build sync.ts",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "check-types": "bunx tsc --noEmit",
+    "test": "bun run test.ts",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "outline",
+    "sync",
+    "documentation",
+    "typescript",
+    "bun",
+    "git-sync",
+    "cli"
+  ],
+  "author": "Its4Nik",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Its4Nik/DockStat",
+    "directory": "packages/outline-sync"
+  },
+  "bugs": {
+    "url": "https://github.com/Its4Nik/DockStat/issues"
+  },
+  "homepage": "https://github.com/Its4Nik/DockStat/tree/main/packages/outline-sync",
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

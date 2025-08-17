@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDirs": ["./"],
+    "composite": true
+  },
+  "include": ["sync.ts"],
+  "exclude": ["node_modules", "dist"]
+}
