@@ -101,7 +101,7 @@ exit 2
 
 When opening the Project in VS Code you can see the testing tab in  the sidebar (typically on the left).
 
-When opening said "Testing"  tab  you can see all 2 currently available tests:                ![Test tab](/api/attachments.redirect?id=4fb23db8-1789-4749-a400-fd033bc42ead)
+When opening said "Testing"  tab  you can see all 2 currently available tests:                 ![Test tab](/api/attachments.redirect?id=4fb23db8-1789-4749-a400-fd033bc42ead)
 
 The test take about 2 minutes since we have a timeout of 2 seconds in between request due to making sure that the previous section is done.
 
