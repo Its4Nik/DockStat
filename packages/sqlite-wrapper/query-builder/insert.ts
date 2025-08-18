@@ -1,3 +1,4 @@
+import type { SQLQueryBindings } from "bun:sqlite";
 import type { InsertResult, InsertOptions } from "../types";
 import { WhereQueryBuilder } from "./where";
 
@@ -6,7 +7,7 @@ import { WhereQueryBuilder } from "./where";
  * Handles single and bulk insert operations with conflict resolution.
  */
 export class InsertQueryBuilder<
-  T extends Record<string, any>,
+  T extends Record<string, unknown>,
 > extends WhereQueryBuilder<T> {
   /**
    * Insert a single row or multiple rows into the table.
@@ -62,7 +63,9 @@ export class InsertQueryBuilder<
 
     // Execute for each row
     for (const row of transformedRows) {
-      const values = columns.map((col) => row[col as keyof typeof row] ?? null);
+      const values = columns.map(
+        (col) => row[col as keyof typeof row] ?? null,
+      ) as SQLQueryBindings[];
       const result = stmt.run(...values);
       totalChanges += result.changes;
       if (result.lastInsertRowid) {
@@ -220,7 +223,7 @@ export class InsertQueryBuilder<
       for (const row of transformedRows) {
         const values = columns.map(
           (col) => row[col as keyof typeof row] ?? null,
-        );
+        ) as SQLQueryBindings[];
         const result = stmt.run(...values);
         totalChanges += result.changes;
         if (result.lastInsertRowid) {

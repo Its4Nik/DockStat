@@ -1,4 +1,4 @@
-import type { Database } from "bun:sqlite";
+import type { Database, SQLQueryBindings } from "bun:sqlite";
 import type {
   ColumnNames,
   WhereCondition,
@@ -8,6 +8,7 @@ import type {
   DeleteResult,
   InsertOptions,
   JsonColumnConfig,
+  QueryBuilderState,
 } from "../types";
 import { SelectQueryBuilder } from "./select";
 import { InsertQueryBuilder } from "./insert";
@@ -25,7 +26,7 @@ import { DeleteQueryBuilder } from "./delete";
  * - DELETE: safe deletes with mandatory WHERE conditions
  * - WHERE: shared conditional logic across all operations
  */
-export class QueryBuilder<T extends Record<string, any>> {
+export class QueryBuilder<T extends Record<string, unknown>> {
   private selectBuilder: SelectQueryBuilder<T>;
   private insertBuilder: InsertQueryBuilder<T>;
   private updateBuilder: UpdateQueryBuilder<T>;
@@ -50,10 +51,15 @@ export class QueryBuilder<T extends Record<string, any>> {
    * Synchronize the state between all builders so WHERE conditions are shared.
    */
   private syncBuilderStates(): void {
-    const masterState = (this.selectBuilder as any).state;
-    (this.insertBuilder as any).state = masterState;
-    (this.updateBuilder as any).state = masterState;
-    (this.deleteBuilder as any).state = masterState;
+    const masterState = (
+      this.selectBuilder as unknown as { state: QueryBuilderState<T> }
+    ).state;
+    (this.insertBuilder as unknown as { state: QueryBuilderState<T> }).state =
+      masterState;
+    (this.updateBuilder as unknown as { state: QueryBuilderState<T> }).state =
+      masterState;
+    (this.deleteBuilder as unknown as { state: QueryBuilderState<T> }).state =
+      masterState;
   }
 
   // ===== WHERE METHODS (delegated to selectBuilder) =====
@@ -77,7 +83,7 @@ export class QueryBuilder<T extends Record<string, any>> {
   /**
    * Add a raw SQL WHERE fragment with parameter binding.
    */
-  whereExpr(expr: string, params: any[] = []): this {
+  whereExpr(expr: string, params: SQLQueryBindings[] = []): this {
     this.selectBuilder.whereExpr(expr, params);
     return this;
   }
@@ -85,7 +91,7 @@ export class QueryBuilder<T extends Record<string, any>> {
   /**
    * Alias for whereExpr.
    */
-  whereRaw(expr: string, params: any[] = []): this {
+  whereRaw(expr: string, params: SQLQueryBindings[] = []): this {
     this.selectBuilder.whereRaw(expr, params);
     return this;
   }
@@ -93,7 +99,7 @@ export class QueryBuilder<T extends Record<string, any>> {
   /**
    * Add an IN clause with proper parameter binding.
    */
-  whereIn(column: keyof T, values: any[]): this {
+  whereIn(column: keyof T, values: SQLQueryBindings[]): this {
     this.selectBuilder.whereIn(column, values);
     return this;
   }
@@ -101,7 +107,7 @@ export class QueryBuilder<T extends Record<string, any>> {
   /**
    * Add a NOT IN clause with proper parameter binding.
    */
-  whereNotIn(column: keyof T, values: any[]): this {
+  whereNotIn(column: keyof T, values: SQLQueryBindings[]): this {
     this.selectBuilder.whereNotIn(column, values);
     return this;
   }
@@ -109,7 +115,7 @@ export class QueryBuilder<T extends Record<string, any>> {
   /**
    * Add a comparison operator condition.
    */
-  whereOp(column: keyof T, op: string, value: any): this {
+  whereOp(column: keyof T, op: string, value: SQLQueryBindings): this {
     this.selectBuilder.whereOp(column, op, value);
     return this;
   }
@@ -117,7 +123,11 @@ export class QueryBuilder<T extends Record<string, any>> {
   /**
    * Add a BETWEEN condition.
    */
-  whereBetween(column: keyof T, min: any, max: any): this {
+  whereBetween(
+    column: keyof T,
+    min: SQLQueryBindings,
+    max: SQLQueryBindings,
+  ): this {
     this.selectBuilder.whereBetween(column, min, max);
     return this;
   }
@@ -125,7 +135,11 @@ export class QueryBuilder<T extends Record<string, any>> {
   /**
    * Add a NOT BETWEEN condition.
    */
-  whereNotBetween(column: keyof T, min: any, max: any): this {
+  whereNotBetween(
+    column: keyof T,
+    min: SQLQueryBindings,
+    max: SQLQueryBindings,
+  ): this {
     this.selectBuilder.whereNotBetween(column, min, max);
     return this;
   }
@@ -375,7 +389,7 @@ export class QueryBuilder<T extends Record<string, any>> {
    */
   softDelete(
     deletedColumn: keyof T = "deleted_at" as keyof T,
-    deletedValue: any = Math.floor(Date.now() / 1000),
+    deletedValue: SQLQueryBindings = Math.floor(Date.now() / 1000),
   ): DeleteResult {
     return this.deleteBuilder.softDelete(deletedColumn, deletedValue);
   }

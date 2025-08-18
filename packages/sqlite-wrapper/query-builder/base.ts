@@ -1,16 +1,17 @@
-import type { Database } from "bun:sqlite";
+import type { Database, SQLQueryBindings } from "bun:sqlite";
 import type {
   ColumnNames,
   OrderDirection,
   QueryBuilderState,
   JsonColumnConfig,
+  DatabaseRowData,
 } from "../types";
 
 /**
  * Base QueryBuilder class that manages core state and shared functionality.
  * This class provides the foundation for all query operations.
  */
-export abstract class BaseQueryBuilder<T extends Record<string, any>> {
+export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
   protected state: QueryBuilderState<T>;
 
   constructor(
@@ -46,7 +47,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, any>> {
    * Build the WHERE clause portion of a SQL query.
    * @returns Tuple of [whereClause, parameters] where whereClause includes "WHERE" prefix
    */
-  protected buildWhereClause(): [string, any[]] {
+  protected buildWhereClause(): [string, SQLQueryBindings[]] {
     if (this.state.whereConditions.length === 0) {
       return ["", []];
     }
@@ -116,10 +117,10 @@ export abstract class BaseQueryBuilder<T extends Record<string, any>> {
   /**
    * Transform row data after fetching from database (deserialize JSON columns).
    */
-  protected transformRowFromDb(row: any): T {
-    if (!this.state.jsonColumns || !row) return row;
+  protected transformRowFromDb(row: unknown): T {
+    if (!this.state.jsonColumns || !row) return row as T;
 
-    const transformed = { ...row };
+    const transformed = { ...row } as DatabaseRowData;
     for (const column of this.state.jsonColumns) {
       const columnKey = String(column);
       if (
@@ -127,30 +128,30 @@ export abstract class BaseQueryBuilder<T extends Record<string, any>> {
         typeof transformed[columnKey] === "string"
       ) {
         try {
-          transformed[columnKey] = JSON.parse(transformed[columnKey]);
+          transformed[columnKey] = JSON.parse(transformed[columnKey] as string);
         } catch {
           // Keep original value if JSON parsing fails
         }
       }
     }
-    return transformed;
+    return transformed as T;
   }
 
   /**
    * Transform multiple rows after fetching from database.
    */
-  protected transformRowsFromDb(rows: any[]): T[] {
-    if (!this.state.jsonColumns) return rows;
+  protected transformRowsFromDb(rows: unknown[]): T[] {
+    if (!this.state.jsonColumns) return rows as T[];
     return rows.map((row) => this.transformRowFromDb(row));
   }
 
   /**
    * Transform row data before inserting/updating to database (serialize JSON columns).
    */
-  protected transformRowToDb(row: Partial<T>): Record<string, any> {
-    if (!this.state.jsonColumns || !row) return row;
+  protected transformRowToDb(row: Partial<T>): DatabaseRowData {
+    if (!this.state.jsonColumns || !row) return row as DatabaseRowData;
 
-    const transformed: Record<string, any> = { ...row };
+    const transformed: DatabaseRowData = { ...row } as DatabaseRowData;
     for (const column of this.state.jsonColumns) {
       const columnKey = String(column);
       if (

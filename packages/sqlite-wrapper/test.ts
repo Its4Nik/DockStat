@@ -1,11 +1,11 @@
-import { DB } from "./index";
+import { DB, column } from "./index";
 
-interface User {
+interface User extends Record<string, unknown> {
   id?: number;
   name: string;
   email: string;
   type: string;
-  active?: boolean;
+  active?: boolean | 1 | 0;
   created_at?: number;
   deleted_at?: number | null;
 }
@@ -98,7 +98,11 @@ class TestRunner {
     }
   }
 
-  assertArrayLength(array: any[], expectedLength: number, message?: string) {
+  assertArrayLength(
+    array: unknown[],
+    expectedLength: number,
+    message?: string,
+  ) {
     if (array.length !== expectedLength) {
       throw new Error(
         `${message || "Array length mismatch"}: expected ${expectedLength}, got ${array.length}`,
@@ -166,7 +170,7 @@ async function runComprehensiveTests() {
 
     test.test("Create users table with object column definition", () => {
       db.createTable(
-        "users",
+        "test_users",
         {
           id: "INTEGER PRIMARY KEY AUTOINCREMENT",
           name: "TEXT NOT NULL",
@@ -175,6 +179,22 @@ async function runComprehensiveTests() {
           active: "INTEGER NOT NULL DEFAULT 1",
           created_at: "INTEGER NOT NULL DEFAULT (strftime('%s','now'))",
           deleted_at: "INTEGER DEFAULT NULL",
+        },
+        { ifNotExists: true },
+      );
+    });
+
+    test.test("Create users table with new structure", () => {
+      db.createTable(
+        "users",
+        {
+          id: column.id(),
+          name: column.text({ notNull: true }),
+          email: column.text({ unique: true }),
+          type: column.text({ default: "user", notNull: true }),
+          active: column.boolean({ default: true }),
+          created_at: column.createdAt(),
+          deleted_at: column.timestamp(),
         },
         { ifNotExists: true },
       );
@@ -853,13 +873,13 @@ async function runComprehensiveTests() {
       const directDb = db.getDb();
       const testRows = directDb
         .prepare("SELECT rowid, * FROM debug_test WHERE id = ?")
-        .all(999) as any[];
+        .all(999) as unknown[];
 
       console.log(`  [DEBUG] Manual test: found ${testRows.length} rows`);
       console.log(`  [DEBUG] Row data: ${JSON.stringify(testRows[0])}`);
 
       // Test the regex manually
-      const testEmail = testRows[0]?.email;
+      const testEmail = (testRows as User[])[0]?.email;
       const testRegex = /debug@/;
       const manualMatch = testRegex.test(String(testEmail));
       console.log(

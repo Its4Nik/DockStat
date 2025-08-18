@@ -1,3 +1,4 @@
+import type { SQLQueryBindings } from "bun:sqlite";
 import type { DeleteResult } from "../types";
 import { SelectQueryBuilder } from "./select";
 
@@ -6,7 +7,7 @@ import { SelectQueryBuilder } from "./select";
  * Handles safe delete operations with mandatory WHERE conditions.
  */
 export class DeleteQueryBuilder<
-  T extends Record<string, any>,
+  T extends Record<string, unknown>,
 > extends SelectQueryBuilder<T> {
   /**
    * Delete rows matching the WHERE conditions.
@@ -61,7 +62,7 @@ export class DeleteQueryBuilder<
 
     let totalChanges = 0;
     for (const row of matchingRows) {
-      const result = stmt.run(row.rowid);
+      const result = stmt.run(row.rowid as SQLQueryBindings);
       totalChanges += result.changes;
     }
 
@@ -99,7 +100,7 @@ export class DeleteQueryBuilder<
    */
   softDelete(
     deletedColumn: keyof T = "deleted_at" as keyof T,
-    deletedValue: any = Math.floor(Date.now() / 1000),
+    deletedValue: SQLQueryBindings = Math.floor(Date.now() / 1000),
   ): DeleteResult {
     this.requireWhereClause("SOFT DELETE");
 
@@ -126,7 +127,7 @@ export class DeleteQueryBuilder<
    */
   private softDeleteWithRegexConditions(
     deletedColumn: keyof T,
-    deletedValue: any,
+    deletedValue: SQLQueryBindings,
   ): DeleteResult {
     // First, get all rows matching SQL conditions (without regex)
     const [selectQuery, selectParams] = this.buildWhereClause();
@@ -149,7 +150,7 @@ export class DeleteQueryBuilder<
 
     let totalChanges = 0;
     for (const row of matchingRows) {
-      const result = stmt.run(deletedValue, row.rowid);
+      const result = stmt.run(deletedValue, row.rowid as SQLQueryBindings);
       totalChanges += result.changes;
     }
 
@@ -208,7 +209,7 @@ export class DeleteQueryBuilder<
 
     let totalChanges = 0;
     for (const row of matchingRows) {
-      const result = stmt.run(row.rowid);
+      const result = stmt.run(row.rowid as SQLQueryBindings);
       totalChanges += result.changes;
     }
 
@@ -237,7 +238,7 @@ export class DeleteQueryBuilder<
         for (const whereData of conditionsToProcess) {
           // Build WHERE conditions for this delete
           const whereConditions: string[] = [];
-          const whereParams: any[] = [];
+          const whereParams: SQLQueryBindings[] = [];
 
           for (const [column, value] of Object.entries(whereData)) {
             if (value === null || value === undefined) {

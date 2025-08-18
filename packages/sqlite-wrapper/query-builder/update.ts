@@ -1,3 +1,4 @@
+import type { SQLQueryBindings } from "bun:sqlite";
 import type { UpdateResult } from "../types";
 import { SelectQueryBuilder } from "./select";
 
@@ -6,7 +7,7 @@ import { SelectQueryBuilder } from "./select";
  * Handles safe update operations with mandatory WHERE conditions.
  */
 export class UpdateQueryBuilder<
-  T extends Record<string, any>,
+  T extends Record<string, unknown>,
 > extends SelectQueryBuilder<T> {
   /**
    * Update rows matching the WHERE conditions with the provided data.
@@ -55,7 +56,7 @@ export class UpdateQueryBuilder<
    * This requires client-side filtering and individual row updates.
    */
   private updateWithRegexConditions(
-    transformedData: Record<string, any>,
+    transformedData: Record<string, SQLQueryBindings>,
   ): UpdateResult {
     // First, get all rows matching SQL conditions (without regex)
     const [selectQuery, selectParams] = this.buildWhereClause();
@@ -85,7 +86,7 @@ export class UpdateQueryBuilder<
     const updateValues = updateColumns.map((col) => transformedData[col]);
 
     for (const row of matchingRows) {
-      const result = stmt.run(...updateValues, row.rowid);
+      const result = stmt.run(...updateValues, row.rowid as SQLQueryBindings);
       totalChanges += result.changes;
     }
 
@@ -214,7 +215,7 @@ export class UpdateQueryBuilder<
 
           // Build WHERE conditions for this update
           const whereConditions: string[] = [];
-          const whereParams: any[] = [];
+          const whereParams: SQLQueryBindings[] = [];
 
           for (const [column, value] of Object.entries(whereData)) {
             if (value === null || value === undefined) {

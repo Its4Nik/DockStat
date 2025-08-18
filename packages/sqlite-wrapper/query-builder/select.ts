@@ -1,3 +1,4 @@
+import type { SQLQueryBindings } from "bun:sqlite";
 import type { ColumnNames, OrderDirection } from "../types";
 import { WhereQueryBuilder } from "./where";
 
@@ -6,7 +7,7 @@ import { WhereQueryBuilder } from "./where";
  * Handles column selection, ordering, limiting, and result execution methods.
  */
 export class SelectQueryBuilder<
-  T extends Record<string, any>,
+  T extends Record<string, unknown>,
 > extends WhereQueryBuilder<T> {
   private selectedColumns: ColumnNames<T> = ["*"];
   private orderColumn?: keyof T;
@@ -92,7 +93,9 @@ export class SelectQueryBuilder<
    * @param includeOrderAndLimit - Whether to include ORDER/LIMIT/OFFSET in SQL
    * @returns Tuple of [query, parameters]
    */
-  private buildSelectQuery(includeOrderAndLimit = true): [string, any[]] {
+  private buildSelectQuery(
+    includeOrderAndLimit = true,
+  ): [string, SQLQueryBindings[]] {
     const cols =
       this.selectedColumns[0] === "*"
         ? "*"
@@ -136,7 +139,7 @@ export class SelectQueryBuilder<
     // Apply ordering in JavaScript
     if (this.orderColumn) {
       const col = String(this.orderColumn);
-      filtered.sort((a: any, b: any) => {
+      filtered.sort((a: T, b: T) => {
         const va = a[col];
         const vb = b[col];
         if (va === vb) return 0;

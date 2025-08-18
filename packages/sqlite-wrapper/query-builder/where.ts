@@ -1,3 +1,4 @@
+import type { SQLQueryBindings } from "bun:sqlite";
 import type { WhereCondition, RegexCondition } from "../types";
 import { BaseQueryBuilder } from "./base";
 
@@ -6,7 +7,7 @@ import { BaseQueryBuilder } from "./base";
  * This includes all conditional filtering methods.
  */
 export class WhereQueryBuilder<
-  T extends Record<string, any>,
+  T extends Record<string, unknown>,
 > extends BaseQueryBuilder<T> {
   /**
    * Add simple equality conditions to the WHERE clause.
@@ -62,7 +63,7 @@ export class WhereQueryBuilder<
    * @param params - Values for the placeholders in order
    * @returns this for method chaining
    */
-  whereExpr(expr: string, params: any[] = []): this {
+  whereExpr(expr: string, params: SQLQueryBindings[] = []): this {
     if (!expr || typeof expr !== "string") {
       throw new Error("whereExpr: expr must be a non-empty string");
     }
@@ -77,7 +78,7 @@ export class WhereQueryBuilder<
   /**
    * Alias for whereExpr for compatibility
    */
-  whereRaw(expr: string, params: any[] = []): this {
+  whereRaw(expr: string, params: SQLQueryBindings[] = []): this {
     return this.whereExpr(expr, params);
   }
 
@@ -88,7 +89,7 @@ export class WhereQueryBuilder<
    * @param values - Non-empty array of values for the IN clause
    * @returns this for method chaining
    */
-  whereIn(column: keyof T, values: any[]): this {
+  whereIn(column: keyof T, values: SQLQueryBindings[]): this {
     if (!Array.isArray(values) || values.length === 0) {
       throw new Error("whereIn: values must be a non-empty array");
     }
@@ -105,7 +106,7 @@ export class WhereQueryBuilder<
    * @param values - Non-empty array of values for the NOT IN clause
    * @returns this for method chaining
    */
-  whereNotIn(column: keyof T, values: any[]): this {
+  whereNotIn(column: keyof T, values: SQLQueryBindings[]): this {
     if (!Array.isArray(values) || values.length === 0) {
       throw new Error("whereNotIn: values must be a non-empty array");
     }
@@ -126,7 +127,7 @@ export class WhereQueryBuilder<
    * @param value - Value to compare (handles null appropriately)
    * @returns this for method chaining
    */
-  whereOp(column: keyof T, op: string, value: any): this {
+  whereOp(column: keyof T, op: string, value: SQLQueryBindings): this {
     const normalizedOp = (op ?? "").toUpperCase().trim();
     const allowed = [
       "=",
@@ -179,7 +180,11 @@ export class WhereQueryBuilder<
    * @param max - Maximum value (inclusive)
    * @returns this for method chaining
    */
-  whereBetween(column: keyof T, min: any, max: any): this {
+  whereBetween(
+    column: keyof T,
+    min: SQLQueryBindings,
+    max: SQLQueryBindings,
+  ): this {
     this.state.whereConditions.push(`${String(column)} BETWEEN ? AND ?`);
     this.state.whereParams.push(min, max);
     return this;
@@ -193,7 +198,11 @@ export class WhereQueryBuilder<
    * @param max - Maximum value (exclusive)
    * @returns this for method chaining
    */
-  whereNotBetween(column: keyof T, min: any, max: any): this {
+  whereNotBetween(
+    column: keyof T,
+    min: SQLQueryBindings,
+    max: SQLQueryBindings,
+  ): this {
     this.state.whereConditions.push(`${String(column)} NOT BETWEEN ? AND ?`);
     this.state.whereParams.push(min, max);
     return this;
