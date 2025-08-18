@@ -23,15 +23,15 @@
               "id": "f33a7ed1-f6f9-48f9-a393-e150feb09d2f",
               "children": [
                 {
-                  "title": "Web Sockets",
-                  "file": "docs/web-sockets.md",
-                  "id": "5a552211-a8fa-44ce-b816-de587a5caa64",
-                  "children": []
-                },
-                {
                   "title": "Background Tasks",
                   "file": "docs/background-tasks.md",
                   "id": "3e9d366d-9001-4448-bad8-30f5ff4eb784",
+                  "children": []
+                },
+                {
+                  "title": "Web Sockets",
+                  "file": "docs/web-sockets.md",
+                  "id": "5a552211-a8fa-44ce-b816-de587a5caa64",
                   "children": []
                 },
                 {
