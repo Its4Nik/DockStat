@@ -1,8 +1,6 @@
 |  ![Bun](/api/files.get?key=public/ef4b5dd4-3cf1-44e1-9b23-87ccfd5473b8/acb34d35-0045-4d8b-bbe6-82aecd1f0a2b/Bun-%2523000000.svg " =154x60") |  ![TypeScript](/api/files.get?key=public/ef4b5dd4-3cf1-44e1-9b23-87ccfd5473b8/f532b94e-382a-49c9-92d0-1cffc27061b0/typescript-%2523007ACC.svg " =272x60") |  ![SQLite](/api/files.get?key=public/ef4b5dd4-3cf1-44e1-9b23-87ccfd5473b8/75464dcb-8e70-400c-bf8b-0127aef068a0/sqlite-%252307405e.svg " =197x60") |
 |----|----|----|
 
-  
-
 > Detailed reference and patterns for building reliable, typed local databases with Bun's `bun:sqlite`.
 
 ## Overview
@@ -290,6 +288,3 @@ db.transaction(() => {
 
 
 ---
-
-
-\
