@@ -6,6 +6,6 @@
     "composite": true,
     "strict": false
   },
-  "include": ["sync.ts"],
+  "include": ["bin/*.ts", "lib/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

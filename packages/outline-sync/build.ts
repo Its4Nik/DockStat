@@ -1,4 +1,3 @@
-import dts from "bun-plugin-dts";
 import { chmodSync } from "node:fs";
 
 function now() {
@@ -10,9 +9,9 @@ const NOW = now();
 console.info(`Start at ${NOW}`);
 
 await Bun.build({
-  entrypoints: ["./sync.ts"],
+  entrypoints: ["./bin/cli.ts"],
   outdir: "./dist",
-  plugins: [dts()],
+  plugins: [],
   minify: true,
   target: "node",
   sourcemap: "inline",

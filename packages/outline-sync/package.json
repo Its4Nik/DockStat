@@ -3,10 +3,10 @@
   "version": "1.0.2",
   "description": "A simple outline git-sync library",
   "type": "module",
-  "main": "./dist/sync.js",
-  "types": "./dist/sync.d.ts",
+  "main": "./dist/cli.js",
+  "types": "./dist/cli.d.ts",
   "bin": {
-    "outline-sync": "./dist/sync.js"
+    "outline-sync": "./dist/cli.js"
   },
   "exports": {
     ".": {
