@@ -46,7 +46,7 @@ const users = db.table("users")
 
 ## Docs & examples
 
-See full technical docs in `docs/technical.md` and `examples/` for e-commerce, migrations, and transactions.
+See full technical docs [here](https://outline.itsnik.de/s/9d88c471-373e-4ef2-a955-b1058eb7dc99/doc/dockstatsqlite-wrapper-Lxt4IphXI5).
 
 ## License
 
