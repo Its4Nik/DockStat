@@ -214,4 +214,4 @@ Tip: Only commit when `pages.json` changed and be careful not to trigger infinit
 
 # License
 
-MIT — use, modify and share.
+[MPL 2.0](./LICENSE)

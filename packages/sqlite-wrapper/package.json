@@ -1,6 +1,6 @@
 {
   "name": "@dockstat/sqlite-wrapper",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A TypeScript wrapper around bun:sqlite with type-safe query building",
   "type": "module",
   "main": "./dist/index.js",
@@ -35,16 +35,16 @@
     "orm"
   ],
   "author": "Its4Nik",
-  "license": "MIT",
+  "license": "MPL-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Its4Nik/DockStat",
+    "url": "https://github.com/Its4Nik/DockStat/packages/sqlite-wrapper",
     "directory": "packages/sqlite-wrapper"
   },
   "bugs": {
     "url": "https://github.com/Its4Nik/DockStat/issues"
   },
-  "homepage": "https://github.com/Its4Nik/DockStat/tree/main/packages/sqlite-wrapper",
+  "homepage": "https://outline.itsnik.de/s/9d88c471-373e-4ef2-a955-b1058eb7dc99/doc/dockstatsqlite-wrapper-Lxt4IphXI5",
   "engines": {
     "bun": ">=1.0.0"
   },
