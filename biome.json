@@ -15,8 +15,7 @@
       "coverage/**",
       "*.min.js",
       "*.bundle.js"
-    ],
-    "include": ["**/*.{ts,tsx,md,js,json}"]
+    ]
   },
   "formatter": {
     "enabled": true,
