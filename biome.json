@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.10.3/schema.json",
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -15,7 +15,8 @@
       "coverage/**",
       "*.min.js",
       "*.bundle.js"
-    ]
+    ],
+    "include": ["**/*.{ts,tsx,md,js,json}"]
   },
   "formatter": {
     "enabled": true,

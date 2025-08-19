@@ -1,14 +1,10 @@
-name: Docs Sync
+name: Lint
 
 on:
+  pull_request:
   push:
-    branches: [main]
-    paths:
-      - "apps/docs/dockstat/**/*.md"
-  schedule:
-    # Run every 6 hours
-    - cron: "0 */6 * * *"
-  workflow_dispatch: # Allow manual triggering
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -18,9 +14,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  sync-docs:
-    name: Sync Documentation
+  prettier:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,13 +26,9 @@ jobs:
         with:
           bun-version-file: ".bun-version"
 
-      - name: Sync docs
-        env:
-          OUTLINE_COLLECTION_ID: ${{ secrets.OUTLINE_COLLECTION_ID }}
-          OUTLINE_API_KEY: ${{ secrets.OUTLINE_API_KEY }}
+      - name: Prettify code
         run: |
-          bash sync.sh
-          git add .
+          bun run lint
 
       - name: Check for changes
         id: check_changes
@@ -55,14 +47,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
-          git commit -m "docs: sync documentation [skip ci]"
+          git commit -m "chore(lint): Linting fixes [skip ci]"
           git push
-
-      - name: Check sync status
-        run: |
-          if [ $? -eq 0 ]; then
-            echo "✅ Docs sync completed successfully"
-          else
-            echo "❌ Docs sync failed"
-            exit 1
-          fi
