@@ -40,7 +40,7 @@ jobs:
         if: ${{ !cancelled() }} # run this step even if previous step failed
         with:
           name: Lint Reports
-          path: .github/lint-*.xml # Path to test results
+          path: */lint-*.xml # Path to test results
           reporter: jest-junit # Format of test results
 
       - name: Check for changes

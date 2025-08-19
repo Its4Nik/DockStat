@@ -7,7 +7,7 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "lint:jn": "biome lint --reporter=junit > ../../.github/lint-dockstat.xml"
+    "lint:jn": "biome lint --reporter=junit > lint-dockstat.xml"
   },
   "dependencies": {
     "@dockstat/typings": "workspace:*",

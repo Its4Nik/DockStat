@@ -9,7 +9,7 @@
     "dev": "bun run --watch ./build.ts",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
-    "lint:jn": "biome lint --reporter=junit > ../../.github/lint-typings.xml",
+    "lint:jn": "biome lint --reporter=junit > lint-typings.xml",
     "check-types": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
