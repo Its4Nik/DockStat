@@ -12,15 +12,13 @@
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "dist/**/*",
-    "README.md"
-  ],
+  "files": ["dist/**/*", "README.md"],
   "scripts": {
     "build": "bun run ./build.ts",
     "dev": "bun run --watch index.ts",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
+    "lint:jn": "biome lint --reporter=junit > ../../.github/lint-docker-client.xml",
     "check-types": "bunx tsc --noEmit",
     "test": "bun run test.ts",
     "example:basic": "bun run examples/basic-usage.ts",

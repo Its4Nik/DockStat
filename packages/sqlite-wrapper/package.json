@@ -12,15 +12,13 @@
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "dist/**/*",
-    "README.md"
-  ],
+  "files": ["dist/**/*", "README.md"],
   "scripts": {
     "build": "bun run ./build.ts",
     "dev": "bun build index.ts",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
+    "lint:jn": "biome lint --reporter=junit > ../../.github/lint-sqlite-wrapper.xml",
     "check-types": "bunx tsc --noEmit",
     "test": "bun run test.ts",
     "clean": "rm -rf dist",

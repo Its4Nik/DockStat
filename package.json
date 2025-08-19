@@ -5,6 +5,8 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
+    "lint:gh": "turbo run lint -- --reporter=github",
+    "lint:jn": "turbo run lint:jn",
     "lint:fix": "turbo run lint:fix",
     "format": "biome format --write .",
     "format:check": "biome format --check .",

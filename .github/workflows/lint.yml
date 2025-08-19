@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  prettier:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -32,7 +32,16 @@ jobs:
 
       - name: Prettify code
         run: |
-          bun run lint
+          bun run lint:gh
+          bun run lint:jn
+
+      - name: Test Report
+        uses: dorny/test-reporter@v2
+        if: ${{ !cancelled() }} # run this step even if previous step failed
+        with:
+          name: Lint Reports
+          path: .github/lint-*.xml # Path to test results
+          reporter: jest-junit # Format of test results
 
       - name: Check for changes
         id: check_changes

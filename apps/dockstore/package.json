@@ -9,6 +9,7 @@
     "make": "cd .generator && bun run convert.ts",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
+    "lint:jn": "biome lint --reporter=junit > ../../.github/lint-dockstore.xml",
     "check-types": "tsc --noEmit",
     "clean": "rm -rf dist"
   },

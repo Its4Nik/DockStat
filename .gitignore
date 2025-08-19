@@ -17,6 +17,9 @@ node_modules
 # Testing
 coverage
 
+# Lint Results
+.github/*.xml
+
 # Turbo
 .turbo
 
