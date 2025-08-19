@@ -18,7 +18,7 @@ node_modules
 coverage
 
 # Lint Results
-.github/*.xml
+lint-*.xml
 
 # Turbo
 .turbo
