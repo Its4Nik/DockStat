@@ -38,7 +38,6 @@ jobs:
           OUTLINE_COLLECTION_ID: ${{ secrets.OUTLINE_COLLECTION_ID }}
           OUTLINE_API_KEY: ${{ secrets.OUTLINE_API_KEY }}
         run: |
-          bun install -g @dockstat/outline-sync@latest
           bash sync.sh
           git add .
 
