@@ -4,8 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "apps/docs/**"
-      - "**/*.md"
+      - "apps/docs/dockstat/**/*.md"
   schedule:
     # Run every 6 hours
     - cron: "0 */6 * * *"
@@ -35,12 +34,11 @@ jobs:
           bun-version: ${{ env.BUN_VERSION }}
 
       - name: Sync docs
-        working-directory: apps/docs
         env:
           OUTLINE_COLLECTION_ID: ${{ secrets.OUTLINE_COLLECTION_ID }}
           OUTLINE_API_KEY: ${{ secrets.OUTLINE_API_KEY }}
         run: |
-          bash sync.sh
+          bunx @dockstat/outline-sync@latest --collection-id $OUTLINE_COLLECTION_ID --api-key $OUTLINE_API_KEY --base-url="https://outline.itsnik.de" sync
           git add .
 
       - name: Check for changes
