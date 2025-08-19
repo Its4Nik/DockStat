@@ -1,4 +1,4 @@
-# Dockstat Monorepo
+# Dockstat
 
 [![Docs Sync](https://github.com/Its4Nik/DockStat/actions/workflows/docs-sync.yml/badge.svg)](https://github.com/Its4Nik/DockStat/actions/workflows/docs-sync.yml)
 
