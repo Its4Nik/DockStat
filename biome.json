@@ -43,7 +43,7 @@
     "formatter": {
       "quoteStyle": "single",
       "trailingCommas": "es5",
-      "semicolons": "always"
+      "semicolons": "asNeeded"
     }
   },
   "json": {
