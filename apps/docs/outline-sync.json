@@ -1,0 +1,12 @@
+{
+  "collections": [
+    {
+      "id": "b4a5e48f-f103-480b-9f50-8f53f515cab9",
+      "name": "DockStat",
+      "configDir": ".outline-sync",
+      "saveDir": "docs",
+      "pagesFile": ".outline-sync/b4a5e48f-f103-480b-9f50-8f53f515cab9.pages.json",
+      "configFile": ".outline-sync/b4a5e48f-f103-480b-9f50-8f53f515cab9.config.json"
+    }
+  ]
+}
