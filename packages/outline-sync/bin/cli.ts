@@ -121,28 +121,25 @@ try {
   };
 
   if (cmd === "list-collections") {
-    console.debug("Listing collections");
+    logger.debug("Listing collections");
     await listCollectionsPrompt({ dryRun: DRY_RUN, nonInteractive: false });
     process.exit(0);
   }
 
   if (cmd === "setup") {
-    console.debug("Running setup");
+    logger.debug("Running setup");
     await listCollectionsPrompt({ dryRun: DRY_RUN, nonInteractive: false });
     process.exit(0);
   }
 
   if (cmd === "init") {
-    console.debug("Running init");
+    logger.debug("Running init");
     const targets = resolveTargets();
     if (!targets.length)
       throw new Error(
         "Init requires at least one collection. Provide --collection or run setup.",
       );
     for (const collectionId of targets) {
-      console.log(
-        `\n==> bootstrapping collection ${collectionId} (dryRun=${DRY_RUN})`,
-      );
       await bootstrapCollection({ collectionId, dryRun: DRY_RUN });
     }
     process.exit(0);

@@ -1,18 +1,7 @@
-# Technical Documentation - Outline Sync
+# Technical Documentation
 
 This document provides a comprehensive technical overview of the outline-sync tool, including architecture, data flow, algorithms, and implementation details.
 
-## Table of Contents
-
-- [Architecture Overview](#architecture-overview)
-- [Core Components](#core-components)
-- [Data Flow](#data-flow)
-- [Sync Algorithm](#sync-algorithm)
-- [Configuration System](#configuration-system)
-- [File Organization Strategy](#file-organization-strategy)
-- [API Integration](#api-integration)
-- [Error Handling & Recovery](#error-handling--recovery)
-- [Performance Considerations](#performance-considerations)
 
 ---
 
@@ -20,8 +9,8 @@ This document provides a comprehensive technical overview of the outline-sync to
 
 The outline-sync tool follows a modular architecture with clear separation of concerns:
 
-```mermaid
-graph TB
+```mermaidjs
+graph LR
     subgraph "CLI Layer"
         A[CLI Parser] --> B[Command Router]
         B --> C[Flag Processor]
@@ -51,11 +40,12 @@ graph TB
     D --> K
     D --> N
 
-    style A fill:#e1f5fe
-    style D fill:#f3e5f5
-    style H fill:#e8f5e8
-    style N fill:#fff3e0
+    style A fill:#00537C
+    style D fill:#9D009F
+    style H fill:#207E00
+    style N fill:#680900
 ```
+
 
 ---
 
@@ -65,7 +55,7 @@ graph TB
 
 The CLI acts as the main entry point and handles:
 
-```mermaid
+```mermaidjs
 flowchart TD
     A[Process Arguments] --> B{Flag Parsing}
     B --> C[API Key Setup]
@@ -88,16 +78,17 @@ flowchart TD
 ```
 
 **Key Features:**
-- Repeatable `--collection` flag support
-- Early API key injection for module imports
-- Comprehensive error handling
-- Debug logging control
+
+* Repeatable `--collection` flag support
+* Early API key injection for module imports
+* Comprehensive error handling
+* Debug logging control
 
 ### 2. Configuration System (`lib/config.ts`)
 
 Manages the hierarchical configuration structure:
 
-```mermaid
+```mermaidjs
 graph LR
     subgraph "Configuration Hierarchy"
         A[Environment Variables] --> B[CLI Flags]
@@ -120,6 +111,8 @@ graph LR
 ```
 
 **Configuration Resolution Order:**
+
+
 1. CLI flags (highest priority)
 2. Environment variables
 3. Configuration files
@@ -129,7 +122,7 @@ graph LR
 
 The core synchronization logic:
 
-```mermaid
+```mermaidjs
 flowchart TD
     A[Load Configuration] --> B[Load Page Manifest]
     B --> C[Apply Path Mappings]
@@ -154,15 +147,15 @@ flowchart TD
     N --> O[Update Manifest]
 ```
 
+
 ---
 
 ## Data Flow
 
 ### Complete Synchronization Flow
 
-```mermaid
-sequ
-enceDiagram
+```mermaidjs
+sequenceDiagram
     participant CLI as CLI Interface
     participant Config as Config Manager
     participant Sync as Sync Engine
@@ -212,7 +205,7 @@ enceDiagram
 
 ### Configuration Loading Flow
 
-```mermaid
+```mermaidjs
 flowchart TD
     A[Start] --> B{Top config exists?}
     B -->|No| C[Use defaults]
@@ -228,6 +221,7 @@ flowchart TD
     J --> K[Ready for sync]
 ```
 
+
 ---
 
 ## Sync Algorithm
@@ -236,7 +230,7 @@ flowchart TD
 
 The tool uses a sophisticated conflict resolution strategy:
 
-```mermaid
+```mermaidjs
 flowchart TD
     A[Compare Documents] --> B[Normalize Content]
     B --> C{Content Equal?}
@@ -276,17 +270,18 @@ function normalizeContentIgnoreWhitespace(content: string): string {
 ```
 
 This approach:
-- Removes ALL whitespace characters (spaces, tabs, newlines)
-- Enables formatting-agnostic comparison
-- Prevents unnecessary syncs due to editor differences
+
+* Removes ALL whitespace characters (spaces, tabs, newlines)
+* Enables formatting-agnostic comparison
+* Prevents unnecessary syncs due to editor differences
 
 ### Timestamp Comparison Logic
 
-```mermaid
-graph LR
+```mermaidjs
+graph TB
     A[Local File] --> B{Git tracked?}
     B -->|Yes| C[git log -1 --format=%ct]
-    B -->|No| D[fs.stat().mtimeMs]
+    B -->|No| D["fs.stat().mtimeMs"]
     C --> E[Git Timestamp]
     D --> F[FS Timestamp]
     E --> G[Compare with Remote]
@@ -297,9 +292,11 @@ graph LR
 ```
 
 **Rationale for 500ms threshold:**
-- Accounts for minor timing differences
-- Prevents unnecessary syncs for simultaneous changes
-- Balances precision with practical usage
+
+* Accounts for minor timing differences
+* Prevents unnecessary syncs for simultaneous changes
+* Balances precision with practical usage
+
 
 ---
 
@@ -307,7 +304,7 @@ graph LR
 
 ### Configuration Hierarchy
 
-```mermaid
+```mermaidjs
 graph TB
     subgraph "Global Level"
         A[outline-sync.json] --> B[Collections List]
@@ -327,14 +324,14 @@ graph TB
     A --> D
     D --> G
     
-    style A fill:#e3f2fd
-    style D fill:#f3e5f5
-    style G fill:#e8f5e8
+    style A fill:#0B6C00
+    style D fill:#02007F
+    style G fill:#005F5A
 ```
 
 ### Mapping Resolution Algorithm
 
-```mermaid
+```mermaidjs
 flowchart TD
     A[Process Document] --> B{ID mapping exists?}
     B -->|Yes| C[Apply ID mapping]
@@ -378,6 +375,7 @@ flowchart TD
 // Child: "Installation" → docs/product/installation/README.md
 ```
 
+
 ---
 
 ## File Organization Strategy
@@ -386,8 +384,8 @@ flowchart TD
 
 The tool employs a folder-based file organization strategy:
 
-```mermaid
-graph TB
+```mermaidjs
+graph LR
     subgraph "Outline Structure"
         A[Product Docs] --> B[Getting Started]
         A --> C[API Reference]
@@ -413,10 +411,11 @@ graph TB
 ```
 
 **Benefits:**
-- Clean URLs when served by static site generators
-- Natural hierarchy representation
-- SEO-friendly structure
-- Easy navigation in file browsers
+
+* Clean URLs when served by static site generators
+* Natural hierarchy representation
+* SEO-friendly structure
+* Easy navigation in file browsers
 
 ### Slug Generation Algorithm
 
@@ -433,13 +432,14 @@ function slugifyTitle(title: string): string {
 }
 ```
 
+
 ---
 
 ## API Integration
 
 ### Outline API Client Architecture
 
-```mermaid
+```mermaidjs
 sequenceDiagram
     participant App as Application
     participant Client as API Client
@@ -449,14 +449,13 @@ sequenceDiagram
     App->>Client: Request document list
     Client->>Retry: Execute with backoff
     
-    loop Retry Attempts (max 3)
+    loop "Retry Attempts (max 3)"
         Retry->>Outline: POST /api/documents.list
         
-        alt Success (200)
+        alt "Success (200)"
             Outline-->>Retry: Document data
             Retry-->>Client: Success response
-            break
-        else Rate Limited (429)
+        else "Rate Limited (429)"
             Outline-->>Retry: Rate limit error
             Retry->>Retry: Exponential backoff
         else Other Error
@@ -470,7 +469,7 @@ sequenceDiagram
 
 ### API Request Flow
 
-```mermaid
+```mermaidjs
 flowchart TD
     A[API Request] --> B[Add Authorization Header]
     B --> C[JSON Serialize Body]
@@ -498,6 +497,7 @@ flowchart TD
 ### Pagination Handling
 
 ```typescript
+
 async function listDocumentsInCollection(collectionId: string): Promise<any[]> {
   const out: any[] = [];
   let offset = 0;
@@ -521,14 +521,15 @@ async function listDocumentsInCollection(collectionId: string): Promise<any[]> {
 }
 ```
 
+
 ---
 
 ## Error Handling & Recovery
 
 ### Error Classification
 
-```mermaid
-graph TB
+```mermaidjs
+graph LR
     A[Error Occurs] --> B{Error Type}
     
     B -->|Network| C[Connection Issues]
@@ -557,7 +558,7 @@ graph TB
 
 ### Backup and Recovery
 
-```mermaid
+```mermaidjs
 flowchart TD
     A[File Write Operation] --> B{File Exists?}
     B -->|Yes| C[Create Backup]
@@ -608,31 +609,36 @@ async function safeWriteFile(
 }
 ```
 
+
 ---
 
 ## Performance Considerations
 
 ### Optimization Strategies
 
-```mermaid
-graph TB
+```mermaidjs
+graph LR
     subgraph "API Optimization"
+        direction LR
         A[Request Batching] --> B[Pagination Efficiency]
         B --> C[Rate Limit Respect]
         C --> D[Connection Pooling]
     end
     
     subgraph "File System Optimization"
+        direction LR
         E[Bulk Directory Creation] --> F[Parallel File Operations]
         F --> G[Efficient Timestamp Queries]
     end
     
     subgraph "Content Optimization"
+        direction LR
         H[Whitespace Normalization] --> I[Content Hashing]
         I --> J[Skip Unchanged Files]
     end
     
     subgraph "Memory Optimization"
+        direction LR
         K[Streaming Large Files] --> L[Incremental Processing]
         L --> M[Garbage Collection Hints]
     end
@@ -642,11 +648,13 @@ graph TB
 
 ```typescript
 // Sequential processing to respect API rate limits
+
 for (const collection of collections) {
   await processCollection(collection);
 }
 
 // Within collection: sequential to maintain parent-child relationships
+
 async function processPages(pages: PageEntry[], parentId: string | null) {
   for (const page of pages) {
     await syncPage(page, parentId);
@@ -658,14 +666,15 @@ async function processPages(pages: PageEntry[], parentId: string | null) {
 ```
 
 **Rationale:**
-- Sequential processing respects API rate limits
-- Maintains document hierarchy integrity
-- Predictable resource usage
-- Easier error handling and recovery
+
+* Sequential processing respects API rate limits
+* Maintains document hierarchy integrity
+* Predictable resource usage
+* Easier error handling and recovery
 
 ### Caching Strategy
 
-```mermaid
+```mermaidjs
 graph LR
     A[Request] --> B{Cache Hit?}
     B -->|Yes| C[Return Cached]
@@ -674,20 +683,24 @@ graph LR
     E --> F[Return Fresh Data]
     
     subgraph "Cache Invalidation"
+        direction LR
         G[Time-based TTL] --> H[Content-based Hashing]
         H --> I[Manual Cache Clear]
     end
 ```
 
 **Current Implementation:**
-- No persistent caching (stateless design)
-- In-memory caching for single run
-- Git timestamp caching for performance
+
+* No persistent caching (stateless design)
+* In-memory caching for single run
+* Git timestamp caching for performance
 
 **Future Enhancements:**
-- Persistent cache with TTL
-- Content-based cache invalidation
-- Collection-level cache management
+
+* Persistent cache with TTL
+* Content-based cache invalidation
+* Collection-level cache management
+
 
 ---
 
@@ -695,8 +708,8 @@ graph LR
 
 ### API Key Management
 
-```mermaid
-flowchart TD
+```mermaidjs
+flowchart TB
     A[API Key Sources] --> B{CLI Flag Provided?}
     B -->|Yes| C[Use CLI Flag]
     B -->|No| D{Environment Variable Set?}
@@ -719,6 +732,7 @@ flowchart TD
 
 ```typescript
 // Path validation to prevent directory traversal
+
 function validatePath(filePath: string): boolean {
   const resolved = path.resolve(filePath);
   const cwd = process.cwd();
@@ -726,6 +740,7 @@ function validatePath(filePath: string): boolean {
 }
 
 // Safe file operations with permission checks
+
 async function ensureWritePermissions(dirPath: string): Promise<void> {
   try {
     await fs.access(dirPath, fs.constants.W_OK);
@@ -739,6 +754,7 @@ async function ensureWritePermissions(dirPath: string): Promise<void> {
 
 ```typescript
 // Sanitize document titles for safe file names
+
 function sanitizeFileName(title: string): string {
   return title
     .replace(/[<>:"/\\|?*]/g, '-')  // Replace invalid filename chars
@@ -747,113 +763,6 @@ function sanitizeFileName(title: string): string {
 }
 ```
 
----
-
-## Testing Strategy
-
-### Unit Testing Framework
-
-```mermaid
-graph TB
-    subgraph "Test Categories"
-        A[Configuration Tests] --> B[File Path Resolution]
-        C[Content Comparison] --> D[Timestamp Logic]
-        E[API Integration] --> F[Error Handling]
-        G[CLI Parsing] --> H[Command Execution]
-    end
-    
-    subgraph "Test Utilities"
-        I[Mock Outline API] --> J[Temporary File System]
-        K[Mock Git Repository] --> L[Test Data Generators]
-    end
-    
-    subgraph "Integration Tests"
-        M[End-to-End Sync] --> N[Multi-Collection Scenarios]
-        O[Error Recovery] --> P[Performance Benchmarks]
-    end
-```
-
-### Mock Implementation Example
-
-```typescript
-// Mock Outline API for testing
-class MockOutlineAPI {
-  private documents = new Map<string, any>();
-  
-  async createDocument(title: string, content: string, collectionId: string) {
-    const id = `mock-${Date.now()}-${Math.random()}`;
-    const doc = {
-      id,
-      title,
-      text: content,
-      collectionId,
-      updatedAt: new Date().toISOString(),
-    };
-    this.documents.set(id, doc);
-    return doc;
-  }
-  
-  async updateDocument(id: string, content: string) {
-    const doc = this.documents.get(id);
-    if (!doc) throw new Error('Document not found');
-    
-    doc.text = content;
-    doc.updatedAt = new Date().toISOString();
-    return doc;
-  }
-}
-```
-
----
-
-## Future Enhancements
-
-### Roadmap
-
-```mermaid
-gantt
-    title Development Roadmap
-    dateFormat  YYYY-MM-DD
-    section Phase 1
-    Template Support    :2024-01-01, 30d
-    Parallel Processing :2024-01-15, 45d
-    section Phase 2
-    Watch Mode         :2024-02-01, 60d
-    Plugin System      :2024-02-15, 90d
-    section Phase 3
-    Web Interface      :2024-04-01, 120d
-    Advanced Conflict Resolution :2024-05-01, 90d
-```
-
-### Proposed Features
-
-1. **Template Support**
-   ```json
-   {
-     "match": { "title": "API {{method}}" },
-     "path": "api/{{slug}}/{{method}}.md"
-   }
-   ```
-
-2. **Watch Mode**
-   ```bash
-   bunx @dockstat/outline-sync watch --collection="docs"
-   ```
-
-3. **Plugin Architecture**
-   ```typescript
-   interface SyncPlugin {
-     beforeSync?(context: SyncContext): Promise<void>;
-     afterSync?(context: SyncContext): Promise<void>;
-     transformContent?(content: string): Promise<string>;
-   }
-   ```
-
-4. **Advanced Conflict Resolution**
-   ```bash
-   # Interactive merge conflict resolution
-   bunx @dockstat/outline-sync sync --interactive
-   ```
 
 ---
 
@@ -862,10 +771,11 @@ gantt
 The outline-sync tool provides a robust, extensible foundation for synchronizing Outline documentation with local markdown files. Its modular architecture, comprehensive error handling, and intelligent conflict resolution make it suitable for both individual use and large-scale documentation workflows.
 
 Key strengths:
-- **Reliability**: Comprehensive error handling and recovery mechanisms
-- **Flexibility**: Configurable mapping system and multiple sync modes
-- **Safety**: Backup system and dry-run capabilities
-- **Performance**: Efficient API usage and content comparison algorithms
-- **Maintainability**: Clean separation of concerns and modular design
+
+* **Reliability**: Comprehensive error handling and recovery mechanisms
+* **Flexibility**: Configurable mapping system and multiple sync modes
+* **Safety**: Backup system and dry-run capabilities
+* **Performance**: Efficient API usage and content comparison algorithms
+* **Maintainability**: Clean separation of concerns and modular design
 
 The tool's design principles of safety, configurability, and extensibility ensure it can evolve with changing requirements while maintaining backward compatibility and user trust.

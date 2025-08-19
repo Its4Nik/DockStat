@@ -99,7 +99,7 @@ export async function getCollectionFilesBase(collectionId: string): Promise<{
       collectionConfig.configFile ||
       path.join(CONFIG_DIR, `${collectionId}.config.json`),
     saveDir: collectionConfig.saveDir || "docs",
-    configDir: collectionConfig.configFile || ".config",
+    configDir: collectionConfig.configDir || ".config",
   };
 }
 

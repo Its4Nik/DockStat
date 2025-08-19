@@ -194,6 +194,10 @@ export async function bootstrapCollection(opts: {
     saveDir: configuredSaveDir,
     configDir,
   } = await getCollectionFilesBase(collectionId);
+  logger.debug(
+    `Collection (${collectionId}) files: pagesFile=${pagesFile}, configFile=${configFile}, saveDir=${configuredSaveDir}, configDir=${configDir}`,
+  );
+
   await ensureConfigDir(configDir);
   if (!dryRun) {
     await fs.writeFile(
@@ -211,6 +215,7 @@ export async function bootstrapCollection(opts: {
       );
       logger.info(`Created new config: ${configFile}`);
     }
+    logger.info(`Saved config: ${configFile}`);
 
     const top = (await loadTopConfig()) || { collections: [] };
     const existsTop = top.collections.find((c) => c.id === collectionId);
@@ -230,5 +235,5 @@ export async function bootstrapCollection(opts: {
     );
   }
 
-  logger.info(`Bootstrap complete: wrote ${pagesFile} and ${configFile}`);
+  logger.info("Bootstrap complete");
 }
