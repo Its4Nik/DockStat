@@ -1,184 +1,191 @@
 # outline-sync — `@dockstat/outline-sync`
 
 Sync Outline (app.getoutline.com) collections ↔ Markdown in your repo.
-Designed for multi-collection pipelines.
-Features:
+Designed for multi-collection pipelines with intelligent conflict resolution and flexible mapping.
 
-* Two-way sync (pull / push / timestamp-based sync)
-* Multi-collection support (`--collection` repeatable)
-* Folder-based default storage (each page → `<slug>/README.md`, children inherit folders)
-* Per-collection mapping file for custom paths
-* Config-driven: `configs/outline-sync.json`, `<collection>.config.json`, `<collection>.pages.json`
-* Whitespace/newline-agnostic diffs (formatting-only changes are ignored)
-* Uses Git commit time when available (falls back to fs mtime)
-* Dry-run mode, backups of overwritten files
+## ✨ Features
+
+* **Bidirectional Sync**: Pull, push, or intelligent timestamp-based synchronization
+* **Multi-Collection Support**: Handle multiple collections with `--collection` (repeatable)
+* **Smart File Organization**: Folder-based storage (`<slug>/README.md`) with customizable mappings
+* **Intelligent Conflict Resolution**: Whitespace/formatting-agnostic diffs with timestamp-based decisions
+* **Flexible Configuration**: Per-collection mapping files and global configuration
+* **Git Integration**: Uses Git commit timestamps when available (fallback to filesystem mtime)
+* **Safe Operations**: Dry-run mode, automatic backups, and comprehensive logging
+* **Interactive Setup**: Easy collection discovery and configuration
 
 ---
 
-# Install
+## 🚀 Quick Start
 
-Using `bunx` (recommended):
+### 1. Install & Setup
 
+```bash
+# Set your API key (recommended for security)
+export OUTLINE_API_KEY="sk_..."
+
+# Interactive setup - discovers and configures collections
+bunx @dockstat/outline-sync setup
+```
+
+### 2. Initialize Collections
+
+```bash
+# Bootstrap a single collection
+bunx @dockstat/outline-sync init --collection="COLLECTION_UUID"
+
+# Or multiple collections at once
+bunx @dockstat/outline-sync init \
+  --collection="collection-1-id" \
+  --collection="collection-2-id"
+```
+
+### 3. Sync Your Content
+
+```bash
+# Dry run first (always recommended)
+bunx @dockstat/outline-sync sync --collection="COLLECTION_UUID" --dry-run
+
+# Actual synchronization
+bunx @dockstat/outline-sync sync --collection="COLLECTION_UUID"
+
+# Or sync all configured collections
+bunx @dockstat/outline-sync sync
+```
+
+---
+
+## 📖 Installation Options
+
+### Using bunx (Recommended)
 ```bash
 bunx @dockstat/outline-sync <command> [flags]
 ```
 
-> Security note: prefer `OUTLINE_API_KEY=...` in CI or environment. Passing `--api-key="..."` is supported but may expose the key in process lists or shell history.
+### Global Installation
+```bash
+npm install -g @dockstat/outline-sync
+outline-sync <command> [flags]
+```
+
+> **Security Note**: Use `OUTLINE_API_KEY=...` environment variable in CI/production. The `--api-key="..."` flag is supported but may expose keys in process lists.
 
 ---
 
-# Quickstart (recommended)
-
-1. Set your API key:
-
-```bash
-export OUTLINE_API_KEY="sk_..."   # recommended for local / CI usage
-```
-
-2. Interactive setup (lists collections and lets you register one):
-
-```bash
-bunx @dockstat/outline-sync setup
-```
-
-3. Bootstrap a collection (non-interactive):
-
-```bash
-bunx @dockstat/outline-sync init --collection="COLLECTION_UUID"
-# or multiple:
-bunx @dockstat/outline-sync init --collection="id1" --collection="id2"
-```
-
-This creates/updates:
-
-* `configs/outline-sync.json` — top-level config listing collections
-* `configs/<collection-id>.config.json` — per-collection mapping config
-* `configs/<collection-id>.pages.json` — assembled manifest of pages (used by sync)
-* `docs/...` — markdown files saved folder-based (`<slug>/README.md`)
-
-4. Run a dry-run sync:
-
-```bash
-bunx @dockstat/outline-sync sync --collection="COLLECTION_UUID" --dry-run
-```
-
-5. Run an actual sync/push/pull:
-
-```bash
-bunx @dockstat/outline-sync sync --collection="COLLECTION_UUID"
-bunx @dockstat/outline-sync pull --collection="COLLECTION_UUID"
-bunx @dockstat/outline-sync push --collection="COLLECTION_UUID"
-```
-
-You can pass `--collection` multiple times to run against several collections in one invocation:
-
-```bash
-bunx @dockstat/outline-sync sync \
-  --collection="id-one" --collection="id-two" \
-  --dry-run
-```
-
-You can also pass `--api-key="sk_..."` or `--base-url="https://custom.outline"` on the CLI; these override environment variables.
-
----
-
-# CLI reference
+## 🎯 Commands Reference
 
 ```
 Usage:
-  OUTLINE_API_KEY=... bunx @dockstat/outline-sync [command] [--collection=ID]... [--dry-run] [--api-key="..."]
+  OUTLINE_API_KEY=... bunx @dockstat/outline-sync [command] [options]
 
 Commands:
-  setup                    - interactive setup (list & add a collection)
-  list-collections         - print the collections visible to the API key
-  init --collection=ID     - bootstrap pages.json + markdown for collection (repeatable)
-  pull --collection=ID     - pull remote changes into local files (repeatable)
-  push --collection=ID     - push local changes to remote (repeatable)
-  sync --collection=ID     - bidirectional sync (timestamp-based) (repeatable)
+  setup                    Interactive setup: discover and configure collections
+  list-collections         List all available collections
+  init --collection=ID     Bootstrap collection (create configs + download content)
+  pull --collection=ID     Pull remote changes to local files
+  push --collection=ID     Push local changes to remote
+  sync --collection=ID     Intelligent bidirectional sync (default)
 
-Flags:
-  --collection=ID          Repeatable; run command for multiple collection ids
-  --dry-run                Preview actions (no writes to Outline or disk)
-  --api-key="..."          Provide Outline API key (overrides env var)
-  --base-url="..."         Custom Outline base URL (overrides default)
-  --help, -h
+Global Options:
+  --collection=ID          Target collection (repeatable for multiple collections)
+  --dry-run                Preview changes without executing
+  --api-key="sk_..."       Outline API key (overrides OUTLINE_API_KEY env var)
+  --base-url="https://..."  Custom Outline instance URL
+  --verbose                Enable debug logging
+  --help, -h               Show help
+
+Examples:
+  # Interactive setup
+  bunx @dockstat/outline-sync setup
+
+  # Sync multiple collections with dry-run
+  bunx @dockstat/outline-sync sync \
+    --collection="id1" --collection="id2" \
+    --dry-run
+
+  # Push changes to custom Outline instance
+  bunx @dockstat/outline-sync push \
+    --collection="my-collection" \
+    --base-url="https://outline.company.com"
 ```
 
 ---
 
-# Config layout & examples
+## 📁 Configuration Structure
 
-Project layout:
+The tool uses a structured configuration approach:
 
 ```
-configs/
-  outline-sync.json            # top-level config (collections list)
-  <collection_id>.config.json  # mapping rules + saveDir for a collection
-  <collection_id>.pages.json   # assembled pages manifest used by sync
-docs/                           # markdown files (default saveDir)
+.config/                           # Configuration directory (customizable)
+├── outline-sync.json             # Global configuration
+├── <collection-id>.config.json   # Per-collection mapping rules
+└── <collection-id>.pages.json    # Generated page manifest
+docs/                              # Content directory (customizable)
+└── collection-name/
+    ├── page-slug/
+    │   └── README.md             # Page content
+    └── parent-page/
+        ├── README.md
+        └── child-page/
+            └── README.md
 ```
 
-## `configs/outline-sync.json` (top-level)
+### Global Configuration (`outline-sync.json`)
 
 ```json
 {
   "collections": [
     {
-      "id": "COLLECTION_UUID",
-      "name": "Support Docs",
-      "saveDir": "docs",
-      "pagesFile": "configs/COLLECTION_UUID.pages.json",
-      "configFile": "configs/COLLECTION_UUID.config.json"
+      "id": "collection-uuid-here",
+      "name": "Documentation",
+      "configDir": ".config",
+      "saveDir": "docs/documentation",
+      "pagesFile": ".config/collection-uuid-here.pages.json",
+      "configFile": ".config/collection-uuid-here.config.json"
     }
   ]
 }
 ```
 
-## `configs/<collection_id>.config.json` (mapping rules)
+### Collection Configuration (`<collection-id>.config.json`)
 
 ```json
 {
-  "collectionId": "COLLECTION_UUID",
-  "saveDir": "docs",
+  "collectionId": "collection-uuid-here",
+  "saveDir": "docs/documentation",
   "mappings": [
     {
-      "match": { "id": "doc-id-123" },
-      "path": "guides/setup/"         // directory mapping → will place doc as guides/setup/README.md
+      "match": { "id": "specific-doc-id" },
+      "path": "guides/getting-started/"
     },
     {
       "match": { "title": "API Reference" },
-      "path": "reference/README.md"    // explicit filename mapping
+      "path": "reference/api.md"
+    },
+    {
+      "match": { "title": "FAQ" },
+      "path": "support/"
     }
   ]
 }
 ```
 
-Rules:
-
-* Match by `id` (preferred) or `title` (exact match).
-* `path` can be:
-
-  * directory-like (`guides/setup/` or any path without `.md`) → page becomes `<path>/README.md` and children inherit that directory,
-  * explicit file (`reference/README.md`) → used verbatim (relative to project root unless you give an absolute path),
-  * bare filename → placed under parent directory or `saveDir`.
-
-## `configs/<collection_id>.pages.json` (generated)
-
-This is a manifest of pages used by the sync engine. Example:
+### Page Manifest (`<collection-id>.pages.json`)
+*Generated automatically - contains the document tree structure*
 
 ```json
 {
-  "collectionId": "COLLECTION_UUID",
+  "collectionId": "collection-uuid-here",
   "pages": [
     {
-      "title": "Product",
-      "file": "docs/product/README.md",
-      "id": "doc-product-id",
+      "title": "Getting Started",
+      "file": "docs/getting-started/README.md",
+      "id": "doc-id-123",
       "children": [
         {
-          "title": "Getting Started",
-          "file": "docs/product/getting-started/README.md",
-          "id": "doc-getting-started-id",
+          "title": "Installation",
+          "file": "docs/getting-started/installation/README.md",
+          "id": "doc-id-456",
           "children": []
         }
       ]
@@ -187,85 +194,218 @@ This is a manifest of pages used by the sync engine. Example:
 }
 ```
 
-`pages.json` is updated when new remote documents are created (IDs get written back).
-
 ---
 
-# How syncing & conflict resolution works
+## 🗂️ File Organization & Mapping
 
-* The tool uses Git commit timestamp (if file is tracked) as the authoritative local timestamp. If Git info isn't available, it falls back to filesystem modification time.
-* For `sync` (default bidirectional flow): the *newer* version wins (remote.updatedAt vs local timestamp). The tool **ignores whitespace/newline-only differences** when deciding whether content actually differs — if the only difference is formatting, no update is performed.
-* For `pull`: remote always wins and overwrites the local file if content differs (ignoring whitespace).
-* For `push`: local always wins; remote is updated if content differs (ignoring whitespace).
-* When writing to existing local files, a backup is created: `path/to/file.md.outline-sync.bak.<timestamp>`.
+### Default Behavior: Folder-Based Structure
 
----
+Each Outline document becomes a folder with `README.md`:
+- Clean URLs when served
+- Natural hierarchy representation
+- Child documents inherit parent folders
 
-# File layout style
-
-Default behavior: folder-based.
-
-For each page:
-
+**Example Outline Structure:**
 ```
-<saveDir>/<ancestor-slug>/<page-slug>/README.md
+Product Documentation
+├── Getting Started
+│   ├── Installation
+│   └── Configuration
+└── API Reference
+    └── Authentication
 ```
 
-Example Outline structure:
-
-* Product
-
-  * Getting Started
-
-    * Install
-
-Results in:
-
+**Generated File Structure:**
 ```
-docs/product/README.md
-docs/product/getting-started/README.md
-docs/product/getting-started/install/README.md
+docs/
+├── product-documentation/README.md
+├── product-documentation/getting-started/README.md
+├── product-documentation/getting-started/installation/README.md
+├── product-documentation/getting-started/configuration/README.md
+├── product-documentation/api-reference/README.md
+└── product-documentation/api-reference/authentication/README.md
 ```
 
-You can override per-page locations in the `<collection_id>.config.json` mappings (see above).
+### Custom Mapping Rules
+
+Override default paths using mapping rules in collection configuration:
+
+```json
+{
+  "mappings": [
+    {
+      "match": { "id": "doc-123" },
+      "path": "guides/setup/"
+    },
+    {
+      "match": { "title": "API Reference" },
+      "path": "reference/README.md"
+    }
+  ]
+}
+```
+
+**Mapping Rule Types:**
+- **Directory mapping** (`path/to/dir/`): Document becomes `path/to/dir/README.md`
+- **File mapping** (`path/to/file.md`): Document saved as specified file
+- **ID matching**: Exact document ID match (preferred)
+- **Title matching**: Exact title match (fallback)
 
 ---
 
-# Advanced notes
+## 🔄 Sync Modes & Conflict Resolution
 
-* **Multiple collections:** pass `--collection` multiple times to operate on multiple collections in order. If `--collection` is not provided, the tool will operate on all collections listed in `configs/outline-sync.json`.
-* **API key sources:** first CLI `--api-key`, then `OUTLINE_API_KEY` env var. Passing `--api-key` sets `process.env.OUTLINE_API_KEY` early so imports read it properly.
-* **Base URL:** `--base-url` for self-hosted/alternate Outline instances.
-* **Dry-run:** always test with `--dry-run` before doing real `push`/`sync`.
-* **Mappings precedence:** `id` match wins over `title` match; explicit mapping wins and children will inherit directories if mapping points to a directory.
-* **Mapping templates:** not supported by default; you can use direct paths and directories via `path` in mapping rules.
+### Sync Modes
+
+1. **`sync` (default)**: Intelligent bidirectional synchronization
+   - Compares timestamps: Git commit time vs Outline `updatedAt`
+   - Newer version wins
+   - Ignores whitespace-only changes
+
+2. **`pull`**: Remote → Local (one-way)
+   - Outline content overwrites local files
+   - Creates backups of existing files
+
+3. **`push`**: Local → Remote (one-way)
+   - Local files overwrite Outline content
+   - No local file modifications
+
+### Conflict Resolution Logic
+
+```mermaid
+flowchart TD
+    A[Compare Content] --> B{Content Different?}
+    B -->|No| C[Skip - No Changes]
+    B -->|Yes| D[Compare Timestamps]
+    D --> E{Remote Newer?}
+    E -->|Yes| F[Pull Remote → Local]
+    E -->|No| G{Local Newer?}
+    G -->|Yes| H[Push Local → Remote]
+    G -->|No| I[Skip - Same Timestamp]
+```
+
+### Content Comparison
+
+The tool performs **whitespace-agnostic** comparisons:
+- Ignores formatting differences (spaces, tabs, newlines)
+- Focuses on actual content changes
+- Prevents unnecessary sync operations
 
 ---
 
-# Troubleshooting
+## 🛡️ Safety Features
 
-* "Manifest not found": run `init --collection=ID` or `setup` to create `configs/<collection_id>.pages.json`.
-* API errors / auth: check `OUTLINE_API_KEY` (or pass `--api-key`) and `--base-url`. Ensure token has access to the collection.
-* Permissions / writing files: make sure the process has write permissions for `docs/` and `configs/`.
-* Large collections: the Outline API is paginated (the client already pages with limit=100). If you hit rate limits, re-run with fewer collections at a time or add retries in your CI.
+### Backup System
+- Automatic backups before overwriting files: `file.md.outline-sync.bak.timestamp`
+- Preserves original content for recovery
 
----
-
-# Contributing & development
-
-Contributions welcome!
-
-* Repo layout is modular (`bin/cli.ts`, `lib/*.ts`) — feel free to add features:
-
-  * mapping templates (`{{slug}}`) or glob rules
-  * parallel collection sync with a `--concurrent` flag
-  * a `--api-key-file` option to read secrets from a file
-  * richer conflict resolution (merge or interactive prompts)
-
-When developing locally:
-
+### Dry Run Mode
 ```bash
-# run CLI against a local checkout
-bun run bin/cli.ts setup
-bun run bin/cli.ts init --collection="..."
+# Preview all changes without executing
+bunx @dockstat/outline-sync sync --dry-run
 ```
+
+### Comprehensive Logging
+```bash
+# Enable detailed debug logging
+bunx @dockstat/outline-sync sync --verbose
+```
+
+### Git Integration
+- Uses Git commit timestamps when available
+- Falls back to filesystem modification time
+- Respects version control history
+
+---
+
+## 🔧 Advanced Usage
+
+### Multiple Collections
+```bash
+# Sync specific collections
+bunx @dockstat/outline-sync sync \
+  --collection="docs-UUID1" \
+  --collection="guides-UUID2" \
+  --collection="api-ref-UUID3"
+
+# Sync all configured collections (default when no --collection specified)
+bunx @dockstat/outline-sync sync
+```
+
+### Custom Outline Instance
+```bash
+# Self-hosted or enterprise Outline
+bunx @dockstat/outline-sync sync \
+  --base-url="https://docs.company.com" \
+  --api-key="your-api-key"
+```
+
+### CI/CD Integration
+```yaml
+# GitHub Actions example
+- name: Sync Documentation
+  env:
+    OUTLINE_API_KEY: ${{ secrets.OUTLINE_API_KEY }}
+  run: |
+    bunx @dockstat/outline-sync sync --collection="$COLLECTION_ID"
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**"Manifest not found"**
+```bash
+# Solution: Initialize the collection first
+bunx @dockstat/outline-sync init --collection="COLLECTION_ID"
+```
+
+**API Authentication Errors**
+```bash
+# Verify your API key
+export OUTLINE_API_KEY="sk_your_actual_key"
+bunx @dockstat/outline-sync list-collections
+```
+
+**Permission Issues**
+- Ensure write permissions for `docs/` and configuration directories
+- Check that API key has access to target collections
+
+**Rate Limiting**
+- Tool includes automatic retry logic with exponential backoff
+- For large collections, process fewer collections simultaneously
+
+### Debug Mode
+```bash
+# Get detailed operation logs
+bunx @dockstat/outline-sync sync --verbose --dry-run
+```
+
+---
+
+### Development Setup
+```bash
+# Clone and setup
+git clone https://github.com/Its4Nik/DockStat.git
+cd packages/outline-sync
+
+# Run locally
+bun run bin/cli.ts setup
+bun run bin/cli.ts sync --collection="test-collection" --dry-run
+```
+
+---
+
+## 📄 License
+
+Mozilla Public License 2.0 (MPL-2.0)
+
+---
+
+## 🔗 Links
+
+- [Repository](https://github.com/Its4Nik/DockStat/tree/main/packages/outline-sync)
+- [Issues](https://github.com/Its4Nik/DockStat/issues)
+- [Outline API Documentation](https://www.getoutline.com/developers)
