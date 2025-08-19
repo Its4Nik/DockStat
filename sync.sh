@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-bunx outline-sync \
+outline-sync \
     --api-key="$OUTLINE_API_KEY" \
     --base-url="https://outline.itsnik.de"
     sync
