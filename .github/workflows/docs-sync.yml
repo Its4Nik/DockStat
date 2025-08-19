@@ -38,7 +38,7 @@ jobs:
           OUTLINE_COLLECTION_ID: ${{ secrets.OUTLINE_COLLECTION_ID }}
           OUTLINE_API_KEY: ${{ secrets.OUTLINE_API_KEY }}
         run: |
-          bunx @dockstat/outline-sync@latest --collection-id $OUTLINE_COLLECTION_ID --api-key $OUTLINE_API_KEY --base-url="https://outline.itsnik.de" sync
+          bash sync.sh
           git add .
 
       - name: Check for changes
