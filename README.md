@@ -1,5 +1,7 @@
 # Dockstat Monorepo
 
+[![Docs Sync](https://github.com/Its4Nik/DockStat/actions/workflows/docs-sync.yml/badge.svg)](https://github.com/Its4Nik/DockStat/actions/workflows/docs-sync.yml)
+
 A modern monorepo built with Turborepo, Bun, and Biome for managing Docker container statistics and monitoring.
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Its4Nik/DockStat)
