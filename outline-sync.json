@@ -3,9 +3,10 @@
     {
       "id": "b4a5e48f-f103-480b-9f50-8f53f515cab9",
       "name": "DockStat",
-      "saveDir": "apps/docs",
-      "pagesFile": "apps/docs/.configs/b4a5e48f-f103-480b-9f50-8f53f515cab9.pages.json",
-      "configFile": "apps/docs/.configs/b4a5e48f-f103-480b-9f50-8f53f515cab9.config.json"
+      "configDir": ".outline-sync",
+      "saveDir": "app/docs",
+      "pagesFile": "app/docs/.outline-sync/b4a5e48f-f103-480b-9f50-8f53f515cab9.pages.json",
+      "configFile": "app/docs/.outline-sync/b4a5e48f-f103-480b-9f50-8f53f515cab9.config.json"
     }
   ]
 }
