@@ -5,6 +5,7 @@ import {
   getCollectionFilesBase,
   saveCollectionConfig,
   ensureConfigDir,
+  ensureConfigDirs,
 } from "./config";
 import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
@@ -37,14 +38,23 @@ export async function listCollectionsPrompt(opts: {
   }
   const chosen = cols[idx - 1];
   console.log(`You chose: ${chosen.name} (${chosen.id})`);
-  await ensureConfigDir();
+  await ensureConfigDirs(await loadTopConfig());
   const top = (await loadTopConfig()) || { collections: [] };
   const exists = top.collections.find((c) => c.id === chosen.id);
+  let configDir = await question(
+    "Enter a base folder path for the collections config files (or press enter for default `.config`): ",
+  );
+
+  if (configDir.trim().length <= 1) {
+    configDir = ".config";
+  }
+
   if (!exists) {
     const defaultSaveDir = "docs";
     top.collections.unshift({
       id: chosen.id,
       name: chosen.name,
+      configDir: configDir,
       saveDir: defaultSaveDir,
       pagesFile: path.join("configs", `${chosen.id}.pages.json`),
       configFile: path.join("configs", `${chosen.id}.config.json`),
@@ -76,7 +86,7 @@ export function question(promptText: string): Promise<string> {
 /**
  * Bootstrap: fetch documents from collection, create pages.json and write markdown files.
  * Now: folder-based structure by inheritance. Each page gets a directory named from the slug,
- * and the page itself is saved as `index.md` inside that directory. Children become subdirectories.
+ * and the page itself is saved as `README.md` inside that directory. Children become subdirectories.
  */
 export async function bootstrapCollection(opts: {
   collectionId: string;
@@ -96,7 +106,7 @@ export async function bootstrapCollection(opts: {
       id: d.id,
       children: [],
       raw: d,
-    } as any);
+    });
   }
 
   // 2) attach children using parentDocumentId or parentId
@@ -113,14 +123,14 @@ export async function bootstrapCollection(opts: {
   }
 
   // 3) assign folder-based file paths recursively
-  // pattern: <saveDir>/<ancestor-slug-1>/<ancestor-slug-2>/<this-slug>/index.md
+  // pattern: <saveDir>/<ancestor-slug-1>/<ancestor-slug-2>/<this-slug>/README.md
   // Get the configured saveDir
   const { saveDir } = await getCollectionFilesBase(collectionId);
 
   function assignPaths(node: any, parentDir: string) {
     const slug = slugifyTitle(node.title || "untitled");
     const dir = path.join(parentDir, slug);
-    const filePath = path.join(dir, "index.md");
+    const filePath = path.join(dir, "README.md");
     node.file = filePath;
     if (node.children?.length) {
       for (const c of node.children) {
@@ -159,12 +169,13 @@ export async function bootstrapCollection(opts: {
   const manifest: Manifest = { collectionId, pages: roots.map(strip) };
 
   // save manifest and config files
-  await ensureConfigDir();
   const {
     pagesFile,
     configFile,
     saveDir: configuredSaveDir,
+    configDir,
   } = await getCollectionFilesBase(collectionId);
+  await ensureConfigDir(configDir);
   if (!dryRun) {
     await fs.writeFile(
       pagesFile,

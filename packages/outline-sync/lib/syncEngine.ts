@@ -58,9 +58,9 @@ export async function persistPagesManifest(
  * - mapping with title exact match next
  * - mapping.path may be:
  *    - a file path (ending with `.md`) -> set node.file to that path
- *    - a directory path (ends with `/` or no extension) -> place node in that dir as index.md
+ *    - a directory path (ends with `/` or no extension) -> place node in that dir as README.md
  * - if no mapping, fall back to inherited folder approach:
- *    parentDir + slug/index.md
+ *    parentDir + slug/README.md
  */
 export function applyMappingsToManifest(
   manifest: Manifest,
@@ -86,7 +86,7 @@ export function applyMappingsToManifest(
         const p = r.path;
         if (isDirPath(p)) {
           const dir = p.endsWith("/") ? p : p;
-          node.file = path.join(dir, "index.md");
+          node.file = path.join(dir, "README.md");
         } else {
           node.file = p;
         }
@@ -100,7 +100,7 @@ export function applyMappingsToManifest(
           const p = r.path;
           if (isDirPath(p)) {
             const dir = p.endsWith("/") ? p : p;
-            node.file = path.join(dir, "index.md");
+            node.file = path.join(dir, "README.md");
           } else {
             node.file = p;
           }
@@ -110,13 +110,13 @@ export function applyMappingsToManifest(
       }
     }
 
-    // if still not assigned, inherit from parentDir by using slug -> index.md
+    // if still not assigned, inherit from parentDir by using slug -> README.md
     if (!node.file) {
       const slug = slugifyTitle(node.title || "untitled");
       const dir = parentDir
         ? path.join(parentDir, slug)
         : path.join(collectionConfig?.saveDir || "docs", slug);
-      node.file = path.join(dir, "index.md");
+      node.file = path.join(dir, "README.md");
     } else {
       // If node.file is a bare filename (no directory) => put under parentDir or saveDir
       const hasDir = path.dirname(node.file) && path.dirname(node.file) !== ".";
@@ -128,7 +128,7 @@ export function applyMappingsToManifest(
       }
     }
 
-    // compute this node's dir to pass to children (directory containing index.md)
+    // compute this node's dir to pass to children (directory containing README.md)
     const nodeDir = path.dirname(node.file);
 
     if (node.children?.length) {
@@ -340,7 +340,7 @@ export async function runSync(opts: {
       const dir = parentDir
         ? path.join(parentDir, slug)
         : path.join(collCfg.saveDir || "docs", slug);
-      node.file = path.join(dir, "index.md");
+      node.file = path.join(dir, "README.md");
     } else {
       // If node.file is bare filename without dir -> put into parentDir or saveDir
       const dirnameOfFile = path.dirname(node.file);

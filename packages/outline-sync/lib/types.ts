@@ -12,6 +12,7 @@ export type Manifest = {
 
 export type TopCollectionConfig = {
   id: string;
+  configDir?: string;
   name?: string;
   saveDir?: string;
   pagesFile?: string;

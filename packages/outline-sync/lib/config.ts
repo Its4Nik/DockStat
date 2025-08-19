@@ -3,14 +3,23 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import type { TopConfig, TopCollectionConfig, CollectionConfig } from "./types";
 
-export const CONFIG_DIR = "configs";
 export const TOP_CONFIG_FILE = path.join("outline-sync.json");
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export async function ensureConfigDir() {
-  if (!existsSync(CONFIG_DIR)) {
-    await fs.mkdir(CONFIG_DIR, { recursive: true });
+export async function ensureConfigDir(dir: string) {
+  if (!existsSync(dir)) {
+    await fs.mkdir(dir, { recursive: true });
+  }
+}
+
+export async function ensureConfigDirs(cfg: TopConfig) {
+  const collections = cfg.collections;
+  for (const collection of collections) {
+    const dir = collection.configDir;
+    if (!existsSync(dir)) {
+      await fs.mkdir(dir, { recursive: true });
+    }
   }
 }
 
@@ -21,7 +30,7 @@ export async function loadTopConfig(): Promise<TopConfig | null> {
 }
 
 export async function saveTopConfig(cfg: TopConfig) {
-  await ensureConfigDir();
+  await ensureConfigDirs(cfg);
   await fs.writeFile(
     TOP_CONFIG_FILE,
     `${JSON.stringify(cfg, null, 2)}\n`,
@@ -33,8 +42,12 @@ export async function getCollectionFilesBase(collectionId: string): Promise<{
   pagesFile: string;
   configFile: string;
   saveDir: string;
+  configDir: string;
 }> {
   const topConfig = await loadTopConfig();
+  const CONFIG_DIR = topConfig.collections.find(
+    (collection) => collection.id === collectionId,
+  ).configDir;
 
   // If no top config exists, use default paths
   if (!topConfig || !topConfig.collections) {
@@ -42,6 +55,7 @@ export async function getCollectionFilesBase(collectionId: string): Promise<{
       pagesFile: path.join(CONFIG_DIR, `${collectionId}.pages.json`),
       configFile: path.join(CONFIG_DIR, `${collectionId}.config.json`),
       saveDir: "docs",
+      configDir: CONFIG_DIR,
     };
   }
 
@@ -56,6 +70,7 @@ export async function getCollectionFilesBase(collectionId: string): Promise<{
       pagesFile: path.join(CONFIG_DIR, `${collectionId}.pages.json`),
       configFile: path.join(CONFIG_DIR, `${collectionId}.config.json`),
       saveDir: "docs",
+      configDir: ".config",
     };
   }
 
@@ -68,6 +83,7 @@ export async function getCollectionFilesBase(collectionId: string): Promise<{
       collectionConfig.configFile ||
       path.join(CONFIG_DIR, `${collectionId}.config.json`),
     saveDir: collectionConfig.saveDir || "docs",
+    configDir: collectionConfig.configFile || ".config",
   };
 }
 
@@ -91,7 +107,9 @@ export async function getCollectionTopConfig(
 }
 
 export async function saveCollectionConfig(c: CollectionConfig) {
-  await ensureConfigDir();
-  const { configFile } = await getCollectionFilesBase(c.collectionId);
+  const { configFile, configDir } = await getCollectionFilesBase(
+    c.collectionId,
+  );
+  await ensureConfigDir(configDir);
   await fs.writeFile(configFile, `${JSON.stringify(c, null, 2)}\n`, "utf8");
 }

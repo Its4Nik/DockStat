@@ -1,12 +1,12 @@
 # outline-sync — `@dockstat/outline-sync`
 
 Sync Outline (app.getoutline.com) collections ↔ Markdown in your repo.
-Designed for Bun (`bunx`) and multi-collection pipelines.
+Designed for multi-collection pipelines.
 Features:
 
 * Two-way sync (pull / push / timestamp-based sync)
 * Multi-collection support (`--collection` repeatable)
-* Folder-based default storage (each page → `<slug>/index.md`, children inherit folders)
+* Folder-based default storage (each page → `<slug>/README.md`, children inherit folders)
 * Per-collection mapping file for custom paths
 * Config-driven: `configs/outline-sync.json`, `<collection>.config.json`, `<collection>.pages.json`
 * Whitespace/newline-agnostic diffs (formatting-only changes are ignored)
@@ -54,7 +54,7 @@ This creates/updates:
 * `configs/outline-sync.json` — top-level config listing collections
 * `configs/<collection-id>.config.json` — per-collection mapping config
 * `configs/<collection-id>.pages.json` — assembled manifest of pages (used by sync)
-* `docs/...` — markdown files saved folder-based (`<slug>/index.md`)
+* `docs/...` — markdown files saved folder-based (`<slug>/README.md`)
 
 4. Run a dry-run sync:
 
@@ -143,11 +143,11 @@ docs/                           # markdown files (default saveDir)
   "mappings": [
     {
       "match": { "id": "doc-id-123" },
-      "path": "guides/setup/"         // directory mapping → will place doc as guides/setup/index.md
+      "path": "guides/setup/"         // directory mapping → will place doc as guides/setup/README.md
     },
     {
       "match": { "title": "API Reference" },
-      "path": "reference/index.md"    // explicit filename mapping
+      "path": "reference/README.md"    // explicit filename mapping
     }
   ]
 }
@@ -158,8 +158,8 @@ Rules:
 * Match by `id` (preferred) or `title` (exact match).
 * `path` can be:
 
-  * directory-like (`guides/setup/` or any path without `.md`) → page becomes `<path>/index.md` and children inherit that directory,
-  * explicit file (`reference/index.md`) → used verbatim (relative to project root unless you give an absolute path),
+  * directory-like (`guides/setup/` or any path without `.md`) → page becomes `<path>/README.md` and children inherit that directory,
+  * explicit file (`reference/README.md`) → used verbatim (relative to project root unless you give an absolute path),
   * bare filename → placed under parent directory or `saveDir`.
 
 ## `configs/<collection_id>.pages.json` (generated)
@@ -172,12 +172,12 @@ This is a manifest of pages used by the sync engine. Example:
   "pages": [
     {
       "title": "Product",
-      "file": "docs/product/index.md",
+      "file": "docs/product/README.md",
       "id": "doc-product-id",
       "children": [
         {
           "title": "Getting Started",
-          "file": "docs/product/getting-started/index.md",
+          "file": "docs/product/getting-started/README.md",
           "id": "doc-getting-started-id",
           "children": []
         }
@@ -208,7 +208,7 @@ Default behavior: folder-based.
 For each page:
 
 ```
-<saveDir>/<ancestor-slug>/<page-slug>/index.md
+<saveDir>/<ancestor-slug>/<page-slug>/README.md
 ```
 
 Example Outline structure:
@@ -222,9 +222,9 @@ Example Outline structure:
 Results in:
 
 ```
-docs/product/index.md
-docs/product/getting-started/index.md
-docs/product/getting-started/install/index.md
+docs/product/README.md
+docs/product/getting-started/README.md
+docs/product/getting-started/install/README.md
 ```
 
 You can override per-page locations in the `<collection_id>.config.json` mappings (see above).
