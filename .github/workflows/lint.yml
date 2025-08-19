@@ -33,15 +33,6 @@ jobs:
       - name: Prettify code
         run: |
           bun run lint:gh
-          bun run lint:jn
-
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: (!cancelled())
-        with:
-          files: |
-            apps/*/lint-*.xml
-            packages/*/lint-*.xml
 
       - name: Check for changes
         id: check_changes

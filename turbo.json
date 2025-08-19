@@ -12,9 +12,6 @@
     "lint:fix": {
       "outputs": []
     },
-    "lint:jn": {
-      "outputs": []
-    },
     "dev": {
       "cache": false,
       "persistent": true

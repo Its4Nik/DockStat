@@ -18,7 +18,7 @@
     "dev": "bun run --watch index.ts",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
-    "lint:jn": "biome lint --reporter=junit > lint-docker-client.xml",
+    "lint:gh": "turbo run lint -- --reporter=github",
     "check-types": "bunx tsc --noEmit",
     "test": "bun run test.ts",
     "example:basic": "bun run examples/basic-usage.ts",
