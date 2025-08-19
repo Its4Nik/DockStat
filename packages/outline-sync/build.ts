@@ -18,7 +18,7 @@ await Bun.build({
 });
 
 // Make the CLI executable
-chmodSync("./dist/sync.js", 0o755);
+chmodSync("./dist/cli.js", 0o755);
 
 console.info(
   `Done at ${now()} - took ${new Date(now().getTime() - NOW.getTime()).getSeconds()}`,

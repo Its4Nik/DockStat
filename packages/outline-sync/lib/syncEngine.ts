@@ -10,6 +10,7 @@ import {
   normalizeContentIgnoreWhitespace,
   getLocalTimestampMs,
   safeWriteFile,
+  slugifyTitle,
 } from "./utils";
 import {
   fetchDocumentInfo,
@@ -24,7 +25,7 @@ import type { Manifest, PageEntry } from "./types";
 export async function loadPagesManifest(
   collectionId: string,
 ): Promise<Manifest> {
-  const { pagesFile } = getCollectionFilesBase(collectionId);
+  const { pagesFile } = await getCollectionFilesBase(collectionId);
   if (!existsSync(pagesFile)) {
     throw new Error(`${pagesFile} not found. Run init/setup to create it`);
   }
@@ -37,79 +38,108 @@ export async function persistPagesManifest(
   manifest: Manifest,
   dryRun = false,
 ) {
-  const { pagesFile } = getCollectionFilesBase(collectionId);
+  const { pagesFile } = await getCollectionFilesBase(collectionId);
   if (dryRun) {
     console.log(`[dry-run] would persist manifest to ${pagesFile}`);
     return;
   }
   await fs.writeFile(
     pagesFile,
-    JSON.stringify(manifest, null, 2) + "\n",
+    `${JSON.stringify(manifest, null, 2)}\n`,
     "utf8",
   );
 }
 
 /**
  * Resolve destination file path for a document using collection config mappings.
- * The mapping rules are applied by exact id match first, then exact title match.
- * If nothing matches, fall back to manifest file.
+ *
+ * Rules:
+ * - mapping with id exact match wins
+ * - mapping with title exact match next
+ * - mapping.path may be:
+ *    - a file path (ending with `.md`) -> set node.file to that path
+ *    - a directory path (ends with `/` or no extension) -> place node in that dir as index.md
+ * - if no mapping, fall back to inherited folder approach:
+ *    parentDir + slug/index.md
  */
 export function applyMappingsToManifest(
   manifest: Manifest,
   collectionConfig: any,
 ) {
-  // mutate manifest.pages' .file when mapping matches
   const rules = (collectionConfig?.mappings || []) as {
     match: any;
     path: string;
   }[];
 
-  function applyToNode(node: any) {
-    // check id match
-    for (const r of rules) {
-      if (r.match?.id && node.id === r.match.id) {
-        node.file = r.path;
-        break;
-      }
-    }
-    // title match if not already matched
-    for (const r of rules) {
-      if (r.match?.title && node.title === r.match.title) {
-        node.file = r.path;
-        break;
-      }
-    }
-    // ensure children get pathing if path is a directory (ends with /) - inherit
-    const parentDir = path.dirname(node.file || "");
-    if (node.children?.length) {
-      for (const c of node.children) {
-        // if child has a path set already skip; else construct from parentDir + slugified title
-        if (!c.file || c.file === "") {
-          const slug = c.title ? c.title : "untitled";
-          c.file = path.join(parentDir, `${slugifySimple(slug)}.md`);
-        } else {
-          // if child path is relative (no dir) make it inside parentDir
-          if (!path.dirname(c.file) || path.dirname(c.file) === ".") {
-            c.file = path.join(parentDir, c.file);
-          }
-        }
-        applyToNode(c);
-      }
-    }
+  function isDirPath(p: string) {
+    // treat trailing slash as directory OR lack of .md extension as directory
+    if (!p) return false;
+    if (p.endsWith("/") || p.endsWith(path.sep)) return true;
+    return path.extname(p).toLowerCase() !== ".md";
   }
 
-  function slugifySimple(t: string) {
-    return t
-      .toString()
-      .normalize("NFKD")
-      .replace(/\p{M}/gu, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)+/g, "");
+  function applyToNode(node: any, parentDir: string | null) {
+    // try id match then title match
+    let matched = false;
+    for (const r of rules) {
+      if (r.match?.id && node.id === r.match.id) {
+        const p = r.path;
+        if (isDirPath(p)) {
+          const dir = p.endsWith("/") ? p : p;
+          node.file = path.join(dir, "index.md");
+        } else {
+          node.file = p;
+        }
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      for (const r of rules) {
+        if (r.match?.title && node.title === r.match.title) {
+          const p = r.path;
+          if (isDirPath(p)) {
+            const dir = p.endsWith("/") ? p : p;
+            node.file = path.join(dir, "index.md");
+          } else {
+            node.file = p;
+          }
+          matched = true;
+          break;
+        }
+      }
+    }
+
+    // if still not assigned, inherit from parentDir by using slug -> index.md
+    if (!node.file) {
+      const slug = slugifyTitle(node.title || "untitled");
+      const dir = parentDir
+        ? path.join(parentDir, slug)
+        : path.join(collectionConfig?.saveDir || "docs", slug);
+      node.file = path.join(dir, "index.md");
+    } else {
+      // If node.file is a bare filename (no directory) => put under parentDir or saveDir
+      const hasDir = path.dirname(node.file) && path.dirname(node.file) !== ".";
+      if (!hasDir) {
+        const baseDir = parentDir || collectionConfig?.saveDir || "docs";
+        node.file = path.join(baseDir, node.file);
+      } else {
+        // if mapping provided a directory-like path (no .md) we already handled; otherwise path may be relative, keep as-is
+      }
+    }
+
+    // compute this node's dir to pass to children (directory containing index.md)
+    const nodeDir = path.dirname(node.file);
+
+    if (node.children?.length) {
+      for (const c of node.children) {
+        applyToNode(c, nodeDir);
+      }
+    }
   }
 
   for (const p of manifest.pages) {
-    applyToNode(p as any);
+    applyToNode(p as any, null);
   }
   return manifest;
 }
@@ -125,10 +155,6 @@ export function contentsEqualIgnoringWhitespace(a: string, b: string) {
 
 /**
  * Decide whether to pull or push or skip for one page.
- * mode:
- *   - 'pull'  : always prefer remote if different
- *   - 'push'  : always push local
- *   - 'sync'  : timestamp-based: newer wins; if equal do nothing
  */
 export async function syncPage(
   collectionId: string,
@@ -150,7 +176,6 @@ export async function syncPage(
     }
   }
 
-  // fetch remote doc if page.id present
   let remoteDoc: any = null;
   if (page.id) {
     try {
@@ -168,34 +193,18 @@ export async function syncPage(
     ? new Date(remoteDoc.updatedAt).getTime()
     : 0;
 
-  // ensure local file exists for pushes/creates
+  // ensure local file exists when needed - create parent dirs
   if (!fileExists) {
-    if (opts.mode === "pull" || opts.mode === "sync") {
-      if (remoteText != null) {
-        console.log(`[PULL] creating local file ${absPath} from remote`);
-        await safeWriteFile(
-          absPath,
-          remoteText ?? `# ${page.title}\n\n`,
-          opts.dryRun || false,
-        );
-      } else {
-        // create placeholder local file
-        await safeWriteFile(
-          absPath,
-          `# ${page.title}\n\n`,
-          opts.dryRun || false,
-        );
-      }
-    } else if (opts.mode === "push") {
-      // create placeholder so we can push
-      await safeWriteFile(absPath, `# ${page.title}\n\n`, opts.dryRun || false);
+    if (opts.mode === "pull" || opts.mode === "sync" || opts.mode === "push") {
+      const dataToWrite =
+        remoteText != null ? remoteText : `# ${page.title}\n\n`;
+      await safeWriteFile(absPath, dataToWrite, opts.dryRun || false);
     }
   }
 
-  // decide action
-  // if remote missing (page.id null) -> create remote from local
+  // create remote if missing
   if (!page.id) {
-    const content = await fs.readFile(absPath, "utf8");
+    const localContent = await fs.readFile(absPath, "utf8");
     if (opts.dryRun) {
       console.log(
         `[dry-run][CREATE] Would create remote doc for "${page.title}" in collection ${collectionId}`,
@@ -204,7 +213,7 @@ export async function syncPage(
       try {
         const created = await createDocument(
           page.title,
-          content,
+          localContent,
           collectionId,
           parentId,
         );
@@ -217,25 +226,18 @@ export async function syncPage(
       }
     }
   } else {
-    // remote exists
     const localContent = await fs.readFile(absPath, "utf8");
-    //const localNormalized = normalizeContentIgnoreWhitespace(localContent);
-    //const remoteNormalized =
-    //  remoteText != null ? normalizeContentIgnoreWhitespace(remoteText) : null;
-
     if (opts.mode === "pull") {
-      // pull wins
       if (
         remoteText != null &&
         !contentsEqualIgnoringWhitespace(localContent, remoteText)
       ) {
-        console.log(`[PULL] Remote is applied to local for "${page.title}"`);
+        console.log(`[PULL] Remote applied to local for "${page.title}"`);
         await safeWriteFile(absPath, remoteText ?? "", opts.dryRun || false);
       } else {
         console.log(`[SKIP] No change (pull) for "${page.title}"`);
       }
     } else if (opts.mode === "push") {
-      // push local to remote if different
       if (
         remoteText == null ||
         !contentsEqualIgnoringWhitespace(localContent, remoteText)
@@ -258,9 +260,8 @@ export async function syncPage(
         console.log(`[SKIP] No change (push) for "${page.title}"`);
       }
     } else {
-      // sync: use timestamps, but ignore whitespace when determining whether content differs
+      // sync: timestamp-based but skip if only whitespace differs
       if (remoteUpdatedAt > localTs + 500) {
-        // remote newer
         if (!contentsEqualIgnoringWhitespace(localContent, remoteText ?? "")) {
           console.log(
             `[PULL] Remote newer -> overwrite local for "${page.title}"`,
@@ -272,7 +273,6 @@ export async function syncPage(
           );
         }
       } else if (localTs > remoteUpdatedAt + 500) {
-        // local newer
         if (!contentsEqualIgnoringWhitespace(localContent, remoteText ?? "")) {
           console.log(
             `[PUSH] Local newer -> update remote for "${page.title}"`,
@@ -302,7 +302,7 @@ export async function syncPage(
     }
   }
 
-  // children recursion
+  // recurse through children
   const nextParentId = page.id || parentId;
   if (page.children?.length) {
     for (const child of page.children) {
@@ -324,47 +324,63 @@ export async function runSync(opts: {
     `Starting ${mode} for collection ${collectionId} (dryRun=${dryRun})`,
   );
   const pagesManifest = await loadPagesManifest(collectionId);
-  const collCfg = await loadCollectionConfig(collectionId);
-  // apply mappings
-  applyMappingsToManifest(pagesManifest, collCfg || {});
-  // ensure files saved into saveDir if provided
-  const saveDir = collCfg?.saveDir || "docs";
+  const collCfg = (await loadCollectionConfig(collectionId)) || {
+    saveDir: "docs",
+    mappings: [],
+  };
 
-  // create missing directories and normalize page.file to include saveDir when path is relative without directories
-  function normalizePaths(node: any) {
+  // apply mappings (this will set folder-based `file` fields)
+  applyMappingsToManifest(pagesManifest, collCfg);
+
+  // ensure local files/folders exist and normalize any relative filenames
+  async function normalizePaths(node: any, parentDir: string | null) {
+    // if node.file is absent, apply inheritance (applyMappingsToManifest should have set it)
     if (!node.file) {
-      // fallback to saveDir + slug
-      node.file = path.join(
-        saveDir,
-        `${(node.title || "untitled").toLowerCase().replace(/\s+/g, "-")}.md`,
-      );
+      const slug = slugifyTitle(node.title || "untitled");
+      const dir = parentDir
+        ? path.join(parentDir, slug)
+        : path.join(collCfg.saveDir || "docs", slug);
+      node.file = path.join(dir, "index.md");
     } else {
-      // if node.file is a bare filename (no dir) make it under saveDir
-      if (!path.dirname(node.file) || path.dirname(node.file) === ".") {
-        node.file = path.join(saveDir, node.file);
+      // If node.file is bare filename without dir -> put into parentDir or saveDir
+      const dirnameOfFile = path.dirname(node.file);
+      if (!dirnameOfFile || dirnameOfFile === ".") {
+        const baseDir = parentDir || collCfg.saveDir || "docs";
+        node.file = path.join(baseDir, node.file);
       }
     }
-    if (node.children?.length) node.children.forEach(normalizePaths);
-  }
-  pagesManifest.pages.forEach(normalizePaths);
 
-  // recursively sync pages
+    // create directory if needed (not writing file contents here, just ensuring structure)
+    const dirToMake = path.dirname(node.file);
+    if (!dryRun) {
+      try {
+        await fs.mkdir(dirToMake, { recursive: true });
+      } catch {
+        // ignore
+      }
+    } else {
+      console.log(`[dry-run] would ensure directory ${dirToMake}`);
+    }
+
+    const nodeDir = path.dirname(node.file);
+    if (node.children?.length) {
+      for (const c of node.children) {
+        await normalizePaths(c, nodeDir);
+      }
+    }
+  }
+
+  // normalize for each root
+  for (const root of pagesManifest.pages) {
+    await normalizePaths(root as any, null);
+  }
+
+  // run sync recursion
   for (const p of pagesManifest.pages) {
     await syncPage(collectionId, pagesManifest, p, null, { mode, dryRun });
   }
 
-  // persist pages manifest (may have ids updated)
+  // persist manifest (write any created ids back)
   await persistPagesManifest(collectionId, pagesManifest, dryRun);
   console.log("Done.");
-}
-
-/**
- * small export for CLI convenience
- */
-export async function runSyncCli(opts: {
-  collectionId: string;
-  mode: "pull" | "push" | "sync";
-  dryRun?: boolean;
-}) {
-  return runSync(opts);
 }

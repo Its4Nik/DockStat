@@ -1,0 +1,183 @@
+{
+  "collectionId": "b4a5e48f-f103-480b-9f50-8f53f515cab9",
+  "pages": [
+    {
+      "title": "DockStat",
+      "file": "apps/docs/dockstat/index.md",
+      "id": "7dddd764-6483-4f84-96a3-988304e772d3",
+      "children": [
+        {
+          "title": "Packages",
+          "file": "apps/docs/dockstat/packages/index.md",
+          "id": "75d80211-7262-4064-aaa6-2ead20e17f43",
+          "children": [
+            {
+              "title": "@dockstat/sqlite-wrapper",
+              "file": "apps/docs/dockstat/packages/dockstat-sqlite-wrapper/index.md",
+              "id": "56229547-5cee-49ff-be41-1b75e7548809",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "Archive",
+          "file": "apps/docs/dockstat/archive/index.md",
+          "id": "280f8e0a-92e7-4825-8dc0-9a8c886e3d17",
+          "children": [
+            {
+              "title": "Contribute",
+              "file": "apps/docs/dockstat/archive/contribute/index.md",
+              "id": "af6ef73c-2e42-457f-bbf9-00ecb01a3833",
+              "children": []
+            },
+            {
+              "title": "DockStatAPI v3",
+              "file": "apps/docs/dockstat/archive/dockstatapi-v3/index.md",
+              "id": "f33a7ed1-f6f9-48f9-a393-e150feb09d2f",
+              "children": [
+                {
+                  "title": "Background Tasks",
+                  "file": "apps/docs/dockstat/archive/dockstatapi-v3/background-tasks/index.md",
+                  "id": "3e9d366d-9001-4448-bad8-30f5ff4eb784",
+                  "children": []
+                },
+                {
+                  "title": "Web Sockets",
+                  "file": "apps/docs/dockstat/archive/dockstatapi-v3/web-sockets/index.md",
+                  "id": "5a552211-a8fa-44ce-b816-de587a5caa64",
+                  "children": []
+                },
+                {
+                  "title": "Database",
+                  "file": "apps/docs/dockstat/archive/dockstatapi-v3/database/index.md",
+                  "id": "9d7c53bf-b335-4567-a4cc-76388a903020",
+                  "children": []
+                },
+                {
+                  "title": "Plugin Development",
+                  "file": "apps/docs/dockstat/archive/dockstatapi-v3/plugin-development/index.md",
+                  "id": "a2b23dbc-0f70-49ef-ad33-73e8421860c7",
+                  "children": [
+                    {
+                      "title": "Docker Events Endpoint",
+                      "file": "apps/docs/dockstat/archive/dockstatapi-v3/plugin-development/docker-events-endpoint/index.md",
+                      "id": "b0c6295e-8a6b-4404-92a3-09c91d50d6fb",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "title": "Authentication",
+                  "file": "apps/docs/dockstat/archive/dockstatapi-v3/authentication/index.md",
+                  "id": "793112f8-b6d8-4e92-a20d-395995e84486",
+                  "children": []
+                },
+                {
+                  "title": "Stacks",
+                  "file": "apps/docs/dockstat/archive/dockstatapi-v3/stacks/index.md",
+                  "id": "970cdf56-b108-4468-8d8a-4c9b7d71c2c3",
+                  "children": [
+                    {
+                      "title": "Usage",
+                      "file": "apps/docs/dockstat/archive/dockstatapi-v3/stacks/usage/index.md",
+                      "id": "8e733b65-5df2-4d8f-90e1-da8b127b2b27",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "title": "Contributing",
+                  "file": "apps/docs/dockstat/archive/dockstatapi-v3/contributing/index.md",
+                  "id": "19ddc854-ab6c-4d8b-93e7-9f8d2ced1a56",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "title": "DockStatAPI v1",
+              "file": "apps/docs/dockstat/archive/dockstatapi-v1/index.md",
+              "id": "88a86081-76f3-4056-985f-b0800ec2445f",
+              "children": [
+                {
+                  "title": "Integrations",
+                  "file": "apps/docs/dockstat/archive/dockstatapi-v1/integrations/index.md",
+                  "id": "112822b1-97bd-4086-a9ae-87b095bc7c7b",
+                  "children": []
+                },
+                {
+                  "title": "Backend API reference",
+                  "file": "apps/docs/dockstat/archive/dockstatapi-v1/backend-api-reference/index.md",
+                  "id": "0adaab7d-0b53-4d3e-9667-0dd0a0f719fd",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "title": "DockStatAPI v2",
+              "file": "apps/docs/dockstat/archive/dockstatapi-v2/index.md",
+              "id": "9550ca5f-3b09-4e4d-9ea9-634b4cc1553d",
+              "children": [
+                {
+                  "title": "Notifications",
+                  "file": "apps/docs/dockstat/archive/dockstatapi-v2/notifications/index.md",
+                  "id": "fc21da6e-6893-48a8-af83-b308012d6ac9",
+                  "children": []
+                },
+                {
+                  "title": "API reference",
+                  "file": "apps/docs/dockstat/archive/dockstatapi-v2/api-reference/index.md",
+                  "id": "c85f4dd0-6855-418c-854d-062d86adb158",
+                  "children": []
+                },
+                {
+                  "title": "Maintaining functions",
+                  "file": "apps/docs/dockstat/archive/dockstatapi-v2/maintaining-functions/index.md",
+                  "id": "16c1541b-03ec-4444-924b-d585c300b9fd",
+                  "children": []
+                },
+                {
+                  "title": "Developing",
+                  "file": "apps/docs/dockstat/archive/dockstatapi-v2/developing/index.md",
+                  "id": "d11138f5-1891-4498-b897-7365d5f74417",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "title": "DockStat v1",
+              "file": "apps/docs/dockstat/archive/dockstat-v1/index.md",
+              "id": "cd021f56-395e-40fa-a2ea-5183d5718345",
+              "children": [
+                {
+                  "title": "Installation",
+                  "file": "apps/docs/dockstat/archive/dockstat-v1/installation/index.md",
+                  "id": "68fd3e9c-4036-493e-8b34-066cd621a597",
+                  "children": []
+                },
+                {
+                  "title": "Customization",
+                  "file": "apps/docs/dockstat/archive/dockstat-v1/customization/index.md",
+                  "id": "1fe793d1-d8cd-4aec-b679-3922bb022550",
+                  "children": [
+                    {
+                      "title": "Themes",
+                      "file": "apps/docs/dockstat/archive/dockstat-v1/customization/themes/index.md",
+                      "id": "4eb89aa1-a388-4fc2-a583-3fdf2da528d5",
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "DockStat v2",
+              "file": "apps/docs/dockstat/archive/dockstat-v2/index.md",
+              "id": "bd293acd-88bc-4d6a-93ab-d5a063895b48",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

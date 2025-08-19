@@ -28,7 +28,7 @@ async function outlineRequest(
       const json = await res.json();
       if (!res.ok) {
         console.error(
-          `[Outline] ${res.status} ${endpoint} payload=`,
+          `[Outline@${BASE_URL}/api/${endpoint}] ${res.status} ${endpoint} payload=`,
           body,
           "response=",
           json,

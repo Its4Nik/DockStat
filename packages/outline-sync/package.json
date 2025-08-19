@@ -1,19 +1,12 @@
 {
   "name": "@dockstat/outline-sync",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "A simple outline git-sync library",
   "type": "module",
   "main": "./dist/cli.js",
   "types": "./dist/cli.d.ts",
   "bin": {
-    "outline-sync": "./dist/cli.js"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/sync.d.ts",
-      "import": "./dist/sync.js",
-      "default": "./dist/sync.js"
-    }
+    "outline-sync": "./dist/cli"
   },
   "files": [
     "dist/**/*",
