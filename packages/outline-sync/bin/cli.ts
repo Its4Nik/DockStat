@@ -6,7 +6,10 @@
    - Then dynamically import the rest of the app
 */
 
+import { Logger } from "../lib/logger";
+
 const rawArgs = process.argv.slice(2);
+let DEBUG = false;
 
 // parse flags (repeatable --collection)
 const flags: Record<string, string | boolean | string[]> = {};
@@ -15,6 +18,8 @@ for (let i = 0; i < rawArgs.length; i++) {
   const a = rawArgs[i];
   if (a === "--help" || a === "-h") {
     positionals.push("--help");
+  } else if (a === "--verbose") {
+    positionals.push("--verbose");
   } else if (a.startsWith("--collection=") || a.startsWith("--collection:")) {
     const val = a.split(/[:=]/)[1] || "";
     if (!flags.collection) flags.collection = [];
@@ -43,6 +48,14 @@ if (flags["api-key"]) {
 if (flags["base-url"]) {
   process.env.OUTLINE_BASE_URL = String(flags["base-url"]);
 }
+
+if (positionals.includes("--verbose")) {
+  DEBUG = true;
+}
+
+export const logger = new Logger({
+  level: DEBUG ? "DEBUG" : "INFO",
+});
 
 if (positionals.includes("--help") || flags.help || flags.h) {
   console.log(`
@@ -76,32 +89,51 @@ const { listCollectionsPrompt, bootstrapCollection } = await import(
 );
 const { runSync } = await import("../lib/syncEngine");
 
+logger.debug("Parsing positionals");
 const cmd = positionals[0] || "sync";
 const DRY_RUN = Boolean(flags["dry-run"]);
 const collectionsFromCli = (flags.collection as string[] | undefined) ?? [];
+logger.debug(
+  `Parsed cmd=${cmd} DRY_RUN=${DRY_RUN} collectionsFromCli=${collectionsFromCli}`,
+);
 
 try {
+  logger.debug("Loading top config");
   const topConfig = (await loadTopConfig()) || { collections: [] };
+  logger.debug(`Loaded: ${JSON.stringify(topConfig)}`);
 
   const resolveTargets = (): string[] => {
-    if (collectionsFromCli.length > 0) return collectionsFromCli;
+    logger.debug("Resolving targets");
+    if (collectionsFromCli.length > 0) {
+      logger.debug(
+        `Found Collection from cli: ${JSON.stringify(collectionsFromCli)}`,
+      );
+      return collectionsFromCli;
+    }
     if (topConfig.collections && topConfig.collections.length > 0) {
+      logger.debug(
+        `Found collections in Top Config: ${JSON.stringify(topConfig)}`,
+      );
       return topConfig.collections.map((c) => c.id);
     }
+    logger.warn("Couldn't resolve targets");
     return [];
   };
 
   if (cmd === "list-collections") {
+    console.debug("Listing collections");
     await listCollectionsPrompt({ dryRun: DRY_RUN, nonInteractive: false });
     process.exit(0);
   }
 
   if (cmd === "setup") {
+    console.debug("Running setup");
     await listCollectionsPrompt({ dryRun: DRY_RUN, nonInteractive: false });
     process.exit(0);
   }
 
   if (cmd === "init") {
+    console.debug("Running init");
     const targets = resolveTargets();
     if (!targets.length)
       throw new Error(
@@ -117,6 +149,7 @@ try {
   }
 
   if (cmd === "pull" || cmd === "push" || cmd === "sync") {
+    logger.debug("Parsing CMD (pull/push/sync)");
     const targets = resolveTargets();
     if (!targets.length)
       throw new Error(
@@ -124,17 +157,14 @@ try {
       );
     const mode = cmd === "pull" ? "pull" : cmd === "push" ? "push" : "sync";
     for (const collectionId of targets) {
-      console.log(`\n==> Running ${mode} for collection ${collectionId}`);
       await runSync({ collectionId, mode: mode as any, dryRun: DRY_RUN });
     }
     process.exit(0);
   }
 
-  console.error("Unknown command:", cmd);
+  logger.error(`Unknown command: ${cmd}`);
   process.exit(1);
 } catch (err: any) {
   console.error("ERROR:", err?.message || err);
   process.exit(1);
 }
-
-export {};

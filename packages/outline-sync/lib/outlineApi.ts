@@ -6,46 +6,79 @@ const HEADERS = {
   "Content-Type": "application/json",
 };
 
+import { logger } from "../bin/cli";
+
+/**
+ * Make a POST request to the Outline API with simple retry/backoff logic.
+ */
 async function outlineRequest(
   endpoint: string,
   body: any,
   retries = 3,
 ): Promise<any> {
   const url = `${BASE_URL}/api/${endpoint}`;
+
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
+      logger.debug(`Outline request: POST ${url} (attempt ${attempt + 1})`);
+      logger.debug(`Payload (trimmed): ${JSON.stringify(body, null, 2)}`);
+
       const res = await fetch(url, {
         method: "POST",
         headers: HEADERS,
         body: JSON.stringify(body),
       });
+
       if (res.status === 429) {
         const backoff = 1000 * (attempt + 1);
-        console.warn(`Rate limited. backing off ${backoff}ms`);
-        await new Promise((r) => setTimeout(r, backoff));
+        logger.warn(
+          `Rate limited by Outline API. Backing off ${backoff}ms (attempt ${attempt + 1}).`,
+        );
+        await sleep(backoff);
         continue;
       }
-      const json = await res.json();
+
+      let json: any;
+      try {
+        json = await res.json();
+      } catch (parseErr) {
+        logger.error(
+          `Failed to parse JSON response from ${endpoint}: ${parseErr}`,
+        );
+        throw parseErr;
+      }
+
       if (!res.ok) {
-        console.error(
-          `[Outline@${BASE_URL}/api/${endpoint}] ${res.status} ${endpoint} payload=`,
-          body,
-          "response=",
-          json,
+        // Log useful context but avoid leaking sensitive headers/keys
+        logger.error(
+          `[Outline@${BASE_URL}/api/${endpoint}] HTTP ${res.status} - payload=${JSON.stringify(body)} response=${JSON.stringify(json)}`,
         );
         throw new Error(
           `Outline API error ${res.status}: ${JSON.stringify(json)}`,
         );
       }
-      return json;
-    } catch (err) {
-      if (attempt === retries - 1) throw err;
-      console.warn(
-        `Request failed (attempt ${attempt + 1}): ${err}. Retrying...`,
+
+      logger.debug(
+        `Outline response for ${endpoint} (attempt ${attempt + 1}): ${JSON.stringify(json).slice(0, 200)}${JSON.stringify(json).length > 200 ? "..." : ""}`,
       );
-      await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+      return json;
+    } catch (err: any) {
+      // last attempt -> rethrow
+      if (attempt === retries - 1) {
+        logger.error(
+          `Request to Outline failed after ${retries} attempts: ${err?.message ?? err}`,
+        );
+        throw err;
+      }
+      const backoff = 500 * (attempt + 1);
+      logger.warn(
+        `Request failed (attempt ${attempt + 1}): ${err?.message ?? err}. Retrying after ${backoff}ms...`,
+      );
+      await sleep(backoff);
     }
   }
+
+  // Should be unreachable, but keep the error for TypeScript
   throw new Error("outlineRequest: unreachable");
 }
 
@@ -62,6 +95,7 @@ export async function listCollectionsPaged(): Promise<
     if (data.length < limit) break;
     offset += data.length;
   }
+  logger.debug(`listCollectionsPaged: returned ${out.length} collections`);
   return out;
 }
 
@@ -82,11 +116,15 @@ export async function listDocumentsInCollection(
     if (data.length < limit) break;
     offset += data.length;
   }
+  logger.debug(
+    `listDocumentsInCollection(${collectionId}): returned ${out.length} documents`,
+  );
   return out;
 }
 
 export async function fetchDocumentInfo(documentId: string) {
   const json = await outlineRequest("documents.info", { id: documentId });
+  logger.debug(`fetchDocumentInfo(${documentId}) -> ${json ? "ok" : "null"}`);
   return json.data ?? null;
 }
 
@@ -104,6 +142,9 @@ export async function createDocument(
     publish: true,
   };
   const json = await outlineRequest("documents.create", payload);
+  logger.info(
+    `Created document "${title}" in collection ${collectionId} (id=${json?.id ?? "unknown"})`,
+  );
   return json.data;
 }
 
@@ -115,5 +156,6 @@ export async function updateDocument(
   const payload: any = { id, text, publish: true };
   if (title) payload.title = title;
   const json = await outlineRequest("documents.update", payload);
+  logger.info(`Updated document id=${id}${title ? ` title="${title}"` : ""}`);
   return json.data;
 }

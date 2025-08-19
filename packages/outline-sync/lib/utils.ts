@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { logger } from "../bin/cli";
 
 /**
  * Remove ALL whitespace (space, tab, newline, CR) for comparison.
@@ -33,21 +34,37 @@ export function getGitTimestampMs(filePath: string): number | null {
         encoding: "utf8",
       },
     );
-    if (out.status !== 0) return null;
+    if (out.status !== 0) {
+      logger.debug(
+        `git log returned non-zero status for ${resolved}: ${out.status}`,
+      );
+      return null;
+    }
     const txt = (out.stdout || "").trim();
-    if (!txt) return null;
+    if (!txt) {
+      logger.debug(`git log returned no output for ${resolved}`);
+      return null;
+    }
     const sec = Number(txt);
-    if (Number.isNaN(sec)) return null;
+    if (Number.isNaN(sec)) {
+      logger.debug(`git log output not a number for ${resolved}: "${txt}"`);
+      return null;
+    }
     return sec * 1000;
-  } catch {
+  } catch (err) {
+    logger.debug(`getGitTimestampMs error for ${filePath}: ${err}`);
     return null;
   }
 }
 
 export async function getLocalTimestampMs(filePath: string): Promise<number> {
   const gitTs = getGitTimestampMs(filePath);
-  if (gitTs) return gitTs;
+  if (gitTs) {
+    logger.debug(`Using git timestamp for ${filePath}: ${gitTs}`);
+    return gitTs;
+  }
   const st = await fs.stat(filePath);
+  logger.debug(`Using FS mtime for ${filePath}: ${st.mtimeMs}`);
   return st.mtimeMs;
 }
 
@@ -59,18 +76,44 @@ export async function safeWriteFile(
   if (existsSync(filePath)) {
     const bak = `${filePath}.outline-sync.bak.${Date.now()}`;
     if (!dryRun) {
-      await fs.copyFile(filePath, bak);
+      try {
+        await fs.copyFile(filePath, bak);
+        logger.info(`Backed up existing file to ${bak}`);
+      } catch (err) {
+        logger.warn(`Failed to back up ${filePath} to ${bak}: ${err}`);
+      }
+    } else {
+      logger.debug(
+        `[dry-run] would backup existing file ${filePath} -> ${bak}`,
+      );
     }
-    console.log(`Backed up existing file to ${bak}`);
   } else {
     if (!dryRun) {
-      await fs.mkdir(path.dirname(filePath), { recursive: true });
+      try {
+        await fs.mkdir(path.dirname(filePath), { recursive: true });
+        logger.debug(`Ensured directory ${path.dirname(filePath)}`);
+      } catch (err) {
+        logger.warn(
+          `Failed to create directory ${path.dirname(filePath)}: ${err}`,
+        );
+      }
+    } else {
+      logger.debug(
+        `[dry-run] would ensure directory ${path.dirname(filePath)}`,
+      );
     }
   }
+
   if (!dryRun) {
-    await fs.writeFile(filePath, content, "utf8");
+    try {
+      await fs.writeFile(filePath, content, "utf8");
+      logger.info(`Wrote file ${filePath} (${content.length} bytes)`);
+    } catch (err) {
+      logger.error(`Failed to write file ${filePath}: ${err}`);
+      throw err;
+    }
   } else {
-    console.log(
+    logger.debug(
       `[dry-run] would write file ${filePath} (${content.length} bytes)`,
     );
   }

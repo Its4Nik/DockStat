@@ -12,6 +12,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { slugifyTitle } from "./utils";
 import type { PageEntry, Manifest } from "./types";
+import { logger } from "../bin/cli";
 
 /**
  * Prompt helper (simple): prints numbered list and reads a line from stdin.
@@ -22,49 +23,68 @@ export async function listCollectionsPrompt(opts: {
 }) {
   const cols = await listCollectionsPaged();
   if (!cols.length) {
-    console.log("No collections found for this API key.");
+    logger.warn("No collections found for this API key.");
     return;
   }
-  console.log("Collections:");
-  cols.forEach((c, i) => console.log(`${i + 1}) ${c.id}\t${c.name}`));
-  if (opts.nonInteractive) return;
+  console.info("Collections:");
+  cols.forEach((c, i) => console.info(`${i + 1}) ${c.id}\t${c.name}`));
+  if (opts.nonInteractive) {
+    return;
+  }
+
   const selection = await question(
     "Select a collection by number (or press Enter to cancel): ",
   );
   const idx = Number(selection.trim());
   if (!idx || idx < 1 || idx > cols.length) {
-    console.log("Cancelled.");
+    logger.warn("Cancelled collection selection.");
     return;
   }
+
   const chosen = cols[idx - 1];
-  console.log(`You chose: ${chosen.name} (${chosen.id})`);
-  await ensureConfigDirs(await loadTopConfig());
+  logger.info(`You chose: ${chosen.name} (${chosen.id})`);
+
+  await ensureConfigDirs((await loadTopConfig()) || { collections: [] });
   const top = (await loadTopConfig()) || { collections: [] };
   const exists = top.collections.find((c) => c.id === chosen.id);
-  let configDir = await question(
-    "Enter a base folder path for the collections config files (or press enter for default `.config`): ",
-  );
+
+  let configDir = (
+    await question(
+      "Enter a base folder path for the collections config files (or press enter for default `.config`): ",
+    )
+  ).replaceAll("\n", "");
 
   if (configDir.trim().length <= 1) {
     configDir = ".config";
+    logger.debug("Using default configDir `.config`");
+  }
+
+  let saveDir = (
+    await question(
+      "Enter a base folder path for the collections markdown files (or press enter for default `docs`): ",
+    )
+  ).replaceAll("\n", "");
+
+  if (saveDir.trim().length <= 1) {
+    saveDir = "docs";
+    logger.debug("Using default saveDir `docs`");
   }
 
   if (!exists) {
-    const defaultSaveDir = "docs";
     top.collections.unshift({
       id: chosen.id,
       name: chosen.name,
       configDir: configDir,
-      saveDir: defaultSaveDir,
-      pagesFile: path.join("configs", `${chosen.id}.pages.json`),
-      configFile: path.join("configs", `${chosen.id}.config.json`),
+      saveDir: saveDir,
+      pagesFile: path.join(configDir, `${chosen.id}.pages.json`),
+      configFile: path.join(configDir, `${chosen.id}.config.json`),
     });
     await saveTopConfig(top);
-    console.log(
+    logger.info(
       `Added collection to ${path.join("configs", "outline-sync.json")}`,
     );
   } else {
-    console.log("Collection already configured.");
+    logger.warn("Collection already configured.");
   }
 }
 
@@ -85,19 +105,21 @@ export function question(promptText: string): Promise<string> {
 
 /**
  * Bootstrap: fetch documents from collection, create pages.json and write markdown files.
- * Now: folder-based structure by inheritance. Each page gets a directory named from the slug,
- * and the page itself is saved as `README.md` inside that directory. Children become subdirectories.
  */
 export async function bootstrapCollection(opts: {
   collectionId: string;
   dryRun?: boolean;
 }) {
   const { collectionId, dryRun = false } = opts;
-  console.log(`Bootstrapping collection ${collectionId} (dryRun=${dryRun})...`);
-  const docs = await listDocumentsInCollection(collectionId);
-  console.log(`Fetched ${docs.length} documents from Outline.`);
+  logger.info(`Bootstrapping collection ${collectionId} (dryRun=${dryRun})...`);
 
-  // 1) build flat map of nodes with raw
+  const docs = await listDocumentsInCollection(collectionId);
+  logger.info(`Fetched ${docs.length} documents from Outline.`);
+  logger.debug(
+    `First 3 documents: ${JSON.stringify(docs.slice(0, 3), null, 2)}`,
+  );
+
+  // 1) build flat map of nodes
   const map = new Map<string, PageEntry & { raw?: any }>();
   for (const d of docs) {
     map.set(d.id, {
@@ -109,24 +131,21 @@ export async function bootstrapCollection(opts: {
     });
   }
 
-  // 2) attach children using parentDocumentId or parentId
+  // 2) attach children
   const roots: (PageEntry & { raw?: any })[] = [];
   for (const node of map.values()) {
     const raw = node.raw || {};
     const parentId = raw.parentDocumentId ?? raw.parentId ?? null;
     if (parentId && map.has(parentId)) {
-      const parent = map.get(parentId);
-      parent.children.push(node);
+      map.get(parentId).children.push(node);
     } else {
       roots.push(node);
     }
   }
+  logger.debug(`Built document tree with ${roots.length} root(s)`);
 
-  // 3) assign folder-based file paths recursively
-  // pattern: <saveDir>/<ancestor-slug-1>/<ancestor-slug-2>/<this-slug>/README.md
-  // Get the configured saveDir
+  // 3) assign paths
   const { saveDir } = await getCollectionFilesBase(collectionId);
-
   function assignPaths(node: any, parentDir: string) {
     const slug = slugifyTitle(node.title || "untitled");
     const dir = path.join(parentDir, slug);
@@ -138,26 +157,26 @@ export async function bootstrapCollection(opts: {
       }
     }
   }
-
   for (const r of roots) {
     assignPaths(r, saveDir);
   }
 
-  // 4) write files to disk
+  // 4) write files
   for (const n of map.values()) {
     const filePath = n.file;
     const content = n.raw?.text ?? `# ${n.title}\n\n`;
     if (!dryRun) {
       await fs.mkdir(path.dirname(filePath), { recursive: true });
       await fs.writeFile(filePath, content, "utf8");
+      logger.debug(`Wrote file: ${filePath}`);
     } else {
-      console.log(
+      logger.debug(
         `[dry-run] would write ${filePath} (${content.length} bytes)`,
       );
     }
   }
 
-  // 5) strip raw and build manifest
+  // 5) build manifest
   function strip(n: any): PageEntry {
     return {
       title: n.title,
@@ -168,7 +187,7 @@ export async function bootstrapCollection(opts: {
   }
   const manifest: Manifest = { collectionId, pages: roots.map(strip) };
 
-  // save manifest and config files
+  // save manifest/config
   const {
     pagesFile,
     configFile,
@@ -182,13 +201,17 @@ export async function bootstrapCollection(opts: {
       `${JSON.stringify(manifest, null, 2)}\n`,
       "utf8",
     );
+    logger.info(`Saved manifest: ${pagesFile}`);
+
     if (!existsSync(configFile)) {
       await fs.writeFile(
         configFile,
         `${JSON.stringify({ collectionId, saveDir: configuredSaveDir, mappings: [] }, null, 2)}\n`,
         "utf8",
       );
+      logger.info(`Created new config: ${configFile}`);
     }
+
     const top = (await loadTopConfig()) || { collections: [] };
     const existsTop = top.collections.find((c) => c.id === collectionId);
     if (!existsTop) {
@@ -199,11 +222,13 @@ export async function bootstrapCollection(opts: {
         configFile,
       });
       await saveTopConfig(top);
+      logger.debug(`Updated top config with collection ${collectionId}`);
     }
   } else {
-    console.log(
+    logger.debug(
       `[dry-run] would save pages to ${pagesFile} and config to ${configFile}`,
     );
   }
-  console.log(`Bootstrap complete: wrote ${pagesFile} and ${configFile}`);
+
+  logger.info(`Bootstrap complete: wrote ${pagesFile} and ${configFile}`);
 }

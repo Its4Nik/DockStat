@@ -18,6 +18,7 @@ import {
   createDocument,
 } from "./outlineApi";
 import type { Manifest, PageEntry } from "./types";
+import { logger } from "../bin/cli";
 
 /**
  * Load pages.json for a collection (if missing, error/ask to init)
@@ -27,9 +28,11 @@ export async function loadPagesManifest(
 ): Promise<Manifest> {
   const { pagesFile } = await getCollectionFilesBase(collectionId);
   if (!existsSync(pagesFile)) {
+    logger.error(`${pagesFile} not found. Run init/setup to create it`);
     throw new Error(`${pagesFile} not found. Run init/setup to create it`);
   }
   const raw = await fs.readFile(pagesFile, "utf8");
+  logger.debug(`Loaded pages manifest from ${pagesFile} (${raw.length} bytes)`);
   return JSON.parse(raw) as Manifest;
 }
 
@@ -40,7 +43,7 @@ export async function persistPagesManifest(
 ) {
   const { pagesFile } = await getCollectionFilesBase(collectionId);
   if (dryRun) {
-    console.log(`[dry-run] would persist manifest to ${pagesFile}`);
+    logger.debug(`[dry-run] would persist manifest to ${pagesFile}`);
     return;
   }
   await fs.writeFile(
@@ -48,6 +51,7 @@ export async function persistPagesManifest(
     `${JSON.stringify(manifest, null, 2)}\n`,
     "utf8",
   );
+  logger.info(`Persisted manifest to ${pagesFile}`);
 }
 
 /**
@@ -91,6 +95,9 @@ export function applyMappingsToManifest(
           node.file = p;
         }
         matched = true;
+        logger.debug(
+          `Mapping applied by id for "${node.title}" -> ${node.file}`,
+        );
         break;
       }
     }
@@ -105,6 +112,9 @@ export function applyMappingsToManifest(
             node.file = p;
           }
           matched = true;
+          logger.debug(
+            `Mapping applied by title for "${node.title}" -> ${node.file}`,
+          );
           break;
         }
       }
@@ -117,14 +127,19 @@ export function applyMappingsToManifest(
         ? path.join(parentDir, slug)
         : path.join(collectionConfig?.saveDir || "docs", slug);
       node.file = path.join(dir, "README.md");
+      logger.debug(`Inherited path for "${node.title}" -> ${node.file}`);
     } else {
       // If node.file is a bare filename (no directory) => put under parentDir or saveDir
       const hasDir = path.dirname(node.file) && path.dirname(node.file) !== ".";
       if (!hasDir) {
         const baseDir = parentDir || collectionConfig?.saveDir || "docs";
         node.file = path.join(baseDir, node.file);
+        logger.debug(
+          `Normalized bare filename for "${node.title}" -> ${node.file}`,
+        );
       } else {
-        // if mapping provided a directory-like path (no .md) we already handled; otherwise path may be relative, keep as-is
+        // mapping may be relative; keep as-is
+        logger.debug(`Using mapped path for "${node.title}" -> ${node.file}`);
       }
     }
 
@@ -141,6 +156,7 @@ export function applyMappingsToManifest(
   for (const p of manifest.pages) {
     applyToNode(p as any, null);
   }
+  logger.debug(`Applied mappings to manifest (rules=${rules.length})`);
   return manifest;
 }
 
@@ -171,7 +187,8 @@ export async function syncPage(
   if (fileExists) {
     try {
       localTs = await getLocalTimestampMs(absPath);
-    } catch {
+    } catch (err) {
+      logger.warn(`Failed to get local timestamp for ${absPath}: ${err}`);
       localTs = 0;
     }
   }
@@ -181,7 +198,7 @@ export async function syncPage(
     try {
       remoteDoc = await fetchDocumentInfo(page.id);
     } catch (err) {
-      console.warn(
+      logger.warn(
         `Failed to fetch remote info for ${page.title} (${page.id}): ${err}`,
       );
       remoteDoc = null;
@@ -193,12 +210,19 @@ export async function syncPage(
     ? new Date(remoteDoc.updatedAt).getTime()
     : 0;
 
+  logger.debug(
+    `syncPage("${page.title}") localExists=${fileExists} localTs=${localTs} remoteExists=${!!remoteDoc} remoteUpdatedAt=${remoteUpdatedAt}`,
+  );
+
   // ensure local file exists when needed - create parent dirs
   if (!fileExists) {
     if (opts.mode === "pull" || opts.mode === "sync" || opts.mode === "push") {
       const dataToWrite =
         remoteText != null ? remoteText : `# ${page.title}\n\n`;
       await safeWriteFile(absPath, dataToWrite, opts.dryRun || false);
+      logger.info(
+        `[INIT] Ensured local file for "${page.title}" -> ${absPath}`,
+      );
     }
   }
 
@@ -206,7 +230,7 @@ export async function syncPage(
   if (!page.id) {
     const localContent = await fs.readFile(absPath, "utf8");
     if (opts.dryRun) {
-      console.log(
+      logger.info(
         `[dry-run][CREATE] Would create remote doc for "${page.title}" in collection ${collectionId}`,
       );
     } else {
@@ -218,9 +242,9 @@ export async function syncPage(
           parentId,
         );
         page.id = created?.id ?? page.id;
-        console.log(`[CREATE] Created remote "${page.title}" id=${page.id}`);
+        logger.info(`[CREATE] Created remote "${page.title}" id=${page.id}`);
       } catch (err) {
-        console.error(
+        logger.error(
           `[CREATE] Failed to create remote for ${page.title}: ${err}`,
         );
       }
@@ -232,10 +256,10 @@ export async function syncPage(
         remoteText != null &&
         !contentsEqualIgnoringWhitespace(localContent, remoteText)
       ) {
-        console.log(`[PULL] Remote applied to local for "${page.title}"`);
+        logger.info(`[PULL] Remote applied to local for "${page.title}"`);
         await safeWriteFile(absPath, remoteText ?? "", opts.dryRun || false);
       } else {
-        console.log(`[SKIP] No change (pull) for "${page.title}"`);
+        logger.debug(`[SKIP] No change (pull) for "${page.title}"`);
       }
     } else if (opts.mode === "push") {
       if (
@@ -243,61 +267,61 @@ export async function syncPage(
         !contentsEqualIgnoringWhitespace(localContent, remoteText)
       ) {
         if (opts.dryRun) {
-          console.log(
+          logger.info(
             `[dry-run][PUSH] Would update remote "${page.title}" id=${page.id}`,
           );
         } else {
           try {
             await updateDocument(page.id, page.title, localContent);
-            console.log(`[PUSH] Updated remote "${page.title}" id=${page.id}`);
+            logger.info(`[PUSH] Updated remote "${page.title}" id=${page.id}`);
           } catch (err) {
-            console.error(
+            logger.error(
               `[PUSH] Failed to update remote for ${page.title}: ${err}`,
             );
           }
         }
       } else {
-        console.log(`[SKIP] No change (push) for "${page.title}"`);
+        logger.debug(`[SKIP] No change (push) for "${page.title}"`);
       }
     } else {
       // sync: timestamp-based but skip if only whitespace differs
       if (remoteUpdatedAt > localTs + 500) {
         if (!contentsEqualIgnoringWhitespace(localContent, remoteText ?? "")) {
-          console.log(
+          logger.info(
             `[PULL] Remote newer -> overwrite local for "${page.title}"`,
           );
           await safeWriteFile(absPath, remoteText ?? "", opts.dryRun || false);
         } else {
-          console.log(
+          logger.debug(
             `[SKIP] equal after normalizing (remote newer timestamp but content same) "${page.title}"`,
           );
         }
       } else if (localTs > remoteUpdatedAt + 500) {
         if (!contentsEqualIgnoringWhitespace(localContent, remoteText ?? "")) {
-          console.log(
+          logger.info(
             `[PUSH] Local newer -> update remote for "${page.title}"`,
           );
           if (opts.dryRun) {
-            console.log(`[dry-run] would update remote ${page.title}`);
+            logger.info(`[dry-run] would update remote ${page.title}`);
           } else {
             try {
               await updateDocument(page.id, page.title, localContent);
-              console.log(
+              logger.info(
                 `[PUSH] Updated remote "${page.title}" id=${page.id}`,
               );
             } catch (err) {
-              console.error(
+              logger.error(
                 `[PUSH] Failed to update remote for ${page.title}: ${err}`,
               );
             }
           }
         } else {
-          console.log(
+          logger.debug(
             `[SKIP] equal after normalizing (local newer timestamp but content same) "${page.title}"`,
           );
         }
       } else {
-        console.log(`[SKIP] No changes for "${page.title}"`);
+        logger.debug(`[SKIP] No changes for "${page.title}"`);
       }
     }
   }
@@ -320,9 +344,10 @@ export async function runSync(opts: {
   dryRun?: boolean;
 }) {
   const { collectionId, mode, dryRun = false } = opts;
-  console.log(
+  logger.info(
     `Starting ${mode} for collection ${collectionId} (dryRun=${dryRun})`,
   );
+
   const pagesManifest = await loadPagesManifest(collectionId);
   const collCfg = (await loadCollectionConfig(collectionId)) || {
     saveDir: "docs",
@@ -355,11 +380,12 @@ export async function runSync(opts: {
     if (!dryRun) {
       try {
         await fs.mkdir(dirToMake, { recursive: true });
-      } catch {
-        // ignore
+        logger.debug(`Ensured directory ${dirToMake}`);
+      } catch (err) {
+        logger.warn(`Failed to ensure directory ${dirToMake}: ${err}`);
       }
     } else {
-      console.log(`[dry-run] would ensure directory ${dirToMake}`);
+      logger.debug(`[dry-run] would ensure directory ${dirToMake}`);
     }
 
     const nodeDir = path.dirname(node.file);
@@ -374,6 +400,7 @@ export async function runSync(opts: {
   for (const root of pagesManifest.pages) {
     await normalizePaths(root as any, null);
   }
+  logger.debug("Completed path normalization for manifest");
 
   // run sync recursion
   for (const p of pagesManifest.pages) {
@@ -382,5 +409,5 @@ export async function runSync(opts: {
 
   // persist manifest (write any created ids back)
   await persistPagesManifest(collectionId, pagesManifest, dryRun);
-  console.log("Done.");
+  logger.info("Done.");
 }
