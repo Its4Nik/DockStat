@@ -47,6 +47,7 @@
   },
   "dependencies": {
     "@dockstat/typings": "workspace:*",
+    "@dockstat/sqlite-wrapper": "workspace:*",
     "dockerode": "^4.0.7"
   }
 }
