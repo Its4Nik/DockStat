@@ -1,36 +1,38 @@
 {
   "name": "@dockstat/theme-handler",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "Theme management system with React context and CSS variable parsing",
-  "main": "index.ts",
-  "module": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "./dist/src/index.js",
+  "module": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "type": "module",
   "private": false,
+  "files": ["dist/**/*", "README.md"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Its4Nik/DockStat",
+    "directory": "packages/theme-handler"
+  },
+  "homepage": "https://outline.itsnik.de/s/9d88c471-373e-4ef2-a955-b1058eb7dc99/doc/dockstattheme-handler-zqe3ITb7jc",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "import": "./src/index.ts"
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
     },
     "./core": {
-      "types": "./index.ts",
-      "import": "./index.ts"
-    },
-    "./example": {
-      "types": "./example/ExampleApp.tsx",
-      "import": "./example/ExampleApp.tsx"
+      "types": "./dist/index.js",
+      "import": "./dist/index.d.ts"
     }
   },
-  "files": ["index.ts", "src/**/*", "example/**/*", "README.md"],
   "scripts": {
     "dev": "bun run index.ts",
     "example": "bun run example/ExampleApp.tsx",
     "example:simple": "bun run example/simple-example.tsx",
     "test": "bun run test.ts",
-    "build": "bun build index.ts",
+    "build": "bun run build.ts",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",
-    "prepublishOnly": "npm run clean && npm run build"
+    "prepublishOnly": "bun run clean && bun run build"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -46,5 +48,5 @@
     "react-dom": "^18.0.0",
     "typescript": "^5"
   },
-  "keywords": ["theme", "css", "react", "context", "styling", "dockstat"]
+  "keywords": ["theme", "css", "react", "styling"]
 }

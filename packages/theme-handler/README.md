@@ -148,6 +148,7 @@ themeHandler.addTheme(myTheme);
 
 ## Documentation
 
+Please see the [Wiki](https://outline.itsnik.de/s/9d88c471-373e-4ef2-a955-b1058eb7dc99/doc/dockstattheme-handler-zqe3ITb7jc) for more info.
 
 ## License
 

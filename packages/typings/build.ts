@@ -1,22 +1,19 @@
-import dts from "bun-plugin-dts";
+import dts from 'bun-plugin-dts'
 
-function now() {
-  return new Date();
-}
+const start = Date.now()
 
-const NOW = now();
-
-console.info(`Start at ${NOW}`);
+console.info(`Start at ${new Date(start).toISOString()}`)
 
 await Bun.build({
-  entrypoints: ["./src/index.ts"],
-  outdir: "./dist",
+  entrypoints: ['./src/index.ts'],
+  outdir: './dist',
   plugins: [dts()],
   minify: true,
-  target: "bun",
-  sourcemap: "inline",
-});
+  target: 'bun',
+  sourcemap: 'inline',
+})
 
-console.info(
-  `Done at ${now()} - took ${new Date(now().getTime() - NOW.getTime()).getMilliseconds()}ms`,
-);
+const end = Date.now()
+const duration = end - start
+
+console.info(`Done at ${new Date(end).toISOString()} - took ${duration}ms`)
