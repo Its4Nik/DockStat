@@ -1,5 +1,3 @@
-import type { THEME_config } from './themes'
-
 type DB_target_host = {
   host: string // IP or DNS
   secure: boolean // SSL yes or no
