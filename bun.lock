@@ -97,16 +97,20 @@
       },
     },
     "packages/theme-handler": {
-      "name": "theme-handler",
+      "name": "@dockstat/theme-handler",
+      "version": "1.0.4",
       "dependencies": {
         "@dockstat/sqlite-wrapper": "workspace:*",
         "@dockstat/typings": "workspace:*",
-        "react-router": "^7.8.2",
       },
       "devDependencies": {
         "@types/bun": "latest",
+        "@types/react": "^19.1.1",
+        "@types/react-dom": "^19.1.1",
       },
       "peerDependencies": {
+        "react": "^19.1.1",
+        "react-dom": "^19.1.1",
         "typescript": "^5",
       },
     },
@@ -208,6 +212,8 @@
     "@dockstat/outline-sync": ["@dockstat/outline-sync@workspace:packages/outline-sync"],
 
     "@dockstat/sqlite-wrapper": ["@dockstat/sqlite-wrapper@workspace:packages/sqlite-wrapper"],
+
+    "@dockstat/theme-handler": ["@dockstat/theme-handler@workspace:packages/theme-handler"],
 
     "@dockstat/typings": ["@dockstat/typings@workspace:packages/typings"],
 
@@ -847,8 +853,6 @@
 
     "tar-stream": ["tar-stream@2.2.0", "", { "dependencies": { "bl": "^4.0.3", "end-of-stream": "^1.4.1", "fs-constants": "^1.0.0", "inherits": "^2.0.3", "readable-stream": "^3.1.1" } }, "sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ=="],
 
-    "theme-handler": ["theme-handler@workspace:packages/theme-handler"],
-
     "tinyglobby": ["tinyglobby@0.2.14", "", { "dependencies": { "fdir": "^6.4.4", "picomatch": "^4.0.2" } }, "sha512-tX5e7OM1HnYr2+a2C/4V0htOcSQcoSTH9KgJnVvNm5zm/cyEWKJ7j7YutsH9CxMdtOkkLFy2AHrMci9IM8IPZQ=="],
 
     "toidentifier": ["toidentifier@1.0.1", "", {}, "sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA=="],
@@ -990,8 +994,6 @@
     "send/encodeurl": ["encodeurl@1.0.2", "", {}, "sha512-TPJXq8JqFaVYm2CWmPvnP2Iyo4ZSM7/QKcSmuMLDObfpH5fi7RUGmd/rTDf+rut/saiDiQEeVTNgAmJEdAOx0w=="],
 
     "tar/chownr": ["chownr@3.0.0", "", {}, "sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g=="],
-
-    "theme-handler/react-router": ["react-router@7.8.2", "", { "dependencies": { "cookie": "^1.0.1", "set-cookie-parser": "^2.6.0" }, "peerDependencies": { "react": ">=18", "react-dom": ">=18" }, "optionalPeers": ["react-dom"] }, "sha512-7M2fR1JbIZ/jFWqelpvSZx+7vd7UlBTfdZqf6OSdF9g6+sfdqJDAWcak6ervbHph200ePlu+7G8LdoiC3ReyAQ=="],
 
     "vite-node/pathe": ["pathe@2.0.3", "", {}, "sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w=="],
 
