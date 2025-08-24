@@ -29,7 +29,8 @@
     "test": "bun run test.ts",
     "build": "bun build index.ts",
     "clean": "rm -rf dist",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "prepublishOnly": "npm run clean && npm run build"
   },
   "devDependencies": {
     "@types/bun": "latest",
