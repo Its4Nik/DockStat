@@ -170,15 +170,27 @@
           "id": "75d80211-7262-4064-aaa6-2ead20e17f43",
           "children": [
             {
-              "title": "@dockstat/outline-sync",
-              "file": "apps/docs/dockstat/packages/dockstat-outline-sync/README.md",
-              "id": "b931ba3f-2f39-4414-9c80-fb1ebbe92771",
+              "title": "@dockstat/theme-handler",
+              "file": "apps/docs/dockstat/packages/dockstat-theme-handler/README.md",
+              "id": "b4148ac3-5b60-4223-aa0d-48111649b91f",
               "children": []
             },
             {
               "title": "@dockstat/sqlite-wrapper",
               "file": "apps/docs/dockstat/packages/dockstat-sqlite-wrapper/README.md",
               "id": "56229547-5cee-49ff-be41-1b75e7548809",
+              "children": []
+            },
+            {
+              "title": "[PRIVATE] @dockstat/db Features",
+              "file": "apps/docs/dockstat/packages/private-dockstat-db-features/README.md",
+              "id": "c87977e4-e0f6-49ae-9cf5-e979c86605b1",
+              "children": []
+            },
+            {
+              "title": "@dockstat/outline-sync",
+              "file": "apps/docs/dockstat/packages/dockstat-outline-sync/README.md",
+              "id": "b931ba3f-2f39-4414-9c80-fb1ebbe92771",
               "children": []
             }
           ]

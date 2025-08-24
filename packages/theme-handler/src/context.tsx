@@ -1,8 +1,41 @@
 import type { THEME } from '@dockstat/typings'
-import { useState } from 'react'
-import { Outlet } from 'react-router'
+import React, { createContext, useContext } from 'react'
 
-export function ThemeContextOutlet() {
-  const [theme, setTheme] = useState<THEME.THEME_config>()
-  return <Outlet context={[theme, setTheme]} />
+export interface ThemeContextType {
+  // Current theme data
+  theme: THEME.THEME_config | null
+  themeName: string
+  themeVars: Record<string, string>
+
+  // Theme management
+  setThemeName: (name: string) => void
+  refreshTheme: () => Promise<void>
+
+  // Loading states
+  isLoading: boolean
+  isThemeLoaded: boolean
+  error: string | null
+
+  // Available themes
+  availableThemes: string[]
+}
+
+export const ThemeContext = createContext<ThemeContextType>({
+  theme: null,
+  themeName: 'default',
+  themeVars: {},
+  setThemeName: () => {},
+  refreshTheme: async () => {},
+  isLoading: false,
+  isThemeLoaded: false,
+  error: null,
+  availableThemes: [],
+})
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext)
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider')
+  }
+  return context
 }

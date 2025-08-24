@@ -38,4 +38,31 @@ export default class ThemeHandler {
     this.theme_table.where({ active: 1 }).update({ active: 0 })
     return this.theme_table.where({ name: name }).update({ active: 1 })
   }
+
+  public getAllThemes() {
+    return this.theme_table.select(['*']).all()
+  }
+
+  public getThemeNames() {
+    return this.theme_table
+      .select(['name'])
+      .all()
+      .map((theme) => theme.name)
+  }
+
+  public deleteTheme(name: string) {
+    return this.theme_table.where({ name: name }).delete()
+  }
+
+  public updateTheme(name: string, updates: Partial<THEME.THEME_config>) {
+    return this.theme_table.where({ name: name }).update(updates)
+  }
+
+  public themeExists(name: string): boolean {
+    const theme = this.theme_table
+      .select(['name'])
+      .where({ name: name })
+      .first()
+    return !!theme
+  }
 }

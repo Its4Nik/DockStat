@@ -1,17 +1,49 @@
 {
-  "name": "theme-handler",
-  "module": "index.ts",
+  "name": "@dockstat/theme-handler",
+  "version": "1.0.0",
+  "description": "Theme management system with React context and CSS variable parsing",
+  "main": "index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./core": {
+      "types": "./index.ts",
+      "import": "./index.ts"
+    },
+    "./example": {
+      "types": "./example/ExampleApp.tsx",
+      "import": "./example/ExampleApp.tsx"
+    }
+  },
+  "files": ["index.ts", "src/**/*", "example/**/*", "README.md"],
+  "scripts": {
+    "dev": "bun run index.ts",
+    "example": "bun run example/ExampleApp.tsx",
+    "example:simple": "bun run example/simple-example.tsx",
+    "test": "bun run test.ts",
+    "build": "bun build index.ts",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0"
   },
   "dependencies": {
     "@dockstat/sqlite-wrapper": "workspace:*",
-    "@dockstat/typings": "workspace:*",
-    "react-router": "^7.8.2"
+    "@dockstat/typings": "workspace:*"
   },
   "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
     "typescript": "^5"
-  }
+  },
+  "keywords": ["theme", "css", "react", "context", "styling", "dockstat"]
 }
