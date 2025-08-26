@@ -46,8 +46,9 @@
     "@types/bun": "latest"
   },
   "dependencies": {
-    "@dockstat/typings": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*",
+    "@dockstat/typings": "workspace:*",
+    "@types/dockerode": "^3.3.43",
     "dockerode": "^4.0.7"
   }
 }

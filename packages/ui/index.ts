@@ -7,7 +7,7 @@ export {
   CardHeader,
 } from './src/components/Card'
 export { Chart } from './src/components/Chart'
-export { Modal } from './src/components/Dialog'
+export { Modal } from './src/components/Modal'
 export { Dropdown, DropdownItem } from './src/components/Dropdown'
 export { HoverCard } from './src/components/HoverCard'
 export { Input } from './src/components/Input'

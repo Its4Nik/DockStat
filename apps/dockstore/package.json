@@ -1,6 +1,7 @@
 {
   "name": "dockstacks",
   "module": "index.ts",
+  "extends": "../../tsconfig.base.json",
   "type": "module",
   "private": true,
   "scripts": {

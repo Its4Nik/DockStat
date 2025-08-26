@@ -19,10 +19,11 @@
   },
   "dependencies": {
     "@dockstat/typings": "workspace:*",
-    "@dockstat/sqlite-wrapper": "workspace:*"
+    "bun-plugin-dts": "^0.3.0"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5",
+    "@dockstat/sqlite-wrapper": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest"

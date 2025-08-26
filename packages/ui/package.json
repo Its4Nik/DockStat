@@ -1,9 +1,11 @@
 {
-  "name": "ui",
+  "name": "@dockstat/ui",
   "description": "A simple component library designed for DockStat",
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "main": "index.ts",
+  "types": "index.ts",
   "files": ["src/**/*.{ts,tsx}", "index.ts"],
   "devDependencies": {
     "@types/bun": "latest"

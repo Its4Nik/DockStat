@@ -1,184 +1,87 @@
-# DockStat Frontend
+# Welcome to React Router!
 
-The main frontend application for Docker container monitoring and management. Built with React Router v7 and modern web technologies.
+A modern, production-ready template for building full-stack React applications using React Router.
 
-## 🚀 Features
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
 
-- **Real-time Monitoring**: Live Docker container statistics and metrics
-- **Container Management**: Start, stop, restart, and manage Docker containers
-- **Modern UI**: Responsive design with TailwindCSS
-- **Theme Support**: Customizable themes from DockStore
-- **Type Safety**: Full TypeScript support with shared types
-- **Fast Development**: Hot Module Replacement (HMR) with Bun
+## Features
 
-## 🛠️ Tech Stack
+- 🚀 Server-side rendering
+- ⚡️ Hot Module Replacement (HMR)
+- 📦 Asset bundling and optimization
+- 🔄 Data loading and mutations
+- 🔒 TypeScript by default
+- 🎉 TailwindCSS for styling
+- 📖 [React Router docs](https://reactrouter.com/)
 
-- **Framework**: React Router v7
-- **Runtime**: Bun
-- **Language**: TypeScript
-- **Styling**: TailwindCSS
-- **Build Tool**: Vite
-- **Linting**: Biome
+## Getting Started
 
-## 🏁 Getting Started
+### Installation
 
-### Prerequisites
+Install the dependencies:
 
-- [Bun](https://bun.sh/) >= 1.2.17
-- Node.js >= 18 (for some tooling)
+```bash
+npm install
+```
 
 ### Development
 
+Start the development server with HMR:
+
 ```bash
-# Install dependencies (from monorepo root)
-bun install
-
-# Start development server
-bun run dev
-
-# Or run from this directory
-cd apps/dockstat
-bun run dev
+npm run dev
 ```
 
 Your application will be available at `http://localhost:5173`.
 
-### Building
+## Building for Production
+
+Create a production build:
 
 ```bash
-# Build for production
-bun run build
-
-# Preview production build
-bun run start
+npm run build
 ```
 
-## 📁 Project Structure
+## Deployment
 
-```
-apps/dockstat/
-├── app/                   # React Router app directory
-│   ├── components/        # Reusable React components
-│   ├── routes/           # Route components and logic
-│   ├── styles/           # CSS and styling files
-│   └── root.tsx          # Root component
-├── public/               # Static assets
-├── build/                # Production build output
-├── package.json          # App dependencies and scripts
-├── tsconfig.json         # TypeScript configuration
-├── tailwind.config.js    # TailwindCSS configuration
-├── vite.config.ts        # Vite configuration
-└── README.md             # This file
-```
+### Docker Deployment
 
-## 🔧 Configuration
-
-### Environment Variables
-
-Create a `.env.local` file for local development:
-
-```env
-# API endpoints
-VITE_API_URL=http://localhost:3000
-VITE_WS_URL=ws://localhost:3000
-
-# Feature flags
-VITE_ENABLE_THEMES=true
-VITE_ENABLE_PLUGINS=true
-```
-
-### TailwindCSS
-
-Styling is handled by TailwindCSS with custom configuration for the DockStat design system. See `tailwind.config.js` for theme customization.
-
-### TypeScript
-
-The app uses strict TypeScript configuration and shared types from `@dockstat/typings`:
-
-```typescript
-import type { ContainerStats, DockerContainer } from '@dockstat/typings';
-```
-
-## 🔌 Integration
-
-### Shared Packages
-
-The app integrates with other monorepo packages:
-
-```typescript
-import { Database } from '@dockstat/db';
-import { SQLiteWrapper } from '@dockstat/sqlite-wrapper';
-import type { BaseConfig, ContainerStats } from '@dockstat/typings';
-```
-
-### API Communication
-
-- RESTful API for container management
-- WebSocket connections for real-time updates
-- Integration with DockStatAPI backend
-
-## 📦 Available Scripts
+To build and run using Docker:
 
 ```bash
-# Development
-bun run dev          # Start development server with HMR
-bun run build        # Build for production
-bun run start        # Start production server
+docker build -t my-app .
 
-# Code Quality
-bun run lint         # Lint code with Biome
-bun run lint:fix     # Fix linting issues
-bun run typecheck    # Type check with TypeScript
-
-# Utilities
-bun run clean        # Clean build artifacts
+# Run the container
+docker run -p 3000:3000 my-app
 ```
 
-## 🎨 Theming
+The containerized application can be deployed to any platform that supports Docker, including:
 
-The app supports custom themes from DockStore:
+- AWS ECS
+- Google Cloud Run
+- Azure Container Apps
+- Digital Ocean App Platform
+- Fly.io
+- Railway
 
-1. Browse available themes in `apps/dockstore`
-2. Install themes through the UI
-3. Themes are applied dynamically via CSS custom properties
+### DIY Deployment
 
-## 🚀 Deployment
+If you're familiar with deploying Node applications, the built-in app server is production-ready.
 
-### Docker
+Make sure to deploy the output of `npm run build`
 
-```bash
-# Build Docker image
-docker build -t dockstat-frontend .
-
-# Run container
-docker run -p 3000:3000 dockstat-frontend
+```
+├── package.json
+├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
+├── build/
+│   ├── client/    # Static assets
+│   └── server/    # Server-side code
 ```
 
-### Static Hosting
+## Styling
 
-The app builds to static files and can be deployed to:
+This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
 
-- Vercel, Netlify, or similar platforms
-- AWS S3 + CloudFront
-- Any static file server
+---
 
-Make sure to configure proper routing for SPA:
-
-```nginx
-# nginx example
-location / {
-  try_files $uri $uri/ /index.html;
-}
-```
-
-## 🤝 Contributing
-
-1. Follow the monorepo contribution guidelines
-2. Use conventional commits
-3. Ensure all tests pass: `bun run test`
-4. Run linting: `bun run lint:fix`
-5. Type check: `bun run check-types`
-
-## 📄 License
-
-Part of the DockStat project - MIT License.
+Built with ❤️ using React Router.

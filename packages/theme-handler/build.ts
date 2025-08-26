@@ -10,6 +10,7 @@ await Bun.build({
   plugins: [dts()],
   minify: true,
   target: 'bun',
+  external: ['react', 'react-dom'],
   sourcemap: 'inline',
 })
 

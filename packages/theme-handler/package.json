@@ -39,10 +39,11 @@
     "@types/react-dom": "^19.1.1"
   },
   "dependencies": {
-    "@dockstat/sqlite-wrapper": "workspace:*",
-    "@dockstat/typings": "workspace:*"
+    "@dockstat/typings": "workspace:*",
+    "bun-plugin-dts": "^0.3.0"
   },
   "peerDependencies": {
+    "@dockstat/sqlite-wrapper": "workspace:*",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "typescript": "^5"
