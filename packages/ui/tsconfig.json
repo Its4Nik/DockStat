@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDirs": ["./"],
+    "composite": true,
+    "jsx": "react",
+    "moduleResolution": "bundler"
+  },
+  "include": ["index.ts", "src/**/*.{ts,tsx}"],
+  "exclude": ["node_modules", "dist"]
+}
