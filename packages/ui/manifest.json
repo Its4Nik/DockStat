@@ -1,0 +1,213 @@
+[
+  {
+    "componentName": "Card",
+    "path": "src/components/Card.tsx",
+    "classes": [
+      "components-card-bg",
+      "components-card-content-font-color",
+      "components-card-content-font-size",
+      "components-card-footer-padding",
+      "components-card-header-padding",
+      "components-card-padding",
+      "components-card-radius",
+      "components-card-shadow"
+    ],
+    "variables": ["Card", "CardContent", "CardFooter", "CardHeader"]
+  },
+  {
+    "componentName": "Button",
+    "path": "src/components/Button.tsx",
+    "classes": [
+      "components-button-font-size",
+      "components-button-padding-x",
+      "components-button-padding-y",
+      "components-button-primary-bg",
+      "components-button-primary-color",
+      "components-button-primary-hover-bg",
+      "components-button-radius",
+      "components-button-secondary-bg",
+      "components-button-secondary-color",
+      "components-button-secondary-hover-bg"
+    ],
+    "variables": ["Button"]
+  },
+  {
+    "componentName": "Dropdown",
+    "path": "src/components/Dropdown.tsx",
+    "classes": [
+      "components-dropdown-bg",
+      "components-dropdown-item-hover-bg",
+      "components-dropdown-item-hover-color",
+      "components-dropdown-radius",
+      "components-dropdown-shadow"
+    ],
+    "variables": ["Dropdown", "DropdownItem", "children", "trigger"]
+  },
+  {
+    "componentName": "Input",
+    "path": "src/components/Input.tsx",
+    "classes": [
+      "components-input-bg",
+      "components-input-border",
+      "components-input-color",
+      "components-input-focus-ring",
+      "components-input-font-size",
+      "components-input-padding-x",
+      "components-input-padding-y",
+      "components-input-radius"
+    ],
+    "variables": ["Input"]
+  },
+  {
+    "componentName": "Textarea",
+    "path": "src/components/Textarea.tsx",
+    "classes": [
+      "components-textarea-bg",
+      "components-textarea-border",
+      "components-textarea-color",
+      "components-textarea-focus-ring",
+      "components-textarea-font-size",
+      "components-textarea-padding-x",
+      "components-textarea-padding-y",
+      "components-textarea-radius"
+    ],
+    "variables": ["Textarea"]
+  },
+  {
+    "componentName": "Badge",
+    "path": "src/components/Badge.tsx",
+    "classes": [
+      "components-badge-default-bg",
+      "components-badge-default-color",
+      "components-badge-error-bg",
+      "components-badge-error-color",
+      "components-badge-font-size",
+      "components-badge-padding-x",
+      "components-badge-padding-y",
+      "components-badge-radius",
+      "components-badge-success-bg",
+      "components-badge-success-color",
+      "components-badge-warning-bg",
+      "components-badge-warning-color"
+    ],
+    "variables": ["Badge"]
+  },
+  {
+    "componentName": "Progress",
+    "path": "src/components/Progress.tsx",
+    "classes": [
+      "components-progress-bar-bg",
+      "components-progress-bg",
+      "components-progress-radius"
+    ],
+    "variables": ["Progress"]
+  },
+  {
+    "componentName": "Table",
+    "path": "src/components/Table.tsx",
+    "classes": [
+      "components-table-body-bg",
+      "components-table-cell-font-size",
+      "components-table-cell-padding-x",
+      "components-table-cell-padding-y",
+      "components-table-divider",
+      "components-table-header-bg",
+      "components-table-radius"
+    ],
+    "variables": ["Table", "TableBody", "TableCell", "TableHead", "TableRow"]
+  },
+  {
+    "componentName": "Modal",
+    "path": "src/components/Dialog.tsx",
+    "classes": [
+      "components-dialog-bg",
+      "components-dialog-overlay-bg",
+      "components-dialog-padding",
+      "components-dialog-radius",
+      "components-dialog-shadow"
+    ],
+    "variables": ["Modal", "children", "isOpen", "onClose"]
+  },
+  {
+    "componentName": "ToggleSwitch",
+    "path": "src/components/Switch.tsx",
+    "classes": [
+      "components-switch-bg",
+      "components-switch-enabled-bg",
+      "components-switch-focus-ring",
+      "components-switch-height",
+      "components-switch-radius",
+      "components-switch-thumb-bg",
+      "components-switch-thumb-enabled-transform",
+      "components-switch-thumb-radius",
+      "components-switch-thumb-size",
+      "components-switch-width"
+    ],
+    "variables": ["ToggleSwitch"]
+  },
+  {
+    "componentName": "HoverCard",
+    "path": "src/components/HoverCard.tsx",
+    "classes": [
+      "components-hovercard-bg",
+      "components-hovercard-padding",
+      "components-hovercard-radius",
+      "components-hovercard-shadow"
+    ],
+    "variables": ["HoverCard"]
+  },
+  {
+    "componentName": "Chart",
+    "path": "src/components/Chart.tsx",
+    "classes": [
+      "components-chart-axis-color",
+      "components-chart-bar-color",
+      "components-chart-bg",
+      "components-chart-grid-color",
+      "components-chart-label-color",
+      "components-chart-padding",
+      "components-chart-radius",
+      "components-chart-title-color",
+      "components-chart-title-font-size",
+      "components-chart-tooltip-bg",
+      "components-chart-tooltip-border",
+      "components-chart-tooltip-color",
+      "components-chart-tooltip-radius"
+    ],
+    "variables": ["Chart"]
+  },
+  {
+    "componentName": "Toaster",
+    "path": "src/components/Sonner.tsx",
+    "classes": [
+      "components-sonner-bg",
+      "components-sonner-border",
+      "components-sonner-button-bg",
+      "components-sonner-button-color",
+      "components-sonner-button-font-size",
+      "components-sonner-cancel-bg",
+      "components-sonner-cancel-color",
+      "components-sonner-close-bg",
+      "components-sonner-close-color",
+      "components-sonner-color",
+      "components-sonner-description-font-size",
+      "components-sonner-error-bg",
+      "components-sonner-error-border",
+      "components-sonner-error-color",
+      "components-sonner-info-bg",
+      "components-sonner-info-border",
+      "components-sonner-info-color",
+      "components-sonner-loading-bg",
+      "components-sonner-loading-border",
+      "components-sonner-loading-color",
+      "components-sonner-success-bg",
+      "components-sonner-success-border",
+      "components-sonner-success-color",
+      "components-sonner-title-font-size",
+      "components-sonner-warning-bg",
+      "components-sonner-warning-border",
+      "components-sonner-warning-color"
+    ],
+    "variables": ["Toaster", "position", "toast"]
+  }
+]

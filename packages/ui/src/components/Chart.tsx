@@ -12,7 +12,6 @@ import {
 interface ChartData {
   name: string
   value: number
-  [key: string]: any
 }
 
 interface ChartProps {

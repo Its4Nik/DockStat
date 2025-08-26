@@ -1,6 +1,7 @@
 {
   "name": "@dockstat/theme-handler",
   "version": "1.0.4",
+  "license": "MPL-2.0",
   "description": "Theme management system with React context and CSS variable parsing",
   "main": "./dist/src/index.js",
   "module": "./dist/src/index.js",
@@ -26,8 +27,6 @@
   },
   "scripts": {
     "dev": "bun run index.ts",
-    "example": "bun run example/ExampleApp.tsx",
-    "example:simple": "bun run example/simple-example.tsx",
     "test": "bun run test.ts",
     "build": "bun run build.ts",
     "clean": "rm -rf dist",
