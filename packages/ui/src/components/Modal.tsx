@@ -4,12 +4,20 @@ import {
   Transition,
   TransitionChild,
 } from '@headlessui/react'
+import type { ReactNode } from 'react'
 import { Fragment } from 'react'
 
-export const Modal = ({ isOpen, onClose, children }) => {
+interface ModalProps {
+  isOpen: boolean
+  onClose: () => void
+  children: ReactNode
+}
+
+export const Modal = ({ isOpen, onClose, children }: ModalProps) => {
   return (
     <Transition show={isOpen} as={Fragment}>
       <Dialog onClose={onClose} className="relative z-50">
+        {/* Overlay */}
         <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
@@ -22,7 +30,7 @@ export const Modal = ({ isOpen, onClose, children }) => {
           <div className="fixed inset-0 bg-components-dialog-overlay-bg" />
         </TransitionChild>
 
-        {/* Modal Panel */}
+        {/* Panel */}
         <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"

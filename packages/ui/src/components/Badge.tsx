@@ -1,7 +1,22 @@
-export const Badge = ({ children, variant = 'default', className = '' }) => {
+import type { ReactNode } from 'react'
+
+type BadgeVariant = 'default' | 'success' | 'warning' | 'error'
+
+interface BadgeProps {
+  children: ReactNode
+  variant?: BadgeVariant
+  className?: string
+}
+
+export const Badge = ({
+  children,
+  variant = 'default',
+  className = '',
+}: BadgeProps) => {
   const baseClasses =
     'inline-flex px-components-badge-padding-x py-components-badge-padding-y text-components-badge-font-size font-medium rounded-components-badge-radius'
-  const variants = {
+
+  const variants: Record<BadgeVariant, string> = {
     default:
       'bg-components-badge-default-bg text-components-badge-default-color',
     success:

@@ -4,9 +4,9 @@
     "outDir": "./dist",
     "rootDirs": ["./"],
     "composite": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "moduleResolution": "bundler"
   },
-  "include": ["index.ts", "src/**/*.{ts,tsx}"],
+  "include": ["index.ts", "src"],
   "exclude": ["node_modules", "dist"]
 }

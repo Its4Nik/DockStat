@@ -1,6 +1,6 @@
 'use client'
 
-import { Toaster as SonnerToaster, toast as sonnerToast } from 'sonner'
+import { Toaster as SonnerToaster } from 'sonner'
 
 type ToasterProps = {
   position:
@@ -44,5 +44,3 @@ export const Toaster = ({ position }: ToasterProps) => {
     />
   )
 }
-
-export const toast = sonnerToast

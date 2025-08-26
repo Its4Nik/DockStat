@@ -1,4 +1,11 @@
-export const Table = ({ children, className = '' }) => (
+import type { ReactNode } from 'react'
+
+interface defaultProps {
+  children: ReactNode
+  className: string
+}
+
+export const Table = ({ children, className = '' }: defaultProps) => (
   <table
     className={`w-full rounded-components-table-radius overflow-hidden ${className}`}
   >
@@ -6,13 +13,13 @@ export const Table = ({ children, className = '' }) => (
   </table>
 )
 
-export const TableHead = ({ children, className = '' }) => (
+export const TableHead = ({ children, className = '' }: defaultProps) => (
   <thead className={`bg-components-table-header-bg ${className}`}>
     {children}
   </thead>
 )
 
-export const TableBody = ({ children, className = '' }) => (
+export const TableBody = ({ children, className = '' }: defaultProps) => (
   <tbody
     className={`bg-components-table-body-bg divide-y divide-components-table-divider ${className}`}
   >
@@ -20,11 +27,18 @@ export const TableBody = ({ children, className = '' }) => (
   </tbody>
 )
 
-export const TableRow = ({ children, className = '' }) => (
+export const TableRow = ({ children, className = '' }: defaultProps) => (
   <tr className={className}>{children}</tr>
 )
 
-export const TableCell = ({ children, className = '', header = false }) => {
+interface cell extends defaultProps {
+  header: boolean
+}
+export const TableCell = ({
+  children,
+  className = '',
+  header = false,
+}: cell) => {
   const Component = header ? 'th' : 'td'
   return (
     <Component
