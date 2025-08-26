@@ -214,4 +214,4 @@ bun run build
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MPL 2.0 License.
