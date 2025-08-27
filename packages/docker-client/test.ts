@@ -1,5 +1,5 @@
 import DB from '@dockstat/sqlite-wrapper'
-import type { DATABASE } from '@dockstat/typings'
+import type { DATABASE, DOCKER } from '@dockstat/typings'
 import DockerClient from './src/docker-client.js'
 
 // Example usage and basic tests
@@ -344,9 +344,8 @@ async function runTests() {
       const diskUsage = await dockerClient.getDiskUsage(host.id)
 
       console.log(`✅ System info for ${host.name}:`)
-      console.log(`  - Server Version: ${systemInfo.ServerVersion}`)
-      console.log(`  - Storage Driver: ${systemInfo.Driver}`)
-      console.log(`  - Logging Driver: ${systemInfo.LoggingDriver}`)
+      console.log(`  - Kernel Version: ${systemInfo.KernelVersion}`)
+      console.log(`  - OS Version: ${systemInfo.OperatingSystem}`)
       console.log(
         `  - Total Space: ${((diskUsage.LayersSize || 0) / 1024 / 1024 / 1024).toFixed(2)} GB`
       )
@@ -444,7 +443,7 @@ async function demonstrateAdvancedFeatures(): Promise<void> {
   // All stats stream (combined container stats and host metrics)
   const allStatsStreamKey = client.startAllStatsStream((data) => {
     if (data.type === 'all_stats') {
-      const allStats = data.data as any
+      const allStats = data.data as DOCKER.AllStatsResponse
       console.log(
         `📈 All Stats Update: ${allStats.containerStats.length} containers, ${allStats.hostMetrics.length} hosts (${new Date(allStats.timestamp).toLocaleTimeString()})`
       )

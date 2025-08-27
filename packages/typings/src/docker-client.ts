@@ -1,4 +1,64 @@
-import type { ContainerStats } from "dockerode";
+import type { ContainerStats, ContainerInspectInfo, Version } from "dockerode";
+
+export interface SysInfo {
+  OperatingSystem: string,
+  Architecture: string,
+  MemTotal: number,
+  NCPU: number,
+  KernelVersion: string,
+  Containers: number,
+  ContainersRunning: number,
+  ContainersStopped: number,
+  ContainersPaused: number,
+  Images: number,
+  SystemTime: string,
+}
+
+export interface DockerAPIResponse {
+  systemInfo: SysInfo;
+  version: Version;
+  containerInspect: ContainerInspectInfo;
+  diskUsage: {
+    LayersSize: number;
+    Images: Array<{
+      Id: string;
+      ParentId: string;
+      RepoTags: string[];
+      Created: number;
+      Size: number;
+      SharedSize: number;
+      VirtualSize: number;
+    }>;
+    Containers: Array<{
+      Id: string;
+      Names: string[];
+      Image: string;
+      ImageID: string;
+      Created: number;
+      State: string;
+      Status: string;
+      SizeRw: number;
+      SizeRootFs: number;
+    }>;
+    Volumes: Array<{
+      Name: string;
+      Driver: string;
+      Mountpoint: string;
+      CreatedAt: string;
+      Size: number;
+    }>;
+  };
+  containerLogs: {
+    stdout: string;
+    stderr: string;
+    exitCode: number;
+  };
+  execResult: {
+    stdout: string;
+    stderr: string;
+    exitCode: number;
+  };
+}
 
 export interface DockerClientOptions {
   defaultTimeout?: number;
@@ -13,6 +73,11 @@ export interface DockerClientOptions {
     enableContainerEvents?: boolean;
     enableHostMetrics?: boolean;
     enableHealthChecks?: boolean;
+  };
+  execOptions?: {
+    workingDir?: string;
+    env?: string[];
+    tty?: boolean;
   };
 }
 
@@ -86,7 +151,7 @@ export interface DockerStreamData {
     | "error";
   hostId: number;
   timestamp: number;
-  data: unknown;
+  data: ContainerStats | ContainerStatsInfo | HostMetrics | ContainerInfo[] | AllStatsResponse | {error: Error};
 }
 
 export type StreamCallback = (data: DockerStreamData) => void;
@@ -126,9 +191,9 @@ export interface DockerClientEvents {
   "stream:data": (streamKey: string, data: DockerStreamData) => void;
   "stream:error": (streamKey: string, error: Error) => void;
 
-  error: (error: Error, context?: Record<string, unknown>) => void;
-  warning: (message: string, context?: Record<string, unknown>) => void;
-  info: (message: string, context?: Record<string, unknown>) => void;
+  error: (error: Error, context?: Record<string, { hostId?: number; containerId?: string; message?: string }>) => void;
+  warning: (message: string, context?: Record<string, { hostId?: number; containerId?: string }>) => void;
+  info: (message: string, context?: Record<string, { hostId?: number; containerId?: string }>) => void;
 }
 
 export interface DockerEventEmitterInterface {
@@ -165,9 +230,9 @@ export interface MonitoringOptions {
 
 export interface MonitoringState {
   isMonitoring: boolean;
-  healthCheckInterval?: NodeJS.Timer;
-  containerEventInterval?: NodeJS.Timer;
-  hostMetricsInterval?: NodeJS.Timer;
+  healthCheckInterval?: NodeJS.Timeout;
+  containerEventInterval?: NodeJS.Timeout;
+  hostMetricsInterval?: NodeJS.Timeout;
   lastHealthStatus: Map<number, boolean>;
   lastContainerStates: Map<string, ContainerInfo[]>;
   dockerEventStreams: Map<number, NodeJS.ReadableStream>;
@@ -177,9 +242,32 @@ export interface StreamMessage {
   id: string;
   type: "subscribe" | "unsubscribe" | "data" | "error" | "ping" | "pong";
   channel?: string;
-  data?: Record<string, unknown>;
+  data?:
+    | ContainerStatsInfo
+    | HostMetrics
+    | HostMetrics[]
+    | ContainerInfo[]
+    | ContainerLogs
+    | AllStatsResponse
+    | {
+        eventType: string;
+        args: unknown[];
+      }
+    | {
+        subscriptionId: string;
+        channel: string;
+        status: 'subscribed' | 'unsubscribed' | 'not_found';
+        options: StreamOptions;
+      };
   timestamp: number;
   error?: string;
+}
+
+export interface ContainerLogs {
+  logs: string[];
+  containerId: string;
+  hostId: number;
+  timestamp: number;
 }
 
 export interface StreamSubscription {

@@ -55,7 +55,7 @@ async function basicExample() {
     // Get system information
     console.log('\n📊 Getting system information...')
     const systemInfo = await dockerClient.getSystemInfo(host.id)
-    console.log(`Docker Version: ${systemInfo.ServerVersion}`)
+    console.log(`Docker Version: ${systemInfo.KernelVersion}`)
     console.log(`OS: ${systemInfo.OperatingSystem}`)
     console.log(`Architecture: ${systemInfo.Architecture}`)
     console.log(

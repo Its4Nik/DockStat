@@ -218,20 +218,17 @@ export class StreamManager extends EventEmitter {
   }
 
   public cleanup(): void {
-    for (const interval of this.streamIntervals) {
-      clearInterval(interval[0])
+    for (const timer of this.streamIntervals.values()) {
+      clearInterval(timer)
     }
     this.streamIntervals.clear()
 
-    // Clear all subscriptions
     this.subscriptions.clear()
 
-    // Stop heartbeat
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval)
     }
 
-    // Clear connections
     this.activeConnections.clear()
   }
 
@@ -253,15 +250,18 @@ export class StreamManager extends EventEmitter {
         (streamMessage) => this.sendMessage(connectionId, streamMessage)
       )
 
+      // Send back a subscription response that matches the updated typing
       this.sendMessage(connectionId, {
         id: message.id,
         type: 'data',
         channel,
         data: {
           subscriptionId,
-          status: 'subscribed',
           channel,
-          options,
+          status: 'subscribed' as const,
+          options: {
+            ...(options as DOCKER.StreamOptions),
+          },
         },
         timestamp: Date.now(),
       })
@@ -275,12 +275,13 @@ export class StreamManager extends EventEmitter {
     }
   }
 
+
   private handleUnsubscribe(
     connectionId: string,
     message: DOCKER.StreamMessage
   ): void {
     const { data } = message
-    const subscriptionId = data?.subscriptionId
+    const subscriptionId = (data as { subscriptionId: string })?.subscriptionId as string
 
     if (!subscriptionId) {
       this.sendMessage(connectionId, {
@@ -292,18 +293,33 @@ export class StreamManager extends EventEmitter {
       return
     }
 
+    // Capture existing subscription info (if available) before it is removed
+    const existingSub = this.subscriptions.get(subscriptionId)
+
     const success = this.unsubscribe(subscriptionId)
+
+    const responseData: {
+      subscriptionId: string
+      channel: string
+      status: 'subscribed' | 'unsubscribed' | 'not_found'
+      options: DOCKER.StreamOptions
+    } = {
+      subscriptionId,
+      channel:
+        existingSub?.channel ??
+        (subscriptionId.split(':')[1] ?? 'unknown'),
+      status: success ? 'unsubscribed' : 'not_found',
+      options: existingSub?.options ?? {},
+    }
 
     this.sendMessage(connectionId, {
       id: message.id,
       type: 'data',
-      data: {
-        subscriptionId,
-        status: success ? 'unsubscribed' : 'not_found',
-      },
+      data: responseData,
       timestamp: Date.now(),
     })
   }
+
 
   private handlePing(
     connectionId: string,
@@ -495,12 +511,13 @@ export class StreamManager extends EventEmitter {
       try {
         // This is a placeholder - you'd need to implement actual log streaming
         const logs = await this.getContainerLogs(hostId, containerId, logLines)
+        const logData: DOCKER.ContainerLogs = { logs, containerId, hostId, timestamp: Date.now() }
 
         subscription.callback({
           id: `logs-${Date.now()}`,
           type: 'data',
           channel: 'container_logs',
-          data: { logs, containerId, hostId },
+          data: logData,
           timestamp: Date.now(),
         })
         subscription.lastActivity = Date.now()
@@ -576,7 +593,7 @@ export class StreamManager extends EventEmitter {
 
   private setupEventListeners(): void {
     // Listen to Docker events and forward them to docker_events subscribers
-    const dockerEventHandler = (eventType: string, ...args: any[]) => {
+    const dockerEventHandler = (eventType: string, ...args: unknown[]) => {
       const dockerEventsSubscriptions = Array.from(
         this.subscriptions.values()
       ).filter((sub) => sub.channel === 'docker_events' && sub.active)
@@ -663,13 +680,15 @@ export class StreamManager extends EventEmitter {
           stdout: true,
           stderr: true,
           tail: lines,
+          timestamps: true
         }
       )
 
       return logsString.split('\n').filter((line) => line.trim().length > 0)
     } catch (error) {
-      console.error(`Failed to get container logs for ${containerId}:`, error)
-      return []
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`Failed to get container logs for ${containerId}:`, errorMessage);
+      return [];
     }
   }
 }

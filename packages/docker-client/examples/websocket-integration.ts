@@ -287,7 +287,7 @@ class DockerWebSocketServer {
     const streamManager = this.dockerClient.getStreamManager()
     const channels = streamManager?.getAvailableChannels() || []
 
-    const welcomeMessage: DOCKER.StreamMessage = {
+    const welcomeMessage: { id: string,type:string,timestamp:number,data: { message: string, connectionId: string, availableChannels: DOCKER.StreamChannel[], serverTime: string, } } = {
       id: 'welcome',
       type: 'data',
       data: {

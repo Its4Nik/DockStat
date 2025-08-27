@@ -171,6 +171,12 @@ export function getContainerStatusInfo(container: DOCKER.ContainerInfo): {
 export function isContainerHealthy(container: DOCKER.ContainerStatsInfo): {
   healthy: boolean;
   issues: string[];
+  metrics: {
+    cpuUsage: number;
+    memoryUsage: number;
+    memoryPercent: number;
+    state: string;
+  };
 } {
   const issues: string[] = [];
 
@@ -197,6 +203,12 @@ export function isContainerHealthy(container: DOCKER.ContainerStatsInfo): {
   return {
     healthy: issues.length === 0,
     issues,
+    metrics: {
+      cpuUsage: container.cpuUsage,
+      memoryUsage: container.memoryUsage,
+      memoryPercent: memoryPercent,
+      state: container.state
+    }
   };
 }
 
@@ -206,6 +218,12 @@ export function isContainerHealthy(container: DOCKER.ContainerStatsInfo): {
 export function isHostHealthy(metrics: DOCKER.HostMetrics): {
   healthy: boolean;
   issues: string[];
+  metrics: {
+    containerRatio: number;
+    runningContainers: number;
+    stoppedContainers: number;
+    totalContainers: number;
+  };
 } {
   const issues: string[] = [];
 
@@ -229,20 +247,28 @@ export function isHostHealthy(metrics: DOCKER.HostMetrics): {
   return {
     healthy: issues.length === 0,
     issues,
+    metrics: {
+      containerRatio,
+      runningContainers: metrics.containersRunning,
+      stoppedContainers: metrics.containersStopped,
+      totalContainers: metrics.containers
+    }
   };
 }
 
 /**
  * Generates a summary of container statistics
  */
-export function generateContainerSummary(containers: DOCKER.ContainerInfo[]): {
+export interface ContainerSummary {
   total: number;
   running: number;
   stopped: number;
   paused: number;
   byImage: Record<string, number>;
   byHost: Record<number, number>;
-} {
+}
+
+export function generateContainerSummary(containers: DOCKER.ContainerInfo[]): ContainerSummary {
   const summary = {
     total: containers.length,
     running: 0,
@@ -282,7 +308,7 @@ export function generateContainerSummary(containers: DOCKER.ContainerInfo[]): {
 /**
  * Generates a summary of host metrics
  */
-export function generateHostSummary(hosts: DOCKER.HostMetrics[]): {
+export interface HostSummary {
   totalHosts: number;
   totalContainers: number;
   totalRunningContainers: number;
@@ -290,7 +316,9 @@ export function generateHostSummary(hosts: DOCKER.HostMetrics[]): {
   totalMemory: number;
   totalCPU: number;
   averageLoad: number;
-} {
+}
+
+export function generateHostSummary(hosts: DOCKER.HostMetrics[]): HostSummary {
   const summary = {
     totalHosts: hosts.length,
     totalContainers: 0,
@@ -340,12 +368,14 @@ export function isValidImageName(name: string): boolean {
 /**
  * Parses Docker image name into components
  */
-export function parseImageName(imageName: string): {
+export interface ImageNameInfo {
   registry?: string;
   namespace?: string;
   repository: string;
   tag: string;
-} {
+}
+
+export function parseImageName(imageName: string): ImageNameInfo {
   let registry: string | undefined;
   let namespace: string | undefined;
   let repository: string;
@@ -403,7 +433,7 @@ export function delay(ms: number): Promise<void> {
 /**
  * Debounces a function call
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number,
 ): (...args: Parameters<T>) => void {
@@ -418,7 +448,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttles a function call
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number,
 ): (...args: Parameters<T>) => void {

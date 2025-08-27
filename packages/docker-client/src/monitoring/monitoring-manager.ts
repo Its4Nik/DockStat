@@ -302,12 +302,12 @@ export default class MonitoringManager {
           .then((eventStream) => {
             eventStream.on('data', (chunk: Buffer) => {
               try {
-                const event = JSON.parse(chunk.toString())
-                this.handleDockerEvent(host.id, event)
+                const info = JSON.parse(chunk.toString()) as { Action: string; Actor?: { ID: string } }
+                this.handleDockerEvent(host.id, info)
               } catch (error) {
                 this.eventEmitter.emitError(
                   error instanceof Error ? error : new Error(String(error)),
-                  { context: 'parse_docker_event', hostId: host.id }
+                  { context: 'parse_docker_event', hostId: host.id, message: 'Failed to parse Docker event' }
                 )
               }
             })
@@ -352,7 +352,7 @@ export default class MonitoringManager {
     this.state.dockerEventStreams.clear()
   }
 
-  private handleDockerEvent(hostId: number, event: any): void {
+  private handleDockerEvent(hostId: number, event: { Action: string; Actor?: { ID: string } }): void {
     const containerId = event.Actor?.ID
     if (!containerId) {
       return
@@ -417,7 +417,7 @@ export default class MonitoringManager {
     }
 
     const container = docker.getContainer(containerId)
-    const containerInfo = await this.withRetry(() => container.inspect())
+    const containerInfo = await this.withRetry<DOCKER.DockerAPIResponse['containerInspect']>(() => container.inspect())
 
     return this.mapContainerInfoFromInspect(containerInfo, hostId)
   }
@@ -447,7 +447,7 @@ export default class MonitoringManager {
     }
 
     const [info, version] = await Promise.all([
-      this.withRetry(() => docker.info()),
+      this.withRetry<DOCKER.DockerAPIResponse['systemInfo']>(() => docker.info()),
       this.withRetry(() => docker.version()),
     ])
 
@@ -471,14 +471,15 @@ export default class MonitoringManager {
   }
 
   private async withRetry<T>(operation: () => Promise<T>): Promise<T> {
+    let lastError: Error | null = null;
     for (let attempt = 1; attempt <= this.options.retryAttempts; attempt++) {
       try {
         return await operation()
       } catch (error) {
-        const err = error instanceof Error ? error : new Error(String(error))
+        lastError = error instanceof Error ? error : new Error(String(error))
 
-        if (attempt === this.options.retryAttempts) {
-          throw err
+        if (attempt === this.options.retryAttempts && lastError) {
+          throw lastError
         }
 
         await new Promise((resolve) =>

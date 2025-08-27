@@ -32,6 +32,7 @@ class DockerClient {
       enableMonitoring: options.enableMonitoring ?? true,
       enableEventEmitter: options.enableEventEmitter ?? true,
       monitoringOptions: options.monitoringOptions,
+      execOptions: options.execOptions ?? {}
     }
 
     // Initialize event emitter
@@ -316,8 +317,7 @@ class DockerClient {
           hostId,
           timestamp: Date.now(),
           data: {
-            error: error instanceof Error ? error.message : 'Unknown error',
-            containerId,
+            error: error instanceof Error ? new Error(error.message) : new Error('Unknown error'),
           },
         })
       }
@@ -353,7 +353,7 @@ class DockerClient {
           hostId,
           timestamp: Date.now(),
           data: {
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? new Error(error.message) : new Error('Unknown error'),
           },
         })
       }
@@ -388,7 +388,7 @@ class DockerClient {
           hostId: -1,
           timestamp: Date.now(),
           data: {
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? new Error(error.message) : new Error('Unknown error'),
           },
         })
       }
@@ -423,7 +423,7 @@ class DockerClient {
           hostId: -1,
           timestamp: Date.now(),
           data: {
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? new Error(error.message) : new Error('Unknown error'),
           },
         })
       }
@@ -572,13 +572,13 @@ class DockerClient {
   }
 
   private async withRetry<T>(operation: () => Promise<T>): Promise<T> {
-    let lastError: Error = new Error('No attempts made')
+    const lastError: Error = new Error('No attempts made')
 
     for (let attempt = 1; attempt <= this.options.retryAttempts; attempt++) {
       try {
         return await operation()
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error))
+        const _err = error instanceof Error ? error : new Error(String(error));
 
         if (attempt === this.options.retryAttempts) {
           throw lastError
@@ -645,7 +645,7 @@ class DockerClient {
 
   private mapContainerStats(
     containerInfo: DOCKER.ContainerInfo,
-    stats: ContainerStats
+    stats: ContainerStats,
   ): DOCKER.ContainerStatsInfo {
     const cpuDelta =
       stats.cpu_stats.cpu_usage.total_usage -
@@ -906,22 +906,22 @@ class DockerClient {
   }
 
   // System Operations
-  public async getSystemInfo(hostId: number): Promise<any> {
+  public async getSystemInfo(hostId: number): Promise<DOCKER.DockerAPIResponse['systemInfo']> {
     const docker = this.getDockerInstance(hostId)
     return await this.withRetry(() => docker.info())
   }
 
-  public async getSystemVersion(hostId: number): Promise<any> {
+  public async getSystemVersion(hostId: number) {
     const docker = this.getDockerInstance(hostId)
     return await this.withRetry(() => docker.version())
   }
 
-  public async getDiskUsage(hostId: number): Promise<any> {
+  public async getDiskUsage(hostId: number): Promise<DOCKER.DockerAPIResponse['diskUsage']> {
     const docker = this.getDockerInstance(hostId)
     return await this.withRetry(() => docker.df())
   }
 
-  public async pruneSystem(hostId: number): Promise<any> {
+  public async pruneSystem(hostId: number): Promise<{ SpaceReclaimed: number }> {
     const docker = this.getDockerInstance(hostId)
     return await this.withRetry(() => docker.pruneImages({ dangling: false }))
   }

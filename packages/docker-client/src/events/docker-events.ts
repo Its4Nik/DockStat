@@ -158,18 +158,18 @@ export class DockerEventEmitter
     this.emit('error', error, { streamKey })
   }
 
-  public emitError(error: Error, context?: any): void {
-    this.logger.error(`Error: ${error.message}`, { context })
+  public emitError(error: Error, context?: unknown): void {
+    this.logger.error(`${error instanceof Error ? error.message : error} - ${context}`)
     this.emit('error', error, context)
   }
 
-  public emitWarning(message: string, context?: any): void {
-    this.logger.warn(message, { context })
+  public emitWarning(message: string, context?: unknown): void {
+    this.logger.warn(`${message} - ${context}`)
     this.emit('warning', message, context)
   }
 
-  public emitInfo(message: string, context?: any): void {
-    this.logger.info(message, { context })
+  public emitInfo(message: string, context?: unknown): void {
+    this.logger.info(`${message} - ${context}`)
     this.emit('info', message, context)
   }
 }
