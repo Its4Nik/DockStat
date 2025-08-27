@@ -1,5 +1,4 @@
 import type { Database, SQLQueryBindings } from 'bun:sqlite'
-import { createLogger } from '@dockstat/logger'
 import type { ColumnNames, JsonColumnConfig, OrderDirection } from '../types'
 import { WhereQueryBuilder } from './where'
 
@@ -185,7 +184,7 @@ export class SelectQueryBuilder<
       )
       const rows = this.getDb()
         .prepare(query)
-        .all(...params) as T[]
+        .all() as T[]
       this.getLogger().debug(`Retrieved ${rows.length} rows from database`)
       const transformed = this.transformRowsFromDb(rows)
       this.getLogger().debug(`Transformed ${transformed.length} rows`)

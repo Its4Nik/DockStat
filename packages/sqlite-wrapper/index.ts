@@ -270,7 +270,7 @@ class DB {
 
     const sql = `CREATE ${temp}TABLE ${ifNot}${quoteIdent(tableName)} (${allDefinitions})${withoutRowId};`
 
-    this.db.exec(sql)
+    this.db.run(sql)
 
     // Store table comment as metadata if provided
     if (options?.comment) {
@@ -306,7 +306,7 @@ class DB {
       sql += ` WHERE ${options.where}`
     }
 
-    this.db.exec(`${sql};`)
+    this.db.run(`${sql};`)
   }
 
   /**
@@ -317,7 +317,7 @@ class DB {
     const quoteIdent = (s: string) => `"${s.replace(/"/g, '""')}"`
 
     const sql = `DROP TABLE ${ifExists}${quoteIdent(tableName)};`
-    this.db.exec(sql)
+    this.db.run(sql)
   }
 
   /**
@@ -328,7 +328,7 @@ class DB {
     const quoteIdent = (s: string) => `"${s.replace(/"/g, '""')}"`
 
     const sql = `DROP INDEX ${ifExists}${quoteIdent(indexName)};`
-    this.db.exec(sql)
+    this.db.run(sql)
   }
 
   /**
@@ -578,7 +578,7 @@ class DB {
   private setTableComment(tableName: string, comment: string): void {
     // Create metadata table if it doesn't exist
     try {
-      this.db.exec(`
+      this.db.run(`
         CREATE TABLE IF NOT EXISTS __table_metadata__ (
           table_name TEXT PRIMARY KEY,
           comment TEXT,
@@ -614,22 +614,22 @@ class DB {
   }
 
   /**
-   * Execute a raw SQL statement
+   * runute a raw SQL statement
    */
-  exec(sql: string): void {
-    logger.debug(`Executing SQL: ${sql}`)
-    this.db.exec(sql)
+  run(sql: string): void {
+    logger.debug(`runuting SQL: ${sql}`)
+    this.db.run(sql)
   }
 
   /**
-   * Prepare a SQL statement for repeated execution
+   * Prepare a SQL statement for repeated runution
    */
   prepare(sql: string) {
     return this.db.prepare(sql)
   }
 
   /**
-   * Execute a transaction
+   * runute a transaction
    */
   transaction<T>(fn: () => T): T {
     return this.db.transaction(fn)()
@@ -640,7 +640,7 @@ class DB {
    */
   begin(mode?: 'DEFERRED' | 'IMMEDIATE' | 'EXCLUSIVE'): void {
     const modeStr = mode ? ` ${mode}` : ''
-    this.db.exec(`BEGIN${modeStr}`)
+    this.db.run(`BEGIN${modeStr}`)
   }
 
   /**
@@ -648,7 +648,7 @@ class DB {
    */
   commit(): void {
     logger.debug('Committing transaction')
-    this.exec('COMMIT')
+    this.run('COMMIT')
   }
 
   /**
@@ -656,7 +656,7 @@ class DB {
    */
   rollback(): void {
     logger.warn('Rolling back transaction')
-    this.exec('ROLLBACK')
+    this.run('ROLLBACK')
   }
 
   /**
@@ -664,7 +664,7 @@ class DB {
    */
   savepoint(name: string): void {
     const quotedName = `"${name.replace(/"/g, '""')}"`
-    this.db.exec(`SAVEPOINT ${quotedName}`)
+    this.db.run(`SAVEPOINT ${quotedName}`)
   }
 
   /**
@@ -672,7 +672,7 @@ class DB {
    */
   releaseSavepoint(name: string): void {
     const quotedName = `"${name.replace(/"/g, '""')}"`
-    this.db.exec(`RELEASE SAVEPOINT ${quotedName}`)
+    this.db.run(`RELEASE SAVEPOINT ${quotedName}`)
   }
 
   /**
@@ -680,14 +680,14 @@ class DB {
    */
   rollbackToSavepoint(name: string): void {
     const quotedName = `"${name.replace(/"/g, '""')}"`
-    this.db.exec(`ROLLBACK TO SAVEPOINT ${quotedName}`)
+    this.db.run(`ROLLBACK TO SAVEPOINT ${quotedName}`)
   }
 
   /**
    * Vacuum the database (reclaim space and optimize)
    */
   vacuum(): void {
-    this.db.exec('VACUUM')
+    this.db.run('VACUUM')
   }
 
   /**
@@ -696,9 +696,9 @@ class DB {
   analyze(tableName?: string): void {
     if (tableName) {
       const quotedName = `"${tableName.replace(/"/g, '""')}"`
-      this.db.exec(`ANALYZE ${quotedName}`)
+      this.db.run(`ANALYZE ${quotedName}`)
     } else {
-      this.db.exec('ANALYZE')
+      this.db.run('ANALYZE')
     }
   }
 
@@ -804,7 +804,7 @@ class DB {
    */
   pragma(name: string, value?: SQLQueryBindings): SQLQueryBindings | undefined {
     if (value !== undefined) {
-      this.db.exec(`PRAGMA ${name} = ${value}`)
+      this.db.run(`PRAGMA ${name} = ${value}`)
       return undefined
     }
     const result = this.db.prepare(`PRAGMA ${name}`).get() as Record<

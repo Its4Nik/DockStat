@@ -95,7 +95,7 @@ class DockStatDB {
   public exec(sql: string): void {
     logger.debug(`Executing raw SQL: ${sql}`)
     try {
-      this.db.exec(sql)
+      this.db.run(sql)
       logger.debug('SQL executed successfully')
     } catch (error) {
       logger.error(`Failed to execute SQL: ${error}`)

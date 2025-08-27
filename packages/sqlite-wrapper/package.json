@@ -5,9 +5,8 @@
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
-  "files": ["index.ts", "src/**/*", "README.md"],
+  "files": ["index.ts", "src/**/*", "README.md", "types.ts"],
   "scripts": {
-    "build": "bun run ./build.ts",
     "dev": "bun build index.ts",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",

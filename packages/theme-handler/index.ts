@@ -28,7 +28,7 @@ export default class ThemeHandler {
       { ifNotExists: true }
     )
 
-    this.theme_table = DB.table<THEME.THEME_config>('themes')
+    this.theme_table = DB.table<THEME.THEME_config>('themes', {jsonColumns: ['vars']})
     this.logger.debug('Inserting default theme')
     const changes = this.theme_table.insertOrReplace(darkDockStatTheme)
     this.logger.debug(`Inserted ${changes.changes} rows at ${changes.insertId}`)
@@ -47,8 +47,13 @@ export default class ThemeHandler {
   }
 
   public setActiveTheme(name: string) {
-    this.theme_table.where({ active: 1 }).update({ active: 0 })
-    return this.theme_table.where({ name: name }).update({ active: 1 })
+    this.logger.debug('[setActiveTheme] Setting previous active theme to inactive' )
+    const out1=this.theme_table.where({ active: 1 }).update({ active: 0 })
+    this.logger.debug(`[setActiveTheme] Set ${name} to active=1: ${JSON.stringify(out1)}; Theme Table: ${JSON.stringify(this.theme_table.select(["*"]).all())}`)
+    this.logger.debug(`[setActiveTheme] Setting ${name} active`)
+    const out2 = this.theme_table.where({ name: name }).update({ active: 1 })
+    this.logger.debug(`[setActiveTheme] Changes: ${JSON.stringify(out2)}`)
+    return out2;
   }
 
   public getAllThemes() {

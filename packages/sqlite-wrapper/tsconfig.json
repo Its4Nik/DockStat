@@ -6,6 +6,6 @@
     "rootDirs": ["./"],
     "composite": true
   },
-  "include": ["index.ts", "query-builder/**/*.ts"],
+  "include": ["index.ts", "query-builder/**/*.ts", "types.ts"],
   "exclude": ["node_modules", "dist"]
 }

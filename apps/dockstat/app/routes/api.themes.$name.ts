@@ -4,7 +4,8 @@ import { themeHandler } from '~/entry.server'
 export async function loader({ params }: { params: { name: string } }) {
   try {
     serverLogger.info(`Setting active theme to ${params.name}`)
-    themeHandler.setActiveTheme(params.name)
+    const out = themeHandler.setActiveTheme(params.name)
+    serverLogger.debug(`themeHandler.setActiveTheme(params.name): ${JSON.stringify(out)}`)
     const theme = themeHandler.getTheme(params.name)
     if (!theme) {
       serverLogger.error(`Theme ${params.name} not found`)
