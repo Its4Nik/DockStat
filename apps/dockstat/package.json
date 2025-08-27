@@ -4,16 +4,21 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
-    "dev": "react-router dev",
+    "dev": "bun run --bun react-router dev",
     "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "react-router typegen && tsc"
+    "typegen": "react-router typegen",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "lint:gh": "turbo run lint -- --reporter=github",
+    "check-types": "bunx tsc --noEmit"
   },
   "dependencies": {
     "@dockstat/db": "workspace:*",
-    "@dockstat/docker-client": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*",
+    "@dockstat/docker-client": "workspace:*",
     "@dockstat/theme-handler": "workspace:*",
     "@dockstat/typings": "workspace:*",
+    "@dockstat/logger": "workspace:*",
     "@dockstat/ui": "workspace:*",
     "@react-router/fs-routes": "^7.8.2",
     "@react-router/node": "^7.7.1",

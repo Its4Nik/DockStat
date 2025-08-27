@@ -21,4 +21,3 @@ export {
   TableHead,
   TableRow,
 } from './src/components/Table'
-export { toast as SendToast } from 'sonner'

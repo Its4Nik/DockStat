@@ -1,3 +1,4 @@
+import { createLogger } from '@dockstat/logger'
 import type DB from '@dockstat/sqlite-wrapper'
 import type { DATABASE, DOCKER } from '@dockstat/typings'
 import Dockerode, { type ContainerStats } from 'dockerode'
@@ -7,6 +8,7 @@ import MonitoringManager from './monitoring/monitoring-manager'
 import { StreamManager } from './stream/stream-manager'
 
 class DockerClient {
+  private logger = createLogger('DockerClient')
   private hostHandler: HostHandler
   private dockerInstances: Map<number, Dockerode> = new Map()
   private activeStreams: Map<string, NodeJS.Timeout> = new Map()
@@ -20,6 +22,8 @@ class DockerClient {
   private streamManager?: StreamManager
 
   constructor(DB: DB, options: DOCKER.DockerClientOptions = {}) {
+    this.logger.info('Initializing DockerClient')
+    this.logger.debug('Creating HostHandler instance')
     this.hostHandler = new HostHandler(DB)
     this.options = {
       defaultTimeout: options.defaultTimeout ?? 5000,
@@ -49,6 +53,7 @@ class DockerClient {
 
   // Host Management
   public addHost(host: DATABASE.DB_target_host): void {
+    this.logger.info(`Adding new host: ${host.name} (ID: ${host.id})`)
     this.hostHandler.addHost(host)
     const dockerInstance = new Dockerode({
       host: host.host,
@@ -68,6 +73,7 @@ class DockerClient {
   }
 
   public removeHost(host: DATABASE.DB_target_host): void {
+    this.logger.info(`Removing host: ${host.name} (ID: ${host.id})`)
     this.hostHandler.removeHost(host)
     this.dockerInstances.delete(host.id)
     // Clean up any active streams for this host
@@ -102,8 +108,10 @@ class DockerClient {
 
   // Container Operations
   public async getAllContainers(): Promise<DOCKER.ContainerInfo[]> {
+    this.logger.info('Fetching containers from all hosts')
     const allContainers: DOCKER.ContainerInfo[] = []
     const hosts = this.hostHandler.getHosts()
+    this.logger.debug(`Found ${hosts.length} hosts to query`)
 
     await Promise.allSettled(
       hosts.map(async (host) => {
@@ -125,6 +133,7 @@ class DockerClient {
   public async getContainersForHost(
     hostId: number
   ): Promise<DOCKER.ContainerInfo[]> {
+    this.logger.debug(`Fetching containers for host ID: ${hostId}`)
     const docker = this.getDockerInstance(hostId)
     const containers = await this.withRetry(() =>
       docker.listContainers({ all: true })
@@ -139,6 +148,7 @@ class DockerClient {
     hostId: number,
     containerId: string
   ): Promise<DOCKER.ContainerInfo> {
+    this.logger.debug(`Fetching container ${containerId} from host ${hostId}`)
     const docker = this.getDockerInstance(hostId)
     const container = docker.getContainer(containerId)
     const containerInfo = await this.withRetry(() => container.inspect())

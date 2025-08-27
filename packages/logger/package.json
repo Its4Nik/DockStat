@@ -1,29 +1,29 @@
 {
-  "name": "@dockstat/ui",
-  "description": "A simple component library designed for DockStat",
+  "name": "@dockstat/logger",
   "module": "index.ts",
-  "type": "module",
-  "private": true,
   "main": "index.ts",
-  "types": "index.ts",
-  "files": ["src/**/*.{ts,tsx}", "index.ts"],
+  "private": true,
+  "exports": {
+    "default": "./index.ts"
+  },
   "scripts": {
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "lint:gh": "turbo run lint -- --reporter=github",
     "check-types": "bunx tsc --noEmit"
   },
+  "files": ["index.ts"],
+  "type": "module",
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
     "typescript": "^5"
   },
   "dependencies": {
-    "@headlessui/react": "^2.2.7",
-    "recharts": "^3.1.2",
-    "sonner": "^2.0.7"
+    "@types/chalk": "^2.2.4",
+    "@types/source-map-support": "^0.5.10",
+    "chalk": "^5.6.0",
+    "source-map-support": "^0.5.21"
   }
 }

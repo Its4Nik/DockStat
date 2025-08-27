@@ -6,6 +6,6 @@
     "composite": true,
     "moduleResolution": "bundler"
   },
-  "include": ["index.ts", "default_theme.ts"],
+  "include": ["index.ts"],
   "exclude": ["node_modules", "dist"]
 }

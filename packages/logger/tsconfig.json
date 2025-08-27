@@ -1,11 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true,
     "outDir": "./dist",
     "rootDirs": ["./"],
-    "composite": true
+    "composite": true,
+    "strict": true
   },
-  "include": ["index.ts", "query-builder/**/*.ts"],
+  "include": ["index.ts"],
   "exclude": ["node_modules", "dist"]
 }

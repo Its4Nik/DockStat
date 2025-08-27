@@ -3,32 +3,30 @@
   "version": "1.0.4",
   "license": "MPL-2.0",
   "description": "Theme management system with React context and CSS variable parsing",
-  "main": "./dist/src/index.js",
-  "module": "./dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
+  "main": "./index.ts",
+  "types": "./index.ts",
   "type": "module",
   "private": false,
-  "files": ["dist/**/*", "README.md"],
+  "files": ["index.ts", "README.md", "defaultTheme.ts", "src/**/*"],
   "repository": {
     "type": "git",
     "url": "https://github.com/Its4Nik/DockStat",
     "directory": "packages/theme-handler"
   },
-  "homepage": "https://outline.itsnik.de/s/9d88c471-373e-4ef2-a955-b1058eb7dc99/doc/dockstattheme-handler-zqe3ITb7jc",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
-      "import": "./dist/src/index.js"
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
     },
     "./core": {
-      "types": "./dist/index.js",
-      "import": "./dist/index.d.ts"
+      "types": "./index.ts",
+      "import": "./index.ts"
     }
   },
+  "homepage": "https://outline.itsnik.de/s/9d88c471-373e-4ef2-a955-b1058eb7dc99/doc/dockstattheme-handler-zqe3ITb7jc",
   "scripts": {
     "dev": "bun run index.ts",
     "test": "bun run test.ts",
-    "build": "bun run build.ts",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",
     "prepublishOnly": "bun run clean && bun run build"
@@ -44,6 +42,7 @@
   },
   "peerDependencies": {
     "@dockstat/sqlite-wrapper": "workspace:*",
+    "@dockstat/logger": "workspace:*",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "typescript": "^5"

@@ -1,8 +1,5 @@
-import {
-  ThemeProvider,
-  useTheme,
-  useThemeSwitch,
-} from '@dockstat/theme-handler'
+import { ThemeProvider } from '@dockstat/theme-handler'
+import { parserConfigs } from '@dockstat/theme-handler'
 import {
   Links,
   Meta,
@@ -10,10 +7,18 @@ import {
   Scripts,
   ScrollRestoration,
   isRouteErrorResponse,
+  useLoaderData,
 } from 'react-router'
 
 import type { Route } from './+types/root'
 import './app.css'
+import { themeHandler } from './entry.server'
+
+export function loader() {
+  const activeTheme = themeHandler.getActiveTheme() || undefined
+  const themes = themeHandler.getThemeNames()
+  return { theme: activeTheme, availableThemes: themes }
+}
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -29,6 +34,9 @@ export const links: Route.LinksFunction = () => [
 ]
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const data = useLoaderData<typeof loader>()
+
+  const theme = data ? data.theme : undefined
   return (
     <html lang="en">
       <head>
@@ -38,7 +46,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider
+          initialTheme={theme}
+          apiEndpoint="/api"
+          cssParserConfig={parserConfigs.standard}
+          fallbackThemeName="default"
+          onThemeChange={async (name) => {
+            const response = await fetch(`/api/themes/${name}`)
+            return response.json()
+          }}
+        >
+          {children}
+        </ThemeProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

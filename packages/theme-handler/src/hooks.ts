@@ -1,6 +1,9 @@
+import { createLogger } from '@dockstat/logger'
 import type { THEME } from '@dockstat/typings'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTheme } from './context'
+
+const logger = createLogger('ThemeHooks')
 
 /**
  * Hook for managing theme switching with loading states
@@ -11,9 +14,14 @@ export function useThemeSwitch() {
 
   const switchTheme = useCallback(
     async (themeName: string) => {
+      logger.info(`Switching theme to: ${themeName}`)
       setSwitchingTo(themeName)
       try {
-        await setThemeName(themeName)
+        setThemeName(themeName)
+        logger.info(`Successfully switched theme to: ${themeName}`)
+      } catch (error) {
+        logger.error(`Failed to switch theme to ${themeName}: ${error}`)
+        throw error
       } finally {
         setSwitchingTo(null)
       }
@@ -40,11 +48,15 @@ export function useThemeVariable(
   const [value, setValue] = useState<string | undefined>(fallback)
 
   useEffect(() => {
-    if (!isThemeLoaded) return
+    if (!isThemeLoaded) {
+      logger.debug('Theme not loaded yet, skipping variable lookup')
+      return
+    }
 
     const cssVarName = variableName.startsWith('--')
       ? variableName
       : `--${variableName}`
+    logger.debug(`Looking up theme variable: ${cssVarName}`)
     const themeValue = themeVars[cssVarName]
 
     if (themeValue !== undefined) {
@@ -122,6 +134,7 @@ export function useThemePersistence(storageKey = 'dockstat-theme') {
   // Save theme to localStorage whenever it changes
   useEffect(() => {
     if (typeof window !== 'undefined' && themeName) {
+      logger.debug(`Persisting theme to localStorage: ${themeName}`)
       localStorage.setItem(storageKey, themeName)
     }
   }, [themeName, storageKey])
@@ -130,7 +143,9 @@ export function useThemePersistence(storageKey = 'dockstat-theme') {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem(storageKey)
+      logger.debug(`Retrieved theme from localStorage: ${savedTheme}`)
       if (savedTheme && savedTheme !== themeName) {
+        logger.info(`Restoring saved theme: ${savedTheme}`)
         setThemeName(savedTheme)
       }
     }
@@ -193,6 +208,7 @@ export function useThemeHealthCheck() {
 
   useEffect(() => {
     if (!isThemeLoaded || !theme) {
+      logger.warn('Theme health check failed: Theme not loaded')
       setHealthStatus({
         isHealthy: false,
         issues: ['Theme not loaded'],

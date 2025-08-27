@@ -1,4 +1,5 @@
 import type { Database, SQLQueryBindings } from 'bun:sqlite'
+import { createLogger } from '@dockstat/logger'
 import type {
   ColumnNames,
   DatabaseRowData,
@@ -12,7 +13,15 @@ import type {
  * This class provides the foundation for all query operations.
  */
 export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
+  private logger = createLogger('BaseQueryBuilder')
   protected state: QueryBuilderState<T>
+
+  /**
+   * Get the logger instance
+   */
+  protected getLogger() {
+    return this.logger
+  }
 
   constructor(
     db: Database,
@@ -27,6 +36,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
       regexConditions: [],
       jsonColumns: jsonConfig?.jsonColumns,
     }
+    this.logger.debug(`Created QueryBuilder for table: ${tableName}`)
   }
 
   /**
@@ -91,9 +101,9 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
       this.state.whereConditions.length === 0 &&
       this.state.regexConditions.length === 0
     ) {
-      throw new Error(
-        `${operation} operation requires at least one WHERE condition. Use where(), whereRaw(), whereIn(), whereOp(), or whereRgx() to add conditions.`
-      )
+      const error = `${operation} operation requires at least one WHERE condition. Use where(), whereRaw(), whereIn(), whereOp(), or whereRgx() to add conditions.`
+      this.logger.error(error)
+      throw new Error(error)
     }
   }
 
@@ -135,16 +145,15 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
             )
           } catch (parseError) {
             // Keep original value if JSON parsing fails
-            console.warn(
-              `JSON parse failed for column ${columnKey}:`,
-              parseError
+            this.logger.warn(
+              `JSON parse failed for column ${columnKey}: ${parseError}`
             )
           }
         }
       }
       return transformed as T
     } catch (error) {
-      console.error('Error in transformRowFromDb:', error)
+      this.logger.error(`Error in transformRowFromDb: ${error}`)
       return row as T
     }
   }
@@ -160,12 +169,12 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
         try {
           return this.transformRowFromDb(row)
         } catch (error) {
-          console.error(`Error transforming row ${index}:`, error)
+          this.logger.error(`Error transforming row ${index}: ${error}`)
           return row as T
         }
       })
     } catch (error) {
-      console.error('Error in transformRowsFromDb:', error)
+      this.logger.error(`Error in transformRowsFromDb: ${error}`)
       return rows as T[]
     }
   }

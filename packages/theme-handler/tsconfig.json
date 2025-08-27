@@ -8,6 +8,6 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react"
   },
-  "include": ["index.ts", "src/**/*.{ts,tsx}"],
+  "include": ["index.ts", "defaultTheme.ts", "src/**/*.{ts,tsx}"],
   "exclude": ["node_modules", "dist"]
 }

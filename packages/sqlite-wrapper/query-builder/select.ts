@@ -1,5 +1,6 @@
-import type { SQLQueryBindings } from 'bun:sqlite'
-import type { ColumnNames, OrderDirection } from '../types'
+import type { Database, SQLQueryBindings } from 'bun:sqlite'
+import { createLogger } from '@dockstat/logger'
+import type { ColumnNames, JsonColumnConfig, OrderDirection } from '../types'
 import { WhereQueryBuilder } from './where'
 
 /**
@@ -9,11 +10,21 @@ import { WhereQueryBuilder } from './where'
 export class SelectQueryBuilder<
   T extends Record<string, unknown>,
 > extends WhereQueryBuilder<T> {
-  private selectedColumns: ColumnNames<T> = ['*']
+  private selectedColumns: ColumnNames<T>
   private orderColumn?: keyof T
-  private orderDirection: OrderDirection = 'ASC'
+  private orderDirection: OrderDirection
   private limitValue?: number
   private offsetValue?: number
+
+  constructor(
+    db: Database,
+    tableName: string,
+    jsonConfig?: JsonColumnConfig<T>
+  ) {
+    super(db, tableName, jsonConfig)
+    this.selectedColumns = ['*']
+    this.orderDirection = 'ASC'
+  }
 
   /**
    * Specify which columns to select.
@@ -169,34 +180,29 @@ export class SelectQueryBuilder<
   all(): T[] {
     if (!this.hasRegexConditions()) {
       const [query, params] = this.buildSelectQuery(true)
-      console.log('DEBUG all() - no regex path:', {
-        query,
-        params,
-        hasJsonColumns: !!this.state.jsonColumns,
-      })
+      this.getLogger().debug(
+        `Executing SELECT query - query: ${query}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.jsonColumns}`
+      )
       const rows = this.getDb()
         .prepare(query)
         .all(...params) as T[]
-      console.log('DEBUG all() - raw rows:', rows.length)
+      this.getLogger().debug(`Retrieved ${rows.length} rows from database`)
       const transformed = this.transformRowsFromDb(rows)
-      console.log('DEBUG all() - transformed rows:', transformed.length)
+      this.getLogger().debug(`Transformed ${transformed.length} rows`)
       return transformed
     }
 
     const [query, params] = this.buildSelectQuery(false)
-    console.log('DEBUG all() - regex path:', {
-      query,
-      params,
-      hasJsonColumns: !!this.state.jsonColumns,
-    })
+    this.getLogger().debug(
+      `Executing SELECT query with regex conditions - query: ${query}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.jsonColumns}`
+    )
     const rows = this.getDb()
       .prepare(query)
       .all(...params) as T[]
-    console.log('DEBUG all() - raw rows (regex):', rows.length)
+    this.getLogger().debug(`Retrieved ${rows.length} rows for regex filtering`)
     const transformedRows = this.transformRowsFromDb(rows)
-    console.log(
-      'DEBUG all() - transformed rows (regex):',
-      transformedRows.length
+    this.getLogger().debug(
+      `Transformed ${transformedRows.length} rows for regex filtering`
     )
     return this.applyClientSideOperations(transformedRows)
   }
@@ -212,19 +218,16 @@ export class SelectQueryBuilder<
       // No regex and no explicit limit, we can safely add LIMIT 1
       const [query, params] = this.buildSelectQuery(true)
       const q = query.includes('LIMIT') ? query : `${query} LIMIT 1`
-      console.log('DEBUG get() - path 1:', {
-        query: q,
-        params,
-        hasJsonColumns: !!this.state.jsonColumns,
-      })
+      this.getLogger().debug(
+        `Executing single-row SELECT query - query: ${q}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.jsonColumns}`
+      )
       const row = this.getDb()
         .prepare(q)
         .get(...params) as T | null
-      console.log('DEBUG get() - raw row (path 1):', row ? 'found' : 'null')
+      this.getLogger().debug(`Row found: ${row ? 'yes' : 'no'}`)
       const transformed = row ? this.transformRowFromDb(row) : null
-      console.log(
-        'DEBUG get() - transformed row (path 1):',
-        transformed ? 'found' : 'null'
+      this.getLogger().debug(
+        `Transformed row available: ${transformed ? 'yes' : 'no'}`
       )
       return transformed
     }
@@ -232,25 +235,26 @@ export class SelectQueryBuilder<
     if (!this.hasRegexConditions() && this.limitValue !== undefined) {
       // Limit is present; just use the query as-is
       const [query, params] = this.buildSelectQuery(true)
-      console.log('DEBUG get() - path 2:', {
-        query,
-        params,
-        hasJsonColumns: !!this.state.jsonColumns,
-      })
+      this.getLogger().debug(
+        `get() - path 2: ${JSON.stringify({
+          query,
+          params,
+          hasJsonColumns: !!this.state.jsonColumns,
+        })}`
+      )
       const row = this.getDb()
         .prepare(query)
         .get(...params) as T | null
-      console.log('DEBUG get() - raw row (path 2):', row ? 'found' : 'null')
+      this.getLogger().debug(`raw row (path 2): ${row ? 'found' : 'null'}`)
       const transformed = row ? this.transformRowFromDb(row) : null
-      console.log(
-        'DEBUG get() - transformed row (path 2):',
-        transformed ? 'found' : 'null'
+      this.getLogger().debug(
+        `transformed row (path 2): ${transformed ? 'found' : 'null'}`
       )
       return transformed
     }
 
     // Has regex conditions, need to process client-side
-    console.log('DEBUG get() - path 3 (regex fallback)')
+    this.getLogger().debug('path 3 (regex fallback)')
     const results = this.all()
     return results[0] ?? null
   }

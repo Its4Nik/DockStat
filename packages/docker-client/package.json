@@ -16,6 +16,7 @@
   "scripts": {
     "build": "bun run ./build.ts",
     "dev": "bun run --watch index.ts",
+    "clean": "rm -rf dist",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "lint:gh": "turbo run lint -- --reporter=github",
@@ -23,7 +24,6 @@
     "test": "bun run test.ts",
     "example:basic": "bun run examples/basic-usage.ts",
     "example:websocket": "bun run examples/websocket-integration.ts",
-    "clean": "rm -rf dist",
     "prepublishOnly": "bun run clean && bun run build"
   },
   "author": "Its4Nik",
@@ -48,6 +48,7 @@
   "dependencies": {
     "@dockstat/sqlite-wrapper": "workspace:*",
     "@dockstat/typings": "workspace:*",
+    "@dockstat/logger": "workspace:*",
     "@types/dockerode": "^3.3.43",
     "dockerode": "^4.0.7"
   }

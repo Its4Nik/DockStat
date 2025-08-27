@@ -1,10 +1,19 @@
+import { createLogger } from '@dockstat/logger'
 import { type DB, type QueryBuilder, column } from '@dockstat/sqlite-wrapper'
 import type { THEME } from '@dockstat/typings'
+import { darkDockStatTheme } from './defaultTheme'
 
 export default class ThemeHandler {
   private theme_table: QueryBuilder<THEME.THEME_config>
+  private logger = createLogger('ThemeHandler')
 
   constructor(DB: DB) {
+    try {
+      this.logger.info('Initializing ThemeHandler')
+      this.logger.debug(`Creating themes table on ${DB.getDb().filename}`)
+    } catch (error) {
+      console.error(`Failed to initialize ThemeHandler: ${error}`)
+    }
     DB.createTable(
       'themes',
       {
@@ -20,6 +29,9 @@ export default class ThemeHandler {
     )
 
     this.theme_table = DB.table<THEME.THEME_config>('themes')
+    this.logger.debug('Inserting default theme')
+    const changes = this.theme_table.insertOrReplace(darkDockStatTheme)
+    this.logger.debug(`Inserted ${changes.changes} rows at ${changes.insertId}`)
   }
 
   public addTheme(theme: THEME.THEME_config) {

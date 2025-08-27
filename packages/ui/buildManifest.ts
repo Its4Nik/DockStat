@@ -6,6 +6,9 @@
 import fs from 'node:fs'
 import { readFile, readdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import { createLogger } from '@dockstat/logger'
+
+const logger = createLogger('buildManifest')
 
 type FilePath = string
 
@@ -30,6 +33,7 @@ const FILE_EXTENSIONS: Set<string> = new Set([
 ])
 
 async function collectFiles(dir: FilePath): Promise<FilePath[]> {
+  logger.debug(`Collecting files from directory: ${dir}`)
   const entries = await readdir(dir, { withFileTypes: true })
   const results: FilePath[] = []
   for (const ent of entries) {
@@ -277,18 +281,21 @@ function detectComponentNameAndProps(
 
 async function run(): Promise<void> {
   try {
+    logger.info('Starting manifest build')
     if (!fs.existsSync(ROOT_DIR)) {
-      console.error(`Directory not found: ${ROOT_DIR}`)
+      logger.error(`Directory not found: ${ROOT_DIR}`)
       process.exitCode = 1
       return
     }
 
     const files = await collectFiles(ROOT_DIR)
+    logger.info(`Found ${files.length} files to process`)
     const manifest: ManifestEntry[] = []
 
     for (const filePath of files) {
       const relativePath = path.relative(process.cwd(), filePath)
       const src = await readFile(filePath, 'utf8')
+      logger.debug(`Processing file: ${relativePath}`)
 
       const classStrings = extractClassStrings(src)
       const classes = classTokensFromStrings(classStrings)
@@ -313,11 +320,10 @@ async function run(): Promise<void> {
     }
 
     await writeFile(OUT_FILE, JSON.stringify(manifest, null, 2), 'utf8')
-    console.log(`Wrote ${manifest.length} entries to ${OUT_FILE}`)
+    logger.info(`Successfully wrote ${manifest.length} entries to ${OUT_FILE}`)
   } catch (err) {
-    console.error(
-      'Error while generating manifest:',
-      err instanceof Error ? err.message : String(err)
+    logger.error(
+      `Error while generating manifest: ${err instanceof Error ? err.message : String(err)}`
     )
     process.exitCode = 2
   }
