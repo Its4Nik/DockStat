@@ -46,9 +46,11 @@ export class UpdateQueryBuilder<
       .prepare(query)
       .run(...allParams);
 
-    return {
+    const out = {
       changes: result.changes,
     };
+    this.reset();
+    return out;
   }
 
   /**
@@ -121,9 +123,11 @@ export class UpdateQueryBuilder<
       .prepare(query)
       .run(...values);
 
-    return {
+    const out = {
       changes: result.changes,
     };
+    this.reset();
+    return out;
   }
 
   /**
@@ -144,9 +148,11 @@ export class UpdateQueryBuilder<
       .prepare(query)
       .run(amount, ...whereParams);
 
-    return {
+    const out = {
       changes: result.changes,
     };
+    this.reset();
+    return out;
   }
 
   /**
@@ -181,7 +187,9 @@ export class UpdateQueryBuilder<
 
     // For simplicity, return the originally matched rows
     // In a real implementation, you might want to re-fetch the updated rows
-    return rowsToUpdate;
+    const out = rowsToUpdate;
+    this.reset();
+    return out;
   }
 
   /**
@@ -253,6 +261,8 @@ export class UpdateQueryBuilder<
       },
     );
 
-    return transaction(updates);
+    const out = transaction(updates);
+    this.reset();
+    return out;
   }
 }

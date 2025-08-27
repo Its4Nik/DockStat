@@ -73,10 +73,12 @@ export class InsertQueryBuilder<
       }
     }
 
-    return {
+    const result = {
       insertId: lastInsertId,
       changes: totalChanges,
     };
+    this.reset();
+    return result;
   }
 
   /**
@@ -234,6 +236,8 @@ export class InsertQueryBuilder<
       return { insertId: lastInsertId, changes: totalChanges };
     });
 
-    return transaction(rows);
+    const result = transaction(rows);
+    this.reset();
+    return result;
   }
 }

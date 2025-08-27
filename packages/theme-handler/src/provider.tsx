@@ -4,7 +4,7 @@ import { ThemeContext } from './context'
 
 interface ThemeProviderProps {
   children: React.ReactNode
-  initialTheme?: THEME.THEME_config
+  initialTheme: THEME.THEME_config
   onThemeChange?: (themeName: string) => Promise<THEME.THEME_config>
   onThemeList?: () => Promise<string[]>
 }
@@ -16,13 +16,13 @@ export function ThemeProvider({
   onThemeList,
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<THEME.THEME_config | null>(
-    initialTheme ?? null
+    initialTheme
   )
   const [themeName, setThemeName] = useState<string>(
-    initialTheme?.name ?? 'default'
+    initialTheme.name ?? 'default'
   )
-  const [themeVars, setThemeVars] = useState<Record<string, string>>(
-    initialTheme?.vars ?? {}
+  const [themeVars, setThemeVars] = useState<THEME.THEME_vars>(
+    initialTheme.vars
   )
   const [isLoading, setIsLoading] = useState(false)
   const [isThemeLoaded, setIsThemeLoaded] = useState(!!initialTheme)
@@ -30,7 +30,7 @@ export function ThemeProvider({
   const [availableThemes, setAvailableThemes] = useState<string[]>([])
 
   const refreshTheme = useCallback(async () => {
-    if (!onThemeChange) return
+    if (!onThemeChange) {return}
 
     setIsLoading(true)
     setError(null)
@@ -42,9 +42,10 @@ export function ThemeProvider({
       setIsThemeLoaded(true)
 
       // Apply theme variables to document root
-      Object.entries(newTheme.vars).forEach(([key, value]) => {
+      const entries = Object.entries(newTheme.vars)
+      for(const [key, value] of entries){
         document.documentElement.style.setProperty(`--${key}`, value)
-      })
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load theme')
     } finally {

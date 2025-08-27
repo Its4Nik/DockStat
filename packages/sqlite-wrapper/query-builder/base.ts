@@ -40,6 +40,16 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
   }
 
   /**
+    * Reset query builder state
+    */
+  protected reset(): void {
+     this.state.whereConditions = []
+     this.state.whereParams = []
+     this.state.regexConditions = []
+   }
+
+
+  /**
    * Get the database instance
    */
   protected getDb(): Database {

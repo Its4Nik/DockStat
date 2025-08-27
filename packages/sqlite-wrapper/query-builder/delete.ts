@@ -20,7 +20,9 @@ export class DeleteQueryBuilder<
 
     // Handle regex conditions by first fetching matching rows
     if (this.hasRegexConditions()) {
-      return this.deleteWithRegexConditions();
+      const result = this.deleteWithRegexConditions();
+      this.reset();
+      return result;
     }
 
     // Build DELETE statement
@@ -31,6 +33,7 @@ export class DeleteQueryBuilder<
       .prepare(query)
       .run(...whereParams);
 
+    this.reset();
     return {
       changes: result.changes,
     };
@@ -41,6 +44,7 @@ export class DeleteQueryBuilder<
    * This requires client-side filtering and individual row deletion.
    */
   private deleteWithRegexConditions(): DeleteResult {
+    this.reset();
     // First, get all rows matching SQL conditions (without regex)
     const [selectQuery, selectParams] = this.buildWhereClause();
     const candidateRows = this.getDb()
@@ -87,7 +91,9 @@ export class DeleteQueryBuilder<
     }
 
     // Return the rows that were deleted
-    return rowsToDelete;
+    const out = rowsToDelete;
+    this.reset();
+    return out;
   }
 
   /**
@@ -106,7 +112,9 @@ export class DeleteQueryBuilder<
 
     // Handle regex conditions
     if (this.hasRegexConditions()) {
-      return this.softDeleteWithRegexConditions(deletedColumn, deletedValue);
+      const result = this.softDeleteWithRegexConditions(deletedColumn, deletedValue);
+      this.reset();
+      return result;
     }
 
     // Build UPDATE statement to mark as deleted
@@ -117,6 +125,7 @@ export class DeleteQueryBuilder<
       .prepare(query)
       .run(deletedValue, ...whereParams);
 
+    this.reset();
     return {
       changes: result.changes,
     };
@@ -168,7 +177,9 @@ export class DeleteQueryBuilder<
 
     // Handle regex conditions
     if (this.hasRegexConditions()) {
-      return this.restoreWithRegexConditions(deletedColumn);
+      const result = this.restoreWithRegexConditions(deletedColumn);
+      this.reset();
+      return result;
     }
 
     // Build UPDATE statement to clear the deleted marker
@@ -179,6 +190,7 @@ export class DeleteQueryBuilder<
       .prepare(query)
       .run(...whereParams);
 
+    this.reset();
     return {
       changes: result.changes,
     };
@@ -267,7 +279,9 @@ export class DeleteQueryBuilder<
       },
     );
 
-    return transaction(conditions);
+    const result = transaction(conditions);
+    this.reset();
+    return result;
   }
 
   /**
@@ -281,6 +295,7 @@ export class DeleteQueryBuilder<
     const query = `DELETE FROM ${this.quoteIdentifier(this.getTableName())}`;
     const result = this.getDb().prepare(query).run();
 
+    this.reset();
     return {
       changes: result.changes,
     };
@@ -295,7 +310,9 @@ export class DeleteQueryBuilder<
    * @returns Delete result with changes count
    */
   deleteOlderThan(timestampColumn: keyof T, olderThan: number): DeleteResult {
-    return this.whereOp(timestampColumn, "<", olderThan).delete();
+    const changes = this.whereOp(timestampColumn, "<", olderThan).delete();
+    this.reset();
+    return changes;
   }
 
   /**
@@ -327,6 +344,7 @@ export class DeleteQueryBuilder<
 
     const result = this.getDb().prepare(query).run();
 
+    this.reset();
     return {
       changes: result.changes,
     };

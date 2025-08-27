@@ -47,12 +47,11 @@ export default class ThemeHandler {
   }
 
   public setActiveTheme(name: string) {
-    this.logger.debug('[setActiveTheme] Setting previous active theme to inactive' )
+    this.logger.debug('Setting previous active theme to inactive' )
     const out1=this.theme_table.where({ active: 1 }).update({ active: 0 })
-    this.logger.debug(`[setActiveTheme] Set ${name} to active=1: ${JSON.stringify(out1)}; Theme Table: ${JSON.stringify(this.theme_table.select(["*"]).all())}`)
-    this.logger.debug(`[setActiveTheme] Setting ${name} active`)
+    this.logger.debug(`Set ${name} to active=1: ${JSON.stringify(out1)}`)
     const out2 = this.theme_table.where({ name: name }).update({ active: 1 })
-    this.logger.debug(`[setActiveTheme] Changes: ${JSON.stringify(out2)}`)
+    this.logger.debug(`Changes: ${JSON.stringify(out2)}`)
     return out2;
   }
 
