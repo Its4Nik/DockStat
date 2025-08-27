@@ -17,7 +17,7 @@ import {
   updateDocument,
   createDocument,
 } from "./outlineApi";
-import type { Manifest, PageEntry } from "./types";
+import type { Collection, CollectionConfig, Document, DocumentWithPoliciesResponse, Manifest, Node, PageEntry, SingleDocumentResponse } from "./types";
 import { logger } from "../bin/cli";
 
 /**
@@ -68,10 +68,10 @@ export async function persistPagesManifest(
  */
 export function applyMappingsToManifest(
   manifest: Manifest,
-  collectionConfig: any,
+  collectionConfig: CollectionConfig,
 ) {
   const rules = (collectionConfig?.mappings || []) as {
-    match: any;
+    match: Document;
     path: string;
   }[];
 
@@ -82,7 +82,7 @@ export function applyMappingsToManifest(
     return path.extname(p).toLowerCase() !== ".md";
   }
 
-  function applyToNode(node: any, parentDir: string | null) {
+  function applyToNode(node: Node, parentDir: string | null) {
     // try id match then title match
     let matched = false;
     for (const r of rules) {
@@ -154,7 +154,7 @@ export function applyMappingsToManifest(
   }
 
   for (const p of manifest.pages) {
-    applyToNode(p as any, null);
+    applyToNode(p as Node, null);
   }
   logger.debug(`Applied mappings to manifest (rules=${rules.length})`);
   return manifest;
@@ -193,7 +193,7 @@ export async function syncPage(
     }
   }
 
-  let remoteDoc: any = null;
+  let remoteDoc: Document | null = null;
   if (page.id) {
     try {
       remoteDoc = await fetchDocumentInfo(page.id);
@@ -349,7 +349,8 @@ export async function runSync(opts: {
   );
 
   const pagesManifest = await loadPagesManifest(collectionId);
-  const collCfg = (await loadCollectionConfig(collectionId)) || {
+  const collCfg: CollectionConfig = (await loadCollectionConfig(collectionId)) || {
+    collectionId: collectionId,
     saveDir: "docs",
     mappings: [],
   };
@@ -358,7 +359,7 @@ export async function runSync(opts: {
   applyMappingsToManifest(pagesManifest, collCfg);
 
   // ensure local files/folders exist and normalize any relative filenames
-  async function normalizePaths(node: any, parentDir: string | null) {
+  async function normalizePaths(node: PageEntry, parentDir: string | null) {
     // if node.file is absent, apply inheritance (applyMappingsToManifest should have set it)
     if (!node.file) {
       const slug = slugifyTitle(node.title || "untitled");
@@ -398,7 +399,7 @@ export async function runSync(opts: {
 
   // normalize for each root
   for (const root of pagesManifest.pages) {
-    await normalizePaths(root as any, null);
+    await normalizePaths(root, null);
   }
   logger.debug("Completed path normalization for manifest");
 

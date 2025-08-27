@@ -11,7 +11,7 @@ import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { slugifyTitle } from "./utils";
-import type { PageEntry, Manifest } from "./types";
+import type { PageEntry, Manifest, Document } from "./types";
 import { logger } from "../bin/cli";
 
 /**
@@ -120,7 +120,7 @@ export async function bootstrapCollection(opts: {
   );
 
   // 1) build flat map of nodes
-  const map = new Map<string, PageEntry & { raw?: any }>();
+  const map = new Map<string, PageEntry & { raw?: Document }>();
   for (const d of docs) {
     map.set(d.id, {
       title: d.title,
@@ -132,10 +132,10 @@ export async function bootstrapCollection(opts: {
   }
 
   // 2) attach children
-  const roots: (PageEntry & { raw?: any })[] = [];
+  const roots: (PageEntry & { raw?: Document })[] = [];
   for (const node of map.values()) {
-    const raw = node.raw || {};
-    const parentId = raw.parentDocumentId ?? raw.parentId ?? null;
+    const raw: Document = node.raw;
+    const parentId = raw.parentDocumentId ?? null;
     if (parentId && map.has(parentId)) {
       map.get(parentId).children.push(node);
     } else {
@@ -146,7 +146,7 @@ export async function bootstrapCollection(opts: {
 
   // 3) assign paths
   const { saveDir } = await getCollectionFilesBase(collectionId);
-  function assignPaths(node: any, parentDir: string) {
+  function assignPaths(node: PageEntry & { raw?: Document }, parentDir: string) {
     const slug = slugifyTitle(node.title || "untitled");
     const dir = path.join(parentDir, slug);
     const filePath = path.join(dir, "README.md");
@@ -177,7 +177,7 @@ export async function bootstrapCollection(opts: {
   }
 
   // 5) build manifest
-  function strip(n: any): PageEntry {
+  function strip(n: PageEntry & { raw?:Document }): PageEntry {
     return {
       title: n.title,
       file: n.file,

@@ -126,9 +126,9 @@ export interface DockerClientEvents {
   "stream:data": (streamKey: string, data: DockerStreamData) => void;
   "stream:error": (streamKey: string, error: Error) => void;
 
-  error: (error: Error, context?: any) => void;
-  warning: (message: string, context?: any) => void;
-  info: (message: string, context?: any) => void;
+  error: (error: Error, context?: Record<string, unknown>) => void;
+  warning: (message: string, context?: Record<string, unknown>) => void;
+  info: (message: string, context?: Record<string, unknown>) => void;
 }
 
 export interface DockerEventEmitterInterface {
@@ -177,7 +177,7 @@ export interface StreamMessage {
   id: string;
   type: "subscribe" | "unsubscribe" | "data" | "error" | "ping" | "pong";
   channel?: string;
-  data?: any;
+  data?: Record<string, unknown>;
   timestamp: number;
   error?: string;
 }

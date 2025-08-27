@@ -6,10 +6,11 @@
    - Then dynamically import the rest of the app
 */
 
-import { Logger } from "../lib/logger";
+import {createLogger} from "@dockstat/logger";
+
+export const logger = createLogger("outline-sync")
 
 const rawArgs = process.argv.slice(2);
-let DEBUG = false;
 
 // parse flags (repeatable --collection)
 const flags: Record<string, string | boolean | string[]> = {};
@@ -48,14 +49,6 @@ if (flags["api-key"]) {
 if (flags["base-url"]) {
   process.env.OUTLINE_BASE_URL = String(flags["base-url"]);
 }
-
-if (positionals.includes("--verbose")) {
-  DEBUG = true;
-}
-
-export const logger = new Logger({
-  level: DEBUG ? "DEBUG" : "INFO",
-});
 
 if (positionals.includes("--help") || flags.help || flags.h) {
   console.log(`
@@ -154,14 +147,14 @@ try {
       );
     const mode = cmd === "pull" ? "pull" : cmd === "push" ? "push" : "sync";
     for (const collectionId of targets) {
-      await runSync({ collectionId, mode: mode as any, dryRun: DRY_RUN });
+      await runSync({ collectionId, mode: mode as "pull" | "push" | "sync", dryRun: DRY_RUN });
     }
     process.exit(0);
   }
 
   logger.error(`Unknown command: ${cmd}`);
   process.exit(1);
-} catch (err: any) {
-  console.error("ERROR:", err?.message || err);
+} catch (err: unknown) {
+  logger.error(`${(err as Error)?.message || err}`);
   process.exit(1);
 }

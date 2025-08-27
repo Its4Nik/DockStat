@@ -105,7 +105,7 @@ export async function getCollectionFilesBase(collectionId: string): Promise<{
 
 export async function loadCollectionConfig(
   collectionId: string,
-): Promise<CollectionConfig | null> {
+): Promise<CollectionConfig> {
   logger.debug(`Loading collection config for ${collectionId}`);
   const { configFile } = await getCollectionFilesBase(collectionId);
   if (!existsSync(configFile)) {

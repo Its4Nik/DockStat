@@ -7,15 +7,16 @@ const HEADERS = {
 };
 
 import { logger } from "../bin/cli";
+import type { Collection, CollectionResponse, Document, DocumentResponse, DocumentWithPoliciesResponse, SingleDocumentResponse } from "./types";
 
 /**
  * Make a POST request to the Outline API with simple retry/backoff logic.
  */
-async function outlineRequest(
+async function outlineRequest<T>(
   endpoint: string,
-  body: any,
+  body: Record<string, unknown>,
   retries = 3,
-): Promise<any> {
+): Promise<T> {
   const url = `${BASE_URL}/api/${endpoint}`;
 
   for (let attempt = 0; attempt < retries; attempt++) {
@@ -38,7 +39,7 @@ async function outlineRequest(
         continue;
       }
 
-      let json: any;
+      let json: Record<string, unknown>;
       try {
         json = await res.json();
       } catch (parseErr) {
@@ -61,18 +62,18 @@ async function outlineRequest(
       logger.debug(
         `Outline response for ${endpoint} (attempt ${attempt + 1}): ${JSON.stringify(json).slice(0, 200)}${JSON.stringify(json).length > 200 ? "..." : ""}`,
       );
-      return json;
-    } catch (err: any) {
+      return json as T;
+    } catch (err: unknown) {
       // last attempt -> rethrow
       if (attempt === retries - 1) {
         logger.error(
-          `Request to Outline failed after ${retries} attempts: ${err?.message ?? err}`,
+          `Request to Outline failed after ${retries} attempts: ${(err as Error)?.message ?? err}`,
         );
         throw err;
       }
       const backoff = 500 * (attempt + 1);
       logger.warn(
-        `Request failed (attempt ${attempt + 1}): ${err?.message ?? err}. Retrying after ${backoff}ms...`,
+        `Request failed (attempt ${attempt + 1}): ${(err as Error)?.message ?? err}. Retrying after ${backoff}ms...`,
       );
       await sleep(backoff);
     }
@@ -89,7 +90,7 @@ export async function listCollectionsPaged(): Promise<
   let offset = 0;
   const limit = 100;
   while (true) {
-    const json = await outlineRequest("collections.list", { offset, limit });
+    const json = await outlineRequest<CollectionResponse>("collections.list", { offset, limit });
     const data = json.data || [];
     for (const c of data) out.push({ id: c.id, name: c.name });
     if (data.length < limit) break;
@@ -101,19 +102,19 @@ export async function listCollectionsPaged(): Promise<
 
 export async function listDocumentsInCollection(
   collectionId: string,
-): Promise<any[]> {
-  const out: any[] = [];
+): Promise<Document[]> {
+  const out: Document[] = [];
   let offset = 0;
   const limit = 100;
   while (true) {
-    const json = await outlineRequest("documents.list", {
+    const json = await outlineRequest<DocumentResponse>("documents.list", {
       collectionId,
       offset,
       limit,
     });
     const data = json.data || [];
-    for (const d of data) out.push(d);
-    if (data.length < limit) break;
+    for (const d of data) {out.push(d);}
+    if (data.length < limit){ break;}
     offset += data.length;
   }
   logger.debug(
@@ -123,7 +124,7 @@ export async function listDocumentsInCollection(
 }
 
 export async function fetchDocumentInfo(documentId: string) {
-  const json = await outlineRequest("documents.info", { id: documentId });
+  const json = await outlineRequest<SingleDocumentResponse>("documents.info", { id: documentId });
   logger.debug(`fetchDocumentInfo(${documentId}) -> ${json ? "ok" : "null"}`);
   return json.data ?? null;
 }
@@ -141,9 +142,9 @@ export async function createDocument(
     parentDocumentId: parentDocumentId || null,
     publish: true,
   };
-  const json = await outlineRequest("documents.create", payload);
+  const json = await outlineRequest<DocumentWithPoliciesResponse>("documents.create", payload);
   logger.info(
-    `Created document "${title}" in collection ${collectionId} (id=${json?.id ?? "unknown"})`,
+    `Created document "${title}" in collection ${collectionId} (id=${json?.data.id ?? "unknown"})`,
   );
   return json.data;
 }
@@ -153,9 +154,9 @@ export async function updateDocument(
   title: string | undefined,
   text: string,
 ) {
-  const payload: any = { id, text, publish: true };
-  if (title) payload.title = title;
-  const json = await outlineRequest("documents.update", payload);
+  const payload: Record<string, unknown> = { id, text, publish: true };
+  if (title) {payload.title = title};
+  const json = await outlineRequest<DocumentWithPoliciesResponse>("documents.update", payload);
   logger.info(`Updated document id=${id}${title ? ` title="${title}"` : ""}`);
   return json.data;
 }
