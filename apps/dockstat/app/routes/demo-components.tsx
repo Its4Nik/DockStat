@@ -23,6 +23,11 @@ import {
 } from '@dockstat/ui'
 import { useLoaderData } from 'react-router'
 
+interface ChartData {
+  name: string
+  value: number
+}
+
 export async function loader() {
   const { themeHandler } = await import('~/.server')
   return themeHandler.getActiveTheme()
@@ -50,14 +55,15 @@ export default function Demo() {
   }
 
   // Example chart data (adapt if your Chart component expects different shape)
-  const chartData = useMemo(
-    () => ({
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-      datasets: [
-        { label: 'CPU', data: [12, 19, 7, 14, 9, 17] },
-        { label: 'Memory', data: [8, 11, 5, 9, 6, 12] },
-      ],
-    }),
+  const chartData: ChartData[] = useMemo(
+    () => [
+      { name: 'Jan', value: 12 },
+      { name: 'Feb', value: 19 },
+      { name: 'Mar', value: 7 },
+      { name: 'Apr', value: 14 },
+      { name: 'May', value: 9 },
+      { name: 'Jun', value: 17 },
+    ],
     []
   )
 
@@ -172,8 +178,7 @@ export default function Demo() {
             </CardHeader>
             <CardContent>
               <div className="h-48">
-                {/* @ts-ignore allow any for demo */}
-                <Chart data={chartData} options={{ responsive: true }} />
+                <Chart data={chartData} dataKey='value' />
               </div>
             </CardContent>
             <CardFooter>

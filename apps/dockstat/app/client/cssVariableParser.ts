@@ -116,48 +116,8 @@ export function parseThemeVars(
   return flattenThemeVars(themeVars as Record<string, unknown>, finalConfig)
 }
 
-/**
- * Applies CSS variables to the document root
- */
-export function applyCSSVariables(variables: Record<string, string>): void {
-  if (typeof window === 'undefined' || typeof document === 'undefined') {
-    console.warn('applyCSSVariables: window or document is undefined');
-    return;
-  }
-  console.log('applyCSSVariables called with:', variables);
-
-  const root = document.documentElement;
-  console.log('Current CSS variables on root:', {
-    variableCount: Object.keys(variables).length,
-    firstFew: Object.entries(variables).slice(0, 5)
-  });
-  for (const [key, value] of Object.entries(variables)) {
-    console.log(`Setting CSS variable ${key} = ${value}`);
-    root.style.setProperty(key, value);
-    // Verify the variable was set
-    const applied = getComputedStyle(root).getPropertyValue(key);
-    console.log(`Verified ${key} = ${applied}`);
-  }
-  console.log('All CSS variables applied');
-}
-
-/**
- * Removes CSS variables from the document root
- */
-export function removeCSSVariables(variables: Record<string, string>): void {
-  if (typeof document === 'undefined') return
-  console.log('removeCSSVariables called with:', Object.keys(variables));
-  if (typeof document === 'undefined') {
-    console.warn('removeCSSVariables: document is undefined');
-    return;
-  }
-  const root = document.documentElement
-  for (const key of Object.keys(variables)) {
-    console.log(`Removing CSS variable: ${key}`);
-    root.style.removeProperty(key)
-  }
-  console.log('CSS variables removed');
-}
+// CSS variable application/removal functions are now in cssVars.ts
+// Import from there if needed: import { applyCSSVariables, removeCSSVariables } from './cssVars'
 
 /**
  * Predefined parser configurations for common use cases

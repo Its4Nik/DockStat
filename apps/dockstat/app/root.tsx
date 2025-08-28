@@ -12,28 +12,26 @@ import './app.css'
 import ThemeProvider from '~/client/ThemeProvider'
 
 export async function loader() {
-  const {themeHandler }= await import('~/.server')
+  const { themeHandler } = await import('~/.server')
   const activeTheme = themeHandler.getActiveTheme() || undefined
   return { theme: activeTheme }
 }
 
 export const links: Route.LinksFunction = () => [
-  //{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-  //{
-  //  rel: 'preconnect',
-  //  href: 'https://fonts.gstatic.com',
-  //  crossOrigin: 'anonymous',
-  //},
-  //{
-  //  rel: 'stylesheet',
-  //  href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
-  //},
+  // Uncomment if you need Google Fonts
+  // { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  // {
+  //   rel: 'preconnect',
+  //   href: 'https://fonts.gstatic.com',
+  //   crossOrigin: 'anonymous',
+  // },
+  // {
+  //   rel: 'stylesheet',
+  //   href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+  // },
 ]
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const data = useLoaderData<typeof loader>()
-  const theme = data ? data.theme : undefined
-
   return (
     <html lang="en">
       <head>
@@ -43,14 +41,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <ThemeProvider
-          initialTheme={theme}
-          fallbackThemeName="default"
-          apiEndpoint="/api/themes"
-          initialThemeName='default'
-        >
-          {children}
-        </ThemeProvider>
+        {children}
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -59,10 +50,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const data = useLoaderData<typeof loader>()
+  const theme = data?.theme
+
   return (
-    <Layout>
+    <ThemeProvider
+      initialTheme={theme}
+      fallbackThemeName="default-dark"
+      initialThemeName='default-dark'
+      apiEndpoint="/api/themes"
+      enableTailwindVariables={true}
+    >
       <Outlet />
-    </Layout>
+    </ThemeProvider>
   )
 }
 

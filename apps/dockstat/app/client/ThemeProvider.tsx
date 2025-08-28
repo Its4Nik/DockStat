@@ -1,9 +1,11 @@
 import type React from 'react'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import type { THEME } from '@dockstat/typings'
 import { ThemeContext, type ThemeContextType } from './ThemeContext'
-import { applyCSSVariables, removeCSSVariables } from './cssVars'
-import { type CSSVariableParserConfig, parseThemeVars, defaultParserConfig, parserConfigs } from './cssVariableParser'
+import { useThemeLoader } from './hooks/useThemeLoader'
+import { useThemeCSS } from './hooks/useThemeCSS'
+import { useThemeState } from './hooks/useThemeState'
+import type { CSSVariableParserConfig } from './cssVariableParser'
 
 export interface ThemeProviderProps {
   children: React.ReactNode
@@ -25,170 +27,183 @@ function ThemeProvider({
   apiEndpoint = '/api/themes',
   apiHeaders = {},
   cssParserConfig = {},
-  enableTailwindVariables = false,
+  enableTailwindVariables = true,
   themeNamespace,
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<THEME.THEME_config | null>(initialTheme ?? null)
-  const [themeName, setThemeNameState] = useState<string>(initialTheme?.name ?? initialThemeName)
-  const [themeVars, setThemeVars] = useState<Record<string, string>>({})
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [availableThemes, setAvailableThemes] = useState<string[]>([])
-  const currentCSSVars = useRef<Record<string, string>>({})
+  const mountedRef = useRef(true)
+  const loadingRef = useRef(false)
 
-  const finalCssParserConfig = useMemo(() => {
-    let baseConfig: CSSVariableParserConfig = defaultParserConfig
-    if (themeNamespace === 'components') {
-      baseConfig = parserConfigs.componentsOnly as CSSVariableParserConfig
-    } else {
-      baseConfig = parserConfigs.standard as CSSVariableParserConfig
+  // Initialize hooks
+  const {
+    theme,
+    themeName,
+    themeVars,
+    error,
+    availableThemes,
+    setAvailableThemes,
+    updateTheme,
+    setThemeError,
+    hasInitialized,
+    markInitialized,
+    currentThemeNameRef
+  } = useThemeState({ initialTheme, initialThemeName })
+
+  const { loadTheme, loadAvailableThemes, clearCache } = useThemeLoader({
+    apiEndpoint,
+    apiHeaders
+  })
+
+  const { applyThemeVariables, cleanup } = useThemeCSS({
+    cssParserConfig,
+    enableTailwindVariables,
+    themeNamespace
+  })
+
+  // Cleanup on unmount
+  useEffect(() => {
+    console.debug('[ThemeProvider] Mounting ThemeProvider')
+    mountedRef.current = true
+    return () => {
+      console.debug('[ThemeProvider] Unmounting ThemeProvider, cleaning up')
+      mountedRef.current = false
+      cleanup()
+      clearCache()
     }
-    if (enableTailwindVariables) {
-      baseConfig = {
-        ...baseConfig,
-        prefix: '',
-        transformKey: (_key: string, path: string[]) => {
-          if (path[0] === 'components') {
-            return path.slice(1).join('-').toLowerCase()
-          }
-          return path.join('-').toLowerCase()
-        },
-      }
-    }
-    return { ...baseConfig, ...(cssParserConfig as CSSVariableParserConfig) }
-  }, [cssParserConfig, enableTailwindVariables, themeNamespace])
+  }, [cleanup, clearCache])
 
-  const applyThemeVariables = useCallback(
-    (themeConfig: THEME.THEME_config): void => {
-      if (Object.keys(currentCSSVars.current).length > 0) {
-        removeCSSVariables(currentCSSVars.current)
-      }
-      let cssVars: Record<string, string> = {}
-      if (themeNamespace === 'components') {
-        cssVars = parseThemeVars({ components: themeConfig.vars.components } as THEME.THEME_vars, finalCssParserConfig)
-      } else if (themeNamespace === 'background') {
-        cssVars = parseThemeVars({ background_effect: themeConfig.vars.background_effect } as THEME.THEME_vars, finalCssParserConfig)
-      } else {
-        cssVars = parseThemeVars(themeConfig.vars, finalCssParserConfig)
-      }
-      applyCSSVariables(cssVars)
-      currentCSSVars.current = cssVars
-      setThemeVars(cssVars)
-    },
-    [finalCssParserConfig, themeNamespace]
-  )
-
-  const loadAvailableThemes = useCallback(async (): Promise<void> => {
-    try {
-      const response = await fetch(apiEndpoint, { headers: apiHeaders })
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
-      }
-      const data = await response.json()
-
-      // Handle the response structure { themes: string[] }
-      const themes = data.themes || data
-
-      if (Array.isArray(themes)) {
-        setAvailableThemes(themes)
-      } else {
-        console.warn('Unexpected themes response format:', data)
-        setAvailableThemes([initialThemeName])
-      }
-    } catch (err) {
-      console.error('Failed to load available themes:', err)
-      setAvailableThemes([initialThemeName])
-    }
-  }, [apiEndpoint, apiHeaders, initialThemeName])
-
-  const loadTheme = useCallback(
-    async (name: string): Promise<THEME.THEME_config | null> => {
-      const url = `${apiEndpoint}/${encodeURIComponent(name)}`
-      try {
-        const response = await fetch(url, { headers: apiHeaders })
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-        }
-        const themeData = await response.json()
-        return themeData
-      } catch (err) {
-        console.error(`Failed to load theme ${name}:`, err)
-        throw err
-      }
-    },
-    [apiEndpoint, apiHeaders]
-  )
-
-  const setThemeName = useCallback(
+  // Function to change theme
+  const setThemeByName = useCallback(
     async (name: string) => {
-      if (name === themeName && theme && theme.name === name) {
+      console.debug('[ThemeProvider] Request to set theme:', name)
+
+      // Prevent duplicate loads
+      if (loadingRef.current) {
+        console.debug('[ThemeProvider] Theme load already in progress, skipping')
+        return
+      }
+      if (theme && theme.name === name) {
+        console.debug('[ThemeProvider] Theme already active:', name)
         return
       }
 
-      setIsLoading(true)
-      setError(null)
+      loadingRef.current = true
+      setThemeError('')
 
       try {
+        console.debug('[ThemeProvider] Loading theme:', name)
         const loadedTheme = await loadTheme(name)
+
         if (!loadedTheme) {
           throw new Error(`Theme ${name} returned empty`)
         }
 
-        applyThemeVariables(loadedTheme)
-        setTheme(loadedTheme)
-        setThemeNameState(name)
+        if (mountedRef.current) {
+          console.debug('[ThemeProvider] Applying theme:', name)
+          const cssVars = applyThemeVariables(loadedTheme)
+          updateTheme(loadedTheme, cssVars)
+        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred'
-        setError(errorMessage)
-        console.error(`Failed to load theme ${name}:`, errorMessage)
 
-        // Try fallback theme if different from the one that failed
-        if (name !== fallbackThemeName) {
-          try {
-            const fallbackTheme = await loadTheme(fallbackThemeName)
-            if (fallbackTheme) {
-              applyThemeVariables(fallbackTheme)
-              setTheme(fallbackTheme)
-              setThemeNameState(fallbackThemeName)
+        if (mountedRef.current) {
+          setThemeError(errorMessage)
+          console.error(`[ThemeProvider] Failed to load theme ${name}:`, errorMessage)
+
+          // Try fallback theme only if we don't have any theme loaded
+          if (!theme && name !== fallbackThemeName) {
+            console.debug('[ThemeProvider] Attempting fallback theme:', fallbackThemeName)
+            try {
+              const fallbackTheme = await loadTheme(fallbackThemeName)
+              if (fallbackTheme && mountedRef.current) {
+                console.debug('[ThemeProvider] Applying fallback theme:', fallbackThemeName)
+                const cssVars = applyThemeVariables(fallbackTheme)
+                updateTheme(fallbackTheme, cssVars)
+              }
+            } catch (fallbackErr) {
+              console.error('[ThemeProvider] Failed to load fallback theme:', fallbackErr)
             }
-          } catch (fallbackErr) {
-            console.error('Failed to load fallback theme:', fallbackErr)
           }
         }
       } finally {
-        setIsLoading(false)
+        loadingRef.current = false
+        console.debug('[ThemeProvider] Finished theme load for:', name)
       }
     },
-    [themeName, theme, loadTheme, applyThemeVariables, fallbackThemeName]
+    [theme, loadTheme, applyThemeVariables, updateTheme, setThemeError, fallbackThemeName]
   )
 
-  // Apply initial theme CSS variables
-  useEffect(() => {
-    if (initialTheme?.vars) {
-      applyThemeVariables(initialTheme)
+  // Initialize theme on mount
+  useLayoutEffect(() => {
+    if (hasInitialized) {
+      console.debug('[ThemeProvider] Already initialized, skipping')
+      return
     }
-  }, [initialTheme, applyThemeVariables])
 
-  // Load available themes on mount
+    console.debug('[ThemeProvider] Initializing theme')
+    markInitialized()
+
+    if (initialTheme) {
+      console.debug('[ThemeProvider] Using provided initialTheme object')
+      const cssVars = applyThemeVariables(initialTheme)
+      updateTheme(initialTheme, cssVars)
+    } else {
+      console.debug('[ThemeProvider] Loading initial theme by name:', initialThemeName)
+      setThemeByName(initialThemeName)
+    }
+  }, []) // Intentionally empty - only run once
+
+  // Load available themes list
   useEffect(() => {
-    loadAvailableThemes()
-  }, [loadAvailableThemes])
+    let cancelled = false
+    console.debug('[ThemeProvider] Loading available themes list')
 
-  const contextValue: ThemeContextType = {
-    theme,
-    themeName,
-    themeVars,
-    setThemeName,
-    refreshTheme: async () => {
-      if (themeName) {
-        await setThemeName(themeName)
+    const loadThemes = async () => {
+      const themes = await loadAvailableThemes()
+      if (!cancelled && mountedRef.current) {
+        console.debug('[ThemeProvider] Available themes loaded:', themes)
+        setAvailableThemes(themes.length > 0 ? themes : [fallbackThemeName])
       }
-    },
-    isLoading,
-    isThemeLoaded: !!theme,
-    error,
-    availableThemes,
-  }
+    }
+
+    loadThemes()
+
+    return () => {
+      cancelled = true
+      console.debug('[ThemeProvider] Cancelled available themes loading')
+    }
+  }, []) // Intentionally empty - only run once
+
+  // Refresh theme function
+  const refreshTheme = useCallback(async () => {
+    console.debug('[ThemeProvider] Refreshing current theme:', currentThemeNameRef.current)
+    if (currentThemeNameRef.current && !loadingRef.current) {
+      clearCache()
+      await setThemeByName(currentThemeNameRef.current)
+    }
+  }, [setThemeByName, clearCache, currentThemeNameRef.current])
+
+  // Context value
+  const contextValue: ThemeContextType = useMemo(() => {
+    console.debug('[ThemeProvider] Building context value', {
+      themeName,
+      isLoading: loadingRef.current,
+      isThemeLoaded: !!theme,
+      error,
+      availableThemes
+    })
+
+    return {
+      theme,
+      themeName,
+      themeVars,
+      setThemeName: setThemeByName,
+      refreshTheme,
+      isLoading: loadingRef.current,
+      isThemeLoaded: !!theme,
+      error,
+      availableThemes,
+    }
+  }, [theme, themeName, themeVars, setThemeByName, refreshTheme, error, availableThemes])
 
   return (
     <ThemeContext.Provider value={contextValue}>

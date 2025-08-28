@@ -4,7 +4,7 @@ export const darkDockStatTheme: THEME.THEME_config = {
   name: 'default-dark',
   creator: 'Its4Nik',
   version: '1.0.0',
-  active: true,
+  active: 1,
   description: 'Default DockStat Dark Theme — tuned for Tailwind CSS variables',
   license: 'MIT',
   vars: {

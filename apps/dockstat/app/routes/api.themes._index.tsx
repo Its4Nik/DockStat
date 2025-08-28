@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs } from 'react-router'
+import type {  LoaderFunctionArgs } from 'react-router'
 import { serverLogger, themeHandler } from '~/.server'
 
 export async function loader(_args: LoaderFunctionArgs) {
@@ -13,6 +13,6 @@ export async function loader(_args: LoaderFunctionArgs) {
     serverLogger.error(`Failed to load themes: ${error}`)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
 
-    return { error: 'Failed to load themes', message: errorMessage  ,status: 500 }
+    return { error: 'Failed to load themes', message: errorMessage , status: 500 }
   }
 }
