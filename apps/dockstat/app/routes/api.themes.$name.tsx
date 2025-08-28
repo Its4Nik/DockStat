@@ -1,5 +1,4 @@
-import { serverLogger } from '~/entry.server'
-import { themeHandler } from '~/entry.server'
+import { serverLogger, themeHandler } from '~/entry.server'
 
 export async function loader({ params }: { params: { name: string } }) {
   try {

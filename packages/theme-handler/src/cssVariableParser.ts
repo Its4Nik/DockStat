@@ -1,3 +1,4 @@
+// theme-handler/src/cssVariableParser.ts
 import type { THEME } from '@dockstat/typings'
 
 /**
@@ -17,25 +18,49 @@ export interface CSSVariableParserConfig {
 export const defaultParserConfig: CSSVariableParserConfig = {
   prefix: '--theme',
   separator: '-',
-  transformKey: (key: string) =>
-    key
+  transformKey: (key: string, path: string[]) => {
+    // Handle special cases for background effects and components
+    if (path[0] === 'background_effect') {
+      const effectType = path[1] // Aurora, Gradient, or Solid
+      return `${key.toLowerCase()}-${effectType.toLowerCase()}`
+    }
+    if (path[0] === 'components') {
+      const componentName = path[1] // Card, etc.
+      return `${componentName.toLowerCase()}-${key.toLowerCase()}`
+    }
+    return key
       .toLowerCase()
       .replace(/[A-Z_]/g, (match) =>
         match === '_' ? '-' : `-${match.toLowerCase()}`
-      ),
+      )
+  },
   transformValue: (value: unknown) => {
     if (typeof value === 'string') return value
     if (typeof value === 'number') return value.toString()
     if (typeof value === 'boolean') return value ? '1' : '0'
     return String(value)
   },
-  shouldInclude(_key: string, value: unknown) {
+  shouldInclude: (_key: string, value: unknown, path: string[]) => {
     // Only include primitive values that can be used as CSS variables
-    return (
+    const isPrimitive =
       typeof value === 'string' ||
       typeof value === 'number' ||
       typeof value === 'boolean'
-    )
+
+    if (!isPrimitive) return false
+
+    // Special handling for background effects
+    if (path[0] === 'background_effect') {
+      return true // Include all primitive values from background effects
+    }
+
+    // Special handling for component properties
+    if (path[0] === 'components') {
+      // Include all primitive component properties
+      return path.length > 1
+    }
+
+    return true
   },
 }
 
@@ -53,24 +78,22 @@ export function flattenThemeVars(
     const currentPath = [...path, key]
 
     if (value && typeof value === 'object' && !Array.isArray(value)) {
-      // Recursively flatten nested objects
-      Object.assign(
-        result,
-        flattenThemeVars(value as Record<string, unknown>, config, currentPath)
-      )
+      const nested = flattenThemeVars(value as Record<string, unknown>, config, currentPath)
+      for (const [k, v] of Object.entries(nested)) {
+        result[k] = v
+      }
     } else {
       // Only apply shouldInclude filter to primitive values
-      if (
-        config.shouldInclude &&
-        !config.shouldInclude(key, value, currentPath)
-      ) {
+      if (config.shouldInclude && !config.shouldInclude(key, value, currentPath)) {
         continue
       }
 
       // Convert to CSS variable
-      const cssVarName = `${config.prefix}${config.separator}${currentPath
-        .map((k) => (config.transformKey ? config.transformKey(k, []) : k))
-        .join(config.separator)}`
+      const parts = currentPath.map((k) =>
+        config.transformKey ? config.transformKey(k, currentPath) : k
+      )
+
+      const cssVarName = `${config.prefix}${config.separator}${parts.join(config.separator)}`
 
       const transformedValue = config.transformValue
         ? config.transformValue(value, key, currentPath)
@@ -90,14 +113,15 @@ export function parseThemeVars(
   themeVars: THEME.THEME_vars,
   config: Partial<CSSVariableParserConfig> = {}
 ): Record<string, string> {
-  const finalConfig = { ...defaultParserConfig, ...config }
-  return flattenThemeVars(themeVars, finalConfig)
+  const finalConfig: CSSVariableParserConfig = { ...defaultParserConfig, ...config }
+  return flattenThemeVars(themeVars as Record<string, unknown>, finalConfig)
 }
 
 /**
  * Applies CSS variables to the document root
  */
 export function applyCSSVariables(variables: Record<string, string>): void {
+  if (typeof document === 'undefined') return
   const root = document.documentElement
   for (const [key, value] of Object.entries(variables)) {
     root.style.setProperty(key, value)
@@ -108,6 +132,7 @@ export function applyCSSVariables(variables: Record<string, string>): void {
  * Removes CSS variables from the document root
  */
 export function removeCSSVariables(variables: Record<string, string>): void {
+  if (typeof document === 'undefined') return
   const root = document.documentElement
   for (const key of Object.keys(variables)) {
     root.style.removeProperty(key)
@@ -129,7 +154,7 @@ export const parserConfigs = {
   compact: {
     ...defaultParserConfig,
     prefix: '--t',
-    transformKey: (key: string) =>
+    transformKey: (key: string, _path: string[]) =>
       key
         .toLowerCase()
         .replace(/[A-Z_]/g, (match) =>
@@ -152,13 +177,21 @@ export const parserConfigs = {
    */
   componentsOnly: {
     ...defaultParserConfig,
+    prefix: '--theme-components',
     shouldInclude: (_key: string, value: unknown, path: string[]) => {
       return (
         path[0] === 'components' &&
+        path.length > 1 && // Must be a component property
         (typeof value === 'string' ||
           typeof value === 'number' ||
           typeof value === 'boolean')
       )
+    },
+    transformKey: (_key: string, path: string[]) => {
+      if (path.length < 2) return ''
+      const componentName = path[1]
+      const propertyPath = path.slice(2).join('-')
+      return `${componentName.toLowerCase()}-${propertyPath.toLowerCase()}`
     },
   } as CSSVariableParserConfig,
 } as const

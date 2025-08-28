@@ -1,5 +1,6 @@
+import type React from 'react'
 import type { THEME } from '@dockstat/typings'
-import React, { createContext, useContext } from 'react'
+import { createContext, useContext } from 'react'
 
 export interface ThemeContextType {
   // Current theme data
@@ -20,19 +21,9 @@ export interface ThemeContextType {
   availableThemes: string[]
 }
 
-export const ThemeContext = createContext<ThemeContextType>({
-  theme: null,
-  themeName: 'default',
-  themeVars: {},
-  setThemeName: () => {},
-  refreshTheme: async () => {},
-  isLoading: false,
-  isThemeLoaded: false,
-  error: null,
-  availableThemes: [],
-})
+export const ThemeContext = createContext<ThemeContextType | null>(null)
 
-export const useTheme = () => {
+export const useTheme = (): ThemeContextType => {
   const context = useContext(ThemeContext)
   if (!context) {
     throw new Error('useTheme must be used within a ThemeProvider')

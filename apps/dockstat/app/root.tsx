@@ -1,5 +1,5 @@
-import { ThemeProvider } from '@dockstat/theme-handler'
-import { parserConfigs } from '@dockstat/theme-handler'
+// root.tsx
+import { ThemeProvider, parserConfigs } from '@dockstat/theme-handler'
 import {
   Links,
   Meta,
@@ -9,12 +9,12 @@ import {
   isRouteErrorResponse,
   useLoaderData,
 } from 'react-router'
-
 import type { Route } from './+types/root'
 import './app.css'
-import { themeHandler } from './entry.server'
 
-export function loader() {
+export async function loader() {
+  // dynamic import - only executed server-side when loader runs
+  const { themeHandler } = await import('./entry.server')
   const activeTheme = themeHandler.getActiveTheme() || undefined
   const themes = themeHandler.getThemeNames()
   return { theme: activeTheme, availableThemes: themes }
@@ -35,8 +35,8 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const data = useLoaderData<typeof loader>()
-
   const theme = data ? data.theme : undefined
+
   return (
     <html lang="en">
       <head>
@@ -51,10 +51,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           apiEndpoint="/api"
           cssParserConfig={parserConfigs.standard}
           fallbackThemeName="default"
-          onThemeChange={async (name) => {
-            const response = await fetch(`/api/themes/${name}`)
-            return response.json()
-          }}
         >
           {children}
         </ThemeProvider>

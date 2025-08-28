@@ -12,9 +12,7 @@
     "lint:fix": "biome lint --write .",
     "lint:gh": "turbo run lint -- --reporter=github",
     "check-types": "bunx tsc --noEmit",
-    "test": "bun run test.ts",
-    "clean": "rm -rf dist",
-    "prepublishOnly": "npm run clean && npm run build"
+    "test": "bun run test.ts"
   },
   "keywords": [
     "sqlite",

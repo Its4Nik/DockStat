@@ -11,7 +11,7 @@ export const serverLogger = createLogger('dockstat-server')
 serverLogger.info('Creating DockStatDB')
 const queryBuilderInstance = DDB.getDB()
 
-export const themeHandler = new ThemeHandler(queryBuilderInstance as any)
+export const themeHandler = new ThemeHandler(queryBuilderInstance)
 
 import { createReadableStreamFromReadable } from '@react-router/node'
 import { isbot } from 'isbot'

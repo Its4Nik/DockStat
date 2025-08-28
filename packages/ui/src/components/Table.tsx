@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 
 interface defaultProps {
   children: ReactNode
-  className: string
+  className?: string
 }
 
 export const Table = ({ children, className = '' }: defaultProps) => (
@@ -32,7 +32,7 @@ export const TableRow = ({ children, className = '' }: defaultProps) => (
 )
 
 interface cell extends defaultProps {
-  header: boolean
+  header?: boolean
 }
 export const TableCell = ({
   children,
