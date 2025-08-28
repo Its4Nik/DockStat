@@ -1,6 +1,6 @@
 export const Input = ({ className = '', ...props }) => (
   <input
-    className={`rounded-components-input-radius border-components-input-border bg-components-input-bg px-components-input-padding-x py-components-input-padding-y text-components-input-font-size text-components-input-color focus:outline-none focus:ring-2 focus:ring-components-input-focus-ring ${className}`}
+    className={`rounded-input-radius border-input-border bg-input-bg px-input-padding-x py-input-padding-y text-input-font-size text-input-color focus:outline-none focus:ring-2 focus:ring-input-focus-ring ${className}`}
     {...props}
   />
 )

@@ -1,5 +1,3 @@
-'use client'
-
 import { Toaster as SonnerToaster } from 'sonner'
 
 type ToasterProps = {
@@ -20,25 +18,25 @@ export const Toaster = ({ position }: ToasterProps) => {
         unstyled: true,
         classNames: {
           toast:
-            'w-full flex items-center p-4 rounded-lg shadow-lg border gap-2 bg-components-sonner-bg border-components-sonner-border text-components-sonner-color',
-          title: 'font-medium text-components-sonner-title-font-size',
+            'w-full flex items-center p-4 rounded-lg shadow-lg border gap-2 bg-sonner-bg border-sonner-border text-sonner-color',
+          title: 'font-medium text-sonner-title-font-size',
           description:
-            'text-components-sonner-description-font-size opacity-90',
+            'text-sonner-description-font-size opacity-90',
           actionButton:
-            'px-3 py-1 text-components-sonner-button-font-size rounded-md bg-components-sonner-button-bg text-components-sonner-button-color',
+            'px-3 py-1 text-sonner-button-font-size rounded-md bg-sonner-button-bg text-sonner-button-color',
           cancelButton:
-            'px-3 py-1 text-components-sonner-button-font-size rounded-md bg-components-sonner-cancel-bg text-components-sonner-cancel-color',
+            'px-3 py-1 text-sonner-button-font-size rounded-md bg-sonner-cancel-bg text-sonner-cancel-color',
           closeButton:
-            'bg-components-sonner-close-bg rounded-md p-1 text-components-sonner-close-color',
+            'bg-sonner-close-bg rounded-md p-1 text-sonner-close-color',
           success:
-            'bg-components-sonner-success-bg border-components-sonner-success-border text-components-sonner-success-color',
+            'bg-sonner-success-bg border-sonner-success-border text-sonner-success-color',
           error:
-            'bg-components-sonner-error-bg border-components-sonner-error-border text-components-sonner-error-color',
+            'bg-sonner-error-bg border-sonner-error-border text-sonner-error-color',
           warning:
-            'bg-components-sonner-warning-bg border-components-sonner-warning-border text-components-sonner-warning-color',
-          info: 'bg-components-sonner-info-bg border-components-sonner-info-border text-components-sonner-info-color',
+            'bg-sonner-warning-bg border-sonner-warning-border text-sonner-warning-color',
+          info: 'bg-sonner-info-bg border-sonner-info-border text-sonner-info-color',
           loading:
-            'bg-components-sonner-loading-bg border-components-sonner-loading-border text-components-sonner-loading-color',
+            'bg-sonner-loading-bg border-sonner-loading-border text-sonner-loading-color',
         },
       }}
     />

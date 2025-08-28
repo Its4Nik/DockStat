@@ -15,13 +15,13 @@ export const Button = ({
   ...props
 }: ButtonProps) => {
   const baseClasses =
-    'px-components-button-padding-x py-components-button-padding-y rounded-components-button-radius font-components-button-font-size focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors'
+    'px-button-padding-x py-button-padding-y rounded-button-radius font-button-font-size focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors'
 
   const variants: Record<ButtonVariant, string> = {
     primary:
-      'bg-components-button-primary-bg text-components-button-primary-color hover:bg-components-button-primary-hover-bg focus:ring-components-button-primary-bg',
+      'bg-button-primary-bg text-button-primary-color hover:bg-button-primary-hover-bg focus:ring-button-primary-bg',
     secondary:
-      'bg-components-button-secondary-bg text-components-button-secondary-color hover:bg-components-button-secondary-hover-bg focus:ring-components-button-secondary-bg',
+      'bg-button-secondary-bg text-button-secondary-color hover:bg-button-secondary-hover-bg focus:ring-button-secondary-bg',
   }
 
   return (

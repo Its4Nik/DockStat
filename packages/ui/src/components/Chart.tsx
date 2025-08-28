@@ -33,10 +33,10 @@ export const Chart = ({
 }: ChartProps) => {
   return (
     <div
-      className={`bg-components-chart-bg rounded-components-chart-radius p-components-chart-padding ${className}`}
+      className={`bg-chart-bg rounded-chart-radius p-chart-padding ${className}`}
     >
       {title && (
-        <h3 className="text-components-chart-title-font-size text-components-chart-title-color font-medium mb-4">
+        <h3 className="text-chart-title-font-size text-chart-title-color font-medium mb-4">
           {title}
         </h3>
       )}
@@ -48,25 +48,25 @@ export const Chart = ({
         >
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="var(--components-chart-grid-color, #e5e7eb)"
+            stroke="var(--chart-grid-color, #e5e7eb)"
           />
           <XAxis
             dataKey="name"
-            stroke="var(--components-chart-axis-color, #6b7280)"
+            stroke="var(--chart-axis-color, #6b7280)"
             label={
               xAxisLabel
                 ? {
                     value: xAxisLabel,
                     position: 'insideBottom',
                     offset: -5,
-                    fill: 'var(--components-chart-label-color, #374151)',
+                    fill: 'var(--chart-label-color, #374151)',
                     fontSize: 12,
                   }
                 : undefined
             }
           />
           <YAxis
-            stroke="var(--components-chart-axis-color, #6b7280)"
+            stroke="var(--chart-axis-color, #6b7280)"
             label={
               yAxisLabel
                 ? {
@@ -74,7 +74,7 @@ export const Chart = ({
                     angle: -90,
                     position: 'insideLeft',
                     offset: 10,
-                    fill: 'var(--components-chart-label-color, #374151)',
+                    fill: 'var(--chart-label-color, #374151)',
                     fontSize: 12,
                   }
                 : undefined
@@ -82,16 +82,16 @@ export const Chart = ({
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: 'var(--components-chart-tooltip-bg, #ffffff)',
-              borderColor: 'var(--components-chart-tooltip-border, #e5e7eb)',
-              borderRadius: 'var(--components-chart-tooltip-radius, 0.375rem)',
-              color: 'var(--components-chart-tooltip-color, #374151)',
+              backgroundColor: 'var(--chart-tooltip-bg, #ffffff)',
+              borderColor: 'var(--chart-tooltip-border, #e5e7eb)',
+              borderRadius: 'var(--chart-tooltip-radius, 0.375rem)',
+              color: 'var(--chart-tooltip-color, #374151)',
             }}
           />
           <Legend />
           <Bar
             dataKey={dataKey}
-            fill="var(--components-chart-bar-color, #3b82f6)"
+            fill="var(--chart-bar-color, #3b82f6)"
             radius={[4, 4, 0, 0]}
           />
         </BarChart>

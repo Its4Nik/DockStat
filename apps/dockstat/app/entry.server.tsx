@@ -1,18 +1,4 @@
 import { PassThrough } from 'node:stream'
-import DockStatDB from '@dockstat/db'
-import { createLogger } from '@dockstat/logger'
-import type DB from '@dockstat/sqlite-wrapper'
-import { ThemeHandler } from '@dockstat/theme-handler'
-
-export const DDB = new DockStatDB()
-
-export const serverLogger = createLogger('dockstat-server')
-
-serverLogger.info('Creating DockStatDB')
-const queryBuilderInstance = DDB.getDB()
-
-export const themeHandler = new ThemeHandler(queryBuilderInstance)
-
 import { createReadableStreamFromReadable } from '@react-router/node'
 import { isbot } from 'isbot'
 import type { RenderToPipeableStreamOptions } from 'react-dom/server'

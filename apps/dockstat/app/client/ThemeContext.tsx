@@ -3,21 +3,14 @@ import type { THEME } from '@dockstat/typings'
 import { createContext, useContext } from 'react'
 
 export interface ThemeContextType {
-  // Current theme data
   theme: THEME.THEME_config | null
   themeName: string
   themeVars: Record<string, string>
-
-  // Theme management
   setThemeName: (name: string) => void
   refreshTheme: () => Promise<void>
-
-  // Loading states
   isLoading: boolean
   isThemeLoaded: boolean
   error: string | null
-
-  // Available themes
   availableThemes: string[]
 }
 

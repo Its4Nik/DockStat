@@ -23,7 +23,7 @@ export const Dropdown = ({ trigger, children }: DropdownProps) => (
       leaveFrom="transform scale-100 opacity-100"
       leaveTo="transform scale-95 opacity-0"
     >
-      <MenuItems className="absolute right-0 mt-2 w-56 origin-top-right rounded-components-dropdown-radius bg-components-dropdown-bg shadow-components-dropdown-shadow focus:outline-none">
+      <MenuItems className="absolute right-0 mt-2 w-56 origin-top-right rounded-dropdown-radius bg-dropdown-bg shadow-dropdown-shadow focus:outline-none">
         {children}
       </MenuItems>
     </Transition>
@@ -45,7 +45,7 @@ export const DropdownItem = ({
       <button
         className={`${
           active
-            ? 'bg-components-dropdown-item-hover-bg text-components-dropdown-item-hover-color'
+            ? 'bg-dropdown-item-hover-bg text-dropdown-item-hover-color'
             : ''
         } flex w-full items-center rounded-md px-4 py-2 text-sm ${className}`}
         {...props}

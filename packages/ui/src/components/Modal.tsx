@@ -27,7 +27,7 @@ export const Modal = ({ isOpen, onClose, children }: ModalProps) => {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-components-dialog-overlay-bg" />
+          <div className="fixed inset-0 bg-dialog-overlay-bg" />
         </TransitionChild>
 
         {/* Panel */}
@@ -40,7 +40,7 @@ export const Modal = ({ isOpen, onClose, children }: ModalProps) => {
           leaveFrom="opacity-100 scale-100"
           leaveTo="opacity-0 scale-95"
         >
-          <DialogPanel className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-components-dialog-radius bg-components-dialog-bg p-components-dialog-padding shadow-components-dialog-shadow">
+          <DialogPanel className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-dialog-radius bg-dialog-bg p-dialog-padding shadow-dialog-shadow">
             {children}
           </DialogPanel>
         </TransitionChild>

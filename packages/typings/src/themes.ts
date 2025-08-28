@@ -1,3 +1,5 @@
+import type { THEME_components } from './theme-components'
+
 type THEME_config = {
   name: string
   version: string
@@ -33,33 +35,6 @@ type THEME_background_effect_gradient = {
 type THEME_background_effect_solid = {
   Solid: {
     color: string
-  }
-}
-
-type THEME_components = {
-  Card: {
-    accent: string
-    border: boolean
-    border_color: string
-    border_size: number
-    title: {
-      font: string
-      color: string
-      font_size: number
-      font_weight: number
-    }
-    sub_title: {
-      font: string
-      color: string
-      font_size: number
-      font_weight: number
-    }
-    content: {
-      font: string
-      color: string
-      font_size: number
-      font_weight: number
-    }
   }
 }
 

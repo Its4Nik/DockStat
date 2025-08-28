@@ -1,14 +1,18 @@
-import { serverLogger } from '~/entry.server'
-import { themeHandler } from '~/entry.server'
+import type { LoaderFunctionArgs } from 'react-router'
+import { serverLogger, themeHandler } from '~/.server'
 
-export async function loader() {
-  serverLogger.info('Listing themes')
+export async function loader(_args: LoaderFunctionArgs) {
+  serverLogger.info('Loading available themes')
+
   try {
     const themes = themeHandler.getThemeNames()
-    serverLogger.debug(`Got ${themes.length} themes`)
-    return themes
+    serverLogger.debug(`Found ${themes.length} themes: ${themes.join(', ')}`)
+
+    return { themes }
   } catch (error) {
-    serverLogger.error(`Failed to list themes: ${error}`)
-    return new Response((error as Error).message, { status: 500 })
+    serverLogger.error(`Failed to load themes: ${error}`)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+
+    return { error: 'Failed to load themes', message: errorMessage  ,status: 500 }
   }
 }

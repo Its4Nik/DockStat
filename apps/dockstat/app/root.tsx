@@ -1,5 +1,3 @@
-// root.tsx
-import { ThemeProvider, parserConfigs } from '@dockstat/theme-handler'
 import {
   Links,
   Meta,
@@ -11,26 +9,25 @@ import {
 } from 'react-router'
 import type { Route } from './+types/root'
 import './app.css'
+import ThemeProvider from '~/client/ThemeProvider'
 
 export async function loader() {
-  // dynamic import - only executed server-side when loader runs
-  const { themeHandler } = await import('./entry.server')
+  const {themeHandler }= await import('~/.server')
   const activeTheme = themeHandler.getActiveTheme() || undefined
-  const themes = themeHandler.getThemeNames()
-  return { theme: activeTheme, availableThemes: themes }
+  return { theme: activeTheme }
 }
 
 export const links: Route.LinksFunction = () => [
-  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-  {
-    rel: 'preconnect',
-    href: 'https://fonts.gstatic.com',
-    crossOrigin: 'anonymous',
-  },
-  {
-    rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
-  },
+  //{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  //{
+  //  rel: 'preconnect',
+  //  href: 'https://fonts.gstatic.com',
+  //  crossOrigin: 'anonymous',
+  //},
+  //{
+  //  rel: 'stylesheet',
+  //  href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+  //},
 ]
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -48,9 +45,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <body>
         <ThemeProvider
           initialTheme={theme}
-          apiEndpoint="/api"
-          cssParserConfig={parserConfigs.standard}
           fallbackThemeName="default"
+          apiEndpoint="/api/themes"
+          initialThemeName='default'
         >
           {children}
         </ThemeProvider>
@@ -62,7 +59,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />
+  return (
+    <Layout>
+      <Outlet />
+    </Layout>
+  )
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

@@ -1,8 +1,14 @@
 {
   "name": "@dockstat/logger",
+  "description": "The internal logging service used by DockStat and @dockstat/outline-sync",
   "module": "index.ts",
   "main": "index.ts",
-  "private": true,
+  "author": {
+    "email": "dockstat@itsnik.de",
+    "name": "Its4Nik",
+    "url": "https://github.com/Its4Nik"
+  },
+  "private": false,
   "exports": {
     "default": "./index.ts"
   },

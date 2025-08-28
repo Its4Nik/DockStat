@@ -52,6 +52,7 @@ const resources = [
     text: "React Router Docs",
     icon: (
       <svg
+        role="graphics-symbol"
         xmlns="http://www.w3.org/2000/svg"
         width="24"
         height="20"
@@ -72,6 +73,7 @@ const resources = [
     text: "Join Discord",
     icon: (
       <svg
+        role="graphics-symbol"
         xmlns="http://www.w3.org/2000/svg"
         width="24"
         height="20"

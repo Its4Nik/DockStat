@@ -14,16 +14,13 @@ export const Badge = ({
   className = '',
 }: BadgeProps) => {
   const baseClasses =
-    'inline-flex px-components-badge-padding-x py-components-badge-padding-y text-components-badge-font-size font-medium rounded-components-badge-radius'
+    'inline-flex px-badge-padding-x py-badge-padding-y text-badge-font-size font-medium rounded-badge-radius'
 
   const variants: Record<BadgeVariant, string> = {
-    default:
-      'bg-components-badge-default-bg text-components-badge-default-color',
-    success:
-      'bg-components-badge-success-bg text-components-badge-success-color',
-    warning:
-      'bg-components-badge-warning-bg text-components-badge-warning-color',
-    error: 'bg-components-badge-error-bg text-components-badge-error-color',
+    default: 'bg-badge-default-bg text-badge-default-color',
+    success: 'bg-badge-success-bg text-badge-success-color',
+    warning: 'bg-badge-warning-bg text-badge-warning-color',
+    error: 'bg-badge-error-bg text-badge-error-color',
   }
 
   return (

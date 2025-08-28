@@ -4,7 +4,6 @@
     "**/.server/**/*",
     "**/.client/**/*",
     ".react-router/types/**/*",
-    "../../packages/ui/src"
   ],
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {

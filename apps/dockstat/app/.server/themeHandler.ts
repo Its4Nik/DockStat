@@ -1,7 +1,7 @@
 import { createLogger } from '@dockstat/logger'
 import { type DB, type QueryBuilder, column } from '@dockstat/sqlite-wrapper'
 import type { THEME } from '@dockstat/typings'
-import { darkDockStatTheme } from './defaultTheme'
+import { darkDockStatTheme } from './defaultThemes'
 
 export default class ThemeHandler {
   private theme_table: QueryBuilder<THEME.THEME_config>
