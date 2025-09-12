@@ -1,8 +1,22 @@
 {
   "name": "@dockstat/logger",
   "module": "index.ts",
+  "types": "./index.ts",
+  "description": "A simple logging library for dockstat", 
   "main": "index.ts",
-  "private": true,
+  "version": "1.0.0"
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Its4Nik/DockStat/tree/main/packages/logger",
+    "directory": "packages/logger"
+  },
+  "bugs": {
+    "url": "https://github.com/Its4Nik/DockStat/issues"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
   "exports": {
     "default": "./index.ts"
   },
