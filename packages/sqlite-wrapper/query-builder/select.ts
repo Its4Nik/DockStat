@@ -188,6 +188,7 @@ export class SelectQueryBuilder<
       this.getLogger().debug(`Retrieved ${rows.length} rows from database`)
       const transformed = this.transformRowsFromDb(rows)
       this.getLogger().debug(`Transformed ${transformed.length} rows`)
+       this.reset()
       return transformed
     }
 
@@ -203,6 +204,7 @@ export class SelectQueryBuilder<
     this.getLogger().debug(
       `Transformed ${transformedRows.length} rows for regex filtering`
     )
+     this.reset()
     return this.applyClientSideOperations(transformedRows)
   }
 
@@ -228,6 +230,7 @@ export class SelectQueryBuilder<
       this.getLogger().debug(
         `Transformed row available: ${transformed ? 'yes' : 'no'}`
       )
+       this.reset()
       return transformed
     }
 
@@ -249,12 +252,14 @@ export class SelectQueryBuilder<
       this.getLogger().debug(
         `transformed row (path 2): ${transformed ? 'found' : 'null'}`
       )
+       this.reset()
       return transformed
     }
 
     // Has regex conditions, need to process client-side
     this.getLogger().debug('path 3 (regex fallback)')
     const results = this.all()
+     this.reset()
     return results[0] ?? null
   }
 
@@ -270,6 +275,7 @@ export class SelectQueryBuilder<
     this.limitValue = 1
     const result = this.get()
     this.limitValue = prevLimit
+     this.reset()
     return result
   }
 
@@ -292,8 +298,10 @@ export class SelectQueryBuilder<
         .get(...params) as {
         __count: number
       }
+       this.reset()
       return result?.__count ?? 0
     }
+     this.reset()
 
     // Has regex conditions, count client-side
     return this.all().length
@@ -314,8 +322,10 @@ export class SelectQueryBuilder<
         .get(...params) as {
         __exists: number
       }
+       this.reset()
       return Boolean(result?.__exists)
     }
+     this.reset()
 
     // Has regex conditions, check client-side
     return this.count() > 0
@@ -330,6 +340,7 @@ export class SelectQueryBuilder<
    */
   value<K extends keyof T>(column: K): T[K] | null {
     const row = this.first()
+     this.reset()
     return row ? row[column] : null
   }
 
@@ -341,6 +352,7 @@ export class SelectQueryBuilder<
    */
   pluck<K extends keyof T>(column: K): T[K][] {
     const rows = this.all()
+     this.reset()
     return rows.map((row) => row[column])
   }
 }

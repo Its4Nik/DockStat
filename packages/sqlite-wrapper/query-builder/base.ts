@@ -42,12 +42,17 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
   /**
     * Reset query builder state
     */
-  protected reset(): void {
-     this.state.whereConditions = []
-     this.state.whereParams = []
-     this.state.regexConditions = []
-   }
-
+    protected reset(): void {
+      this.state.whereConditions = []
+      this.state.whereParams = []
+      this.state.regexConditions = []
+      // Reset any ordering, limit, offset, selected columns if present
+      if ('orderColumn' in this) (this as any).orderColumn = undefined
+      if ('orderDirection' in this) (this as any).orderDirection = 'ASC'
+      if ('limitValue' in this) (this as any).limitValue = undefined
+      if ('offsetValue' in this) (this as any).offsetValue = undefined
+      if ('selectedColumns' in this) (this as any).selectedColumns = ['*']
+    }
 
   /**
    * Get the database instance

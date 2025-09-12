@@ -23,11 +23,13 @@ export class UpdateQueryBuilder<
     const transformedData = this.transformRowToDb(data);
     const updateColumns = Object.keys(transformedData);
     if (updateColumns.length === 0) {
+       this.reset()
       throw new Error("update: no columns to update");
     }
 
     // Handle regex conditions by first fetching matching rows
     if (this.hasRegexConditions()) {
+       this.reset()
       return this.updateWithRegexConditions(transformedData);
     }
 
@@ -72,6 +74,7 @@ export class UpdateQueryBuilder<
     const matchingRows = this.applyRegexFiltering(candidateRows);
 
     if (matchingRows.length === 0) {
+       this.reset()
       return { changes: 0 };
     }
 
@@ -91,7 +94,7 @@ export class UpdateQueryBuilder<
       const result = stmt.run(...updateValues, row.rowid as SQLQueryBindings);
       totalChanges += result.changes;
     }
-
+ this.reset()
     return { changes: totalChanges };
   }
 
@@ -108,6 +111,7 @@ export class UpdateQueryBuilder<
     const transformedData = this.transformRowToDb(data);
     const columns = Object.keys(transformedData);
     if (columns.length === 0) {
+       this.reset()
       throw new Error("upsert: no columns to upsert");
     }
 
@@ -164,7 +168,9 @@ export class UpdateQueryBuilder<
    * @returns Update result with changes count
    */
   decrement(column: keyof T, amount = 1): UpdateResult {
-    return this.increment(column, -amount);
+    const out = this.increment(column, -amount);
+    this.reset();
+    return out;
   }
 
   /**
@@ -182,6 +188,7 @@ export class UpdateQueryBuilder<
     const updateResult = this.update(data);
 
     if (updateResult.changes === 0) {
+       this.reset()
       return [];
     }
 
@@ -203,6 +210,7 @@ export class UpdateQueryBuilder<
     updates: Array<{ where: Partial<T>; data: Partial<T> }>,
   ): UpdateResult {
     if (!Array.isArray(updates) || updates.length === 0) {
+       this.reset()
       throw new Error("updateBatch: updates must be a non-empty array");
     }
 
@@ -235,6 +243,7 @@ export class UpdateQueryBuilder<
           }
 
           if (whereConditions.length === 0) {
+             this.reset()
             throw new Error(
               "updateBatch: each update must have WHERE conditions",
             );
@@ -257,6 +266,7 @@ export class UpdateQueryBuilder<
           totalChanges += result.changes;
         }
 
+         this.reset()
         return { changes: totalChanges };
       },
     );

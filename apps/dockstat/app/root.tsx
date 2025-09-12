@@ -1,3 +1,4 @@
+import './app.css'
 import {
   Links,
   Meta,
@@ -8,32 +9,31 @@ import {
   useLoaderData,
 } from 'react-router'
 import type { Route } from './+types/root'
-import './app.css'
-import ThemeProvider from '~/client/ThemeProvider'
+import { useTheme } from "react-router-theme";
+export { loader, action } from "react-router-theme";
+import { ThemeContext } from "./ThemeContext";
+import { useFetcher } from 'react-router';
+import Sidebar, {type NavItem} from './components/ui/Sidebar';
 
-export async function loader() {
-  const { themeHandler } = await import('~/.server')
-  const activeTheme = themeHandler.getActiveTheme() || undefined
-  return { theme: activeTheme }
-}
+const defaultTheme = "system";
 
-export const links: Route.LinksFunction = () => [
-  // Uncomment if you need Google Fonts
-  // { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-  // {
-  //   rel: 'preconnect',
-  //   href: 'https://fonts.gstatic.com',
-  //   crossOrigin: 'anonymous',
-  // },
-  // {
-  //   rel: 'stylesheet',
-  //   href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
-  // },
-]
+export const links: Route.LinksFunction = () => []
+
+const items: NavItem[] = [
+  { key: "home", label: "Home", href: "/"},
+  { key: "test", label: "Test", href: "/test", badge: 3 },
+  { key: "settings", label: "Settings", href: "/settings" },
+];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
+  const loaderData = useLoaderData() as { theme: string };
+    const fetcher = useFetcher();
+
+    const [theme, setTheme] = useTheme(loaderData, fetcher, defaultTheme);
+
+    return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <html lang="en" data-theme={theme}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -41,28 +41,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
+        <Sidebar
+        items={items}
+        />
         {children}
         <ScrollRestoration />
         <Scripts />
       </body>
     </html>
+    </ThemeContext.Provider>
   )
 }
 
 export default function App() {
-  const data = useLoaderData<typeof loader>()
-  const theme = data?.theme
-
   return (
-    <ThemeProvider
-      initialTheme={theme}
-      fallbackThemeName="default-dark"
-      initialThemeName='default-dark'
-      apiEndpoint="/api/themes"
-      enableTailwindVariables={true}
-    >
       <Outlet />
-    </ThemeProvider>
   )
 }
 
