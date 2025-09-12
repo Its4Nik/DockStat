@@ -1,11 +1,11 @@
 {
   "name": "@dockstat/sqlite-wrapper",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "A TypeScript wrapper around bun:sqlite with type-safe query building",
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
-  "files": ["index.ts", "src/**/*", "README.md", "types.ts"],
+  "files": ["index.ts", "query-builder/**/*", "README.md", "types.ts"],
   "scripts": {
     "dev": "bun build index.ts",
     "lint": "biome lint .",
