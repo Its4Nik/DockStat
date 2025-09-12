@@ -4,6 +4,7 @@
   "module": "index.ts",
   "types": "./index.ts",
   "main": "index.ts",
+  "files": ["index.ts", "README.md"],
   "version": "1.0.0",
   "private": false,
   "repository": {
@@ -26,7 +27,6 @@
     "lint:gh": "turbo run lint -- --reporter=github",
     "check-types": "bunx tsc --noEmit"
   },
-  "files": ["index.ts"],
   "type": "module",
   "devDependencies": {
     "@types/bun": "latest"
