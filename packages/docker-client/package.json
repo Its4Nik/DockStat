@@ -3,18 +3,10 @@
   "version": "1.0.2",
   "description": "A docker-client library powered by Dockerode for DockStat",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
-    }
-  },
-  "files": ["dist/**/*", "README.md"],
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "files": ["index.ts","src/**/*", "README.md"],
   "scripts": {
-    "build": "bun run ./build.ts",
     "dev": "bun run --watch index.ts",
     "clean": "rm -rf dist",
     "lint": "biome lint .",

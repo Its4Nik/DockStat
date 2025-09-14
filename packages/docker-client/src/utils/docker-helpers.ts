@@ -6,7 +6,10 @@ import type { DOCKER } from "@dockstat/typings";
  */
 
 /**
- * Formats bytes to human readable format
+ * Formats a number of bytes into a human-readable string (e.g., KB, MB, GB).
+ * @param bytes - The number of bytes.
+ * @param decimals - Number of decimal places to display.
+ * @returns Human-readable string representation of bytes.
  */
 export function formatBytes(bytes: number, decimals = 2): string {
   if (bytes === 0) return "0 Bytes";
@@ -21,14 +24,19 @@ export function formatBytes(bytes: number, decimals = 2): string {
 }
 
 /**
- * Formats CPU percentage
+ * Formats a CPU usage percentage value to a string with two decimals and a percent sign.
+ * @param percentage - The CPU usage percentage.
+ * @returns Formatted percentage string.
  */
 export function formatCpuPercentage(percentage: number): string {
   return `${percentage.toFixed(2)}%`;
 }
 
 /**
- * Formats memory usage percentage
+ * Formats memory usage as a percentage string.
+ * @param used - Amount of memory used.
+ * @param total - Total memory available.
+ * @returns Formatted percentage string.
  */
 export function formatMemoryPercentage(used: number, total: number): string {
   const percentage = total > 0 ? (used / total) * 100 : 0;
@@ -36,7 +44,9 @@ export function formatMemoryPercentage(used: number, total: number): string {
 }
 
 /**
- * Formats uptime from seconds to human readable format
+ * Formats uptime in seconds to a human-readable string (e.g., "1d 2h 3m 4s").
+ * @param seconds - Uptime in seconds.
+ * @returns Human-readable uptime string.
  */
 export function formatUptime(seconds: number): string {
   const days = Math.floor(seconds / 86400);
@@ -54,7 +64,9 @@ export function formatUptime(seconds: number): string {
 }
 
 /**
- * Calculates CPU usage percentage from container stats
+ * Calculates the CPU usage percentage from Docker container stats.
+ * @param stats - Docker container stats object.
+ * @returns CPU usage percentage.
  */
 export function calculateCpuUsage(stats: ContainerStats): number {
   const precpuStats = stats.precpu_stats;
@@ -75,7 +87,9 @@ export function calculateCpuUsage(stats: ContainerStats): number {
 }
 
 /**
- * Calculates memory usage percentage from container stats
+ * Calculates memory usage statistics from Docker container stats.
+ * @param stats - Docker container stats object.
+ * @returns Object containing used, total, and percentage of memory usage.
  */
 export function calculateMemoryUsage(stats: ContainerStats): {
   used: number;
@@ -90,7 +104,9 @@ export function calculateMemoryUsage(stats: ContainerStats): {
 }
 
 /**
- * Calculates network I/O from container stats
+ * Calculates network I/O (received and transmitted bytes) from Docker container stats.
+ * @param stats - Docker container stats object.
+ * @returns Object containing rx (received) and tx (transmitted) bytes.
  */
 export function calculateNetworkIO(stats: ContainerStats): {
   rx: number;
@@ -110,7 +126,9 @@ export function calculateNetworkIO(stats: ContainerStats): {
 }
 
 /**
- * Calculates block I/O from container stats
+ * Calculates block I/O (read and write bytes) from Docker container stats.
+ * @param stats - Docker container stats object.
+ * @returns Object containing read and write bytes.
  */
 export function calculateBlockIO(stats: ContainerStats): {
   read: number;
@@ -130,7 +148,9 @@ export function calculateBlockIO(stats: ContainerStats): {
 }
 
 /**
- * Extracts container port mappings in a readable format
+ * Formats container port mappings into readable strings.
+ * @param container - Docker container info object.
+ * @returns Array of formatted port mapping strings.
  */
 export function formatContainerPorts(
   container: DOCKER.ContainerInfo,
@@ -141,7 +161,9 @@ export function formatContainerPorts(
 }
 
 /**
- * Gets container status with color coding info
+ * Gets container status information including color and icon for UI display.
+ * @param container - Docker container info object.
+ * @returns Object with status, color, and icon.
  */
 export function getContainerStatusInfo(container: DOCKER.ContainerInfo): {
   status: string;
@@ -166,7 +188,9 @@ export function getContainerStatusInfo(container: DOCKER.ContainerInfo): {
 }
 
 /**
- * Checks if a container is healthy based on various metrics
+ * Checks if a container is healthy based on CPU, memory, and state metrics.
+ * @param container - Docker container stats info object.
+ * @returns Object indicating health, issues, and metrics.
  */
 export function isContainerHealthy(container: DOCKER.ContainerStatsInfo): {
   healthy: boolean;
@@ -213,7 +237,9 @@ export function isContainerHealthy(container: DOCKER.ContainerStatsInfo): {
 }
 
 /**
- * Checks if a host is healthy based on metrics
+ * Checks if a host is healthy based on container metrics.
+ * @param metrics - Docker host metrics object.
+ * @returns Object indicating health, issues, and metrics.
  */
 export function isHostHealthy(metrics: DOCKER.HostMetrics): {
   healthy: boolean;
@@ -268,6 +294,11 @@ export interface ContainerSummary {
   byHost: Record<number, number>;
 }
 
+/**
+ * Generates a summary of container statistics, including counts by state, image, and host.
+ * @param containers - Array of Docker container info objects.
+ * @returns ContainerSummary object.
+ */
 export function generateContainerSummary(containers: DOCKER.ContainerInfo[]): ContainerSummary {
   const summary = {
     total: containers.length,
@@ -318,6 +349,11 @@ export interface HostSummary {
   averageLoad: number;
 }
 
+/**
+ * Generates a summary of host metrics, including totals and averages.
+ * @param hosts - Array of Docker host metrics objects.
+ * @returns HostSummary object.
+ */
 export function generateHostSummary(hosts: DOCKER.HostMetrics[]): HostSummary {
   const summary = {
     totalHosts: hosts.length,
@@ -347,7 +383,9 @@ export function generateHostSummary(hosts: DOCKER.HostMetrics[]): HostSummary {
 }
 
 /**
- * Validates container name format
+ * Validates the format of a Docker container name.
+ * @param name - The container name to validate.
+ * @returns True if valid, false otherwise.
  */
 export function isValidContainerName(name: string): boolean {
   // Docker container names must match: [a-zA-Z0-9][a-zA-Z0-9_.-]*
@@ -356,7 +394,9 @@ export function isValidContainerName(name: string): boolean {
 }
 
 /**
- * Validates Docker image name format
+ * Validates the format of a Docker image name.
+ * @param name - The image name to validate.
+ * @returns True if valid, false otherwise.
  */
 export function isValidImageName(name: string): boolean {
   // Basic validation for Docker image names
@@ -366,7 +406,9 @@ export function isValidImageName(name: string): boolean {
 }
 
 /**
- * Parses Docker image name into components
+ * Parses a Docker image name into its registry, namespace, repository, and tag components.
+ * @param imageName - The Docker image name to parse.
+ * @returns ImageNameInfo object with parsed components.
  */
 export interface ImageNameInfo {
   registry?: string;
@@ -413,7 +455,9 @@ export function parseImageName(imageName: string): ImageNameInfo {
 }
 
 /**
- * Sanitizes container or image names for safe usage
+ * Sanitizes a container or image name for safe usage (lowercase, valid chars, max length).
+ * @param name - The name to sanitize.
+ * @returns Sanitized name string.
  */
 export function sanitizeName(name: string): string {
   return name
@@ -424,14 +468,19 @@ export function sanitizeName(name: string): string {
 }
 
 /**
- * Creates a delay promise for retry mechanisms
+ * Creates a promise that resolves after a specified delay (in milliseconds).
+ * @param ms - Milliseconds to delay.
+ * @returns Promise that resolves after the delay.
  */
 export function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
- * Debounces a function call
+ * Debounces a function call, ensuring it's only called after a specified wait time has elapsed since the last invocation.
+ * @param func - The function to debounce.
+ * @param wait - Milliseconds to wait before calling the function.
+ * @returns Debounced function.
  */
 export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
@@ -446,7 +495,10 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
 }
 
 /**
- * Throttles a function call
+ * Throttles a function call, ensuring it's only called at most once in a specified time interval.
+ * @param func - The function to throttle.
+ * @param limit - Milliseconds interval to throttle calls.
+ * @returns Throttled function.
  */
 export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,

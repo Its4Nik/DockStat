@@ -3,13 +3,14 @@ import { type DB, column } from '@dockstat/sqlite-wrapper'
 import type { DATABASE } from '@dockstat/typings'
 
 export default class HostHandler {
-  private logger = createLogger('HostHandler')
+  private logger;
   protected hostTable
 
-  constructor(hostDB: DB) {
+  constructor(id: number, hostDB: DB) {
+     this.logger = createLogger(`hostHandler-${id}`)
     this.logger.info('Initializing HostHandler')
     this.logger.debug('Creating hosts table')
-    hostDB.createTable('hosts', {
+    hostDB.createTable(`hostHandler-${id}`, {
       id: column.id(),
       name: column.text({ notNull: true }),
       host: column.text({ notNull: true }),
@@ -18,7 +19,7 @@ export default class HostHandler {
       createdAt: column.createdAt(),
       updatedAt: column.updatedAt(),
     })
-    this.hostTable = hostDB.table<DATABASE.DB_target_host>('hosts')
+    this.hostTable = hostDB.table<DATABASE.DB_target_host>(`hostHandler-${id}`)
   }
 
   public addHost(host: DATABASE.DB_target_host) {

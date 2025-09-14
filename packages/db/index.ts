@@ -6,7 +6,7 @@ const logger = createLogger('DockStatDB')
 
 class DockStatDB {
   private db: DB
-  private config_table: QueryBuilder<DATABASE.DB_config>
+  public config_table: QueryBuilder<DATABASE.DB_config>
 
   constructor() {
     logger.info('Initializing DockStatDB')

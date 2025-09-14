@@ -8,7 +8,7 @@ import MonitoringManager from './monitoring/monitoring-manager'
 import { StreamManager } from './stream/stream-manager'
 
 class DockerClient {
-  private logger = createLogger('DockerClient')
+  private logger;
   private hostHandler: HostHandler
   private dockerInstances: Map<number, Dockerode> = new Map()
   private activeStreams: Map<string, NodeJS.Timeout> = new Map()
@@ -21,10 +21,16 @@ class DockerClient {
   private monitoringManager?: MonitoringManager
   private streamManager?: StreamManager
 
-  constructor(DB: DB, options: DOCKER.DockerClientOptions = {}) {
+  /**
+   * Creates a new DockerClient instance.
+   * @param DB - Database instance for host management.
+   * @param options - Optional Docker client configuration.
+   */
+  constructor(id: number, DB: DB, options: DOCKER.DockerClientOptions = {}) {
+    this.logger = createLogger(`DockerClient-${id}`)
     this.logger.info('Initializing DockerClient')
     this.logger.debug('Creating HostHandler instance')
-    this.hostHandler = new HostHandler(DB)
+    this.hostHandler = new HostHandler(id,DB)
     this.options = {
       defaultTimeout: options.defaultTimeout ?? 5000,
       retryAttempts: options.retryAttempts ?? 3,
@@ -53,6 +59,10 @@ class DockerClient {
   }
 
   // Host Management
+  /**
+   * Adds a new Docker host to the client.
+   * @param host - Host information to add.
+   */
   public addHost(host: DATABASE.DB_target_host): void {
     this.logger.info(`Adding new host: ${host.name} (ID: ${host.id})`)
     this.hostHandler.addHost(host)
@@ -73,6 +83,10 @@ class DockerClient {
     this.events.emitHostAdded(host.id, host.name)
   }
 
+  /**
+   * Removes a Docker host from the client.
+   * @param host - Host information to remove.
+   */
   public removeHost(host: DATABASE.DB_target_host): void {
     this.logger.info(`Removing host: ${host.name} (ID: ${host.id})`)
     this.hostHandler.removeHost(host)
@@ -94,6 +108,11 @@ class DockerClient {
     this.events.emitHostRemoved(host.id, host.name)
   }
 
+  /**
+   * Updates an existing Docker host with new information.
+   * @param oldHost - The previous host information.
+   * @param newHost - The new host information.
+   */
   public updateHost(
     oldHost: DATABASE.DB_target_host,
     newHost: DATABASE.DB_target_host
@@ -103,11 +122,19 @@ class DockerClient {
     this.events.emitHostUpdated(newHost.id, newHost.name)
   }
 
+  /**
+   * Returns a list of all Docker hosts managed by the client.
+   * @returns Array of host information.
+   */
   public getHosts(): DATABASE.DB_target_host[] {
     return this.hostHandler.getHosts()
   }
 
   // Container Operations
+  /**
+   * Fetches all containers from all Docker hosts.
+   * @returns Array of container information.
+   */
   public async getAllContainers(): Promise<DOCKER.ContainerInfo[]> {
     this.logger.info('Fetching containers from all hosts')
     const allContainers: DOCKER.ContainerInfo[] = []
@@ -131,6 +158,11 @@ class DockerClient {
     return allContainers
   }
 
+  /**
+   * Fetches all containers for a specific Docker host.
+   * @param hostId - The ID of the host.
+   * @returns Array of container information.
+   */
   public async getContainersForHost(
     hostId: number
   ): Promise<DOCKER.ContainerInfo[]> {
@@ -145,6 +177,12 @@ class DockerClient {
     )
   }
 
+  /**
+   * Fetches detailed information for a specific container on a host.
+   * @param hostId - The ID of the host.
+   * @param containerId - The ID of the container.
+   * @returns Container information object.
+   */
   public async getContainer(
     hostId: number,
     containerId: string
@@ -158,6 +196,10 @@ class DockerClient {
   }
 
   // Container Statistics
+  /**
+   * Fetches statistics for all containers across all hosts.
+   * @returns Array of container statistics information.
+   */
   public async getAllContainerStats(): Promise<DOCKER.ContainerStatsInfo[]> {
     const allStats: DOCKER.ContainerStatsInfo[] = []
     const hosts = this.hostHandler.getHosts()
@@ -179,6 +221,11 @@ class DockerClient {
     return allStats
   }
 
+  /**
+   * Fetches statistics for all running containers on a specific host.
+   * @param hostId - The ID of the host.
+   * @returns Array of container statistics information.
+   */
   public async getContainerStatsForHost(
     hostId: number
   ): Promise<DOCKER.ContainerStatsInfo[]> {
@@ -207,6 +254,12 @@ class DockerClient {
       .map((result) => result.value)
   }
 
+  /**
+   * Fetches statistics for a specific container on a host.
+   * @param hostId - The ID of the host.
+   * @param containerId - The ID of the container.
+   * @returns Container statistics information.
+   */
   public async getContainerStats(
     hostId: number,
     containerId: string
@@ -224,6 +277,10 @@ class DockerClient {
   }
 
   // Host Metrics
+  /**
+   * Fetches metrics for all Docker hosts.
+   * @returns Array of host metrics information.
+   */
   public async getAllHostMetrics(): Promise<DOCKER.HostMetrics[]> {
     const hosts = this.hostHandler.getHosts()
     const metricsPromises = hosts.map(async (host) => {
@@ -244,6 +301,10 @@ class DockerClient {
       .map((result) => result.value)
   }
 
+  /**
+   * Fetches all container and host statistics in a single response.
+   * @returns Object containing containerStats, hostMetrics, and timestamp.
+   */
   public async getAllStats(): Promise<DOCKER.AllStatsResponse> {
     const [containerStats, hostMetrics] = await Promise.all([
       this.getAllContainerStats(),
@@ -257,6 +318,11 @@ class DockerClient {
     }
   }
 
+  /**
+   * Fetches metrics for a specific Docker host.
+   * @param hostId - The ID of the host.
+   * @returns Host metrics information.
+   */
   public async getHostMetrics(hostId: number): Promise<DOCKER.HostMetrics> {
     const docker = this.getDockerInstance(hostId)
     const host = this.hostHandler.getHosts().find((h) => h.id === hostId)
@@ -290,6 +356,14 @@ class DockerClient {
   }
 
   // Streaming
+  /**
+   * Starts a periodic stream of container statistics for a specific container.
+   * @param hostId - The ID of the host.
+   * @param containerId - The ID of the container.
+   * @param callback - Callback to receive stream updates.
+   * @param interval - Interval in milliseconds between updates.
+   * @returns The stream key identifier.
+   */
   public startContainerStatsStream(
     hostId: number,
     containerId: string,
@@ -327,6 +401,13 @@ class DockerClient {
     return streamKey
   }
 
+  /**
+   * Starts a periodic stream of host metrics for a specific host.
+   * @param hostId - The ID of the host.
+   * @param callback - Callback to receive stream updates.
+   * @param interval - Interval in milliseconds between updates.
+   * @returns The stream key identifier.
+   */
   public startHostMetricsStream(
     hostId: number,
     callback: DOCKER.StreamCallback,
@@ -363,6 +444,12 @@ class DockerClient {
     return streamKey
   }
 
+  /**
+   * Starts a periodic stream of all containers across all hosts.
+   * @param callback - Callback to receive stream updates.
+   * @param interval - Interval in milliseconds between updates.
+   * @returns The stream key identifier.
+   */
   public startAllContainersStream(
     callback: DOCKER.StreamCallback,
     interval = 2000
@@ -398,6 +485,12 @@ class DockerClient {
     return streamKey
   }
 
+  /**
+   * Starts a periodic stream of all statistics (containers and hosts).
+   * @param callback - Callback to receive stream updates.
+   * @param interval - Interval in milliseconds between updates.
+   * @returns The stream key identifier.
+   */
   public startAllStatsStream(
     callback: DOCKER.StreamCallback,
     interval = 5000
@@ -433,6 +526,11 @@ class DockerClient {
     return streamKey
   }
 
+  /**
+   * Stops a specific active stream by its key.
+   * @param streamKey - The stream key identifier.
+   * @returns True if the stream was stopped, false otherwise.
+   */
   public stopStream(streamKey: string): boolean {
     const timer = this.activeStreams.get(streamKey)
     if (timer) {
@@ -443,6 +541,9 @@ class DockerClient {
     return false
   }
 
+  /**
+   * Stops all active streams managed by the client.
+   */
   public stopAllStreams(): void {
     for (const timer of this.activeStreams.values()) {
       clearInterval(timer)
@@ -450,11 +551,20 @@ class DockerClient {
     this.activeStreams.clear()
   }
 
+  /**
+   * Returns a list of all currently active stream keys.
+   * @returns Array of stream key identifiers.
+   */
   public getActiveStreams(): string[] {
     return Array.from(this.activeStreams.keys())
   }
 
   // Container Control Operations
+  /**
+   * Starts a specific container on a host.
+   * @param hostId - The ID of the host.
+   * @param containerId - The ID of the container.
+   */
   public async startContainer(
     hostId: number,
     containerId: string
@@ -464,6 +574,11 @@ class DockerClient {
     await this.withRetry(() => container.start())
   }
 
+  /**
+   * Stops a specific container on a host.
+   * @param hostId - The ID of the host.
+   * @param containerId - The ID of the container.
+   */
   public async stopContainer(
     hostId: number,
     containerId: string
@@ -473,6 +588,11 @@ class DockerClient {
     await this.withRetry(() => container.stop())
   }
 
+  /**
+   * Restarts a specific container on a host.
+   * @param hostId - The ID of the host.
+   * @param containerId - The ID of the container.
+   */
   public async restartContainer(
     hostId: number,
     containerId: string
@@ -482,6 +602,12 @@ class DockerClient {
     await this.withRetry(() => container.restart())
   }
 
+  /**
+   * Removes a specific container from a host.
+   * @param hostId - The ID of the host.
+   * @param containerId - The ID of the container.
+   * @param force - Whether to force removal.
+   */
   public async removeContainer(
     hostId: number,
     containerId: string,
@@ -493,11 +619,21 @@ class DockerClient {
   }
 
   // Image Operations
+  /**
+   * Fetches a list of Docker images available on a host.
+   * @param hostId - The ID of the host.
+   * @returns Array of image information.
+   */
   public async getImages(hostId: number): Promise<Dockerode.ImageInfo[]> {
     const docker = this.getDockerInstance(hostId)
     return await this.withRetry(() => docker.listImages())
   }
 
+  /**
+   * Pulls a Docker image onto a host.
+   * @param hostId - The ID of the host.
+   * @param imageName - The name of the image to pull.
+   */
   public async pullImage(hostId: number, imageName: string): Promise<void> {
     const docker = this.getDockerInstance(hostId)
     const stream = await docker.pull(imageName)
@@ -514,6 +650,11 @@ class DockerClient {
   }
 
   // Network Operations
+  /**
+   * Fetches a list of Docker networks available on a host.
+   * @param hostId - The ID of the host.
+   * @returns Array of network information.
+   */
   public async getNetworks(
     hostId: number
   ): Promise<Dockerode.NetworkInspectInfo[]> {
@@ -522,6 +663,11 @@ class DockerClient {
   }
 
   // Volume Operations
+  /**
+   * Fetches a list of Docker volumes available on a host.
+   * @param hostId - The ID of the host.
+   * @returns Array of volume information.
+   */
   public async getVolumes(
     hostId: number
   ): Promise<Dockerode.VolumeInspectInfo[]> {
@@ -531,6 +677,11 @@ class DockerClient {
   }
 
   // Health Check
+  /**
+   * Checks if a specific Docker host is healthy (reachable).
+   * @param hostId - The ID of the host.
+   * @returns True if healthy, false otherwise.
+   */
   public async checkHostHealth(hostId: number): Promise<boolean> {
     try {
       const docker = this.getDockerInstance(hostId)
@@ -543,6 +694,10 @@ class DockerClient {
     }
   }
 
+  /**
+   * Checks the health of all Docker hosts managed by the client.
+   * @returns Object mapping host IDs to health status.
+   */
   public async checkAllHostsHealth(): Promise<Record<number, boolean>> {
     const hosts = this.hostHandler.getHosts()
     const healthChecks = await Promise.allSettled(
@@ -695,6 +850,10 @@ class DockerClient {
   }
 
   // Monitoring Management
+  /**
+   * Starts the monitoring manager if enabled.
+   * Emits a warning if the monitoring manager is not initialized.
+   */
   public startMonitoring(): void {
     if (this.monitoringManager) {
       this.monitoringManager.startMonitoring()
@@ -703,33 +862,57 @@ class DockerClient {
     }
   }
 
+  /**
+   * Stops the monitoring manager if enabled.
+   */
   public stopMonitoring(): void {
     if (this.monitoringManager) {
       this.monitoringManager.stopMonitoring()
     }
   }
 
+  /**
+   * Checks if monitoring is currently active.
+   * @returns True if monitoring is active, false otherwise.
+   */
   public isMonitoring(): boolean {
     return this.monitoringManager?.getMonitoringState().isMonitoring ?? false
   }
 
   // Stream Management
+  /**
+   * Gets the stream manager instance.
+   * @returns The StreamManager instance or undefined.
+   */
   public getStreamManager(): StreamManager | undefined {
     return this.streamManager
   }
 
+  /**
+   * Creates a new stream connection.
+   * @param connectionId - The connection identifier.
+   */
   public createStreamConnection(connectionId: string): void {
     if (this.streamManager) {
       this.streamManager.createConnection(connectionId)
     }
   }
 
+  /**
+   * Closes an existing stream connection.
+   * @param connectionId - The connection identifier.
+   */
   public closeStreamConnection(connectionId: string): void {
     if (this.streamManager) {
       this.streamManager.closeConnection(connectionId)
     }
   }
 
+  /**
+   * Handles a message for a specific stream connection.
+   * @param connectionId - The connection identifier.
+   * @param message - The message to handle.
+   */
   public handleStreamMessage(connectionId: string, message: string): void {
     if (this.streamManager) {
       this.streamManager.handleMessage(connectionId, message)
@@ -737,6 +920,11 @@ class DockerClient {
   }
 
   // Advanced Container Operations
+  /**
+   * Pauses a running container on a host.
+   * @param hostId - The ID of the host.
+   * @param containerId - The ID of the container.
+   */
   public async pauseContainer(
     hostId: number,
     containerId: string
@@ -746,6 +934,11 @@ class DockerClient {
     await this.withRetry(() => container.pause())
   }
 
+  /**
+   * Unpauses a paused container on a host.
+   * @param hostId - The ID of the host.
+   * @param containerId - The ID of the container.
+   */
   public async unpauseContainer(
     hostId: number,
     containerId: string
@@ -755,6 +948,12 @@ class DockerClient {
     await this.withRetry(() => container.unpause())
   }
 
+  /**
+   * Sends a kill signal to a container on a host.
+   * @param hostId - The ID of the host.
+   * @param containerId - The ID of the container.
+   * @param signal - The signal to send (default: 'SIGKILL').
+   */
   public async killContainer(
     hostId: number,
     containerId: string,
@@ -765,6 +964,12 @@ class DockerClient {
     await this.withRetry(() => container.kill({ signal }))
   }
 
+  /**
+   * Renames a container on a host.
+   * @param hostId - The ID of the host.
+   * @param containerId - The ID of the container.
+   * @param newName - The new name for the container.
+   */
   public async renameContainer(
     hostId: number,
     containerId: string,
@@ -775,6 +980,13 @@ class DockerClient {
     await this.withRetry(() => container.rename({ name: newName }))
   }
 
+  /**
+   * Fetches logs for a specific container on a host.
+   * @param hostId - The ID of the host.
+   * @param containerId - The ID of the container.
+   * @param options - Log options (stdout, stderr, timestamps, tail, since).
+   * @returns The container logs as a string.
+   */
   public async getContainerLogs(
     hostId: number,
     containerId: string,
@@ -802,6 +1014,14 @@ class DockerClient {
     return logStream.toString()
   }
 
+  /**
+   * Executes a command inside a running container.
+   * @param hostId - The ID of the host.
+   * @param containerId - The ID of the container.
+   * @param command - Array of command arguments to execute.
+   * @param options - Execution options (attachStdout, attachStderr, tty, env, workingDir).
+   * @returns An object containing stdout, stderr, and exitCode.
+   */
   public async execInContainer(
     hostId: number,
     containerId: string,
@@ -906,21 +1126,41 @@ class DockerClient {
   }
 
   // System Operations
+  /**
+   * Retrieves system information for a Docker host.
+   * @param hostId - The ID of the host.
+   * @returns System information object.
+   */
   public async getSystemInfo(hostId: number): Promise<DOCKER.DockerAPIResponse['systemInfo']> {
     const docker = this.getDockerInstance(hostId)
     return await this.withRetry(() => docker.info())
   }
 
+  /**
+   * Retrieves Docker version information for a host.
+   * @param hostId - The ID of the host.
+   * @returns Docker version information object.
+   */
   public async getSystemVersion(hostId: number) {
     const docker = this.getDockerInstance(hostId)
     return await this.withRetry(() => docker.version())
   }
 
+  /**
+   * Retrieves disk usage information for a Docker host.
+   * @param hostId - The ID of the host.
+   * @returns Disk usage information object.
+   */
   public async getDiskUsage(hostId: number): Promise<DOCKER.DockerAPIResponse['diskUsage']> {
     const docker = this.getDockerInstance(hostId)
     return await this.withRetry(() => docker.df())
   }
 
+  /**
+   * Prunes unused Docker images on a host.
+   * @param hostId - The ID of the host.
+   * @returns Object containing the amount of space reclaimed.
+   */
   public async pruneSystem(hostId: number): Promise<{ SpaceReclaimed: number }> {
     const docker = this.getDockerInstance(hostId)
     return await this.withRetry(() => docker.pruneImages({ dangling: false }))
