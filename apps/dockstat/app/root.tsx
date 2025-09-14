@@ -11,29 +11,11 @@ import {
 import type { Route } from './+types/root'
 import { useTheme } from "react-router-theme";
 export { loader, action } from "react-router-theme";
-import { ThemeContext } from "./ThemeContext";
 import { useFetcher } from 'react-router';
-import Sidebar, {type NavItem} from './components/ui/Sidebar';
-
-const defaultTheme = "system";
-
-export const links: Route.LinksFunction = () => []
-
-const items: NavItem[] = [
-  { key: "home", label: "Home", href: "/"},
-  { key: "test", label: "Test", href: "/test", badge: 3 },
-  { key: "settings", label: "Settings", href: "/settings" },
-];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const loaderData = useLoaderData() as { theme: string };
-    const fetcher = useFetcher();
-
-    const [theme, setTheme] = useTheme(loaderData, fetcher, defaultTheme);
-
     return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-    <html lang="en" data-theme={theme}>
+    <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -41,15 +23,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <Sidebar
-        items={items}
-        />
         {children}
         <ScrollRestoration />
         <Scripts />
       </body>
     </html>
-    </ThemeContext.Provider>
   )
 }
 

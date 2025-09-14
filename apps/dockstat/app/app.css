@@ -1,4 +1,8 @@
 @import "tailwindcss";
-@plugin "daisyui" {
-  themes: all;
+
+@theme {
+    --primary-bg: "#011627";
+    --secondary-bg: "#E8E8E8";
+    --accent: "#818CF8";
+    --primary-text: "#6F5060";
 }
