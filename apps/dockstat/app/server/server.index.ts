@@ -47,7 +47,7 @@ class ServerInstance {
 
             this.logger.info('Database initialized successfully.');
           },
-          () => {this.config_table = this.DB.config_table}
+          () => {this.config_table = this.DB.getConfigTable()}
         ]
       }
     });

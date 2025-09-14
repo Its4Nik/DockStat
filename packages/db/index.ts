@@ -6,7 +6,7 @@ const logger = createLogger('DockStatDB')
 
 class DockStatDB {
   private db: DB
-  public config_table: QueryBuilder<DATABASE.DB_config>
+  private config_table: QueryBuilder<DATABASE.DB_config>
 
   constructor() {
     logger.info('Initializing DockStatDB')
@@ -71,6 +71,10 @@ class DockStatDB {
   public getDB(): DB {
     logger.debug('Getting DB instance')
     return this.db
+  }
+
+  public getConfigTable(){
+    return this.config_table
   }
 
   // Database Management
