@@ -10,8 +10,10 @@ import {
 } from 'react-router'
 import type { Route } from './+types/root'
 import { useTheme } from "react-router-theme";
+import { createLogger } from '@dockstat/logger';
 export { loader, action } from "react-router-theme";
-import { useFetcher } from 'react-router';
+export const clientLogger = createLogger("DockStat-Client")
+
 
 export function Layout({ children }: { children: React.ReactNode }) {
     return (

@@ -60,25 +60,29 @@ export interface DockerAPIResponse {
   };
 }
 
-export interface DockerClientOptions {
+export type MonitoringOptions = {
+  healthCheckInterval?: number;
+  containerEventPollingInterval?: number;
+  hostMetricsInterval?: number;
+  enableContainerEvents?: boolean;
+  enableHostMetrics?: boolean;
+  enableHealthChecks?: boolean;
+};
+
+export type ExecOptions = {
+  workingDir?: string;
+  env?: string[];
+  tty?: boolean;
+};
+
+export interface DockerAdapterOptions {
   defaultTimeout?: number;
   retryAttempts?: number;
   retryDelay?: number;
   enableMonitoring?: boolean;
   enableEventEmitter?: boolean;
-  monitoringOptions?: {
-    healthCheckInterval?: number;
-    containerEventPollingInterval?: number;
-    hostMetricsInterval?: number;
-    enableContainerEvents?: boolean;
-    enableHostMetrics?: boolean;
-    enableHealthChecks?: boolean;
-  };
-  execOptions?: {
-    workingDir?: string;
-    env?: string[];
-    tty?: boolean;
-  };
+  monitoringOptions?: MonitoringOptions;
+  execOptions?: ExecOptions;
 }
 
 export interface ContainerInfo {
@@ -215,17 +219,6 @@ export interface DockerEventEmitterInterface {
   ): this;
   removeAllListeners<K extends keyof DockerClientEvents>(event?: K): this;
   listenerCount<K extends keyof DockerClientEvents>(event: K): number;
-}
-
-export interface MonitoringOptions {
-  healthCheckInterval?: number;
-  containerEventPollingInterval?: number;
-  hostMetricsInterval?: number;
-  enableContainerEvents?: boolean;
-  enableHostMetrics?: boolean;
-  enableHealthChecks?: boolean;
-  retryAttempts?: number;
-  retryDelay?: number;
 }
 
 export interface MonitoringState {

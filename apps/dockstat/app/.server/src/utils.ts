@@ -14,12 +14,12 @@ export async function startUp(
 
   startUpLogger.info("=".repeat(20))
   startUpLogger.info("/".repeat(10))
-  startUpLogger.info(`\n🚀 Running ${entries.length} steps`)
+  startUpLogger.info(`🚀 Running ${entries.length} steps`)
   startUpLogger.info(
     `⌛ Async Steps: ${entries.filter(([, t]) => (t.asyncSteps?.length ?? 0) > 0).length}`
   )
   startUpLogger.info(
-    `⌛ Sync Steps: ${entries.filter(([, t]) => (t.steps?.length ?? 0) > 0).length}\n`
+    `⌛ Sync Steps: ${entries.filter(([, t]) => (t.steps?.length ?? 0) > 0).length}`
   )
 
   for (const [taskName, tasks] of entries) {
@@ -32,10 +32,10 @@ export async function startUp(
       for (const [i, step] of tasks.steps.entries()) {
         try {
           step()
-          startUpLogger.info(`   ✅ Step ${i + 1}/${tasks.steps.length} completed`)
+          startUpLogger.info(`✅ Step ${i + 1}/${tasks.steps.length} completed`)
         } catch (err) {
           startUpLogger.error(
-            `   ❌ Step ${i + 1} failed in ${taskName}: ${(err as Error).message}`
+            `❌ Step ${i + 1} failed in ${taskName}: ${(err as Error).message}`
           )
         }
       }
@@ -47,11 +47,11 @@ export async function startUp(
         try {
           await step()
           startUpLogger.info(
-            `   ✅ Async Step ${i + 1}/${tasks.asyncSteps.length} completed`
+            `✅ Async Step ${i + 1}/${tasks.asyncSteps.length} completed`
           )
         } catch (err) {
           startUpLogger.error(
-            `   ❌ Async Step ${i + 1} failed in ${taskName}: ${(err as Error).message}`
+            `❌ Async Step ${i + 1} failed in ${taskName}: ${(err as Error).message}`
           )
         }
       }
@@ -60,5 +60,5 @@ export async function startUp(
     startUpLogger.info(`✔️ Finished ${taskName}`)
   }
 
-  startUpLogger.info("\n🎉 All tasks complete!\n")
+  startUpLogger.info("🎉 All tasks complete!")
 }

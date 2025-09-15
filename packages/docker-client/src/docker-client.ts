@@ -13,9 +13,9 @@ class DockerClient {
   private dockerInstances: Map<number, Dockerode> = new Map()
   private activeStreams: Map<string, NodeJS.Timeout> = new Map()
   private options: Required<
-    Omit<DOCKER.DockerClientOptions, 'monitoringOptions'>
+    Omit<DOCKER.DockerAdapterOptions, 'monitoringOptions'>
   > & {
-    monitoringOptions?: DOCKER.DockerClientOptions['monitoringOptions']
+    monitoringOptions?: DOCKER.DockerAdapterOptions['monitoringOptions']
   }
   public readonly events: DockerEventEmitter
   private monitoringManager?: MonitoringManager
@@ -26,7 +26,7 @@ class DockerClient {
    * @param DB - Database instance for host management.
    * @param options - Optional Docker client configuration.
    */
-  constructor(id: number, DB: DB, options: DOCKER.DockerClientOptions = {}) {
+  constructor(id: number, DB: DB, options: DOCKER.DockerAdapterOptions = {}) {
     this.logger = createLogger(`DockerClient-${id}`)
     this.logger.info('Initializing DockerClient')
     this.logger.debug('Creating HostHandler instance')
@@ -58,20 +58,70 @@ class DockerClient {
     this.streamManager = new StreamManager(this.events, this)
   }
 
+  public async ping(): Promise<{ reachableInstances: number[]; unreachableInstances: number[] }> {
+    this.logger.info('Testing ping to all instances')
+
+    const clients = Array.from(this.dockerInstances.entries())
+    if (clients.length === 0) {
+      this.logger.info('No docker instances to ping')
+      return { reachableInstances: [], unreachableInstances: [] }
+    }
+
+    const pingPromises = clients.map(([id, docker]) =>
+      docker
+        .ping()
+        .then(() => ({ id, ok: true }))
+        .catch((err) => {
+          this.logger.debug(`Ping failed for instance ${id}: ${err?.message ?? err}`)
+          return { id, ok: false }
+        })
+    )
+
+    const settled = await Promise.all(pingPromises)
+
+    const good: number[] = []
+    const bad: number[] = []
+
+    for (const res of settled) {
+      if (res.ok) good.push(res.id)
+      else bad.push(res.id)
+    }
+
+    this.logger.info(`Ping complete: ${good.length} healthy, ${bad.length} unhealthy`)
+    return { reachableInstances: good, unreachableInstances: bad }
+  }
+
+
   // Host Management
   /**
    * Adds a new Docker host to the client.
    * @param host - Host information to add.
    */
-  public addHost(host: DATABASE.DB_target_host): void {
-    this.logger.info(`Adding new host: ${host.name} (ID: ${host.id})`)
-    this.hostHandler.addHost(host)
-    const dockerInstance = new Dockerode({
+  public addHost(hostname: string, name: string, secure: boolean, port: number, id?: number) {
+    const host: Partial<DATABASE.DB_target_host> = {
+      name, secure, port, host: hostname
+    };
+
+    if(!id){
+      this.logger.info(`Adding new host: ${host.name}`)
+      host.id = this.hostHandler.addHost(host)
+
+    } else {
+      this.logger.info(`Host ${name} (${id}) already exists. Initializing...`)
+      host.id = id
+    }
+
+
+    const instanceCfg: Dockerode.DockerOptions = {
       host: host.host,
       protocol: host.secure ? 'https' : 'http',
-      port: host.secure ? 2376 : 2375,
+      port: host.port,
       timeout: this.options.defaultTimeout,
-    })
+    }
+
+    this.logger.info(`Creating new Docker Instace ${JSON.stringify(instanceCfg)}`)
+
+    const dockerInstance = new Dockerode(instanceCfg)
     this.dockerInstances.set(host.id, dockerInstance)
 
     // Update monitoring manager
@@ -80,7 +130,17 @@ class DockerClient {
       this.monitoringManager.updateDockerInstances(this.dockerInstances)
     }
 
-    this.events.emitHostAdded(host.id, host.name)
+    this.events.emitHostAdded(host.id, host.name as string)
+    return host as DATABASE.DB_target_host
+  }
+
+
+  public init(hosts = this.hostHandler.getHosts()){
+    this.logger.info("Initializing...")
+    for(const host of hosts){
+      this.logger.info(`Initializing ${host.name} (${host.id})`)
+      this.addHost(host.host, host.name, host.secure, host.port, host.id)
+    }
   }
 
   /**
@@ -118,7 +178,7 @@ class DockerClient {
     newHost: DATABASE.DB_target_host
   ): void {
     this.removeHost(oldHost)
-    this.addHost(newHost)
+    this.addHost(newHost.host, newHost.name, newHost.secure, newHost.port)
     this.events.emitHostUpdated(newHost.id, newHost.name)
   }
 

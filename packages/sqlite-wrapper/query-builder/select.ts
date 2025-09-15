@@ -183,7 +183,7 @@ export class SelectQueryBuilder<
         `Executing SELECT query - query: ${query}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.jsonColumns}`
       )
       const rows = this.getDb()
-        .prepare(query)
+        .prepare(query, params)
         .all() as T[]
       this.getLogger().debug(`Retrieved ${rows.length} rows from database`)
       const transformed = this.transformRowsFromDb(rows)

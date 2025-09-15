@@ -10,7 +10,8 @@ export default defineConfig({
     build: {
       rollupOptions: {
         external: ["ssh2", "cpu-features"],
-      },
+      }
+      ,
     },
   plugins: [
     tsconfigPaths({ root: './', projects: ['./tsconfig.json'] }),

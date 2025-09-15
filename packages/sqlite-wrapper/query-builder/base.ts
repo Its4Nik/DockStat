@@ -36,7 +36,6 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
       regexConditions: [],
       jsonColumns: jsonConfig?.jsonColumns,
     }
-    this.logger.debug(`Created QueryBuilder for table: ${tableName}`)
   }
 
   /**

@@ -206,9 +206,6 @@ export class WhereQueryBuilder<
       throw new Error(`whereOp: operator "${op}" not supported`);
     }
 
-    // Remove any existing conditions for this column
-    this.removeExistingCondition(String(column));
-
     // Handle null special-casing for IS / IS NOT and equality operators
     if (
       (value === null || value === undefined) &&

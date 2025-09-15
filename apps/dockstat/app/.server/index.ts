@@ -3,8 +3,8 @@ import type sqliteWrapper from '@dockstat/sqlite-wrapper';
 import type { QueryBuilder } from '@dockstat/sqlite-wrapper';
 import type { DATABASE } from '@dockstat/typings';
 import { createLogger } from '@dockstat/logger'
-import { startUp } from './src/server.utils';
-import AdapterHandler from './src/adapters/server.index';
+import { startUp } from './src/utils';
+import AdapterHandler from './src/adapters/handler';
 
 class ServerInstance {
   public logger: {
@@ -18,7 +18,7 @@ class ServerInstance {
   private DBWrapper!: sqliteWrapper;
   private config_table!: QueryBuilder<DATABASE.DB_config>;
 
-  constructor(name = "DockStat"){
+  constructor(name = 'DockStatAPI'){
     this.logger = createLogger(`${name}`);
     this.logger.debug("Initialized Server Logger")
     this.logger.info("Starting DockStat Server... Please stand by.")
@@ -49,17 +49,32 @@ class ServerInstance {
           },
           () => {this.config_table = this.DB.getConfigTable()}
         ]
-      }
-    });
-    startUp({
+      },
       "Setup Adapter Handler": {
         steps: [
           () => {
             this.AdapterHandler = new AdapterHandler(this.DB.getDB());
           },
         ]
+      },
+      "Init Docker Adapters": {
+        asyncSteps: [() => {return this.AdapterHandler.initDockerAdapters()}]
+      },
+      "Init Docker Clients": {
+        steps: [
+          () => {
+            this.logger.info("Getting Docker Adapters")
+            let c = 0
+            const DA = this.AdapterHandler.getDockerAdapters()
+            for (const client of Object.values(DA)) {
+              c = c++
+              this.logger.info(`initializing Nr ${c}`)
+              client.init()
+            }
+          }
+        ]
       }
-    });
+    })
   }
 
   getDB(){
@@ -72,7 +87,6 @@ class ServerInstance {
         adapter: this.AdapterHandler.getAdapterTable()
       }
     }
-    this.logger.debug(`Got ${JSON.stringify(dbObj)}`)
     return dbObj
   }
 

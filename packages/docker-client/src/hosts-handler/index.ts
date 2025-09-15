@@ -7,10 +7,10 @@ export default class HostHandler {
   protected hostTable
 
   constructor(id: number, hostDB: DB) {
-     this.logger = createLogger(`hostHandler-${id}`)
+     this.logger = createLogger(`HostHandler-${id}`)
     this.logger.info('Initializing HostHandler')
     this.logger.debug('Creating hosts table')
-    hostDB.createTable(`hostHandler-${id}`, {
+    hostDB.createTable(`HostHandler-${id}`, {
       id: column.id(),
       name: column.text({ notNull: true }),
       host: column.text({ notNull: true }),
@@ -18,16 +18,25 @@ export default class HostHandler {
       secure: column.boolean({ default: 0 }),
       createdAt: column.createdAt(),
       updatedAt: column.updatedAt(),
-    })
+    },{ifNotExists: true})
     this.hostTable = hostDB.table<DATABASE.DB_target_host>(`hostHandler-${id}`)
   }
 
-  public addHost(host: DATABASE.DB_target_host) {
+  public addHost(host: Partial<DATABASE.DB_target_host>): number {
+    const prev = this.getHosts().map(h => h.id);
+
     this.logger.info(
       `Adding new host: ${host.name} (${host.host}:${host.port})`
-    )
-    return this.hostTable.insert(host)
+    );
+
+    this.hostTable.insert(host);
+
+    const now = this.getHosts();
+    const newHost = now.find(h => !prev.includes(h.id)) as DATABASE.DB_target_host;
+
+    return newHost.id;
   }
+
 
   public getHosts() {
     this.logger.debug('Fetching all hosts')
