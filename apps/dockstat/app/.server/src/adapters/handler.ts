@@ -1,5 +1,5 @@
 import type DB from "@dockstat/sqlite-wrapper"
-import type { ADAPTER, DOCKER } from "@dockstat/typings";
+import type { DOCKER, ADAPTER ,DockerAdapterOptions } from "@dockstat/typings";
 import DockerClient from "@dockstat/docker-client";
 import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper";
 import { createLogger } from "@dockstat/logger";
@@ -17,7 +17,6 @@ class AdapterHandler {
       name: column.text({ notNull: true }),
       type: column.enum(["docker"]),
       config: column.json({ notNull: true }),
-      adapter: column.foreignKey("adapters","id"  )
     },{ifNotExists:true})
 
     this.adapterConfigTable = db.table("adapters", {jsonColumns: ["config"]});
@@ -58,7 +57,7 @@ class AdapterHandler {
       this.logger.info(
           `Initializing Docker Adapter ${adapter.id} --- ${count}/${DockerAdapters.length}`
         )
-      this.dockerAdapters[adapter.id] = new DockerClient(adapter.id,this.db, adapter.config);
+      this.dockerAdapters[adapter.id] = new DockerClient(adapter.id,this.db, adapter.config as DockerAdapterOptions);
       this.logger.info(`Initialized Docker Adapter ${adapter.id} --- ${count}/${DockerAdapters.length}`);
       count++;
     }

@@ -5,6 +5,7 @@ import type { DATABASE } from '@dockstat/typings';
 import { createLogger } from '@dockstat/logger'
 import { startUp } from './src/utils';
 import AdapterHandler from './src/adapters/handler';
+import ThemeHandler from './src/theme/themeHandler';
 
 class ServerInstance {
   public logger: {
@@ -17,8 +18,9 @@ class ServerInstance {
   private DB!: DBFactory;
   private DBWrapper!: sqliteWrapper;
   private config_table!: QueryBuilder<DATABASE.DB_config>;
+  private themeHandler!: ThemeHandler;
 
-  constructor(name = 'DockStatAPI'){
+  constructor(docRoot: HTMLElement, name = 'DockStatAPI'){
     this.logger = createLogger(`${name}`);
     this.logger.debug("Initialized Server Logger")
     this.logger.info("Starting DockStat Server... Please stand by.")
@@ -73,6 +75,14 @@ class ServerInstance {
             }
           }
         ]
+      },
+      "Setup Theme Handler": {
+        steps: [
+          () => {
+            this.logger.info("Setting up Theme Handler")
+            this.themeHandler = new ThemeHandler(this.DB.getDB(), docRoot)
+          }
+        ]
       }
     })
   }
@@ -90,10 +100,13 @@ class ServerInstance {
     return dbObj
   }
 
+  getThemeHandler(){
+    return this.themeHandler
+  }
+
   public getAdapterHandler(){
     return this.AdapterHandler;
   }
-
 }
 
-export default new ServerInstance()
+export default new ServerInstance(document.documentElement)

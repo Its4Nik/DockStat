@@ -259,7 +259,7 @@ export function loader() {
         schema: DBSchema,
     };
   } catch (error) {
-    clientLogger.error("Loader failed", { error });
+    clientLogger.error(`Loader failed: ${error}`);
 
     return {
       adapters: [],

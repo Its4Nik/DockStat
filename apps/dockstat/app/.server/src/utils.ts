@@ -1,5 +1,7 @@
 import { createLogger } from "@dockstat/logger"
-const startUpLogger = createLogger("DockStat-Init")
+import ServerInstance from "~/.server"
+
+const logger = ServerInstance.logger
 
 export async function startUp(
   toRun: Record<
@@ -10,6 +12,7 @@ export async function startUp(
     }
   >
 ) {
+  const startUpLogger = createLogger("DockStat-Init")
   const entries = Object.entries(toRun)
 
   startUpLogger.info("=".repeat(20))
@@ -61,4 +64,21 @@ export async function startUp(
   }
 
   startUpLogger.info("🎉 All tasks complete!")
+}
+
+export function injectVariables(variables: Record<string, string>, docRoot: HTMLElement): void {
+  logger.info(`Injecting variables : ${Object.keys(variables).join(", ")}`)
+  for (const [key, value] of Object.entries(variables)) {
+    injectSingleCSSVar(key,value, docRoot)
+  }
+}
+
+
+function injectSingleCSSVar(variable: string, value: string, docRoot: HTMLElement): string {
+  logger.info(`Injecting ${variable} with value: ${value}`)
+  const startsWithHyphen = variable.startsWith("--")
+  logger.debug(`${startsWithHyphen ? "Parsed variable with Hyphen" : "Parsed variable without Hyphens, added \"--\""}`)
+  const cssVar = startsWithHyphen ? variable : `--${variable}`;
+  docRoot.style.setProperty(cssVar, value);
+  return value;
 }
