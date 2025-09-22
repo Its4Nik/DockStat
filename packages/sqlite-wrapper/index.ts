@@ -211,7 +211,7 @@ class DB {
     tableName: string,
     columns: string | Record<string, string> | TableSchema,
     options?: TableOptions
-  ): void {
+  ): QueryBuilder<_T> {
     const temp = options?.temporary ? 'TEMPORARY ' : ''
     const ifNot = options?.ifNotExists ? 'IF NOT EXISTS ' : ''
     const withoutRowId = options?.withoutRowId ? ' WITHOUT ROWID' : ''
@@ -276,6 +276,8 @@ class DB {
     if (options?.comment) {
       this.setTableComment(tableName, options.comment)
     }
+
+    return this.table<_T>(tableName)
   }
 
   /**
