@@ -8,7 +8,7 @@ import AdapterHandler from './src/adapters/handler';
 import ThemeHandler from './src/theme/themeHandler';
 
 class ServerInstance {
-  public logger: {
+  private logger: {
       error: (msg: string) => void;
       warn: (msg: string) => void;
       info: (msg: string) => void;
@@ -20,25 +20,30 @@ class ServerInstance {
   private config_table!: QueryBuilder<DATABASE.DB_config>;
   private themeHandler!: ThemeHandler;
 
-  constructor(docRoot: HTMLElement, name = 'DockStatAPI'){
+  constructor(name = 'DockStatAPI'){
     this.logger = createLogger(`${name}`);
-    this.logger.debug("Initialized Server Logger")
-    this.logger.info("Starting DockStat Server... Please stand by.")
+    this.logger.debug("Initialized Server Logger");
+    this.logger.info("Starting DockStat Server... Please stand by.");
 
     startUp({
       "Setup Database": {
         steps: [
           () => {
+            this.logger.debug("Step: Instantiating DBFactory");
             this.DB = new DBFactory();
+            this.logger.info("DBFactory instance created");
           },
           () => {
-            // getDB() might return undefined-ish, so fall back to null explicitly
-            this.DBWrapper = this.DB.getDB()
+            this.logger.debug("Step: Getting DB Wrapper from DBFactory");
+            this.DBWrapper = this.DB.getDB();
+            this.logger.info(`DBWrapper assigned: ${!!this.DBWrapper}`);
           },
           () => {
             // Final verification step: ensure both are assigned
             const okDB = !!this.DB;
             const okWrapper = !!this.DBWrapper;
+
+            this.logger.debug(`Verifying DB and DBWrapper: DB=${okDB}, Wrapper=${okWrapper}`);
 
             if (!okDB || !okWrapper) {
               const msg =
@@ -49,29 +54,50 @@ class ServerInstance {
 
             this.logger.info('Database initialized successfully.');
           },
-          () => {this.config_table = this.DB.getConfigTable()}
+          () => {
+            this.logger.debug("Step: Getting config table from DB");
+            this.config_table = this.DB.getConfigTable();
+            this.logger.info("Config table assigned");
+          }
         ]
       },
       "Setup Adapter Handler": {
         steps: [
           () => {
+            this.logger.debug("Step: Instantiating AdapterHandler");
             this.AdapterHandler = new AdapterHandler(this.DB.getDB());
+            this.logger.info("AdapterHandler instance created");
           },
         ]
       },
       "Init Docker Adapters": {
-        asyncSteps: [() => {return this.AdapterHandler.initDockerAdapters()}]
+        asyncSteps: [async () => {
+          this.logger.info("Async Step: Initializing Docker Adapters");
+          try {
+            await this.AdapterHandler.initDockerAdapters();
+            this.logger.info("Docker Adapters initialized");
+          } catch (err) {
+            this.logger.error(`Error initializing Docker Adapters: ${err}`);
+            throw err;
+          }
+        }]
       },
       "Init Docker Clients": {
         steps: [
           () => {
-            this.logger.info("Getting Docker Adapters")
-            let c = 0
-            const DA = this.AdapterHandler.getDockerAdapters()
+            this.logger.info("Getting Docker Adapters");
+            let c = 0;
+            const DA = this.AdapterHandler.getDockerAdapters();
+            this.logger.debug(`Found ${Object.keys(DA).length} Docker Adapters`);
             for (const client of Object.values(DA)) {
-              c = c++
-              this.logger.info(`initializing Nr ${c}`)
-              client.init()
+              c = c++;
+              this.logger.info(`initializing Nr ${c}`);
+              try {
+                client.init();
+                this.logger.debug(`Docker client ${c} initialized`);
+              } catch (err) {
+                this.logger.error(`Error initializing Docker client ${c}: ${err}`);
+              }
             }
           }
         ]
@@ -79,16 +105,26 @@ class ServerInstance {
       "Setup Theme Handler": {
         steps: [
           () => {
-            this.logger.info("Setting up Theme Handler")
-            this.themeHandler = new ThemeHandler(this.DB.getDB(), docRoot)
+            this.logger.info("Setting up Theme Handler");
+            try {
+              this.themeHandler = new ThemeHandler(this.DB.getDB());
+              this.logger.debug("ThemeHandler instance created");
+            } catch (err) {
+              this.logger.error(`Error setting up ThemeHandler: ${err}`);
+              throw err;
+            }
           }
         ]
       }
-    })
+    });
+  }
+
+  getLogger(){
+    return this.logger;
   }
 
   getDB(){
-    this.logger.debug("Getting Database Object")
+    this.logger.debug("Getting Database Object");
     const dbObj = {
       DB: this.DB,
       DBWrapper: this.DBWrapper,
@@ -96,17 +132,20 @@ class ServerInstance {
         config: this.config_table,
         adapter: this.AdapterHandler.getAdapterTable()
       }
-    }
-    return dbObj
+    };
+    this.logger.info("Database object returned");
+    return dbObj;
   }
 
   getThemeHandler(){
-    return this.themeHandler
+    this.logger.debug("Getting ThemeHandler instance");
+    return this.themeHandler;
   }
 
   public getAdapterHandler(){
+    this.logger.debug("Getting AdapterHandler instance");
     return this.AdapterHandler;
   }
 }
 
-export default new ServerInstance(document.documentElement)
+export default new ServerInstance();

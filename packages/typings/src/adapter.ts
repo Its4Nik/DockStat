@@ -1,5 +1,5 @@
 import type Docker from "dockerode";
-import type { DockerClientOptions } from "./docker-client";
+import type { DockerAdapterOptions } from "./docker-client";
 
 export type ContainerId = string;
 
@@ -9,7 +9,7 @@ export type AdapterTable = {
   id: number;
   name: string;
   type: Type;
-  config: DockerClientOptions;
+  config: DockerAdapterOptions;
 }
 
 export interface LogChunk {
@@ -36,16 +36,4 @@ export interface NetworkStats {
   Containers: Record<string, { Name: string; IPv4Address?: string; IPv6Address?: string }>;
   Options?: Record<string, string>;
   Labels?: Record<string, string>;
-}
-
-export interface DockerAdapterOptions {
-  socketPath?: string;
-  host?: string;
-  port?: number;
-  protocol?: "http" | "https";
-  ca?: Buffer | string;
-  cert?: Buffer | string;
-  key?: Buffer | string;
-  // timeout in ms for requests
-  timeout?: number;
 }

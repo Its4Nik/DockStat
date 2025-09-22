@@ -21,10 +21,11 @@ class DockStatDB {
         'config',
         {
           id: column.integer({ primaryKey: true, notNull: true }),
-          current_theme_name: column.text({
+          default_theme: column.text({
             notNull: true,
             default: 'default',
           }),
+          hotkeys: column.json({notNull: true})
         },
         {
           ifNotExists: true,
@@ -34,7 +35,7 @@ class DockStatDB {
       logger.debug('Config table created successfully')
 
       // Initialize query builders
-      this.config_table = this.db.table('config')
+      this.config_table = this.db.table('config', {jsonColumns: ["hotkeys"]})
       logger.debug('Query builders initialized')
 
       // Initialize database with defaults if empty
@@ -53,7 +54,8 @@ class DockStatDB {
       if (!existingConfig) {
         logger.info('No existing config found, initializing with defaults')
         this.config_table.insert({
-          current_theme_name: 'default',
+          default_theme: 'default',
+          hotkeys: {}
         })
         logger.debug('Default config inserted')
       } else {

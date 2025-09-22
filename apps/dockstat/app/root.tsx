@@ -9,14 +9,14 @@ import {
   useLoaderData,
 } from 'react-router'
 import type { Route } from './+types/root'
-import { useTheme } from "react-router-theme";
 import { createLogger } from '@dockstat/logger';
+import { Card, CardBody, CardFooter, CardHeader } from './components/ui/Card';
+import Nav from './components/ui/Nav';
 export { loader, action } from "react-router-theme";
 export const clientLogger = createLogger("DockStat-Client")
 
-
 export function Layout({ children }: { children: React.ReactNode }) {
-    return (
+  return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
@@ -24,7 +24,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className='bg-main-bg text-text-primary'>
+        <Nav />
+        {/* <CardNav brandName={'DockStat'} cardNavItems={NavItems} logo='/assets/DockStat-Logo.png'/> */}
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -35,7 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-      <Outlet />
+    <Outlet />
   )
 }
 
@@ -56,12 +58,20 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
+    <main className="pt-16 p-4 container mx-auto text-text-primary">
       {stack && (
         <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
+          <Card>
+            <CardHeader>
+              <h1 className='text-3xl text-red-500'>{message}</h1>
+            </CardHeader>
+            <CardBody>
+              <p>{details}</p>
+            </CardBody>
+            <CardFooter>
+              <code>{stack}</code>
+            </CardFooter>
+          </Card>
         </pre>
       )}
     </main>

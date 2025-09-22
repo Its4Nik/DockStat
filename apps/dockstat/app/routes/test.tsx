@@ -11,7 +11,7 @@ import { clientLogger } from "~/root";
 
 /* ------------------------------- ACTION ------------------------------- */
 export async function action({ request }: ActionFunctionArgs) {
-  const logger = ServerInstance.logger
+  const logger = ServerInstance.getLogger()
   const startTime = Date.now();
   let intent = "";
 

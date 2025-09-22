@@ -1,8 +1,49 @@
 @import "tailwindcss";
 
 @theme {
-    --primary-bg: "#011627";
-    --secondary-bg: "#E8E8E8";
-    --accent: "#818CF8";
-    --primary-text: "#6F5060";
+    --color-navcard-from: #20063B;
+    --color-navcard-to: #424B54;
+
+    --color-navcard-views-from: #231942;
+    --color-navcard-views-to: #5E548E;
+
+    --color-navcard-dockstore-from: #9F86C0 ;
+    --color-navcard-dockstore-to: #5E548E;
+
+    --color-navcard-stacks-from: #353A47;
+    --color-navcard-stacks-to: #BEA7E5;
+
+    --color-main-bg: #0b1220;            /* deep navy */
+    --color-surface: #0f1724;            /* slightly lighter surface */
+    --color-card-bg: #111827;            /* card base */
+    --color-border: rgba(255,255,255,0.06);
+    --color-shadow: 0 10px 30px rgba(2,6,23,0.6);
+    --color-glow: rgba(124,92,255,0.14);
+
+    /* accents & text */
+    --color-accent: #818CF8FF;             /* violet accent */
+    --color-accent-2: #60a5fa;           /* secondary blue */
+    --color-text-primary: #e6eef8;       /* main text */
+    --color-text-secondary: #bfc8ff;     /* secondary text */
+    --color-muted: #9aa4bf;              /* muted text */
+
+    /* card text (explicit) */
+    --color-card-text: #F8FAFC;
+
+    --animate-fade-in-scale: fade-in-scale 0.3s ease-out;
+
+    @keyframes fade-in-scale {
+        0% {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        98% {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
 }

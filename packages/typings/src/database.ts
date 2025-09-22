@@ -1,3 +1,5 @@
+import type { Action } from "./hotkeys"
+
 type DB_target_host = {
   host: string // IP or DNS
   secure: boolean // SSL yes or no
@@ -9,7 +11,8 @@ type DB_target_host = {
 }
 
 type DB_config = {
-  current_theme_name: string
+  default_theme: string
+  hotkeys: Record<string, Action>
 }
 
 export type { DB_config, DB_target_host }

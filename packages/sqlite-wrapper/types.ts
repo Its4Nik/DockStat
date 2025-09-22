@@ -496,6 +496,7 @@ export const column = {
     constraints?: ColumnConstraints,
   ): ColumnDefinition => ({
     type: SQLiteTypes.TEXT,
+    notNull: true,
     check: `{{COLUMN}} IN (${values.map((v) => `'${v}'`).join(", ")})`,
     ...constraints,
   }),
