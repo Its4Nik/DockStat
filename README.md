@@ -2,18 +2,16 @@
   <img src="./.github/DockStat2-04.png" alt="DockStat Logo" width="225" height="150" />
 </p>
 
-<h1 align="center">🚢 DockStat</h1>
-
 <p align="center">
-  <a href="#project-description">Project Description</a> •
-  <a href="#key-features">Key Features</a> •
-  <a href="#technology-stack">Tech Stack</a> •
+  <a href="#description">Description</a> •
+  <a href="#features">Features</a> •
+  <a href="#tech-stack">Tech Stack</a> •
   <a href="https://outline.itsnik.de/s/9d88c471-373e-4ef2-a955-b1058eb7dc99">Wiki</a>
 </p>
 
 ---
 
-## 📖 Project Description
+## 📖 Description
 
 DockStat aims to combine the best of **Portainer**, **Grafana**, and **Dockge** into a single, unified platform for **container administration** and **monitoring**.
 The goal: the ultimate, extensible solution for managing and observing your containerized environments.
@@ -27,7 +25,7 @@ Expect **breaking changes, missing features, and no guarantees** at this stage.
 
 ---
 
-## ✨ Key Features
+## ✨ Features
 
 DockStat is built with extensibility in mind, powered by a **runtime-compatible plugin system**.
 
