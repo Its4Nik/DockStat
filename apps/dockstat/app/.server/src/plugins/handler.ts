@@ -1,10 +1,12 @@
 import type DB from "@dockstat/sqlite-wrapper";
 import type { PLUGIN } from "@dockstat/typings"
 import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper";
+import { createLogger } from "@dockstat/logger";
 
-class PluginHandler {
+export class PluginHandler {
   private DB: DB
   private table: QueryBuilder<PLUGIN.PluginTable>
+  private logger = createLogger("PluginHandler")
 
   constructor(DB: DB) {
     this.DB = DB
@@ -19,22 +21,21 @@ class PluginHandler {
     })
   }
 
-  getPluginBlob(id: number) {
-    const plugin = this.table.select(["*"]).where({ id: id }).first()
-    const tmp: Record<string, Blob> = {}
+  getPluginBlobs(id: number) {
+    const plugin = this.table.select(["backend", "component"]).where({ id: id }).first()
+    const tmp = new Map<string, Blob>
 
     if (!plugin) {
       throw new Error(`Plugin with id ${id} not found`)
     }
 
-    if (plugin.backend) {
-      tmp.backend = plugin.backend
-    }
+    plugin.backend && tmp.set("backend", plugin.backend)
+    plugin.component && tmp.set('component', plugin.component)
 
-    if (plugin.component) {
-      tmp.component = plugin.component
-    }
+    return tmp
+  }
 
-    return
+  getSavedPlugins() {
+    return this.table.select(["*"]).all()
   }
 }

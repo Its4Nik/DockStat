@@ -1,217 +1,64 @@
-# Dockstat
+<p align="center">
+  <img src="./.github/DockStat2-04.png" alt="DockStat Logo" width="225" height="150" />
+</p>
 
-[![Docs Sync](https://github.com/Its4Nik/DockStat/actions/workflows/docs-sync.yml/badge.svg)](https://github.com/Its4Nik/DockStat/actions/workflows/docs-sync.yml)
-[![Lint](https://github.com/Its4Nik/DockStat/actions/workflows/lint.yml/badge.svg)](https://github.com/Its4Nik/DockStat/actions/workflows/lint.yml)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Its4Nik/DockStat)
+<h1 align="center">🚢 DockStat</h1>
 
-A modern monorepo built with Turborepo, Bun, and Biome for managing Docker container statistics and monitoring.
+<p align="center">
+  <a href="#project-description">Project Description</a> •
+  <a href="#key-features">Key Features</a> •
+  <a href="#technology-stack">Tech Stack</a> •
+  <a href="https://outline.itsnik.de/s/9d88c471-373e-4ef2-a955-b1058eb7dc99">Wiki</a>
+</p>
 
-## 🚀 Tech Stack
+---
 
-- **Monorepo**: Turborepo
-- **Runtime**: Bun
-- **Linting & Formatting**: Biome
-- **TypeScript**: Strict configuration
-- **Apps**: React Router, Node.js applications
-- **Packages**: Shared utilities, database layer, and types
+## 📖 Project Description
 
-## 📁 Project Structure
+DockStat aims to combine the best of **Portainer**, **Grafana**, and **Dockge** into a single, unified platform for **container administration** and **monitoring**.
+The goal: the ultimate, extensible solution for managing and observing your containerized environments.
 
-```
-dockstat/
-├── apps/
-│   ├── dockstat/          # Frontend (React Router)
-│   ├── dockstore/         # Community made themes, stacks and plugins
-│   └── docs/              # Documentation sync with Outline Wiki
-├── packages/
-│   ├── db/                # Database layer and models
-│   ├── outline-sync/      # Bi-directional sync between Git and Outline Wiki
-│   ├── sqlite-wrapper/    # Type-safe SQLite wrapper
-│   └── typings/           # Shared TypeScript types
-└── turbo.json             # Turborepo configuration
-```
+---
 
-## 🛠️ Setup
+### ⚠️ Disclaimer
 
-### Prerequisites
+DockStat is currently in **Pre-Alpha**.
+Expect **breaking changes, missing features, and no guarantees** at this stage.
 
-- [Bun](https://bun.sh/) >= 1.2.17
-- Node.js >= 18 (for some tooling)
+---
 
-### Installation
+## ✨ Key Features
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Its4Nik/DockStat.git
-   cd DockStat
-   ```
+DockStat is built with extensibility in mind, powered by a **runtime-compatible plugin system**.
 
-2. **Install dependencies**
-   ```bash
-   bun install
-   ```
+- **Plugin System**
+  - Frontend components
+  - Backend services
+  - Combined (full-stack) plugins
+- **Theming Support**
+  - Custom CSS variables for deep theming
+- **Stacks**
+  - Automatic node provisioning
+    - (e.g. Hetzner Cloud API plugin)
+  - Prebuilt Docker Compose templates
+    - _(future: Kubernetes support)_
+  - Whole-stack monitoring
+  - Stack-level plugin support (e.g. Traefik, Caddy)
+- **Monitoring**
+  - Table-based views
+  - Graph-based insights
+  - Network-based visualization with [sigma.js](https://sigmajs.org) / [reagraph](https://www.npmjs.com/package/reagraph)
+- **Custom Dashboards**
+  - Extend with plugins (e.g. Home Assistant-style widgets)
+- **Multi-Node Monitoring**
+  - Group nodes using **adapters**
+  - Adapters configure monitoring options (e.g. Docker Client can track multiple hosts with its own config)
 
-3. **Set up development environment**
-   ```bash
-   # Build all packages
-   bun run build
+---
 
-   # Start development servers
-   bun run dev
-   ```
+## 🛠 Tech Stack
 
-## 📜 Available Scripts
+**Core**: React Router v7 • React • Bun
 
-### Root Level Commands
-
-```bash
-# Development
-bun run dev          # Start all apps in development mode
-bun run build        # Build all apps and packages
-bun run lint         # Lint all packages and apps
-bun run lint:fix     # Fix linting issues
-bun run format       # Format all code
-bun run format:check # Check formatting
-bun run check-types  # Type check all packages
-bun run clean        # Clean all build artifacts
-bun run test         # Run tests across all packages
-```
-
-### Individual Package Commands
-
-Each package and app supports these scripts:
-
-```bash
-bun run build        # Build the package
-bun run dev          # Start development server
-bun run lint         # Lint the package
-bun run lint:fix     # Fix linting issues
-bun run check-types  # Type check the package
-bun run clean        # Clean build artifacts
-```
-
-## 🔧 Configuration
-
-### Turborepo
-
-The monorepo uses Turborepo for build orchestration. Configuration is in `turbo.json`:
-
-- **Build**: Dependencies are automatically resolved
-- **Dev**: Persistent development servers
-- **Lint**: No outputs (stateless)
-- **Test**: Depends on build, outputs coverage
-
-### Biome
-
-Code formatting and linting is handled by Biome. Configuration in `biome.json`:
-
-- **Formatting**: 2-space indentation, 80 character line width
-- **Linting**: Recommended rules with custom overrides
-- **JavaScript**: Single quotes, trailing commas, semicolons
-
-### TypeScript
-
-Shared TypeScript configuration in `tsconfig.base.json`:
-
-- **Module**: ESNext
-- **Target**: ESNext
-- **Strict**: Enabled
-- **Paths**: Configured for monorepo packages
-
-## 🏗️ Development
-
-### Adding a New App
-
-1. Create a new directory in `apps/`
-2. Add `package.json` with required scripts
-3. Add `tsconfig.json` extending the base config
-4. Update root `package.json` workspaces if needed
-
-### Adding a New Package
-
-1. Create a new directory in `packages/`
-2. Add `package.json` with required scripts
-3. Add `tsconfig.json` extending the base config
-4. Update root `package.json` workspaces if needed
-
-### Workspace Dependencies
-
-Use the `@dockstat/` prefix for internal packages:
-
-```typescript
-import { BaseConfig } from '@dockstat/typings';
-import { Database } from '@dockstat/db';
-import { SQLiteWrapper } from '@dockstat/sqlite-wrapper';
-```
-
-## 📦 Package Overview
-
-### `@dockstat/db`
-Database layer with models and data access patterns for Docker container statistics.
-
-### `@dockstat/sqlite-wrapper`
-A TypeScript wrapper around `bun:sqlite` with type-safe query building capabilities.
-
-### `@dockstat/outline-sync`
-A Bun CLI tool for bi-directional synchronization between Git-backed Markdown files and Outline Wiki collections.
-
-### `@dockstat/typings`
-Shared TypeScript type definitions used across all applications and packages.
-
-## 📚 Documentation
-
-The project uses Outline Wiki for documentation with bi-directional sync:
-
-- Documentation files are stored in `apps/docs/docs/`
-- Use `@dockstat/outline-sync` package to sync with Outline Wiki
-- See `packages/outline-sync/README.md` for sync setup and usage
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-bun run test
-
-# Run tests for a specific package
-cd apps/dockstat && bun run test
-```
-
-## 📦 Building
-
-```bash
-# Build all packages and apps
-bun run build
-
-# Build a specific package
-cd packages/db && bun run build
-```
-
-## 🚀 Deployment
-
-Each app can be built and deployed independently:
-
-```bash
-# Build for production
-bun run build
-
-# The built artifacts will be in:
-# - apps/dockstat/build/
-# - packages/db/dist/
-# - packages/outline-sync/dist/
-# - packages/sqlite-wrapper/dist/
-# - packages/typings/dist/
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run linting and type checking: `bun run lint && bun run check-types`
-5. Commit your changes
-6. Push to your branch
-7. Create a pull request
-
-## 📄 License
-
-This project is licensed under the MPL 2.0 License.
+- **Frontend**: TailwindCSS • GSAP • lucide-react
+- **Backend**: Dockerode • bun:sqlite • @dockstat/\*
