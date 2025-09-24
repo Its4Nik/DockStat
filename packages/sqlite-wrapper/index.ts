@@ -209,8 +209,7 @@ class DB {
    */
   createTable<_T extends Record<string, unknown>>(
     tableName: string,
-    columns: string | Record<string, string> | TableSchema,
-    options?: TableOptions
+    columns: string | Record<string, string> | Partial<Record<Extract<keyof _T, string>, ColumnDefinition>> | TableSchema, options?: TableOptions<_T>,
   ): QueryBuilder<_T> {
     const temp = options?.temporary ? 'TEMPORARY ' : ''
     const ifNot = options?.ifNotExists ? 'IF NOT EXISTS ' : ''

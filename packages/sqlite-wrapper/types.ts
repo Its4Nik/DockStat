@@ -223,6 +223,9 @@ export interface ColumnDefinition extends ColumnConstraints {
  */
 export type TableSchema = Record<string, ColumnDefinition>;
 
+
+export type TypedTableSchema<T extends string = string> = Record<T, ColumnDefinition>;
+
 /**
  * Table constraint types
  */
@@ -248,7 +251,7 @@ export interface TableConstraints {
 /**
  * Enhanced table options
  */
-export interface TableOptions {
+export interface TableOptions<T> {
   /** Add IF NOT EXISTS clause */
   ifNotExists?: boolean;
   /** Create WITHOUT ROWID table */
@@ -259,6 +262,8 @@ export interface TableOptions {
   temporary?: boolean;
   /** Table comment */
   comment?: string;
+  /** JSON config for table creation and returned query builder */
+  jsonConfig?: Array<keyof T>;
 }
 
 /**
@@ -372,10 +377,10 @@ export const column = {
    * Create a JSON column (stored as TEXT)
    */
   json: (
-    constraints?: ColumnConstraints & { validateJson?: boolean },
+    constraints: ColumnConstraints & { validateJson?: boolean },
   ): ColumnDefinition => ({
     type: SQLiteTypes.JSON,
-    check: constraints?.validateJson
+    check: constraints?.validateJson ?? true
       ? "JSON_VALID({{COLUMN}})"
       : constraints?.check,
     ...constraints,
@@ -431,8 +436,8 @@ export const column = {
     length: 36,
     default: constraints?.generateDefault
       ? defaultExpr(
-          "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))",
-        )
+        "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))",
+      )
       : constraints?.default,
     ...constraints,
   }),
