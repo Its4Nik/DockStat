@@ -102,7 +102,7 @@ class DB {
     tableName: string,
     jsonConfig?: JsonColumnConfig<T>
   ): QueryBuilder<T> {
-    logger.debug(`Creating QueryBuilder for table: ${tableName}`)
+    logger.debug(`Creating QueryBuilder for table: ${tableName} - JSONConfig: ${JSON.stringify(jsonConfig)}`)
     return new QueryBuilder<T>(this.db, tableName, jsonConfig)
   }
 
@@ -209,7 +209,8 @@ class DB {
    */
   createTable<_T extends Record<string, unknown>>(
     tableName: string,
-    columns: string | Record<string, string> | Partial<Record<Extract<keyof _T, string>, ColumnDefinition>> | TableSchema, options?: TableOptions<_T>,
+    columns: string | Record<string, string> | Partial<Record<Extract<keyof _T, string>, ColumnDefinition>> | TableSchema,
+    options?: TableOptions<_T>,
   ): QueryBuilder<_T> {
     const temp = options?.temporary ? 'TEMPORARY ' : ''
     const ifNot = options?.ifNotExists ? 'IF NOT EXISTS ' : ''
@@ -276,7 +277,7 @@ class DB {
       this.setTableComment(tableName, options.comment)
     }
 
-    return this.table<_T>(tableName)
+    return this.table<_T>(tableName, options?.jsonConfig)
   }
 
   /**

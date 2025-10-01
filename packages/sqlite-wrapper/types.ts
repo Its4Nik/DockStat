@@ -1,4 +1,3 @@
-// Enhanced types.ts with comprehensive SQLite support
 import type { Database, SQLQueryBindings } from "bun:sqlite";
 
 /**
@@ -262,8 +261,8 @@ export interface TableOptions<T> {
   temporary?: boolean;
   /** Table comment */
   comment?: string;
-  /** JSON config for table creation and returned query builder */
-  jsonConfig?: Array<keyof T>;
+
+  jsonConfig?: JsonColumnConfig<T>
 }
 
 /**
@@ -380,7 +379,7 @@ export const column = {
     constraints: ColumnConstraints & { validateJson?: boolean },
   ): ColumnDefinition => ({
     type: SQLiteTypes.JSON,
-    check: constraints?.validateJson ?? true
+    check: constraints?.validateJson
       ? "JSON_VALID({{COLUMN}})"
       : constraints?.check,
     ...constraints,
@@ -606,9 +605,7 @@ export interface InsertOptions {
 /**
  * JSON column configuration
  */
-export interface JsonColumnConfig<T> {
-  jsonColumns?: Array<keyof T>;
-}
+export type JsonColumnConfig<T> = Array<keyof T>
 
 /**
  * Generic database row type

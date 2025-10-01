@@ -34,24 +34,24 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
       whereConditions: [],
       whereParams: [],
       regexConditions: [],
-      jsonColumns: jsonConfig?.jsonColumns,
+      jsonColumns: jsonConfig,
     }
   }
 
   /**
     * Reset query builder state
     */
-    protected reset(): void {
-      this.state.whereConditions = []
-      this.state.whereParams = []
-      this.state.regexConditions = []
-      // Reset any ordering, limit, offset, selected columns if present
-      if ('orderColumn' in this) (this as any).orderColumn = undefined
-      if ('orderDirection' in this) (this as any).orderDirection = 'ASC'
-      if ('limitValue' in this) (this as any).limitValue = undefined
-      if ('offsetValue' in this) (this as any).offsetValue = undefined
-      if ('selectedColumns' in this) (this as any).selectedColumns = ['*']
-    }
+  protected reset(): void {
+    this.state.whereConditions = []
+    this.state.whereParams = []
+    this.state.regexConditions = []
+    // Reset any ordering, limit, offset, selected columns if present
+    if ('orderColumn' in this) (this as any).orderColumn = undefined
+    if ('orderDirection' in this) (this as any).orderDirection = 'ASC'
+    if ('limitValue' in this) (this as any).limitValue = undefined
+    if ('offsetValue' in this) (this as any).offsetValue = undefined
+    if ('selectedColumns' in this) (this as any).selectedColumns = ['*']
+  }
 
   /**
    * Get the database instance
@@ -197,11 +197,16 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * Transform row data before inserting/updating to database (serialize JSON columns).
    */
   protected transformRowToDb(row: Partial<T>): DatabaseRowData {
-    if (!this.state.jsonColumns || !row) return row as DatabaseRowData
+    this.logger.debug(`Transforming row (${JSON.stringify(row)}) to row Data`)
+    if (!this.state.jsonColumns || !row) {
+      return row as DatabaseRowData
+    }
 
     const transformed: DatabaseRowData = { ...row } as DatabaseRowData
+
     for (const column of this.state.jsonColumns) {
       const columnKey = String(column)
+      this.logger.debug(`Checking: ${columnKey}`)
       if (
         transformed[columnKey] !== undefined &&
         transformed[columnKey] !== null

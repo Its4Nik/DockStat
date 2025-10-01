@@ -9,6 +9,7 @@ import { WhereQueryBuilder } from "./where";
 export class InsertQueryBuilder<
   T extends Record<string, unknown>,
 > extends WhereQueryBuilder<T> {
+
   /**
    * Insert a single row or multiple rows into the table.
    *
@@ -20,10 +21,15 @@ export class InsertQueryBuilder<
     data: Partial<T> | Partial<T>[],
     options?: InsertOptions,
   ): InsertResult {
+    this.getLogger().debug(`Building Data Array: ${data}`)
     const rows = Array.isArray(data) ? data : [data];
+
+
 
     // Transform rows to handle JSON serialization
     const transformedRows = rows.map((row) => this.transformRowToDb(row));
+
+    this.getLogger().debug(`Transformed row: ${JSON.stringify(transformedRows)}`)
 
     if (transformedRows.length === 0) {
       throw new Error("insert: data cannot be empty");

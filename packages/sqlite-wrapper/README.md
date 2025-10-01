@@ -19,16 +19,29 @@ bun add @dockstat/sqlite-wrapper
 ```ts
 import { DB, column } from "@dockstat/sqlite-wrapper";
 
-const db = new DB("app.db", { pragmas: [["journal_mode","WAL"], ["foreign_keys","ON"]] });
+type User = {
+  id?: number,
+  name: string,
+  active: boolean,
+  email: string,
+}
 
-db.createTable("users", {
+const db = new DB("app.db", {
+  pragmas: [
+    ["journal_mode","WAL"],
+    ["foreign_keys","ON"]
+  ]
+});
+
+const userTable = db.createTable<User>("users", {
   id: column.id(),
   name: column.text({ notNull: true }),
+  active: column.boolean(),
   email: column.text({ unique: true, notNull: true }),
   created_at: column.createdAt()
 });
 
-const users = db.table("users")
+const users = userTable
   .select(["id","name","email"])
   .where({ active: true })
   .orderBy("created_at").desc()
