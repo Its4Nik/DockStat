@@ -16,7 +16,7 @@ bun add @dockstat/sqlite-wrapper
 
 ## 10-second quickstart
 
-```ts
+```typescript
 import { DB, column } from "@dockstat/sqlite-wrapper";
 
 type User = {
@@ -57,10 +57,43 @@ const users = userTable
 * 🛡️ Safety-first defaults — prevents accidental full-table updates/deletes
 * 🚀 Designed for production workflows: WAL, pragmatic PRAGMAs, bulk ops, transactions
 
+## Core Features
+
+### Type Safety
+
+* **Compile-time validation** of column names and data shapes
+* **IntelliSense support** for all operations
+* **Generic interfaces** that adapt to your data models
+* **Type-safe column definitions** with comprehensive constraint support
+
+### Safety-First Design
+
+* **Mandatory WHERE conditions** for UPDATE and DELETE operations to prevent accidental data loss
+* **Parameter binding** for all queries to prevent SQL injection
+* **Prepared statements** used internally for optimal performance
+* **Transaction support** with automatic rollback on errors
+
+### Production Ready
+
+* **WAL mode** support for concurrent read/write operations
+* **Comprehensive PRAGMA management** for performance tuning
+* **Connection pooling** considerations built-in
+* **Bulk operation** support with transaction batching
+* **Schema introspection** tools for migrations and debugging
+
+### Complete SQLite Support
+
+* **All SQLite data types** with proper TypeScript mappings
+* **Generated columns** (both VIRTUAL and STORED)
+* **Foreign key constraints** with cascade options
+* **JSON columns** with validation and transformation
+* **Full-text search** preparation
+* **Custom functions** and extensions support
+
 ## Docs & examples
 
 See full technical docs [here](https://outline.itsnik.de/s/9d88c471-373e-4ef2-a955-b1058eb7dc99/doc/dockstatsqlite-wrapper-Lxt4IphXI5).
 
 ## License
 
-MIT — maintained by Dockstat. Contributions welcome.
+MPL-2.0 — maintained by Dockstat. Contributions welcome.
