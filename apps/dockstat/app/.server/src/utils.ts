@@ -42,6 +42,7 @@ export async function startUp(
             `❌ Step ${i + 1} failed in ${taskName}: ${(err as Error).message}`
           )
           startUpLogger.debug(`Error stack: ${(err as Error).stack}`);
+          process.exit(1)
         }
       }
     }
@@ -60,6 +61,7 @@ export async function startUp(
             `❌ Async Step ${i + 1} failed in ${taskName}: ${(err as Error).message}`
           )
           startUpLogger.debug(`Error stack: ${(err as Error).stack}`);
+          process.exit(1)
         }
       }
     }
@@ -76,7 +78,7 @@ export function injectVariables(variables: Record<string, string>, docRoot: HTML
   for (const [key, value] of Object.entries(variables)) {
     logger.debug(`Injecting variable: ${key} with value: ${value}`);
     try {
-      injectSingleCSSVar(key,value, docRoot)
+      injectSingleCSSVar(key, value, docRoot)
       logger.info(`Injected variable: ${key}`);
     } catch (err) {
       logger.error(`Failed to inject variable ${key}: ${err}`);
@@ -98,7 +100,7 @@ function injectSingleCSSVar(variable: string, value: string, docRoot: HTMLElemen
   return value;
 }
 
-export function getHostObjectFromForm(form: FormData, setId = false){
+export function getHostObjectFromForm(form: FormData, setId = false) {
   const host: DB_target_host = {
     id: setId ? Number.parseInt(String(form.get('id'))) : 0,
     host: String(form.get('host')),
@@ -110,11 +112,11 @@ export function getHostObjectFromForm(form: FormData, setId = false){
   return host
 }
 
-export function getDockerClientFromAdapterID(DOA: [string, DockerClient][], form: FormData){
+export function getDockerClientFromAdapterID(DOA: [string, DockerClient][], form: FormData) {
   const aID = String(form.get('adapterID'))
   const AOBJ = DOA.find(([id]) => id === aID)
-  if(!AOBJ) {throw new Error(`Adapter ID ${aID} not found`)}
+  if (!AOBJ) { throw new Error(`Adapter ID ${aID} not found`) }
   const [id, client] = AOBJ
 
-  return {id: id, client: client}
+  return { id: id, client: client }
 }

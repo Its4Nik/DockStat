@@ -3,24 +3,29 @@ import type sqliteWrapper from '@dockstat/sqlite-wrapper';
 import type { QueryBuilder } from '@dockstat/sqlite-wrapper';
 import type { DATABASE } from '@dockstat/typings';
 import { createLogger } from '@dockstat/logger'
-import { startUp } from './src/utils';
-import AdapterHandler from './src/adapters/handler';
-import ThemeHandler from './src/theme/themeHandler';
+import PluginHandler from "@dockstat/plugin-handler"
+
+import { startUp } from '~/.server/src/utils';
+import AdapterHandler from '~/.server/src/adapters/handler';
+import ThemeHandler from '~/.server/src/theme/themeHandler';
+
+
 
 class ServerInstance {
   private logger: {
-      error: (msg: string) => void;
-      warn: (msg: string) => void;
-      info: (msg: string) => void;
-      debug: (msg: string) => void;
+    error: (msg: string) => void;
+    warn: (msg: string) => void;
+    info: (msg: string) => void;
+    debug: (msg: string) => void;
   }
   private AdapterHandler!: AdapterHandler;
   private DB!: DBFactory;
   private DBWrapper!: sqliteWrapper;
   private config_table!: QueryBuilder<DATABASE.DB_config>;
   private themeHandler!: ThemeHandler;
+  private pluginHandler!: PluginHandler
 
-  constructor(name = 'DockStatAPI'){
+  constructor(name = 'DockStatAPI') {
     this.logger = createLogger(`${name}`);
     this.logger.debug("Initialized Server Logger");
     this.logger.info("Starting DockStat Server... Please stand by.");
@@ -58,6 +63,13 @@ class ServerInstance {
             this.logger.debug("Step: Getting config table from DB");
             this.config_table = this.DB.getConfigTable();
             this.logger.info("Config table assigned");
+          }
+        ]
+      },
+      "initialize plugins": {
+        steps: [
+          () => {
+            this.pluginHandler = new PluginHandler(this.DB.getDB())
           }
         ]
       },
@@ -115,21 +127,22 @@ class ServerInstance {
             }
           }
         ]
-      }
+      },
     });
   }
 
-  getLogger(){
+  getLogger() {
     return this.logger;
   }
 
-  getDB(){
+  getDB() {
     this.logger.debug("Getting Database Object");
     const dbObj = {
       DB: this.DB,
       DBWrapper: this.DBWrapper,
       tables: {
         config: this.config_table,
+        themes: this.themeHandler.getThemeTable(),
         adapter: this.AdapterHandler.getAdapterTable()
       }
     };
@@ -137,14 +150,19 @@ class ServerInstance {
     return dbObj;
   }
 
-  getThemeHandler(){
+  getThemeHandler() {
     this.logger.debug("Getting ThemeHandler instance");
     return this.themeHandler;
   }
 
-  public getAdapterHandler(){
+  getAdapterHandler() {
     this.logger.debug("Getting AdapterHandler instance");
     return this.AdapterHandler;
+  }
+
+  getPluginHandler() {
+    this.logger.debug("Getting PluginHandler")
+    return this.pluginHandler;
   }
 }
 

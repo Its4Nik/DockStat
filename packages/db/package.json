@@ -19,8 +19,8 @@
     "bun-plugin-dts": "^0.3.0"
   },
   "peerDependencies": {
-    "typescript": "^5",
-    "@dockstat/sqlite-wrapper": "workspace:*",
+    "typescript": "^5.9.3",
+    "@dockstat/sqlite-wrapper": "latest",
     "@dockstat/logger": "workspace:*"
   },
   "devDependencies": {

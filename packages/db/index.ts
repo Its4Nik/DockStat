@@ -1,6 +1,6 @@
 import { createLogger } from '@dockstat/logger'
 import { DB, type QueryBuilder, column } from '@dockstat/sqlite-wrapper'
-import type { DATABASE, THEME } from '@dockstat/typings'
+import type { DATABASE } from '@dockstat/typings'
 
 const logger = createLogger('DockStatDB')
 
@@ -17,7 +17,7 @@ class DockStatDB {
 
       // Create config table (stores current theme name)
       logger.debug('Creating config table')
-      this.db.createTable(
+      this.config_table = this.db.createTable<DATABASE.DB_config>(
         'config',
         {
           id: column.integer({ primaryKey: true, notNull: true }),
@@ -25,18 +25,16 @@ class DockStatDB {
             notNull: true,
             default: 'default',
           }),
-          hotkeys: column.json({notNull: true})
+          nav_links: column.json({ notNull: true }),
+          hotkeys: column.json({ notNull: true })
         },
         {
           ifNotExists: true,
           withoutRowId: false,
-        }
+          jsonConfig: ["hotkeys", "nav_links"],
+        },
       )
       logger.debug('Config table created successfully')
-
-      // Initialize query builders
-      this.config_table = this.db.table('config', {jsonColumns: ["hotkeys"]})
-      logger.debug('Query builders initialized')
 
       // Initialize database with defaults if empty
       this.initializeDefaults()
@@ -55,7 +53,8 @@ class DockStatDB {
         logger.info('No existing config found, initializing with defaults')
         this.config_table.insert({
           default_theme: 'default',
-          hotkeys: {}
+          hotkeys: {},
+          nav_links: []
         })
         logger.debug('Default config inserted')
       } else {
@@ -75,7 +74,7 @@ class DockStatDB {
     return this.db
   }
 
-  public getConfigTable(){
+  public getConfigTable() {
     return this.config_table
   }
 

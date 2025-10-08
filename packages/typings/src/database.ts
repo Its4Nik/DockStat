@@ -13,6 +13,7 @@ type DB_target_host = {
 type DB_config = {
   default_theme: string
   hotkeys: Record<string, Action>
+  nav_links: { href: string; slug: string }[]
 }
 
 export type { DB_config, DB_target_host }

@@ -12,10 +12,10 @@
     "clean": "rm -rf dist"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/dockerode": "^3.3.42"
+    "@types/dockerode": "^3.3.44"
   }
 }

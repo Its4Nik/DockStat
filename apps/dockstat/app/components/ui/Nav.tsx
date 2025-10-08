@@ -1,11 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Button } from "./Button";
-import { Book, Bubbles, Github, Navigation, Table } from "lucide-react";
-import { Link } from "react-router";
+import { Book, Github, Navigation } from "lucide-react";
+import { Link, useLoaderData } from "react-router";
 import Modal from "./Modal";
-import { Card, CardBody } from "./Card";
 import NavCards from "./NavCards";
 import { NavItems } from "~/utils/NavItem";
 
@@ -19,7 +18,7 @@ gsap.registerPlugin(useGSAP)
  * TailwindCSS required.
  */
 
-export default function Nav() {
+export default function Nav({ links }: { links: { href: string, slug: string }[] }) {
   const navRef = useRef<HTMLDivElement | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -102,9 +101,15 @@ export default function Nav() {
                 <div className="text-xl text-text-secondary font-black">DockStat</div>
               </div>
 
-              <Button variant="ghost" size="xs" aria-label="open navigation" onClick={() => setIsModalOpen(true)} >
-                <Navigation className="w-5" />
-              </Button>
+              <div>
+                {links.map((link) => {
+                  return (
+                    <Link key={JSON.stringify(link)} to={link.href}>
+                      {link.slug}
+                    </Link>
+                  )
+                })}
+              </div>
 
               <div className="hidden md:flex items-center gap-6 text-md text-accent">
                 <a
@@ -125,6 +130,9 @@ export default function Nav() {
                   <Book className="w-5" />
                   Docs
                 </a>
+                <Button variant="ghost" size="xs" aria-label="open navigation" onClick={() => setIsModalOpen(true)} >
+                  <Navigation className="w-5" />
+                </Button>
               </div>
             </div>
           ) : (

@@ -12,10 +12,29 @@ import type { Route } from './+types/root'
 import { createLogger } from '@dockstat/logger';
 import { Card, CardBody, CardFooter, CardHeader } from './components/ui/Card';
 import Nav from './components/ui/Nav';
-export { loader, action } from "react-router-theme";
+import type { DATABASE, THEME } from '@dockstat/typings';
+import { useState } from 'react';
+import { useOutletContext } from 'react-router';
 export const clientLogger = createLogger("DockStat-Client")
+export { loader } from "~/routes/api.v1.conf"
+
+export function Body({ DB_Config, children }: { children: React.ReactNode, DB_Config: DATABASE.DB_config }) {
+  return (
+    <>
+      <div className='mb-20'>
+        <Nav links={DB_Config.nav_links} />
+      </div>
+      {children}
+      <ScrollRestoration />
+      <Scripts />
+    </>
+  )
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const data = useLoaderData<DATABASE.DB_config>()
+  const context = useOutletContext<OutletContext>()
+
   return (
     <html lang="en">
       <head>
@@ -24,20 +43,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className='bg-main-bg text-text-primary'>
-        <Nav />
-        {/* <CardNav brandName={'DockStat'} cardNavItems={NavItems} logo='/assets/DockStat-Logo.png'/> */}
-        {children}
-        <ScrollRestoration />
-        <Scripts />
-      </body>
+
     </html>
   )
 }
 
+type OutletContext = {
+  theme: THEME.ThemeTable | undefined
+  setTheme: React.Dispatch<React.SetStateAction<THEME.ThemeTable | undefined>>
+}
+
 export default function App() {
+  const [theme, setTheme] = useState<THEME.ThemeTable>()
+
   return (
-    <Outlet />
+    <Outlet context={{ theme: theme, setTheme: setTheme } satisfies OutletContext} />
   )
 }
 

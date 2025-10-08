@@ -1,4 +1,4 @@
-import { ChartNetwork, Grid, Paintbrush, Plug, Puzzle, Settings, SquareStack, Table2, UploadCloud } from "lucide-react";
+import { ChartNetwork, Grid, Link, Paintbrush, Plug, Puzzle, Settings, SquareStack, Table2, UploadCloud } from "lucide-react";
 import { SiDocker } from "react-icons/si";
 import type { NavCard } from "~/components/ui/NavCards";
 
@@ -92,6 +92,12 @@ export const NavItems: NavCard[] = [
         ariaLabel: "DockStat - Configure Docker",
         href: "/configure/docker",
         icon: <SiDocker className="nav-card-link-icon shrink-0 w-4 h-4" aria-hidden="true" />
+      },
+      {
+        label: "Quick Links",
+        ariaLabel: "Setup quick links",
+        href: "/configure#links",
+        icon: <Link className="nav-card-link-icon shrink-0 w-4 h-4" aria-hidden="true" />
       }
     ]
   }
