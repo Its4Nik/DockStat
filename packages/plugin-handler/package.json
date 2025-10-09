@@ -4,9 +4,12 @@
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
+  "exports": {
+    "./pluginBuilder": "./src/pluginBuilder/index.ts"
+  },
   "dependencies": {
     "@dockstat/typings": "workspace:*",
-    "@dockstat/logger": "workspace:*",
+    "@dockstat/logger": "latest",
     "@dockstat/sqlite-wrapper": "latest"
   },
   "devDependencies": {
