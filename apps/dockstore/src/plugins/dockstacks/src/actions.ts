@@ -1,5 +1,4 @@
 import type { PluginActions } from "@dockstat/typings";
-import { writeStackToDisk } from "./fs/writeFile";
 import type {
   DockStacksDeployConfig,
   DockStacksMeta,
@@ -50,13 +49,13 @@ export const actions: PluginActions<DockStacksTable> = {
       throw new Error(`Error inserting stack: ${error}`);
     }
 
-    return await writeStackToDisk(
-      pParams.name,
-      pParams.compose,
-      pParams.stackDeployConfig
-    );
+    //return await writeStackToDisk(
+    //pParams.name,
+    //   pParams.compose,
+    //    pParams.stackDeployConfig
+    //    );
   },
-  startStack: ({ params, dockerClient }) => {
+  startStack: ({ params }) => {
     const { id } = params as { id: number };
     if (!id) {
       throw new Error("Missing required parameter: id");
