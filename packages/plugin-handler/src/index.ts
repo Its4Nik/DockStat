@@ -6,13 +6,16 @@ import { buildPluginLink, logger, validatePlugin } from "./utils";
 
 class PluginHandler {
   private DB: DB;
-  private pluginTable: QueryBuilder<PLUGIN.PluginTable>;
-  private loadedPlugins: Map<string, PLUGIN.PluginRegistry> = new Map();
+  private pluginTable: QueryBuilder<PLUGIN.PluginRecord>;
+  private loadedPlugins: Map<
+    string,
+    PLUGIN.RegisteredPlugin<PLUGIN.PluginRecord, any>
+  > = new Map();
 
   constructor(db: DB) {
     this.DB = db;
 
-    this.pluginTable = this.DB.createTable<PLUGIN.PluginTable>("plugin", {
+    this.pluginTable = this.DB.createTable<PLUGIN.PluginRecord>("plugin", {
       id: column.id(),
       meta: column.json({ notNull: true }),
       plugin: column.json({}),
@@ -37,14 +40,14 @@ class PluginHandler {
    * Load a plugin instance from stored configuration
    */
   async loadPlugin(
-    pluginData: PLUGIN.PluginTable
-  ): Promise<PLUGIN.PluginInstance> {
+    pluginData: PLUGIN.PluginRecord
+  ): Promise<Plugin<Record<string, unknown>, any>> {
     try {
       // Extract the backend configuration from the stored plugin data
       const { meta } = pluginData;
-      const { backendConfig, backendActions } = pluginData.plugin;
+      const { backendConfig, actions } = pluginData.plugin;
 
-      if (!backendConfig || !backendActions) {
+      if (!backendConfig || !actions) {
         throw new Error(
           `Plugin ${pluginData.meta.name} has no backend configuration`
         );
@@ -54,14 +57,18 @@ class PluginHandler {
       const plugin = new Plugin<any, any>(
         meta as PLUGIN.PluginMeta,
         backendConfig,
-        backendActions,
-        this.DB
+        actions
       );
+
+      if (backendConfig.table?.name) {
+        plugin.implementTable(this.DB);
+      }
 
       // Register in the loaded plugins map
       this.loadedPlugins.set(pluginData.meta.name, {
         instance: plugin,
-        routes: backendConfig.routes || {},
+        routes: backendConfig.apiRoutes || {},
+        actions: actions,
       });
 
       logger.debug(`Loaded plugin: ${pluginData.meta.name}`);
@@ -93,7 +100,7 @@ class PluginHandler {
   }
 
   /**
-   * Execute a plugin action
+   * Execute a plugin action with support for pre-action hooks
    */
   async executeAction(
     pluginName: string,
@@ -106,13 +113,25 @@ class PluginHandler {
       throw new Error(`Plugin ${pluginName} not loaded`);
     }
 
-    const action = registry.instance.backendActions[actionName];
+    // Check for pre-action hook
+    const preActionName = `pre:${actionName}`;
+    if (registry.actions[preActionName]) {
+      logger.debug(`Executing pre-action hook: ${preActionName}`);
+      await registry.actions[preActionName]({
+        table: registry.instance.backendConfig.table,
+        db: this.DB,
+        params,
+        previousAction,
+      });
+    }
+
+    const action = registry.actions[actionName];
     if (!action) {
       throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
     }
 
     return await action({
-      table: registry.instance.table,
+      table: registry.instance.backendConfig.table,
       db: this.DB,
       params,
       previousAction,
@@ -120,7 +139,7 @@ class PluginHandler {
   }
 
   /**
-   * Execute a route with multiple chained actions
+   * Execute a route with multiple chained actions and pre-action hooks
    */
   async executeRoute(
     pluginName: string,
@@ -138,7 +157,21 @@ class PluginHandler {
     }
 
     let previousResult: unknown = undefined;
-    const results: unknown[] = [];
+    const results: Record<string, unknown> = {};
+
+    // Check for route-level pre-action
+    const routePreAction = `pre:${routeName}`;
+    if (registry.actions[routePreAction]) {
+      logger.debug(`Executing route-level pre-action: ${routePreAction}`);
+      const preResult = await this.executeAction(
+        pluginName,
+        routePreAction,
+        params,
+        undefined
+      );
+      results[routePreAction] = preResult;
+      previousResult = preResult;
+    }
 
     // Execute actions in sequence, passing previous results
     for (const actionName of route.actions) {
@@ -148,14 +181,36 @@ class PluginHandler {
         params,
         previousResult
       );
-      results.push(result);
+      results[actionName] = result;
       previousResult = result;
     }
 
     return results;
   }
 
-  registerPlugin(data: PLUGIN.PluginTable) {
+  runPreAction(pluginName: string, actionName?: string) {
+    const registry = this.loadedPlugins.get(pluginName);
+    let action: any;
+    if (!registry) {
+      throw new Error(`Plugin ${pluginName} not loaded`);
+    }
+    if (!actionName) {
+      action = registry.actions.pre;
+    } else {
+      action = registry.actions[`pre:${actionName}`];
+    }
+    if (!action) {
+      logger.error(`Action ${actionName} not found in plugin ${pluginName}`);
+    }
+    return action.pre({
+      table: registry.instance.backendConfig.table,
+      db: this.DB,
+      logger: logger,
+      previousAction: undefined,
+    });
+  }
+
+  registerPlugin(data: PLUGIN.PluginRecord) {
     validatePlugin(data);
 
     const insertRes = this.pluginTable.insertAndGet(data);
@@ -188,7 +243,7 @@ class PluginHandler {
 
     const newPluginData = (await (
       await fetch(buildPluginLink(plugin.meta.repository, plugin.meta.path))
-    ).json()) as PLUGIN.PluginTable;
+    ).json()) as PLUGIN.PluginRecord;
 
     if (plugin.meta.version === newPluginData.meta.version) {
       throw new Error("Plugin Version cannot stay the same when updating");
@@ -224,9 +279,9 @@ class PluginHandler {
     const registry = this.loadedPlugins.get(pluginName);
     if (registry) {
       // Clean up any plugin-specific tables if needed
-      if (registry.instance.table) {
+      if (registry.instance.backendConfig.table?.name) {
         logger.debug(
-          `Unloading plugin ${pluginName} with table ${registry.instance.config.table?.name}`
+          `Unloading plugin ${pluginName} with table ${registry.instance.backendConfig.table?.name}`
         );
       }
       this.loadedPlugins.delete(pluginName);
@@ -236,7 +291,9 @@ class PluginHandler {
   /**
    * Get a specific loaded plugin instance
    */
-  getPluginInstance(pluginName: string): PLUGIN.PluginInstance | undefined {
+  getPluginInstance(
+    pluginName: string
+  ): PLUGIN.Plugin<PLUGIN.PluginRecord, any> | undefined | undefined {
     return this.loadedPlugins.get(pluginName)?.instance;
   }
 
@@ -247,7 +304,7 @@ class PluginHandler {
     return this.loadedPlugins.has(pluginName);
   }
 
-  private writeFrontendComponent(data: PLUGIN.PluginTable) {
+  private writeFrontendComponent(data: PLUGIN.PluginRecord) {
     try {
       if (!data.plugin.frontendConfig) {
         logger.debug(`Plugin ${data.meta.name} has no Frontend Page`);

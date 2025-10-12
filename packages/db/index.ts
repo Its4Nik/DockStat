@@ -1,68 +1,68 @@
-import { createLogger } from '@dockstat/logger'
-import { DB, type QueryBuilder, column } from '@dockstat/sqlite-wrapper'
-import type { DATABASE } from '@dockstat/typings'
+import { createLogger } from "@dockstat/logger";
+import { DB, type QueryBuilder, column } from "@dockstat/sqlite-wrapper";
+import type { DATABASE } from "@dockstat/typings";
 
-const logger = createLogger('DockStatDB')
+const logger = createLogger("DockStatDB");
 
 class DockStatDB {
-  private db: DB
-  private config_table: QueryBuilder<DATABASE.DB_config>
+  protected db: DB;
+  private config_table: QueryBuilder<DATABASE.DB_config>;
 
   constructor() {
-    logger.info('Initializing DockStatDB')
+    logger.info("Initializing DockStatDB");
 
     try {
-      this.db = new DB('dockstat.sqlite')
-      logger.debug('Created DB instance for dockstat.sqlite')
+      this.db = new DB("dockstat.sqlite");
+      logger.debug("Created DB instance for dockstat.sqlite");
 
       // Create config table (stores current theme name)
-      logger.debug('Creating config table')
+      logger.debug("Creating config table");
       this.config_table = this.db.createTable<DATABASE.DB_config>(
-        'config',
+        "config",
         {
           id: column.integer({ primaryKey: true, notNull: true }),
           default_theme: column.text({
             notNull: true,
-            default: 'default',
+            default: "default",
           }),
           nav_links: column.json({ notNull: true }),
-          hotkeys: column.json({ notNull: true })
+          hotkeys: column.json({ notNull: true }),
         },
         {
           ifNotExists: true,
           withoutRowId: false,
           jsonConfig: ["hotkeys", "nav_links"],
-        },
-      )
-      logger.debug('Config table created successfully')
+        }
+      );
+      logger.debug("Config table created successfully");
 
       // Initialize database with defaults if empty
-      this.initializeDefaults()
+      this.initializeDefaults();
     } catch (error) {
-      logger.error(`Failed to initialize database: ${error}`)
-      throw error
+      logger.error(`Failed to initialize database: ${error}`);
+      throw error;
     }
   }
 
   private initializeDefaults(): void {
-    logger.debug('Checking if database needs initialization with defaults')
+    logger.debug("Checking if database needs initialization with defaults");
     try {
       // Initialize config table if empty
-      const existingConfig = this.config_table.select(['*']).get()
+      const existingConfig = this.config_table.select(["*"]).get();
       if (!existingConfig) {
-        logger.info('No existing config found, initializing with defaults')
+        logger.info("No existing config found, initializing with defaults");
         this.config_table.insert({
-          default_theme: 'default',
+          default_theme: "default",
           hotkeys: {},
-          nav_links: []
-        })
-        logger.debug('Default config inserted')
+          nav_links: [],
+        });
+        logger.debug("Default config inserted");
       } else {
-        logger.debug('Database already initialized, skipping defaults')
+        logger.debug("Database already initialized, skipping defaults");
       }
     } catch (error) {
-      logger.error(`Failed to initialize defaults: ${error}`)
-      throw error
+      logger.error(`Failed to initialize defaults: ${error}`);
+      throw error;
     }
   }
 
@@ -70,12 +70,12 @@ class DockStatDB {
    * Get the underlying sqlite-wrapper DB instance for integration with docker-client
    */
   public getDB(): DB {
-    logger.debug('Getting DB instance')
-    return this.db
+    logger.debug("Getting DB instance");
+    return this.db;
   }
 
   public getConfigTable() {
-    return this.config_table
+    return this.config_table;
   }
 
   // Database Management
@@ -84,13 +84,13 @@ class DockStatDB {
    * Close the database connection
    */
   public close(): void {
-    logger.info('Closing database connection')
+    logger.info("Closing database connection");
     try {
-      this.db.close()
-      logger.debug('Database connection closed successfully')
+      this.db.close();
+      logger.debug("Database connection closed successfully");
     } catch (error) {
-      logger.error(`Failed to close database connection: ${error}`)
-      throw error
+      logger.error(`Failed to close database connection: ${error}`);
+      throw error;
     }
   }
 
@@ -98,13 +98,13 @@ class DockStatDB {
    * Execute a raw SQL query (for advanced use cases)
    */
   public exec(sql: string): void {
-    logger.debug(`Executing raw SQL: ${sql}`)
+    logger.debug(`Executing raw SQL: ${sql}`);
     try {
-      this.db.run(sql)
-      logger.debug('SQL executed successfully')
+      this.db.run(sql);
+      logger.debug("SQL executed successfully");
     } catch (error) {
-      logger.error(`Failed to execute SQL: ${error}`)
-      throw error
+      logger.error(`Failed to execute SQL: ${error}`);
+      throw error;
     }
   }
 
@@ -112,14 +112,14 @@ class DockStatDB {
    * Get database schema information
    */
   public getSchema(): unknown {
-    logger.debug('Getting database schema')
+    logger.debug("Getting database schema");
     try {
-      const schema = this.db.getSchema()
-      logger.debug('Schema retrieved successfully')
-      return schema
+      const schema = this.db.getSchema();
+      logger.debug("Schema retrieved successfully");
+      return schema;
     } catch (error) {
-      logger.error(`Failed to get database schema: ${error}`)
-      throw error
+      logger.error(`Failed to get database schema: ${error}`);
+      throw error;
     }
   }
 
@@ -127,8 +127,8 @@ class DockStatDB {
    * Get database file path
    */
   public getDatabasePath(): string {
-    return 'dockstat.sqlite'
+    return "dockstat.sqlite";
   }
 }
 
-export default DockStatDB
+export default DockStatDB;

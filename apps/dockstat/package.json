@@ -1,7 +1,10 @@
 {
-  "name": "dockstat",
+  "name": "@dockstat/dockstat",
   "private": true,
   "type": "module",
+  "exports": {
+    "./server.ts": "./app/.server"
+  },
   "scripts": {
     "build": "bun --bun cross-env NODE_ENV=production react-router build --minify true ",
     "dev": "bun run --bun react-router dev",
@@ -17,8 +20,8 @@
     "@dockstat/db": "workspace:*",
     "@dockstat/plugin-handler": "workspace:*",
     "@dockstat/docker-client": "workspace:*",
-    "@dockstat/logger": "workspace:*",
-    "@dockstat/sqlite-wrapper": "latest",
+    "@dockstat/logger": "latest",
+    "@dockstat/sqlite-wrapper": "workspace:*",
     "@dockstat/typings": "workspace:*",
     "@gsap/react": "^2.1.2",
     "@react-router/express": "^7.9.3",

@@ -1,15 +1,13 @@
-import DBFactory from '@dockstat/db'
-import type sqliteWrapper from '@dockstat/sqlite-wrapper';
-import type { QueryBuilder } from '@dockstat/sqlite-wrapper';
-import type { DATABASE } from '@dockstat/typings';
-import { createLogger } from '@dockstat/logger'
-import PluginHandler from "@dockstat/plugin-handler"
+import DBFactory from "@dockstat/db";
+import { createLogger } from "@dockstat/logger";
+import PluginHandler from "@dockstat/plugin-handler";
+import type sqliteWrapper from "@dockstat/sqlite-wrapper";
+import type { QueryBuilder } from "@dockstat/sqlite-wrapper";
+import type { DATABASE } from "@dockstat/typings";
 
-import { startUp } from '~/.server/src/utils';
-import AdapterHandler from '~/.server/src/adapters/handler';
-import ThemeHandler from '~/.server/src/theme/themeHandler';
-
-
+import AdapterHandler from "~/.server/src/adapters/handler";
+import ThemeHandler from "~/.server/src/theme/themeHandler";
+import { startUp } from "~/.server/src/utils";
 
 class ServerInstance {
   private logger: {
@@ -17,15 +15,15 @@ class ServerInstance {
     warn: (msg: string) => void;
     info: (msg: string) => void;
     debug: (msg: string) => void;
-  }
+  };
   private AdapterHandler!: AdapterHandler;
-  private DB!: DBFactory;
+  protected DB!: DBFactory;
   private DBWrapper!: sqliteWrapper;
   private config_table!: QueryBuilder<DATABASE.DB_config>;
   private themeHandler!: ThemeHandler;
-  private pluginHandler!: PluginHandler
+  private pluginHandler!: PluginHandler;
 
-  constructor(name = 'DockStatAPI') {
+  constructor(name = "DockStatAPI") {
     this.logger = createLogger(`${name}`);
     this.logger.debug("Initialized Server Logger");
     this.logger.info("Starting DockStat Server... Please stand by.");
@@ -48,30 +46,31 @@ class ServerInstance {
             const okDB = !!this.DB;
             const okWrapper = !!this.DBWrapper;
 
-            this.logger.debug(`Verifying DB and DBWrapper: DB=${okDB}, Wrapper=${okWrapper}`);
+            this.logger.debug(
+              `Verifying DB and DBWrapper: DB=${okDB}, Wrapper=${okWrapper}`
+            );
 
             if (!okDB || !okWrapper) {
-              const msg =
-                `Database initialization failed: DB=${okDB}, okWrapper=${okWrapper}`;
+              const msg = `Database initialization failed: DB=${okDB}, okWrapper=${okWrapper}`;
               this.logger.error(msg);
               throw new Error(msg);
             }
 
-            this.logger.info('Database initialized successfully.');
+            this.logger.info("Database initialized successfully.");
           },
           () => {
             this.logger.debug("Step: Getting config table from DB");
             this.config_table = this.DB.getConfigTable();
             this.logger.info("Config table assigned");
-          }
-        ]
+          },
+        ],
       },
       "initialize plugins": {
         steps: [
           () => {
-            this.pluginHandler = new PluginHandler(this.DB.getDB())
-          }
-        ]
+            this.pluginHandler = new PluginHandler(this.DB.getDB());
+          },
+        ],
       },
       "Setup Adapter Handler": {
         steps: [
@@ -80,19 +79,21 @@ class ServerInstance {
             this.AdapterHandler = new AdapterHandler(this.DB.getDB());
             this.logger.info("AdapterHandler instance created");
           },
-        ]
+        ],
       },
       "Init Docker Adapters": {
-        asyncSteps: [async () => {
-          this.logger.info("Async Step: Initializing Docker Adapters");
-          try {
-            await this.AdapterHandler.initDockerAdapters();
-            this.logger.info("Docker Adapters initialized");
-          } catch (err) {
-            this.logger.error(`Error initializing Docker Adapters: ${err}`);
-            throw err;
-          }
-        }]
+        asyncSteps: [
+          async () => {
+            this.logger.info("Async Step: Initializing Docker Adapters");
+            try {
+              await this.AdapterHandler.initDockerAdapters();
+              this.logger.info("Docker Adapters initialized");
+            } catch (err) {
+              this.logger.error(`Error initializing Docker Adapters: ${err}`);
+              throw err;
+            }
+          },
+        ],
       },
       "Init Docker Clients": {
         steps: [
@@ -100,19 +101,23 @@ class ServerInstance {
             this.logger.info("Getting Docker Adapters");
             let c = 0;
             const DA = this.AdapterHandler.getDockerAdapters();
-            this.logger.debug(`Found ${Object.keys(DA).length} Docker Adapters`);
+            this.logger.debug(
+              `Found ${Object.keys(DA).length} Docker Adapters`
+            );
             for (const client of Object.values(DA)) {
-              c = c++;
+              c = ++c;
               this.logger.info(`initializing Nr ${c}`);
               try {
                 client.init();
                 this.logger.debug(`Docker client ${c} initialized`);
               } catch (err) {
-                this.logger.error(`Error initializing Docker client ${c}: ${err}`);
+                this.logger.error(
+                  `Error initializing Docker client ${c}: ${err}`
+                );
               }
             }
-          }
-        ]
+          },
+        ],
       },
       "Setup Theme Handler": {
         steps: [
@@ -125,8 +130,8 @@ class ServerInstance {
               this.logger.error(`Error setting up ThemeHandler: ${err}`);
               throw err;
             }
-          }
-        ]
+          },
+        ],
       },
     });
   }
@@ -143,8 +148,8 @@ class ServerInstance {
       tables: {
         config: this.config_table,
         themes: this.themeHandler.getThemeTable(),
-        adapter: this.AdapterHandler.getAdapterTable()
-      }
+        adapter: this.AdapterHandler.getAdapterTable(),
+      },
     };
     this.logger.info("Database object returned");
     return dbObj;
@@ -161,9 +166,10 @@ class ServerInstance {
   }
 
   getPluginHandler() {
-    this.logger.debug("Getting PluginHandler")
+    this.logger.debug("Getting PluginHandler");
     return this.pluginHandler;
   }
 }
 
+export type { ServerInstance };
 export default new ServerInstance();

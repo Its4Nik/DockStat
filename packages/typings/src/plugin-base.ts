@@ -1,0 +1,72 @@
+import type DockerClient from "@dockstat/docker-client";
+import type { ServerInstance } from "@dockstat/dockstat/app/.server";
+import type { DB, QueryBuilder } from "@dockstat/sqlite-wrapper";
+import type { DockerClientEvents } from "./docker-client";
+import type { PluginConfig } from "./plugins";
+
+export interface PluginRecord extends Record<string, unknown> {
+  id?: number;
+  meta: PluginMeta;
+  plugin: {
+    backendConfig: PluginConfig<any, any>;
+    actions: PluginActions<any>;
+    frontendConfig?: unknown;
+  };
+}
+
+export interface PluginMeta {
+  name: string;
+  description: string;
+  author: { name: string; website?: string; email?: string };
+  version: string;
+  license: string;
+  tags: string[];
+  repository: string;
+  path: string;
+}
+
+export interface Plugin<
+  T extends Record<string, unknown>,
+  A extends PluginActions<T>
+> {
+  meta: PluginMeta;
+  backendConfig: PluginConfig<T, A>;
+}
+
+export type PluginActionHandler<
+  T extends Record<string, unknown>,
+  R = unknown
+> = (ctx: PluginActionContext<T>) => Promise<R> | R;
+
+export interface PluginActionContext<T extends Record<string, unknown>> {
+  table: QueryBuilder<T> | null;
+  instanceId: string;
+  db: DB;
+  params?: Record<string, unknown>;
+  logger: {
+    error: (msg: string) => void;
+    warn: (msg: string) => void;
+    info: (msg: string) => void;
+    debug: (msg: string) => void;
+  };
+  previousAction: unknown;
+  dockerClient: DockerClient;
+}
+
+export type PluginActions<T extends Record<string, unknown>> = Record<
+  string,
+  PluginActionHandler<T>
+>;
+
+export interface RegisteredPlugin<
+  T extends Record<string, unknown>,
+  A extends PluginActions<T>
+> {
+  instance: Plugin<T, A>;
+  routes: Record<string, { method: string; actions: string[] }>;
+  actions: A;
+}
+
+export interface PluginHooks extends DockerClientEvents {
+  onServerBoot?: () => Promise<void> | void;
+}

@@ -1,17 +1,17 @@
-import type { ContainerStats, ContainerInspectInfo, Version } from "dockerode";
+import type { ContainerInspectInfo, ContainerStats, Version } from "dockerode";
 
 export interface SysInfo {
-  OperatingSystem: string,
-  Architecture: string,
-  MemTotal: number,
-  NCPU: number,
-  KernelVersion: string,
-  Containers: number,
-  ContainersRunning: number,
-  ContainersStopped: number,
-  ContainersPaused: number,
-  Images: number,
-  SystemTime: string,
+  OperatingSystem: string;
+  Architecture: string;
+  MemTotal: number;
+  NCPU: number;
+  KernelVersion: string;
+  Containers: number;
+  ContainersRunning: number;
+  ContainersStopped: number;
+  ContainersPaused: number;
+  Images: number;
+  SystemTime: string;
 }
 
 export interface DockerAPIResponse {
@@ -67,6 +67,8 @@ export type MonitoringOptions = {
   enableContainerEvents?: boolean;
   enableHostMetrics?: boolean;
   enableHealthChecks?: boolean;
+  retryAttempts?: number;
+  retryDelay?: number;
 };
 
 export type ExecOptions = {
@@ -155,7 +157,13 @@ export interface DockerStreamData {
     | "error";
   hostId: number;
   timestamp: number;
-  data: ContainerStats | ContainerStatsInfo | HostMetrics | ContainerInfo[] | AllStatsResponse | {error: Error};
+  data:
+    | ContainerStats
+    | ContainerStatsInfo
+    | HostMetrics
+    | ContainerInfo[]
+    | AllStatsResponse
+    | { error: Error };
 }
 
 export type StreamCallback = (data: DockerStreamData) => void;
@@ -170,23 +178,23 @@ export interface DockerClientEvents {
   "container:stats": (
     hostId: number,
     containerId: string,
-    stats: ContainerStatsInfo,
+    stats: ContainerStatsInfo
   ) => void;
   "container:started": (
     hostId: number,
     containerId: string,
-    containerInfo: ContainerInfo,
+    containerInfo: ContainerInfo
   ) => void;
   "container:stopped": (
     hostId: number,
     containerId: string,
-    containerInfo: ContainerInfo,
+    containerInfo: ContainerInfo
   ) => void;
   "container:removed": (hostId: number, containerId: string) => void;
   "container:created": (
     hostId: number,
     containerId: string,
-    containerInfo: ContainerInfo,
+    containerInfo: ContainerInfo
   ) => void;
   "container:died": (hostId: number, containerId: string) => void;
 
@@ -195,19 +203,31 @@ export interface DockerClientEvents {
   "stream:data": (streamKey: string, data: DockerStreamData) => void;
   "stream:error": (streamKey: string, error: Error) => void;
 
-  error: (error: Error, context?: Record<string, { hostId?: number; containerId?: string; message?: string }>) => void;
-  warning: (message: string, context?: Record<string, { hostId?: number; containerId?: string }>) => void;
-  info: (message: string, context?: Record<string, { hostId?: number; containerId?: string }>) => void;
+  error: (
+    error: Error,
+    context?: Record<
+      string,
+      { hostId?: number; containerId?: string; message?: string }
+    >
+  ) => void;
+  warning: (
+    message: string,
+    context?: Record<string, { hostId?: number; containerId?: string }>
+  ) => void;
+  info: (
+    message: string,
+    context?: Record<string, { hostId?: number; containerId?: string }>
+  ) => void;
 }
 
 export interface DockerEventEmitterInterface {
   on<K extends keyof DockerClientEvents>(
     event: K,
-    listener: DockerClientEvents[K],
+    listener: DockerClientEvents[K]
   ): this;
   off<K extends keyof DockerClientEvents>(
     event: K,
-    listener: DockerClientEvents[K],
+    listener: DockerClientEvents[K]
   ): this;
   emit<K extends keyof DockerClientEvents>(
     event: K,
@@ -215,7 +235,7 @@ export interface DockerEventEmitterInterface {
   ): boolean;
   once<K extends keyof DockerClientEvents>(
     event: K,
-    listener: DockerClientEvents[K],
+    listener: DockerClientEvents[K]
   ): this;
   removeAllListeners<K extends keyof DockerClientEvents>(event?: K): this;
   listenerCount<K extends keyof DockerClientEvents>(event: K): number;
@@ -249,7 +269,7 @@ export interface StreamMessage {
     | {
         subscriptionId: string;
         channel: string;
-        status: 'subscribed' | 'unsubscribed' | 'not_found';
+        status: "subscribed" | "unsubscribed" | "not_found";
         options: StreamOptions;
       };
   timestamp: number;

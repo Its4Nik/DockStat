@@ -1,12 +1,12 @@
-import { createLogger } from '@dockstat/logger'
-export const logger = createLogger('docker-client')
+import { createLogger } from "@dockstat/logger";
+export const logger = createLogger("docker-client");
 
-export { default } from './src/docker-client.js'
-export { default as DockerClient } from './src/docker-client.js'
-export { default as HostHandler } from './src/hosts-handler/index.js'
-export { DockerEventEmitter } from './src/events/docker-events.js'
-export { default as MonitoringManager } from './src/monitoring/monitoring-manager.js'
-export { StreamManager, STREAM_CHANNELS } from './src/stream/stream-manager.js'
+export { default } from "./src/docker-client";
+export { default as DockerClient } from "./src/docker-client";
+export { default as HostHandler } from "./src/hosts-handler/index";
+export { DockerEventEmitter } from "./src/events/docker-events";
+export { default as MonitoringManager } from "./src/monitoring/monitoring-manager";
+export { StreamManager, STREAM_CHANNELS } from "./src/stream/stream-manager";
 
-export type { ContainerStats } from 'dockerode'
-export type { default as Dockerode } from 'dockerode'
+export type { ContainerStats } from "dockerode";
+export type { default as Dockerode } from "dockerode";
