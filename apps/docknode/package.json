@@ -1,12 +1,14 @@
 {
-  "name": "app",
+  "name": "docknode",
   "version": "1.0.50",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
-    "@dockstat/logger": "latest",
+    "@dockstat/logger": "workspace:*",
+    "@elysiajs/openapi": "^1.4.11",
+    "@tqman/nice-logger": "^1.1.1",
     "elysia": "latest"
   },
   "devDependencies": {
