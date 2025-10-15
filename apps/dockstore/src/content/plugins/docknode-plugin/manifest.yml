@@ -1,0 +1,12 @@
+name: DockNode Plugin
+description: "The connection and auth handler for DockNodes"
+version: 1.0.0
+license: MIT
+tags: 
+  - DockNode
+  - Remote
+  - fs
+author:
+  name: Its4Nik
+  website: https://itsnik.de
+  email: dockstat@itsnik.de

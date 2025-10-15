@@ -1,0 +1,16 @@
+import type { PLUGIN } from "@dockstat/typings";
+
+export const DockNodePluginMeta: PLUGIN.PluginMeta = {
+  name: "DockNode",
+  description: "Manager for the optional DockNode capabilities",
+  license: "GPL-2.0",
+  author: {
+    name: "Its4Nik",
+    website: "https://github.com/Its4Nik",
+    email: "dockstat@itsnik.de",
+  },
+  version: "1.0.0",
+  tags: ["stacks", "fs", "apps", "remote"],
+  repository: "https://dockstore.itsnik.de",
+  path: "plugins/docknode",
+};

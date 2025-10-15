@@ -6,14 +6,15 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@dockstat/plugin-handler": "workspace:*",
-    "@dockstat/typings": "workspace:*"
+    "@dockstat/typings": "workspace:*",
+    "@dockstat/logger": "workspace:*",
+    "@dockstat/sqlite-wrapper": "workspace:*",
+    "@types/js-yaml": "^4.0.9"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "@dockstat/sqlite-wrapper": "^1.2.8",
-    "@types/js-yaml": "^4.0.9",
     "js-yaml": "^4.1.0"
   }
 }
