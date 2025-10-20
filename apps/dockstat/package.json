@@ -18,9 +18,9 @@
   },
   "dependencies": {
     "@dockstat/db": "workspace:*",
-    "@dockstat/plugin-handler": "workspace:*",
     "@dockstat/docker-client": "workspace:*",
     "@dockstat/logger": "latest",
+    "@dockstat/plugin-handler": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*",
     "@dockstat/typings": "workspace:*",
     "@gsap/react": "^2.1.2",
@@ -32,6 +32,7 @@
     "@types/express": "^5.0.3",
     "@types/morgan": "^1.9.10",
     "dockerode": "^4.0.9",
+    "elysia-react-router": "^0.4.4",
     "express": "^5.1.0",
     "gsap": "^3.13.0",
     "isbot": "^5.1.31",
