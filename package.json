@@ -21,6 +21,12 @@
   "engines": {
     "bun": ">=1.2.17"
   },
+  "overrides": {
+    "elysia": "1.4.12"
+  },
+  "resolutions": {
+    "elysia": "1.4.12"
+  },
   "packageManager": "bun@1.2.17",
   "workspaces": [
     "apps/*",

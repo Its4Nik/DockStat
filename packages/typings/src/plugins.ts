@@ -6,9 +6,9 @@ import type {
 import type { PluginActions } from "./plugin-base";
 
 /* PluginRoute defines the API route configuration for a plugin action */
-export type PluginRoute<Action> = {
+export type PluginRoute<A extends PluginActions<any>> = {
   method: "GET" | "POST";
-  actions: Action[]; // must be keys from the actions map
+  actions: (keyof A)[]; // must be keys from the actions map
 };
 
 export type FrontendRoute = unknown; // Placeholder for future frontend route definitions
@@ -23,5 +23,5 @@ export type PluginConfig<
     jsonColumns: JsonColumnConfig<T>;
     columns: Record<string, ColumnDefinition>;
   };
-  apiRoutes?: Record<string, PluginRoute<Extract<keyof A, string>>>; // routes.actions must be keys of A
+  apiRoutes?: Record<string, PluginRoute<A>>; // routes.actions must be keys of A
 };
