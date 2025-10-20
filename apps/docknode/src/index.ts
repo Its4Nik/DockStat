@@ -10,7 +10,6 @@ import { authPlugin } from "./handlers/auth/elysia-adapter";
 import { DockStackHandler } from "./handlers/dockstack";
 
 new Elysia({ prefix: "/api" })
-  .onBeforeHandle({ set }) {}
   .use(
     openapi({
       path: "/docs",

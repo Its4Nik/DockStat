@@ -15,11 +15,17 @@ class PluginHandler {
   constructor(db: DB) {
     this.DB = db;
 
-    this.pluginTable = this.DB.createTable<PLUGIN.PluginRecord>("plugin", {
-      id: column.id(),
-      meta: column.json({ notNull: true }),
-      plugin: column.json({}),
-    });
+    this.pluginTable = this.DB.createTable<PLUGIN.PluginRecord>(
+      "plugin",
+      {
+        id: column.id(),
+        meta: column.json({ notNull: true }),
+        plugin: column.json({}),
+      },
+      {
+        ifNotExists: true,
+      }
+    );
   }
 
   private getComponentPath = (fileName: string) => `.components/${fileName}.js`;

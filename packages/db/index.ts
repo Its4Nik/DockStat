@@ -1,8 +1,8 @@
-import { createLogger } from "@dockstat/logger";
+import { Logger } from "@dockstat/logger";
 import { DB, type QueryBuilder, column } from "@dockstat/sqlite-wrapper";
 import type { DATABASE } from "@dockstat/typings";
 
-const logger = createLogger("DockStatDB");
+const logger = new Logger("DockStatDB");
 
 class DockStatDB {
   protected db: DB;

@@ -1,4 +1,3 @@
-import type DockerClient from "@dockstat/docker-client";
 import type { DB, QueryBuilder } from "@dockstat/sqlite-wrapper";
 import type { DockerClientEvents } from "./docker-client";
 import type { PluginConfig } from "./plugins";
@@ -36,7 +35,10 @@ export type PluginActionHandler<T extends Record<string, unknown>> = (
   ctx: PluginActionContext<T>
 ) => Promise<unknown> | unknown;
 
-export interface PluginActionContext<T extends Record<string, unknown>> {
+export interface PluginActionContext<
+  T extends Record<string, unknown>,
+  U = unknown
+> {
   table: QueryBuilder<T> | null;
   instanceId: string;
   db: DB;
@@ -48,7 +50,7 @@ export interface PluginActionContext<T extends Record<string, unknown>> {
     debug: (msg: string) => void;
   };
   previousAction: unknown;
-  dockerClient: DockerClient;
+  dockerClient: U;
 }
 
 export type PluginActions<T extends Record<string, unknown>> = Record<

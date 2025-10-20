@@ -1,16 +1,15 @@
-import type Docker from "dockerode";
 import type { DockerAdapterOptions } from "./docker-client";
 
 export type ContainerId = string;
 
-export type Type = "docker"
+export type Type = "docker";
 
 export type AdapterTable = {
   id: number;
   name: string;
   type: Type;
   config: DockerAdapterOptions;
-}
+};
 
 export interface LogChunk {
   containerId: ContainerId;
@@ -33,7 +32,10 @@ export interface ContainerStatsSnapshot {
 export interface NetworkStats {
   Id: string;
   Name: string;
-  Containers: Record<string, { Name: string; IPv4Address?: string; IPv6Address?: string }>;
+  Containers: Record<
+    string,
+    { Name: string; IPv4Address?: string; IPv6Address?: string }
+  >;
   Options?: Record<string, string>;
   Labels?: Record<string, string>;
 }

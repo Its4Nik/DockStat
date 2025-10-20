@@ -17,9 +17,7 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/dockerode": "^3.3.44",
-    "@dockstat/sqlite-wrapper": "workspace:*",
-    "@dockstat/docker-client": "workspace:*",
-    "@dockstat/dockstat": "workspace:*",
+    "@dockstat/sqlite-wrapper": "latest",
     "@dockstat/logger": "latest"
   },
   "dependencies": {
