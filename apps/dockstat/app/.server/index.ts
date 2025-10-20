@@ -8,6 +8,7 @@ import type { DATABASE } from "@dockstat/typings";
 import AdapterHandler from "~/.server/src/adapters/handler";
 import ThemeHandler from "~/.server/src/theme/themeHandler";
 import { startUp } from "~/.server/src/utils";
+//import { ElysiaInstance } from "./src/backend";
 
 class ServerInstance {
   private logger: {
@@ -16,6 +17,9 @@ class ServerInstance {
     info: (msg: string) => void;
     debug: (msg: string) => void;
   };
+
+  //private elysia = ElysiaInstance;
+
   private AdapterHandler!: AdapterHandler;
   protected DB!: DBFactory;
   private DBWrapper!: sqliteWrapper;
