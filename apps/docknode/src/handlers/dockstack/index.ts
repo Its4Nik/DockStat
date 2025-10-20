@@ -2,7 +2,6 @@ import { rm } from "node:fs/promises";
 import Logger from "@dockstat/logger";
 import openapi from "@elysiajs/openapi";
 import Elysia, { t } from "elysia";
-import { dockNodeLoggerParents } from "../..";
 import { getStackDir, writeDockerCompose } from "./src/deployStack";
 
 export const dockStackLogger = new Logger("DockStack", ["DockNode"]);

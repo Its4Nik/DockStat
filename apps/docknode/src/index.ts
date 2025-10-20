@@ -6,22 +6,15 @@ export const dockNodeLoggerParents: string[] = dockNodeLogger.getParents();
 import { openapi } from "@elysiajs/openapi";
 import { logger } from "@tqman/nice-logger";
 import Elysia from "elysia";
+import { authPlugin } from "./handlers/auth/elysia-adapter";
 import { DockStackHandler } from "./handlers/dockstack";
-import { authPlugin } from "./handlers/dockstack/src/handlers/auth";
-import { getDefaultAuthKey } from "./handlers/dockstack/src/utils/getDefaultAuthKey";
 
 new Elysia({ prefix: "/api" })
+  .onBeforeHandle({ set }) {}
   .use(
     openapi({
       path: "/docs",
       provider: "scalar",
-    })
-  )
-  .use(
-    authPlugin({
-      headerName: "x-dockstacks-api",
-      psk: `dockstat-${getDefaultAuthKey()}`,
-      ignoredRoutes: [],
     })
   )
   .use(
@@ -34,6 +27,9 @@ new Elysia({ prefix: "/api" })
   )
   .get("/status", { status: 200, message: "alive" })
   .use(DockStackHandler)
+  .get("/deimudda", () => "sex", {
+    requireAuth: true,
+  })
   .listen(4000);
 
 dockNodeLogger.info("Server listening on http://localhost:4000");
