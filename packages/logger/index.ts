@@ -3,6 +3,12 @@ import sourceMapSupport from "source-map-support";
 
 sourceMapSupport.install();
 
+let callerMatchesDepth = 2
+
+if (Bun.env.DOCKSTAT_LOGGER_FULL_FILE_PATH === "true") {
+  callerMatchesDepth = 1
+}
+
 // Helper to get file and line info from stack trace
 function getCallerInfo(): string {
   const stack = new Error().stack?.split("\n");
@@ -14,7 +20,7 @@ function getCallerInfo(): string {
         const matches = line.match(/\(?(.+):(\d+):(\d+)\)?$/);
         if (matches) {
           if (matches[1]) {
-            return `${matches[1].split("/").pop()}:${matches[2]}`;
+            return `${matches[1].split("/").pop()}:${matches[callerMatchesDepth]}`;
           }
         }
       }
@@ -41,10 +47,12 @@ function formatMessage(
   const timestamp = chalk.magenta(new Date().toISOString().slice(11, 19)); // HH:mm:ss
   const coloredLevel = levelColors[level](level.toUpperCase());
   const callerInfo = chalk.blue(getCallerInfo());
-  const coloredPrefix = `[${chalk.cyan(prefix)}${chalk.yellow(
-    `@${parents.join("->")}`
-  )}`;
-  const msgPrefix = `${timestamp} ${coloredPrefix} ${callerInfo} ${coloredLevel}`;
+
+  const coloredPrefix = parents.length >= 1 ? `[${chalk.cyan(prefix)}${chalk.yellow(
+    `@${parents.join("@")}`
+  )}` : `[${chalk.cyan(prefix)}`
+
+  const msgPrefix = `${timestamp} ${coloredPrefix} ${callerInfo} ${coloredLevel}]`;
   return `${msgPrefix} : ${chalk.grey(message)}`;
 }
 
@@ -75,6 +83,10 @@ class Logger {
 
   getParents(): string[] {
     return this.parents;
+  }
+
+  getParentsForLoggerChaining(): string[] {
+    return [this.name, ...this.parents]
   }
 
   addParent(prefix: string) {
