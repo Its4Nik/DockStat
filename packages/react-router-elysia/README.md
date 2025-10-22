@@ -13,7 +13,7 @@ This setup bridges the gap between frontend routing and a high-performance Bun-p
 To bootstrap a new project using this template (Bun required):
 
 ```bash
-bun create react-router@latest --template its4nik/dockstat/packages/react-router-elysia
+bun create react-router@latest --template  https://github.com/Its4Nik/DockStat/tree/dev/packages/react-router-elysia
 bun run dev
 ```
 
