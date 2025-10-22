@@ -2,7 +2,7 @@
   "name": "@dockstat/create-rr-elysia",
   "description": "A template for a ready to use React Router Setup and ElysiaJS endpoint",
   "private": false,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "keywords": [
     "template",

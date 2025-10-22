@@ -4,8 +4,6 @@ A modern template for building **React Router v7** applications backed by an **E
 
 This setup bridges the gap between frontend routing and a high-performance Bun-powered backend, giving you full-stack type safety and speed — all with minimal configuration.
 
-> ⚠️ Note: Native ElysiaJS WebSockets aren’t currently supported in this template, but a practical workaround example is included.
-
 ---
 
 ## 🚀 Getting Started
