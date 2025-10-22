@@ -11,7 +11,7 @@
     "@dockstat/logger": "workspace:*",
     "@elysiajs/openapi": "^1.4.0",
     "@tqman/nice-logger": "^1.1.1",
-    "elysia": "^1.4.0",
+    "elysia": "1.4.12",
     "elysia-basic-auth": "^1.0.7"
   },
   "devDependencies": {

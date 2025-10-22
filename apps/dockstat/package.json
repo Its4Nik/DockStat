@@ -1,6 +1,6 @@
 {
   "name": "dockstat",
-  "private": true,
+  "private": false,
   "type": "module",
   "scripts": {
     "build": "bun run --bun react-router build",
@@ -11,8 +11,8 @@
     "typegen": "react-router typegen"
   },
   "dependencies": {
-    "@dockstat/api": "workspace:*",
     "@dockstat/db": "workspace:*",
+    "@dockstat/typings": "workspace:*",
     "@dockstat/logger": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*",
     "@elysiajs/eden": "^1.4.4",

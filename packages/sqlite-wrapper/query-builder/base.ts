@@ -1,5 +1,5 @@
 import type { Database, SQLQueryBindings } from 'bun:sqlite'
-import { createLogger } from '@dockstat/logger'
+import Logger from '@dockstat/logger'
 import type {
   ColumnNames,
   DatabaseRowData,
@@ -7,13 +7,14 @@ import type {
   OrderDirection,
   QueryBuilderState,
 } from '../types'
+import { logger } from '..'
 
 /**
  * Base QueryBuilder class that manages core state and shared functionality.
  * This class provides the foundation for all query operations.
  */
 export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
-  private logger = createLogger('BaseQueryBuilder')
+  private logger = new Logger('Base', logger.getParentsForLoggerChaining())
   protected state: QueryBuilderState<T>
 
   /**

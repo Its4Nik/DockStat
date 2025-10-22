@@ -1,2 +1,9 @@
 import DBFactory from "@dockstat/db"
-import Logger from "@dockstat/logger"
+
+const InitialDockStatDB = new DBFactory("DB", ["Elysia", "DockStat"])
+
+export const DockStatDB = {
+  _sqliteWrapper: InitialDockStatDB.getDB(),
+  _dbPath: InitialDockStatDB.getDatabasePath(),
+  configTable: InitialDockStatDB.getConfigTable()
+}

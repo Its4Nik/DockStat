@@ -2,7 +2,8 @@
   "name": "@dockstat/typings",
   "version": "1.0.0",
   "exports": {
-    "types": "./src/index.ts"
+    "./schemas": "./src/typebox/_schemas.ts",
+    "./types": "./src/typebox/_types.ts"
   },
   "scripts": {
     "lint": "biome lint .",
@@ -21,6 +22,7 @@
     "@dockstat/logger": "latest"
   },
   "dependencies": {
+    "elysia": "^1.4.12",
     "js-yaml": "^4.1.0"
   }
 }

@@ -8,7 +8,7 @@ DockStatAPI.listen(3000)
 logger.info(`Started Elysia ${JSON.stringify(DockStatAPI.config)}`)
 
 const handler = async ({ request }: { request: Request }) => {
-  logger.debug(`Handling request [${request.method}] (${request.url}) with DockStatAPI`)
+  logger.debug(`Handling request [${request.method}] (${request.url}) with DockStatAPI`, request.headers.get("x-dockstatapi-requestid") || "")
   return DockStatAPI.handle(request)
 }
 

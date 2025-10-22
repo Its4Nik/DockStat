@@ -1,67 +1,91 @@
-import { Logger } from "@dockstat/logger";
-import { DB, type QueryBuilder, column } from "@dockstat/sqlite-wrapper";
-import type { DATABASE } from "@dockstat/typings";
-
-const logger = new Logger("DockStatDB");
+import Logger from "@dockstat/logger";
+import { DB, type QueryBuilder, column, addLoggerParents } from "@dockstat/sqlite-wrapper";
+import type { DockStatConfigTableType } from "@dockstat/typings/types";
 
 class DockStatDB {
   protected db: DB;
-  private config_table: QueryBuilder<DATABASE.DB_config>;
+  private config_table: QueryBuilder<DockStatConfigTableType>;
+  private logger: Logger
 
-  constructor() {
-    logger.info("Initializing DockStatDB");
+  constructor(prefix = "DockStatDB", parents: string[] = []) {
+    this.logger = new Logger(prefix, parents);
+    addLoggerParents([prefix, ...parents])
+    this.logger.info("Initializing DockStatDB");
 
     try {
       this.db = new DB("dockstat.sqlite");
-      logger.debug("Created DB instance for dockstat.sqlite");
+      this.logger.debug("Created DB instance for dockstat.sqlite");
 
       // Create config table (stores current theme name)
-      logger.debug("Creating config table");
-      this.config_table = this.db.createTable<DATABASE.DB_config>(
+      this.logger.debug("Creating config table");
+      this.config_table = this.db.createTable<DockStatConfigTableType>(
         "config",
         {
-          id: column.integer({ primaryKey: true, notNull: true }),
-          default_theme: column.text({
-            notNull: true,
-            default: "default",
-          }),
-          nav_links: column.json({ notNull: true }),
-          hotkeys: column.json({ notNull: true }),
+          id: column.uuid(),
+          allow_untrusted_repo: column.boolean({ default: false }),
+          default_themes: column.json({ notNull: true }),
+          tables: column.json({ notNull: true }),
+          tls_certs_and_keys: column.json({ notNull: true }),
+          registered_repos: column.json({ notNull: true }),
+          version: column.text({ notNull: true }),
+          hotkeys: column.json(),
+          nav_links: column.json(),
+          name: column.text({ notNull: false })
         },
         {
           ifNotExists: true,
-          withoutRowId: false,
-          jsonConfig: ["hotkeys", "nav_links"],
+          jsonConfig: ["registered_repos", "default_themes", "tables", "tls_certs_and_keys", "hotkeys", "nav_links"]
         }
       );
-      logger.debug("Config table created successfully");
+      this.logger.debug("Config table created successfully");
 
       // Initialize database with defaults if empty
       this.initializeDefaults();
     } catch (error) {
-      logger.error(`Failed to initialize database: ${error}`);
+      this.logger.error(`Failed to initialize database: ${error}`);
       throw error;
     }
   }
 
   private initializeDefaults(): void {
-    logger.debug("Checking if database needs initialization with defaults");
+    this.logger.debug("Checking if database needs initialization with defaults");
     try {
       // Initialize config table if empty
       const existingConfig = this.config_table.select(["*"]).get();
       if (!existingConfig) {
-        logger.info("No existing config found, initializing with defaults");
+        this.logger.info("No existing config found, initializing with defaults");
         this.config_table.insert({
-          default_theme: "default",
+          name: "DockStat",
+          version: "1.0.0",
+          id: 0,
+          allow_untrusted_repo: false,
+          default_themes: {
+            // Themes will be split in dark and white packs => each their own array, and 0 has to be dockstat default
+            dark: 0,
+            light: 0,
+          },
           hotkeys: {},
           nav_links: [],
+          registered_repos: [
+            {
+              name: "DockStacks",
+              source: "its4nik/dockstat/apps/dockstore",
+              type: "github",
+              isVerified: true,
+              policy: "strict",
+              verificatioh_api: "https://api.itsnik.de/dockstacks/_verify",
+              hashes: null
+            }
+          ],
+          tables: [],
+          tls_certs_and_keys: {},
         });
-        logger.debug("Default config inserted");
+        this.logger.debug("Default config inserted");
       } else {
-        logger.debug("Database already initialized, skipping defaults");
+        this.logger.debug("Database already initialized, skipping defaults");
       }
     } catch (error) {
-      logger.error(`Failed to initialize defaults: ${error}`);
+      this.logger.error(`Failed to initialize defaults: ${error}`);
       throw error;
     }
   }
@@ -70,7 +94,7 @@ class DockStatDB {
    * Get the underlying sqlite-wrapper DB instance for integration with docker-client
    */
   public getDB(): DB {
-    logger.debug("Getting DB instance");
+    this.logger.debug("Getting DB instance");
     return this.db;
   }
 
@@ -84,12 +108,12 @@ class DockStatDB {
    * Close the database connection
    */
   public close(): void {
-    logger.info("Closing database connection");
+    this.logger.info("Closing database connection");
     try {
       this.db.close();
-      logger.debug("Database connection closed successfully");
+      this.logger.debug("Database connection closed successfully");
     } catch (error) {
-      logger.error(`Failed to close database connection: ${error}`);
+      this.logger.error(`Failed to close database connection: ${error}`);
       throw error;
     }
   }
@@ -98,12 +122,12 @@ class DockStatDB {
    * Execute a raw SQL query (for advanced use cases)
    */
   public exec(sql: string): void {
-    logger.debug(`Executing raw SQL: ${sql}`);
+    this.logger.debug(`Executing raw SQL: ${sql}`);
     try {
       this.db.run(sql);
-      logger.debug("SQL executed successfully");
+      this.logger.debug("SQL executed successfully");
     } catch (error) {
-      logger.error(`Failed to execute SQL: ${error}`);
+      this.logger.error(`Failed to execute SQL: ${error}`);
       throw error;
     }
   }
@@ -112,13 +136,13 @@ class DockStatDB {
    * Get database schema information
    */
   public getSchema(): unknown {
-    logger.debug("Getting database schema");
+    this.logger.debug("Getting database schema");
     try {
       const schema = this.db.getSchema();
-      logger.debug("Schema retrieved successfully");
+      this.logger.debug("Schema retrieved successfully");
       return schema;
     } catch (error) {
-      logger.error(`Failed to get database schema: ${error}`);
+      this.logger.error(`Failed to get database schema: ${error}`);
       throw error;
     }
   }

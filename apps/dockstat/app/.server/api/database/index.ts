@@ -1,11 +1,20 @@
-import Elysia from "elysia";
-import { DockStatConfigTable } from "~/typings/db";
+import Elysia, { t } from "elysia";
+import { DockStatConfigTable, UpdateDockStatConfigTableResponse } from "@dockstat/typings/schemas";
+import { DockStatDB } from "~/.server/db";
 
 export const DatabaseElysiaInstance = new Elysia({ prefix: "/db" })
   .post("/dockstat-config", ({ body }) => {
-    return { code: 200, message: "Updated DockStack config successfully.", newConfig: body }
+    const updateRes = DockStatDB.configTable.where({ id: 0 }).update(body)
+    const newConfig = DockStatDB.configTable.select(["*"]).where({ id: 0 }).get()
+    return {
+      message: "Updated config successfully",
+      code: 200,
+      update_response: updateRes,
+      new_config: newConfig
+    }
   },
     {
-      body: DockStatConfigTable
+      body: DockStatConfigTable,
+      response: UpdateDockStatConfigTableResponse
     })
   .get("/dockstat-config", () => "Hi")

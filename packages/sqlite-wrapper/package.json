@@ -5,6 +5,10 @@
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types.ts"
+  },
   "files": [
     "index.ts",
     "query-builder/**/*",
@@ -42,7 +46,7 @@
     "bun": ">=1.0.0"
   },
   "dependencies": {
-    "@dockstat/logger": "latest"
+    "@dockstat/logger": "1.0.1"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"

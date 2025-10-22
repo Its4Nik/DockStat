@@ -376,7 +376,7 @@ export const column = {
    * Create a JSON column (stored as TEXT)
    */
   json: (
-    constraints: ColumnConstraints & { validateJson?: boolean },
+    constraints?: ColumnConstraints & { validateJson?: boolean },
   ): ColumnDefinition => ({
     type: SQLiteTypes.JSON,
     check: constraints?.validateJson

@@ -11,7 +11,8 @@ export const DockStatAPI = new Elysia({ prefix: "/api" })
       provider: "scalar",
     })
   )
-  .get("/status", () => ({
+  .get("/status", ({ request }) => ({
+    _id: request.headers.get("x-dockstatapi-requestid"),
     message: "Looking goood",
     status: 200
   }))

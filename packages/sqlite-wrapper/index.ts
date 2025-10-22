@@ -1,5 +1,5 @@
 import { Database, type SQLQueryBindings } from "bun:sqlite";
-import { createLogger } from "@dockstat/logger";
+import Logger from "@dockstat/logger"
 import { QueryBuilder } from "./query-builder/index";
 import type {
   ColumnConstraints,
@@ -13,7 +13,11 @@ import type {
   TableSchema,
 } from "./types";
 
-const logger = createLogger("sqlite-wrapper");
+export const logger = new Logger("Sqlite-Wrapper");
+
+export function addLoggerParents(parents: string[]) {
+  logger.addParents(parents)
+}
 
 /**
  * Re-export all types and utilities
@@ -216,7 +220,7 @@ class DB {
     columns:
       | string
       | Record<string, string>
-      | Partial<Record<Extract<keyof _T, string>, ColumnDefinition>>
+      | Record<Extract<keyof _T, string>, ColumnDefinition>
       | TableSchema,
     options?: TableOptions<_T>
   ): QueryBuilder<_T> {
