@@ -150,7 +150,7 @@
     "packages/plugin-handler": {
       "name": "@dockstat/plugin-handler",
       "dependencies": {
-        "@dockstat/logger": "latest",
+        "@dockstat/logger": "workspace:*",
         "@dockstat/sqlite-wrapper": "workspace:*",
         "@dockstat/typings": "workspace:*",
       },
@@ -1287,8 +1287,6 @@
     "@dockstat/create-rr-elysia/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "@dockstat/docker-client/@dockstat/logger": ["@dockstat/logger@1.0.1", "", { "dependencies": { "@types/chalk": "^2.2.4", "@types/source-map-support": "^0.5.10", "chalk": "^5.6.2", "source-map-support": "^0.5.21" }, "peerDependencies": { "typescript": "^5.9.3" } }, "sha512-AmftXt4B5GrilRpj6Jwy0akZ3wgn0Ko6r1BBZRDVCY1MsyP1qqETTPlpHLcezA+tUg9ZLJ+H14BIdtwQlbOk7g=="],
-
-    "@dockstat/plugin-handler/@dockstat/logger": ["@dockstat/logger@1.0.1", "", { "dependencies": { "@types/chalk": "^2.2.4", "@types/source-map-support": "^0.5.10", "chalk": "^5.6.2", "source-map-support": "^0.5.21" }, "peerDependencies": { "typescript": "^5.9.3" } }, "sha512-AmftXt4B5GrilRpj6Jwy0akZ3wgn0Ko6r1BBZRDVCY1MsyP1qqETTPlpHLcezA+tUg9ZLJ+H14BIdtwQlbOk7g=="],
 
     "@dockstat/typings/@dockstat/logger": ["@dockstat/logger@1.0.1", "", { "dependencies": { "@types/chalk": "^2.2.4", "@types/source-map-support": "^0.5.10", "chalk": "^5.6.2", "source-map-support": "^0.5.21" }, "peerDependencies": { "typescript": "^5.9.3" } }, "sha512-AmftXt4B5GrilRpj6Jwy0akZ3wgn0Ko6r1BBZRDVCY1MsyP1qqETTPlpHLcezA+tUg9ZLJ+H14BIdtwQlbOk7g=="],
 
