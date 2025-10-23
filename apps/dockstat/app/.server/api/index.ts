@@ -1,18 +1,12 @@
 import Elysia from "elysia";
-import { DatabaseElysiaInstance } from "./database";
-import {
-  openapi
-} from '@elysiajs/openapi'
+import DatabaseElysiaInstance from "./database";
+import DockStatElysiaHandlers from "./handlers";
+import DockStatElysiaPlugins from "./elysiaPlugins";
 
 export const DockStatAPI = new Elysia({ prefix: "/api" })
-  .use(
-    openapi({
-      path: "/docs",
-      provider: "scalar",
-    })
-  )
-  .get("/status", ({ request }) => ({
-    _id: request.headers.get("x-dockstatapi-requestid"),
+  .use(DockStatElysiaHandlers)
+  .use(DockStatElysiaPlugins)
+  .get("/status", () => ({
     message: "Looking goood",
     status: 200
   }))

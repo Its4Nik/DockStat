@@ -9,6 +9,8 @@ if (Bun.env.DOCKSTAT_LOGGER_FULL_FILE_PATH === "true") {
   callerMatchesDepth = 1
 }
 
+const DISABLED_LOGGERS: string[] = (Bun.env.DOCKSTAT_LOGGER_DISABLED_LOGGERS || "").split(",")
+
 function stringToHash(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -34,12 +36,6 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
   const f = (n: number) =>
     pl - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
   return [255 * f(0), 255 * f(8), 255 * f(4)];
-}
-
-function colorByReqID(reqId: string): string {
-  const hash = stringToHash(reqId);
-  const [r, g, b] = hashToColor(hash);
-  return chalk.rgb(Math.round(r), Math.round(g), Math.round(b))(reqId);
 }
 
 // Helper to get file and line info from stack trace
@@ -71,47 +67,38 @@ const levelColors: Record<LogLevel, (msg: string) => string> = {
   debug: chalk.blue.bold,
 };
 
-function formatMessage(
-  level: LogLevel,
-  prefix: string,
-  message: string,
-  parents: string[],
-  requestID?: string
-): string {
-  const timestamp = chalk.magenta(new Date().toISOString().slice(11, 19)); // HH:mm:ss
-  const coloredLevel = levelColors[level](level.toUpperCase());
-  const callerInfo = chalk.blue(getCallerInfo());
-
-  const coloredPrefix = parents.length >= 1 ? `[${chalk.cyan(prefix)}${chalk.yellow(
-    `@${parents.join("@")}`
-  )}` : `[${chalk.cyan(prefix)}`
-  const msgPrefix = `${timestamp} ${requestID ? `(${colorByReqID(requestID)}) ` : ""}${coloredPrefix} ${callerInfo} ${coloredLevel}]`;
-  return `${msgPrefix} : ${chalk.grey(message)}`;
-}
-
 class Logger {
   protected name: string;
-  protected parents: string[];
+  protected parents: string[] = [];
+  public reqFrom: Record<string, string> = {}
+  public disabled: boolean
 
   constructor(prefix: string, parents: string[] = []) {
     this.name = prefix;
     this.parents = parents;
+
+    this.disabled = DISABLED_LOGGERS.includes(prefix)
+    this.debug(`Logger Status: ${this.disabled ? "disabled" : "active"}`)
   }
 
   error(msg: string, requestid?: string) {
-    console.error(formatMessage("error", this.name, msg, this.parents, requestid));
+    if (!this.disabled)
+      console.error(this.formatMessage("error", msg, requestid));
   }
 
   warn(msg: string, requestid?: string) {
-    console.warn(formatMessage("warn", this.name, msg, this.parents, requestid));
+    if (!this.disabled)
+      console.warn(this.formatMessage("warn", msg, requestid));
   }
 
   info(msg: string, requestid?: string) {
-    console.info(formatMessage("info", this.name, msg, this.parents, requestid));
+    if (!this.disabled)
+      console.info(this.formatMessage("info", msg, requestid));
   }
 
   debug(msg: string, requestid?: string) {
-    console.debug(formatMessage("debug", this.name, msg, this.parents, requestid));
+    if (!this.disabled)
+      console.debug(this.formatMessage("debug", msg, requestid));
   }
 
   getParents(): string[] {
@@ -129,6 +116,51 @@ class Logger {
 
   addParents(parents: string[]) {
     this.parents = parents
+  }
+
+  setReqFrom(reqId: string, from: string) {
+    this.reqFrom[reqId] = from
+  }
+
+  clearReqFrom(reqId: string) {
+    this.reqFrom[reqId] = ""
+  }
+
+  private formatMessage(
+    level: LogLevel,
+    message: string,
+    requestID?: string
+  ) {
+    const timestamp = chalk.magenta(new Date().toISOString().slice(11, 19)); // HH:mm:ss
+
+    const coloredLevel = levelColors[level](level.toUpperCase());
+
+    const callerInfo = chalk.blue(getCallerInfo());
+
+    const coloredPrefix = this.parents.length >= 1 ? `[${chalk.cyan(this.name)}${chalk.yellow(
+      `@${this.parents.join("@")}`
+    )}` : `[${chalk.cyan(this.name)}`
+
+    const msgRequest = `${requestID ? `(${this.colorByReqID(requestID)}${this.reqFrom[requestID].length > 0 ? `@${chalk.green(this.reqFrom[requestID])}` : ""}) ` : ""}`
+
+    const msgPrefix = `${timestamp} ${msgRequest}${coloredPrefix} ${callerInfo} ${coloredLevel}]`;
+
+    return `${msgPrefix} : ${chalk.grey(message)}`;
+  }
+
+  private cleanReqId(reqId: string) {
+    if (reqId.includes("|")) {
+      this.reqFrom[reqId] = reqId.split("|")[1]
+      return reqId.split("|")[0]
+    }
+    return reqId
+  }
+
+  private colorByReqID(rawReqId: string): string {
+    const reqId = this.cleanReqId(rawReqId)
+    const hash = stringToHash(reqId);
+    const [r, g, b] = hashToColor(hash);
+    return chalk.rgb(Math.round(r), Math.round(g), Math.round(b))(reqId);
   }
 }
 

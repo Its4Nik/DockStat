@@ -2,7 +2,7 @@ import { useLoaderData } from "react-router";
 import { api } from "~/.server/treaty";
 
 export const loader = async () => {
-  return await api.db["dockstat-config"].get()
+  return (await api.db["dockstat-config"].get())
 };
 
 export default function Test() {
@@ -10,8 +10,9 @@ export default function Test() {
   return (
     <main>
       test
+      <br />
       <span>
-        {data}
+        {JSON.stringify(data)}
       </span>
     </main>
   );

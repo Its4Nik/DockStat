@@ -1,0 +1,13 @@
+{
+  "name": "@dockstat/utils",
+  "main": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@dockstat/logger": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

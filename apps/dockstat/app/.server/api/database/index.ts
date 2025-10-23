@@ -1,8 +1,8 @@
-import Elysia, { t } from "elysia";
+import Elysia from "elysia";
 import { DockStatConfigTable, UpdateDockStatConfigTableResponse } from "@dockstat/typings/schemas";
 import { DockStatDB } from "~/.server/db";
 
-export const DatabaseElysiaInstance = new Elysia({ prefix: "/db" })
+const DatabaseElysiaInstance = new Elysia({ prefix: "/db" })
   .post("/dockstat-config", ({ body }) => {
     const updateRes = DockStatDB.configTable.where({ id: 0 }).update(body)
     const newConfig = DockStatDB.configTable.select(["*"]).where({ id: 0 }).get()
@@ -17,4 +17,18 @@ export const DatabaseElysiaInstance = new Elysia({ prefix: "/db" })
       body: DockStatConfigTable,
       response: UpdateDockStatConfigTableResponse
     })
-  .get("/dockstat-config", () => "Hi")
+  .get("/dockstat-config", () => {
+    const data = DockStatDB.configTable.select(["*"]).where({ id: 0 }).get()
+
+    if (!data) {
+      throw new Error("No Config found!")
+    }
+
+    return {
+      message: "Received DockStat config",
+      code: 200,
+      config: data
+    }
+  })
+
+export default DatabaseElysiaInstance

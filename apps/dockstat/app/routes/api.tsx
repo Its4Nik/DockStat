@@ -1,11 +1,10 @@
 import { ApiHandler } from "~/.server/treaty"
 import { Logger } from "@dockstat/logger"
+import { http } from "@dockstat/utils"
 import type { Route } from "./+types/api"
 
 const logger = new Logger("Api", ["RR", "DockStat"])
-const queryHandlerLoggger = new Logger("query-handler", logger.getParentsForLoggerChaining())
-
-const getReqId = () => Bun.randomUUIDv7().split('-')[4]
+const queryHandlerLoggger = new Logger("Query", logger.getParentsForLoggerChaining())
 
 async function query(req: Request, reqId: string) {
   req.headers.set("x-dockstatapi-requestid", reqId)
@@ -21,7 +20,7 @@ async function query(req: Request, reqId: string) {
   const loaderData = apiRes.loaderData[0]
 
   if (method === "GET") {
-    queryHandlerLoggger.info(`Returning loader data: ${JSON.stringify(loaderData).length} chars`, reqId)
+    queryHandlerLoggger.info(`Returning loader data: ${JSON.stringify(loaderData || {}).length} chars`, reqId)
     return loaderData
   }
 
@@ -33,20 +32,20 @@ async function query(req: Request, reqId: string) {
     }
   }
 
-  queryHandlerLoggger.warn(`Unknown API request: ${JSON.stringify(apiRes)}`)
-  queryHandlerLoggger.debug('Returning default (loaderData[0])')
+  queryHandlerLoggger.warn(`Unknown API request: ${JSON.stringify(apiRes)}`, reqId)
+  queryHandlerLoggger.debug('Returning default (loaderData[0])', reqId)
 
   return loaderData
 }
 
 export async function loader({ request, params }: Route.LoaderArgs) {
-  const reqId = getReqId()
+  const reqId = http.requestId.getRequestID(true)
   logger.info(`[GET] Requested Api Route: ${params["*"]}`, reqId)
   return await query(request, reqId)
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
-  const reqId = getReqId()
+  const reqId = http.requestId.getRequestID(true)
   logger.info(`[POST] Requested Api Route: ${params["*"]}`)
   return await query(request, reqId)
 }

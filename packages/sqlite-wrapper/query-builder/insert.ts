@@ -21,7 +21,7 @@ export class InsertQueryBuilder<
     data: Partial<T> | Partial<T>[],
     options?: InsertOptions,
   ): InsertResult {
-    this.getLogger().debug(`Building Data Array: ${data}`)
+    this.getLogger("INSERT").debug(`Building Data Array: ${data}`)
     const rows = Array.isArray(data) ? data : [data];
 
 
@@ -29,7 +29,7 @@ export class InsertQueryBuilder<
     // Transform rows to handle JSON serialization
     const transformedRows = rows.map((row) => this.transformRowToDb(row));
 
-    this.getLogger().debug(`Transformed row: ${JSON.stringify(transformedRows)}`)
+    this.getLogger("INSERT").debug(`Transformed row: ${JSON.stringify(transformedRows)}`)
 
     if (transformedRows.length === 0) {
       throw new Error("insert: data cannot be empty");

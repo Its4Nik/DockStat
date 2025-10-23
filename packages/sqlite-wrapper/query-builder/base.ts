@@ -14,14 +14,25 @@ import { logger } from '..'
  * This class provides the foundation for all query operations.
  */
 export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
-  private logger = new Logger('Base', logger.getParentsForLoggerChaining())
+  protected logger = new Logger('QueryBuilder', logger.getParentsForLoggerChaining())
+  protected deleteLogger = new Logger('Delete', this.logger.getParentsForLoggerChaining())
+  protected insertLogger = new Logger('Insert', this.logger.getParentsForLoggerChaining())
+  protected selectLogger = new Logger('Select', this.logger.getParentsForLoggerChaining())
+  protected updateLogger = new Logger('Update', this.logger.getParentsForLoggerChaining())
+  protected whereLogger = new Logger('Where', this.logger.getParentsForLoggerChaining())
   protected state: QueryBuilderState<T>
 
   /**
    * Get the logger instance
    */
-  protected getLogger() {
-    return this.logger
+  protected getLogger(type: "DELETE" | "INSERT" | "SELECT" | "UPDATE" | "WHERE") {
+    switch (type) {
+      case "DELETE": return this.deleteLogger
+      case "INSERT": return this.insertLogger
+      case "SELECT": return this.selectLogger
+      case "UPDATE": return this.updateLogger
+      case "WHERE": return this.whereLogger
+    }
   }
 
   constructor(

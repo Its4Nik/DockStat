@@ -51,28 +51,28 @@ export class WhereQueryBuilder<
    * @param conditions - Object with column-value pairs for equality checks
    * @returns this for method chaining
    */
-   where(conditions: WhereCondition<T>): this {
-      for (const [column, value] of Object.entries(conditions)) {
-        // Remove any existing conditions for this column
-        this.removeExistingCondition(column);
+  where(conditions: WhereCondition<T>): this {
+    for (const [column, value] of Object.entries(conditions)) {
+      // Remove any existing conditions for this column
+      this.removeExistingCondition(column);
 
-        if (value === null || value === undefined) {
-          this.state.whereConditions.push(`${String(column)} IS NULL`);
-        } else {
-          this.state.whereConditions.push(`${String(column)} = ?`);
+      if (value === null || value === undefined) {
+        this.state.whereConditions.push(`${String(column)} IS NULL`);
+      } else {
+        this.state.whereConditions.push(`${String(column)} = ?`);
 
-          // Convert JavaScript boolean to SQLite integer (0/1)
-          let sqliteValue: SQLQueryBindings = value;
-          if (typeof value === 'boolean') {
-            sqliteValue = value ? 1 : 0;
-            this.getLogger().debug(`Converting boolean value ${value} to ${sqliteValue} for column ${column}`);
-          }
-
-          this.state.whereParams.push(sqliteValue);
+        // Convert JavaScript boolean to SQLite integer (0/1)
+        let sqliteValue: SQLQueryBindings = value;
+        if (typeof value === 'boolean') {
+          sqliteValue = value ? 1 : 0;
+          this.getLogger("WHERE").debug(`Converting boolean value ${value} to ${sqliteValue} for column ${column}`);
         }
+
+        this.state.whereParams.push(sqliteValue);
       }
-      return this;
     }
+    return this;
+  }
 
   /**
    * Add regex conditions. Note: regex conditions are applied client-side
