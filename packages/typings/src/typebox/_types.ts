@@ -1,23 +1,6 @@
 import type { DockStatConfigTable, Repo, TableMetaData, UpdateDockStatConfigTableResponse } from "./db";
 import type { Plugin, StaticPluginMeta } from "./plugins"
 
-
-export type {
-  BackendAction,
-  BackendContext,
-  ContainerHook,
-  ContainerHooksContext,
-  HostHook,
-  HostHookContext,
-  PluginBase,
-  PluginContextType,
-  PluginDataType,
-  PluginPermissions,
-  StackHook,
-  StackHookContext,
-  TableSchemaType,
-} from "./plugins";
-
 type DockStatConfigTableType = typeof DockStatConfigTable.static;
 type RepoType = typeof Repo.static;
 type TableMetaDataType = typeof TableMetaData.static;

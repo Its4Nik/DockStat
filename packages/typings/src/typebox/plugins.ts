@@ -19,6 +19,8 @@ export const PluginMeta = t.Object({
   tags: t.Optional(t.Array(t.String())),
 });
 
+export const PluinMetaElysa = t.Extends
+
 export type StaticPluginMeta = typeof PluginMeta.static
 
 export interface Plugin<Columns = Record<string, ColumnDefinition>> extends StaticPluginMeta, Record<string, unknown> {
