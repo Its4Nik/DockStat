@@ -2,6 +2,7 @@
   "name": "@dockstat/typings",
   "version": "1.0.0",
   "exports": {
+    ".": "./src/index.ts",
     "./schemas": "./src/typebox/_schemas.ts",
     "./types": "./src/typebox/_types.ts"
   },

@@ -150,58 +150,84 @@ export interface StreamOptions {
 
 export interface DockerStreamData {
   type:
-    | "container_stats"
-    | "host_metrics"
-    | "container_list"
-    | "all_stats"
-    | "error";
+  | "container_stats"
+  | "host_metrics"
+  | "container_list"
+  | "all_stats"
+  | "error";
   hostId: number;
   timestamp: number;
   data:
-    | ContainerStats
-    | ContainerStatsInfo
-    | HostMetrics
-    | ContainerInfo[]
-    | AllStatsResponse
-    | { error: Error };
+  | ContainerStats
+  | ContainerStatsInfo
+  | HostMetrics
+  | ContainerInfo[]
+  | AllStatsResponse
+  | { error: Error };
 }
 
 export type StreamCallback = (data: DockerStreamData) => void;
+interface BaseCtx {
+  logger: {
+    debug: (msg: string) => void
+    info: (msg: string) => void
+    error: (msg: string) => void
+    warn: (msg: string) => void
+  }
+}
+
+interface BaseHostCtx extends BaseCtx {
+  hostId: number,
+  hostName: string
+}
+
+interface HostHealthContext extends BaseHostCtx { healthy: boolean }
+interface HostMetricsContext extends BaseHostCtx { metrics: HostMetrics }
+
+interface ContainerBaseCtx extends BaseCtx {
+  hostId: number,
+  containerId: string,
+}
+
+interface ContainerStatsCtx extends ContainerBaseCtx {
+  stats: ContainerStatsInfo
+}
+
+interface ContainerInfoCtx extends ContainerBaseCtx {
+  containerInfo: ContainerInfo
+}
+
+interface BaseStreamCtx extends BaseCtx {
+  streamKey: string,
+  streamType: string
+}
+
+interface StreamDataCtx extends BaseStreamCtx {
+  data: DockerStreamData
+}
+
+interface StreamErrorCtx extends BaseStreamCtx {
+  error: Error
+}
 
 export interface DockerClientEvents {
-  "host:added": (hostId: number, hostName: string) => void;
-  "host:removed": (hostId: number, hostName: string) => void;
-  "host:updated": (hostId: number, hostName: string) => void;
-  "host:health:changed": (hostId: number, healthy: boolean) => void;
-  "host:metrics": (hostId: number, metrics: HostMetrics) => void;
+  "host:added": (ctx: BaseHostCtx) => void;
+  "host:removed": (ctx: BaseHostCtx) => void;
+  "host:updated": (ctx: BaseHostCtx) => void;
+  "host:health:changed": (ctx: HostHealthContext) => void;
+  "host:metrics": (ctx: HostMetricsContext) => void;
 
-  "container:stats": (
-    hostId: number,
-    containerId: string,
-    stats: ContainerStatsInfo
-  ) => void;
-  "container:started": (
-    hostId: number,
-    containerId: string,
-    containerInfo: ContainerInfo
-  ) => void;
-  "container:stopped": (
-    hostId: number,
-    containerId: string,
-    containerInfo: ContainerInfo
-  ) => void;
-  "container:removed": (hostId: number, containerId: string) => void;
-  "container:created": (
-    hostId: number,
-    containerId: string,
-    containerInfo: ContainerInfo
-  ) => void;
-  "container:died": (hostId: number, containerId: string) => void;
+  "container:stats": (ctx: ContainerStatsCtx) => void;
+  "container:started": (ctx: ContainerInfoCtx) => void;
+  "container:stopped": (ctx: ContainerInfoCtx) => void;
+  "container:removed": (ctx: ContainerBaseCtx) => void;
+  "container:created": (ctx: ContainerInfoCtx) => void;
+  "container:died": (ctx: ContainerBaseCtx) => void;
 
-  "stream:started": (streamKey: string, streamType: string) => void;
-  "stream:stopped": (streamKey: string, streamType: string) => void;
-  "stream:data": (streamKey: string, data: DockerStreamData) => void;
-  "stream:error": (streamKey: string, error: Error) => void;
+  "stream:started": (ctx: BaseStreamCtx) => void;
+  "stream:stopped": (ctx: BaseStreamCtx) => void;
+  "stream:data": (ctx: StreamDataCtx) => void;
+  "stream:error": (ctx: StreamErrorCtx) => void;
 
   error: (
     error: Error,
@@ -256,22 +282,22 @@ export interface StreamMessage {
   type: "subscribe" | "unsubscribe" | "data" | "error" | "ping" | "pong";
   channel?: string;
   data?:
-    | ContainerStatsInfo
-    | HostMetrics
-    | HostMetrics[]
-    | ContainerInfo[]
-    | ContainerLogs
-    | AllStatsResponse
-    | {
-        eventType: string;
-        args: unknown[];
-      }
-    | {
-        subscriptionId: string;
-        channel: string;
-        status: "subscribed" | "unsubscribed" | "not_found";
-        options: StreamOptions;
-      };
+  | ContainerStatsInfo
+  | HostMetrics
+  | HostMetrics[]
+  | ContainerInfo[]
+  | ContainerLogs
+  | AllStatsResponse
+  | {
+    eventType: string;
+    args: unknown[];
+  }
+  | {
+    subscriptionId: string;
+    channel: string;
+    status: "subscribed" | "unsubscribed" | "not_found";
+    options: StreamOptions;
+  };
   timestamp: number;
   error?: string;
 }
@@ -310,12 +336,12 @@ export interface StreamOptions {
 export interface StreamChannel {
   name: string;
   type:
-    | "container_stats"
-    | "host_metrics"
-    | "container_list"
-    | "container_logs"
-    | "docker_events"
-    | "all_stats";
+  | "container_stats"
+  | "host_metrics"
+  | "container_list"
+  | "container_logs"
+  | "docker_events"
+  | "all_stats";
   description: string;
   defaultInterval: number;
   requiresHostId: boolean;

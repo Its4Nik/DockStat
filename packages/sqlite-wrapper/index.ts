@@ -11,6 +11,7 @@ import type {
   TableConstraints,
   TableOptions,
   TableSchema,
+  TypedTableSchema,
 } from "./types";
 
 export const logger = new Logger("Sqlite-Wrapper");
@@ -218,10 +219,10 @@ class DB {
   createTable<_T extends Record<string, unknown>>(
     tableName: string,
     columns:
-      | string
-      | Record<string, string>
       | Record<Extract<keyof _T, string>, ColumnDefinition>
-      | TableSchema,
+      | Record<string, string>
+      | TableSchema
+      | string,
     options?: TableOptions<_T>
   ): QueryBuilder<_T> {
     const temp = options?.temporary ? "TEMPORARY " : "";
@@ -506,7 +507,6 @@ class DB {
         `GENERATED ALWAYS AS (${colDef.generated.expression}) ${storageType}`
       );
     }
-
     return parts.join(" ");
   }
 

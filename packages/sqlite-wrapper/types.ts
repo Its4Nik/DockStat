@@ -42,6 +42,9 @@ export const SQLiteTypes = {
 
   // JSON (stored as TEXT)
   JSON: "JSON" as const,
+
+  // Functions (stored as TEXT)
+  FUNCTION: "TEXT" as const
 } as const;
 
 export type SQLiteType = (typeof SQLiteTypes)[keyof typeof SQLiteTypes];
@@ -185,6 +188,9 @@ export interface ColumnConstraints {
   };
   /** Column comment (stored as metadata, not in schema) */
   comment?: string;
+
+  /** Is column a function */
+  isFunction: boolean
 }
 
 /**
@@ -455,6 +461,16 @@ export const column = {
       ? defaultExpr("datetime('now')")
       : defaultExpr("strftime('%s', 'now')"),
     ...constraints,
+  }),
+
+  /**
+   * Creates a function Column that will be parsed and transpiled using Bun.transpiler
+   */
+  function: (
+    constraints?: ColumnConstraints
+  ): ColumnDefinition => ({
+    type: "TEXT",
+    ...constraints
   }),
 
   /**
