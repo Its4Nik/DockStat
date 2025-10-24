@@ -14,9 +14,10 @@ export const PluginMeta = t.Object({
     name: t.String(),
     website: t.Nullable(t.String({ format: "uri" })),
     license: t.String({ default: "MIT" }),
-    email: t.Nullable(t.String({ format: "email" }))
-  })
-})
+    email: t.Nullable(t.String({ format: "email" })),
+  }),
+  tags: t.Optional(t.Array(t.String())),
+});
 
 export type StaticPluginMeta = typeof PluginMeta.static
 

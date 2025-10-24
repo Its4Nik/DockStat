@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@dockstat/typings": "workspace:*",
-    "@dockstat/logger": "latest",
+    "@dockstat/logger": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*"
   },
   "devDependencies": {

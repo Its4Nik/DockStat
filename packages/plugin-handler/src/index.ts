@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type DB from "@dockstat/sqlite-wrapper"
 import type { Plugin } from "@dockstat/typings/types"
@@ -75,5 +76,19 @@ export class PluginHandler {
         plugin.events[action]
       }
     }
+=======
+import type { type PluginBase } from "@dockstat/typings/types";
+import { DB, type QueryBuilder } from "@dockstat/sqlite-wrapper";
+import Logger from "@dockstat/logger";
+
+class PluginHandler {
+  private DB: DB;
+  private logger: Logger;
+  private table: QueryBuilder<PluginBase>;
+
+  constructor(db: DB, parents: string[]) {
+    this.DB = db;
+    this.logger = new Logger("PluginHandler", parents);
+>>>>>>> 9e3b5eb0a035e804e116473a7ed0dc2343132f18
   }
 }
