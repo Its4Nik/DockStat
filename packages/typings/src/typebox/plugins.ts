@@ -24,6 +24,7 @@ export const PluinMetaElysa = t.Extends
 export type StaticPluginMeta = typeof PluginMeta.static
 
 export interface Plugin<Columns = Record<string, ColumnDefinition>> extends StaticPluginMeta, Record<string, unknown> {
+  id?: number;
   table?: { name: string, columns: Columns, jsonColumns: (keyof Columns)[] }
   routes?: AnyElysia
   events?: Partial<DockerClientEvents>

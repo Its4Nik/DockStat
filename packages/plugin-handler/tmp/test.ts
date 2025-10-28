@@ -1,10 +1,11 @@
 import { column } from "@dockstat/sqlite-wrapper";
-import { definePlugin } from "../src/utils/builder";
+import type { Plugin } from "@dockstat/typings/types";
 
-export const MyPlugin = definePlugin({
+const MyPlugin = {
   name: 'DockStack',
   version: '1.0.0',
   description: '',
+  tags: [],
   type: 'github',
   repository: 'its4nik/dockstat',
   branch: 'dev',
@@ -26,5 +27,6 @@ export const MyPlugin = definePlugin({
       name: column.text(),
     },
   },
+} satisfies Plugin
 
-})
+export default MyPlugin

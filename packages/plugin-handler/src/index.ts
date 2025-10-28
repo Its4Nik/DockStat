@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
+import { column, type ColumnDefinition, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type DB from "@dockstat/sqlite-wrapper"
 import type { Plugin } from "@dockstat/typings/types"
 import type { DockerClientEvents } from "@dockstat/typings"
@@ -20,10 +19,10 @@ export class PluginHandler {
     this.logger.debug("Creating Plugin Table")
     this.table = this.DB.createTable<Plugin>("plugins", {
       id: column.id(),
-
       // Plugin Metadata
       name: column.text({ notNull: true, unique: true }),
       description: column.text({ notNull: false }),
+      tags: column.json(),
       version: column.text({ notNull: true }),
       repository: column.text({ notNull: true }),
       type: column.enum(["http", "github", "gitlab"]),
@@ -31,11 +30,12 @@ export class PluginHandler {
       manifest: column.text({ notNull: true }),
       author: column.json({ notNull: true }),
 
-      // Plugin Hooks / Actions
-      routes: column.function(),
+      routes: column.function({ functionConstraints: {} }),
 
+      // Plugin Hooks / Actions
       events: column.json()
-    }, { ifNotExists: true, jsonConfig: ["table", "routes", "ws", "events"] })
+
+    }, { ifNotExists: true, jsonConfig: ["table", "ws", "events"] })
   }
 
   public savePlugin(plugin: Plugin) {
@@ -63,7 +63,7 @@ export class PluginHandler {
     this.loadedPluginsMap.delete(id)
   }
 
-  public trigger(action: keyof DockerClientEvents) {
+  public triggerEvent(action: keyof DockerClientEvents) {
     if (!action) {
       throw new Error("No action defined!")
     }
@@ -76,19 +76,5 @@ export class PluginHandler {
         plugin.events[action]
       }
     }
-=======
-import type { type PluginBase } from "@dockstat/typings/types";
-import { DB, type QueryBuilder } from "@dockstat/sqlite-wrapper";
-import Logger from "@dockstat/logger";
-
-class PluginHandler {
-  private DB: DB;
-  private logger: Logger;
-  private table: QueryBuilder<PluginBase>;
-
-  constructor(db: DB, parents: string[]) {
-    this.DB = db;
-    this.logger = new Logger("PluginHandler", parents);
->>>>>>> 9e3b5eb0a035e804e116473a7ed0dc2343132f18
   }
 }

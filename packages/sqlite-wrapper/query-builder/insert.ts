@@ -24,8 +24,6 @@ export class InsertQueryBuilder<
     this.getLogger("INSERT").debug(`Building Data Array: ${data}`)
     const rows = Array.isArray(data) ? data : [data];
 
-
-
     // Transform rows to handle JSON serialization
     const transformedRows = rows.map((row) => this.transformRowToDb(row));
 

@@ -1,11 +1,14 @@
 import type { Database, SQLQueryBindings } from 'bun:sqlite'
 import Logger from '@dockstat/logger'
 import type {
+  ArrayKey,
   ColumnNames,
   DatabaseRowData,
-  JsonColumnConfig,
+
   OrderDirection,
+  Parser,
   QueryBuilderState,
+
 } from '../types'
 import { logger } from '..'
 
@@ -38,7 +41,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
   constructor(
     db: Database,
     tableName: string,
-    jsonConfig?: JsonColumnConfig<T>
+    parser?: Parser<T>
   ) {
     this.state = {
       db,
@@ -46,7 +49,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
       whereConditions: [],
       whereParams: [],
       regexConditions: [],
-      jsonColumns: jsonConfig,
+      parser: parser
     }
   }
 
@@ -210,7 +213,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    */
   protected transformRowToDb(row: Partial<T>): DatabaseRowData {
     this.logger.debug(`Transforming row (${JSON.stringify(row)}) to row Data`)
-    if (!this.state.jsonColumns || !row) {
+    if (!this.state.jsonColumns || !this.state.functionColumns || !row) {
       return row as DatabaseRowData
     }
 

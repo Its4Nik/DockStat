@@ -1,3 +1,4 @@
+import type { TranspilerOptions } from "bun";
 import type { Database, SQLQueryBindings } from "bun:sqlite";
 
 /**
@@ -189,8 +190,13 @@ export interface ColumnConstraints {
   /** Column comment (stored as metadata, not in schema) */
   comment?: string;
 
-  /** Is column a function */
-  isFunction: boolean
+  /** Function column specific constraints */
+  functionConstrains?: {
+    exports: string[]
+    default: boolean
+  };
+  /** Function source code validation */
+  //validateFunction?: boolean;
 }
 
 /**
@@ -268,7 +274,17 @@ export interface TableOptions<T> {
   /** Table comment */
   comment?: string;
 
-  jsonConfig?: JsonColumnConfig<T>
+  parser?: Parser<T>
+}
+
+export interface Parser<T> extends FunctionParser<T> {
+  JSON: ArrayKey<T>
+}
+
+interface FunctionParser<T> {
+  FUNCTION: Record<keyof T, {
+    transpiler_optioms: Bun.TranspilerOptions
+  }>
 }
 
 /**
@@ -469,7 +485,14 @@ export const column = {
   function: (
     constraints?: ColumnConstraints
   ): ColumnDefinition => ({
-    type: "TEXT",
+    type: SQLiteTypes.FUNCTION,
+    check: constraints?.functionConstrains ?
+      `JSON_VALID({{COLUMN}}) AND (SELECT COUNT(*) FROM json_each(JSON_EXTRACT({{COLUMN}}, '$.exports')) WHERE value IN (${constraints.functionConstrains.exports?.map(e => `'${e}'`).join(', ') || ''
+      })) = ${constraints.functionConstrains.exports?.length || 0}${constraints.functionConstrains.default ?
+        ` AND JSON_EXTRACT({{COLUMN}}, '$.default') = true` :
+        ''
+      }` :
+      undefined,
     ...constraints
   }),
 
@@ -562,7 +585,7 @@ export interface QueryBuilderState<T extends Record<string, unknown>> {
     column: keyof T;
     regex: RegExp;
   }>;
-  jsonColumns?: Array<keyof T>;
+  parser?: Parser<T>
 }
 
 /**
@@ -621,7 +644,7 @@ export interface InsertOptions {
 /**
  * JSON column configuration
  */
-export type JsonColumnConfig<T> = Array<keyof T>
+export type ArrayKey<T> = Array<keyof T>
 
 /**
  * Generic database row type

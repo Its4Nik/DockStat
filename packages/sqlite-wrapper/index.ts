@@ -2,11 +2,14 @@ import { Database, type SQLQueryBindings } from "bun:sqlite";
 import Logger from "@dockstat/logger"
 import { QueryBuilder } from "./query-builder/index";
 import type {
+  ArrayKey,
   ColumnConstraints,
   ColumnDefinition,
   DefaultExpression,
   ForeignKeyAction,
-  JsonColumnConfig,
+
+  Parser,
+
   SQLiteType,
   TableConstraints,
   TableOptions,
@@ -32,7 +35,7 @@ export type {
   ColumnNames,
   WhereCondition,
   RegexCondition,
-  JsonColumnConfig,
+  ArrayKey,
   TableSchema,
   ColumnDefinition,
   SQLiteType,
@@ -105,14 +108,14 @@ class DB {
    */
   table<T extends Record<string, unknown>>(
     tableName: string,
-    jsonConfig?: JsonColumnConfig<T>
+    parser: Partial<Parser<T>>
   ): QueryBuilder<T> {
     logger.debug(
-      `Creating QueryBuilder for table: ${tableName} - JSONConfig: ${JSON.stringify(
-        jsonConfig
-      )}`
+      `Creating QueryBuilder for table: ${tableName} - JSON Columns: ${JSON.stringify(
+        parser.JSON
+      )} - Function columns: ${JSON.stringify(parser.FUNCTION)}`
     );
-    return new QueryBuilder<T>(this.db, tableName, jsonConfig);
+    return new QueryBuilder<T>(this.db, tableName, parser);
   }
 
   /**
@@ -219,10 +222,8 @@ class DB {
   createTable<_T extends Record<string, unknown>>(
     tableName: string,
     columns:
-      | Record<Extract<keyof _T, string>, ColumnDefinition>
-      | Record<string, string>
-      | TableSchema
-      | string,
+      | Record<keyof _T, ColumnDefinition>
+      | TableSchema,
     options?: TableOptions<_T>
   ): QueryBuilder<_T> {
     const temp = options?.temporary ? "TEMPORARY " : "";
@@ -234,14 +235,8 @@ class DB {
     let columnDefs: string;
     let tableConstraints: string[] = [];
 
-    if (typeof columns === "string") {
-      // Original string-based approach
-      columnDefs = columns.trim();
-      if (!columnDefs) {
-        throw new Error("Empty column definition string");
-      }
-    } else if (this.isTableSchema(columns)) {
-      // New comprehensive type-safe approach
+    if (this.isTableSchema(columns)) {
+      //  comprehensive type-safe approach
       const parts: string[] = [];
       for (const [colName, colDef] of Object.entries(columns)) {
         if (!colName) continue;
@@ -265,7 +260,7 @@ class DB {
       for (const [col, def] of Object.entries(columns)) {
         if (!col) continue;
 
-        const defTrim = (def ?? "").trim();
+        const defTrim = (def || "").trim();
         if (!defTrim) {
           throw new Error(`Missing SQL type/constraints for column "${col}"`);
         }
@@ -292,7 +287,7 @@ class DB {
       this.setTableComment(tableName, options.comment);
     }
 
-    return this.table<_T>(tableName, options?.jsonConfig);
+    return this.table<_T>(tableName, options?.parser);
   }
 
   /**

@@ -1,5 +1,5 @@
 import type { Database, SQLQueryBindings } from 'bun:sqlite'
-import type { ColumnNames, JsonColumnConfig, OrderDirection } from '../types'
+import type { ColumnNames, OrderDirection, Parser } from '../types'
 import { WhereQueryBuilder } from './where'
 
 /**
@@ -18,9 +18,9 @@ export class SelectQueryBuilder<
   constructor(
     db: Database,
     tableName: string,
-    jsonConfig?: JsonColumnConfig<T>
+    parser: Parser<T>
   ) {
-    super(db, tableName, jsonConfig)
+    super(db, tableName, parser)
     this.selectedColumns = ['*']
     this.orderDirection = 'ASC'
   }
@@ -180,7 +180,7 @@ export class SelectQueryBuilder<
     if (!this.hasRegexConditions()) {
       const [query, params] = this.buildSelectQuery(true)
       this.getLogger("SELECT").debug(
-        `Executing SELECT query - query: ${query}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.jsonColumns}`
+        `Executing SELECT query - query: ${query}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.parser?.JSON}`
       )
       const rows = this.getDb()
         .prepare(query, params)
@@ -194,7 +194,7 @@ export class SelectQueryBuilder<
 
     const [query, params] = this.buildSelectQuery(false)
     this.getLogger("SELECT").debug(
-      `Executing SELECT query with regex conditions - query: ${query}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.jsonColumns}`
+      `Executing SELECT query with regex conditions - query: ${query}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.parser?.JSON}`
     )
     const rows = this.getDb()
       .prepare(query)
@@ -220,7 +220,7 @@ export class SelectQueryBuilder<
       const [query, params] = this.buildSelectQuery(true)
       const q = query.includes('LIMIT') ? query : `${query} LIMIT 1`
       this.getLogger("SELECT").debug(
-        `Executing single-row SELECT query - query: ${q}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.jsonColumns}`
+        `Executing single-row SELECT query - query: ${q}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.parser?.JSON}`
       )
       const row = this.getDb()
         .prepare(q)
@@ -241,7 +241,6 @@ export class SelectQueryBuilder<
         `get() - path 2: ${JSON.stringify({
           query,
           params,
-          hasJsonColumns: !!this.state.jsonColumns,
         })}`
       )
       const row = this.getDb()
