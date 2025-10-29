@@ -9,18 +9,18 @@ export const DockStatAPI = new Elysia({ prefix: "/api" })
   .use(DockStatElysiaPlugins)
   .get("/status", () => ({
     message: "Looking goood",
-    status: 200
+    status: 200,
   }))
   .use(DatabaseElysiaInstance)
-  .use(PluginElysiaInstance)
+  .use(PluginElysiaInstance);
 
 if (import.meta.main) {
-  DockStatAPI.listen(3000, console.log)
-  console.log("DockStatAPI is running in dev mode, see the docs: https://localhost:3000/api/docs")
+  DockStatAPI.listen(3000, console.log);
+  console.log(
+    "DockStatAPI is running in dev mode, see the docs: https://localhost:3000/api/docs",
+  );
 }
 
-export {
-  DatabaseElysiaInstance
-}
+export { DatabaseElysiaInstance };
 
-export type DockStatAPIType = typeof DockStatAPI
+export type DockStatAPIType = typeof DockStatAPI;

@@ -1,26 +1,18 @@
 import { Database, type SQLQueryBindings } from "bun:sqlite";
-import Logger from "@dockstat/logger"
+import Logger from "@dockstat/logger";
 import { QueryBuilder } from "./query-builder/index";
 import type {
-  ArrayKey,
-  ColumnConstraints,
   ColumnDefinition,
-  DefaultExpression,
-  ForeignKeyAction,
-
   Parser,
-
-  SQLiteType,
   TableConstraints,
   TableOptions,
   TableSchema,
-  TypedTableSchema,
 } from "./types";
 
 export const logger = new Logger("Sqlite-Wrapper");
 
 export function addLoggerParents(parents: string[]) {
-  logger.addParents(parents)
+  logger.addParents(parents);
 }
 
 /**
@@ -82,7 +74,7 @@ class DB {
     options?: {
       pragmas?: Array<[string, SQLQueryBindings]>;
       loadExtensions?: string[];
-    }
+    },
   ) {
     logger.info(`Opening database: ${path}`);
     this.db = new Database(path);
@@ -108,17 +100,17 @@ class DB {
    */
   table<T extends Record<string, unknown>>(
     tableName: string,
-    parser: Partial<Parser<T>>
+    parser: Partial<Parser<T>>,
   ): QueryBuilder<T> {
     const pObj = {
       JSON: parser.JSON || [],
-      MODULE: parser.MODULE || {}
-    }
+      MODULE: parser.MODULE || {},
+    };
 
     logger.debug(
       `Creating QueryBuilder for table: ${tableName} - JSON Columns: ${JSON.stringify(
-        parser.JSON
-      )} - Function columns: ${JSON.stringify(pObj.MODULE)}`
+        parser.JSON,
+      )} - Function columns: ${JSON.stringify(pObj.MODULE)}`,
     );
     return new QueryBuilder<T>(this.db, tableName, pObj);
   }
@@ -226,10 +218,8 @@ class DB {
    */
   createTable<_T extends Record<string, unknown>>(
     tableName: string,
-    columns:
-      | Record<keyof _T, ColumnDefinition>
-      | TableSchema,
-    options?: TableOptions<_T>
+    columns: Record<keyof _T, ColumnDefinition> | TableSchema,
+    options?: TableOptions<_T>,
   ): QueryBuilder<_T> {
     const temp = options?.temporary ? "TEMPORARY " : "";
     const ifNot = options?.ifNotExists ? "IF NOT EXISTS " : "";
@@ -237,7 +227,10 @@ class DB {
 
     const quoteIdent = (s: string) => `"${s.replace(/"/g, '""')}"`;
 
+    let columnDefs: string;
     let tableConstraints: string[] = [];
+
+    console.log(columns);
 
     if (this.isTableSchema(columns)) {
       //  comprehensive type-safe approach
@@ -253,17 +246,41 @@ class DB {
         throw new Error("No columns provided");
       }
 
+      columnDefs = parts.join(", ");
+
       // Add table-level constraints
       if (options?.constraints) {
         tableConstraints = this.buildTableConstraints(options.constraints);
       }
+    } else {
+      // Original object-based approach
+      const parts: string[] = [];
+      for (const [col, def] of Object.entries(
+        columns as Record<string, string>,
+      )) {
+        if (!col) continue;
+
+        const defTrim = (def || "").trim();
+        if (!defTrim) {
+          throw new Error(`Missing SQL type/constraints for column "${col}"`);
+        }
+        parts.push(`${quoteIdent(col)} ${defTrim}`);
+      }
+
+      if (parts.length === 0) {
+        throw new Error("No columns provided");
+      }
+      columnDefs = parts.join(", ");
     }
 
-    // Combine column definitions and table constraints
-    const allDefinitions = [...tableConstraints].join(", ");
+    const allDefinitions = [columnDefs, ...tableConstraints].join(", ");
+
+    logger.debug(
+      `Creating table (${tableName}) inMem=${temp.length > 1 ? true : false} ifNot=${ifNot.length > 1 ? true : false} withoutRowID=${withoutRowId.length > 1 ? true : false} - Definitions: ${JSON.stringify(allDefinitions)}`,
+    );
 
     const sql = `CREATE ${temp}TABLE ${ifNot}${quoteIdent(
-      tableName
+      tableName,
     )} (${allDefinitions})${withoutRowId};`;
 
     this.db.run(sql);
@@ -276,7 +293,7 @@ class DB {
     const pObj = {
       JSON: (options?.parser ?? { JSON: [] }).JSON,
       MODULE: (options?.parser ?? { MODULE: {} }).MODULE,
-    }
+    };
 
     return this.table<_T>(tableName, pObj);
   }
@@ -293,7 +310,7 @@ class DB {
       ifNotExists?: boolean;
       where?: string;
       partial?: string;
-    }
+    },
   ): void {
     const unique = options?.unique ? "UNIQUE " : "";
     const ifNot = options?.ifNotExists ? "IF NOT EXISTS " : "";
@@ -304,7 +321,7 @@ class DB {
       : quoteIdent(columns);
 
     let sql = `CREATE ${unique}INDEX ${ifNot}${quoteIdent(
-      indexName
+      indexName,
     )} ON ${quoteIdent(tableName)} (${columnList})`;
 
     if (options?.where) {
@@ -412,7 +429,7 @@ class DB {
     if (colDef.autoincrement) {
       if (!colDef.type.includes("INT") || !colDef.primaryKey) {
         throw new Error(
-          `AUTOINCREMENT can only be used with INTEGER PRIMARY KEY columns (column: ${columnName})`
+          `AUTOINCREMENT can only be used with INTEGER PRIMARY KEY columns (column: ${columnName})`,
         );
       }
       parts.push("AUTOINCREMENT");
@@ -462,7 +479,7 @@ class DB {
     if (colDef.check) {
       const checkConstraint = colDef.check.replace(
         /\{\{COLUMN\}\}/g,
-        `"${columnName.replace(/"/g, '""')}"`
+        `"${columnName.replace(/"/g, '""')}"`,
       );
       parts.push(`CHECK (${checkConstraint})`);
     }
@@ -472,7 +489,7 @@ class DB {
       const ref = colDef.references;
       let refClause = `REFERENCES "${ref.table.replace(
         /"/g,
-        '""'
+        '""',
       )}"("${ref.column.replace(/"/g, '""')}")`;
 
       if (ref.onDelete) {
@@ -490,7 +507,7 @@ class DB {
     if (colDef.generated) {
       const storageType = colDef.generated.stored ? "STORED" : "VIRTUAL";
       parts.push(
-        `GENERATED ALWAYS AS (${colDef.generated.expression}) ${storageType}`
+        `GENERATED ALWAYS AS (${colDef.generated.expression}) ${storageType}`,
       );
     }
     return parts.join(" ");
@@ -548,7 +565,7 @@ class DB {
 
         let fkClause = `FOREIGN KEY (${columns}) REFERENCES "${fk.references.table.replace(
           /"/g,
-          '""'
+          '""',
         )}" (${refColumns})`;
 
         if (fk.references.onDelete) {
@@ -745,7 +762,7 @@ class DB {
     pk: number;
   }> {
     const stmt = this.db.prepare(
-      `PRAGMA table_info("${tableName.replace(/"/g, '""')}")`
+      `PRAGMA table_info("${tableName.replace(/"/g, '""')}")`,
     );
     return stmt.all() as Array<{
       cid: number;
@@ -771,7 +788,7 @@ class DB {
     match: string;
   }> {
     const stmt = this.db.prepare(
-      `PRAGMA foreign_key_list("${tableName.replace(/"/g, '""')}")`
+      `PRAGMA foreign_key_list("${tableName.replace(/"/g, '""')}")`,
     );
     return stmt.all() as Array<{
       id: number;
@@ -795,7 +812,7 @@ class DB {
     partial: number;
   }> {
     const stmt = this.db.prepare(
-      `PRAGMA index_list("${tableName.replace(/"/g, '""')}")`
+      `PRAGMA index_list("${tableName.replace(/"/g, '""')}")`,
     );
     return stmt.all() as Array<{
       name: string;

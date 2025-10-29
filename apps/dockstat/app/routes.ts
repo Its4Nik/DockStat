@@ -3,5 +3,5 @@ import { flatRoutes } from "@react-router/fs-routes";
 
 export default [
   route("/test", "./routes/test.tsx"),
-  route("/api/*", "./routes/api.tsx")
+  route("/api/*", "./routes/api.tsx"),
 ] satisfies RouteConfig;

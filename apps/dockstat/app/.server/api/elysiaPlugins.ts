@@ -1,14 +1,11 @@
 import Elysia from "elysia";
-import {
-  openapi
-} from '@elysiajs/openapi'
+import { openapi } from "@elysiajs/openapi";
 
-const DockStatElysiaPlugins = new Elysia()
-  .use(
-    openapi({
-      path: "/docs",
-      provider: "scalar",
-    })
-  )
+const DockStatElysiaPlugins = new Elysia().use(
+  openapi({
+    path: "/docs",
+    provider: "scalar",
+  }),
+);
 
-export default DockStatElysiaPlugins
+export default DockStatElysiaPlugins;

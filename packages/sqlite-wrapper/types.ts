@@ -45,7 +45,7 @@ export const SQLiteTypes = {
   JSON: "JSON" as const,
 
   // Modules (stored as TEXT)
-  MODULE: "TEXT" as const
+  MODULE: "TEXT" as const,
 } as const;
 
 export type SQLiteType = (typeof SQLiteTypes)[keyof typeof SQLiteTypes];
@@ -189,12 +189,6 @@ export interface ColumnConstraints {
   };
   /** Column comment (stored as metadata, not in schema) */
   comment?: string;
-
-  /** Function column specific constraints */
-  moduleConstrains?: {
-    exports: string[]
-    default: boolean
-  };
 }
 
 /**
@@ -232,8 +226,10 @@ export interface ColumnDefinition extends ColumnConstraints {
  */
 export type TableSchema = Record<string, ColumnDefinition>;
 
-
-export type TypedTableSchema<T extends string = string> = Record<T, ColumnDefinition>;
+export type TypedTableSchema<T extends string = string> = Record<
+  T,
+  ColumnDefinition
+>;
 
 /**
  * Table constraint types
@@ -272,15 +268,15 @@ export interface TableOptions<T> {
   /** Table comment */
   comment?: string;
 
-  parser?: Partial<Parser<T>>
+  parser?: Partial<Parser<T>>;
 }
 
 export interface Parser<T> extends ModuleParser<T> {
-  JSON: ArrayKey<T>
+  JSON: ArrayKey<T>;
 }
 
 interface ModuleParser<T> {
-  MODULE: Partial<Record<keyof T, Bun.TranspilerOptions>>
+  MODULE: Partial<Record<keyof T, Bun.TranspilerOptions>>;
 }
 
 /**
@@ -453,8 +449,8 @@ export const column = {
     length: 36,
     default: constraints?.generateDefault
       ? defaultExpr(
-        "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))",
-      )
+          "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))",
+        )
       : constraints?.default,
     ...constraints,
   }),
@@ -478,19 +474,12 @@ export const column = {
   /**
    * Creates a function Column that will be parsed and transpiled using Bun.transpiler
    */
-  module: (
-    constraints?: ColumnConstraints
-  ): ColumnDefinition => ({
+  module: (constraints?: ColumnConstraints): ColumnDefinition => ({
     type: SQLiteTypes.MODULE,
-    comment: constraints?.comment || 'A simple Module column, with automatic serilisation and deserilisation using Bun.Transpiler()',
-    check: constraints?.moduleConstrains ?
-      `JSON_VALID({{COLUMN}}) AND (SELECT COUNT(*) FROM json_each(JSON_EXTRACT({{COLUMN}}, '$.exports')) WHERE value IN (${constraints.moduleConstrains.exports?.map(e => `'${e}'`).join(', ') || ''
-      })) = ${constraints.moduleConstrains.exports?.length || 0}${constraints.moduleConstrains.default ?
-        ` AND JSON_EXTRACT({{COLUMN}}, '$.default') = true` :
-        ''
-      }` :
-      undefined,
-    ...constraints
+    comment:
+      constraints?.comment ||
+      "A simple Module column, with automatic serilisation and deserilisation using Bun.Transpiler()",
+    ...constraints,
   }),
 
   /**
@@ -582,7 +571,7 @@ export interface QueryBuilderState<T extends Record<string, unknown>> {
     column: keyof T;
     regex: RegExp;
   }>;
-  parser?: Parser<T>
+  parser?: Parser<T>;
 }
 
 /**
@@ -641,7 +630,7 @@ export interface InsertOptions {
 /**
  * JSON column configuration
  */
-export type ArrayKey<T> = Array<keyof T>
+export type ArrayKey<T> = Array<keyof T>;
 
 /**
  * Generic database row type
