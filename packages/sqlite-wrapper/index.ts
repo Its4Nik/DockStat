@@ -110,12 +110,17 @@ class DB {
     tableName: string,
     parser: Partial<Parser<T>>
   ): QueryBuilder<T> {
+    const pObj = {
+      JSON: parser.JSON || [],
+      MODULE: parser.MODULE || {}
+    }
+
     logger.debug(
       `Creating QueryBuilder for table: ${tableName} - JSON Columns: ${JSON.stringify(
         parser.JSON
-      )} - Function columns: ${JSON.stringify(parser.FUNCTION)}`
+      )} - Function columns: ${JSON.stringify(pObj.MODULE)}`
     );
-    return new QueryBuilder<T>(this.db, tableName, parser);
+    return new QueryBuilder<T>(this.db, tableName, pObj);
   }
 
   /**
@@ -232,7 +237,6 @@ class DB {
 
     const quoteIdent = (s: string) => `"${s.replace(/"/g, '""')}"`;
 
-    let columnDefs: string;
     let tableConstraints: string[] = [];
 
     if (this.isTableSchema(columns)) {
@@ -248,33 +252,15 @@ class DB {
       if (parts.length === 0) {
         throw new Error("No columns provided");
       }
-      columnDefs = parts.join(", ");
 
       // Add table-level constraints
       if (options?.constraints) {
         tableConstraints = this.buildTableConstraints(options.constraints);
       }
-    } else {
-      // Original object-based approach
-      const parts: string[] = [];
-      for (const [col, def] of Object.entries(columns)) {
-        if (!col) continue;
-
-        const defTrim = (def || "").trim();
-        if (!defTrim) {
-          throw new Error(`Missing SQL type/constraints for column "${col}"`);
-        }
-        parts.push(`${quoteIdent(col)} ${defTrim}`);
-      }
-
-      if (parts.length === 0) {
-        throw new Error("No columns provided");
-      }
-      columnDefs = parts.join(", ");
     }
 
     // Combine column definitions and table constraints
-    const allDefinitions = [columnDefs, ...tableConstraints].join(", ");
+    const allDefinitions = [...tableConstraints].join(", ");
 
     const sql = `CREATE ${temp}TABLE ${ifNot}${quoteIdent(
       tableName
@@ -287,7 +273,12 @@ class DB {
       this.setTableComment(tableName, options.comment);
     }
 
-    return this.table<_T>(tableName, options?.parser);
+    const pObj = {
+      JSON: (options?.parser ?? { JSON: [] }).JSON,
+      MODULE: (options?.parser ?? { MODULE: {} }).MODULE,
+    }
+
+    return this.table<_T>(tableName, pObj);
   }
 
   /**

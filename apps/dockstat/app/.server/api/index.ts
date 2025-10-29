@@ -2,6 +2,7 @@ import Elysia from "elysia";
 import DatabaseElysiaInstance from "./database";
 import DockStatElysiaHandlers from "./handlers";
 import DockStatElysiaPlugins from "./elysiaPlugins";
+import PluginElysiaInstance from "./plugins";
 
 export const DockStatAPI = new Elysia({ prefix: "/api" })
   .use(DockStatElysiaHandlers)
@@ -11,6 +12,7 @@ export const DockStatAPI = new Elysia({ prefix: "/api" })
     status: 200
   }))
   .use(DatabaseElysiaInstance)
+  .use(PluginElysiaInstance)
 
 if (import.meta.main) {
   DockStatAPI.listen(3000, console.log)

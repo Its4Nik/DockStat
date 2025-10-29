@@ -1,5 +1,5 @@
 import type { DockStatConfigTable, Repo, TableMetaData, UpdateDockStatConfigTableResponse } from "./db";
-import type { Plugin, StaticPluginMeta } from "./plugins"
+import type { DBPlugin, Plugin, StaticPluginMeta } from "./plugins"
 
 type DockStatConfigTableType = typeof DockStatConfigTable.static;
 type RepoType = typeof Repo.static;
@@ -12,6 +12,7 @@ export type {
   RepoType,
   TableMetaDataType,
   UpdateDockStatConfigTableResponseType,
+  DBPlugin,
   Plugin,
   StaticPluginMeta
 }

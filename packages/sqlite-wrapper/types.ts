@@ -191,12 +191,10 @@ export interface ColumnConstraints {
   comment?: string;
 
   /** Function column specific constraints */
-  functionConstrains?: {
+  moduleConstrains?: {
     exports: string[]
     default: boolean
   };
-  /** Function source code validation */
-  //validateFunction?: boolean;
 }
 
 /**
@@ -483,10 +481,11 @@ export const column = {
   module: (
     constraints?: ColumnConstraints
   ): ColumnDefinition => ({
-    type: SQLiteTypes.FUNCTION,
-    check: constraints?.functionConstrains ?
-      `JSON_VALID({{COLUMN}}) AND (SELECT COUNT(*) FROM json_each(JSON_EXTRACT({{COLUMN}}, '$.exports')) WHERE value IN (${constraints.functionConstrains.exports?.map(e => `'${e}'`).join(', ') || ''
-      })) = ${constraints.functionConstrains.exports?.length || 0}${constraints.functionConstrains.default ?
+    type: SQLiteTypes.MODULE,
+    comment: constraints?.comment || 'A simple Module column, with automatic serilisation and deserilisation using Bun.Transpiler()',
+    check: constraints?.moduleConstrains ?
+      `JSON_VALID({{COLUMN}}) AND (SELECT COUNT(*) FROM json_each(JSON_EXTRACT({{COLUMN}}, '$.exports')) WHERE value IN (${constraints.moduleConstrains.exports?.map(e => `'${e}'`).join(', ') || ''
+      })) = ${constraints.moduleConstrains.exports?.length || 0}${constraints.moduleConstrains.default ?
         ` AND JSON_EXTRACT({{COLUMN}}, '$.default') = true` :
         ''
       }` :

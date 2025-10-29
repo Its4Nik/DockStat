@@ -1,13 +1,12 @@
-import { column, type ColumnDefinition, type QueryBuilder } from "@dockstat/sqlite-wrapper"
+import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type DB from "@dockstat/sqlite-wrapper"
-import type { Plugin } from "@dockstat/typings/types"
-import type { DockerClientEvents } from "@dockstat/typings"
+import type { DBPlugin, Plugin } from "@dockstat/typings/types"
 import Logger from "@dockstat/logger"
 
-export class PluginHandler {
+class PluginHandler {
   private loadedPluginsMap = new Map<number, Plugin>()
   private DB: DB
-  private table: QueryBuilder<Plugin>
+  private table: QueryBuilder<DBPlugin>
   private logger: Logger
 
   constructor(db: DB, loggerParents: string[] = []) {
@@ -17,7 +16,7 @@ export class PluginHandler {
     this.DB = db
 
     this.logger.debug("Creating Plugin Table")
-    this.table = this.DB.createTable<Plugin>("plugins", {
+    this.table = this.DB.createTable<DBPlugin>("plugins", {
       id: column.id(),
       // Plugin Metadata
       name: column.text({ notNull: true, unique: true }),
@@ -30,15 +29,23 @@ export class PluginHandler {
       manifest: column.text({ notNull: true }),
       author: column.json({ notNull: true }),
 
-      routes: column.function({ functionConstraints: {} }),
-
-      // Plugin Hooks / Actions
-      events: column.json()
-
-    }, { ifNotExists: true, jsonConfig: ["table", "ws", "events"] })
+      plugin: column.module({ moduleConstrains: { default: true, exports: [] } })
+    }, {
+      ifNotExists: true, parser: {
+        JSON: ["table", "ws", "events"],
+        MODULE: {
+          "plugin": {
+            loader: "ts",
+            minifyWhitespace: true,
+            allowBunRuntime: true,
+            target: "bun"
+          }
+        }
+      }
+    })
   }
 
-  public savePlugin(plugin: Plugin) {
+  public savePlugin(plugin: DBPlugin) {
     this.logger.debug(`Saving Plugin ${plugin.name} to DB`)
     return this.table.insert(plugin)
   }
@@ -48,33 +55,62 @@ export class PluginHandler {
     return this.table.where({ id: id }).delete()
   }
 
-  public loadPlugin(id: number) {
-    this.logger.debug(`Loading Plugin ${id}`)
-    const data = this.table.select(["*"]).where({ id: id }).first()
-    if (data) {
-      this.loadedPluginsMap.set(id, data)
-    } else {
-      this.logger.error(`Plugin ${id} not found in DB`)
-    }
-  }
+  public async loadPlugins() {
+    const plugins = this.table.select(["*"]).all()
 
-  public unLoadPlugin(id: number) {
-    this.logger.debug(`Unloading Plugin ${id}`)
-    this.loadedPluginsMap.delete(id)
-  }
+    const loadedPlugins = this.loadedPluginsMap
 
-  public triggerEvent(action: keyof DockerClientEvents) {
-    if (!action) {
-      throw new Error("No action defined!")
-    }
+    const validPlugins = plugins.filter((p): p is DBPlugin => {
+      if (loadedPlugins.get(p.id as number)) {
+        return false
+      }
 
-    const allLoadedPlugins = this.loadedPluginsMap.values()
+      return Boolean(p.plugin && p.id)
+    })
 
-    for (const plugin of allLoadedPlugins) {
-      this.logger.debug(`Triggering ${action} on ${plugin.name}`)
-      if (plugin.events) {
-        plugin.events[action]
+    const imports = await Promise.allSettled(
+      validPlugins.map(async (plugin) => {
+        try {
+          const mod = (await import(plugin.plugin)) as Plugin
+          return { id: plugin.id, module: mod }
+        } catch (err) {
+          console.error(`Failed to import plugin ${plugin.plugin}:`, err)
+          return null
+        }
+      })
+    )
+
+    for (const result of imports) {
+      if (result.status === "fulfilled" && result.value) {
+        this.loadedPluginsMap.set(result.value.id as number, result.value.module)
       }
     }
+    return;
+  }
+
+  public unloadAllPlugins() {
+    return this.loadedPluginsMap.clear()
+  }
+
+  public unloadPlugin(id: number) {
+    return this.loadedPluginsMap.delete(id)
+  }
+
+  public async loadPlugin(id: number) {
+    const pluginToLoad = this.table.select(["*"]).where({ id: id }).first()
+
+    if (!pluginToLoad) {
+      throw new Error(`No Plugin found for id: ${id}`)
+    }
+
+    const mod = (await import(pluginToLoad.plugin)) as Plugin
+
+    return this.loadedPluginsMap.set(pluginToLoad.id as number, mod)
+  }
+
+  public getTable() {
+    return this.table
   }
 }
+
+export default PluginHandler
