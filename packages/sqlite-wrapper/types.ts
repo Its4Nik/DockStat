@@ -44,8 +44,8 @@ export const SQLiteTypes = {
   // JSON (stored as TEXT)
   JSON: "JSON" as const,
 
-  // Functions (stored as TEXT)
-  FUNCTION: "TEXT" as const
+  // Modules (stored as TEXT)
+  MODULE: "TEXT" as const
 } as const;
 
 export type SQLiteType = (typeof SQLiteTypes)[keyof typeof SQLiteTypes];
@@ -274,17 +274,15 @@ export interface TableOptions<T> {
   /** Table comment */
   comment?: string;
 
-  parser?: Parser<T>
+  parser?: Partial<Parser<T>>
 }
 
-export interface Parser<T> extends FunctionParser<T> {
+export interface Parser<T> extends ModuleParser<T> {
   JSON: ArrayKey<T>
 }
 
-interface FunctionParser<T> {
-  FUNCTION: Record<keyof T, {
-    transpiler_optioms: Bun.TranspilerOptions
-  }>
+interface ModuleParser<T> {
+  MODULE: Partial<Record<keyof T, Bun.TranspilerOptions>>
 }
 
 /**
@@ -482,7 +480,7 @@ export const column = {
   /**
    * Creates a function Column that will be parsed and transpiled using Bun.transpiler
    */
-  function: (
+  module: (
     constraints?: ColumnConstraints
   ): ColumnDefinition => ({
     type: SQLiteTypes.FUNCTION,

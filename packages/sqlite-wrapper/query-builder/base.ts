@@ -4,7 +4,6 @@ import type {
   ArrayKey,
   ColumnNames,
   DatabaseRowData,
-
   OrderDirection,
   Parser,
   QueryBuilderState,
@@ -157,29 +156,52 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * Transform row data after fetching from database (deserialize JSON columns).
    */
   protected transformRowFromDb(row: unknown): T {
-    if (!this.state.jsonColumns || !row) return row as T
+    this.logger.debug(`Transforming row: ${JSON.stringify(row)}`)
+    if (!row) {
+      this.logger.warn("Empty row received")
+      return row as T
+    }
 
     try {
       const transformed = { ...row } as DatabaseRowData
-      for (const column of this.state.jsonColumns) {
-        const columnKey = String(column)
-        if (
-          transformed[columnKey] !== null &&
-          transformed[columnKey] !== undefined &&
-          typeof transformed[columnKey] === 'string'
-        ) {
-          try {
-            transformed[columnKey] = JSON.parse(
-              transformed[columnKey] as string
-            )
-          } catch (parseError) {
-            // Keep original value if JSON parsing fails
-            this.logger.warn(
-              `JSON parse failed for column ${columnKey}: ${parseError}`
-            )
+
+      if (this.state.parser?.JSON) {
+        for (const column of this.state.parser.JSON) {
+          const columnKey = String(column)
+          if (
+            transformed[columnKey] !== null &&
+            transformed[columnKey] !== undefined &&
+            typeof transformed[columnKey] === 'string'
+          ) {
+            try {
+              transformed[columnKey] = JSON.parse(
+                transformed[columnKey] as string
+              )
+            } catch (parseError) {
+              // Keep original value if JSON parsing fails
+              this.logger.warn(
+                `JSON parse failed for column ${columnKey}: ${parseError}`
+              )
+            }
           }
         }
       }
+
+      if (this.state.parser?.MODULE) {
+        for (const [func, options] of Object.entries(this.state.parser.MODULE)) {
+          const transpiler = new Bun.Transpiler(options)
+          const funcKey = String(func)
+
+          if (transformed[funcKey] !== undefined && transformed[funcKey] !== null) {
+            const compiled = transpiler.transformSync(String(transformed[funcKey]))
+            this.logger.debug(`Compiled function ${compiled}`)
+            const blob = new Blob([compiled], { type: "text/javascript" })
+            transformed[funcKey] = URL.createObjectURL(blob)
+            this.logger.debug(`Created Object URL for importing: ${transformed[funcKey]}`)
+          }
+        }
+      }
+
       return transformed as T
     } catch (error) {
       this.logger.error(`Error in transformRowFromDb: ${error}`)
@@ -191,7 +213,10 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * Transform multiple rows after fetching from database.
    */
   protected transformRowsFromDb(rows: unknown[]): T[] {
-    if (!this.state.jsonColumns || !Array.isArray(rows)) return rows as T[]
+    if (!rows) {
+      this.logger.warn("Empty row received")
+      return rows as T[]
+    }
 
     try {
       return rows.map((row, index) => {
@@ -212,25 +237,44 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * Transform row data before inserting/updating to database (serialize JSON columns).
    */
   protected transformRowToDb(row: Partial<T>): DatabaseRowData {
-    this.logger.debug(`Transforming row (${JSON.stringify(row)}) to row Data`)
-    if (!this.state.jsonColumns || !this.state.functionColumns || !row) {
+    this.logger.debug(`Transforming row (${JSON.stringify(row)}) to row Data = JSON=${!!this.state.parser?.JSON} MODULE=${!!this.state.parser?.MODULE}`)
+
+    if (!row) {
+      this.logger.debug("No row data received!")
       return row as DatabaseRowData
     }
 
     const transformed: DatabaseRowData = { ...row } as DatabaseRowData
 
-    for (const column of this.state.jsonColumns) {
-      const columnKey = String(column)
-      this.logger.debug(`Checking: ${columnKey}`)
-      if (
-        transformed[columnKey] !== undefined &&
-        transformed[columnKey] !== null
-      ) {
-        if (typeof transformed[columnKey] === 'object') {
-          transformed[columnKey] = JSON.stringify(transformed[columnKey])
+    if (this.state.parser?.JSON) {
+      for (const jsonCol of this.state.parser.JSON) {
+        const columnKey = String(jsonCol)
+        this.logger.debug(`Checking: ${columnKey}`)
+        if (
+          transformed[columnKey] !== undefined &&
+          transformed[columnKey] !== null
+        ) {
+          if (typeof transformed[columnKey] === 'object') {
+            transformed[columnKey] = JSON.stringify(transformed[columnKey])
+          }
         }
       }
     }
+
+    if (this.state.parser?.MODULE) {
+      for (const [func, options] of Object.entries(this.state.parser.MODULE)) {
+        this.logger.debug(`Transpiling ${JSON.stringify(options)}`)
+        const transpiler = new Bun.Transpiler(options)
+        const funcKey = String(func)
+
+        if (transformed[funcKey] !== undefined && transformed[funcKey] !== null) {
+          if (typeof transformed[funcKey] === "function") {
+            transformed[funcKey] = transpiler.transformSync((transformed[funcKey] as () => unknown).toString())
+          }
+        }
+      }
+    }
+
     return transformed
   }
 }

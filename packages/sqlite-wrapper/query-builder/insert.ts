@@ -21,7 +21,7 @@ export class InsertQueryBuilder<
     data: Partial<T> | Partial<T>[],
     options?: InsertOptions,
   ): InsertResult {
-    this.getLogger("INSERT").debug(`Building Data Array: ${data}`)
+    this.getLogger("INSERT").debug(`Building Data Array: ${JSON.stringify(data)}`)
     const rows = Array.isArray(data) ? data : [data];
 
     // Transform rows to handle JSON serialization
