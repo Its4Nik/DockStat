@@ -17,5 +17,14 @@
     "noEmit": false
   },
   "include": [],
-  "exclude": ["node_modules", "dist", "build"]
+  "exclude": ["node_modules", "dist", "build"],
+  "references": [
+    { "path": "./packages/docker-client" },
+    { "path": "./packages/plugin-handler" },
+    { "path": "./packages/sqlite-wrapper" },
+    { "path": "./packages/typings" },
+    { "path": "./packages/logger" },
+    { "path": "./packages/utils" },
+    { "path": "./packages/db" }
+  ]
 }
