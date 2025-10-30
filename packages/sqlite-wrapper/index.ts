@@ -230,8 +230,6 @@ class DB {
     let columnDefs: string;
     let tableConstraints: string[] = [];
 
-    console.log(columns);
-
     if (this.isTableSchema(columns)) {
       //  comprehensive type-safe approach
       const parts: string[] = [];
@@ -276,7 +274,7 @@ class DB {
     const allDefinitions = [columnDefs, ...tableConstraints].join(", ");
 
     logger.debug(
-      `Creating table (${tableName}) inMem=${temp.length > 1 ? true : false} ifNot=${ifNot.length > 1 ? true : false} withoutRowID=${withoutRowId.length > 1 ? true : false} - Definitions: ${JSON.stringify(allDefinitions)}`,
+      `Creating table (${tableName}) inMem=${temp === "TEMPORARY "} ifNot=${ifNot === "IF NOT EXISTS "} withoutRowID=${withoutRowId === " WITHOUT ROWID"} - Definitions: ${JSON.stringify(allDefinitions)}`,
     );
 
     const sql = `CREATE ${temp}TABLE ${ifNot}${quoteIdent(
@@ -621,7 +619,7 @@ class DB {
       stmt.run(tableName, comment);
     } catch (error) {
       // Silently ignore if we can't create metadata table
-      console.warn(`Could not store table comment for ${tableName}:`, error);
+      logger.warn(`Could not store table comment for ${tableName}: ${error}`);
     }
   }
 

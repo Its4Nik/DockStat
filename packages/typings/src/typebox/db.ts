@@ -12,7 +12,7 @@ const Repo = t.Object({
   // This Verification API will then in turn check all versions of the Hashes and mark any plugin/stack/theme version that is not verified and also block installations of untrusted plugins
   // If the Policy is set to relaxed there will be no verification for anythin at all.
   policy: t.UnionEnum(["strict", "relaxed"]),
-  verificatioh_api: t.Nullable(t.String({ format: 'uri' })),
+  verification_api: t.Nullable(t.String({ format: 'uri' })),
   isVerified: t.Boolean(),
   hashes: t.Nullable(
     t.Object({
@@ -88,10 +88,23 @@ const DockStatConfigTable = t.Object({
               /keys
                 ${containerName}.key
   */
-  tls_certs_and_keys: t.Record(t.Number(), t.Object({
-    key: t.String(),
-    cert: t.String()
-  })),
+  tls_certs_and_keys: t.Object({
+    web: t.Nullable(
+      t.Object({
+        key: t.String(),
+        cert: t.String(),
+      })
+    ),
+    docker: t.Nullable(
+      t.Record(
+        t.Number(),
+        t.Object({
+          key: t.String(),
+          cert: t.String(),
+        })
+      )
+    )
+  }),
   nav_links: t.ArrayString(),
   hotkeys: t.Record(t.String(), t.UnionEnum(["open:nav", "close:nav", "toggle:nav"]))
 })

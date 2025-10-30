@@ -1,5 +1,5 @@
-import PluginBuilder from "@dockstat/plugin-handler/pluginBuilder";
+//import PluginBuilder from "@dockstat/plugin-handler/pluginBuilder";
 import { DockNodeConfig } from "./src/config";
 import { DockNodePluginMeta } from "./src/meta";
 
-const DockNodePlugin = new PluginBuilder(DockNodePluginMeta, DockNodeConfig);
+//const DockNodePlugin = new PluginBuilder(DockNodePluginMeta, DockNodeConfig);

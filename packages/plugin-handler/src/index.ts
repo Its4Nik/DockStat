@@ -1,12 +1,12 @@
 import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type DB from "@dockstat/sqlite-wrapper"
-import type { DBPlugin, Plugin } from "@dockstat/typings/types"
+import type { DBPluginShemaT, Plugin } from "@dockstat/typings/types"
 import Logger from "@dockstat/logger"
 
 class PluginHandler {
   private loadedPluginsMap = new Map<number, Plugin>()
   private DB: DB
-  private table: QueryBuilder<DBPlugin>
+  private table: QueryBuilder<DBPluginShemaT>
   private logger: Logger
 
   constructor(db: DB, loggerParents: string[] = []) {
@@ -16,7 +16,7 @@ class PluginHandler {
     this.DB = db
 
     this.logger.debug("Creating Plugin Table")
-    this.table = this.DB.createTable<DBPlugin>("plugins", {
+    this.table = this.DB.createTable<DBPluginShemaT>("plugins", {
       id: column.id(),
       // Plugin Metadata
       name: column.text({ notNull: true, unique: true }),
@@ -29,10 +29,10 @@ class PluginHandler {
       manifest: column.text({ notNull: true }),
       author: column.json({ notNull: true }),
 
-      plugin: column.module({ moduleConstrains: { default: true, exports: [] } })
+      plugin: column.module()
     }, {
       ifNotExists: true, parser: {
-        JSON: ["table", "ws", "events"],
+        JSON: ["table", "author", "tags"],
         MODULE: {
           "plugin": {
             loader: "ts",
@@ -45,7 +45,7 @@ class PluginHandler {
     })
   }
 
-  public savePlugin(plugin: DBPlugin) {
+  public savePlugin(plugin: DBPluginShemaT) {
     this.logger.debug(`Saving Plugin ${plugin.name} to DB`)
     return this.table.insert(plugin)
   }
@@ -55,12 +55,34 @@ class PluginHandler {
     return this.table.where({ id: id }).delete()
   }
 
-  public async loadPlugins() {
+  public async loadPlugins(ids: number[]) {
+    this.logger.debug(`Loading plugins: ${ids}`)
+    const successes: number[] = []
+    const errors: number[] = []
+    let step = 0
+
+    for (const id of ids) {
+      ++step
+      try {
+        await this.loadPlugin(id)
+        successes.push(id)
+      } catch (error: unknown) {
+        this.logger.error(`Could not load ${id} - ${error}`)
+        errors.push(id)
+      }
+    }
+
+    this.logger.info(`Done with ${step}/${ids.length}`)
+
+    return { errors, successes }
+  }
+
+  public async loadAllPlugins() {
     const plugins = this.table.select(["*"]).all()
 
     const loadedPlugins = this.loadedPluginsMap
 
-    const validPlugins = plugins.filter((p): p is DBPlugin => {
+    const validPlugins = plugins.filter((p): p is DBPluginShemaT => {
       if (loadedPlugins.get(p.id as number)) {
         return false
       }
@@ -103,13 +125,85 @@ class PluginHandler {
       throw new Error(`No Plugin found for id: ${id}`)
     }
 
+    if (this.loadedPluginsMap.get(id)) {
+      throw new Error(`Plugin already loaded: ${id}`)
+    }
+
     const mod = (await import(pluginToLoad.plugin)) as Plugin
 
     return this.loadedPluginsMap.set(pluginToLoad.id as number, mod)
   }
 
-  public getTable() {
+  public getTable(): QueryBuilder<DBPluginShemaT> {
     return this.table
+  }
+
+  public getLoadedPlugins() {
+    const loaded: number[] = []
+    for (const plugin of this.loadedPluginsMap.keys()) {
+      loaded.push(plugin)
+
+    }
+    return loaded
+  }
+
+  public getStatus() {
+    const installedPlugins = this.table.select(['*']).all()
+    const loadedPlugins = this.getLoadedPlugins()
+
+    const rDat = {
+      installed_plugins: installedPlugins.length,
+      types: {
+        gitlab: installedPlugins.filter((e) => e.type === 'gitlab'),
+        github: installedPlugins.filter((e) => e.type === 'github'),
+        http: installedPlugins.filter((e) => e.type === 'http'),
+        default: installedPlugins.filter((e) => e.type === "default")
+      },
+      repos: installedPlugins.map(l => l.repository),
+      loaded_plugins: loadedPlugins
+        .map(id => installedPlugins.find(plugin => plugin.id === id))
+        .filter(Boolean)
+    }
+
+    this.logger.debug(JSON.stringify(rDat))
+    return rDat
+  }
+
+  public async installFromManifestLink(url: string) {
+    const res = (await fetch(url))
+    const txt = await res.text()
+
+    return this.savePlugin(this.parseManifest(url, txt))
+  }
+
+  private parseManifest(link: string, manifest: string): DBPluginShemaT {
+    if (link.endsWith("json")) {
+      return JSON.parse(manifest) as DBPluginShemaT
+    }
+    if (link.endsWith("yml") || link.endsWith("yaml")) {
+      return Bun.YAML.parse(manifest) as DBPluginShemaT
+    }
+    throw new Error("Unsupported manifest")
+  }
+
+  public async handleRoute(req: Request, params: Record<string, string>) {
+    const { id } = params;
+
+    if (!id) {
+      throw new Error("PluginID not provided!")
+    }
+
+    const plugin = this.loadedPluginsMap.get(Number(id))
+
+    if (!plugin) {
+      throw new Error(`No loaded Plugin with ID ${id} found`)
+    }
+
+    if (!plugin.routes) {
+      throw new Error(`No routes defined for Plugin ${id}`)
+    }
+
+    return await plugin.routes.handle(req)
   }
 }
 

@@ -141,7 +141,7 @@ class Logger {
       `@${this.parents.join("@")}`
     )}` : `[${chalk.cyan(this.name)}`
 
-    const msgRequest = `${requestID ? `(${this.colorByReqID(requestID)}${this.reqFrom[requestID].length > 0 ? `@${chalk.green(this.reqFrom[requestID])}` : ""}) ` : ""}`
+    const msgRequest = `${requestID ? `(${this.colorByReqID(requestID)}${(this.reqFrom[requestID] || "").length > 0 ? `@${chalk.green(this.reqFrom[requestID])}` : ""}) ` : ""}`
 
     const msgPrefix = `${timestamp} ${msgRequest}${coloredPrefix} ${callerInfo} ${coloredLevel}]`;
 

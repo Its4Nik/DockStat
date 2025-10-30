@@ -1,7 +1,10 @@
 import { treaty } from "@elysiajs/eden";
 import { createStaticHandler } from "react-router";
 import { DockStatAPI, type DockStatAPIType } from "./api";
-import { logger } from "./logger";
+import { logger as BaseLogger } from "./logger";
+import Logger from "@dockstat/logger";
+
+const logger = new Logger("Treaty", BaseLogger.getParentsForLoggerChaining())
 
 DockStatAPI.listen(3000);
 

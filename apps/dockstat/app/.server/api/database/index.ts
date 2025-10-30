@@ -5,7 +5,7 @@ import {
 } from "@dockstat/typings/schemas";
 import { DockStatDB } from "~/.server/db";
 
-const DatabaseElysiaInstance = new Elysia({ prefix: "/db" })
+const DatabaseElysiaInstance = new Elysia({ prefix: "/db", detail: { tags: ["DB"] } })
   .post(
     "/dockstat-config",
     ({ body }) => {

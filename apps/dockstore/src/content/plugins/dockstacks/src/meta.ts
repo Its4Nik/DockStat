@@ -1,16 +1,21 @@
-import type { PLUGIN } from "@dockstat/typings";
+import type { StaticPluginMeta } from "@dockstat/typings/types";
 
-export const DocksStacksMeta: PLUGIN.PluginMeta = {
+export const PluginMeta: StaticPluginMeta = {
   name: "DockStacks",
-  description: "One-click installer for Docker Compose stacks.",
-  license: "GPL-2.0",
-  author: {
-    name: "Its4Nik",
-    website: "https://github.com/Its4Nik",
-    email: "dockstat@itsnik.de",
-  },
+  description: "This Plugin allows for deploying so called stacks. Stacks are prebuilt docker compose file, with tempplating and plugin support",
+  type: "default",
+  repository: "its4nik/dockstat",
   version: "1.0.0",
-  tags: ["stacks", "compose", "one-click", "apps"],
-  repository: "https://dockstore.itsnik.de",
-  path: "plugins/dockstacks",
-};
+  tags: [
+    "compose",
+    "management"
+  ],
+  author: {
+    email: "info@itsnik.de",
+    license: "MIT",
+    name: "Its4Nik",
+    website: "https://github.com/Its4Nik"
+  },
+  branch: "dev",
+  manifest: "/apps/dockstore/src/content/plugins/dockstacks/manifest.yml"
+}

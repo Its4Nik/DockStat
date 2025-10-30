@@ -10,16 +10,17 @@ export const Elogger = new Logger(
 
 const DockStatElysiaHandlers = new Elysia()
   .onRequest(({ request }) => {
+    const header = request.headers.get("x-dockstatapi-requestid") || http.requestId.getRequestID()
+
     const reqId =
-      request.headers.get("x-dockstatapi-requestid") ||
-      http.requestId.getRequestID();
+      header === "treaty" ? http.requestId.getRequestID(false, true) : header
 
     Elogger.debug(
       `Handling API Call ${request.method} on ${request.url}`,
       reqId,
     );
   })
-  .onAfterHandle(({ request }) => {
+  .onAfterResponse(({ request }) => {
     const reqId = request.headers.get("x-dockstatapi-requestid") || "";
     Elogger.debug(
       `Responded to API Call ${request.method} on ${request.url}`,

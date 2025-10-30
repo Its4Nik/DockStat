@@ -1,2 +1,2 @@
 export { DockStatConfigTable, Repo, TableMetaData, UpdateDockStatConfigTableResponse } from "./db";
-export { PluginMeta } from "./plugins"
+export { PluginMeta, PluginStatusRepsonse, DBPluginShema } from "./plugins"

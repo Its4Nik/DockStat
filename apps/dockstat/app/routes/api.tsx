@@ -3,7 +3,7 @@ import { Logger } from "@dockstat/logger";
 import { http } from "@dockstat/utils";
 import type { Route } from "./+types/api";
 
-const logger = new Logger("Api", ["RR", "DockStat"]);
+const logger = new Logger("Proxy", ["RR", "DockStat"]);
 const queryHandlerLoggger = new Logger(
   "Query",
   logger.getParentsForLoggerChaining(),

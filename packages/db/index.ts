@@ -34,7 +34,9 @@ class DockStatDB {
         },
         {
           ifNotExists: true,
-          jsonConfig: ["registered_repos", "default_themes", "tables", "tls_certs_and_keys", "hotkeys", "nav_links"]
+          parser: {
+            JSON: ["registered_repos", "default_themes", "tables", "tls_certs_and_keys", "hotkeys", "nav_links"]
+          }
         }
       );
       this.logger.debug("Config table created successfully");
@@ -69,16 +71,16 @@ class DockStatDB {
           registered_repos: [
             {
               name: "DockStacks",
-              source: "its4nik/dockstat/apps/dockstore",
+              source: "its4nik/dockstat",
               type: "github",
               isVerified: true,
               policy: "strict",
-              verificatioh_api: "https://api.itsnik.de/dockstacks/_verify",
+              verification_api: "https://api.itsnik.de/dockstacks/_verify",
               hashes: null
             }
           ],
           tables: [],
-          tls_certs_and_keys: {},
+          tls_certs_and_keys: { web: null, docker: null },
         });
         this.logger.debug("Default config inserted");
       } else {

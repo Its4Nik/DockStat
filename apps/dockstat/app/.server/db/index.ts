@@ -4,8 +4,9 @@ import type { QueryBuilder } from "@dockstat/sqlite-wrapper";
 import type {
   DockStatConfigTableType,
 } from "@dockstat/typings/types";
+import { logger } from "../logger";
 
-const InitialDockStatDB = new DBFactory("DB", ["Elysia", "DockStat"]);
+const InitialDockStatDB = new DBFactory("DB", logger.getParentsForLoggerChaining());
 
 export const DockStatDB: {
   _sqliteWrapper: DB;

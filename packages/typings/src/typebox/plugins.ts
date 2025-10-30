@@ -2,12 +2,12 @@ import type { ColumnDefinition } from "@dockstat/sqlite-wrapper";
 import { type AnyElysia, t } from "elysia";
 import type { DockerClientEvents } from "../docker-client";
 
-export const PluginMeta = t.Object({
+export const PluginMeta = {
   name: t.String(),
   description: t.String(),
   version: t.String(),
   repository: t.String(),
-  type: t.UnionEnum(["http", "github", "gitlab"]),
+  type: t.UnionEnum(["http", "github", "gitlab", "default"]),
   branch: t.Nullable(t.String(), { default: null }),
   manifest: t.String(),
   author: t.Object({
@@ -17,11 +17,24 @@ export const PluginMeta = t.Object({
     email: t.Nullable(t.String({ format: "email" })),
   }),
   tags: t.Optional(t.Array(t.String())),
-});
+};
 
-export const PluinMetaElysa = t.Extends
+const pPluginMeta = t.Object({ ...PluginMeta })
 
-export type StaticPluginMeta = typeof PluginMeta.static
+export type StaticPluginMeta = typeof pPluginMeta.static
+
+export const DBPluginShema = t.Object({
+  id: t.Nullable(t.Number()),
+  table: t.Array(t.Object({
+    name: t.String(),
+    columns: t.Record(t.String(), t.Unknown()),
+    jsonColumns: t.Array(t.String())
+  })),
+  plugin: t.String(),
+  ...PluginMeta
+})
+
+export type DBPluginShemaT = typeof DBPluginShema.static
 
 export interface DBPlugin<Columns = Record<string, ColumnDefinition>> extends StaticPluginMeta, Record<string, unknown> {
   id?: number;
@@ -29,8 +42,19 @@ export interface DBPlugin<Columns = Record<string, ColumnDefinition>> extends St
   plugin: string
 }
 
-export interface Plugin {
-  routes: AnyElysia,
-  events: Partial<DockerClientEvents>
+export interface Plugin extends StaticPluginMeta, Omit<DBPlugin, "plugin"> {
+  routes?: AnyElysia,
+  events?: Partial<DockerClientEvents>
   init?: () => void,
 }
+
+export const PluginStatusRepsonse = t.Object({
+  installed_plugins: t.Number(),
+  types: t.Object({
+    gitlab: t.Array(DBPluginShema),
+    github: t.Array(DBPluginShema),
+    http: t.Array(DBPluginShema),
+  }),
+  repos: t.Array(t.String()),
+  loaded_plugins: t.Array(DBPluginShema)
+})
