@@ -10,8 +10,7 @@
     "format": "biome format --write .",
     "format:check": "biome format --check .",
     "check-types": "turbo run check-types",
-    "clean": "turbo run clean && rm -rf node_modules",
-    "test": "turbo run test"
+    "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

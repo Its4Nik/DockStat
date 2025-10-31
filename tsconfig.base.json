@@ -3,7 +3,11 @@
     "composite": true,
     "module": "ESNext",
     "target": "ESNext",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
     "moduleResolution": "Node",
     "strict": true,
     "skipLibCheck": true,
@@ -17,14 +21,35 @@
     "noEmit": false
   },
   "include": [],
-  "exclude": ["node_modules", "dist", "build"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build"
+  ],
   "references": [
-    { "path": "./packages/docker-client" },
-    { "path": "./packages/plugin-handler" },
-    { "path": "./packages/sqlite-wrapper" },
-    { "path": "./packages/typings" },
-    { "path": "./packages/logger" },
-    { "path": "./packages/utils" },
-    { "path": "./packages/db" }
+    {
+      "path": "./packages/docker-client"
+    },
+    {
+      "path": "./packages/plugin-handler"
+    },
+    {
+      "path": "./packages/sqlite-wrapper"
+    },
+    {
+      "path": "./packages/typings"
+    },
+    {
+      "path": "./packages/logger"
+    },
+    {
+      "path": "./packages/utils"
+    },
+    {
+      "path": "./packages/db"
+    },
+    {
+      "path": "./packages/ui"
+    }
   ]
 }
