@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 export interface HoverBubbleProps {
   label: string;
@@ -24,7 +24,7 @@ export const HoverBubble: React.FC<HoverBubbleProps> = ({
     <div className="relative group inline-block">
       {children}
       <div
-        className={`absolute z-10 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap ${positionClasses[position]} ${className}`}
+        className={`absolute z-10 hidden group-hover:block bg-hover-bubble-bg text-hover-bubble-text text-xs rounded px-2 py-1 whitespace-nowrap ${positionClasses[position]} ${className}`}
       >
         {label}
       </div>

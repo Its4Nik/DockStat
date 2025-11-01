@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 export type BadgeVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'error';
 export type BadgeSize = 'sm' | 'md' | 'lg';
@@ -24,20 +24,20 @@ export const Badge: React.FC<BadgeProps> = ({
 
   const variantClasses = {
     primary: outlined
-      ? 'text-blue-600 border border-blue-600'
-      : 'bg-blue-100 text-blue-800',
+      ? 'text-badge-primary-outlined-text border border-badge-primary-outlined-border'
+      : 'bg-badge-primary-bg text-badge-primary-text',
     secondary: outlined
-      ? 'text-gray-600 border border-gray-600'
-      : 'bg-gray-100 text-gray-800',
+      ? 'text-badge-secondary-outlined-text border border-badge-secondary-outlined-border'
+      : 'bg-badge-secondary-bg text-badge-secondary-text',
     success: outlined
-      ? 'text-green-600 border border-green-600'
-      : 'bg-green-100 text-green-800',
+      ? 'text-badge-success-outlined-text border border-badge-success-outlined-border'
+      : 'bg-badge-success-bg text-badge-success-text',
     warning: outlined
-      ? 'text-yellow-600 border border-yellow-600'
-      : 'bg-yellow-100 text-yellow-800',
+      ? 'text-badge-warning-outlined-text border border-badge-warning-outlined-border'
+      : 'bg-badge-warning-bg text-badge-warning-text',
     error: outlined
-      ? 'text-red-600 border border-red-600'
-      : 'bg-red-100 text-red-800',
+      ? 'text-badge-error-outlined-text border border-badge-error-outlined-border'
+      : 'bg-badge-error-bg text-badge-error-text',
   };
 
   const sizeClasses = {

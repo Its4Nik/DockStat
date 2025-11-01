@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 export interface CardBodyProps {
   children: React.ReactNode;
@@ -6,5 +6,5 @@ export interface CardBodyProps {
 }
 
 export const CardBody: React.FC<CardBodyProps> = ({ children, className = '' }) => {
-  return <div className={`py-4 ${className}`}>{children}</div>;
+  return <div className={`py-4 text-secondary-text ${className}`}>{children}</div>;
 };

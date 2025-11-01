@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 export type InputSize = 'sm' | 'md' | 'lg';
 export type InputVariant = 'default' | 'filled' | 'underline';
@@ -37,23 +37,25 @@ export const Input: React.FC<InputProps> = ({
   };
 
   const variantClasses = {
-    default: 'border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
-    filled: 'bg-gray-100 border-none rounded-md focus:bg-white focus:ring-2 focus:ring-blue-500',
-    underline: 'border-b-2 border-gray-300 bg-transparent rounded-none focus:border-blue-500',
+    default: 'text-input-default-text border border-input-default-border rounded-md focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring',
+    filled: 'text-input-filled-text bg-input-filled-bg border-none rounded-md focus:bg-input-filled-focus-bg focus:ring-2 focus:ring-input-filled-focus-ring',
+    underline: 'text-input-underline-text border-b-2 border-input-underline-color bg-transparent rounded-none focus:border-input-underline-focus-color',
   };
-
-  const stateClasses = error
-    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-    : success
-      ? 'border-green-500 focus:border-green-500 focus:ring-green-500'
-      : '';
 
   const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : '';
 
   return (
     <input
       type={type}
-      className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${stateClasses} ${disabledClasses} ${className}`}
+      className={[
+        baseClasses,
+        sizeClasses[size],
+        variantClasses[variant],
+        className,
+        disabledClasses,
+        error ? 'border-error! focus:border-error! focus:ring-error!' : '',
+        success ? 'border-success! focus:border-success! focus:ring-success!' : '',
+      ].join(' ')}
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange?.(e.target.value)}

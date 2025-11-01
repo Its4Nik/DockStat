@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Modal } from '../components/Modal/Modal';
 import { useArgs } from '@storybook/client-api';
+import { Button } from '../components/Button/Button';
+import { Badge } from '../components/Badge/Badge';
 
 const meta: Meta<typeof Modal> = {
   title: 'Feedback/Modal',
@@ -26,15 +28,14 @@ export const Interactive: Story = {
     const toggle = () => updateArgs({ open: !args.open });
 
     return (
-      <div className="p-8">
-        <button
+      <div>
+        <Button
           onClick={toggle}
-          className="px-3 py-2 bg-blue-600 text-white rounded"
         >
           Open Modal
-        </button>
+        </Button>
         <Modal {...args} onClose={() => updateArgs({ open: false })}>
-          <p className="text-gray-700">
+          <p>
             This is a demo modal. Click outside or press “Close” to dismiss.
           </p>
         </Modal>
@@ -42,3 +43,59 @@ export const Interactive: Story = {
     );
   },
 };
+
+export const StringFooter: Story = {
+  args: {
+    open: false,
+    footer: "Sample String footer",
+    title: "String Footer"
+  },
+  render: (args) => {
+    // eslint-disable-next-line
+    const [, updateArgs] = useArgs();
+    const toggle = () => updateArgs({ open: !args.open });
+
+    return (
+      <div>
+        <Button
+          onClick={toggle}
+        >
+          Open Modal
+        </Button>
+        <Modal {...args} onClose={() => updateArgs({ open: false })}>
+          <p>
+            This is a demo modal. Click outside or press “Close” to dismiss.
+          </p>
+        </Modal>
+      </div>
+    );
+  }
+}
+
+export const ElementFooter: Story = {
+  args: {
+    open: false,
+    footer: <Badge variant='primary'>Example Element</Badge>,
+    title: "String Footer"
+  },
+  render: (args) => {
+    // eslint-disable-next-line
+    const [, updateArgs] = useArgs();
+    const toggle = () => updateArgs({ open: !args.open });
+
+    return (
+      <div>
+        <Button
+          onClick={toggle}
+        >
+          Open Modal
+        </Button>
+        <Modal {...args} onClose={() => updateArgs({ open: false })}>
+          <p>
+            This is a demo modal. Click outside or press “Close” to dismiss.
+          </p>
+        </Modal>
+      </div>
+    );
+  }
+}

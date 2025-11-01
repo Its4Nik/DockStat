@@ -1,4 +1,5 @@
-import React from 'react';
+import type { MouseEventHandler } from 'react';
+import type React from 'react';
 
 export type CardVariant = 'default' | 'outlined' | 'elevated' | 'flat';
 export type CardSize = 'sm' | 'md' | 'lg';
@@ -8,7 +9,7 @@ export interface CardProps {
   variant?: CardVariant;
   size?: CardSize;
   className?: string;
-  onClick?: () => void;
+  onClick?: MouseEventHandler;
   hoverable?: boolean;
 }
 
@@ -23,10 +24,10 @@ export const Card: React.FC<CardProps> = ({
   const baseClasses = 'rounded-lg transition-all duration-200';
 
   const variantClasses = {
-    default: 'bg-white border border-gray-200',
-    outlined: 'border-2 border-gray-300 bg-transparent',
-    elevated: 'bg-white shadow-md',
-    flat: 'bg-gray-50 border-none',
+    default: 'bg-card-default-bg border border-card-default-border text-primary-text',
+    outlined: 'border border-card-outlined-border bg-transparent text-secondary-text',
+    elevated: 'bg-card-elevated-bg shadow-md text-primary-text',
+    flat: 'bg-card-flat-bg border-none text-muted-text',
   };
 
   const sizeClasses = {
@@ -38,12 +39,13 @@ export const Card: React.FC<CardProps> = ({
   const hoverClasses = hoverable ? 'hover:shadow-lg hover:-translate-y-1 cursor-pointer' : '';
 
   return (
-    <div
+    <button
+      type="button"
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${hoverClasses} ${className}`}
       onClick={onClick}
     >
       {children}
-    </div>
+    </button>
   );
 };
 

@@ -1,12 +1,14 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { Button } from '../Button/Button';
+import { Card, CardBody, CardFooter, CardHeader } from '../Card/Card';
 
 export interface ModalProps {
   open: boolean;
   onClose: () => void;
   title?: string;
+  footer?: string | React.ReactNode;
   children?: React.ReactNode;
-  className?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -14,48 +16,52 @@ export const Modal: React.FC<ModalProps> = ({
   onClose,
   title,
   children,
-  className = '',
+  footer,
 }) => {
   const modalRoot = document.body;
 
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = open ? 'hidden' : '';
     return () => {
       document.body.style.overflow = '';
     };
   }, [open]);
 
-  if (!open) return null;
+  if (!open) { return null }
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    <button
+      type="button"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-modal-bg/50"
       onClick={onClose}
     >
-      <div
-        className={`bg-white rounded shadow-lg max-w-md w-full mx-4 ${className}`}
+      <Card
         onClick={(e) => e.stopPropagation()}
+        className="max-w-lg w-full shadow-lg"
       >
-        {title && (
-          <div className="border-b px-4 py-3 text-lg font-medium text-gray-800">
-            {title}
-          </div>
-        )}
-        <div className="p-4">{children}</div>
-        <div className="flex justify-end border-t px-4 py-3">
-          <button
-            onClick={onClose}
-            className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>,
+        {title && <CardHeader>{title}</CardHeader>}
+
+        <CardBody>{children}</CardBody>
+
+        <CardFooter className="flex justify-between items-center">
+          {typeof footer === 'string' ? (
+            <>
+              <div>{footer}</div>
+              <Button onClick={onClose}>Close</Button>
+            </>
+          ) : footer ? (
+            <>
+              {footer}
+              <Button onClick={onClose}>Close</Button>
+            </>
+          ) : (
+            <div className="flex justify-end w-full">
+              <Button onClick={onClose}>Close</Button>
+            </div>
+          )}
+        </CardFooter>
+      </Card>
+    </button >,
     modalRoot
   );
 };

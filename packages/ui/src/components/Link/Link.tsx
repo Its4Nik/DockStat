@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 export interface LinkWithIconProps {
   href: string;
@@ -25,7 +25,7 @@ export const LinkWithIcon: React.FC<LinkWithIconProps> = ({
       href={href}
       target={external ? '_blank' : undefined}
       rel={external ? 'noopener noreferrer' : undefined}
-      className={`inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors ${className}`}
+      className={`inline-flex items-center text-icon-link-text hover:icon-link-text-hover transition-colors ${className}`}
     >
       {isLeft && <span className="mr-1">{icon}</span>}
       <span>{label}</span>

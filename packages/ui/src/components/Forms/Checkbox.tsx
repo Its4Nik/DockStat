@@ -49,7 +49,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>((props
   };
 
   const baseClasses =
-    'rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 disabled:opacity-50';
+    'rounded border-checkbox-border text-checkbox-text focus:ring-checkbox-ring focus:ring-offset-0 disabled:opacity-50';
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // when user interacts, the checkbox native checked value is accurate
@@ -77,7 +77,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>((props
         aria-checked={ariaChecked}
         {...rest}
       />
-      {label && <span className="ml-2 text-gray-700">{label}</span>}
+      {label && <span className="ml-2 text-checkbox-text">{label}</span>}
     </label>
   );
 });

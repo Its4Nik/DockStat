@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 export interface Column<T> {
   key: keyof T;
@@ -33,21 +33,21 @@ export const Table = <T,>({
     lg: 'px-6 py-3 text-lg',
   };
 
-  const tableClasses = `min-w-full divide-y divide-gray-200 ${bordered ? 'border border-gray-200' : ''}`;
+  const tableClasses = "min-w-full divide-y divide-table-head-divide";
 
-  const theadClasses = 'bg-gray-50';
+  const theadClasses = 'bg-table-head-bg';
 
-  const tbodyClasses = "bg-white divide-y divide-gray-200";
+  const tbodyClasses = "bg-table-body-bg divide-y divide-table-body-divide";
 
   return (
-    <div className={`overflow-hidden shadow-sm rounded-lg ${className}`}>
+    <div className={`overflow-hidden shadow-sm rounded-lg ${bordered ? 'border border-table-border' : ''} ${className}`}>
       <table className={tableClasses}>
         <thead className={theadClasses}>
           <tr>
             {columns.map((column) => (
               <th
-                key={column.key as string}
-                className={`${sizeClasses[size]} font-semibold text-gray-900 text-${column.align || 'left'}`}
+                key={String(column.key)}
+                className={`${sizeClasses[size]} font-semibold text-table-head-text text-${column.align || 'left'}`}
                 style={{ width: column.width }}
               >
                 {column.title}
@@ -57,11 +57,11 @@ export const Table = <T,>({
         </thead>
         <tbody className={tbodyClasses}>
           {data.map((record, index) => (
-            <tr key={index} className={`${hoverable ? 'transition-colors cursor-pointer hover:bg-gray-50 hover:cursor-default' : ''} ${striped ? `${index % 2 === 0 ? "bg-gray-100" : ""}` : ""}`}>
+            <tr key={String(record)} className={`${hoverable ? 'transition-colors duration-150 cursor-pointer hover:bg-table-body-hover hover:cursor-default' : ''} ${striped ? `${index % 2 === 0 ? "bg-table-body-stripe" : ""}` : ""}`}>
               {columns.map((column) => (
                 <td
                   key={column.key as string}
-                  className={`${sizeClasses[size]} text-${column.align || 'left'} text-gray-900`}
+                  className={`${sizeClasses[size]} text-${column.align || 'left'} text-table-body-text`}
                 >
                   {column.render
                     ? column.render(record[column.key], record)

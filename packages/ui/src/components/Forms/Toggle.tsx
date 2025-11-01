@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 export type ToggleSize = 'sm' | 'md' | 'lg';
 
@@ -48,11 +48,11 @@ export const Toggle: React.FC<ToggleProps> = ({
           disabled={disabled}
         />
         <div
-          className={`${sizeClasses[size]} rounded-full transition-colors ${checked ? 'bg-blue-600' : 'bg-gray-300'
+          className={`${sizeClasses[size]} rounded-full transition-colors ${checked ? 'bg-toggle-true' : 'bg-toggle-false'
             }`}
         />
         <div
-          className={`absolute top-1/2 -translate-y-1/2 ${dotSizeClasses[size]} rounded-full bg-white transition-transform ${dotPositionClasses[size]}`}
+          className={`absolute top-1/2 -translate-y-1/2 ${dotSizeClasses[size]} rounded-full bg-toggle-dot transition-transform ${dotPositionClasses[size]}`}
         />
       </div>
       {label && <span className="ml-3 text-gray-700">{label}</span>}

@@ -16,8 +16,8 @@ export const Default: Story = {
   render: () => (
     <Card>
       <CardBody>
-        <h3 className="text-lg font-semibold">Default Card</h3>
-        <p className="text-gray-600">This is a default card with some content.</p>
+        <h3 className="text-lg font-semibold text-primary-text">Default Card</h3>
+        <p className="text-secondary-text">This is a default card with some content.</p>
       </CardBody>
     </Card>
   ),
@@ -25,7 +25,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <div className="space-y-4">
+    <div className="space-x-4">
       <Card variant="default">
         <CardBody>Default Card</CardBody>
       </Card>
@@ -46,13 +46,13 @@ export const WithSections: Story = {
   render: () => (
     <Card>
       <CardHeader>
-        <h3 className="text-lg font-semibold">Card Title</h3>
+        Card Title
       </CardHeader>
       <CardBody>
-        <p className="text-gray-600">This is the main content of the card.</p>
+        This is the main content of the card
       </CardBody>
       <CardFooter>
-        <p className="text-sm text-gray-500">Card footer</p>
+        Card footer
       </CardFooter>
     </Card>
   ),

@@ -76,7 +76,7 @@ export const Uncontrolled: Story = {
           }}
           label="Uncontrolled (local state)"
         />
-        <div className="text-xs text-gray-500">Local state value: {checked ? 'true' : 'false'}</div>
+        <div className="text-xs text-muted-text">Local state value: {checked ? 'true' : 'false'}</div>
       </div>
     );
   },
@@ -130,21 +130,21 @@ export const Sizes: Story = {
     const [s3, setS3] = useState(false);
 
     return (
-      <div className="flex items-center gap-6">
-        <label className="inline-flex items-center gap-2">
+      <div className="flex items-center gap-6 text-muted-text">
+        <div className="inline-flex items-center gap-2">
           <Checkbox {...args} size="sm" checked={s1} onChange={setS1} />
           <span className="text-sm">sm</span>
-        </label>
+        </div>
 
-        <label className="inline-flex items-center gap-2">
+        <div className="inline-flex items-center gap-2">
           <Checkbox {...args} size="md" checked={s2} onChange={setS2} />
           <span className="text-sm">md</span>
-        </label>
+        </div>
 
-        <label className="inline-flex items-center gap-2">
+        <div className="inline-flex items-center gap-2">
           <Checkbox {...args} size="lg" checked={s3} onChange={setS3} />
           <span className="text-sm">lg</span>
-        </label>
+        </div>
       </div>
     );
   },

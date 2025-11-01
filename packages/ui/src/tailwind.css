@@ -1,1 +1,175 @@
 @import "tailwindcss";
+
+@theme {
+    /*
+     *  Base
+    */
+    /* Accent */
+    /* Background */
+    --color-main-bg: #282a36;
+
+    /* Text variables */
+    --color-primary-text: #f8f8f2;
+    --color-secondary-text: #e0e0e0;
+    --color-muted-text: #6272a4;
+
+    /*
+    * Generics
+    */
+
+    --color-error: #ef4444;
+    --color-success: #10b981;
+
+    /*
+    *   Components
+    */
+
+    /* Badges */
+    /* Primary */
+    --color-badge-primary-bg: #818cf8;
+    --color-badge-primary-text: #18181b;
+    --color-badge-primary-outlined-text: #a5b4fc;
+    --color-badge-primary-outlined-border: #818cf8;
+
+    /* Secondary */
+    --color-badge-secondary-bg: #6272a4;
+    --color-badge-secondary-text: #f8f8f2;
+    --color-badge-secondary-outlined-text: #8b98c4;
+    --color-badge-secondary-outlined-border: #6272a4;
+
+    /* Success */
+    --color-badge-success-bg: #34d399;
+    --color-badge-success-text: #18181b;
+    --color-badge-success-outlined-text: #6ee7b7;
+    --color-badge-success-outlined-border: #34d399;
+
+    /* Warning */
+    --color-badge-warning-bg: #fbbf24;
+    --color-badge-warning-text: #18181b;
+    --color-badge-warning-outlined-text: #fcd34d;
+    --color-badge-warning-outlined-border: #fbbf24;
+
+    /* Error */
+    --color-badge-error-bg: #f87171;
+    --color-badge-error-text: #18181b;
+    --color-badge-error-outlined-text: #fca5a5;
+    --color-badge-error-outlined-border: #f87171;
+    /* Badges */
+
+    /* Buttons */
+    /* Primary*/
+    --color-button-primary-text: #ffffff;
+    --color-button-primary-bg: #818cf8;
+    --color-button-primary-hover-text: #ffffff;
+    --color-button-primary-hover-bg: #6366f1;
+    --color-button-primary-hover-ring: #a5b4fc;
+
+    /* Secondary */
+    --color-button-secondary-text: #f8f8f2;
+    --color-button-secondary-bg: #44475a;
+    --color-button-secondary-hover-text: #ffffff;
+    --color-button-secondary-hover-bg: #4a4d62;
+    --color-button-secondary-hover-ring: #6272a4;
+
+    /* Outline */
+    --color-button-outline-text: #a5b4fc;
+    --color-button-outline-border: "";
+    --color-button-outline-hover-bg: #383a4a;
+    --color-button-outline-hover-ring: #818cf8;
+
+    /* Ghost */
+    --color-button-ghost-text: #f8f8f2;
+    --color-button-ghost-hover-text: #ffffff;
+    --color-button-ghost-hover-bg: #44475a;
+    --color-button-ghost-hover-ring: #44475a;
+
+    /* Danger */
+    --color-button-danger-text: #ffffff;
+    --color-button-danger-bg: #dc2626;
+    --color-button-danger-hover-text: #ffffff;
+    --color-button-danger-hover-bg: #b91c1c;
+    --color-button-danger-hover-ring: #f87171;
+    /* Buttons */
+
+    /* Cards */
+    /* Default */
+    --color-card-default-bg: #44475a;
+    --color-card-default-border: #6272a4;
+
+    /* Outlined */
+    --color-card-outlined-border: #6272a4;
+
+    /* Elevated */
+    --color-card-elevated-bg: #4a4d62;
+
+    /* Flat */
+    --color-card-flat-bg: #383a4a;
+    /* Cards */
+
+    /* Card Footer & Header */
+    --color-card-footer-border: #6272a4;
+    --color-card-header-border: #6272a4;
+    /* Card Footer & Header */
+
+    /* Divider */
+    --color-divider-color: #6272a4;
+    --color-divider-text: #8b98c4;
+    /* Divider */
+
+    /* Forms */
+    /* Checkbox */
+    --color-checkbox-border: #6272a4;
+    --color-checkbox-text: #818cf8;
+    --color-checkbox-ring: #a5b4fc;
+
+    /* Inputs */
+    /* Default*/
+    --color-input-default-border: #6272a4;
+    --color-input-default-text: #8b98c4;
+    --color-input-default-focus-border: #818cf8;
+    --color-input-default-focus-ring: #a5b4fc;
+
+    /* Filled */
+    --color-input-filled-bg: #44475a;
+    --color-input-filled-text: #8b98c4;
+    --color-input-filled-focus-bg: #4a4d62;
+    --color-input-filled-focus-ring: #a5b4fc;
+
+    /* Underline */
+    --color-input-underline-text: #8b98c4;
+    --color-input-underline-color: #6272a4;
+    --color-input-underline-focus-color: #818cf8;
+    /* Inputs */
+
+    /* Toggle */
+    --color-toggle-true: #818cf8;
+    --color-toggle-false: #6272a4;
+    --color-toggle-dot: #ffffff;
+    /* Forms */
+
+    /* Hoverbubble */
+    --color-hover-bubble-bg: #44475a;
+    --color-hover-bubble-text: #f8f8f2;
+    /* Hoverbubble */
+
+    /* Link with icon */
+    --color-icon-link-text: #a5b4fc;
+    --color-icon-link-text-hover: #c7d2fe;
+    /* Link with icon */
+
+    /* Modal */
+    --color-modal-bg: #44475a;
+    /* Modal */
+
+    /* Table */
+    --color-table-border: #6272a4;
+    --color-table-head-divide: #6272a4;
+    --color-table-head-text: #f8f8f2;
+    --color-table-head-bg: #44475a;
+    --color-table-body-bg: #2a2d3f;
+    --color-table-body-text: #f8f8f2;
+    --color-table-body-divide: #4a4d62;
+    --color-table-body-hover: #4a4d62;
+    --color-table-body-stripe: #383a4a;
+    /* Table */
+}
