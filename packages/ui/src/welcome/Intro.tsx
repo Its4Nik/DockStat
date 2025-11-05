@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
-import { Card } from "../components/Card/Card";
-import DockStatLogo from "../../public/DockStat2-06.png"
+import { Card, CardBody } from "../components/Card/Card";
+import DockStatLogo from "../../public/DockStat2-06.png";
 
-
-export default function IntroScreen() {
+export default function IntroScreen({ message }: { message?: string }) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    // Hide after all animations complete (logo fade-in + stripe animations)
     const timer = setTimeout(() => setVisible(false), 4000);
     return () => clearTimeout(timer);
   }, []);
@@ -23,7 +21,7 @@ export default function IntroScreen() {
             key={String(i)}
             className="flex-1 bg-linear-to-b from-zinc-800 to-zinc-900 animate-float-up"
             style={{
-              animationDelay: `${i * 0.1}s`,
+              animationDelay: `${i * 0.08}s`,
             }}
           />
         ))}
@@ -36,11 +34,18 @@ export default function IntroScreen() {
         <div
           className="animate-fade-in-up text-white text-6xl font-bold drop-shadow-lg"
           style={{
-            animationDelay: "0.5s" // Delay logo to let stripes start first
+            animationDelay: "0.5s"
           }}
         >
-          <Card>
+          <Card className="relative">
             <img src={DockStatLogo} className="w-40 h-40" alt="DockStat Logo" />
+            {message ? (
+              <CardBody>
+                <p className="text-sm">
+                  {message}
+                </p>
+              </CardBody>
+            ) : (null)}
           </Card>
         </div>
       </div>
