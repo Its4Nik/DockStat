@@ -139,6 +139,12 @@
     --color-input-underline-text: #8b98c4;
     --color-input-underline-color: #6272a4;
     --color-input-underline-focus-color: #818cf8;
+
+    /* Slider */
+    --color-slider-base-bg: #364153;
+    --color-slider-gradient-from: #6272a4;
+    --color-slider-gradient-to: #818cf8;
+    --color-slider-solid-bg: #818cf8;
     /* Inputs */
 
     /* Toggle */
@@ -172,4 +178,40 @@
     --color-table-body-hover: #4a4d62;
     --color-table-body-stripe: #383a4a;
     /* Table */
+
+
+
+    /* Animations */
+    --animate-float-up: float-up 2.5s ease-in-out forwards;
+    --animate-fade-in-up: fade-in-up 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    /* Animations */
+}
+
+@keyframes float-up {
+    0% {
+        transform: scaleY(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-120%) scaleY(0.8);
+
+    }
+}
+
+@keyframes fade-in-up {
+    0% {
+        opacity: 0;
+        transform: translateY(30px) scale(0.9);
+    }
+
+    70% {
+        transform: translateY(-5px) scale(1.02);
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.3;
+        transform: translateY(-700%) scale(0.4);
+    }
 }

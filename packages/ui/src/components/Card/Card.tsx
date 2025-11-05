@@ -21,12 +21,12 @@ export const Card: React.FC<CardProps> = ({
   onClick,
   hoverable = false,
 }) => {
-  const baseClasses = 'rounded-lg transition-all duration-200';
+  const baseClasses = 'shadow-xl rounded-lg transition-all duration-200';
 
   const variantClasses = {
     default: 'bg-card-default-bg border border-card-default-border text-primary-text',
     outlined: 'border border-card-outlined-border bg-transparent text-secondary-text',
-    elevated: 'bg-card-elevated-bg shadow-md text-primary-text',
+    elevated: 'bg-card-elevated-bg shadow-2xl text-primary-text',
     flat: 'bg-card-flat-bg border-none text-muted-text',
   };
 
@@ -36,12 +36,12 @@ export const Card: React.FC<CardProps> = ({
     lg: 'p-8',
   };
 
-  const hoverClasses = hoverable ? 'hover:shadow-lg hover:-translate-y-1 cursor-pointer' : '';
+  const hoverClasses = hoverable ? 'hover:shadow-lg hover:-translate-y-1' : '';
 
   return (
     <button
       type="button"
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${hoverClasses} ${className}`}
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${hoverClasses} ${onClick ? "cursor-pointer" : ""} ${className}`}
       onClick={onClick}
     >
       {children}

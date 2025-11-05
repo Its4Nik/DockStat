@@ -5,15 +5,17 @@ export type DividerVariant = 'solid' | 'dashed' | 'dotted';
 export interface DividerProps {
   variant?: DividerVariant;
   className?: string;
+  shadow?: boolean;
   label?: string;
 }
 
 export const Divider: React.FC<DividerProps> = ({
   variant = 'solid',
   className = '',
+  shadow = true,
   label,
 }) => {
-  const baseClasses = 'border-divider-color';
+  const baseClasses = `border-divider-color ${shadow ? "shadow-2xl" : ""}`;
   const variantClasses = {
     solid: 'border-solid',
     dashed: 'border-dashed',

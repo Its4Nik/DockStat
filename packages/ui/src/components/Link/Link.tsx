@@ -2,7 +2,7 @@ import type React from 'react';
 
 export interface LinkWithIconProps {
   href: string;
-  label: string;
+  children: React.ReactNode;
   icon?: React.ReactNode;
   iconPosition?: 'left' | 'right';
   className?: string;
@@ -11,7 +11,7 @@ export interface LinkWithIconProps {
 
 export const LinkWithIcon: React.FC<LinkWithIconProps> = ({
   href,
-  label,
+  children,
   icon,
   iconPosition = 'left',
   className = '',
@@ -28,7 +28,7 @@ export const LinkWithIcon: React.FC<LinkWithIconProps> = ({
       className={`inline-flex items-center text-icon-link-text hover:icon-link-text-hover transition-colors ${className}`}
     >
       {isLeft && <span className="mr-1">{icon}</span>}
-      <span>{label}</span>
+      {children}
       {isRight && <span className="ml-1">{icon}</span>}
     </a>
   );
