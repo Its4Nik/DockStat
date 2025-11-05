@@ -6,11 +6,12 @@ const Repo = t.Object({
   // Points to root Manifest
   source: t.String(),
 
-  // The Policy defines if you want to trust a Repo completely and accept any Plugins/Stacks/Themes without veryfing with a compatible verification server
-  // The Hashes will be servered by the API, where their code was receiced from.
-  // After receiving all the hashes they will be verified by the compatible verification api
-  // This Verification API will then in turn check all versions of the Hashes and mark any plugin/stack/theme version that is not verified and also block installations of untrusted plugins
-  // If the Policy is set to relaxed there will be no verification for anythin at all.
+  // The Policy determines whether a repository is fully trusted.
+  // - If fully trusted, any plugins, stacks, or themes are accepted without verification.
+  // - Hashes for all received code are provided by the API.
+  // - These hashes are checked against the verification API, which validates versions
+  //   and blocks installation of untrusted or unverified plugins, stacks, or themes.
+  // - If the Policy is set to "relaxed", no verification is performed at all.
   policy: t.UnionEnum(["strict", "relaxed"]),
   verification_api: t.Nullable(t.String({ format: 'uri' })),
   isVerified: t.Boolean(),

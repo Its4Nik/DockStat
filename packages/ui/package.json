@@ -1,16 +1,28 @@
 {
-  "name": "ui",
+  "name": "@dockstat/ui",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "types": "./src/components/index.ts",
+  "exports": {
+    ".": "./src/components/index.ts",
+    "./css": "./src/App.css"
+  },
+  "files": [
+    "./src/App.css",
+    "./**/*.{ts,tsx,css,scss,md,html,json}"
+  ],
   "scripts": {
     "dev": "storybook dev -p 6006",
+    "d": "storybook dev -p 6006 --no-open",
     "build": "storybook build",
+    "bundle": "bun build --minify src/components/index.ts --outdir=./dist",
     "lint": "eslint .",
     "preview": "vite preview",
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@dockstat/typings": "workspace:*",
     "@storybook/client-api": "latest",
     "@storybook/react-vite": "^10.0.2",
     "@tailwindcss/vite": "^4.1.16",

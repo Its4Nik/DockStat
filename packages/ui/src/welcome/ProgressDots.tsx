@@ -16,8 +16,7 @@ export const ProgressDots = ({
         key={slide.title}
         onClick={() => onDotClick(index)}
         aria-label={`Go to step ${index + 1}`}
-        className={`w-3 h-3 rounded-full transition-all ${index === currentIndex ? "bg-white scale-110" : "bg-white/30"
-          }`}
+        className={`w-3 h-3 rounded-full transition-all ${index === currentIndex ? "bg-white scale-125" : index < currentIndex ? "bg-success" : "bg-gray-400"}`}
       />
     ))}
   </div>

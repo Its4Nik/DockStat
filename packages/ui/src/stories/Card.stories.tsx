@@ -25,7 +25,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <div className="space-x-4">
+    <div className="space-x-4 flex flex-row">
       <Card variant="default">
         <CardBody>Default Card</CardBody>
       </Card>

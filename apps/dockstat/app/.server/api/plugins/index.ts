@@ -11,13 +11,14 @@ export const PluginHandler = new PluginHandlerFactory(
   Elogger.getParentsForLoggerChaining()
 );
 
+
 const PluginTable: QueryBuilder<DBPluginShemaT> = PluginHandler.getTable();
 
 const PluginElysiaInstance = new Elysia({
   prefix: "/plugins",
   detail: { tags: ["Plugins"] },
 })
-  .get("/all", () => PluginTable.select(["*"]).all())
+  .get("/all", () => PluginHandler.getAll())
   .get("/status", () => PluginHandler.getStatus())
   .post("/install", ({ body }) => PluginHandler.savePlugin(body), {
     body: DBPluginShema,

@@ -17,6 +17,7 @@
     "@dockstat/plugin-handler": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*",
     "@dockstat/typings": "workspace:*",
+    "@dockstat/ui": "workspace:*",
     "@elysiajs/eden": "^1.4.4",
     "@elysiajs/openapi": "^1.4.11",
     "@react-router/fs-routes": "^7.9.5",

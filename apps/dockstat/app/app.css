@@ -1,16 +1,5 @@
+@import "@dockstat/ui/css";
 @import "tailwindcss";
 
-@theme {
-  --font-sans:
-    "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-}
-
-html,
-body {
-  @apply bg-white dark:bg-gray-950;
-
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
-}
+/* DO NOT REMOVE THE FOLLOWING LINE */
+@source "../../../packages/ui/src/**/*.{js,jsx,ts,tsx}";

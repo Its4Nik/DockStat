@@ -1,4 +1,4 @@
-import { Box, Github, Layers, Puzzle, Server, ShoppingBag, Store, Zap } from "lucide-react";
+import { Box, Github, Hand, Layers, LockIcon, PlaneTakeoff, Puzzle, ShoppingBag, Store, Zap } from "lucide-react";
 import { HoverBubble } from "../components/HoverBubble/HoverBubble";
 import { LinkWithIcon } from "../components/Link/Link";
 import { Badge } from "../components/Badge/Badge";
@@ -9,7 +9,7 @@ export const slides: Slide[] = [
   {
     title: "Welcome to DockStat",
     subtitle: "Next-gen container management and orchestration — modular, extensible, TS-first.",
-    icon: <Server className="w-10 h-10" />,
+    icon: <Hand className="w-10 h-10 animate-wave rotate-45" />,
     bullets: [
       { title: "Plugin-first design", desc: "Extend everything: deployers, notifiers, themes. The only limit is your imagination!" },
       { title: "Modern JS/TS ecosystem", desc: "Use the huge library ecosystem without limits." },
@@ -35,7 +35,7 @@ export const slides: Slide[] = [
   {
     title: "DockStat × Zoraxy",
     subtitle: "A modern alternative to Nginx Proxy Manager.",
-    icon: <Zap className="w-10 h-10" />,
+    icon: <LockIcon className="w-10 h-10" />,
     bullets: [
       { title: "Automatic subdomains", desc: "Auto-create based on container_name." },
       { title: "One-click deploy", desc: "Deploy Zoraxy to a host and manage proxies visually." },
@@ -46,7 +46,7 @@ export const slides: Slide[] = [
   {
     title: "DockStack Migrator",
     subtitle: "Migrate existing containers into DockStacks-managed stacks.",
-    icon: <Box className="w-10 h-10" />,
+    icon: <PlaneTakeoff className="w-10 h-10" />,
     bullets: [
       { title: "Read metadata", desc: "Generates docker-compose files from host containers." },
       { title: "Mount handling", desc: "Keep mounts or optionally copy data to managed paths." },

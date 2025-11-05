@@ -1,6 +1,6 @@
 import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type DB from "@dockstat/sqlite-wrapper"
-import type { DBPluginShemaT, Plugin } from "@dockstat/typings/types"
+import type { DBPluginShemaT, Plugin, RepoType } from "@dockstat/typings/types"
 import Logger from "@dockstat/logger"
 
 class PluginHandler {
@@ -43,6 +43,11 @@ class PluginHandler {
         }
       }
     })
+  }
+
+  public getAll() {
+    this.logger.debug("Fetching all plugins")
+    return this.table.select(["*"]).all()
   }
 
   public savePlugin(plugin: DBPluginShemaT) {
@@ -93,7 +98,7 @@ class PluginHandler {
     const imports = await Promise.allSettled(
       validPlugins.map(async (plugin) => {
         try {
-          const mod = (await import(plugin.plugin)) as Plugin
+          const mod = (await import(/* @vite-ignore */plugin.plugin)) as Plugin
           return { id: plugin.id, module: mod }
         } catch (err) {
           console.error(`Failed to import plugin ${plugin.plugin}:`, err)
@@ -129,7 +134,7 @@ class PluginHandler {
       throw new Error(`Plugin already loaded: ${id}`)
     }
 
-    const mod = (await import(pluginToLoad.plugin)) as Plugin
+    const mod = (await import(/* @vite-ignore */pluginToLoad.plugin)) as Plugin
 
     return this.loadedPluginsMap.set(pluginToLoad.id as number, mod)
   }
@@ -204,6 +209,38 @@ class PluginHandler {
     }
 
     return await plugin.routes.handle(req)
+  }
+
+  public async pullRepoData(manifest: RepoType) {
+    switch (manifest.type) {
+      case "github":
+        // Format: OWNER/REPO:branch/PATH
+        const owner = manifest.source.split("/")[0];
+        const repo = manifest.source.split("/")[1];
+
+        if (!owner || !repo) {
+          throw new Error("Invalid GitHub repository URL");
+        }
+
+        const branchAndPath = manifest.source.split(":")[1] || "";
+
+        const branch = branchAndPath.split("/")[0] || "main";
+        const path = branchAndPath.split("/")[1] || "manifest.yml";
+
+        const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/refs/heads/${branch}/${path}`)
+
+        if (path.endsWith(".yml") || path.endsWith(".yaml")) {
+          return Bun.YAML.parse(await res.text())
+        }
+        if (path.endsWith(".json")) {
+          return await res.json()
+        }
+        if (path.endsWith(".toml")) {
+          return Bun.TOML.parse(await res.text())
+        }
+
+        throw new Error("Invalid file extension");
+    }
   }
 }
 

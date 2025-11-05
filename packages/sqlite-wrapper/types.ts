@@ -234,16 +234,16 @@ export type TypedTableSchema<T extends string = string> = Record<
 /**
  * Table constraint types
  */
-export interface TableConstraints {
+export interface TableConstraints<T> {
   /** PRIMARY KEY constraint on multiple columns */
-  primaryKey?: string[];
+  primaryKey?: ArrayKey<T>;
   /** UNIQUE constraints */
   unique?: string[] | string[][];
   /** CHECK constraints */
   check?: string[];
   /** FOREIGN KEY constraints */
   foreignKeys?: Array<{
-    columns: string[];
+    columns: ArrayKey<T>[];
     references: {
       table: string;
       columns: string[];
@@ -262,7 +262,7 @@ export interface TableOptions<T> {
   /** Create WITHOUT ROWID table */
   withoutRowId?: boolean;
   /** Table constraints */
-  constraints?: TableConstraints;
+  constraints?: TableConstraints<T>;
   /** Temporary table */
   temporary?: boolean;
   /** Table comment */
@@ -449,8 +449,8 @@ export const column = {
     length: 36,
     default: constraints?.generateDefault
       ? defaultExpr(
-          "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))",
-        )
+        "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))",
+      )
       : constraints?.default,
     ...constraints,
   }),

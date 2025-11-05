@@ -4,8 +4,8 @@ services:
     container_name: socket-proxy
     image: lscr.io/linuxserver/socket-proxy:latest
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    restart: no
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: on-failure
     read_only: true
     tmpfs:
       - /run
@@ -44,10 +44,10 @@ services:
   sqlite-web:
     container_name: sqlite-web
     image: ghcr.io/coleifer/sqlite-web:latest
-    restart: no
+    restart: on-failure
     ports:
       - 8080:8080
     volumes:
-      - ./apps/dockstat:/data:ro
+      - ./apps/dockstat:/data
     environment:
       - SQLITE_DATABASE=dockstat.sqlite

@@ -33,6 +33,9 @@ class DockStatDB {
           name: column.text({ notNull: false })
         },
         {
+          constraints: {
+            primaryKey: ["id"]
+          },
           ifNotExists: true,
           parser: {
             JSON: ["registered_repos", "default_themes", "tables", "tls_certs_and_keys", "hotkeys", "nav_links"]
@@ -52,41 +55,35 @@ class DockStatDB {
   private initializeDefaults(): void {
     this.logger.debug("Checking if database needs initialization with defaults");
     try {
-      // Initialize config table if empty
-      const existingConfig = this.config_table.select(["*"]).get();
-      if (!existingConfig) {
-        this.logger.info("No existing config found, initializing with defaults");
-        this.config_table.insert({
-          name: "DockStat",
-          version: "1.0.0",
-          id: 0,
-          allow_untrusted_repo: false,
-          default_themes: {
-            // Themes will be split in dark and white packs => each their own array, and 0 has to be dockstat default
-            dark: 0,
-            light: 0,
-          },
-          hotkeys: {},
-          nav_links: [],
-          registered_repos: [
-            {
-              name: "DockStacks",
-              source: "its4nik/dockstat",
-              type: "github",
-              isVerified: true,
-              policy: "strict",
-              verification_api: "https://api.itsnik.de/dockstacks/_verify",
-              hashes: null
-            }
-          ],
-          tables: [],
-          tls_certs_and_keys: { web: null, docker: null },
-        });
-        this.logger.debug("Default config inserted");
-      } else {
-        this.logger.debug("Database already initialized, skipping defaults");
-      }
-    } catch (error) {
+      this.logger.info("No existing config found, initializing with defaults");
+      this.config_table.where({ id: 0 }).insertOrReplace({
+        id: 0,
+        name: "DockStat",
+        version: "1.0.0",
+        allow_untrusted_repo: false,
+        default_themes: {
+          // Themes will be split in dark and white packs => each their own array, and 0 has to be dockstat default
+          dark: 0,
+          light: 0,
+        },
+        hotkeys: {},
+        nav_links: [],
+        registered_repos: [
+          {
+            name: "DockStacks",
+            source: "its4nik/dockstat:main/apps/dockstacks/manifest.json",
+            type: "github",
+            isVerified: true,
+            policy: "strict",
+            verification_api: "https://api.itsnik.de/dockstacks/_verify",
+            hashes: null
+          }
+        ],
+        tables: [],
+        tls_certs_and_keys: { web: null, docker: null },
+      });
+      this.logger.debug("Default config inserted");
+    } catch (error: unknown) {
       this.logger.error(`Failed to initialize defaults: ${error}`);
       throw error;
     }
