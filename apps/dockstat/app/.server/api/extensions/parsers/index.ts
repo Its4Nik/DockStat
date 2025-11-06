@@ -1,5 +1,5 @@
 import type { RepoType } from "@dockstat/typings/types";
-import { getGitHubPluginManifest } from "./github";
+import { getGitHubRepoManifest, getGitHubPluginManifest } from "./github";
 import { logger } from "..";
 
 export async function getRemotePluginManifest(repoType: RepoType["type"], repoSource: string, pluginName: string) {
@@ -8,4 +8,10 @@ export async function getRemotePluginManifest(repoType: RepoType["type"], repoSo
     return await getGitHubPluginManifest(repoSource, pluginName)
 
   return new Response(`Unknown Repository Type: ${repoType}`, { status: 402 })
+}
+
+export async function getRepoManifest(repoType: RepoType["type"], repoSource: string) {
+  logger.debug(`Getting remote Repo Manifest - repoType=${repoType} repoSource=${repoSource}`)
+  if (repoType === "github")
+    return getGitHubRepoManifest(repoSource)
 }

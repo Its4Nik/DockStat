@@ -17,15 +17,24 @@ export async function ExtensionLoader() {
 
   const installedPlugins = treatyResPlugins.data || []
 
+  const repoManifests: Record<string, { data: Record<string, string[]>, type: RepoType["type"], repoSource: string }> = {}
 
-
-
+  for (const repo of repos) {
+    repoManifests[repo.name] = {
+      data: (await api.extensions.repo.manifest.post({ repoSource: repo.source, repoType: repo.type })).data as Record<string, string[]>,
+      type: repo.type,
+      repoSource: repo.source
+    }
+  }
 
   const pDat: {
     installedPlugins: DBPluginShemaT[]
     repos: RepoType[]
     allow_untrusted_repo: boolean
-  } = { installedPlugins, repos, allow_untrusted_repo }
+    repoManifests: typeof repoManifests
+  } = { installedPlugins, repos, allow_untrusted_repo, repoManifests }
+
+  logger.debug(JSON.stringify(pDat))
 
   return pDat
 }

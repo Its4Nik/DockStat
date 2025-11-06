@@ -13,7 +13,7 @@ const PluginElysiaInstance = new Elysia({
   prefix: "/plugins",
   detail: { tags: ["Plugins"] },
 })
-  .get("/all", () => PluginHandler.getAll(), { body: t.Array(DBPluginShema) })
+  .get("/all", () => PluginHandler.getAll())
   .get("/status", () => PluginHandler.getStatus())
   .post("/install", ({ body }) => PluginHandler.savePlugin(body), {
     body: DBPluginShema,

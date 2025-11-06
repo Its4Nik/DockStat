@@ -1,5 +1,5 @@
 import { Repo } from "@dockstat/typings/schemas";
-import { getRemotePluginManifest } from "./parsers"
+import { getRemotePluginManifest, getRepoManifest } from "./parsers"
 import Elysia, { t } from "elysia";
 import { Elogger } from "../handlers";
 import Logger from "@dockstat/logger";
@@ -7,9 +7,14 @@ import Logger from "@dockstat/logger";
 export const logger = new Logger("Extensions", Elogger.getParentsForLoggerChaining())
 
 const ExtensionElysiaInstance = new Elysia({ prefix: "/extensions", detail: { tags: ["Extensions"] } })
-  .post("/plugin/manifest", async ({ body }) => await getRemotePluginManifest(body.repoType, body.repoSource, body.pluginName), {
+  .post("/plugin/manifest/:pluginName", async ({ body, params }) => await getRemotePluginManifest(body.repoType, body.repoSource, params.pluginName), {
     body: t.Object({
-      pluginName: t.String(),
+      repoSource: t.String(),
+      repoType: Repo.properties.type
+    })
+  })
+  .post("/repo/manifest", async ({ body }) => getRepoManifest(body.repoType, body.repoSource), {
+    body: t.Object({
       repoSource: t.String(),
       repoType: Repo.properties.type
     })
