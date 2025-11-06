@@ -8,3 +8,4 @@ const DockStacks: Plugin = {
 }
 
 export default DockStacks
+export const meta = PluginMeta

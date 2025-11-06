@@ -1,32 +1,15 @@
 import type { RepoType } from "@dockstat/typings/types";
 import { Card, CardBody, CardHeader } from "../Card/Card";
 import { Badge } from "../Badge/Badge";
-import { LockOpen, Lock, Github, Gitlab, Coffee, Link, Folder, Check, X } from "lucide-react";
+import { LockOpen, Lock, Check, X } from "lucide-react";
 import { HoverBubble } from "../HoverBubble/HoverBubble";
 import { Divider } from "../Divider/Divider";
-
-
-
-function getRepoIcon(repoType: RepoType["type"]) {
-  switch (repoType) {
-    case "github":
-      return <Github />;
-    case "gitlab":
-      return <Gitlab />;
-    case "gitea":
-      return <Coffee />;
-    case "http":
-      return <Link />;
-    case "local":
-      return <Folder />;
-  }
-}
+import { getRepoIcon } from "../../utils/repoIcons";
+import { Button } from "../Button/Button";
+import { useState } from "react";
 
 export function Repo({ repo }: { repo: RepoType }) {
-
-
-
-
+  const [selectedType, setSelectedType] = useState<"plugins" | "themes" | "stacks">("plugins")
   return (
     <Card hoverable variant="outlined" className="w-full" size="md">
       <CardHeader className="">
@@ -76,6 +59,17 @@ export function Repo({ repo }: { repo: RepoType }) {
         </div>
       </CardHeader>
       <CardBody>
+        <div className="w-fit flex-row space-x-2">
+          <Button size="sm" disabled={selectedType === "plugins"} variant={selectedType === "plugins" ? "outline" : "primary"} onClick={() => setSelectedType("plugins")}>
+            Plugins
+          </Button>
+          <Button size="sm" disabled={selectedType === "stacks"} variant={selectedType === "stacks" ? "outline" : "primary"} onClick={() => setSelectedType("stacks")}>
+            Plugins
+          </Button>
+          <Button size="sm" disabled={selectedType === "themes"} variant={selectedType === "themes" ? "outline" : "primary"} onClick={() => setSelectedType("themes")}>
+            Plugins
+          </Button>
+        </div>
       </CardBody>
     </Card>
   )

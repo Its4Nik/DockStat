@@ -2,6 +2,7 @@ import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type DB from "@dockstat/sqlite-wrapper"
 import type { DBPluginShemaT, Plugin, RepoType } from "@dockstat/typings/types"
 import Logger from "@dockstat/logger"
+import type { StaticPluginMeta } from "@dockstat/typings/types"
 
 class PluginHandler {
   private loadedPluginsMap = new Map<number, Plugin>()
@@ -18,21 +19,20 @@ class PluginHandler {
     this.logger.debug("Creating Plugin Table")
     this.table = this.DB.createTable<DBPluginShemaT>("plugins", {
       id: column.id(),
+      table: column.json(),
       // Plugin Metadata
       name: column.text({ notNull: true, unique: true }),
       description: column.text({ notNull: false }),
       tags: column.json(),
       version: column.text({ notNull: true }),
       repository: column.text({ notNull: true }),
-      type: column.enum(["http", "github", "gitlab"]),
-      branch: column.text({ notNull: false }),
       manifest: column.text({ notNull: true }),
       author: column.json({ notNull: true }),
 
       plugin: column.module()
     }, {
       ifNotExists: true, parser: {
-        JSON: ["table", "author", "tags"],
+        JSON: ["table", "author", "tags", "table"],
         MODULE: {
           "plugin": {
             loader: "ts",
@@ -157,13 +157,7 @@ class PluginHandler {
     const loadedPlugins = this.getLoadedPlugins()
 
     const rDat = {
-      installed_plugins: installedPlugins.length,
-      types: {
-        gitlab: installedPlugins.filter((e) => e.type === 'gitlab'),
-        github: installedPlugins.filter((e) => e.type === 'github'),
-        http: installedPlugins.filter((e) => e.type === 'http'),
-        default: installedPlugins.filter((e) => e.type === "default")
-      },
+      installed_plugins: { count: installedPlugins.length, data: installedPlugins },
       repos: installedPlugins.map(l => l.repository),
       loaded_plugins: loadedPlugins
         .map(id => installedPlugins.find(plugin => plugin.id === id))
@@ -211,35 +205,39 @@ class PluginHandler {
     return await plugin.routes.handle(req)
   }
 
-  public async pullRepoData(manifest: RepoType) {
-    switch (manifest.type) {
+  public async getUnknownPluginMeta(RepoManifest: RepoType, pluginName: string): Promise<StaticPluginMeta> {
+    switch (RepoManifest.type) {
       case "github":
         // Format: OWNER/REPO:branch/PATH
-        const owner = manifest.source.split("/")[0];
-        const repo = manifest.source.split("/")[1];
+        const owner = RepoManifest.source.split("/")[0];
+        const repo = RepoManifest.source.split("/")[1];
 
         if (!owner || !repo) {
           throw new Error("Invalid GitHub repository URL");
         }
 
-        const branchAndPath = manifest.source.split(":")[1] || "";
+        const branchAndPath = RepoManifest.source.split(":")[1] || "";
 
         const branch = branchAndPath.split("/")[0] || "main";
-        const path = branchAndPath.split("/")[1] || "manifest.yml";
+        const path = branchAndPath.split("/")[1] || `src/content/plugins/${encodeURI(pluginName)}/manifest.name`;
 
         const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/refs/heads/${branch}/${path}`)
 
         if (path.endsWith(".yml") || path.endsWith(".yaml")) {
-          return Bun.YAML.parse(await res.text())
+          return Bun.YAML.parse(await res.text()) as StaticPluginMeta
         }
         if (path.endsWith(".json")) {
-          return await res.json()
+          return await res.json() as StaticPluginMeta
         }
         if (path.endsWith(".toml")) {
-          return Bun.TOML.parse(await res.text())
+          return Bun.TOML.parse(await res.text()) as StaticPluginMeta
         }
 
         throw new Error("Invalid file extension");
+
+      default: {
+        throw new Error()
+      }
     }
   }
 }

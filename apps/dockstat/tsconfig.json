@@ -5,17 +5,35 @@
     "**/.client/**/*",
     ".react-router/types/**/*"
   ],
-  "extends": ["../../tsconfig.base.json"],
+  "extends": [
+    "../../tsconfig.base.json"
+  ],
   "compilerOptions": {
-    "lib": ["ESNext", "DOM", "DOM.Iterable", "ES2022"],
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable",
+      "ES2022"
+    ],
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "paths": {
-      "~/*": ["./app/*"]
+      "~/*": [
+        "./app/*"
+      ],
+      "@ServerActions/*": [
+        "./app/.server/actions/*"
+      ],
+      "@ServerLoaders/*": [
+        "./app/.server/loaders/*"
+      ]
     },
-    "rootDirs": [".", "./.react-router/types"],
+    "rootDirs": [
+      ".",
+      "./.react-router/types"
+    ],
     "baseUrl": ".",
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,

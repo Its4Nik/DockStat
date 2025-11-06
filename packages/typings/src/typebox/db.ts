@@ -3,7 +3,9 @@ import { t } from "elysia";
 const Repo = t.Object({
   name: t.String(),
   type: t.UnionEnum(["local", "http", "github", "gitlab", "gitea"]),
+
   // Points to root Manifest
+  // Is custom format!
   source: t.String(),
 
   // The Policy determines whether a repository is fully trusted.

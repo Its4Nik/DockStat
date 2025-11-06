@@ -13,11 +13,11 @@
   "dependencies": {
     "@dockstat/db": "workspace:*",
     "@dockstat/logger": "workspace:*",
-    "@dockstat/utils": "workspace:*",
     "@dockstat/plugin-handler": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*",
     "@dockstat/typings": "workspace:*",
     "@dockstat/ui": "workspace:*",
+    "@dockstat/utils": "workspace:*",
     "@elysiajs/eden": "^1.4.4",
     "@elysiajs/openapi": "^1.4.11",
     "@react-router/fs-routes": "^7.9.5",
@@ -28,6 +28,7 @@
     "logixlysia": "^5.3.0",
     "memoirist": "^0.4.0",
     "react": "^19.2.0",
+    "react-collapsible": "^2.10.0",
     "react-dom": "^19.2.0",
     "react-router": "^7.9.5"
   },

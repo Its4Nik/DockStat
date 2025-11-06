@@ -2,13 +2,23 @@ import type { ColumnDefinition } from "@dockstat/sqlite-wrapper";
 import { type AnyElysia, t } from "elysia";
 import type { DockerClientEvents } from "../docker-client";
 
+/**
+ * name: The Plugins name
+ * description: A short description of what the plugin does
+ * version: Semver (example: v1.0.1,  2.12.4)
+ * repository: The path to the Repository Manifest (can be in the custom formats)
+ * manifest: Path to the Plugin Manifest file (can be in the same custom formats)
+ * author:
+ *  name: Your Alias
+ *  website: (Nullable) Your Website
+ *  email: (Nullable) Your E-Mail
+ * tags: Tags which should be shown in DockStore
+ */
 export const PluginMeta = {
   name: t.String(),
   description: t.String(),
   version: t.String(),
   repository: t.String(),
-  type: t.UnionEnum(["http", "github", "gitlab", "default"]),
-  branch: t.Nullable(t.String(), { default: null }),
   manifest: t.String(),
   author: t.Object({
     name: t.String(),

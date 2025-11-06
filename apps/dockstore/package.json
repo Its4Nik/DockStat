@@ -1,6 +1,6 @@
 {
   "name": "dockstore",
-  "module": "index.ts",
+  "module": "bundler.ts",
   "type": "module",
   "private": true,
   "devDependencies": {

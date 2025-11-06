@@ -10,6 +10,8 @@ if (Bun.env.DOCKSTAT_LOGGER_FULL_FILE_PATH === "true") {
 }
 
 const DISABLED_LOGGERS: string[] = (Bun.env.DOCKSTAT_LOGGER_DISABLED_LOGGERS || "").split(",")
+const ONLY_SHOW: string[] = (Bun.env.DOCKSTAT_LOGGER_ONLY_SHOW || "").split(",")
+const NAME_SEP: string = Bun.env.DOCKSTAT_LOGGER_SEPERATOR || ":"
 
 function stringToHash(str: string): number {
   let hash = 0;
@@ -78,6 +80,10 @@ class Logger {
     this.parents = parents;
 
     this.disabled = DISABLED_LOGGERS.includes(prefix)
+
+    if (ONLY_SHOW.length > 1) {
+      this.disabled = (!ONLY_SHOW.includes(prefix)) === true ? true : this.disabled
+    }
     this.debug(`Logger Status: ${this.disabled ? "disabled" : "active"}`)
   }
 
@@ -138,7 +144,7 @@ class Logger {
     const callerInfo = chalk.blue(getCallerInfo());
 
     const coloredPrefix = this.parents.length >= 1 ? `[${chalk.cyan(this.name)}${chalk.yellow(
-      `@${this.parents.join("@")}`
+      `${NAME_SEP}${this.parents.join(NAME_SEP)}`
     )}` : `[${chalk.cyan(this.name)}`
 
     const msgRequest = `${requestID ? `(${this.colorByReqID(requestID)}${(this.reqFrom[requestID] || "").length > 0 ? `@${chalk.green(this.reqFrom[requestID])}` : ""}) ` : ""}`

@@ -1,47 +1,33 @@
-import type { DBPluginShemaT, RepoType } from "@dockstat/typings/types"
-import { DockStore } from "@dockstat/ui"
+import type { RepoType } from "@dockstat/typings/types"
+import { ExtensionBrowser } from "@dockstat/ui"
 import { useLoaderData } from "react-router"
-import { api } from "~/.server/treaty"
 import type { Route } from "./+types/dockstore"
+import { ExtensionLoader } from "@ServerLoaders/extensions"
+import { ExtensionActions } from "@ServerActions/extensions"
 
-export async function action({ request }: Route.ActionArgs) {
-  let formData = await request.formData()
-  let pluginManifest: DBPluginShemaT = JSON.parse(formData.get("pluginManifest")?.toString() || "{}")
-  let repoId = formData.get("repoId")?.toString()
-  let action = formData.get("action")
+export const action = ExtensionActions
+export const loader = ExtensionLoader
 
-  if (action === "install") {
-    return await api.plugins.install.post(pluginManifest)
-  } else if (action === "uninstall") {
-    if (!repoId) { return new Response("No Repository ID received", { status: 400 }) }
+export async function clientLoader({ serverLoader }: Route.ClientLoaderArgs) {
+  const serverLoaderData = await serverLoader()
+  const t = {}
 
-    return await api.plugins.delete.post(Number(repoId))
+  for (const repo of serverLoaderData.repos) {
+    const [] = await Promise.all([
+      fetch("/api/")
+    ])
   }
-  return new Response("Invalid action", { status: 400 })
+
+  return { ...serverLoaderData }
 }
+clientLoader.hydrate = true as const;
 
-export async function loader() {
-  const { data: pluginData } = await api.plugins.all.get()
-  const { data: config } = await api.db["dockstat-config"].get()
-  const repos = config?.config.registered_repos || []
-  const allow_untrusted_repo = Boolean(config?.config.allow_untrusted_repo)
 
-  const installedPlugins = pluginData || []
-
-  const pDat: {
-    installedPlugins: DBPluginShemaT[]
-    repos: RepoType[]
-    allow_untrusted_repo: boolean
-  } = { installedPlugins, repos, allow_untrusted_repo }
-
-  return pDat
-}
-
-export default function DockStorePage() {
+export default async function Extensions({ }: Route.ComponentProps) {
   const data = useLoaderData<typeof loader>()
 
   return (
-    <DockStore
+    <ExtensionBrowser
       allowUntrustedRepo={data.allow_untrusted_repo}
       installedPlugins={data.installedPlugins}
       repos={data.repos}

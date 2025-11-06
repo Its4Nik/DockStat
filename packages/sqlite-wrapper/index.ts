@@ -218,7 +218,7 @@ class DB {
    */
   createTable<_T extends Record<string, unknown>>(
     tableName: string,
-    columns: Record<keyof _T, ColumnDefinition> | TableSchema,
+    columns: Record<keyof _T, ColumnDefinition>,
     options?: TableOptions<_T>,
   ): QueryBuilder<_T> {
     const temp = options?.temporary ? "TEMPORARY " : "";

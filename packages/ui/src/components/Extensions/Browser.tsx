@@ -3,19 +3,19 @@ import { Card, CardBody, CardHeader } from "../Card/Card";
 import { Badge } from "../Badge/Badge";
 import { Repo } from "./Repo";
 
-export interface DockStoreProps {
+export interface ExtensionBrowserProps {
   repos: RepoType[];
   installedPlugins: DBPluginShemaT[]
   allowUntrustedRepo: boolean
 }
 
-export function DockStore({ repos, allowUntrustedRepo, installedPlugins }: DockStoreProps) {
+export function ExtensionBrowser({ repos, allowUntrustedRepo, installedPlugins }: ExtensionBrowserProps) {
   return (
     <Card className="w-full">
       <CardHeader>
         <div className="justify-between flex">
-          <p>
-            DockStore
+          <p className="font-extrabold text-2xl">
+            Extensions
           </p>
 
           <div className="flex flex-row space-x-2 my-auto">

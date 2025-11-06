@@ -50,6 +50,7 @@
         "logixlysia": "^5.3.0",
         "memoirist": "^0.4.0",
         "react": "^19.2.0",
+        "react-collapsible": "^2.10.0",
         "react-dom": "^19.2.0",
         "react-router": "^7.9.5",
       },
@@ -223,7 +224,7 @@
     },
     "packages/ui": {
       "name": "@dockstat/ui",
-      "version": "0.0.0",
+      "version": "1.0.0",
       "dependencies": {
         "@dockstat/typings": "workspace:*",
         "@storybook/client-api": "latest",
@@ -1304,6 +1305,8 @@
     "raw-body": ["raw-body@2.5.2", "", { "dependencies": { "bytes": "3.1.2", "http-errors": "2.0.0", "iconv-lite": "0.4.24", "unpipe": "1.0.0" } }, "sha512-8zGqypfENjCIqGhgXToC8aB2r7YrBX+AQAfIPs/Mlk+BtPTztOvTS01NRW/3Eh60J+a48lt8qsCzirQ6loCVfA=="],
 
     "react": ["react@19.2.0", "", {}, "sha512-tmbWg6W31tQLeB5cdIBOicJDJRR2KzXsV7uSK9iNfLWQ5bIZfxuPEHp7M8wiHyHnn0DD1i7w3Zmin0FtkrwoCQ=="],
+
+    "react-collapsible": ["react-collapsible@2.10.0", "", { "peerDependencies": { "react": "~15 || ~16 || ~17 || ~18", "react-dom": "~15 || ~16 || ~17 || ~18" } }, "sha512-kEVsmlFfXBMTCnU5gwIv19MdmPAhbIPzz5Er37TiJSzRKS0IHrqAKQyQeHEmtoGIQMTcVI46FzE4z3NlVTx77A=="],
 
     "react-docgen": ["react-docgen@8.0.2", "", { "dependencies": { "@babel/core": "^7.28.0", "@babel/traverse": "^7.28.0", "@babel/types": "^7.28.2", "@types/babel__core": "^7.20.5", "@types/babel__traverse": "^7.20.7", "@types/doctrine": "^0.0.9", "@types/resolve": "^1.20.2", "doctrine": "^3.0.0", "resolve": "^1.22.1", "strip-indent": "^4.0.0" } }, "sha512-+NRMYs2DyTP4/tqWz371Oo50JqmWltR1h2gcdgUMAWZJIAvrd0/SqlCfx7tpzpl/s36rzw6qH2MjoNrxtRNYhA=="],
 

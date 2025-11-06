@@ -70,8 +70,8 @@ class DockStatDB {
         nav_links: [],
         registered_repos: [
           {
-            name: "DockStacks",
-            source: "its4nik/dockstat:main/apps/dockstacks/manifest.json",
+            name: "DockStore",
+            source: "its4nik/dockstat:dev/apps/dockstore",
             type: "github",
             isVerified: true,
             policy: "strict",

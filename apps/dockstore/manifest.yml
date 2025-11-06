@@ -1,0 +1,3 @@
+plugins:
+  - dockstacks
+  - docknode-plugin
