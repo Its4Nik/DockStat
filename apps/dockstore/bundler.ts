@@ -45,7 +45,7 @@ for (const plug of plugins.scanSync()) {
     manifest: ${getPluginManifestPath(plug)}
 `)
 
-  BUNDLED_PLUGINS.push(encodeURI(getPluginName(plug)))
+  BUNDLED_PLUGINS.push(meta)
 }
 
 const RepoManifestData = {

@@ -1,6 +1,6 @@
-import type { StaticPluginMeta } from "@dockstat/typings/types";
+import type { WrappedPluginMeta } from "@dockstat/typings/types";
 
-export const PluginMeta: StaticPluginMeta = {
+export const PluginMeta: WrappedPluginMeta = {
   name: "DockStacks",
   description: "This Plugin allows for deploying so called stacks. Stacks are prebuilt docker compose file, with tempplating and plugin support",
   type: "default",

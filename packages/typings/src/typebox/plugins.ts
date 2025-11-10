@@ -29,9 +29,9 @@ export const PluginMeta = {
   tags: t.Optional(t.Array(t.String())),
 };
 
-const pPluginMeta = t.Object({ ...PluginMeta })
+export const WrappedPluginMeta = t.Object(PluginMeta)
 
-export type StaticPluginMeta = typeof pPluginMeta.static
+type WrappedPluginMetaType = typeof WrappedPluginMeta.static
 
 export const DBPluginShema = t.Object({
   id: t.Nullable(t.Number()),
@@ -46,13 +46,14 @@ export const DBPluginShema = t.Object({
 
 export type DBPluginShemaT = typeof DBPluginShema.static
 
-export interface DBPlugin<Columns = Record<string, ColumnDefinition>> extends StaticPluginMeta, Record<string, unknown> {
+
+export interface DBPlugin<Columns = Record<string, ColumnDefinition>> extends WrappedPluginMetaType, Record<string, unknown> {
   id?: number;
   table?: { name: string, columns: Columns, jsonColumns: (keyof Columns)[] }
   plugin: string
 }
 
-export interface Plugin extends StaticPluginMeta, Omit<DBPlugin, "plugin"> {
+export interface Plugin extends WrappedPluginMetaType, Omit<DBPlugin, "plugin"> {
   routes?: AnyElysia,
   events?: Partial<DockerClientEvents>
   init?: () => void,

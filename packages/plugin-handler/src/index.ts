@@ -2,7 +2,7 @@ import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type DB from "@dockstat/sqlite-wrapper"
 import type { DBPluginShemaT, Plugin, RepoType } from "@dockstat/typings/types"
 import Logger from "@dockstat/logger"
-import type { StaticPluginMeta } from "@dockstat/typings/types"
+import type { WrappedPluginMeta } from "@dockstat/typings/types"
 
 class PluginHandler {
   private loadedPluginsMap = new Map<number, Plugin>()
@@ -205,7 +205,7 @@ class PluginHandler {
     return await plugin.routes.handle(req)
   }
 
-  public async getUnknownPluginMeta(RepoManifest: RepoType, pluginName: string): Promise<StaticPluginMeta> {
+  public async getUnknownPluginMeta(RepoManifest: RepoType, pluginName: string): Promise<WrappedPluginMeta> {
     switch (RepoManifest.type) {
       case "github":
         // Format: OWNER/REPO:branch/PATH
@@ -224,13 +224,13 @@ class PluginHandler {
         const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/refs/heads/${branch}/${path}`)
 
         if (path.endsWith(".yml") || path.endsWith(".yaml")) {
-          return Bun.YAML.parse(await res.text()) as StaticPluginMeta
+          return Bun.YAML.parse(await res.text()) as WrappedPluginMeta
         }
         if (path.endsWith(".json")) {
-          return await res.json() as StaticPluginMeta
+          return await res.json() as WrappedPluginMeta
         }
         if (path.endsWith(".toml")) {
-          return Bun.TOML.parse(await res.text()) as StaticPluginMeta
+          return Bun.TOML.parse(await res.text()) as WrappedPluginMeta
         }
 
         throw new Error("Invalid file extension");

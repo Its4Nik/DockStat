@@ -1,4 +1,4 @@
-import type { StaticPluginMeta } from "@dockstat/typings/types";
+import type { WrappedPluginMeta } from "@dockstat/typings/types";
 import { logger } from "..";
 
 export async function getGitHubPluginManifest(repoSource: string, pluginName: string) {
@@ -21,7 +21,7 @@ export async function getGitHubPluginManifest(repoSource: string, pluginName: st
   const res = await fetch(builtPath)
 
   if (path.endsWith(".yml")) {
-    return Bun.YAML.parse(await res.text()) as StaticPluginMeta
+    return Bun.YAML.parse(await res.text()) as WrappedPluginMeta
   }
 
   throw new Error("Invalid file extension, needs to be .yml");
@@ -47,7 +47,7 @@ export async function getGitHubRepoManifest(repoSource: string) {
   const res = await fetch(builtPath)
 
   if (path.endsWith(".yml")) {
-    return Bun.YAML.parse(await res.text()) as StaticPluginMeta
+    return Bun.YAML.parse(await res.text()) as WrappedPluginMeta
   }
 
   throw new Error("Manifest needs to end in .yml")
