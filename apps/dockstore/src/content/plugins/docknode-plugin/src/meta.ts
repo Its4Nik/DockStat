@@ -1,16 +1,16 @@
-import type { PLUGIN } from "@dockstat/typings";
+import type { PluginMetaType } from '@dockstat/typings/types'
 
-export const DockNodePluginMeta: PLUGIN.PluginMeta = {
-  name: "DockNode",
-  description: "Manager for the optional DockNode capabilities",
-  license: "GPL-2.0",
-  author: {
-    name: "Its4Nik",
-    website: "https://github.com/Its4Nik",
-    email: "dockstat@itsnik.de",
-  },
-  version: "1.0.0",
-  tags: ["stacks", "fs", "apps", "remote"],
-  repository: "https://dockstore.itsnik.de",
-  path: "plugins/docknode",
-};
+export const DockNodePluginMeta: PluginMetaType = {
+	name: 'DockNode',
+	description: 'Allows management of remote nodes',
+	author: {
+		license: 'MIT',
+		name: 'Its4Nik',
+		website: 'https://github.com/Its4Nik',
+		email: 'dockstat@itsnik.de',
+	},
+	version: '1.0.0',
+	tags: ['stacks', 'fs', 'apps', 'remote'],
+	repository: 'its4nik/dockstat:dev/apps/dockstore',
+	manifest: 'src/content/plugins/docknode-plugin/manifest.yaml',
+}

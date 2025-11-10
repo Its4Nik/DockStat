@@ -1,7 +1,7 @@
 name: DockNode
-description: Manager for the optional DockNode capabilities
-license: GPL-2.0
+description: Allows management of remote nodes
 author:
+  license: MIT
   name: Its4Nik
   website: https://github.com/Its4Nik
   email: dockstat@itsnik.de
@@ -11,5 +11,5 @@ tags:
   - fs
   - apps
   - remote
-repository: https://dockstore.itsnik.de
-path: plugins/docknode
+repository: its4nik/dockstat:dev/apps/dockstore
+manifest: src/content/plugins/docknode-plugin/manifest.yaml

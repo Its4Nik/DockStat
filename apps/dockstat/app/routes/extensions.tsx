@@ -14,6 +14,7 @@ export default function Extensions() {
 			allowUntrustedRepo={data.allow_untrusted_repo}
 			installedPlugins={data.installedPlugins}
 			repos={data.repos}
+			manifests={data.repoManifests}
 		/>
 	)
 }
