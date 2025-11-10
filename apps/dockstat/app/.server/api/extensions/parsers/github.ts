@@ -1,54 +1,62 @@
-import type { WrappedPluginMeta } from "@dockstat/typings/types";
-import { logger } from "..";
+import type { RepoManifestType } from '@dockstat/typings/types'
+import { logger } from '..'
 
-export async function getGitHubPluginManifest(repoSource: string, pluginName: string) {
-  const owner = repoSource.split("/")[0];
-  const repo = repoSource.split("/")[1].split(":")[0];
-  logger.debug(`Repo Owner: ${owner} Repo Name: ${repo}`)
+export async function getGitHubPluginManifest(
+	repoSource: string,
+	pluginName: string
+) {
+	const owner = repoSource.split('/')[0]
+	const repo = repoSource.split('/')[1].split(':')[0]
+	logger.debug(`Repo Owner: ${owner} Repo Name: ${repo}`)
 
-  if (!owner || !repo) {
-    throw new Error("Invalid GitHub repository URL");
-  }
+	if (!owner || !repo) {
+		throw new Error('Invalid GitHub repository URL')
+	}
 
-  const branchAndPath = repoSource.split(":")[1] || "";
+	const branchAndPath = repoSource.split(':')[1] || ''
 
-  const path = `${branchAndPath}/src/content/plugins/${encodeURI(pluginName)}/manifest.yml`;
+	const path = `${branchAndPath}/src/content/plugins/${encodeURI(pluginName)}/manifest.yml`
 
-  const builtPath = `https://raw.githubusercontent.com/${owner}/${repo}/refs/heads/${path}`
+	const builtPath = `https://raw.githubusercontent.com/${owner}/${repo}/refs/heads/${path}`
 
-  logger.debug(`Fetching Plugin Manifest from: ${builtPath}`)
+	logger.debug(`Fetching Plugin Manifest from: ${builtPath}`)
 
-  const res = await fetch(builtPath)
+	const res = await fetch(builtPath)
 
-  if (path.endsWith(".yml")) {
-    return Bun.YAML.parse(await res.text()) as WrappedPluginMeta
-  }
+	if (path.endsWith('.yml')) {
+		return Bun.YAML.parse(await res.text()) as RepoManifestType
+	}
 
-  throw new Error("Invalid file extension, needs to be .yml");
+	throw new Error('Invalid file extension, needs to be .yml')
 }
 
 export async function getGitHubRepoManifest(repoSource: string) {
-  const owner = repoSource.split("/")[0];
-  const repo = repoSource.split("/")[1].split(":")[0];
-  logger.debug(`Repo Owner: ${owner} Repo Name: ${repo}`)
+	const path = buildGitHubLink(`${repoSource}/manifest.yml`)
 
-  if (!owner || !repo) {
-    throw new Error("Invalid GitHub repository URL");
-  }
+	const res = await fetch(path)
 
-  const branchAndPath = repoSource.split(":")[1] || "";
+	if (path.endsWith('.yml')) {
+		return Bun.YAML.parse(await res.text()) as RepoManifestType
+	}
 
-  const path = `${branchAndPath}/manifest.yml`;
+	throw new Error('Manifest needs to end in .yml')
+}
 
-  const builtPath = `https://raw.githubusercontent.com/${owner}/${repo}/refs/heads/${path}`
+export function buildGitHubLink(repoSource: string) {
+	const owner = repoSource.split('/')[0]
+	const repo = repoSource.split('/')[1].split(':')[0]
+	logger.debug(`Repo Owner: ${owner} Repo Name: ${repo}`)
 
-  logger.debug(`Fetching Plugin Manifest from: ${builtPath}`)
+	if (!owner || !repo) {
+		throw new Error('Invalid GitHub repository URL')
+	}
 
-  const res = await fetch(builtPath)
+	const branchAndPath = repoSource.split(':')[1] || ''
 
-  if (path.endsWith(".yml")) {
-    return Bun.YAML.parse(await res.text()) as WrappedPluginMeta
-  }
+	const path = `${branchAndPath}`
 
-  throw new Error("Manifest needs to end in .yml")
+	const builtPath = `https://raw.githubusercontent.com/${owner}/${repo}/refs/heads/${path}`
+
+	logger.debug(`Built path: ${builtPath}`)
+	return builtPath
 }
