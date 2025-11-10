@@ -230,6 +230,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@dockstat/typings": "workspace:*",
+        "@dockstat/utils": "workspace:*",
         "@storybook/client-api": "latest",
         "@storybook/react-vite": "^10.0.2",
         "@tailwindcss/vite": "^4.1.16",
@@ -237,6 +238,7 @@
         "lucide-react": "^0.552.0",
         "react": "^19.1.1",
         "react-dom": "^19.1.1",
+        "react-router": "^7.9.5",
         "storybook": "^10.0.2",
         "tailwindcss": "^4.1.16",
       },

@@ -42,7 +42,7 @@ export async function getGitHubRepoManifest(repoSource: string) {
 	throw new Error('Manifest needs to end in .yml')
 }
 
-export function buildGitHubLink(repoSource: string) {
+export function buildGitHubLink(repoSource: string, raw = true) {
 	const owner = repoSource.split('/')[0]
 	const repo = repoSource.split('/')[1].split(':')[0]
 	logger.debug(`Repo Owner: ${owner} Repo Name: ${repo}`)
@@ -55,7 +55,12 @@ export function buildGitHubLink(repoSource: string) {
 
 	const path = `${branchAndPath}`
 
-	const builtPath = `https://raw.githubusercontent.com/${owner}/${repo}/refs/heads/${path}`
+	let builtPath = ''
+	if (raw) {
+		builtPath = `https://raw.githubusercontent.com/${owner}/${repo}/refs/heads/${path}`
+	} else {
+		builtPath = `https://github.com/${owner}/${repo}/tree/${path}`
+	}
 
 	logger.debug(`Built path: ${builtPath}`)
 	return builtPath

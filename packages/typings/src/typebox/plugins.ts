@@ -37,13 +37,6 @@ type WrappedPluginMetaType = typeof WrappedPluginMeta.static
 
 export const DBPluginShema = t.Object({
 	id: t.Nullable(t.Number()),
-	table: t.Array(
-		t.Object({
-			name: t.String(),
-			columns: t.Record(t.String(), t.Unknown()),
-			jsonColumns: t.Array(t.String()),
-		})
-	),
 	plugin: t.String(),
 	...PluginMeta,
 })
