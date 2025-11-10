@@ -13,4 +13,5 @@ export const DockNodePluginMeta: PluginMetaType = {
 	tags: ['stacks', 'fs', 'apps', 'remote'],
 	repository: 'its4nik/dockstat:dev/apps/dockstore',
 	manifest: 'src/content/plugins/docknode-plugin/manifest.yaml',
+	repoType: 'github',
 }

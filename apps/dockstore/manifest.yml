@@ -14,6 +14,7 @@ plugins:
       name: Its4Nik
       website: https://github.com/Its4Nik
     manifest: src/content/plugins/dockstacks/manifest.yml
+    repoType: github
   - name: DockNode
     description: Allows management of remote nodes
     author:
@@ -29,3 +30,4 @@ plugins:
       - remote
     repository: its4nik/dockstat:dev/apps/dockstore
     manifest: src/content/plugins/docknode-plugin/manifest.yaml
+    repoType: github

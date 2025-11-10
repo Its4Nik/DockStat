@@ -7,11 +7,11 @@ import { Info } from 'lucide-react'
 import { Button } from '../../Button/Button'
 import { LinkWithIcon } from '../../Link/Link'
 
-export function RepoPluginSlide({
-	plugins,
-}: {
+type RepoPluginSlideProps = {
 	plugins: PluginMetaType[]
-}) {
+}
+
+export function RepoPluginSlide({ plugins }: RepoPluginSlideProps) {
 	const [showModal, setShowModal] = useState('')
 
 	return (
@@ -30,7 +30,10 @@ export function RepoPluginSlide({
 							<CardHeader>
 								<div className="flex items-center justify-between">
 									<div>
-										<LinkWithIcon href={plugin.manifest} external>
+										<LinkWithIcon
+											href={`/api/extensions/proxy/plugins/${plugin.repoType}/${plugin.repository}/${plugin.manifest}`}
+											external
+										>
 											{plugin.name}
 										</LinkWithIcon>
 										<Button
@@ -110,6 +113,9 @@ export function RepoPluginSlide({
 										<p className="text-foreground">{plugin.description}</p>
 									)}
 								</Card>
+								<Button variant="primary" size="sm" className="w-full mt-2">
+									Install
+								</Button>
 							</CardBody>
 						</Card>
 					))}

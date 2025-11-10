@@ -11,6 +11,17 @@
   "repository": {
     "type": "string"
   },
+  "repoType": {
+    "default": "local",
+    "type": "string",
+    "enum": [
+      "local",
+      "http",
+      "github",
+      "gitlab",
+      "gitea"
+    ]
+  },
   "manifest": {
     "type": "string"
   },

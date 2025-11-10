@@ -1,6 +1,7 @@
 import type { ColumnDefinition } from '@dockstat/sqlite-wrapper'
 import { type AnyElysia, t } from 'elysia'
 import type { DockerClientEvents } from '../docker-client'
+import { Repo } from './db'
 
 /**
  * name: The Plugins name
@@ -19,6 +20,7 @@ export const PluginMeta = {
 	description: t.String(),
 	version: t.String(),
 	repository: t.String(),
+	repoType: Repo.properties.type,
 	manifest: t.String(),
 	author: t.Object({
 		name: t.String(),

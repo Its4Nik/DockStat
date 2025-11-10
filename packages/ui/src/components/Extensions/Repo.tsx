@@ -114,7 +114,7 @@ export function Repo({
 						onClick={() => setSelectedType('plugins')}
 					>
 						<Puzzle className="w-4 h-4 mr-1" />
-						Plugins
+						Plugins ({plugins.length})
 					</Button>
 					<Button
 						size="sm"
