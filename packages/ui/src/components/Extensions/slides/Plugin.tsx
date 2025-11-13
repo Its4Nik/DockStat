@@ -52,7 +52,7 @@ function PluginCard({
 	setShowModal: (id: string) => void
 }) {
 	const [pluginObject, setPluginObject] =
-		useState<DBPluginShemaT | null>(null)
+		useState<Omit<DBPluginShemaT, 'id'> | null>(null)
 
 	const fetcher = useFetcher<{
 		success: boolean
@@ -82,10 +82,9 @@ function PluginCard({
 		}
 
 		getPluginBundle().then((d) => {
-			const pluginObject: DBPluginShemaT = {
-				id: 0,
+			const pluginObject: Omit<DBPluginShemaT, 'id'> = {
 				...plugin,
-				plugin: d,
+				plugin: String(d),
 			}
 			setPluginObject(pluginObject)
 		})
@@ -193,7 +192,7 @@ function PluginCard({
 				{/* Use fetcher.Form here so that navigation doesn’t change */}
 				<fetcher.Form
 					method="post"
-					action={`/api/plugins/install`} // adapt this to your route
+					action={`/api/plugins/install`}
 				>
 					<input
 						type="hidden"

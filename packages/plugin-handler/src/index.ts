@@ -2,7 +2,6 @@ import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type DB from "@dockstat/sqlite-wrapper"
 import type { DBPluginShemaT, Plugin, RepoType } from "@dockstat/typings/types"
 import Logger from "@dockstat/logger"
-import type { WrappedPluginMeta } from "@dockstat/typings/types"
 
 class PluginHandler {
   private loadedPluginsMap = new Map<number, Plugin>()
@@ -19,7 +18,7 @@ class PluginHandler {
     this.logger.debug("Creating Plugin Table")
     this.table = this.DB.createTable<DBPluginShemaT>("plugins", {
       id: column.id(),
-      table: column.json(),
+      repoType: column.enum(["github", "gitlab", "local"]),
       // Plugin Metadata
       name: column.text({ notNull: true, unique: true }),
       description: column.text({ notNull: false }),
@@ -32,7 +31,7 @@ class PluginHandler {
       plugin: column.module()
     }, {
       ifNotExists: true, parser: {
-        JSON: ["table", "author", "tags", "table"],
+        JSON: ["author", "tags"],
         MODULE: {
           "plugin": {
             loader: "ts",
@@ -51,8 +50,15 @@ class PluginHandler {
   }
 
   public savePlugin(plugin: DBPluginShemaT) {
-    this.logger.debug(`Saving Plugin ${plugin.name} to DB`)
-    return this.table.insert(plugin)
+    try {
+      this.logger.debug(`Saving Plugin ${plugin.name} to DB`)
+      const res = this.table.insert(plugin)
+      this.logger.debug(`Plugin ${plugin.name} saved`)
+      return {success: true, id: res.insertId, message: "Plugin saved successfully"}
+    } catch (error: unknown) {
+      this.logger.error(`Could not save ${plugin.name} - ${error}`)
+      return {error: `${error}`, success: false, message: "Failed to save plugin"}
+    }
   }
 
   public deletePlugin(id: number) {

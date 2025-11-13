@@ -1,4 +1,4 @@
-import Elysia from 'elysia'
+import Elysia, { ParseError, ValidationError } from 'elysia'
 import { ElysiaLogger } from './logger'
 import { http } from '@dockstat/utils'
 
@@ -20,7 +20,14 @@ const DockStatElysiaHandlers = new Elysia()
 	.onError({ as: 'global' }, ({ error, code, dockStatRequestId }) => {
 		if (code === 'VALIDATION') {
 			ElysiaLogger.error(
-				`Validation failed: ${error.message}`,
+				`Validation failed: ${(error as ValidationError).message}`,
+				dockStatRequestId
+			)
+			return new Response(error.message, { status: 400 })
+		}
+		if(code === "PARSE"){
+			ElysiaLogger.error(
+				`Parse failed: ${(error as ParseError).message}`,
 				dockStatRequestId
 			)
 			return new Response(error.message, { status: 400 })
