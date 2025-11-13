@@ -2,7 +2,6 @@ import type {
 	DBPluginShemaT,
 	PluginMetaType,
 } from '@dockstat/typings/types'
-import { http } from '@dockstat/utils'
 import { useFetcher } from 'react-router'
 import {
 	Card,
@@ -19,27 +18,6 @@ import { LinkWithIcon } from '../../Link/Link'
 
 type RepoPluginSlideProps = {
 	plugins: PluginMetaType[]
-}
-
-async function getPluginData(
-	PluginMeta: PluginMetaType
-): Promise<DBPluginShemaT> {
-	const pluginBundle = `http://localhost:3000/api/extensions/proxy/true/${PluginMeta.repoType}/${PluginMeta.repository}/${PluginMeta.manifest.replace('/manifest.yml', '/bundle/index.js')}`
-	return {
-		id: 0,
-		...PluginMeta,
-		plugin: await (
-			await fetch(pluginBundle, {
-				method: 'GET',
-				headers: {
-					'x-dockstatapi-requestid': http.requestId.getRequestID(
-						true,
-						false
-					),
-				},
-			})
-		).text(),
-	}
 }
 
 export function RepoPluginSlide({ plugins }: RepoPluginSlideProps) {
@@ -73,27 +51,51 @@ function PluginCard({
 	showModal: string
 	setShowModal: (id: string) => void
 }) {
-	const fetcher = useFetcher()
+	const [pluginObject, setPluginObject] =
+		useState<DBPluginShemaT | null>(null)
 
-	async function handleInstall() {
-		// Build the full plugin data (including the plugin bundle JS)
-		const pluginData = await getPluginData(plugin)
+	const fetcher = useFetcher<{
+		success: boolean
+		message?: string
+		error?: string
+	}>()
 
-		// Attach the request id into the payload so the server can see it
-		// (useFetcher.submit doesn't let us set custom headers directly)
-		;(pluginData as any).__requestId = http.requestId.getRequestID(
-			true,
-			false
-		)
+	useEffect(() => {
+		const getPluginBundle = async () => {
+			return await (
+				await fetch(
+					`http://localhost:5173/api/extensions/proxy/plugin/bundle/${plugin.repoType.trim()}`,
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({
+							path: `${plugin.repository}/${plugin.manifest.replace(
+								'/manifest.yml',
+								'/bundle/index.js'
+							)}`,
+						}),
+					}
+				)
+			).text()
+		}
 
-		// Submit JSON via useFetcher.submit. We provide encType so react-router
-		// will send the correct Content-Type for a string/Blob body.
-		fetcher.submit(JSON.stringify(pluginData), {
-			method: 'post',
-			action: '/api/plugins/install',
-			encType: 'application/json',
+		getPluginBundle().then((d) => {
+			const pluginObject: DBPluginShemaT = {
+				id: 0,
+				...plugin,
+				plugin: d,
+			}
+			setPluginObject(pluginObject)
 		})
-	}
+	}, [])
+
+	const installing = fetcher.state !== 'idle'
+	const id = `${plugin.name}-${plugin.repository}`
+
+	const hasCorrectPluginData =
+		pluginObject && pluginObject.plugin !== 'Not Found'
 
 	return (
 		<Card
@@ -114,9 +116,7 @@ function PluginCard({
 							className="p-0 w-4 h-4 ml-2"
 							size="sm"
 							variant="ghost"
-							onClick={() =>
-								setShowModal(`${plugin.name}-${plugin.repository}`)
-							}
+							onClick={() => setShowModal(id)}
 						>
 							<Info className="w-3 h-3" />
 						</Button>
@@ -132,13 +132,15 @@ function PluginCard({
 							{tag}
 						</Badge>
 					))}
+					{!hasCorrectPluginData && (
+						<Badge variant="error" size="sm">
+							No Data for this Plugin received
+						</Badge>
+					)}
 				</div>
 			</CardHeader>
 
-			<Modal
-				open={showModal === `${plugin.name}-${plugin.repository}`}
-				onClose={() => setShowModal('')}
-			>
+			<Modal open={showModal === id} onClose={() => setShowModal('')}>
 				<ul className="mt-2 space-y-1">
 					{plugin.repository && (
 						<li>
@@ -188,20 +190,34 @@ function PluginCard({
 					)}
 				</Card>
 
-				<div>
+				{/* Use fetcher.Form here so that navigation doesn’t change */}
+				<fetcher.Form
+					method="post"
+					action={`/api/plugins/install`} // adapt this to your route
+				>
+					<input
+						type="hidden"
+						name="pluginObject"
+						value={JSON.stringify(pluginObject)}
+					/>
 					<Button
 						fullWidth
-						onClick={handleInstall}
-						disabled={fetcher.state !== 'idle'}
-						variant={fetcher.state === 'idle' ? 'primary' : 'outline'}
+						type="submit"
+						disabled={installing ? true : !hasCorrectPluginData}
+						variant={installing ? 'outline' : 'primary'}
 					>
-						{fetcher.state !== 'idle' ? 'Installing...' : 'Install'}
+						{installing ? 'Installing...' : 'Install'}
 					</Button>
-				</div>
+				</fetcher.Form>
 			</CardBody>
+
 			{fetcher.data ? (
 				<CardFooter>
-					<div>{JSON.stringify(fetcher.data)}</div>
+					<div>
+						{fetcher.data.success
+							? `✅ ${fetcher.data.message ?? 'Installed'}`
+							: `❌ ${fetcher.data.error ?? 'Failed to install'} - ${JSON.stringify(fetcher.data.error)}`}
+					</div>
 				</CardFooter>
 			) : null}
 		</Card>

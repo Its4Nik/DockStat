@@ -1,0 +1,11 @@
+{
+  "version": 3,
+  "sources": ["../src/meta.ts", "../index.ts"],
+  "sourcesContent": [
+    "import type { PluginMetaType } from '@dockstat/typings/types'\n\nexport const DockNodePluginMeta: PluginMetaType = {\n\tname: 'DockNode',\n\tdescription: 'Allows management of remote nodes',\n\tauthor: {\n\t\tlicense: 'MIT',\n\t\tname: 'Its4Nik',\n\t\twebsite: 'https://github.com/Its4Nik',\n\t\temail: 'dockstat@itsnik.de',\n\t},\n\tversion: '1.0.0',\n\ttags: ['stacks', 'fs', 'apps', 'remote'],\n\trepository: 'its4nik/dockstat:dev/apps/dockstore',\n\tmanifest: 'src/content/plugins/docknode-plugin/manifest.yml',\n\trepoType: 'github',\n}\n",
+    "//import PluginBuilder from \"@dockstat/plugin-handler/pluginBuilder\";\nimport { DockNodeConfig } from \"./src/config\";\nimport { DockNodePluginMeta } from \"./src/meta\";\n\n//const DockNodePlugin = new PluginBuilder(DockNodePluginMeta, DockNodeConfig);\nexport const meta = DockNodePluginMeta\n"
+  ],
+  "mappings": ";AAEO,IAAM,EAAqC,CACjD,KAAM,WACN,YAAa,oCACb,OAAQ,CACP,QAAS,MACT,KAAM,UACN,QAAS,6BACT,MAAO,oBACR,EACA,QAAS,QACT,KAAM,CAAC,SAAU,KAAM,OAAQ,QAAQ,EACvC,WAAY,sCACZ,SAAU,mDACV,SAAU,QACX,ECXO,IAAM,EAAO",
+  "debugId": "97D2CEC261328A9764756E2164756E21",
+  "names": []
+}

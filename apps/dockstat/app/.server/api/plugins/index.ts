@@ -15,9 +15,13 @@ const PluginElysiaInstance = new Elysia({
 })
 	.get('/all', () => PluginHandler.getAll())
 	.get('/status', () => PluginHandler.getStatus())
-	.post('/install', ({ body }) => PluginHandler.savePlugin(body), {
-		body: DBPluginShema,
-	})
+	.post(
+		'/install',
+		({ body }) => PluginHandler.savePlugin(body.pluginObject),
+		{
+			body: t.Object({ pluginObject: DBPluginShema }),
+		}
+	)
 	.post(
 		'/install/url',
 		async ({ body }) =>

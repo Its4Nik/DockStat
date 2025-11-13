@@ -169,7 +169,7 @@ async function buildAll() {
 				entrypoints: [rec.path],
 				outdir: getPluginBuildDir(rec.path),
 				minify: true,
-				sourcemap: 'inline',
+				sourcemap: 'external',
 				splitting: false,
 				env: `${rec.name.toUpperCase()}_*`,
 				banner: `/*　Bundled by DockStore　*/`,
