@@ -3,11 +3,16 @@ import type {
 	PluginMetaType,
 } from '@dockstat/typings/types'
 import { http } from '@dockstat/utils'
-import { Form, useFetcher } from 'react-router'
-import { Card, CardBody, CardHeader } from '../../Card/Card'
+import { useFetcher } from 'react-router'
+import {
+	Card,
+	CardBody,
+	CardFooter,
+	CardHeader,
+} from '../../Card/Card'
 import { Badge } from '../../Badge/Badge'
 import { Modal } from '../../Modal/Modal'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Info } from 'lucide-react'
 import { Button } from '../../Button/Button'
 import { LinkWithIcon } from '../../Link/Link'
@@ -59,7 +64,7 @@ export function RepoPluginSlide({ plugins }: RepoPluginSlideProps) {
 	)
 }
 
-async function PluginCard({
+function PluginCard({
 	plugin,
 	showModal,
 	setShowModal,
@@ -69,7 +74,26 @@ async function PluginCard({
 	setShowModal: (id: string) => void
 }) {
 	const fetcher = useFetcher()
-	const busy = fetcher.state !== 'idle'
+
+	async function handleInstall() {
+		// Build the full plugin data (including the plugin bundle JS)
+		const pluginData = await getPluginData(plugin)
+
+		// Attach the request id into the payload so the server can see it
+		// (useFetcher.submit doesn't let us set custom headers directly)
+		;(pluginData as any).__requestId = http.requestId.getRequestID(
+			true,
+			false
+		)
+
+		// Submit JSON via useFetcher.submit. We provide encType so react-router
+		// will send the correct Content-Type for a string/Blob body.
+		fetcher.submit(JSON.stringify(pluginData), {
+			method: 'post',
+			action: '/api/plugins/install',
+			encType: 'application/json',
+		})
+	}
 
 	return (
 		<Card
@@ -164,31 +188,22 @@ async function PluginCard({
 					)}
 				</Card>
 
-				<fetcher.Form action="/extensions">
-					<input type="hidden" name="action" value="install" />
-					<input
-						type="text"
-						name="pluginManifest"
-						value={JSON.stringify(await getPluginData(plugin))}
-					/>
-					<p>{JSON.stringify(await getPluginData(plugin))}</p>
+				<div>
 					<Button
-						type="submit"
-						variant={fetcher.data?.error ? 'danger' : 'primary'}
-						size="sm"
-						className="w-full mt-2"
-						disabled={busy || fetcher.data?.error}
+						fullWidth
+						onClick={handleInstall}
+						disabled={fetcher.state !== 'idle'}
+						variant={fetcher.state === 'idle' ? 'primary' : 'outline'}
 					>
-						{busy ? 'Installing...' : 'Install'}
+						{fetcher.state !== 'idle' ? 'Installing...' : 'Install'}
 					</Button>
-				</fetcher.Form>
-
-				{fetcher.data?.error ? (
-					<Card size="sm" variant="outlined">
-						{JSON.stringify(fetcher.data.error)}
-					</Card>
-				) : null}
+				</div>
 			</CardBody>
+			{fetcher.data ? (
+				<CardFooter>
+					<div>{JSON.stringify(fetcher.data)}</div>
+				</CardFooter>
+			) : null}
 		</Card>
 	)
 }

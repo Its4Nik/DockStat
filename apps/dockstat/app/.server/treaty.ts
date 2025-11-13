@@ -1,40 +1,40 @@
 import { treaty } from "@elysiajs/eden";
 import { createStaticHandler } from "react-router";
 import { DockStatAPI, type DockStatAPIType } from "./api";
-import { logger as BaseLogger } from "./logger";
 import Logger from "@dockstat/logger";
+import { logger as BaseLogger } from "./logger";
 
-const logger = new Logger("Treaty", BaseLogger.getParentsForLoggerChaining())
+const logger = new Logger("Treaty", BaseLogger.getParentsForLoggerChaining());
 
-DockStatAPI.listen(3000);
+export const apiHandler = async ({ request }: { request: Request }) => {
+	const reqId = request.headers.get("x-dockstatapi-requestid") ?? "";
+	logger.debug(
+		`Treaty handler forwarding request [${request.method}] ${request.url}`,
+		reqId,
+	);
 
-logger.info(`Started Elysia ${JSON.stringify(DockStatAPI.config)}`);
-
-const handler = async ({ request }: { request: Request }) => {
-  const reqId = request.headers.get("x-dockstatapi-requestid") || "";
-  logger.debug(
-    `Handling request [${request.method}] (${request.url}) with DockStatAPI`,
-    reqId,
-  );
-  return DockStatAPI.handle(request);
+	return DockStatAPI.handle(request);
 };
 
 export const ApiHandler = createStaticHandler(
-  [
-    {
-      path: "*",
-      loader: handler,
-      action: handler,
-    },
-  ],
-  { basename: "/api" },
+	[
+		{
+			path: "*",
+			loader: apiHandler,
+			action: apiHandler,
+		},
+	],
+	{ basename: "/api" },
 );
 
-export const api = treaty<DockStatAPIType>(
-  typeof window !== "undefined" ? location.origin : "http://localhost:3000",
-  {
-    headers: {
-      "x-dockstatapi-requestid": "treaty",
-    },
-  },
-).api;
+// create treaty client for server-side usage.
+// Use environment value as origin to avoid hard-coding when you deploy.
+const origin = process.env.DOCKSTAT_API_ORIGIN ?? "http://localhost:3000";
+
+export const api = treaty<DockStatAPIType>(origin, {
+	headers: {
+		"x-dockstatapi-requestid": "treaty",
+	},
+}).api;
+
+logger.info(`Treaty module ready (origin=${origin})`);
