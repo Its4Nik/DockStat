@@ -25,9 +25,11 @@ import { LinkWithIcon } from '../Link/Link'
 export function Repo({
 	repo,
 	plugins,
+	installedPlugins,
 }: {
 	repo: RepoType
 	plugins: PluginMetaType[]
+	installedPlugins: Record<string, { version: string; id: number }>
 }) {
 	const [selectedType, setSelectedType] = useState<
 		'plugins' | 'themes' | 'stacks'
@@ -138,7 +140,10 @@ export function Repo({
 				</div>
 
 				{selectedType === 'plugins' ? (
-					<RepoPluginSlide plugins={plugins} />
+					<RepoPluginSlide
+						plugins={plugins}
+						installedPlugins={installedPlugins}
+					/>
 				) : null}
 			</CardBody>
 		</Card>

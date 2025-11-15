@@ -3,6 +3,7 @@ import type {
 	PluginMetaType,
 } from '@dockstat/typings/types'
 import { useFetcher } from 'react-router'
+import { toast } from 'sonner'
 import {
 	Card,
 	CardBody,
@@ -12,15 +13,49 @@ import {
 import { Badge } from '../../Badge/Badge'
 import { Modal } from '../../Modal/Modal'
 import { useEffect, useState } from 'react'
-import { Info } from 'lucide-react'
+import { Download, Info, RefreshCcwDot, Trash } from 'lucide-react'
 import { Button } from '../../Button/Button'
 import { LinkWithIcon } from '../../Link/Link'
 
 type RepoPluginSlideProps = {
 	plugins: PluginMetaType[]
+	installedPlugins: Record<string, { version: string; id: number }>
 }
 
-export function RepoPluginSlide({ plugins }: RepoPluginSlideProps) {
+/**
+ * Extract number sequences from a version string and return them as numbers.
+ * E.g. "v1.2.3-alpha" -> [1,2,3], "2023.10" -> [2023,10]
+ */
+function extractNumbersFromVersion(version?: string): number[] {
+	if (!version) return []
+	const matches = version.match(/\d+/g) || []
+	return matches.map((s) => parseInt(s, 10))
+}
+
+/**
+ * Compare two version strings by their numeric components.
+ * Returns:
+ *   1  if a > b
+ *   -1 if a < b
+ *   0  if equal
+ */
+function compareVersionStrings(a?: string, b?: string): number {
+	const an = extractNumbersFromVersion(a)
+	const bn = extractNumbersFromVersion(b)
+	const len = Math.max(an.length, bn.length)
+	for (let i = 0; i < len; i++) {
+		const av = an[i] ?? 0
+		const bv = bn[i] ?? 0
+		if (av > bv) return 1
+		if (av < bv) return -1
+	}
+	return 0
+}
+
+export function RepoPluginSlide({
+	plugins,
+	installedPlugins,
+}: RepoPluginSlideProps) {
 	const [showModal, setShowModal] = useState<string>('')
 
 	return (
@@ -28,14 +63,28 @@ export function RepoPluginSlide({ plugins }: RepoPluginSlideProps) {
 			<CardHeader className="text-md font-semibold">Plugins</CardHeader>
 			<CardBody>
 				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-					{plugins.map((plugin) => (
-						<PluginCard
-							key={plugin.name}
-							plugin={plugin}
-							showModal={showModal}
-							setShowModal={setShowModal}
-						/>
-					))}
+					{plugins.map((plugin) => {
+						const installed = installedPlugins[plugin.name]
+						const isInstalled = installed
+							? installed.version === plugin.version
+							: false
+
+						const canBeUpdated = installed
+							? compareVersionStrings(plugin.version, installed.version) > 0
+							: false
+
+						return (
+							<PluginCard
+								isInstalled={isInstalled}
+								canBeUpdated={canBeUpdated}
+								key={`${plugin.name}-${plugin.repository}`}
+								plugin={plugin}
+								showModal={showModal}
+								setShowModal={setShowModal}
+								pluginId={isInstalled ? installed.id : null}
+							/>
+						)
+					})}
 				</div>
 			</CardBody>
 		</Card>
@@ -46,19 +95,69 @@ function PluginCard({
 	plugin,
 	showModal,
 	setShowModal,
+	isInstalled,
+	canBeUpdated,
+	pluginId = null,
 }: {
 	plugin: PluginMetaType
 	showModal: string
 	setShowModal: (id: string) => void
+	isInstalled: boolean
+	canBeUpdated: boolean
+	pluginId: number | null
 }) {
-	const [pluginObject, setPluginObject] =
-		useState<Omit<DBPluginShemaT, 'id'> | null>(null)
+	const [pluginObject, setPluginObject] = useState<Omit<
+		DBPluginShemaT,
+		'id'
+	> | null>(null)
 
 	const fetcher = useFetcher<{
 		success: boolean
 		message?: string
 		error?: string
 	}>()
+
+	useEffect(() => {
+		if (!fetcher.data) return
+		if (fetcher.state !== 'idle') return
+
+		const isError = !!fetcher.data.error
+
+		const isDelete = isInstalled && !canBeUpdated
+		const isUpdate = canBeUpdated
+
+		const title = isDelete
+			? `Installed ${plugin.name}@${plugin.version}`
+			: isUpdate
+				? `Updated ${plugin.name}@${plugin.version}`
+				: `Deleted ${plugin.name}@${plugin.version}`
+
+		const icon = isDelete ? (
+			<Download className={isError ? 'text-error' : 'text-success'} />
+		) : isUpdate ? (
+			<RefreshCcwDot
+				className={isError ? 'text-error' : 'text-success'}
+			/>
+		) : (
+			<Trash className={isError ? 'text-error' : 'text-success'} />
+		)
+
+		if (isError) {
+			toast.error(title, {
+				description: fetcher.data.message,
+				icon,
+				duration: 5000,
+				dismissible: true,
+			})
+		} else {
+			toast.success(title, {
+				description: fetcher.data.message,
+				icon,
+				duration: 5000,
+				dismissible: true,
+			})
+		}
+	}, [fetcher.state, fetcher.data, isInstalled, canBeUpdated, plugin])
 
 	useEffect(() => {
 		const getPluginBundle = async () => {
@@ -82,15 +181,16 @@ function PluginCard({
 		}
 
 		getPluginBundle().then((d) => {
-			const pluginObject: Omit<DBPluginShemaT, 'id'> = {
+			const pluginObject: DBPluginShemaT = {
+				id: pluginId,
 				...plugin,
 				plugin: String(d),
 			}
 			setPluginObject(pluginObject)
 		})
-	}, [])
+	}, [plugin, pluginId])
 
-	const installing = fetcher.state !== 'idle'
+	const fetching = fetcher.state !== 'idle'
 	const id = `${plugin.name}-${plugin.repository}`
 
 	const hasCorrectPluginData =
@@ -120,9 +220,16 @@ function PluginCard({
 							<Info className="w-3 h-3" />
 						</Button>
 					</div>
-					<span className="text-xs text-muted-text font-bold">
-						{plugin.version}
-					</span>
+					<div className="flex items-center gap-2">
+						<span className="text-xs text-muted-text font-bold">
+							{plugin.version}
+						</span>
+						{canBeUpdated && (
+							<Badge variant="warning" size="sm">
+								Update available
+							</Badge>
+						)}
+					</div>
 				</div>
 
 				<div className="mt-2 flex flex-wrap gap-1">
@@ -192,33 +299,59 @@ function PluginCard({
 				{/* Use fetcher.Form here so that navigation doesn’t change */}
 				<fetcher.Form
 					method="post"
-					action={`/api/plugins/install`}
+					action={
+						isInstalled
+							? canBeUpdated
+								? '/api/plugins/install'
+								: '/api/plugins/delete'
+							: '/api/plugins/install'
+					}
 				>
 					<input
 						type="hidden"
 						name="pluginObject"
 						value={JSON.stringify(pluginObject)}
 					/>
-					<Button
-						fullWidth
-						type="submit"
-						disabled={installing ? true : !hasCorrectPluginData}
-						variant={installing ? 'outline' : 'primary'}
-					>
-						{installing ? 'Installing...' : 'Install'}
-					</Button>
+					<input
+						type="hidden"
+						name="pluginId"
+						value={pluginId || undefined}
+					/>
+					{/* If installed and update available show Update button.
+                If not installed show Install button.
+                If already installed and not update available show nothing. */}
+					{isInstalled ? (
+						canBeUpdated ? (
+							<Button
+								fullWidth
+								type="submit"
+								disabled={fetching ? true : !hasCorrectPluginData}
+								variant={fetching ? 'outline' : 'primary'}
+							>
+								{fetching ? 'Updating...' : 'Update'}
+							</Button>
+						) : (
+							<Button
+								fullWidth
+								type="submit"
+								disabled={fetching}
+								variant={fetching ? 'outline' : 'danger'}
+							>
+								{fetching ? 'Deleting...' : 'Delete'}
+							</Button>
+						)
+					) : (
+						<Button
+							fullWidth
+							type="submit"
+							disabled={fetching ? true : !hasCorrectPluginData}
+							variant={fetching ? 'outline' : 'primary'}
+						>
+							{fetching ? 'Installing...' : 'Install'}
+						</Button>
+					)}
 				</fetcher.Form>
 			</CardBody>
-
-			{fetcher.data ? (
-				<CardFooter>
-					<div>
-						{fetcher.data.success
-							? `✅ ${fetcher.data.message ?? 'Installed'}`
-							: `❌ ${fetcher.data.error ?? 'Failed to install'} - ${JSON.stringify(fetcher.data.error)}`}
-					</div>
-				</CardFooter>
-			) : null}
 		</Card>
 	)
 }

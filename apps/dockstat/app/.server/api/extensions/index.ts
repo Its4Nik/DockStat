@@ -11,6 +11,7 @@ export const logger = new Logger(
 )
 
 const ExtensionElysiaInstance = new Elysia({
+  name: "ExtensionElysiaInstance",
 	prefix: '/extensions',
 	detail: { tags: ['Extensions'] },
 })

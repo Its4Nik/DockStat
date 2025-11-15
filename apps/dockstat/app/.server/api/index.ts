@@ -5,9 +5,11 @@ import DockStatElysiaHandlers from './handlers'
 import DockStatElysiaPlugins from './elysiaPlugins'
 import PluginElysiaInstance from './plugins'
 import ExtensionElysiaInstance from './extensions'
+import DockStatMetricsElysiaInstance from './metrics'
 
-export const DockStatAPI = new Elysia({ prefix: '/api' })
+export const DockStatAPI = new Elysia({ prefix: '/api', name: "DockStatAPI" })
 	.use(DockStatElysiaHandlers)
+	.use(DockStatMetricsElysiaInstance)
 	.use(DockStatElysiaPlugins)
 	.get('/status', () => ({
 		message: 'Looking goood',

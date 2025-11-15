@@ -4,6 +4,7 @@ import { logger } from '.'
 
 const ExtensionsProxyElysiaInstance = new Elysia({
 	prefix: '/proxy',
+	name: "ExtensionsProxyElysiaInstance",
 	detail: {
 		tags: ['Extensions', 'Proxy'],
 	},

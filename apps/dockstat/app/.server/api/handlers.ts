@@ -2,6 +2,8 @@ import Elysia, { ParseError, ValidationError } from 'elysia'
 import { ElysiaLogger } from './logger'
 import { http } from '@dockstat/utils'
 
+let requestCount = 0
+
 const DockStatElysiaHandlers = new Elysia()
 	.derive({ as: 'global' }, ({ headers }) => {
 		const dockStatRequestId =
@@ -12,10 +14,14 @@ const DockStatElysiaHandlers = new Elysia()
 		}
 	})
 	.onRequest(({ request }) => {
+		requestCount++
 		const reqId =
 			request.headers.get('x-dockstatapi-requestid') ||
 			http.requestId.getRequestID(true)
-		ElysiaLogger.debug(`${request.method} ${request.url}`, reqId)
+		ElysiaLogger.debug(
+			`${request.method} (Request Nr: ${requestCount}) ${request.url}`,
+			reqId
+		)
 	})
 	.onError({ as: 'global' }, ({ error, code, dockStatRequestId }) => {
 		if (code === 'VALIDATION') {
@@ -25,7 +31,7 @@ const DockStatElysiaHandlers = new Elysia()
 			)
 			return new Response(error.message, { status: 400 })
 		}
-		if(code === "PARSE"){
+		if (code === 'PARSE') {
 			ElysiaLogger.error(
 				`Parse failed: ${(error as ParseError).message}`,
 				dockStatRequestId
@@ -35,7 +41,7 @@ const DockStatElysiaHandlers = new Elysia()
 	})
 	.onAfterResponse(
 		{ as: 'global' },
-		({ request, dockStatRequestId }) => {
+		({ request, dockStatRequestId}) => {
 			const reqId = dockStatRequestId ?? 'unknown'
 			ElysiaLogger.debug(
 				`Responded to ${request.method} ${request.url}`,

@@ -3,7 +3,7 @@ import type {
 	RepoManifestType,
 	RepoType,
 } from '@dockstat/typings/types'
-import { Card, CardBody, CardHeader } from '../Card/Card'
+import { Card, CardBody, CardFooter, CardHeader } from '../Card/Card'
 import { Badge } from '../Badge/Badge'
 import { Repo } from './Repo'
 
@@ -27,6 +27,13 @@ export function ExtensionBrowser({
 	installedPlugins,
 	manifests,
 }: ExtensionBrowserProps) {
+	const installedPluginsRecord = Object.fromEntries(
+		installedPlugins.map((p) => [
+			p.name,
+			{ version: p.version, id: p.id },
+		])
+	) as Record<string, { version: string; id: number }>
+
 	return (
 		<Card className="w-full">
 			<CardHeader>
@@ -49,6 +56,7 @@ export function ExtensionBrowser({
 							repo={repo}
 							key={repo.name}
 							plugins={manifests[repo.name].data.plugins}
+							installedPlugins={installedPluginsRecord}
 						/>
 					))}
 				</div>

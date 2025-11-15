@@ -6,6 +6,7 @@ import {
 import { DockStatDB } from '~/.server/db'
 
 const DatabaseElysiaInstance = new Elysia({
+  name: "DatabaseElysiaInstance",
 	prefix: '/db',
 	detail: { tags: ['DB'] },
 })

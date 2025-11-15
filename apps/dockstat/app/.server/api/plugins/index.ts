@@ -1,7 +1,6 @@
 import Elysia, { t } from 'elysia'
 import PluginHandlerFactory from '@dockstat/plugin-handler'
 import { DockStatDB } from '~/.server/db'
-import { DBPluginShema } from '@dockstat/typings/schemas'
 import { ElysiaLogger } from '../logger'
 
 export const PluginHandler = new PluginHandlerFactory(
@@ -9,7 +8,8 @@ export const PluginHandler = new PluginHandlerFactory(
 	ElysiaLogger.getParentsForLoggerChaining()
 )
 
-const PluginElysiaInstance = new Elysia({
+const DockStatPluginElysiaInstance = new Elysia({
+  name: "DockStatPluginElysiaInstance",
 	prefix: '/plugins',
 	detail: { tags: ['Plugins'] },
 })
@@ -17,9 +17,10 @@ const PluginElysiaInstance = new Elysia({
 	.get('/status', () => PluginHandler.getStatus())
 	.post(
 		'/install',
-		({ body }) => PluginHandler.savePlugin(JSON.parse(body.pluginObject)),
+		({ body }) =>
+			PluginHandler.savePlugin(JSON.parse(body.pluginObject)),
 		{
-			body: t.Object({pluginObject: t.String()})
+			body: t.Object({ pluginObject: t.String() }),
 		}
 	)
 	.post(
@@ -39,9 +40,15 @@ const PluginElysiaInstance = new Elysia({
 			}),
 		}
 	)
-	.post('/delete', ({ body }) => PluginHandler.deletePlugin(body), {
-		body: t.Number(),
-	})
+	.post(
+		'/delete',
+		({ body }) => PluginHandler.deletePlugin(Number(body.pluginId)),
+		{
+			body: t.Object({
+				pluginId: t.String(),
+			}),
+		}
+	)
 	.post(
 		'/:id/routes/*',
 		async ({ request, params }) =>
@@ -54,4 +61,4 @@ const PluginElysiaInstance = new Elysia({
 		}
 	)
 
-export default PluginElysiaInstance
+export default DockStatPluginElysiaInstance

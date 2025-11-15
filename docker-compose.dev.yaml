@@ -1,7 +1,7 @@
 name: "dockstatapi-dev"
 services:
   socket-proxy:
-    container_name: socket-proxy
+    container_name: socket-proxy-dockstat-dev
     image: lscr.io/linuxserver/socket-proxy:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -42,7 +42,7 @@ services:
       - VOLUMES=1
 
   sqlite-web:
-    container_name: sqlite-web
+    container_name: sqlite-web-dockstat-dev
     image: ghcr.io/coleifer/sqlite-web:latest
     restart: on-failure
     ports:
@@ -51,3 +51,12 @@ services:
       - ./apps/dockstat:/data
     environment:
       - SQLITE_DATABASE=dockstat.sqlite
+
+  prometheus:
+    container_name: prometheus-dockstat-dev
+    restart: on-failure
+    image: quay.io/prometheus/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./dockstat-dev.prometheus.yml:/etc/prometheus/prometheus.yml
