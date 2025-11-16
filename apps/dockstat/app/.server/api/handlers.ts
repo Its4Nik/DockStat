@@ -1,4 +1,4 @@
-import Elysia, { ParseError, ValidationError } from 'elysia'
+import Elysia, { type ParseError, type ValidationError } from 'elysia'
 import { ElysiaLogger } from './logger'
 import { http } from '@dockstat/utils'
 
@@ -41,7 +41,7 @@ const DockStatElysiaHandlers = new Elysia()
 	})
 	.onAfterResponse(
 		{ as: 'global' },
-		({ request, dockStatRequestId}) => {
+		({ request, dockStatRequestId }) => {
 			const reqId = dockStatRequestId ?? 'unknown'
 			ElysiaLogger.debug(
 				`Responded to ${request.method} ${request.url}`,

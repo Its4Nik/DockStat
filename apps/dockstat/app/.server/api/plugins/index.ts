@@ -1,36 +1,34 @@
-import Elysia, { t } from 'elysia'
-import PluginHandlerFactory from '@dockstat/plugin-handler'
-import { DockStatDB } from '~/.server/db'
-import { ElysiaLogger } from '../logger'
+import Elysia, { t } from "elysia";
+import PluginHandlerFactory from "@dockstat/plugin-handler";
+import { DockStatDB } from "~/.server/db";
+import { ElysiaLogger } from "../logger";
 
 export const PluginHandler = new PluginHandlerFactory(
 	DockStatDB._sqliteWrapper,
-	ElysiaLogger.getParentsForLoggerChaining()
-)
+	ElysiaLogger.getParentsForLoggerChaining(),
+);
 
 const DockStatPluginElysiaInstance = new Elysia({
-  name: "DockStatPluginElysiaInstance",
-	prefix: '/plugins',
-	detail: { tags: ['Plugins'] },
+	name: "DockStatPluginElysiaInstance",
+	prefix: "/plugins",
+	detail: { tags: ["Plugins"] },
 })
-	.get('/all', () => PluginHandler.getAll())
-	.get('/status', () => PluginHandler.getStatus())
+	.get("/all", () => PluginHandler.getAll())
+	.get("/status", () => PluginHandler.getStatus())
 	.post(
-		'/install',
-		({ body }) =>
-			PluginHandler.savePlugin(JSON.parse(body.pluginObject)),
+		"/install",
+		({ body }) => PluginHandler.savePlugin(JSON.parse(body.pluginObject)),
 		{
 			body: t.Object({ pluginObject: t.String() }),
-		}
+		},
 	)
 	.post(
-		'/install/url',
-		async ({ body }) =>
-			await PluginHandler.installFromManifestLink(body),
-		{ body: t.String() }
+		"/install/url",
+		async ({ body }) => await PluginHandler.installFromManifestLink(body),
+		{ body: t.String() },
 	)
 	.post(
-		'/activate',
+		"/activate",
 		async ({ body }) => await PluginHandler.loadPlugins(body),
 		{
 			body: t.Array(t.Number()),
@@ -38,27 +36,26 @@ const DockStatPluginElysiaInstance = new Elysia({
 				successes: t.Array(t.Number()),
 				errors: t.Array(t.Number()),
 			}),
-		}
+		},
 	)
 	.post(
-		'/delete',
+		"/delete",
 		({ body }) => PluginHandler.deletePlugin(Number(body.pluginId)),
 		{
 			body: t.Object({
 				pluginId: t.String(),
 			}),
-		}
+		},
 	)
 	.post(
-		'/:id/routes/*',
-		async ({ request, params }) =>
-			PluginHandler.handleRoute(request, params),
+		"/:id/routes/*",
+		async ({ request, params }) => PluginHandler.handleRoute(request, params),
 		{
 			detail: {
 				description:
 					"This route proxies all Plugin-API requests to the specified Plugin's Elysia Instance",
 			},
-		}
-	)
+		},
+	);
 
-export default DockStatPluginElysiaInstance
+export default DockStatPluginElysiaInstance;

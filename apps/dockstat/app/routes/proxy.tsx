@@ -1,5 +1,5 @@
-import { ProxyAction } from '@ServerActions/proxy'
-import { ProxyLoader } from '@ServerLoaders/proxy'
+import { ProxyAction } from "@ServerActions/proxy";
+import { ProxyLoader } from "@ServerLoaders/proxy";
 
-export const action = ProxyAction
-export const loader = ProxyLoader
+export const action = ProxyAction;
+export const loader = ProxyLoader;
