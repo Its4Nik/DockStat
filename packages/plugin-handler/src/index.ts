@@ -209,19 +209,18 @@ class PluginHandler {
 	public getStatus() {
 		const installedPlugins = this.table.select(['*']).all()
 		const loadedPlugins = this.getLoadedPlugins()
+		const repos = installedPlugins.map((l) => l.repository)
 
 		const rDat = {
 			installed_plugins: {
 				count: installedPlugins.length,
 				data: installedPlugins,
 			},
-			repos: installedPlugins.map((l) => l.repository),
+			repos: [...new Set(repos)],
 			loaded_plugins: loadedPlugins
 				.map((id) => installedPlugins.find((plugin) => plugin.id === id))
 				.filter(Boolean),
 		}
-
-		this.logger.debug(JSON.stringify(rDat))
 		return rDat
 	}
 
