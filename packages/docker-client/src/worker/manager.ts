@@ -8,6 +8,7 @@ import type {
 	WorkerRequest,
 	WorkerResponse,
 } from '../types'
+import { logger } from '../../'
 
 interface WorkerWrapper {
 	worker: Worker
@@ -28,7 +29,10 @@ type DockerClientTable = {
 export class DockerClientManager {
 	private DB: DB
 	private table: QueryBuilder<DockerClientTable>
-	private logger = new Logger('DockerClientManager')
+	private logger = new Logger(
+		'DCM',
+		logger.getParentsForLoggerChaining()
+	)
 	private workers: Map<number, WorkerWrapper> = new Map()
 	private maxWorkers: number
 	private dbPath: string
@@ -43,11 +47,23 @@ export class DockerClientManager {
 			'docker_clients',
 			{
 				id: column.id(),
-				name: column.text(),
+				name: column.text({ unique: true }),
 				options: column.json(),
 			},
-			{ ifNotExists: true, parser: { JSON: ['options'] } }
+			{
+				ifNotExists: true,
+				parser: { JSON: ['options'] },
+			}
 		)
+
+		this.logger.info('Initialized DB')
+		this.logger.debug('Creating Workers for already existing Clients')
+
+		const clients = this.table.select(['*']).all()
+
+		for (const c of clients) {
+			this.createWorker(c.id as number, c.name, c.options)
+		}
 
 		this.logger.info(
 			`Initialized with max ${this.maxWorkers} workers, DB path: ${this.dbPath}`
@@ -57,29 +73,55 @@ export class DockerClientManager {
 	public async registerClient(
 		name: string,
 		options: DOCKER.DockerAdapterOptions = {}
-	): Promise<number> {
-		this.logger.info(`Registering client: ${name}`)
+	) {
+		let dbStepDone = false
+		try {
+			this.logger.info(`Registering client: ${name}`)
 
-		// Insert into database
-		this.table.insertOrFail({
-			name,
-			options: options,
-		})
+			// Insert into database
+			this.table.insert({
+				name,
+				options: options,
+			})
 
-		const { id: clientId } = this.table
-			.select(['id'])
-			.where({ name: name, options: options })
-			.first() || { id: undefined }
+			const { id: clientId } = this.table
+				.select(['id'])
+				.where({ name: name })
+				.first() || { id: undefined }
 
-		if (!clientId) {
-			throw new Error(`No client registered in the DB`)
+			if (!clientId) {
+				throw new Error(`No client with the name ${name} found in the DB`)
+			}
+
+			dbStepDone = true
+			this.logger.debug('Client added to DB')
+
+			// Create worker
+			await this.createWorker(clientId, name, options)
+
+			const msg = `Client ${name} successfully registered with ID: ${clientId}`
+
+			this.logger.info(msg)
+			return {
+				success: true,
+				message: msg,
+				clientId: clientId,
+			}
+		} catch (error: unknown) {
+			const msg = `Error while registering Client ${name} ${dbStepDone ?? ', the CLient was already registered in the DB. It will be automatically removed'} - error: ${JSON.stringify(error)}`
+
+			this.logger.error(msg)
+			if (dbStepDone) {
+				this.table.where({ name: name }).delete()
+				this.logger.info('Orphan Client has been removed')
+			}
+
+			return {
+				success: false,
+				error: error,
+				message: msg,
+			}
 		}
-
-		// Create worker
-		await this.createWorker(clientId, name, options)
-
-		this.logger.info(`Client ${name} registered with ID: ${clientId}`)
-		return clientId
 	}
 
 	private async createWorker(
@@ -87,38 +129,45 @@ export class DockerClientManager {
 		clientName: string,
 		options: DOCKER.DockerAdapterOptions
 	): Promise<void> {
-		if (this.workers.size >= this.maxWorkers) {
-			throw new Error(
-				`Maximum number of workers (${this.maxWorkers}) reached`
-			)
+		try {
+			if (this.workers.size >= this.maxWorkers) {
+				throw new Error(
+					`Maximum number of workers (${this.maxWorkers}) reached`
+				)
+			}
+
+			this.logger.debug(`Creating worker for client ${clientId}`)
+
+			// Create worker using Bun's Worker API
+			const worker = new Worker(new URL('./index.ts', import.meta.url))
+
+			const wrapper: WorkerWrapper = {
+				worker,
+				clientId,
+				clientName,
+				hostIds: new Set(),
+				busy: false,
+				lastUsed: Date.now(),
+				initialized: false,
+			}
+
+			// Handle errors
+			worker.addEventListener('error', (error) => {
+				this.logger.error(
+					`Worker ${clientId} error: ${JSON.stringify(error)}`
+				)
+				this.handleWorkerError(clientId, error)
+				throw new Error(JSON.stringify(error))
+			})
+
+			// Store wrapper
+			this.workers.set(clientId, wrapper)
+
+			// Initialize the worker
+			await this.initializeWorker(clientId, clientName, options)
+		} catch (error: unknown) {
+			throw new Error(String(error))
 		}
-
-		this.logger.debug(`Creating worker for client ${clientId}`)
-
-		// Create worker using Bun's Worker API
-		const worker = new Worker(new URL('./worker.ts', import.meta.url))
-
-		const wrapper: WorkerWrapper = {
-			worker,
-			clientId,
-			clientName,
-			hostIds: new Set(),
-			busy: false,
-			lastUsed: Date.now(),
-			initialized: false,
-		}
-
-		// Handle errors
-		worker.addEventListener('error', (error) => {
-			this.logger.error(`Worker ${clientId} error: ${error}`)
-			this.handleWorkerError(clientId, error as ErrorEvent)
-		})
-
-		// Store wrapper
-		this.workers.set(clientId, wrapper)
-
-		// Initialize the worker
-		await this.initializeWorker(clientId, clientName, options)
 	}
 
 	private async initializeWorker(

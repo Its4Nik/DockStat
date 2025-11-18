@@ -43,7 +43,7 @@ services:
 
   sqlite-web:
     container_name: sqlite-web-dockstat-dev
-    image: ghcr.io/coleifer/sqlite-web:latest
+    image: coleifer/sqlite-web:latest
     restart: on-failure
     ports:
       - 8080:8080

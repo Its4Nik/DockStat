@@ -11,3 +11,4 @@ export {
 	WrappedPluginMeta,
 } from './plugins'
 export { RepoManifest } from './dockstore'
+export { DockerAdapterOptionsSchema } from '../docker-client'

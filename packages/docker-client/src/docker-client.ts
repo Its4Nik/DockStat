@@ -12,6 +12,7 @@ import {
 	mapContainerInfoFromInspect,
 	mapContainerStats,
 } from './utils/mapper'
+import { logger } from '../index'
 
 class DockerClient {
 	private name: string
@@ -36,7 +37,10 @@ class DockerClient {
 		DB: DB,
 		options: DOCKER.DockerAdapterOptions = {}
 	) {
-		this.logger = new Logger(`DockerClient-${id}`)
+		this.logger = new Logger(
+			`DockerClient-${id}`,
+			logger.getParentsForLoggerChaining()
+		)
 		this.logger.info('Initializing DockerClient')
 		this.hostHandler = new HostHandler(id, DB)
 		this.options = {
@@ -50,7 +54,9 @@ class DockerClient {
 		}
 
 		this.name = name
-		this.events = new DockerEventEmitter()
+		this.events = new DockerEventEmitter(
+			this.logger.getParentsForLoggerChaining()
+		)
 
 		if (this.options.enableMonitoring) {
 			this.monitoringManager = new MonitoringManager(
@@ -61,7 +67,11 @@ class DockerClient {
 			)
 		}
 
-		this.streamManager = new StreamManager(this.events, this)
+		this.streamManager = new StreamManager(
+			this.events,
+			this,
+			this.logger.getParentsForLoggerChaining()
+		)
 	}
 
 	private checkDisposed(): void {

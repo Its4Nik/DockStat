@@ -6,8 +6,12 @@ import DockStatElysiaPlugins from "./elysiaPlugins";
 import PluginElysiaInstance from "./plugins";
 import ExtensionElysiaInstance from "./extensions";
 import DockStatMetricsElysiaInstance from "./metrics";
+import ElysiaDockerInstance from "./docker";
 
-export const DockStatAPI = new Elysia({ prefix: "/api", name: "DockStatAPI" })
+export const DockStatAPI = new Elysia({
+	prefix: "/api",
+	name: "DockStatAPI",
+})
 	.use(DockStatElysiaHandlers)
 	.use(DockStatMetricsElysiaInstance)
 	.use(DockStatElysiaPlugins)
@@ -17,6 +21,7 @@ export const DockStatAPI = new Elysia({ prefix: "/api", name: "DockStatAPI" })
 	}))
 	.use(DatabaseElysiaInstance)
 	.use(PluginElysiaInstance)
+	.use(ElysiaDockerInstance)
 	.use(ExtensionElysiaInstance);
 
 if (import.meta.main) {
