@@ -1,102 +1,281 @@
-import type { Elysia } from "elysia";
-import type { Database } from "bun:sqlite";
-import Logger from "@dockstat/logger";
-import { ElysiaLogger } from "../logger";
+import type { Elysia } from 'elysia'
+import type { Database } from 'bun:sqlite'
+import Logger from '@dockstat/logger'
+import { ElysiaLogger } from '../logger'
+import { DockStatDB } from '~/.server/db'
+import { column } from '@dockstat/sqlite-wrapper'
+import {
+	renderPrometheusMetrics,
+	type MetricFamily,
+} from './prometheus'
 
-const logger = new Logger(
-	"Metrics",
-	ElysiaLogger.getParentsForLoggerChaining(),
-);
-
+/**
+ * In-memory metrics (current server session)
+ */
 interface RequestMetrics {
-	totalRequests: number;
-	requestsByMethod: Map<string, number>;
-	requestsByPath: Map<string, number>;
-	requestsByStatus: Map<number, number>;
-	requestDurations: number[];
-	errors: number;
+	totalRequests: number
+	requestsByMethod: Map<string, number>
+	requestsByPath: Map<string, number>
+	requestsByStatus: Map<number, number>
+	requestDurations: number[]
+	errors: number
 }
 
-const metrics: RequestMetrics = {
-	totalRequests: 0,
-	requestsByMethod: new Map(),
-	requestsByPath: new Map(),
-	requestsByStatus: new Map(),
-	requestDurations: [],
-	errors: 0,
-};
+/**
+ * Serializable version for JSON columns (no Map keys)
+ */
+interface SerializableRequestMetrics {
+	totalRequests: number
+	requestsByMethod: Record<string, number>
+	requestsByPath: Record<string, number>
+	requestsByStatus: Record<string, number>
+	requestDurations: number[]
+	errors: number
+}
+
+interface MetricsRow
+	extends SerializableRequestMetrics,
+		Record<string, unknown> {
+	id: number
+}
+
+const MetricsTable =
+	DockStatDB._sqliteWrapper.createTable<MetricsRow>(
+		'Metrics',
+		{
+			id: column.id(),
+			totalRequests: column.integer(),
+			requestsByMethod: column.json(),
+			requestsByPath: column.json(),
+			requestsByStatus: column.json(),
+			requestDurations: column.json(),
+			errors: column.integer(),
+		},
+		{
+			ifNotExists: true,
+			parser: {
+				JSON: [
+					'requestsByMethod',
+					'requestsByPath',
+					'requestsByStatus',
+					'requestDurations',
+				],
+			},
+		}
+	)
+
+const logger = new Logger(
+	'Metrics',
+	ElysiaLogger.getParentsForLoggerChaining()
+)
+
+/**
+ * Helpers to create empty metrics
+ */
+function createEmptyRequestMetrics(): RequestMetrics {
+	return {
+		totalRequests: 0,
+		requestsByMethod: new Map(),
+		requestsByPath: new Map(),
+		requestsByStatus: new Map(),
+		requestDurations: [],
+		errors: 0,
+	}
+}
+
+function createEmptySerializableMetrics(): SerializableRequestMetrics {
+	return {
+		totalRequests: 0,
+		requestsByMethod: {},
+		requestsByPath: {},
+		requestsByStatus: {},
+		requestDurations: [],
+		errors: 0,
+	}
+}
+
+/**
+ * Global in-memory metrics (current server session)
+ */
+const metrics: RequestMetrics = createEmptyRequestMetrics()
+
+/**
+ * Persisted metrics (backed by DB)
+ */
+let persistedMetrics: SerializableRequestMetrics =
+	createEmptySerializableMetrics()
+let persistedMetricsId: number | null = null
+
+/**
+ * Initialize/load the single metrics row from DB (or create it)
+ */
+function initPersistedMetrics() {
+	if (persistedMetricsId !== null) return
+
+	try {
+		const existing = MetricsTable.all()[0]
+
+		if (existing) {
+			persistedMetricsId = existing.id
+			persistedMetrics = {
+				totalRequests: existing.totalRequests ?? 0,
+				requestsByMethod: existing.requestsByMethod ?? {},
+				requestsByPath: existing.requestsByPath ?? {},
+				requestsByStatus: existing.requestsByStatus ?? {},
+				requestDurations: existing.requestDurations ?? [],
+				errors: existing.errors ?? 0,
+			}
+		} else {
+			const empty = createEmptySerializableMetrics()
+			const result = MetricsTable.insert({
+				totalRequests: empty.totalRequests,
+				requestsByMethod: empty.requestsByMethod,
+				requestsByPath: empty.requestsByPath,
+				requestsByStatus: empty.requestsByStatus,
+				requestDurations: empty.requestDurations,
+				errors: empty.errors,
+			})
+			persistedMetrics = empty
+			const id = result.insertId
+			persistedMetricsId = Number(id ?? 1)
+		}
+	} catch (err) {
+		console.error('Failed to init persisted metrics:', err)
+		// Fall back to in-memory only
+		persistedMetricsId = null
+	}
+}
+
+/**
+ * Persist current `persistedMetrics` into DB
+ */
+function savePersistedMetrics() {
+	if (persistedMetricsId === null) {
+		initPersistedMetrics()
+		if (persistedMetricsId === null) return
+	}
+
+	try {
+		MetricsTable.where({ id: persistedMetricsId }).update({
+			totalRequests: persistedMetrics.totalRequests,
+			requestsByMethod: persistedMetrics.requestsByMethod,
+			requestsByPath: persistedMetrics.requestsByPath,
+			requestsByStatus: persistedMetrics.requestsByStatus,
+			requestDurations: persistedMetrics.requestDurations,
+			errors: persistedMetrics.errors,
+		})
+	} catch (err) {
+		console.error('Failed to save persisted metrics:', err)
+	}
+}
+
+/**
+ * Helpers for updating persisted metrics safely
+ */
+function incPersisted(obj: Record<string, number>, key: string) {
+	obj[key] = (obj[key] ?? 0) + 1
+}
+
+function trackDuration(
+	durations: number[],
+	duration: number,
+	max = 1000
+) {
+	durations.push(duration)
+	if (durations.length > max) durations.shift()
+}
 
 export const metricsMiddleware = (app: Elysia) => {
+	// Ensure persisted metrics row is ready
+	initPersistedMetrics()
+
 	return app
-		.state("startTime", 0)
-		.onBeforeHandle({ as: "global" }, ({ store, request }) => {
-			store.startTime = performance.now();
+		.state('startTime', 0)
+		.onBeforeHandle({ as: 'global' }, ({ store, request }) => {
+			store.startTime = performance.now()
 			logger.debug(
 				`Started performance tracking`,
-				request.headers.get("x-dockstatapi-requestid") ?? undefined,
-			);
+				request.headers.get('x-dockstatapi-requestid') ?? undefined
+			)
 		})
-		.onAfterHandle({ as: "global" }, ({ request, responseValue, store }) => {
-			const duration = performance.now() - (store.startTime || 0);
-			const method = request.method;
-			const path = new URL(request.url).pathname;
+		.onAfterHandle(
+			{ as: 'global' },
+			({ request, responseValue, store }) => {
+				const duration = performance.now() - (store.startTime || 0)
+				const method = request.method
+				const path = new URL(request.url).pathname
 
-			logger.debug(
-				`[${method}] Took ${Math.round(duration)}ms on ${path}`,
-				request.headers.get("x-dockstatapi-requestid") ?? undefined,
-			);
-
-			if (path === "/api/metrics") {
 				logger.debug(
-					`Skipped path: ${path}`,
-					request.headers.get("x-dockstatapi-requestid") ?? undefined,
-				);
-			} else {
-				metrics.totalRequests++;
+					`[${method}] Took ${Math.round(duration)}ms on ${path}`,
+					request.headers.get('x-dockstatapi-requestid') ?? undefined
+				)
 
-				// Track by method
-				metrics.requestsByMethod.set(
-					method,
-					(metrics.requestsByMethod.get(method) || 0) + 1,
-				);
+				if (path === '/api/metrics') {
+					logger.debug(
+						`Skipped path: ${path}`,
+						request.headers.get('x-dockstatapi-requestid') ?? undefined
+					)
+				} else {
+					// ---- SESSION METRICS ----
+					metrics.totalRequests++
 
-				// Track by path
-				metrics.requestsByPath.set(
-					path,
-					(metrics.requestsByPath.get(path) || 0) + 1,
-				);
+					metrics.requestsByMethod.set(
+						method,
+						(metrics.requestsByMethod.get(method) || 0) + 1
+					)
 
-				// Track by status
-				const status = (responseValue as { status: number })?.status || 200;
-				metrics.requestsByStatus.set(
-					status,
-					(metrics.requestsByStatus.get(status) || 0) + 1,
-				);
+					metrics.requestsByPath.set(
+						path,
+						(metrics.requestsByPath.get(path) || 0) + 1
+					)
 
-				// Track duration (keep last 1000 requests)
-				metrics.requestDurations.push(duration);
-				if (metrics.requestDurations.length > 1000) {
-					metrics.requestDurations.shift();
+					const status =
+						(responseValue as { status?: number })?.status || 200
+					metrics.requestsByStatus.set(
+						status,
+						(metrics.requestsByStatus.get(status) || 0) + 1
+					)
+
+					trackDuration(metrics.requestDurations, duration)
+
+					// ---- PERSISTED / TOTAL METRICS ----
+					persistedMetrics.totalRequests++
+
+					incPersisted(persistedMetrics.requestsByMethod, method)
+					incPersisted(persistedMetrics.requestsByPath, path)
+					incPersisted(persistedMetrics.requestsByStatus, String(status))
+					trackDuration(persistedMetrics.requestDurations, duration)
+
+					// Persist to DB
+					savePersistedMetrics()
 				}
+
+				logger.debug(
+					'Tracked metrics',
+					request.headers.get('x-dockstatapi-requestid') ?? undefined
+				)
 			}
+		)
+		.onError({ as: 'global' }, ({ store, request }) => {
+			const duration = performance.now() - (store.startTime || 0)
+
+			// Session metrics
+			metrics.errors++
+			trackDuration(metrics.requestDurations, duration)
+
+			// Persisted metrics
+			persistedMetrics.errors++
+			trackDuration(persistedMetrics.requestDurations, duration)
+			savePersistedMetrics()
 
 			logger.debug(
-				"Tracked metrics",
-				request.headers.get("x-dockstatapi-requestid") ?? undefined,
-			);
+				'Tracked Error',
+				request.headers.get('x-dockstatapi-requestid') ?? undefined
+			)
 		})
-		.onError({ as: "global" }, ({ store, request }) => {
-			metrics.errors++;
-			logger.debug(
-				"Tracked Error",
-				request.headers.get("x-dockstatapi-requestid") ?? undefined,
-			);
-			const duration = performance.now() - (store.startTime || 0);
-			metrics.requestDurations.push(duration);
-		});
-};
+}
 
-// Database metrics collector
+// Database metrics collector (unchanged)
 function getDatabaseMetrics(db: Database) {
 	const dbMetrics = {
 		size: 0,
@@ -104,186 +283,373 @@ function getDatabaseMetrics(db: Database) {
 		pageSize: 0,
 		tableCount: 0,
 		tables: [] as Array<{ name: string; rowCount: number }>,
-	};
+	}
 
 	try {
-		// Get database file size
 		const sizeQuery = db.query(
-			"SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()",
-		);
+			'SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()'
+		)
 		const sizeResult: { size?: number } = sizeQuery.get() as {
-			size?: number;
-		};
-		dbMetrics.size = sizeResult?.size || 0;
+			size?: number
+		}
+		dbMetrics.size = sizeResult?.size || 0
 
-		// Get page info
-		const pageCountQuery = db.query("PRAGMA page_count");
+		const pageCountQuery = db.query('PRAGMA page_count')
 		const pageCountResult = pageCountQuery.get() as {
-			page_count?: number;
-		};
-		dbMetrics.pageCount = pageCountResult?.page_count || 0;
+			page_count?: number
+		}
+		dbMetrics.pageCount = pageCountResult?.page_count || 0
 
-		const pageSizeQuery = db.query("PRAGMA page_size");
-		const pageSizeResult = pageSizeQuery.get() as { page_size?: number };
-		dbMetrics.pageSize = pageSizeResult?.page_size || 0;
+		const pageSizeQuery = db.query('PRAGMA page_size')
+		const pageSizeResult = pageSizeQuery.get() as {
+			page_size?: number
+		}
+		dbMetrics.pageSize = pageSizeResult?.page_size || 0
 
-		// Get all tables
 		const tablesQuery = db.query(
-			"SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
-		);
-		const tables = tablesQuery.all() as Array<{ name: string }>;
-		dbMetrics.tableCount = tables.length;
+			"SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+		)
+		const tables = tablesQuery.all() as Array<{ name: string }>
+		dbMetrics.tableCount = tables.length
 
-		// Get row counts for each table
 		for (const table of tables) {
 			try {
 				const countQuery = db.query(
-					`SELECT COUNT(*) as count FROM "${table.name}"`,
-				);
-				const countResult = countQuery.get() as { count?: number };
+					`SELECT COUNT(*) as count FROM "${table.name}"`
+				)
+				const countResult = countQuery.get() as {
+					count?: number
+				}
 				dbMetrics.tables.push({
 					name: table.name,
 					rowCount: countResult?.count || 0,
-				});
+				})
 			} catch (_) {
 				// Skip tables we can't read
 			}
 		}
 	} catch (error) {
-		console.error("Error collecting database metrics:", error);
+		console.error('Error collecting database metrics:', error)
 	}
 
-	return dbMetrics;
+	return dbMetrics
 }
 
-// Format metrics in Prometheus format
+/**
+ * Helper to compute summary stats from a duration array
+ */
+function summarizeDurations(durations: number[]) {
+	if (!durations.length) return null
+
+	const sorted = [...durations].sort((a, b) => a - b)
+	const sum = sorted.reduce((a, b) => a + b, 0)
+	const avg = sum / sorted.length
+	const p50 = sorted[Math.floor(sorted.length * 0.5)]
+	const p95 = sorted[Math.floor(sorted.length * 0.95)]
+	const p99 = sorted[Math.floor(sorted.length * 0.99)]
+
+	return { sorted, sum, avg, p50, p95, p99 }
+}
+
 export function formatPrometheusMetrics(db: Database) {
-	const lines: string[] = [];
-	const timestamp = Date.now();
+	initPersistedMetrics()
 
-	// HTTP Metrics
-	lines.push("# HELP http_requests_total Total number of HTTP requests");
-	lines.push("# TYPE http_requests_total counter");
-	lines.push(`http_requests_total ${metrics.totalRequests} ${timestamp}`);
+	const timestamp = Date.now()
+	const families: MetricFamily[] = []
 
-	lines.push("\n# HELP http_requests_by_method_total HTTP requests by method");
-	lines.push("# TYPE http_requests_by_method_total counter");
-	for (const [method, count] of metrics.requestsByMethod.entries()) {
-		lines.push(
-			`http_requests_by_method_total{method="${method}"} ${count} ${timestamp}`,
-		);
+	families.push({
+		name: 'http_requests_total',
+		help: 'Total number of HTTP requests',
+		type: 'counter',
+		samples: [
+			{
+				labels: { scope: 'session' },
+				value: metrics.totalRequests,
+				timestamp,
+			},
+			{
+				labels: { scope: 'total' },
+				value: persistedMetrics.totalRequests,
+				timestamp,
+			},
+		],
+	})
+
+	// --- REPLACEMENT for http_requests_by_method_total block ---
+	families.push({
+		name: 'http_requests_by_method_total',
+		help: 'HTTP requests by method',
+		type: 'counter',
+		samples: [
+			// session
+			...Array.from(metrics.requestsByMethod.entries()).map(
+				([method, count]) => ({
+					labels: { method, scope: 'session' },
+					value: count,
+					timestamp,
+				})
+			),
+			// total (persisted)
+			...Object.entries(persistedMetrics.requestsByMethod).map(
+				([method, count]) => ({
+					labels: { method, scope: 'total' },
+					value: count,
+					timestamp,
+				})
+			),
+		],
+	})
+
+	families.push({
+		name: 'http_requests_by_path_total',
+		help: 'HTTP requests by path',
+		type: 'counter',
+		samples: [
+			...Array.from(metrics.requestsByPath.entries()).map(
+				([path, count]) => ({
+					labels: { path, scope: 'session' },
+					value: count,
+					timestamp,
+				})
+			),
+			...Object.entries(persistedMetrics.requestsByPath).map(
+				([path, count]) => ({
+					labels: { path, scope: 'total' },
+					value: count,
+					timestamp,
+				})
+			),
+		],
+	})
+
+	families.push({
+		name: 'http_requests_by_status_total',
+		help: 'HTTP requests by status code',
+		type: 'counter',
+		samples: [
+			...Array.from(metrics.requestsByStatus.entries()).map(
+				([status, count]) => ({
+					labels: { status: String(status), scope: 'session' },
+					value: count,
+					timestamp,
+				})
+			),
+			...Object.entries(persistedMetrics.requestsByStatus).map(
+				([status, count]) => ({
+					labels: { status, scope: 'total' },
+					value: count,
+					timestamp,
+				})
+			),
+		],
+	})
+
+	families.push({
+		name: 'http_request_errors_total',
+		help: 'Total number of HTTP errors',
+		type: 'counter',
+		samples: [
+			{
+				labels: { scope: 'session' },
+				value: metrics.errors,
+				timestamp,
+			},
+			{
+				labels: { scope: 'total' },
+				value: persistedMetrics.errors,
+				timestamp,
+			},
+		],
+	})
+
+	// ---------- DURATION METRICS ----------
+
+	const sessionSummary = summarizeDurations(metrics.requestDurations)
+	const totalSummary = summarizeDurations(
+		persistedMetrics.requestDurations
+	)
+
+	if (sessionSummary) {
+		families.push({
+			name: 'http_request_duration_ms',
+			help: 'HTTP request duration in milliseconds',
+			type: 'summary',
+			samples: [
+				{
+					labels: { quantile: '0.5', scope: 'session' },
+					value: sessionSummary.p50.toFixed(2),
+					timestamp,
+				},
+				{
+					labels: { quantile: '0.95', scope: 'session' },
+					value: sessionSummary.p95.toFixed(2),
+					timestamp,
+				},
+				{
+					labels: { quantile: '0.99', scope: 'session' },
+					value: sessionSummary.p99.toFixed(2),
+					timestamp,
+				},
+			],
+		})
+
+		families.push({
+			name: 'http_request_duration_ms_sum',
+			help: 'Total HTTP request duration in milliseconds',
+			type: 'summary',
+			samples: [
+				{
+					labels: { scope: 'session' },
+					value: sessionSummary.sum.toFixed(2),
+					timestamp,
+				},
+			],
+		})
+
+		families.push({
+			name: 'http_request_duration_ms_count',
+			help: 'HTTP request duration sample count',
+			type: 'summary',
+			samples: [
+				{
+					labels: { scope: 'session' },
+					value: sessionSummary.sorted.length,
+					timestamp,
+				},
+			],
+		})
 	}
 
-	lines.push("\n# HELP http_requests_by_path_total HTTP requests by path");
-	lines.push("# TYPE http_requests_by_path_total counter");
-	for (const [path, count] of metrics.requestsByPath.entries()) {
-		lines.push(
-			`http_requests_by_path_total{path="${path}"} ${count} ${timestamp}`,
-		);
+	if (totalSummary) {
+		families.push({
+			name: 'http_request_duration_ms',
+			help: 'HTTP request duration in milliseconds',
+			type: 'summary',
+			samples: [
+				{
+					labels: { quantile: '0.5', scope: 'total' },
+					value: totalSummary.p50.toFixed(2),
+					timestamp,
+				},
+				{
+					labels: { quantile: '0.95', scope: 'total' },
+					value: totalSummary.p95.toFixed(2),
+					timestamp,
+				},
+				{
+					labels: { quantile: '0.99', scope: 'total' },
+					value: totalSummary.p99.toFixed(2),
+					timestamp,
+				},
+			],
+		})
+
+		families.push({
+			name: 'http_request_duration_ms_sum',
+			help: 'Total HTTP request duration in milliseconds',
+			type: 'summary',
+			samples: [
+				{
+					labels: { scope: 'total' },
+					value: totalSummary.sum.toFixed(2),
+					timestamp,
+				},
+			],
+		})
+
+		families.push({
+			name: 'http_request_duration_ms_count',
+			help: 'HTTP request duration sample count',
+			type: 'summary',
+			samples: [
+				{
+					labels: { scope: 'total' },
+					value: totalSummary.sorted.length,
+					timestamp,
+				},
+			],
+		})
 	}
 
-	lines.push(
-		"\n# HELP http_requests_by_status_total HTTP requests by status code",
-	);
-	lines.push("# TYPE http_requests_by_status_total counter");
-	for (const [status, count] of metrics.requestsByStatus.entries()) {
-		lines.push(
-			`http_requests_by_status_total{status="${status}"} ${count} ${timestamp}`,
-		);
-	}
+	// ---------- DATABASE METRICS ----------
 
-	lines.push("\n# HELP http_request_errors_total Total number of HTTP errors");
-	lines.push("# TYPE http_request_errors_total counter");
-	lines.push(`http_request_errors_total ${metrics.errors} ${timestamp}`);
+	const dbMetrics = getDatabaseMetrics(db)
 
-	// Request duration metrics
-	if (metrics.requestDurations.length > 0) {
-		const sorted = [...metrics.requestDurations].sort((a, b) => a - b);
-		const sum = sorted.reduce((a, b) => a + b, 0);
-		const avg = sum / sorted.length;
-		const p50 = sorted[Math.floor(sorted.length * 0.5)];
-		const p95 = sorted[Math.floor(sorted.length * 0.95)];
-		const p99 = sorted[Math.floor(sorted.length * 0.99)];
+	families.push({
+		name: 'database_size_bytes',
+		help: 'Database file size in bytes',
+		type: 'gauge',
+		samples: [{ value: dbMetrics.size, timestamp }],
+	})
 
-		lines.push(
-			"\n# HELP http_request_duration_ms HTTP request duration in milliseconds",
-		);
-		lines.push("# TYPE http_request_duration_ms summary");
-		lines.push(
-			`http_request_duration_ms{quantile="0.5"} ${p50.toFixed(2)} ${timestamp}`,
-		);
-		lines.push(
-			`http_request_duration_ms{quantile="0.95"} ${p95.toFixed(2)} ${timestamp}`,
-		);
-		lines.push(
-			`http_request_duration_ms{quantile="0.99"} ${p99.toFixed(2)} ${timestamp}`,
-		);
-		lines.push(`http_request_duration_ms_sum ${sum.toFixed(2)} ${timestamp}`);
-		lines.push(`http_request_duration_ms_count ${sorted.length} ${timestamp}`);
+	families.push({
+		name: 'database_page_count',
+		help: 'Total number of database pages',
+		type: 'gauge',
+		samples: [{ value: dbMetrics.pageCount, timestamp }],
+	})
 
-		lines.push(
-			"\n# HELP http_request_duration_avg_ms Average HTTP request duration in milliseconds",
-		);
-		lines.push("# TYPE http_request_duration_avg_ms gauge");
-		lines.push(`http_request_duration_avg_ms ${avg.toFixed(2)} ${timestamp}`);
-	}
+	families.push({
+		name: 'database_page_size_bytes',
+		help: 'Database page size in bytes',
+		type: 'gauge',
+		samples: [{ value: dbMetrics.pageSize, timestamp }],
+	})
 
-	// Database metrics
-	const dbMetrics = getDatabaseMetrics(db);
+	families.push({
+		name: 'database_table_count',
+		help: 'Total number of tables',
+		type: 'gauge',
+		samples: [{ value: dbMetrics.tableCount, timestamp }],
+	})
 
-	lines.push("\n# HELP database_size_bytes Database file size in bytes");
-	lines.push("# TYPE database_size_bytes gauge");
-	lines.push(`database_size_bytes ${dbMetrics.size} ${timestamp}`);
+	families.push({
+		name: 'database_table_rows',
+		help: 'Number of rows per table',
+		type: 'gauge',
+		samples: dbMetrics.tables.map((table) => ({
+			labels: { table: table.name },
+			value: table.rowCount,
+			timestamp,
+		})),
+	})
 
-	lines.push("\n# HELP database_page_count Total number of database pages");
-	lines.push("# TYPE database_page_count gauge");
-	lines.push(`database_page_count ${dbMetrics.pageCount} ${timestamp}`);
+	// ---------- PROCESS METRICS ----------
 
-	lines.push("\n# HELP database_page_size_bytes Database page size in bytes");
-	lines.push("# TYPE database_page_size_bytes gauge");
-	lines.push(`database_page_size_bytes ${dbMetrics.pageSize} ${timestamp}`);
+	const memUsage = process.memoryUsage()
 
-	lines.push("\n# HELP database_table_count Total number of tables");
-	lines.push("# TYPE database_table_count gauge");
-	lines.push(`database_table_count ${dbMetrics.tableCount} ${timestamp}`);
+	families.push({
+		name: 'process_memory_rss_bytes',
+		help: 'Process resident memory in bytes',
+		type: 'gauge',
+		samples: [{ value: memUsage.rss, timestamp }],
+	})
 
-	lines.push("\n# HELP database_table_rows Number of rows per table");
-	lines.push("# TYPE database_table_rows gauge");
-	for (const table of dbMetrics.tables) {
-		lines.push(
-			`database_table_rows{table="${table.name}"} ${table.rowCount} ${timestamp}`,
-		);
-	}
+	families.push({
+		name: 'process_memory_heap_used_bytes',
+		help: 'Process heap memory used in bytes',
+		type: 'gauge',
+		samples: [{ value: memUsage.heapUsed, timestamp }],
+	})
 
-	// Process metrics
-	const memUsage = process.memoryUsage();
-	lines.push(
-		"\n# HELP process_memory_rss_bytes Process resident memory in bytes",
-	);
-	lines.push("# TYPE process_memory_rss_bytes gauge");
-	lines.push(`process_memory_rss_bytes ${memUsage.rss} ${timestamp}`);
+	families.push({
+		name: 'process_memory_heap_total_bytes',
+		help: 'Process heap memory total in bytes',
+		type: 'gauge',
+		samples: [{ value: memUsage.heapTotal, timestamp }],
+	})
 
-	lines.push(
-		"\n# HELP process_memory_heap_used_bytes Process heap memory used in bytes",
-	);
-	lines.push("# TYPE process_memory_heap_used_bytes gauge");
-	lines.push(
-		`process_memory_heap_used_bytes ${memUsage.heapUsed} ${timestamp}`,
-	);
+	families.push({
+		name: 'process_uptime_seconds',
+		help: 'Process uptime in seconds',
+		type: 'counter',
+		samples: [
+			{
+				value: Number(process.uptime().toFixed(2)),
+				timestamp,
+			},
+		],
+	})
 
-	lines.push(
-		"\n# HELP process_memory_heap_total_bytes Process heap memory total in bytes",
-	);
-	lines.push("# TYPE process_memory_heap_total_bytes gauge");
-	lines.push(
-		`process_memory_heap_total_bytes ${memUsage.heapTotal} ${timestamp}`,
-	);
-
-	lines.push("\n# HELP process_uptime_seconds Process uptime in seconds");
-	lines.push("# TYPE process_uptime_seconds counter");
-	lines.push(
-		`process_uptime_seconds ${process.uptime().toFixed(2)} ${timestamp}`,
-	);
-
-	return lines.join("\n");
+	return renderPrometheusMetrics(families, timestamp)
 }
