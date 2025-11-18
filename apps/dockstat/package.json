@@ -15,6 +15,7 @@
 		"@dockstat/logger": "workspace:*",
 		"@dockstat/plugin-handler": "workspace:*",
 		"@dockstat/sqlite-wrapper": "workspace:*",
+		"@dockstat/docker-client": "workspace:*",
 		"@dockstat/typings": "workspace:*",
 		"@dockstat/ui": "workspace:*",
 		"@dockstat/utils": "workspace:*",

@@ -13,6 +13,8 @@ import {
 	BookTemplate,
 	Puzzle,
 	Link,
+	Table,
+	Blocks,
 } from 'lucide-react'
 import { HoverBubble } from '../HoverBubble/HoverBubble'
 import { Divider } from '../Divider/Divider'
@@ -21,6 +23,28 @@ import { Button } from '../Button/Button'
 import { useState } from 'react'
 import { RepoPluginSlide } from './slides/Plugin'
 import { LinkWithIcon } from '../Link/Link'
+import { Checkbox } from '../Forms/Checkbox'
+
+function Plugins({
+	pluginsAsTable = false,
+	plugins,
+	installedPlugins,
+}: {
+	pluginsAsTable: boolean
+	plugins: PluginMetaType[]
+	installedPlugins: Record<string, { version: string; id: number }>
+}) {
+	if (pluginsAsTable) {
+		return
+	}
+
+	return (
+		<RepoPluginSlide
+			plugins={plugins}
+			installedPlugins={installedPlugins}
+		/>
+	)
+}
 
 export function Repo({
 	repo,
@@ -34,6 +58,9 @@ export function Repo({
 	const [selectedType, setSelectedType] = useState<
 		'plugins' | 'themes' | 'stacks'
 	>('plugins')
+
+	const [asTable, setAsTable] = useState<boolean>(false)
+
 	return (
 		<Card hoverable variant="outlined" className="w-full" size="md">
 			<CardHeader className="">
@@ -136,13 +163,20 @@ export function Repo({
 						<PaintBucket className="w-4 h-4 mr-1" />
 						Themes
 					</Button>
+					<Checkbox
+						variant="icon"
+						tickedIcon={<Table />}
+						unTickedIcon={<Blocks />}
+						onChange={() => setAsTable(!asTable)}
+					/>
 					<Divider className="my-4" variant="dotted" />
 				</div>
 
 				{selectedType === 'plugins' ? (
-					<RepoPluginSlide
+					<Plugins
 						plugins={plugins}
 						installedPlugins={installedPlugins}
+						pluginsAsTable={asTable}
 					/>
 				) : null}
 			</CardBody>

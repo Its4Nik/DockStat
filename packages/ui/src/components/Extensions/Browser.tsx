@@ -3,7 +3,7 @@ import type {
 	RepoManifestType,
 	RepoType,
 } from '@dockstat/typings/types'
-import { Card, CardBody, CardFooter, CardHeader } from '../Card/Card'
+import { Card, CardBody, CardHeader } from '../Card/Card'
 import { Badge } from '../Badge/Badge'
 import { Repo } from './Repo'
 

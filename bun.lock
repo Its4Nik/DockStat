@@ -34,6 +34,7 @@
       "name": "dockstat",
       "dependencies": {
         "@dockstat/db": "workspace:*",
+        "@dockstat/docker-client": "workspace:*",
         "@dockstat/logger": "workspace:*",
         "@dockstat/plugin-handler": "workspace:*",
         "@dockstat/sqlite-wrapper": "workspace:*",
@@ -1581,6 +1582,8 @@
     "@dockstat/db/@types/bun": ["@types/bun@1.3.2", "", { "dependencies": { "bun-types": "1.3.2" } }, "sha512-t15P7k5UIgHKkxwnMNkJbWlh/617rkDGEdSsDbu+qNHTaz9SKf7aC8fiIlUdD5RPpH6GEkP0cK7WlvmrEBRtWg=="],
 
     "@dockstat/docker-client/@dockstat/logger": ["@dockstat/logger@1.0.1", "", { "dependencies": { "@types/chalk": "^2.2.4", "@types/source-map-support": "^0.5.10", "chalk": "^5.6.2", "source-map-support": "^0.5.21" }, "peerDependencies": { "typescript": "^5.9.3" } }, "sha512-AmftXt4B5GrilRpj6Jwy0akZ3wgn0Ko6r1BBZRDVCY1MsyP1qqETTPlpHLcezA+tUg9ZLJ+H14BIdtwQlbOk7g=="],
+
+    "@dockstat/docker-client/@types/bun": ["@types/bun@1.3.2", "", { "dependencies": { "bun-types": "1.3.2" } }, "sha512-t15P7k5UIgHKkxwnMNkJbWlh/617rkDGEdSsDbu+qNHTaz9SKf7aC8fiIlUdD5RPpH6GEkP0cK7WlvmrEBRtWg=="],
 
     "@dockstat/logger/@types/bun": ["@types/bun@1.3.2", "", { "dependencies": { "bun-types": "1.3.2" } }, "sha512-t15P7k5UIgHKkxwnMNkJbWlh/617rkDGEdSsDbu+qNHTaz9SKf7aC8fiIlUdD5RPpH6GEkP0cK7WlvmrEBRtWg=="],
 
