@@ -55,10 +55,31 @@ const ElysiaDockerInstance = new Elysia({
 					allHosts[c.name] = await DCM.getHosts(c.id)
 				}
 				return allHosts
-			}).get(
-				'/:id',
-				async ({ params }) => await DCM.getHosts(Number(params.id))
-			)
+			})
+				.get(
+					'/:id',
+					async ({ params }) => await DCM.getHosts(Number(params.id))
+				)
+				.post(
+					'/add',
+					async ({ body }) =>
+						await DCM.addHost(
+							body.clientId,
+							body.hostname,
+							body.name,
+							body.secure,
+							body.port
+						),
+					{
+						body: t.Object({
+							clientId: t.Number(),
+							hostname: t.String(),
+							name: t.String(),
+							secure: t.Boolean(),
+							port: t.Number(),
+						}),
+					}
+				)
 	)
 
 export default ElysiaDockerInstance
