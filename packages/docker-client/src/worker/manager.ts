@@ -732,6 +732,7 @@ export class DockerClientManager {
 				clientId: wrapper.clientId,
 				clientName: wrapper.clientName,
 				hostsManaged: wrapper.hostIds.size,
+				initialized: wrapper.initialized,
 				activeStreams: 0,
 				isMonitoring,
 				memoryUsage: Bun.nanoseconds()
@@ -774,6 +775,7 @@ export class DockerClientManager {
 			clientId: wrapper.clientId,
 			clientName: wrapper.clientName,
 			hostsManaged: wrapper.hostIds.size,
+			initialized: wrapper.initialized,
 			activeStreams: 0,
 			isMonitoring,
 			memoryUsage: process.memoryUsage(),

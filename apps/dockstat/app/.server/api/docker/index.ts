@@ -13,7 +13,22 @@ const ElysiaDockerInstance = new Elysia({
 	prefix: '/docker',
 	detail: { tags: ['Docker'] },
 })
-	.get('/status', () => {})
+	.get('/status', async () => {
+		try {
+			const status = await DCM.getPoolMetrics()
+			return status
+		} catch (error) {
+			logger.error(
+				`Failed to get Docker status: ${
+					error instanceof Error ? error.message : String(error)
+				}`
+			)
+			return {
+				success: false,
+				error: error instanceof Error ? error.message : String(error),
+			}
+		}
+	})
 	.group('/manager', { detail: { tags: ['Docker Manager'] } }, (EDI) =>
 		EDI.get('/pool-stats', () => DCM.getPoolMetrics()).post(
 			'/init-all-clients',

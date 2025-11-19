@@ -25,6 +25,8 @@ self.onmessage = async (event: MessageEvent) => {
 				message.options
 			)
 
+			client.init()
+
 			self.postMessage({
 				type: '__init_complete__',
 				success: true,

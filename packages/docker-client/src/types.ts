@@ -90,6 +90,7 @@ export interface WorkerMetrics {
 	hostsManaged: number
 	activeStreams: number
 	isMonitoring: boolean
+	initialized: boolean
 	memoryUsage?: {
 		rss: number
 		heapTotal: number
