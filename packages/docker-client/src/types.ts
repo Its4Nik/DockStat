@@ -16,8 +16,7 @@ export type WorkerRequest =
 	| { type: 'removeHost'; hostId: number }
 	| {
 			type: 'updateHost'
-			oldHost: DATABASE.DB_target_host
-			newHost: DATABASE.DB_target_host
+			host: DATABASE.DB_target_host
 	  }
 	| { type: 'getHosts' }
 	| { type: 'getAllContainers' }

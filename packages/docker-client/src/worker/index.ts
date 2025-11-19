@@ -92,19 +92,12 @@ self.onmessage = async (event: MessageEvent) => {
 				break
 
 			case 'removeHost': {
-				const hostToRemove = client
-					.getHosts()
-					.find((h) => h.id === request.hostId)
-				if (hostToRemove) {
-					client.removeHost(hostToRemove)
-				}
-				result = undefined
+				result = client.removeHost(request.hostId)
 				break
 			}
 
 			case 'updateHost':
-				client.updateHost(request.oldHost, request.newHost)
-				result = undefined
+				result = client.updateHost(request.host)
 				break
 
 			case 'getHosts':

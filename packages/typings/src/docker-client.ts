@@ -92,32 +92,34 @@ export interface DockerAdapterOptions {
 	execOptions?: ExecOptions
 }
 
-export const DockerAdapterOptionsSchema = t.Object({
-	defaultTimeout: t.Partial(t.Number()),
-	retryAttempts: t.Partial(t.Number()),
-	retryDelay: t.Partial(t.Number()),
-	enableMonitoring: t.Partial(t.Boolean()),
-	enableEventEmitter: t.Partial(t.Boolean()),
-	monitoringOptions: t.Partial(
-		t.Object({
-			healthCheckInterval: t.Partial(t.Number()),
-			containerEventPollingInterval: t.Partial(t.Number()),
-			hostMetricsInterval: t.Partial(t.Number()),
-			enableContainerEvents: t.Partial(t.Boolean()),
-			enableHostMetrics: t.Partial(t.Boolean()),
-			enableHealthChecks: t.Partial(t.Boolean()),
-			retryAttempts: t.Partial(t.Number()),
-			retryDelay: t.Partial(t.Number()),
-		})
-	),
-	execOptions: t.Partial(
-		t.Object({
-			workingDir: t.Partial(t.String()),
-			env: t.Array(t.String()),
-			tty: t.Partial(t.Boolean()),
-		})
-	),
-})
+export const DockerAdapterOptionsSchema = t.Partial(
+	t.Object({
+		defaultTimeout: t.Number(),
+		retryAttempts: t.Number(),
+		retryDelay: t.Number(),
+		enableMonitoring: t.Boolean(),
+		enableEventEmitter: t.Boolean(),
+		monitoringOptions: t.Partial(
+			t.Object({
+				healthCheckInterval: t.Number(),
+				containerEventPollingInterval: t.Number(),
+				hostMetricsInterval: t.Number(),
+				enableContainerEvents: t.Boolean(),
+				enableHostMetrics: t.Boolean(),
+				enableHealthChecks: t.Boolean(),
+				retryAttempts: t.Number(),
+				retryDelay: t.Number(),
+			})
+		),
+		execOptions: t.Partial(
+			t.Object({
+				workingDir: t.String(),
+				env: t.Array(t.String()),
+				tty: t.Boolean(),
+			})
+		),
+	})
+)
 
 export interface ContainerInfo {
 	id: string

@@ -41,7 +41,7 @@ interface MetricsRow
 
 const MetricsTable =
 	DockStatDB._sqliteWrapper.createTable<MetricsRow>(
-		'Metrics',
+		'metrics',
 		{
 			id: column.id(),
 			totalRequests: column.integer(),

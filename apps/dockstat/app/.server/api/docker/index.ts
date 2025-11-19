@@ -13,6 +13,7 @@ const ElysiaDockerInstance = new Elysia({
 	prefix: '/docker',
 	detail: { tags: ['Docker'] },
 })
+	.get('/status', () => {})
 	.group('/manager', { detail: { tags: ['Docker Manager'] } }, (EDI) =>
 		EDI.get('/pool-stats', () => DCM.getPoolMetrics()).post(
 			'/init-all-clients',
@@ -31,24 +32,29 @@ const ElysiaDockerInstance = new Elysia({
 		(EDI) =>
 			EDI.post(
 				'/register',
-				({ body }) => DCM.registerClient(body.clientName, body.options),
+				({ body }) =>
+					DCM.registerClient(body.clientName, body.options || undefined),
 				{
 					body: t.Object({
 						clientName: t.String(),
-						options: DockerAdapterOptionsSchema,
+						options: t.Nullable(DockerAdapterOptionsSchema),
 					}),
 				}
 			)
-				.post('/delete', ({ body }) => DCM.removeClient(body.clientId), {
-					body: t.Object({ clientId: t.Number() }),
-				})
+				.delete(
+					'/delete',
+					({ body }) => DCM.removeClient(body.clientId),
+					{
+						body: t.Object({ clientId: t.Number() }),
+					}
+				)
 				.get('/all', () => DCM.getAllClients())
 	)
 	.group(
 		'/hosts',
 		{ detail: { tags: ['Docker Host Management'] } },
-		(EDIDC) =>
-			EDIDC.get('/', async () => {
+		(EDI) =>
+			EDI.get('/', async () => {
 				const allClients = DCM.getAllClients()
 				const allHosts: Record<string, unknown> = {}
 				for (const c of allClients) {
@@ -57,8 +63,13 @@ const ElysiaDockerInstance = new Elysia({
 				return allHosts
 			})
 				.get(
-					'/:id',
-					async ({ params }) => await DCM.getHosts(Number(params.id))
+					'/:clientId',
+					async ({ params: { clientId } }) => await DCM.getHosts(clientId),
+					{
+						params: t.Object({
+							clientId: t.Number(),
+						}),
+					}
 				)
 				.post(
 					'/add',
@@ -80,6 +91,35 @@ const ElysiaDockerInstance = new Elysia({
 						}),
 					}
 				)
+				.post(
+					'/update',
+					async ({ body: { clientId, host } }) =>
+						await DCM.updateHost(clientId, host),
+					{
+						body: t.Object({
+							clientId: t.Number(),
+							host: t.Object({
+								id: t.Number(),
+								host: t.String(),
+								name: t.String(),
+								secure: t.Boolean(),
+								port: t.Number(),
+							}),
+						}),
+					}
+				)
+	)
+
+	.group(
+		'/container',
+		{ detail: { tags: ['Docker Containers'] } },
+		(EDI) =>
+			EDI.get(
+				'/all/:clientId',
+				async ({ params: { clientId } }) =>
+					await DCM.getAllContainers(clientId),
+				{ params: t.Object({ clientId: t.Number() }) }
+			)
 	)
 
 export default ElysiaDockerInstance

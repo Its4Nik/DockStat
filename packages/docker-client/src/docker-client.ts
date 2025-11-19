@@ -186,15 +186,18 @@ class DockerClient {
 		}
 	}
 
-	public removeHost(host: DATABASE.DB_target_host): void {
+	public removeHost(hostId: number): void {
+		const hostName =
+			this.getHosts().find((h) => h.id === hostId)?.name || 'Unknown'
 		this.checkDisposed()
-		this.logger.info(`Removing host: ${host.name} (ID: ${host.id})`)
-		this.hostHandler.removeHost(host)
-		this.dockerInstances.delete(host.id)
+		this.logger.info(`Removing host: ${hostName} (ID: ${hostId})`)
+		this.hostHandler.removeHost(hostId)
+		this.dockerInstances.delete(hostId)
 
 		const streamsToRemove = Array.from(
 			this.activeStreams.keys()
-		).filter((key) => key.includes(`host-${host.id}`))
+		).filter((key) => key.includes(`host-${hostId}`))
+
 		for (const streamKey of streamsToRemove) {
 			this.stopStream(streamKey)
 		}
@@ -204,23 +207,14 @@ class DockerClient {
 			this.monitoringManager.updateDockerInstances(this.dockerInstances)
 		}
 
-		this.events.emitHostRemoved(host.id, host.name)
+		this.events.emitHostRemoved(hostId, hostName)
 	}
 
-	public updateHost(
-		oldHost: DATABASE.DB_target_host,
-		newHost: DATABASE.DB_target_host
-	): void {
+	public updateHost(host: DATABASE.DB_target_host): void {
+		this.removeHost(host.id)
 		this.checkDisposed()
-		this.removeHost(oldHost)
-		this.addHost(
-			newHost.host,
-			newHost.name,
-			newHost.secure,
-			newHost.port,
-			newHost.id
-		)
-		this.events.emitHostUpdated(newHost.id, newHost.name)
+		this.addHost(host.host, host.name, host.secure, host.port, host.id)
+		this.events.emitHostUpdated(host.id, host.name)
 	}
 
 	public getHosts(): DATABASE.DB_target_host[] {

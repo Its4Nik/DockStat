@@ -11,7 +11,7 @@ export default class HostHandler {
 		this.logger.info('Initializing HostHandler')
 		this.logger.debug('Creating hosts table')
 		this.hostTable = hostDB.createTable<DATABASE.DB_target_host>(
-			`HostHandler-${id}`,
+			`host_handler_${id}`,
 			{
 				id: column.id(),
 				name: column.text({ notNull: true }),
@@ -47,9 +47,9 @@ export default class HostHandler {
 		return this.hostTable.all()
 	}
 
-	public removeHost(host: DATABASE.DB_target_host) {
-		this.logger.info(`Removing host: ${host.name} (ID: ${host.id})`)
-		this.hostTable.where({ id: host.id }).delete()
+	public removeHost(hostId: number) {
+		this.logger.info(`Removing host: ${hostId}`)
+		this.hostTable.where({ id: hostId }).delete()
 	}
 
 	public updateHost(host: DATABASE.DB_target_host) {

@@ -369,13 +369,11 @@ export class DockerClientManager {
 
 	public async updateHost(
 		clientId: number,
-		oldHost: DATABASE.DB_target_host,
-		newHost: DATABASE.DB_target_host
+		host: DATABASE.DB_target_host
 	): Promise<void> {
 		return this.sendRequest(clientId, {
 			type: 'updateHost',
-			oldHost,
-			newHost,
+			host,
 		})
 	}
 
@@ -383,6 +381,19 @@ export class DockerClientManager {
 		clientId: number
 	): Promise<DATABASE.DB_target_host[]> {
 		return this.sendRequest(clientId, { type: 'getHosts' })
+	}
+
+	public async getAllHosts() {
+		const clients = this.getAllClients()
+		const hosts: Array<{ name: string; id: number; clientId: number }> =
+			[]
+		for (const client of clients) {
+			const clientsHosts = (await this.getHosts(client.id)).map((c) => {
+				return { name: c.name, id: c.id, clientId: client.id }
+			})
+			hosts.concat(clientsHosts)
+		}
+		return hosts
 	}
 
 	public async ping(clientId: number) {
