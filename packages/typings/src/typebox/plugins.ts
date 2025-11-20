@@ -59,7 +59,7 @@ export interface Plugin
 	extends WrappedPluginMetaType,
 		Omit<DBPlugin, 'plugin'> {
 	routes?: AnyElysia
-	events?: Partial<DockerClientEvents>
+	dockerClientEvents?: Partial<DockerClientEvents>
 	init?: () => void
 }
 

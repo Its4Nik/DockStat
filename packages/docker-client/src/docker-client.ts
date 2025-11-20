@@ -1,4 +1,7 @@
 import Logger from '@dockstat/logger'
+
+declare var self: Worker
+
 import type DB from '@dockstat/sqlite-wrapper'
 import type { DATABASE, DOCKER } from '@dockstat/typings'
 import Dockerode, { type ContainerStats } from 'dockerode'

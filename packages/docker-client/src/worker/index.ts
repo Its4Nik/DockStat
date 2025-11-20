@@ -1,6 +1,8 @@
 import DockerClient from '../docker-client'
 import type { WorkerRequest, WorkerResponse } from '../types'
 
+declare var self: Worker
+
 let client: DockerClient | null = null
 let clientId: number
 let clientName: string

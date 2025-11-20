@@ -30,22 +30,26 @@ type DockerClientTable = {
 	options: DOCKER.DockerAdapterOptions
 }
 
-export class DockerClientManager {
-	private DB: DB
-	private table: QueryBuilder<DockerClientTable>
-	private logger = new Logger(
-		'DCM',
-		logger.getParentsForLoggerChaining()
-	)
-	private workers: Map<number, WorkerWrapper> = new Map()
-	private maxWorkers: number
-	private dbPath: string
+type triggerHookListener = <K extends keyof DOCKER.DockerClientEvents>(hook: K, ...args: Parameters<DOCKER.DockerClientEvents[K]>) => void
 
-	constructor(db: DB, options: { maxWorkers?: number } = {}) {
+export class DockerClientManager {
+  private DB: DB
+  private table: QueryBuilder<DockerClientTable>
+  private logger = new Logger(
+    'DCM',
+    logger.getParentsForLoggerChaining()
+  )
+  private workers: Map<number, WorkerWrapper> = new Map()
+  private maxWorkers: number
+  private dbPath: string
+  private triggerHook: triggerHookListener | undefined
+
+	constructor(db: DB, options: { maxWorkers?: number, triggerHook?:( <K extends keyof DOCKER.DockerClientEvents>(hook: K, ...args: Parameters<DOCKER.DockerClientEvents[K]>) => void) }) {
 		this.logger.info('Creating Docker Client Manager')
 		this.DB = db
 		this.dbPath = db.getDb().filename
 		this.maxWorkers = options.maxWorkers ?? 4
+		this.triggerHook = options.triggerHook
 
 		this.table = this.DB.createTable<DockerClientTable>(
 			'docker_clients',

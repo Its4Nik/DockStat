@@ -1,7 +1,8 @@
-import { column, type QueryBuilder } from '@dockstat/sqlite-wrapper'
-import type DB from '@dockstat/sqlite-wrapper'
-import type { DBPluginShemaT, Plugin } from '@dockstat/typings/types'
-import Logger from '@dockstat/logger'
+import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
+import type DB from "@dockstat/sqlite-wrapper"
+import type { DBPluginShemaT, Plugin } from "@dockstat/typings/types"
+import Logger from "@dockstat/logger"
+import type { DOCKER } from "@dockstat/typings"
 
 class PluginHandler {
 	private loadedPluginsMap = new Map<number, Plugin>()
@@ -10,17 +11,17 @@ class PluginHandler {
 	private logger: Logger
 
 	constructor(db: DB, loggerParents: string[] = []) {
-		this.logger = new Logger('PluginHandler', loggerParents)
-		this.logger.debug('Initializing...')
+		this.logger = new Logger("PluginHandler", loggerParents)
+		this.logger.debug("Initializing...")
 
 		this.DB = db
 
-		this.logger.debug('Creating Plugin Table')
+		this.logger.debug("Creating Plugin Table")
 		this.table = this.DB.createTable<DBPluginShemaT>(
-			'plugins',
+			"plugins",
 			{
 				id: column.id(),
-				repoType: column.enum(['github', 'gitlab', 'local']),
+				repoType: column.enum(["github", "gitlab", "local"]),
 				// Plugin Metadata
 				name: column.text({ notNull: true, unique: true }),
 				description: column.text({ notNull: false }),
@@ -35,13 +36,13 @@ class PluginHandler {
 			{
 				ifNotExists: true,
 				parser: {
-					JSON: ['author', 'tags'],
+					JSON: ["author", "tags"],
 					MODULE: {
 						plugin: {
-							loader: 'ts',
+							loader: "ts",
 							minifyWhitespace: true,
 							allowBunRuntime: true,
-							target: 'bun',
+							target: "bun",
 						},
 					},
 				},
@@ -50,18 +51,18 @@ class PluginHandler {
 	}
 
 	public getAll() {
-		this.logger.debug('Fetching all plugins')
+		this.logger.debug("Fetching all plugins")
 		return this.table
 			.select([
-				'author',
-				'description',
-				'id',
-				'manifest',
-				'name',
-				'repoType',
-				'repository',
-				'tags',
-				'version',
+				"author",
+				"description",
+				"id",
+				"manifest",
+				"name",
+				"repoType",
+				"repository",
+				"tags",
+				"version",
 			])
 			.all()
 	}
@@ -74,14 +75,14 @@ class PluginHandler {
 			return {
 				success: true,
 				id: res.insertId,
-				message: 'Plugin saved successfully',
+				message: "Plugin saved successfully",
 			}
 		} catch (error: unknown) {
 			this.logger.error(`Could not save ${plugin.name} - ${error}`)
 			return {
 				error: `${error}`,
 				success: false,
-				message: 'Failed to save plugin',
+				message: "Failed to save plugin",
 			}
 		}
 	}
@@ -93,7 +94,7 @@ class PluginHandler {
 			this.logger.info(`Deleted Plugin: ${id}`)
 			return {
 				success: true,
-				message: 'Deleted Plugin',
+				message: "Deleted Plugin",
 			}
 		} catch (error: unknown) {
 			this.logger.error(`Could not delete Plugin: ${id} - ${error}`)
@@ -128,7 +129,7 @@ class PluginHandler {
 	}
 
 	public async loadAllPlugins() {
-		const plugins = this.table.select(['*']).all()
+		const plugins = this.table.select(["*"]).all()
 
 		const loadedPlugins = this.loadedPluginsMap
 
@@ -143,9 +144,7 @@ class PluginHandler {
 		const imports = await Promise.allSettled(
 			validPlugins.map(async (plugin) => {
 				try {
-					const mod = (await import(
-						/* @vite-ignore */ plugin.plugin
-					)) as Plugin
+					const mod = (await import(/* @vite-ignore */ plugin.plugin)) as Plugin
 					return { id: plugin.id, module: mod }
 				} catch (err) {
 					console.error(`Failed to import plugin ${plugin.plugin}:`, err)
@@ -155,7 +154,7 @@ class PluginHandler {
 		)
 
 		for (const result of imports) {
-			if (result.status === 'fulfilled' && result.value) {
+			if (result.status === "fulfilled" && result.value) {
 				this.loadedPluginsMap.set(
 					result.value.id as number,
 					result.value.module
@@ -174,10 +173,7 @@ class PluginHandler {
 	}
 
 	public async loadPlugin(id: number) {
-		const pluginToLoad = this.table
-			.select(['*'])
-			.where({ id: id })
-			.first()
+		const pluginToLoad = this.table.select(["*"]).where({ id: id }).first()
 
 		if (!pluginToLoad) {
 			throw new Error(`No Plugin found for id: ${id}`)
@@ -187,9 +183,7 @@ class PluginHandler {
 			throw new Error(`Plugin already loaded: ${id}`)
 		}
 
-		const mod = (await import(
-			/* @vite-ignore */ pluginToLoad.plugin
-		)) as Plugin
+		const mod = (await import(/* @vite-ignore */ pluginToLoad.plugin)) as Plugin
 
 		return this.loadedPluginsMap.set(pluginToLoad.id as number, mod)
 	}
@@ -207,7 +201,7 @@ class PluginHandler {
 	}
 
 	public getStatus() {
-		const installedPlugins = this.table.select(['*']).all()
+		const installedPlugins = this.table.select(["*"]).all()
 		const loadedPlugins = this.getLoadedPlugins()
 		const repos = installedPlugins.map((l) => l.repository)
 
@@ -231,27 +225,21 @@ class PluginHandler {
 		return this.savePlugin(this.parseManifest(url, txt))
 	}
 
-	private parseManifest(
-		link: string,
-		manifest: string
-	): DBPluginShemaT {
-		if (link.endsWith('json')) {
+	private parseManifest(link: string, manifest: string): DBPluginShemaT {
+		if (link.endsWith("json")) {
 			return JSON.parse(manifest) as DBPluginShemaT
 		}
-		if (link.endsWith('yml') || link.endsWith('yaml')) {
+		if (link.endsWith("yml") || link.endsWith("yaml")) {
 			return Bun.YAML.parse(manifest) as DBPluginShemaT
 		}
-		throw new Error('Unsupported manifest')
+		throw new Error("Unsupported manifest")
 	}
 
-	public async handleRoute(
-		req: Request,
-		params: Record<string, string>
-	) {
+	public async handleRoute(req: Request, params: Record<string, string>) {
 		const { id } = params
 
 		if (!id) {
-			throw new Error('PluginID not provided!')
+			throw new Error("PluginID not provided!")
 		}
 
 		const plugin = this.loadedPluginsMap.get(Number(id))
@@ -265,6 +253,30 @@ class PluginHandler {
 		}
 
 		return await plugin.routes.handle(req)
+	}
+
+	public triggerDockerClientHooks<K extends keyof DOCKER.DockerClientEvents>(
+		hook: K,
+		...args: Parameters<DOCKER.DockerClientEvents[K]>
+	): void {
+		const loadedPlugins = this.loadedPluginsMap.values()
+
+		for (const plug of loadedPlugins) {
+			const handler = plug.dockerClientEvents?.[hook] as
+				| DOCKER.DockerClientEvents[K]
+				| undefined
+
+			if (typeof handler === "function") {
+				try {
+					// Call the handler with the strongly-typed args.
+					;(handler as (...a: unknown[]) => unknown)(...args)
+				} catch (error: unknown) {
+					this.logger.error(
+						`Plugin hook "${String(hook)}" failed: ${String(error)}`
+					)
+				}
+			}
+		}
 	}
 }
 
