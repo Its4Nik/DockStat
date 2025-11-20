@@ -26,20 +26,11 @@ export default class HostHandler {
 	}
 
 	public addHost(host: Partial<DATABASE.DB_target_host>): number {
-		const prev = this.getHosts().map((h) => h.id)
-
 		this.logger.info(
 			`Adding new host: ${host.name} (${host.host}:${host.port})`
 		)
 
-		this.hostTable.insertOrFail(host)
-
-		const now = this.getHosts()
-		const newHost = now.find(
-			(h) => !prev.includes(h.id)
-		) as DATABASE.DB_target_host
-
-		return newHost.id
+		return this.hostTable.insert(host).insertId
 	}
 
 	public getHosts() {

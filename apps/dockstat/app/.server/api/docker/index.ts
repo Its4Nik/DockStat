@@ -15,7 +15,7 @@ const ElysiaDockerInstance = new Elysia({
 })
 	.get('/status', async () => {
 		try {
-			const status = await DCM.getPoolMetrics()
+			const status = await DCM.getStatus()
 			return status
 		} catch (error) {
 			logger.error(
@@ -64,16 +64,36 @@ const ElysiaDockerInstance = new Elysia({
 					}
 				)
 				.get('/all', () => DCM.getAllClients())
+				.post(
+					'/monitoring/:clientId/start',
+					({ params }) => DCM.startMonitoring(params.clientId),
+					{ params: t.Object({ clientId: t.Number() }) }
+				)
+				.post(
+					'/monitoring/:clientId/stop',
+					({ params }) => DCM.stopMonitoring(params.clientId),
+					{ params: t.Object({ clientId: t.Number() }) }
+				)
 	)
 	.group(
 		'/hosts',
 		{ detail: { tags: ['Docker Host Management'] } },
 		(EDI) =>
 			EDI.get('/', async () => {
+				// Return hosts per client. If fetching hosts for a client fails,
+				// include the error message for that client instead of silently
+				// returning an empty value.
 				const allClients = DCM.getAllClients()
 				const allHosts: Record<string, unknown> = {}
 				for (const c of allClients) {
-					allHosts[c.name] = await DCM.getHosts(c.id)
+					try {
+						allHosts[c.name] = await DCM.getHosts(c.id)
+					} catch (err) {
+						allHosts[c.name] = {
+							success: false,
+							error: err instanceof Error ? err.message : String(err),
+						}
+					}
 				}
 				return allHosts
 			})

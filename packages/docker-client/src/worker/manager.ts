@@ -18,6 +18,10 @@ interface WorkerWrapper {
 	busy: boolean
 	lastUsed: number
 	initialized: boolean
+	// Track the last error message observed for this worker (if any)
+	lastError?: string | null
+	// Number of times this worker reported or experienced an error
+	errorCount?: number
 }
 
 type DockerClientTable = {
@@ -156,15 +160,39 @@ export class DockerClientManager {
 				this.logger.error(
 					`Worker ${clientId} error: ${JSON.stringify(error)}`
 				)
+				// record error on wrapper if available
+				const existing = this.workers.get(clientId)
+				if (existing) {
+					try {
+						existing.lastError =
+							error instanceof Error ? error.message : String(error)
+					} catch {
+						existing.lastError = JSON.stringify(error)
+					}
+					existing.errorCount = (existing.errorCount ?? 0) + 1
+				}
+				// perform cleanup
 				this.handleWorkerError(clientId, error)
-				throw new Error(JSON.stringify(error))
+				// do not rethrow here (cleanup handled above)
 			})
 
 			// Store wrapper
+
 			this.workers.set(clientId, wrapper)
 
 			// Initialize the worker
 			await this.initializeWorker(clientId, clientName, options)
+
+			// Update hosts
+			const hostIds = (await this.getHosts(clientId)).map(
+				(host) => host.id
+			)
+
+			for (const hostId of hostIds) {
+				wrapper.hostIds.add(hostId)
+			}
+
+			this.workers.set(clientId, wrapper)
 		} catch (error: unknown) {
 			throw new Error(String(error))
 		}
@@ -182,6 +210,23 @@ export class DockerClientManager {
 
 		return new Promise((resolve, reject) => {
 			const timeout = setTimeout(() => {
+				// Record initialization timeout on wrapper
+				try {
+					wrapper.lastError = 'Worker initialization timeout'
+				} catch {
+					wrapper.lastError = 'Worker initialization timeout'
+				}
+				wrapper.errorCount = (wrapper.errorCount ?? 0) + 1
+
+				// Ensure we cleanup the worker since it didn't initialize
+				try {
+					// Best-effort cleanup: terminate and delete wrapper entry
+					wrapper.worker.terminate()
+				} catch {
+					// ignore termination errors
+				}
+				this.workers.delete(clientId)
+
 				reject(new Error('Worker initialization timeout'))
 			}, 30000)
 
@@ -196,6 +241,22 @@ export class DockerClientManager {
 						this.logger.info(`Worker ${clientId} initialized successfully`)
 						resolve()
 					} else {
+						// store error info on wrapper for diagnostics
+						try {
+							wrapper.lastError = message.error ?? 'Unknown init error'
+						} catch {
+							wrapper.lastError = String(message.error)
+						}
+						wrapper.errorCount = (wrapper.errorCount ?? 0) + 1
+
+						// cleanup the worker instance
+						try {
+							wrapper.worker.terminate()
+						} catch {
+							// ignore
+						}
+						this.workers.delete(clientId)
+
 						reject(new Error(`Worker init failed: ${message.error}`))
 					}
 				}
@@ -247,8 +308,19 @@ export class DockerClientManager {
 			wrapper.busy = true
 			wrapper.lastUsed = Date.now()
 
+			let settled = false
+
 			const timeout = setTimeout(() => {
+				if (settled) return
+				settled = true
 				wrapper.busy = false
+				// record timeout error for diagnostics
+				try {
+					wrapper.lastError = 'Request timeout'
+				} catch {
+					wrapper.lastError = 'Request timeout'
+				}
+				wrapper.errorCount = (wrapper.errorCount ?? 0) + 1
 				wrapper.worker.removeEventListener('message', messageHandler)
 				reject(new Error('Request timeout'))
 			}, 30000)
@@ -267,6 +339,8 @@ export class DockerClientManager {
 					return
 				}
 
+				if (settled) return
+				settled = true
 				clearTimeout(timeout)
 				wrapper.busy = false
 				wrapper.worker.removeEventListener('message', messageHandler)
@@ -274,12 +348,34 @@ export class DockerClientManager {
 				if (response.success) {
 					resolve(response.data)
 				} else {
+					// record worker-reported error
+					try {
+						wrapper.lastError = response.error ?? 'Unknown worker error'
+					} catch {
+						wrapper.lastError = String(response.error)
+					}
+					wrapper.errorCount = (wrapper.errorCount ?? 0) + 1
 					reject(new Error(response.error))
 				}
 			}
 
 			wrapper.worker.addEventListener('message', messageHandler)
-			wrapper.worker.postMessage(request)
+			try {
+				wrapper.worker.postMessage(request)
+			} catch (err) {
+				// If postMessage itself fails, record it and reject
+				clearTimeout(timeout)
+				wrapper.busy = false
+				wrapper.worker.removeEventListener('message', messageHandler)
+				try {
+					wrapper.lastError =
+						err instanceof Error ? err.message : String(err)
+				} catch {
+					wrapper.lastError = String(err)
+				}
+				wrapper.errorCount = (wrapper.errorCount ?? 0) + 1
+				reject(err)
+			}
 		})
 	}
 
@@ -347,6 +443,7 @@ export class DockerClientManager {
 		const wrapper = this.workers.get(clientId)
 		if (wrapper && result.id) {
 			wrapper.hostIds.add(result.id)
+			this.workers.set(clientId, wrapper)
 		}
 
 		return result
@@ -364,6 +461,7 @@ export class DockerClientManager {
 		const wrapper = this.workers.get(clientId)
 		if (wrapper) {
 			wrapper.hostIds.delete(hostId)
+			this.workers.set(clientId, wrapper)
 		}
 	}
 
@@ -384,15 +482,20 @@ export class DockerClientManager {
 	}
 
 	public async getAllHosts() {
+		this.logger.debug('Getting all hosts')
 		const clients = this.getAllClients()
-		const hosts: Array<{ name: string; id: number; clientId: number }> =
+		this.logger.debug(`Clients: ${JSON.stringify(clients)}`)
+		let hosts: Array<{ name: string; id: number; clientId: number }> =
 			[]
 		for (const client of clients) {
 			const clientsHosts = (await this.getHosts(client.id)).map((c) => {
 				return { name: c.name, id: c.id, clientId: client.id }
 			})
-			hosts.concat(clientsHosts)
+			this.logger.debug(`Clients Hosts: ${JSON.stringify(clientsHosts)}`)
+			hosts = hosts.concat(clientsHosts)
 		}
+
+		this.logger.debug(`All Hosts: ${JSON.stringify(hosts)}`)
 		return hosts
 	}
 
@@ -754,6 +857,16 @@ export class DockerClientManager {
 			averageHostsPerWorker:
 				this.workers.size > 0 ? totalHosts / this.workers.size : 0,
 			workers,
+		}
+	}
+
+	public async getStatus() {
+		const hosts = await this.getAllHosts()
+		this.logger.debug('Getting status')
+		this.logger.debug(`Hosts: ${JSON.stringify(hosts)}`)
+		return {
+			...(await this.getPoolMetrics()),
+			hosts: hosts,
 		}
 	}
 

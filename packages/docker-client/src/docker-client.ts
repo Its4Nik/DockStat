@@ -58,6 +58,9 @@ class DockerClient {
 			this.logger.getParentsForLoggerChaining()
 		)
 
+		this.logger.debug(
+			`Monitoring enabled: ${this.options.enableMonitoring}`
+		)
 		if (this.options.enableMonitoring) {
 			this.monitoringManager = new MonitoringManager(
 				this.events,
@@ -135,7 +138,8 @@ class DockerClient {
 		name: string,
 		secure: boolean,
 		port: number,
-		id?: number
+		id?: number,
+		update = false
 	): DATABASE.DB_target_host {
 		this.checkDisposed()
 		const host: Partial<DATABASE.DB_target_host> = {
@@ -147,6 +151,9 @@ class DockerClient {
 
 		if (!id) {
 			this.logger.info(`Adding new host: ${host.name}`)
+			host.id = this.hostHandler.addHost(host)
+		} else if (update) {
+			this.logger.info(`Updating host action: ${host.name}`)
 			host.id = this.hostHandler.addHost(host)
 		} else {
 			this.logger.info(
@@ -211,9 +218,80 @@ class DockerClient {
 	}
 
 	public updateHost(host: DATABASE.DB_target_host): void {
-		this.removeHost(host.id)
 		this.checkDisposed()
-		this.addHost(host.host, host.name, host.secure, host.port, host.id)
+		this.logger.info(`Updating host: ${host.name} (ID: ${host.id})`)
+
+		// Verify host exists in DB
+		const existing = this.getHosts().find((h) => h.id === host.id)
+		if (!existing) {
+			this.logger.error(`Host with ID ${host.id} not found for update`)
+			throw new Error(`Host with ID ${host.id} not found`)
+		}
+
+		// Update the database record first
+		try {
+			this.hostHandler.updateHost(host)
+			this.logger.info(`Host DB record updated for ID ${host.id}`)
+		} catch (err) {
+			this.logger.error(
+				`Failed to update host record for ID ${host.id}: ${err}`
+			)
+			throw err
+		}
+
+		// Stop any active streams related to this host
+		const streamsToRemove = Array.from(
+			this.activeStreams.keys()
+		).filter((key) => key.includes(`host-${host.id}`))
+		for (const streamKey of streamsToRemove) {
+			this.logger.debug(
+				`Stopping stream ${streamKey} for updated host ${host.id}`
+			)
+			this.stopStream(streamKey)
+		}
+
+		// Replace or create Docker instance for this host
+		try {
+			const instanceCfg: Dockerode.DockerOptions = {
+				host: host.host,
+				protocol: host.secure ? 'https' : 'http',
+				port: host.port,
+				timeout: this.options.defaultTimeout,
+			}
+
+			this.logger.info(
+				`Creating/updating Docker Instance for host ID ${host.id}: ${JSON.stringify(
+					instanceCfg
+				)}`
+			)
+			// Replace any existing instance
+			this.dockerInstances.delete(host.id)
+			const dockerInstance = new Dockerode(instanceCfg)
+			this.dockerInstances.set(host.id, dockerInstance)
+		} catch (err) {
+			this.logger.error(
+				`Failed to create Docker instance for updated host ${host.id}: ${err}`
+			)
+			// Re-throw to let callers handle; at this point DB is updated but docker instance may be inconsistent
+			throw err
+		}
+
+		// Update monitoring manager if present
+		if (this.monitoringManager) {
+			try {
+				this.monitoringManager.updateHosts(this.hostHandler.getHosts())
+				this.monitoringManager.updateDockerInstances(this.dockerInstances)
+				this.logger.info(
+					`Monitoring manager updated for host ID ${host.id}`
+				)
+			} catch (err) {
+				this.logger.error(
+					`Failed to update monitoring manager for host ${host.id}: ${err}`
+				)
+			}
+		}
+
+		// Emit event to notify listeners
 		this.events.emitHostUpdated(host.id, host.name)
 	}
 
@@ -237,6 +315,7 @@ class DockerClient {
 					this.logger.error(
 						`Failed to get containers for host ${host.name}: ${error}`
 					)
+					throw new Error(`Failed to get containers for host ${host.name}`)
 				}
 			})
 		)

@@ -184,7 +184,7 @@ export class DockerEventEmitter
 
 	public emitError(error: Error, context?: unknown): void {
 		this.logger.error(
-			`${error instanceof Error ? error.message : error} - ${context}`
+			`${error instanceof Error ? error.message : error} - ${JSON.stringify(context)}`
 		)
 		this.emit('error', error, context)
 	}
