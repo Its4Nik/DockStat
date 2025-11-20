@@ -9,10 +9,7 @@
 		"ignoreUnknown": true
 	},
 	"formatter": {
-		"enabled": true,
-		"indentStyle": "tab",
-		"indentWidth": 1,
-		"lineWidth": 70
+		"enabled": true
 	},
 	"linter": {
 		"enabled": true,
@@ -31,9 +28,10 @@
 	},
 	"javascript": {
 		"formatter": {
-			"quoteStyle": "single",
+			"quoteStyle": "double",
 			"trailingCommas": "es5",
-			"semicolons": "asNeeded"
+			"semicolons": "asNeeded",
+			"enabled": true
 		}
 	},
 	"json": {
@@ -44,6 +42,16 @@
 	"css": {
 		"parser": {
 			"tailwindDirectives": true
+		}
+	},
+
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": "on",
+				"useSortedProperties": "on"
+			}
 		}
 	}
 }

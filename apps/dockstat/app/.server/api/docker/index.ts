@@ -1,19 +1,21 @@
-import Logger from '@dockstat/logger'
-import { ElysiaLogger } from '../logger'
-import Elysia, { t } from 'elysia'
-import DCM from '~/.server/docker'
-import { DockerAdapterOptionsSchema } from '@dockstat/typings/schemas'
+import Logger from "@dockstat/logger"
+import { ElysiaLogger } from "../logger"
+import Elysia, { t } from "elysia"
+import DCM from "~/.server/docker"
+import { DockerAdapterOptionsSchema } from "@dockstat/typings/schemas"
 
 export const logger = new Logger(
-	'Docker',
+	"Docker",
 	ElysiaLogger.getParentsForLoggerChaining()
 )
 
 const ElysiaDockerInstance = new Elysia({
-	prefix: '/docker',
-	detail: { tags: ['Docker'] },
+	prefix: "/docker",
+	detail: {
+		tags: ["Docker"],
+	},
 })
-	.get('/status', async () => {
+	.get("/status", async () => {
 		try {
 			const status = await DCM.getStatus()
 			return status
@@ -29,24 +31,35 @@ const ElysiaDockerInstance = new Elysia({
 			}
 		}
 	})
-	.group('/manager', { detail: { tags: ['Docker Manager'] } }, (EDI) =>
-		EDI.get('/pool-stats', () => DCM.getPoolMetrics()).post(
-			'/init-all-clients',
-			() => {
-				const allClients = DCM.getAllClients()
-				for (const c of allClients) {
-					DCM.init(c.id)
+	.group(
+		"/manager",
+		{
+			detail: {
+				tags: ["Docker Manager"],
+			},
+		},
+		(EDI) =>
+			EDI.get("/pool-stats", () => DCM.getPoolMetrics()).post(
+				"/init-all-clients",
+				() => {
+					const allClients = DCM.getAllClients()
+					for (const c of allClients) {
+						DCM.init(c.id)
+					}
+					return
 				}
-				return
-			}
-		)
+			)
 	)
 	.group(
-		'/docker-client',
-		{ detail: { tags: ['Docker Client Management'] } },
+		"/docker-client",
+		{
+			detail: {
+				tags: ["Docker Client Management"],
+			},
+		},
 		(EDI) =>
 			EDI.post(
-				'/register',
+				"/register",
 				({ body }) =>
 					DCM.registerClient(body.clientName, body.options || undefined),
 				{
@@ -56,30 +69,40 @@ const ElysiaDockerInstance = new Elysia({
 					}),
 				}
 			)
-				.delete(
-					'/delete',
-					({ body }) => DCM.removeClient(body.clientId),
+				.delete("/delete", ({ body }) => DCM.removeClient(body.clientId), {
+					body: t.Object({
+						clientId: t.Number(),
+					}),
+				})
+				.get("/all", () => DCM.getAllClients())
+				.post(
+					"/monitoring/:clientId/start",
+					({ params }) => DCM.startMonitoring(params.clientId),
 					{
-						body: t.Object({ clientId: t.Number() }),
+						params: t.Object({
+							clientId: t.Number(),
+						}),
 					}
 				)
-				.get('/all', () => DCM.getAllClients())
 				.post(
-					'/monitoring/:clientId/start',
-					({ params }) => DCM.startMonitoring(params.clientId),
-					{ params: t.Object({ clientId: t.Number() }) }
-				)
-				.post(
-					'/monitoring/:clientId/stop',
+					"/monitoring/:clientId/stop",
 					({ params }) => DCM.stopMonitoring(params.clientId),
-					{ params: t.Object({ clientId: t.Number() }) }
+					{
+						params: t.Object({
+							clientId: t.Number(),
+						}),
+					}
 				)
 	)
 	.group(
-		'/hosts',
-		{ detail: { tags: ['Docker Host Management'] } },
+		"/hosts",
+		{
+			detail: {
+				tags: ["Docker Host Management"],
+			},
+		},
 		(EDI) =>
-			EDI.get('/', async () => {
+			EDI.get("/", async () => {
 				// Return hosts per client. If fetching hosts for a client fails,
 				// include the error message for that client instead of silently
 				// returning an empty value.
@@ -98,7 +121,7 @@ const ElysiaDockerInstance = new Elysia({
 				return allHosts
 			})
 				.get(
-					'/:clientId',
+					"/:clientId",
 					async ({ params: { clientId } }) => await DCM.getHosts(clientId),
 					{
 						params: t.Object({
@@ -107,7 +130,7 @@ const ElysiaDockerInstance = new Elysia({
 					}
 				)
 				.post(
-					'/add',
+					"/add",
 					async ({ body }) =>
 						await DCM.addHost(
 							body.clientId,
@@ -127,7 +150,7 @@ const ElysiaDockerInstance = new Elysia({
 					}
 				)
 				.post(
-					'/update',
+					"/update",
 					async ({ body: { clientId, host } }) =>
 						await DCM.updateHost(clientId, host),
 					{
@@ -146,14 +169,22 @@ const ElysiaDockerInstance = new Elysia({
 	)
 
 	.group(
-		'/container',
-		{ detail: { tags: ['Docker Containers'] } },
+		"/container",
+		{
+			detail: {
+				tags: ["Docker Containers"],
+			},
+		},
 		(EDI) =>
 			EDI.get(
-				'/all/:clientId',
+				"/all/:clientId",
 				async ({ params: { clientId } }) =>
 					await DCM.getAllContainers(clientId),
-				{ params: t.Object({ clientId: t.Number() }) }
+				{
+					params: t.Object({
+						clientId: t.Number(),
+					}),
+				}
 			)
 	)
 

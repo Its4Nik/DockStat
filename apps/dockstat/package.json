@@ -8,7 +8,8 @@
 		"d": "bun run --bun react-router dev",
 		"start": "bun run --bun react-router-serve ./build/server/index.js",
 		"typecheck": "react-router typegen && tsc",
-		"typegen": "react-router typegen"
+		"typegen": "react-router typegen",
+		"format": "biome format --write"
 	},
 	"dependencies": {
 		"@dockstat/db": "workspace:*",

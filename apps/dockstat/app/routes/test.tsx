@@ -1,27 +1,27 @@
 //import { useLoaderData } from 'react-router'
-import { Button, Card, CardBody, CardFooter, CardHeader } from "@dockstat/ui";
-import { api } from "~/.server/treaty";
-import { useState } from "react";
+import { Button, Card, CardBody, CardFooter, CardHeader } from "@dockstat/ui"
+import { api } from "~/.server/treaty"
+import { useState } from "react"
 
 export const loader = async () => {
-	return await api.db["dockstat-config"].get();
-};
+	return await api.db["dockstat-config"].get()
+}
 
 export default function Test() {
 	//const {} = useLoaderData<typeof loader>()
-	const [vars, setVars] = useState<Record<string, string>>({});
+	const [vars, setVars] = useState<Record<string, string>>({})
 
 	const getTailwindVariables = () => {
-		const styles = getComputedStyle(document.documentElement);
-		const vars: Record<string, string> = {};
+		const styles = getComputedStyle(document.documentElement)
+		const vars: Record<string, string> = {}
 		for (let i = 0; i < styles.length; i++) {
-			const name = styles[i];
+			const name = styles[i]
 			if (name.startsWith("--")) {
-				vars[name] = styles.getPropertyValue(name).trim();
+				vars[name] = styles.getPropertyValue(name).trim()
 			}
 		}
-		setVars(vars);
-	};
+		setVars(vars)
+	}
 
 	return (
 		<main className="p-4">
@@ -41,5 +41,5 @@ export default function Test() {
 				</CardFooter>
 			</Card>
 		</main>
-	);
+	)
 }

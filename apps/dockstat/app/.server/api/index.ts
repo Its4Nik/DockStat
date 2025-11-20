@@ -1,12 +1,12 @@
-import Elysia from "elysia";
+import Elysia from "elysia"
 
-import DatabaseElysiaInstance from "./database";
-import DockStatElysiaHandlers from "./handlers";
-import DockStatElysiaPlugins from "./elysiaPlugins";
-import PluginElysiaInstance from "./plugins";
-import ExtensionElysiaInstance from "./extensions";
-import DockStatMetricsElysiaInstance from "./metrics";
-import ElysiaDockerInstance from "./docker";
+import DatabaseElysiaInstance from "./database"
+import DockStatElysiaHandlers from "./handlers"
+import DockStatElysiaPlugins from "./elysiaPlugins"
+import PluginElysiaInstance from "./plugins"
+import ExtensionElysiaInstance from "./extensions"
+import DockStatMetricsElysiaInstance from "./metrics"
+import ElysiaDockerInstance from "./docker"
 
 export const DockStatAPI = new Elysia({
 	prefix: "/api",
@@ -22,15 +22,15 @@ export const DockStatAPI = new Elysia({
 	.use(DatabaseElysiaInstance)
 	.use(PluginElysiaInstance)
 	.use(ElysiaDockerInstance)
-	.use(ExtensionElysiaInstance);
+	.use(ExtensionElysiaInstance)
 
 if (import.meta.main) {
-	DockStatAPI.listen(3000, console.log);
+	DockStatAPI.listen(3000, console.log)
 	console.log(
-		"DockStatAPI is running in dev mode, see the docs: https://localhost:3000/api/docs",
-	);
+		"DockStatAPI is running in dev mode, see the docs: https://localhost:3000/api/docs"
+	)
 }
 
-export { DatabaseElysiaInstance };
+export { DatabaseElysiaInstance }
 
-export type DockStatAPIType = typeof DockStatAPI;
+export type DockStatAPIType = typeof DockStatAPI

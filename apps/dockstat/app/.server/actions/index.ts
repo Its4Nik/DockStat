@@ -1,3 +1,3 @@
-import Logger from "@dockstat/logger";
+import Logger from "@dockstat/logger"
 
-export const logger = new Logger("Actions", ["RR", "DockStat"]);
+export const logger = new Logger("Actions", ["RR", "DockStat"])

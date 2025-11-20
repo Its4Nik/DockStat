@@ -1,19 +1,21 @@
-import { Repo } from "@dockstat/typings/schemas";
-import { getRepoManifest } from "./parsers";
-import Elysia, { t } from "elysia";
-import Logger from "@dockstat/logger";
-import ExtensionsProxyElysiaInstance from "./proxy";
-import { ElysiaLogger } from "../logger";
+import { Repo } from "@dockstat/typings/schemas"
+import { getRepoManifest } from "./parsers"
+import Elysia, { t } from "elysia"
+import Logger from "@dockstat/logger"
+import ExtensionsProxyElysiaInstance from "./proxy"
+import { ElysiaLogger } from "../logger"
 
 export const logger = new Logger(
 	"Extensions",
-	ElysiaLogger.getParentsForLoggerChaining(),
-);
+	ElysiaLogger.getParentsForLoggerChaining()
+)
 
 const ExtensionElysiaInstance = new Elysia({
 	name: "ExtensionElysiaInstance",
 	prefix: "/extensions",
-	detail: { tags: ["Extensions"] },
+	detail: {
+		tags: ["Extensions"],
+	},
 })
 	.use(ExtensionsProxyElysiaInstance)
 	.post(
@@ -24,7 +26,7 @@ const ExtensionElysiaInstance = new Elysia({
 				repoSource: t.String(),
 				repoType: Repo.properties.type,
 			}),
-		},
-	);
+		}
+	)
 
-export default ExtensionElysiaInstance;
+export default ExtensionElysiaInstance

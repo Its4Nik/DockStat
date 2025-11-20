@@ -1,13 +1,10 @@
-import type { Elysia } from 'elysia'
-import type { Database } from 'bun:sqlite'
-import Logger from '@dockstat/logger'
-import { ElysiaLogger } from '../logger'
-import { DockStatDB } from '~/.server/db'
-import { column } from '@dockstat/sqlite-wrapper'
-import {
-	renderPrometheusMetrics,
-	type MetricFamily,
-} from './prometheus'
+import type { Elysia } from "elysia"
+import type { Database } from "bun:sqlite"
+import Logger from "@dockstat/logger"
+import { ElysiaLogger } from "../logger"
+import { DockStatDB } from "~/.server/db"
+import { column } from "@dockstat/sqlite-wrapper"
+import { renderPrometheusMetrics, type MetricFamily } from "./prometheus"
 
 /**
  * In-memory metrics (current server session)
@@ -39,35 +36,31 @@ interface MetricsRow
 	id: number
 }
 
-const MetricsTable =
-	DockStatDB._sqliteWrapper.createTable<MetricsRow>(
-		'metrics',
-		{
-			id: column.id(),
-			totalRequests: column.integer(),
-			requestsByMethod: column.json(),
-			requestsByPath: column.json(),
-			requestsByStatus: column.json(),
-			requestDurations: column.json(),
-			errors: column.integer(),
+const MetricsTable = DockStatDB._sqliteWrapper.createTable<MetricsRow>(
+	"metrics",
+	{
+		id: column.id(),
+		totalRequests: column.integer(),
+		requestsByMethod: column.json(),
+		requestsByPath: column.json(),
+		requestsByStatus: column.json(),
+		requestDurations: column.json(),
+		errors: column.integer(),
+	},
+	{
+		ifNotExists: true,
+		parser: {
+			JSON: [
+				"requestsByMethod",
+				"requestsByPath",
+				"requestsByStatus",
+				"requestDurations",
+			],
 		},
-		{
-			ifNotExists: true,
-			parser: {
-				JSON: [
-					'requestsByMethod',
-					'requestsByPath',
-					'requestsByStatus',
-					'requestDurations',
-				],
-			},
-		}
-	)
-
-const logger = new Logger(
-	'Metrics',
-	ElysiaLogger.getParentsForLoggerChaining()
+	}
 )
+
+const logger = new Logger("Metrics", ElysiaLogger.getParentsForLoggerChaining())
 
 /**
  * Helpers to create empty metrics
@@ -140,7 +133,7 @@ function initPersistedMetrics() {
 			persistedMetricsId = Number(id ?? 1)
 		}
 	} catch (err) {
-		console.error('Failed to init persisted metrics:', err)
+		console.error("Failed to init persisted metrics:", err)
 		// Fall back to in-memory only
 		persistedMetricsId = null
 	}
@@ -156,7 +149,9 @@ function savePersistedMetrics() {
 	}
 
 	try {
-		MetricsTable.where({ id: persistedMetricsId }).update({
+		MetricsTable.where({
+			id: persistedMetricsId,
+		}).update({
 			totalRequests: persistedMetrics.totalRequests,
 			requestsByMethod: persistedMetrics.requestsByMethod,
 			requestsByPath: persistedMetrics.requestsByPath,
@@ -165,7 +160,7 @@ function savePersistedMetrics() {
 			errors: persistedMetrics.errors,
 		})
 	} catch (err) {
-		console.error('Failed to save persisted metrics:', err)
+		console.error("Failed to save persisted metrics:", err)
 	}
 }
 
@@ -176,11 +171,7 @@ function incPersisted(obj: Record<string, number>, key: string) {
 	obj[key] = (obj[key] ?? 0) + 1
 }
 
-function trackDuration(
-	durations: number[],
-	duration: number,
-	max = 1000
-) {
+function trackDuration(durations: number[], duration: number, max = 1000) {
 	durations.push(duration)
 	if (durations.length > max) durations.shift()
 }
@@ -190,16 +181,23 @@ export const metricsMiddleware = (app: Elysia) => {
 	initPersistedMetrics()
 
 	return app
-		.state('startTime', 0)
-		.onBeforeHandle({ as: 'global' }, ({ store, request }) => {
-			store.startTime = performance.now()
-			logger.debug(
-				`Started performance tracking`,
-				request.headers.get('x-dockstatapi-requestid') ?? undefined
-			)
-		})
+		.state("startTime", 0)
+		.onBeforeHandle(
+			{
+				as: "global",
+			},
+			({ store, request }) => {
+				store.startTime = performance.now()
+				logger.debug(
+					`Started performance tracking`,
+					request.headers.get("x-dockstatapi-requestid") ?? undefined
+				)
+			}
+		)
 		.onAfterHandle(
-			{ as: 'global' },
+			{
+				as: "global",
+			},
 			({ request, responseValue, store }) => {
 				const duration = performance.now() - (store.startTime || 0)
 				const method = request.method
@@ -207,13 +205,13 @@ export const metricsMiddleware = (app: Elysia) => {
 
 				logger.debug(
 					`[${method}] Took ${Math.round(duration)}ms on ${path}`,
-					request.headers.get('x-dockstatapi-requestid') ?? undefined
+					request.headers.get("x-dockstatapi-requestid") ?? undefined
 				)
 
-				if (path === '/api/metrics') {
+				if (path === "/api/metrics") {
 					logger.debug(
 						`Skipped path: ${path}`,
-						request.headers.get('x-dockstatapi-requestid') ?? undefined
+						request.headers.get("x-dockstatapi-requestid") ?? undefined
 					)
 				} else {
 					// ---- SESSION METRICS ----
@@ -230,7 +228,11 @@ export const metricsMiddleware = (app: Elysia) => {
 					)
 
 					const status =
-						(responseValue as { status?: number })?.status || 200
+						(
+							responseValue as {
+								status?: number
+							}
+						)?.status || 200
 					metrics.requestsByStatus.set(
 						status,
 						(metrics.requestsByStatus.get(status) || 0) + 1
@@ -251,28 +253,33 @@ export const metricsMiddleware = (app: Elysia) => {
 				}
 
 				logger.debug(
-					'Tracked metrics',
-					request.headers.get('x-dockstatapi-requestid') ?? undefined
+					"Tracked metrics",
+					request.headers.get("x-dockstatapi-requestid") ?? undefined
 				)
 			}
 		)
-		.onError({ as: 'global' }, ({ store, request }) => {
-			const duration = performance.now() - (store.startTime || 0)
+		.onError(
+			{
+				as: "global",
+			},
+			({ store, request }) => {
+				const duration = performance.now() - (store.startTime || 0)
 
-			// Session metrics
-			metrics.errors++
-			trackDuration(metrics.requestDurations, duration)
+				// Session metrics
+				metrics.errors++
+				trackDuration(metrics.requestDurations, duration)
 
-			// Persisted metrics
-			persistedMetrics.errors++
-			trackDuration(persistedMetrics.requestDurations, duration)
-			savePersistedMetrics()
+				// Persisted metrics
+				persistedMetrics.errors++
+				trackDuration(persistedMetrics.requestDurations, duration)
+				savePersistedMetrics()
 
-			logger.debug(
-				'Tracked Error',
-				request.headers.get('x-dockstatapi-requestid') ?? undefined
-			)
-		})
+				logger.debug(
+					"Tracked Error",
+					request.headers.get("x-dockstatapi-requestid") ?? undefined
+				)
+			}
+		)
 }
 
 // Database metrics collector (unchanged)
@@ -282,25 +289,30 @@ function getDatabaseMetrics(db: Database) {
 		pageCount: 0,
 		pageSize: 0,
 		tableCount: 0,
-		tables: [] as Array<{ name: string; rowCount: number }>,
+		tables: [] as Array<{
+			name: string
+			rowCount: number
+		}>,
 	}
 
 	try {
 		const sizeQuery = db.query(
-			'SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()'
+			"SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()"
 		)
-		const sizeResult: { size?: number } = sizeQuery.get() as {
+		const sizeResult: {
+			size?: number
+		} = sizeQuery.get() as {
 			size?: number
 		}
 		dbMetrics.size = sizeResult?.size || 0
 
-		const pageCountQuery = db.query('PRAGMA page_count')
+		const pageCountQuery = db.query("PRAGMA page_count")
 		const pageCountResult = pageCountQuery.get() as {
 			page_count?: number
 		}
 		dbMetrics.pageCount = pageCountResult?.page_count || 0
 
-		const pageSizeQuery = db.query('PRAGMA page_size')
+		const pageSizeQuery = db.query("PRAGMA page_size")
 		const pageSizeResult = pageSizeQuery.get() as {
 			page_size?: number
 		}
@@ -309,7 +321,9 @@ function getDatabaseMetrics(db: Database) {
 		const tablesQuery = db.query(
 			"SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
 		)
-		const tables = tablesQuery.all() as Array<{ name: string }>
+		const tables = tablesQuery.all() as Array<{
+			name: string
+		}>
 		dbMetrics.tableCount = tables.length
 
 		for (const table of tables) {
@@ -329,7 +343,7 @@ function getDatabaseMetrics(db: Database) {
 			}
 		}
 	} catch (error) {
-		console.error('Error collecting database metrics:', error)
+		console.error("Error collecting database metrics:", error)
 	}
 
 	return dbMetrics
@@ -348,7 +362,14 @@ function summarizeDurations(durations: number[]) {
 	const p95 = sorted[Math.floor(sorted.length * 0.95)]
 	const p99 = sorted[Math.floor(sorted.length * 0.99)]
 
-	return { sorted, sum, avg, p50, p95, p99 }
+	return {
+		sorted,
+		sum,
+		avg,
+		p50,
+		p95,
+		p99,
+	}
 }
 
 export function formatPrometheusMetrics(db: Database) {
@@ -358,17 +379,21 @@ export function formatPrometheusMetrics(db: Database) {
 	const families: MetricFamily[] = []
 
 	families.push({
-		name: 'http_requests_total',
-		help: 'Total number of HTTP requests',
-		type: 'counter',
+		name: "http_requests_total",
+		help: "Total number of HTTP requests",
+		type: "counter",
 		samples: [
 			{
-				labels: { scope: 'session' },
+				labels: {
+					scope: "session",
+				},
 				value: metrics.totalRequests,
 				timestamp,
 			},
 			{
-				labels: { scope: 'total' },
+				labels: {
+					scope: "total",
+				},
 				value: persistedMetrics.totalRequests,
 				timestamp,
 			},
@@ -377,14 +402,17 @@ export function formatPrometheusMetrics(db: Database) {
 
 	// --- REPLACEMENT for http_requests_by_method_total block ---
 	families.push({
-		name: 'http_requests_by_method_total',
-		help: 'HTTP requests by method',
-		type: 'counter',
+		name: "http_requests_by_method_total",
+		help: "HTTP requests by method",
+		type: "counter",
 		samples: [
 			// session
 			...Array.from(metrics.requestsByMethod.entries()).map(
 				([method, count]) => ({
-					labels: { method, scope: 'session' },
+					labels: {
+						method,
+						scope: "session",
+					},
 					value: count,
 					timestamp,
 				})
@@ -392,7 +420,10 @@ export function formatPrometheusMetrics(db: Database) {
 			// total (persisted)
 			...Object.entries(persistedMetrics.requestsByMethod).map(
 				([method, count]) => ({
-					labels: { method, scope: 'total' },
+					labels: {
+						method,
+						scope: "total",
+					},
 					value: count,
 					timestamp,
 				})
@@ -401,20 +432,24 @@ export function formatPrometheusMetrics(db: Database) {
 	})
 
 	families.push({
-		name: 'http_requests_by_path_total',
-		help: 'HTTP requests by path',
-		type: 'counter',
+		name: "http_requests_by_path_total",
+		help: "HTTP requests by path",
+		type: "counter",
 		samples: [
-			...Array.from(metrics.requestsByPath.entries()).map(
-				([path, count]) => ({
-					labels: { path, scope: 'session' },
-					value: count,
-					timestamp,
-				})
-			),
+			...Array.from(metrics.requestsByPath.entries()).map(([path, count]) => ({
+				labels: {
+					path,
+					scope: "session",
+				},
+				value: count,
+				timestamp,
+			})),
 			...Object.entries(persistedMetrics.requestsByPath).map(
 				([path, count]) => ({
-					labels: { path, scope: 'total' },
+					labels: {
+						path,
+						scope: "total",
+					},
 					value: count,
 					timestamp,
 				})
@@ -423,20 +458,26 @@ export function formatPrometheusMetrics(db: Database) {
 	})
 
 	families.push({
-		name: 'http_requests_by_status_total',
-		help: 'HTTP requests by status code',
-		type: 'counter',
+		name: "http_requests_by_status_total",
+		help: "HTTP requests by status code",
+		type: "counter",
 		samples: [
 			...Array.from(metrics.requestsByStatus.entries()).map(
 				([status, count]) => ({
-					labels: { status: String(status), scope: 'session' },
+					labels: {
+						status: String(status),
+						scope: "session",
+					},
 					value: count,
 					timestamp,
 				})
 			),
 			...Object.entries(persistedMetrics.requestsByStatus).map(
 				([status, count]) => ({
-					labels: { status, scope: 'total' },
+					labels: {
+						status,
+						scope: "total",
+					},
 					value: count,
 					timestamp,
 				})
@@ -445,17 +486,21 @@ export function formatPrometheusMetrics(db: Database) {
 	})
 
 	families.push({
-		name: 'http_request_errors_total',
-		help: 'Total number of HTTP errors',
-		type: 'counter',
+		name: "http_request_errors_total",
+		help: "Total number of HTTP errors",
+		type: "counter",
 		samples: [
 			{
-				labels: { scope: 'session' },
+				labels: {
+					scope: "session",
+				},
 				value: metrics.errors,
 				timestamp,
 			},
 			{
-				labels: { scope: 'total' },
+				labels: {
+					scope: "total",
+				},
 				value: persistedMetrics.errors,
 				timestamp,
 			},
@@ -465,28 +510,35 @@ export function formatPrometheusMetrics(db: Database) {
 	// ---------- DURATION METRICS ----------
 
 	const sessionSummary = summarizeDurations(metrics.requestDurations)
-	const totalSummary = summarizeDurations(
-		persistedMetrics.requestDurations
-	)
+	const totalSummary = summarizeDurations(persistedMetrics.requestDurations)
 
 	if (sessionSummary) {
 		families.push({
-			name: 'http_request_duration_ms',
-			help: 'HTTP request duration in milliseconds',
-			type: 'summary',
+			name: "http_request_duration_ms",
+			help: "HTTP request duration in milliseconds",
+			type: "summary",
 			samples: [
 				{
-					labels: { quantile: '0.5', scope: 'session' },
+					labels: {
+						quantile: "0.5",
+						scope: "session",
+					},
 					value: sessionSummary.p50.toFixed(2),
 					timestamp,
 				},
 				{
-					labels: { quantile: '0.95', scope: 'session' },
+					labels: {
+						quantile: "0.95",
+						scope: "session",
+					},
 					value: sessionSummary.p95.toFixed(2),
 					timestamp,
 				},
 				{
-					labels: { quantile: '0.99', scope: 'session' },
+					labels: {
+						quantile: "0.99",
+						scope: "session",
+					},
 					value: sessionSummary.p99.toFixed(2),
 					timestamp,
 				},
@@ -494,12 +546,14 @@ export function formatPrometheusMetrics(db: Database) {
 		})
 
 		families.push({
-			name: 'http_request_duration_ms_sum',
-			help: 'Total HTTP request duration in milliseconds',
-			type: 'summary',
+			name: "http_request_duration_ms_sum",
+			help: "Total HTTP request duration in milliseconds",
+			type: "summary",
 			samples: [
 				{
-					labels: { scope: 'session' },
+					labels: {
+						scope: "session",
+					},
 					value: sessionSummary.sum.toFixed(2),
 					timestamp,
 				},
@@ -507,12 +561,14 @@ export function formatPrometheusMetrics(db: Database) {
 		})
 
 		families.push({
-			name: 'http_request_duration_ms_count',
-			help: 'HTTP request duration sample count',
-			type: 'summary',
+			name: "http_request_duration_ms_count",
+			help: "HTTP request duration sample count",
+			type: "summary",
 			samples: [
 				{
-					labels: { scope: 'session' },
+					labels: {
+						scope: "session",
+					},
 					value: sessionSummary.sorted.length,
 					timestamp,
 				},
@@ -522,22 +578,31 @@ export function formatPrometheusMetrics(db: Database) {
 
 	if (totalSummary) {
 		families.push({
-			name: 'http_request_duration_ms',
-			help: 'HTTP request duration in milliseconds',
-			type: 'summary',
+			name: "http_request_duration_ms",
+			help: "HTTP request duration in milliseconds",
+			type: "summary",
 			samples: [
 				{
-					labels: { quantile: '0.5', scope: 'total' },
+					labels: {
+						quantile: "0.5",
+						scope: "total",
+					},
 					value: totalSummary.p50.toFixed(2),
 					timestamp,
 				},
 				{
-					labels: { quantile: '0.95', scope: 'total' },
+					labels: {
+						quantile: "0.95",
+						scope: "total",
+					},
 					value: totalSummary.p95.toFixed(2),
 					timestamp,
 				},
 				{
-					labels: { quantile: '0.99', scope: 'total' },
+					labels: {
+						quantile: "0.99",
+						scope: "total",
+					},
 					value: totalSummary.p99.toFixed(2),
 					timestamp,
 				},
@@ -545,12 +610,14 @@ export function formatPrometheusMetrics(db: Database) {
 		})
 
 		families.push({
-			name: 'http_request_duration_ms_sum',
-			help: 'Total HTTP request duration in milliseconds',
-			type: 'summary',
+			name: "http_request_duration_ms_sum",
+			help: "Total HTTP request duration in milliseconds",
+			type: "summary",
 			samples: [
 				{
-					labels: { scope: 'total' },
+					labels: {
+						scope: "total",
+					},
 					value: totalSummary.sum.toFixed(2),
 					timestamp,
 				},
@@ -558,12 +625,14 @@ export function formatPrometheusMetrics(db: Database) {
 		})
 
 		families.push({
-			name: 'http_request_duration_ms_count',
-			help: 'HTTP request duration sample count',
-			type: 'summary',
+			name: "http_request_duration_ms_count",
+			help: "HTTP request duration sample count",
+			type: "summary",
 			samples: [
 				{
-					labels: { scope: 'total' },
+					labels: {
+						scope: "total",
+					},
 					value: totalSummary.sorted.length,
 					timestamp,
 				},
@@ -576,39 +645,61 @@ export function formatPrometheusMetrics(db: Database) {
 	const dbMetrics = getDatabaseMetrics(db)
 
 	families.push({
-		name: 'database_size_bytes',
-		help: 'Database file size in bytes',
-		type: 'gauge',
-		samples: [{ value: dbMetrics.size, timestamp }],
+		name: "database_size_bytes",
+		help: "Database file size in bytes",
+		type: "gauge",
+		samples: [
+			{
+				value: dbMetrics.size,
+				timestamp,
+			},
+		],
 	})
 
 	families.push({
-		name: 'database_page_count',
-		help: 'Total number of database pages',
-		type: 'gauge',
-		samples: [{ value: dbMetrics.pageCount, timestamp }],
+		name: "database_page_count",
+		help: "Total number of database pages",
+		type: "gauge",
+		samples: [
+			{
+				value: dbMetrics.pageCount,
+				timestamp,
+			},
+		],
 	})
 
 	families.push({
-		name: 'database_page_size_bytes',
-		help: 'Database page size in bytes',
-		type: 'gauge',
-		samples: [{ value: dbMetrics.pageSize, timestamp }],
+		name: "database_page_size_bytes",
+		help: "Database page size in bytes",
+		type: "gauge",
+		samples: [
+			{
+				value: dbMetrics.pageSize,
+				timestamp,
+			},
+		],
 	})
 
 	families.push({
-		name: 'database_table_count',
-		help: 'Total number of tables',
-		type: 'gauge',
-		samples: [{ value: dbMetrics.tableCount, timestamp }],
+		name: "database_table_count",
+		help: "Total number of tables",
+		type: "gauge",
+		samples: [
+			{
+				value: dbMetrics.tableCount,
+				timestamp,
+			},
+		],
 	})
 
 	families.push({
-		name: 'database_table_rows',
-		help: 'Number of rows per table',
-		type: 'gauge',
+		name: "database_table_rows",
+		help: "Number of rows per table",
+		type: "gauge",
 		samples: dbMetrics.tables.map((table) => ({
-			labels: { table: table.name },
+			labels: {
+				table: table.name,
+			},
 			value: table.rowCount,
 			timestamp,
 		})),
@@ -619,30 +710,45 @@ export function formatPrometheusMetrics(db: Database) {
 	const memUsage = process.memoryUsage()
 
 	families.push({
-		name: 'process_memory_rss_bytes',
-		help: 'Process resident memory in bytes',
-		type: 'gauge',
-		samples: [{ value: memUsage.rss, timestamp }],
+		name: "process_memory_rss_bytes",
+		help: "Process resident memory in bytes",
+		type: "gauge",
+		samples: [
+			{
+				value: memUsage.rss,
+				timestamp,
+			},
+		],
 	})
 
 	families.push({
-		name: 'process_memory_heap_used_bytes',
-		help: 'Process heap memory used in bytes',
-		type: 'gauge',
-		samples: [{ value: memUsage.heapUsed, timestamp }],
+		name: "process_memory_heap_used_bytes",
+		help: "Process heap memory used in bytes",
+		type: "gauge",
+		samples: [
+			{
+				value: memUsage.heapUsed,
+				timestamp,
+			},
+		],
 	})
 
 	families.push({
-		name: 'process_memory_heap_total_bytes',
-		help: 'Process heap memory total in bytes',
-		type: 'gauge',
-		samples: [{ value: memUsage.heapTotal, timestamp }],
+		name: "process_memory_heap_total_bytes",
+		help: "Process heap memory total in bytes",
+		type: "gauge",
+		samples: [
+			{
+				value: memUsage.heapTotal,
+				timestamp,
+			},
+		],
 	})
 
 	families.push({
-		name: 'process_uptime_seconds',
-		help: 'Process uptime in seconds',
-		type: 'counter',
+		name: "process_uptime_seconds",
+		help: "Process uptime in seconds",
+		type: "counter",
 		samples: [
 			{
 				value: Number(process.uptime().toFixed(2)),

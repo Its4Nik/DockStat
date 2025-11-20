@@ -1,14 +1,14 @@
-import Elysia from "elysia";
+import Elysia from "elysia"
 
-import { openapi } from "@elysiajs/openapi";
-import { serverTiming } from "@elysiajs/server-timing";
+import { openapi } from "@elysiajs/openapi"
+import { serverTiming } from "@elysiajs/server-timing"
 
 const DockStatElysiaPlugins = new Elysia()
 	.use(
 		openapi({
 			path: "/docs",
 			provider: "scalar",
-		}),
+		})
 	)
 	.use(
 		serverTiming({
@@ -23,7 +23,7 @@ const DockStatElysiaPlugins = new Elysia()
 				total: true,
 				transform: true,
 			},
-		}),
-	);
+		})
+	)
 
-export default DockStatElysiaPlugins;
+export default DockStatElysiaPlugins

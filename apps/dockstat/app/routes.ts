@@ -1,4 +1,4 @@
-import { type RouteConfig, route } from "@react-router/dev/routes";
+import { type RouteConfig, route } from "@react-router/dev/routes"
 //import { flatRoutes } from "@react-router/fs-routes";
 
 export default [
@@ -6,4 +6,4 @@ export default [
 	route("/plugins", "./routes/plugins.tsx"),
 	route("/api/*", "./routes/proxy.tsx"),
 	route("/extensions", "./routes/extensions.tsx"),
-] satisfies RouteConfig;
+] satisfies RouteConfig

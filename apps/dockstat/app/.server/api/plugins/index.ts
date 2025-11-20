@@ -1,17 +1,19 @@
-import Elysia, { t } from "elysia";
-import PluginHandlerFactory from "@dockstat/plugin-handler";
-import { DockStatDB } from "~/.server/db";
-import { ElysiaLogger } from "../logger";
+import Elysia, { t } from "elysia"
+import PluginHandlerFactory from "@dockstat/plugin-handler"
+import { DockStatDB } from "~/.server/db"
+import { ElysiaLogger } from "../logger"
 
 export const PluginHandler = new PluginHandlerFactory(
 	DockStatDB._sqliteWrapper,
-	ElysiaLogger.getParentsForLoggerChaining(),
-);
+	ElysiaLogger.getParentsForLoggerChaining()
+)
 
 const DockStatPluginElysiaInstance = new Elysia({
 	name: "DockStatPluginElysiaInstance",
 	prefix: "/plugins",
-	detail: { tags: ["Plugins"] },
+	detail: {
+		tags: ["Plugins"],
+	},
 })
 	.get("/all", () => PluginHandler.getAll())
 	.get("/status", () => PluginHandler.getStatus())
@@ -19,13 +21,17 @@ const DockStatPluginElysiaInstance = new Elysia({
 		"/install",
 		({ body }) => PluginHandler.savePlugin(JSON.parse(body.pluginObject)),
 		{
-			body: t.Object({ pluginObject: t.String() }),
-		},
+			body: t.Object({
+				pluginObject: t.String(),
+			}),
+		}
 	)
 	.post(
 		"/install/url",
 		async ({ body }) => await PluginHandler.installFromManifestLink(body),
-		{ body: t.String() },
+		{
+			body: t.String(),
+		}
 	)
 	.post(
 		"/activate",
@@ -36,7 +42,7 @@ const DockStatPluginElysiaInstance = new Elysia({
 				successes: t.Array(t.Number()),
 				errors: t.Array(t.Number()),
 			}),
-		},
+		}
 	)
 	.post(
 		"/delete",
@@ -45,7 +51,7 @@ const DockStatPluginElysiaInstance = new Elysia({
 			body: t.Object({
 				pluginId: t.String(),
 			}),
-		},
+		}
 	)
 	.post(
 		"/:id/routes/*",
@@ -55,7 +61,7 @@ const DockStatPluginElysiaInstance = new Elysia({
 				description:
 					"This route proxies all Plugin-API requests to the specified Plugin's Elysia Instance",
 			},
-		},
-	);
+		}
+	)
 
-export default DockStatPluginElysiaInstance;
+export default DockStatPluginElysiaInstance

@@ -1,4 +1,4 @@
-export type MetricType = 'counter' | 'gauge' | 'summary'
+export type MetricType = "counter" | "gauge" | "summary"
 
 export interface MetricSample {
 	labels?: Record<string, string>
@@ -14,11 +14,11 @@ export interface MetricFamily {
 }
 
 function formatLabels(labels?: Record<string, string>): string {
-	if (!labels || Object.keys(labels).length === 0) return ''
+	if (!labels || Object.keys(labels).length === 0) return ""
 	const parts = Object.entries(labels).map(
 		([key, value]) => `${key}="${String(value)}"`
 	)
-	return `{${parts.join(',')}}`
+	return `{${parts.join(",")}}`
 }
 
 export function renderPrometheusMetrics(
@@ -28,7 +28,7 @@ export function renderPrometheusMetrics(
 	const lines: string[] = []
 
 	families.forEach((family, index) => {
-		if (index > 0) lines.push('') // blank line between metric families
+		if (index > 0) lines.push("") // blank line between metric families
 
 		lines.push(`# HELP ${family.name} ${family.help}`)
 		lines.push(`# TYPE ${family.name} ${family.type}`)
@@ -40,5 +40,5 @@ export function renderPrometheusMetrics(
 		}
 	})
 
-	return lines.join('\n')
+	return lines.join("\n")
 }

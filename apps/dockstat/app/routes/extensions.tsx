@@ -1,11 +1,11 @@
-import { ExtensionBrowser } from "@dockstat/ui";
-import { ExtensionLoader } from "@ServerLoaders/extensions";
-import { useLoaderData } from "react-router";
+import { ExtensionBrowser } from "@dockstat/ui"
+import { ExtensionLoader } from "@ServerLoaders/extensions"
+import { useLoaderData } from "react-router"
 
-export const loader = ExtensionLoader;
+export const loader = ExtensionLoader
 
 export default function Extensions() {
-	const data = useLoaderData<typeof loader>();
+	const data = useLoaderData<typeof loader>()
 
 	return (
 		<ExtensionBrowser
@@ -14,5 +14,5 @@ export default function Extensions() {
 			repos={data.repos}
 			manifests={data.repoManifests}
 		/>
-	);
+	)
 }
