@@ -9,8 +9,7 @@ export async function withRetry<T>(
 		try {
 			return await operation()
 		} catch (error) {
-			lastError =
-				error instanceof Error ? error : new Error(String(error))
+			lastError = error instanceof Error ? error : new Error(String(error))
 
 			if (attempt === attempts) {
 				throw lastError
@@ -20,5 +19,5 @@ export async function withRetry<T>(
 		}
 	}
 
-	throw lastError || new Error('No attempts made')
+	throw lastError || new Error("No attempts made")
 }

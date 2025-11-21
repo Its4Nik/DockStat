@@ -1,14 +1,14 @@
-import Logger from '@dockstat/logger'
-import type DB from '@dockstat/sqlite-wrapper'
-import { column, type QueryBuilder } from '@dockstat/sqlite-wrapper'
-import type { DATABASE, DOCKER } from '@dockstat/typings'
+import Logger from "@dockstat/logger"
+import type DB from "@dockstat/sqlite-wrapper"
+import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
+import type { DATABASE, DOCKER } from "@dockstat/typings"
 import type {
 	PoolMetrics,
 	WorkerMetrics,
 	WorkerRequest,
 	WorkerResponse,
-} from '../types'
-import { logger } from '../../'
+} from "../types"
+import { logger } from "../../"
 
 interface WorkerWrapper {
 	worker: Worker
@@ -30,29 +30,38 @@ type DockerClientTable = {
 	options: DOCKER.DockerAdapterOptions
 }
 
-type triggerHookListener = <K extends keyof DOCKER.DockerClientEvents>(hook: K, ...args: Parameters<DOCKER.DockerClientEvents[K]>) => void
+type triggerHookListener = <K extends keyof DOCKER.DockerClientEvents>(
+	hook: K,
+	...args: Parameters<DOCKER.DockerClientEvents[K]>
+) => void
 
 export class DockerClientManager {
-  private DB: DB
-  private table: QueryBuilder<DockerClientTable>
-  private logger = new Logger(
-    'DCM',
-    logger.getParentsForLoggerChaining()
-  )
-  private workers: Map<number, WorkerWrapper> = new Map()
-  private maxWorkers: number
-  private dbPath: string
-  private triggerHook: triggerHookListener | undefined
+	private DB: DB
+	private table: QueryBuilder<DockerClientTable>
+	private logger = new Logger("DCM", logger.getParentsForLoggerChaining())
+	private workers: Map<number, WorkerWrapper> = new Map()
+	private maxWorkers: number
+	private dbPath: string
+	private triggerHook: triggerHookListener | undefined
 
-	constructor(db: DB, options: { maxWorkers?: number, triggerHook?:( <K extends keyof DOCKER.DockerClientEvents>(hook: K, ...args: Parameters<DOCKER.DockerClientEvents[K]>) => void) }) {
-		this.logger.info('Creating Docker Client Manager')
+	constructor(
+		db: DB,
+		options: {
+			maxWorkers?: number
+			triggerHook?: <K extends keyof DOCKER.DockerClientEvents>(
+				hook: K,
+				...args: Parameters<DOCKER.DockerClientEvents[K]>
+			) => void
+		}
+	) {
+		this.logger.info("Creating Docker Client Manager")
 		this.DB = db
 		this.dbPath = db.getDb().filename
 		this.maxWorkers = options.maxWorkers ?? 4
 		this.triggerHook = options.triggerHook
 
 		this.table = this.DB.createTable<DockerClientTable>(
-			'docker_clients',
+			"docker_clients",
 			{
 				id: column.id(),
 				name: column.text({ unique: true }),
@@ -60,14 +69,14 @@ export class DockerClientManager {
 			},
 			{
 				ifNotExists: true,
-				parser: { JSON: ['options'] },
+				parser: { JSON: ["options"] },
 			}
 		)
 
-		this.logger.info('Initialized DB')
-		this.logger.debug('Creating Workers for already existing Clients')
+		this.logger.info("Initialized DB")
+		this.logger.debug("Creating Workers for already existing Clients")
 
-		const clients = this.table.select(['*']).all()
+		const clients = this.table.select(["*"]).all()
 
 		for (const c of clients) {
 			this.createWorker(c.id as number, c.name, c.options)
@@ -93,7 +102,7 @@ export class DockerClientManager {
 			})
 
 			const { id: clientId } = this.table
-				.select(['id'])
+				.select(["id"])
 				.where({ name: name })
 				.first() || { id: undefined }
 
@@ -102,7 +111,7 @@ export class DockerClientManager {
 			}
 
 			dbStepDone = true
-			this.logger.debug('Client added to DB')
+			this.logger.debug("Client added to DB")
 
 			// Create worker
 			await this.createWorker(clientId, name, options)
@@ -116,12 +125,12 @@ export class DockerClientManager {
 				clientId: clientId,
 			}
 		} catch (error: unknown) {
-			const msg = `Error while registering Client ${name} ${dbStepDone ?? ', the CLient was already registered in the DB. It will be automatically removed'} - error: ${JSON.stringify(error)}`
+			const msg = `Error while registering Client ${name} ${dbStepDone ?? ", the CLient was already registered in the DB. It will be automatically removed"} - error: ${JSON.stringify(error)}`
 
 			this.logger.error(msg)
 			if (dbStepDone) {
 				this.table.where({ name: name }).delete()
-				this.logger.info('Orphan Client has been removed')
+				this.logger.info("Orphan Client has been removed")
 			}
 
 			return {
@@ -147,7 +156,7 @@ export class DockerClientManager {
 			this.logger.debug(`Creating worker for client ${clientId}`)
 
 			// Create worker using Bun's Worker API
-			const worker = new Worker(new URL('./index.ts', import.meta.url))
+			const worker = new Worker(new URL("./index.ts"))
 
 			const wrapper: WorkerWrapper = {
 				worker,
@@ -160,10 +169,8 @@ export class DockerClientManager {
 			}
 
 			// Handle errors
-			worker.addEventListener('error', (error) => {
-				this.logger.error(
-					`Worker ${clientId} error: ${JSON.stringify(error)}`
-				)
+			worker.addEventListener("error", (error) => {
+				this.logger.error(`Worker ${clientId} error: ${JSON.stringify(error)}`)
 				// record error on wrapper if available
 				const existing = this.workers.get(clientId)
 				if (existing) {
@@ -188,9 +195,7 @@ export class DockerClientManager {
 			await this.initializeWorker(clientId, clientName, options)
 
 			// Update hosts
-			const hostIds = (await this.getHosts(clientId)).map(
-				(host) => host.id
-			)
+			const hostIds = (await this.getHosts(clientId)).map((host) => host.id)
 
 			for (const hostId of hostIds) {
 				wrapper.hostIds.add(hostId)
@@ -216,9 +221,9 @@ export class DockerClientManager {
 			const timeout = setTimeout(() => {
 				// Record initialization timeout on wrapper
 				try {
-					wrapper.lastError = 'Worker initialization timeout'
+					wrapper.lastError = "Worker initialization timeout"
 				} catch {
-					wrapper.lastError = 'Worker initialization timeout'
+					wrapper.lastError = "Worker initialization timeout"
 				}
 				wrapper.errorCount = (wrapper.errorCount ?? 0) + 1
 
@@ -231,14 +236,14 @@ export class DockerClientManager {
 				}
 				this.workers.delete(clientId)
 
-				reject(new Error('Worker initialization timeout'))
+				reject(new Error("Worker initialization timeout"))
 			}, 30000)
 
 			const initHandler = (event: MessageEvent) => {
 				const message = event.data
-				if (message.type === '__init_complete__') {
+				if (message.type === "__init_complete__") {
 					clearTimeout(timeout)
-					wrapper.worker.removeEventListener('message', initHandler)
+					wrapper.worker.removeEventListener("message", initHandler)
 
 					if (message.success) {
 						wrapper.initialized = true
@@ -247,7 +252,7 @@ export class DockerClientManager {
 					} else {
 						// store error info on wrapper for diagnostics
 						try {
-							wrapper.lastError = message.error ?? 'Unknown init error'
+							wrapper.lastError = message.error ?? "Unknown init error"
 						} catch {
 							wrapper.lastError = String(message.error)
 						}
@@ -266,11 +271,11 @@ export class DockerClientManager {
 				}
 			}
 
-			wrapper.worker.addEventListener('message', initHandler)
+			wrapper.worker.addEventListener("message", initHandler)
 
 			// Send initialization message
 			wrapper.worker.postMessage({
-				type: '__init__',
+				type: "__init__",
 				clientId,
 				clientName,
 				dbPath: this.dbPath,
@@ -279,10 +284,7 @@ export class DockerClientManager {
 		})
 	}
 
-	private handleWorkerError(
-		clientId: number,
-		error: ErrorEvent
-	): void {
+	private handleWorkerError(clientId: number, error: ErrorEvent): void {
 		const wrapper = this.workers.get(clientId)
 		if (!wrapper) return
 
@@ -320,13 +322,13 @@ export class DockerClientManager {
 				wrapper.busy = false
 				// record timeout error for diagnostics
 				try {
-					wrapper.lastError = 'Request timeout'
+					wrapper.lastError = "Request timeout"
 				} catch {
-					wrapper.lastError = 'Request timeout'
+					wrapper.lastError = "Request timeout"
 				}
 				wrapper.errorCount = (wrapper.errorCount ?? 0) + 1
-				wrapper.worker.removeEventListener('message', messageHandler)
-				reject(new Error('Request timeout'))
+				wrapper.worker.removeEventListener("message", messageHandler)
+				reject(new Error("Request timeout"))
 			}, 30000)
 
 			const messageHandler = (event: MessageEvent) => {
@@ -335,10 +337,10 @@ export class DockerClientManager {
 				// Ignore internal messages
 				if (
 					response &&
-					typeof response === 'object' &&
-					'type' in response &&
-					(response.type === '__init_complete__' ||
-						response.type === '__metrics__')
+					typeof response === "object" &&
+					"type" in response &&
+					(response.type === "__init_complete__" ||
+						response.type === "__metrics__")
 				) {
 					return
 				}
@@ -347,14 +349,14 @@ export class DockerClientManager {
 				settled = true
 				clearTimeout(timeout)
 				wrapper.busy = false
-				wrapper.worker.removeEventListener('message', messageHandler)
+				wrapper.worker.removeEventListener("message", messageHandler)
 
 				if (response.success) {
 					resolve(response.data)
 				} else {
 					// record worker-reported error
 					try {
-						wrapper.lastError = response.error ?? 'Unknown worker error'
+						wrapper.lastError = response.error ?? "Unknown worker error"
 					} catch {
 						wrapper.lastError = String(response.error)
 					}
@@ -363,17 +365,16 @@ export class DockerClientManager {
 				}
 			}
 
-			wrapper.worker.addEventListener('message', messageHandler)
+			wrapper.worker.addEventListener("message", messageHandler)
 			try {
 				wrapper.worker.postMessage(request)
 			} catch (err) {
 				// If postMessage itself fails, record it and reject
 				clearTimeout(timeout)
 				wrapper.busy = false
-				wrapper.worker.removeEventListener('message', messageHandler)
+				wrapper.worker.removeEventListener("message", messageHandler)
 				try {
-					wrapper.lastError =
-						err instanceof Error ? err.message : String(err)
+					wrapper.lastError = err instanceof Error ? err.message : String(err)
 				} catch {
 					wrapper.lastError = String(err)
 				}
@@ -402,7 +403,7 @@ export class DockerClientManager {
 		}
 
 		try {
-			await this.sendRequest(clientId, { type: 'cleanup' })
+			await this.sendRequest(clientId, { type: "cleanup" })
 		} catch (error) {
 			this.logger.warn(`Error cleaning up worker ${clientId}: ${error}`)
 		}
@@ -423,7 +424,7 @@ export class DockerClientManager {
 	): Promise<void> {
 		const actualHosts = hosts || []
 		return this.sendRequest(clientId, {
-			type: 'init',
+			type: "init",
 			hosts: actualHosts,
 		})
 	}
@@ -436,13 +437,10 @@ export class DockerClientManager {
 		port: number,
 		id?: number
 	): Promise<DATABASE.DB_target_host> {
-		const result = await this.sendRequest<DATABASE.DB_target_host>(
-			clientId,
-			{
-				type: 'addHost',
-				data: { hostname, name, secure, port, id },
-			}
-		)
+		const result = await this.sendRequest<DATABASE.DB_target_host>(clientId, {
+			type: "addHost",
+			data: { hostname, name, secure, port, id },
+		})
 
 		const wrapper = this.workers.get(clientId)
 		if (wrapper && result.id) {
@@ -453,12 +451,9 @@ export class DockerClientManager {
 		return result
 	}
 
-	public async removeHost(
-		clientId: number,
-		hostId: number
-	): Promise<void> {
+	public async removeHost(clientId: number, hostId: number): Promise<void> {
 		await this.sendRequest(clientId, {
-			type: 'removeHost',
+			type: "removeHost",
 			hostId,
 		})
 
@@ -474,23 +469,20 @@ export class DockerClientManager {
 		host: DATABASE.DB_target_host
 	): Promise<void> {
 		return this.sendRequest(clientId, {
-			type: 'updateHost',
+			type: "updateHost",
 			host,
 		})
 	}
 
-	public async getHosts(
-		clientId: number
-	): Promise<DATABASE.DB_target_host[]> {
-		return this.sendRequest(clientId, { type: 'getHosts' })
+	public async getHosts(clientId: number): Promise<DATABASE.DB_target_host[]> {
+		return this.sendRequest(clientId, { type: "getHosts" })
 	}
 
 	public async getAllHosts() {
-		this.logger.debug('Getting all hosts')
+		this.logger.debug("Getting all hosts")
 		const clients = this.getAllClients()
 		this.logger.debug(`Clients: ${JSON.stringify(clients)}`)
-		let hosts: Array<{ name: string; id: number; clientId: number }> =
-			[]
+		let hosts: Array<{ name: string; id: number; clientId: number }> = []
 		for (const client of clients) {
 			const clientsHosts = (await this.getHosts(client.id)).map((c) => {
 				return { name: c.name, id: c.id, clientId: client.id }
@@ -504,14 +496,14 @@ export class DockerClientManager {
 	}
 
 	public async ping(clientId: number) {
-		return this.sendRequest(clientId, { type: 'ping' })
+		return this.sendRequest(clientId, { type: "ping" })
 	}
 
 	// Container Operations (proxy to worker)
 	public async getAllContainers(
 		clientId: number
 	): Promise<DOCKER.ContainerInfo[]> {
-		return this.sendRequest(clientId, { type: 'getAllContainers' })
+		return this.sendRequest(clientId, { type: "getAllContainers" })
 	}
 
 	public async getContainersForHost(
@@ -519,7 +511,7 @@ export class DockerClientManager {
 		hostId: number
 	): Promise<DOCKER.ContainerInfo[]> {
 		return this.sendRequest(clientId, {
-			type: 'getContainersForHost',
+			type: "getContainersForHost",
 			hostId,
 		})
 	}
@@ -530,7 +522,7 @@ export class DockerClientManager {
 		containerId: string
 	): Promise<DOCKER.ContainerInfo> {
 		return this.sendRequest(clientId, {
-			type: 'getContainer',
+			type: "getContainer",
 			hostId,
 			containerId,
 		})
@@ -540,7 +532,7 @@ export class DockerClientManager {
 	public async getAllContainerStats(
 		clientId: number
 	): Promise<DOCKER.ContainerStatsInfo[]> {
-		return this.sendRequest(clientId, { type: 'getAllContainerStats' })
+		return this.sendRequest(clientId, { type: "getAllContainerStats" })
 	}
 
 	public async getContainerStatsForHost(
@@ -548,7 +540,7 @@ export class DockerClientManager {
 		hostId: number
 	): Promise<DOCKER.ContainerStatsInfo[]> {
 		return this.sendRequest(clientId, {
-			type: 'getContainerStatsForHost',
+			type: "getContainerStatsForHost",
 			hostId,
 		})
 	}
@@ -559,7 +551,7 @@ export class DockerClientManager {
 		containerId: string
 	): Promise<DOCKER.ContainerStatsInfo> {
 		return this.sendRequest(clientId, {
-			type: 'getContainerStats',
+			type: "getContainerStats",
 			hostId,
 			containerId,
 		})
@@ -569,7 +561,7 @@ export class DockerClientManager {
 	public async getAllHostMetrics(
 		clientId: number
 	): Promise<DOCKER.HostMetrics[]> {
-		return this.sendRequest(clientId, { type: 'getAllHostMetrics' })
+		return this.sendRequest(clientId, { type: "getAllHostMetrics" })
 	}
 
 	public async getHostMetrics(
@@ -577,15 +569,13 @@ export class DockerClientManager {
 		hostId: number
 	): Promise<DOCKER.HostMetrics> {
 		return this.sendRequest(clientId, {
-			type: 'getHostMetrics',
+			type: "getHostMetrics",
 			hostId,
 		})
 	}
 
-	public async getAllStats(
-		clientId: number
-	): Promise<DOCKER.AllStatsResponse> {
-		return this.sendRequest(clientId, { type: 'getAllStats' })
+	public async getAllStats(clientId: number): Promise<DOCKER.AllStatsResponse> {
+		return this.sendRequest(clientId, { type: "getAllStats" })
 	}
 
 	// Container Control (proxy to worker)
@@ -595,7 +585,7 @@ export class DockerClientManager {
 		containerId: string
 	): Promise<void> {
 		return this.sendRequest(clientId, {
-			type: 'startContainer',
+			type: "startContainer",
 			hostId,
 			containerId,
 		})
@@ -607,7 +597,7 @@ export class DockerClientManager {
 		containerId: string
 	): Promise<void> {
 		return this.sendRequest(clientId, {
-			type: 'stopContainer',
+			type: "stopContainer",
 			hostId,
 			containerId,
 		})
@@ -619,7 +609,7 @@ export class DockerClientManager {
 		containerId: string
 	): Promise<void> {
 		return this.sendRequest(clientId, {
-			type: 'restartContainer',
+			type: "restartContainer",
 			hostId,
 			containerId,
 		})
@@ -632,7 +622,7 @@ export class DockerClientManager {
 		force?: boolean
 	): Promise<void> {
 		return this.sendRequest(clientId, {
-			type: 'removeContainer',
+			type: "removeContainer",
 			hostId,
 			containerId,
 			force,
@@ -645,7 +635,7 @@ export class DockerClientManager {
 		containerId: string
 	): Promise<void> {
 		return this.sendRequest(clientId, {
-			type: 'pauseContainer',
+			type: "pauseContainer",
 			hostId,
 			containerId,
 		})
@@ -657,7 +647,7 @@ export class DockerClientManager {
 		containerId: string
 	): Promise<void> {
 		return this.sendRequest(clientId, {
-			type: 'unpauseContainer',
+			type: "unpauseContainer",
 			hostId,
 			containerId,
 		})
@@ -670,7 +660,7 @@ export class DockerClientManager {
 		signal?: string
 	): Promise<void> {
 		return this.sendRequest(clientId, {
-			type: 'killContainer',
+			type: "killContainer",
 			hostId,
 			containerId,
 			signal,
@@ -684,7 +674,7 @@ export class DockerClientManager {
 		newName: string
 	): Promise<void> {
 		return this.sendRequest(clientId, {
-			type: 'renameContainer',
+			type: "renameContainer",
 			hostId,
 			containerId,
 			newName,
@@ -698,7 +688,7 @@ export class DockerClientManager {
 		options?: unknown
 	): Promise<string> {
 		return this.sendRequest(clientId, {
-			type: 'getContainerLogs',
+			type: "getContainerLogs",
 			hostId,
 			containerId,
 			options,
@@ -713,7 +703,7 @@ export class DockerClientManager {
 		options?: unknown
 	): Promise<{ stdout: string; stderr: string; exitCode: number }> {
 		return this.sendRequest(clientId, {
-			type: 'execInContainer',
+			type: "execInContainer",
 			hostId,
 			containerId,
 			command,
@@ -724,7 +714,7 @@ export class DockerClientManager {
 	// Image Operations (proxy to worker)
 	public async getImages(clientId: number, hostId: number) {
 		return this.sendRequest(clientId, {
-			type: 'getImages',
+			type: "getImages",
 			hostId,
 		})
 	}
@@ -735,7 +725,7 @@ export class DockerClientManager {
 		imageName: string
 	): Promise<void> {
 		return this.sendRequest(clientId, {
-			type: 'pullImage',
+			type: "pullImage",
 			hostId,
 			imageName,
 		})
@@ -744,7 +734,7 @@ export class DockerClientManager {
 	// Network Operations (proxy to worker)
 	public async getNetworks(clientId: number, hostId: number) {
 		return this.sendRequest(clientId, {
-			type: 'getNetworks',
+			type: "getNetworks",
 			hostId,
 		})
 	}
@@ -752,7 +742,7 @@ export class DockerClientManager {
 	// Volume Operations (proxy to worker)
 	public async getVolumes(clientId: number, hostId: number) {
 		return this.sendRequest(clientId, {
-			type: 'getVolumes',
+			type: "getVolumes",
 			hostId,
 		})
 	}
@@ -763,7 +753,7 @@ export class DockerClientManager {
 		hostId: number
 	): Promise<boolean> {
 		return this.sendRequest(clientId, {
-			type: 'checkHostHealth',
+			type: "checkHostHealth",
 			hostId,
 		})
 	}
@@ -772,50 +762,50 @@ export class DockerClientManager {
 		clientId: number
 	): Promise<Record<number, boolean>> {
 		return this.sendRequest(clientId, {
-			type: 'checkAllHostsHealth',
+			type: "checkAllHostsHealth",
 		})
 	}
 
 	// System Operations (proxy to worker)
 	public async getSystemInfo(clientId: number, hostId: number) {
 		return this.sendRequest(clientId, {
-			type: 'getSystemInfo',
+			type: "getSystemInfo",
 			hostId,
 		})
 	}
 
 	public async getSystemVersion(clientId: number, hostId: number) {
 		return this.sendRequest(clientId, {
-			type: 'getSystemVersion',
+			type: "getSystemVersion",
 			hostId,
 		})
 	}
 
 	public async getDiskUsage(clientId: number, hostId: number) {
 		return this.sendRequest(clientId, {
-			type: 'getDiskUsage',
+			type: "getDiskUsage",
 			hostId,
 		})
 	}
 
 	public async pruneSystem(clientId: number, hostId: number) {
 		return this.sendRequest(clientId, {
-			type: 'pruneSystem',
+			type: "pruneSystem",
 			hostId,
 		})
 	}
 
 	// Monitoring (proxy to worker)
 	public async startMonitoring(clientId: number): Promise<void> {
-		return this.sendRequest(clientId, { type: 'startMonitoring' })
+		return this.sendRequest(clientId, { type: "startMonitoring" })
 	}
 
 	public async stopMonitoring(clientId: number): Promise<void> {
-		return this.sendRequest(clientId, { type: 'stopMonitoring' })
+		return this.sendRequest(clientId, { type: "stopMonitoring" })
 	}
 
 	public async isMonitoring(clientId: number): Promise<boolean> {
-		return this.sendRequest(clientId, { type: 'isMonitoring' })
+		return this.sendRequest(clientId, { type: "isMonitoring" })
 	}
 
 	// Pool Metrics
@@ -823,7 +813,7 @@ export class DockerClientManager {
 		const workers: WorkerMetrics[] = []
 		let totalHosts = 0
 
-		for (const [clientId, wrapper] of this.workers) {
+		for (const [clientId, wrapper] of Array.from(this.workers)) {
 			totalHosts += wrapper.hostIds.size
 
 			// Try to get monitoring status
@@ -842,9 +832,7 @@ export class DockerClientManager {
 				initialized: wrapper.initialized,
 				activeStreams: 0,
 				isMonitoring,
-				memoryUsage: Bun.nanoseconds()
-					? undefined
-					: process.memoryUsage(),
+				memoryUsage: Bun.nanoseconds() ? undefined : process.memoryUsage(),
 				uptime: Date.now() - wrapper.lastUsed,
 			}
 
@@ -853,9 +841,8 @@ export class DockerClientManager {
 
 		return {
 			totalWorkers: this.workers.size,
-			activeWorkers: Array.from(this.workers.values()).filter(
-				(w) => !w.busy
-			).length,
+			activeWorkers: Array.from(this.workers.values()).filter((w) => !w.busy)
+				.length,
 			totalHosts,
 			totalClients: this.workers.size,
 			averageHostsPerWorker:
@@ -866,7 +853,7 @@ export class DockerClientManager {
 
 	public async getStatus() {
 		const hosts = await this.getAllHosts()
-		this.logger.debug('Getting status')
+		this.logger.debug("Getting status")
 		this.logger.debug(`Hosts: ${JSON.stringify(hosts)}`)
 		return {
 			...(await this.getPoolMetrics()),
@@ -902,18 +889,17 @@ export class DockerClientManager {
 
 	// Cleanup
 	public async dispose(): Promise<void> {
-		this.logger.info('Disposing DockerClientManager')
+		this.logger.info("Disposing DockerClientManager")
 
-		const cleanupPromises = Array.from(this.workers.keys()).map(
-			(clientId) =>
-				this.removeClient(clientId).catch((err) => {
-					this.logger.error(`Error removing client ${clientId}: ${err}`)
-				})
+		const cleanupPromises = Array.from(this.workers.keys()).map((clientId) =>
+			this.removeClient(clientId).catch((err) => {
+				this.logger.error(`Error removing client ${clientId}: ${err}`)
+			})
 		)
 
 		await Promise.allSettled(cleanupPromises)
 		this.workers.clear()
 
-		this.logger.info('DockerClientManager disposed')
+		this.logger.info("DockerClientManager disposed")
 	}
 }

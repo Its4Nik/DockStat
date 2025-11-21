@@ -3,14 +3,15 @@ import type {
 	Repo,
 	TableMetaData,
 	UpdateDockStatConfigTableResponse,
-} from './db'
+} from "./db"
 import type {
 	DBPlugin,
 	Plugin,
 	WrappedPluginMeta,
 	DBPluginShemaT,
-} from './plugins'
-import { RepoManifest } from './dockstore'
+} from "./plugins"
+import type { RepoManifest } from "./dockstore"
+export type { DockerStreamManagerProxy } from "../docker-monitoring-manager"
 
 type DockStatConfigTableType = typeof DockStatConfigTable.static
 type RepoType = typeof Repo.static

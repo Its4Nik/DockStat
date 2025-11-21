@@ -1,21 +1,19 @@
-import Logger from '@dockstat/logger'
+import Logger from "@dockstat/logger"
 
-declare var self: Worker
-
-import type DB from '@dockstat/sqlite-wrapper'
-import type { DATABASE, DOCKER } from '@dockstat/typings'
-import Dockerode, { type ContainerStats } from 'dockerode'
-import { DockerEventEmitter } from './events/docker-events.js'
-import HostHandler from './hosts-handler/index'
-import MonitoringManager from './monitoring/monitoring-manager'
-import { StreamManager } from './stream/stream-manager'
-import { withRetry } from './utils/retry'
+import type DB from "@dockstat/sqlite-wrapper"
+import type { DATABASE, DOCKER } from "@dockstat/typings"
+import Dockerode, { type ContainerStats } from "dockerode"
+import HostHandler from "./hosts-handler/index"
+import MonitoringManager from "./monitoring/monitoring-manager"
+import { StreamManager } from "./stream/stream-manager"
+import { withRetry } from "./utils/retry"
 import {
 	mapContainerInfo,
 	mapContainerInfoFromInspect,
 	mapContainerStats,
-} from './utils/mapper'
-import { logger } from '../index'
+} from "./utils/mapper"
+import { logger } from "../index"
+import { proxyEvent } from "./events/workerEventProxy"
 
 class DockerClient {
 	private name: string
@@ -24,11 +22,10 @@ class DockerClient {
 	private dockerInstances: Map<number, Dockerode> = new Map()
 	private activeStreams: Map<string, NodeJS.Timeout> = new Map()
 	private options: Required<
-		Omit<DOCKER.DockerAdapterOptions, 'monitoringOptions'>
+		Omit<DOCKER.DockerAdapterOptions, "monitoringOptions">
 	> & {
-		monitoringOptions?: DOCKER.DockerAdapterOptions['monitoringOptions']
+		monitoringOptions?: DOCKER.DockerAdapterOptions["monitoringOptions"]
 	}
-	public readonly events: DockerEventEmitter
 	private monitoringManager?: MonitoringManager
 	private streamManager?: StreamManager
 	private disposed = false
@@ -44,7 +41,7 @@ class DockerClient {
 			`DockerClient-${id}`,
 			logger.getParentsForLoggerChaining()
 		)
-		this.logger.info('Initializing DockerClient')
+		this.logger.info("Initializing DockerClient")
 		this.hostHandler = new HostHandler(id, DB)
 		this.options = {
 			defaultTimeout: options.defaultTimeout ?? 5000,
@@ -57,24 +54,16 @@ class DockerClient {
 		}
 
 		this.name = name
-		this.events = new DockerEventEmitter(
-			this.logger.getParentsForLoggerChaining()
-		)
 
-		this.logger.debug(
-			`Monitoring enabled: ${this.options.enableMonitoring}`
-		)
+		this.logger.debug(`Monitoring enabled: ${this.options.enableMonitoring}`)
 		if (this.options.enableMonitoring) {
 			this.monitoringManager = new MonitoringManager(
-				this.events,
 				this.dockerInstances,
-				this.hostHandler.getHosts(),
-				this.options.monitoringOptions
+				this.hostHandler.getHosts()
 			)
 		}
 
 		this.streamManager = new StreamManager(
-			this.events,
 			this,
 			this.logger.getParentsForLoggerChaining()
 		)
@@ -82,7 +71,7 @@ class DockerClient {
 
 	private checkDisposed(): void {
 		if (this.disposed) {
-			throw new Error('DockerClient has been disposed')
+			throw new Error("DockerClient has been disposed")
 		}
 	}
 
@@ -101,11 +90,11 @@ class DockerClient {
 		unreachableInstances: number[]
 	}> {
 		this.checkDisposed()
-		this.logger.info('Testing ping to all instances')
+		this.logger.info("Testing ping to all instances")
 
 		const clients = Array.from(this.dockerInstances.entries())
 		if (clients.length === 0) {
-			this.logger.info('No docker instances to ping')
+			this.logger.info("No docker instances to ping")
 			return { reachableInstances: [], unreachableInstances: [] }
 		}
 
@@ -159,15 +148,13 @@ class DockerClient {
 			this.logger.info(`Updating host action: ${host.name}`)
 			host.id = this.hostHandler.addHost(host)
 		} else {
-			this.logger.info(
-				`Host ${name} (${id}) already exists. Initializing...`
-			)
+			this.logger.info(`Host ${name} (${id}) already exists. Initializing...`)
 			host.id = id
 		}
 
 		const instanceCfg: Dockerode.DockerOptions = {
 			host: host.host,
-			protocol: host.secure ? 'https' : 'http',
+			protocol: host.secure ? "https" : "http",
 			port: host.port,
 			timeout: this.options.defaultTimeout,
 		}
@@ -183,13 +170,13 @@ class DockerClient {
 			this.monitoringManager.updateDockerInstances(this.dockerInstances)
 		}
 
-		this.events.emitHostAdded(host.id, host.name as string)
+		proxyEvent("host:added", { hostId: host.id, hostName: String(host.name) })
 		return host as DATABASE.DB_target_host
 	}
 
 	public init(hosts = this.hostHandler.getHosts()): void {
 		this.checkDisposed()
-		this.logger.info('Initializing...')
+		this.logger.info("Initializing...")
 		for (const host of hosts) {
 			this.logger.info(`Initializing ${host.name} (${host.id})`)
 			this.addHost(host.host, host.name, host.secure, host.port, host.id)
@@ -198,15 +185,15 @@ class DockerClient {
 
 	public removeHost(hostId: number): void {
 		const hostName =
-			this.getHosts().find((h) => h.id === hostId)?.name || 'Unknown'
+			this.getHosts().find((h) => h.id === hostId)?.name || "Unknown"
 		this.checkDisposed()
 		this.logger.info(`Removing host: ${hostName} (ID: ${hostId})`)
 		this.hostHandler.removeHost(hostId)
 		this.dockerInstances.delete(hostId)
 
-		const streamsToRemove = Array.from(
-			this.activeStreams.keys()
-		).filter((key) => key.includes(`host-${hostId}`))
+		const streamsToRemove = Array.from(this.activeStreams.keys()).filter(
+			(key) => key.includes(`host-${hostId}`)
+		)
 
 		for (const streamKey of streamsToRemove) {
 			this.stopStream(streamKey)
@@ -217,7 +204,7 @@ class DockerClient {
 			this.monitoringManager.updateDockerInstances(this.dockerInstances)
 		}
 
-		this.events.emitHostRemoved(hostId, hostName)
+		proxyEvent("host:removed", { hostId, hostName })
 	}
 
 	public updateHost(host: DATABASE.DB_target_host): void {
@@ -243,9 +230,9 @@ class DockerClient {
 		}
 
 		// Stop any active streams related to this host
-		const streamsToRemove = Array.from(
-			this.activeStreams.keys()
-		).filter((key) => key.includes(`host-${host.id}`))
+		const streamsToRemove = Array.from(this.activeStreams.keys()).filter(
+			(key) => key.includes(`host-${host.id}`)
+		)
 		for (const streamKey of streamsToRemove) {
 			this.logger.debug(
 				`Stopping stream ${streamKey} for updated host ${host.id}`
@@ -257,7 +244,7 @@ class DockerClient {
 		try {
 			const instanceCfg: Dockerode.DockerOptions = {
 				host: host.host,
-				protocol: host.secure ? 'https' : 'http',
+				protocol: host.secure ? "https" : "http",
 				port: host.port,
 				timeout: this.options.defaultTimeout,
 			}
@@ -284,9 +271,7 @@ class DockerClient {
 			try {
 				this.monitoringManager.updateHosts(this.hostHandler.getHosts())
 				this.monitoringManager.updateDockerInstances(this.dockerInstances)
-				this.logger.info(
-					`Monitoring manager updated for host ID ${host.id}`
-				)
+				this.logger.info(`Monitoring manager updated for host ID ${host.id}`)
 			} catch (err) {
 				this.logger.error(
 					`Failed to update monitoring manager for host ${host.id}: ${err}`
@@ -295,7 +280,7 @@ class DockerClient {
 		}
 
 		// Emit event to notify listeners
-		this.events.emitHostUpdated(host.id, host.name)
+		proxyEvent("host:updated", { hostId: host.id, hostName: host.name })
 	}
 
 	public getHosts(): DATABASE.DB_target_host[] {
@@ -305,7 +290,7 @@ class DockerClient {
 
 	public async getAllContainers(): Promise<DOCKER.ContainerInfo[]> {
 		this.checkDisposed()
-		this.logger.info('Fetching containers from all hosts')
+		this.logger.info("Fetching containers from all hosts")
 		const allContainers: DOCKER.ContainerInfo[] = []
 		const hosts = this.hostHandler.getHosts()
 
@@ -337,9 +322,7 @@ class DockerClient {
 			this.options.retryDelay
 		)
 
-		return containers.map((container) =>
-			mapContainerInfo(container, hostId)
-		)
+		return containers.map((container) => mapContainerInfo(container, hostId))
 	}
 
 	public async getContainer(
@@ -358,9 +341,7 @@ class DockerClient {
 		return mapContainerInfoFromInspect(containerInfo, hostId)
 	}
 
-	public async getAllContainerStats(): Promise<
-		DOCKER.ContainerStatsInfo[]
-	> {
+	public async getAllContainerStats(): Promise<DOCKER.ContainerStatsInfo[]> {
 		this.checkDisposed()
 		const allStats: DOCKER.ContainerStatsInfo[] = []
 		const hosts = this.hostHandler.getHosts()
@@ -386,9 +367,7 @@ class DockerClient {
 	): Promise<DOCKER.ContainerStatsInfo[]> {
 		this.checkDisposed()
 		const containers = await this.getContainersForHost(hostId)
-		const runningContainers = containers.filter(
-			(c) => c.state === 'running'
-		)
+		const runningContainers = containers.filter((c) => c.state === "running")
 
 		const statsPromises = runningContainers.map(async (container) => {
 			try {
@@ -404,10 +383,8 @@ class DockerClient {
 		const results = await Promise.allSettled(statsPromises)
 		return results
 			.filter(
-				(
-					result
-				): result is PromiseFulfilledResult<DOCKER.ContainerStatsInfo> =>
-					result.status === 'fulfilled' && result.value !== null
+				(result): result is PromiseFulfilledResult<DOCKER.ContainerStatsInfo> =>
+					result.status === "fulfilled" && result.value !== null
 			)
 			.map((result) => result.value)
 	}
@@ -433,10 +410,7 @@ class DockerClient {
 			),
 		])
 
-		const mappedInfo = mapContainerInfoFromInspect(
-			containerInfo,
-			hostId
-		)
+		const mappedInfo = mapContainerInfoFromInspect(containerInfo, hostId)
 		return mapContainerStats(mappedInfo, stats as ContainerStats)
 	}
 
@@ -458,7 +432,7 @@ class DockerClient {
 		return results
 			.filter(
 				(result): result is PromiseFulfilledResult<DOCKER.HostMetrics> =>
-					result.status === 'fulfilled' && result.value !== null
+					result.status === "fulfilled" && result.value !== null
 			)
 			.map((result) => result.value)
 	}
@@ -477,14 +451,10 @@ class DockerClient {
 		}
 	}
 
-	public async getHostMetrics(
-		hostId: number
-	): Promise<DOCKER.HostMetrics> {
+	public async getHostMetrics(hostId: number): Promise<DOCKER.HostMetrics> {
 		this.checkDisposed()
 		const docker = this.getDockerInstance(hostId)
-		const host = this.hostHandler
-			.getHosts()
-			.find((h) => h.id === hostId)
+		const host = this.hostHandler.getHosts().find((h) => h.id === hostId)
 
 		if (!host) {
 			throw new Error(`Host with ID ${hostId} not found`)
@@ -539,21 +509,21 @@ class DockerClient {
 			try {
 				const stats = await this.getContainerStats(hostId, containerId)
 				callback({
-					type: 'container_stats',
+					type: "container_stats",
 					hostId,
 					timestamp: Date.now(),
 					data: stats,
 				})
 			} catch (error) {
 				callback({
-					type: 'error',
+					type: "error",
 					hostId,
 					timestamp: Date.now(),
 					data: {
 						error:
 							error instanceof Error
 								? new Error(error.message)
-								: new Error('Unknown error'),
+								: new Error("Unknown error"),
 					},
 				})
 			}
@@ -579,21 +549,21 @@ class DockerClient {
 			try {
 				const metrics = await this.getHostMetrics(hostId)
 				callback({
-					type: 'host_metrics',
+					type: "host_metrics",
 					hostId,
 					timestamp: Date.now(),
 					data: metrics,
 				})
 			} catch (error) {
 				callback({
-					type: 'error',
+					type: "error",
 					hostId,
 					timestamp: Date.now(),
 					data: {
 						error:
 							error instanceof Error
 								? new Error(error.message)
-								: new Error('Unknown error'),
+								: new Error("Unknown error"),
 					},
 				})
 			}
@@ -608,7 +578,7 @@ class DockerClient {
 		interval = 2000
 	): string {
 		this.checkDisposed()
-		const streamKey = 'all-containers'
+		const streamKey = "all-containers"
 
 		if (this.activeStreams.has(streamKey)) {
 			this.stopStream(streamKey)
@@ -618,21 +588,21 @@ class DockerClient {
 			try {
 				const containers = await this.getAllContainers()
 				callback({
-					type: 'container_list',
+					type: "container_list",
 					hostId: -1,
 					timestamp: Date.now(),
 					data: containers,
 				})
 			} catch (error) {
 				callback({
-					type: 'error',
+					type: "error",
 					hostId: -1,
 					timestamp: Date.now(),
 					data: {
 						error:
 							error instanceof Error
 								? new Error(error.message)
-								: new Error('Unknown error'),
+								: new Error("Unknown error"),
 					},
 				})
 			}
@@ -647,7 +617,7 @@ class DockerClient {
 		interval = 5000
 	): string {
 		this.checkDisposed()
-		const streamKey = 'all-stats'
+		const streamKey = "all-stats"
 
 		if (this.activeStreams.has(streamKey)) {
 			this.stopStream(streamKey)
@@ -657,21 +627,21 @@ class DockerClient {
 			try {
 				const allStats = await this.getAllStats()
 				callback({
-					type: 'all_stats',
+					type: "all_stats",
 					hostId: -1,
 					timestamp: Date.now(),
 					data: allStats,
 				})
 			} catch (error) {
 				callback({
-					type: 'error',
+					type: "error",
 					hostId: -1,
 					timestamp: Date.now(),
 					data: {
 						error:
 							error instanceof Error
 								? new Error(error.message)
-								: new Error('Unknown error'),
+								: new Error("Unknown error"),
 					},
 				})
 			}
@@ -692,7 +662,7 @@ class DockerClient {
 	}
 
 	public stopAllStreams(): void {
-		for (const timer of this.activeStreams.values()) {
+		for (const [, timer] of Array.from(this.activeStreams)) {
 			clearInterval(timer)
 		}
 		this.activeStreams.clear()
@@ -790,7 +760,7 @@ class DockerClient {
 	public async killContainer(
 		hostId: number,
 		containerId: string,
-		signal = 'SIGKILL'
+		signal = "SIGKILL"
 	): Promise<void> {
 		this.checkDisposed()
 		const docker = this.getDockerInstance(hostId)
@@ -894,15 +864,15 @@ class DockerClient {
 			return new Promise((resolve, reject) => {
 				const chunks: Buffer[] = []
 
-				stream.on('data', (chunk: Buffer) => {
+				stream.on("data", (chunk: Buffer) => {
 					chunks.push(chunk)
 				})
 
-				stream.on('end', async () => {
+				stream.on("end", async () => {
 					try {
 						const combinedBuffer = Buffer.concat(chunks)
-						let stdout = ''
-						let stderr = ''
+						let stdout = ""
+						let stderr = ""
 
 						if (options.tty) {
 							stdout = combinedBuffer.toString()
@@ -942,21 +912,16 @@ class DockerClient {
 					}
 				})
 
-				stream.on('error', reject)
+				stream.on("error", reject)
 
-				setTimeout(
-					() => reject(new Error('Exec operation timed out')),
-					30000
-				)
+				setTimeout(() => reject(new Error("Exec operation timed out")), 30000)
 			})
 		} catch (error) {
 			throw new Error(`Failed to execute command in container: ${error}`)
 		}
 	}
 
-	public async getImages(
-		hostId: number
-	): Promise<Dockerode.ImageInfo[]> {
+	public async getImages(hostId: number): Promise<Dockerode.ImageInfo[]> {
 		this.checkDisposed()
 		const docker = this.getDockerInstance(hostId)
 		return await withRetry(
@@ -966,10 +931,7 @@ class DockerClient {
 		)
 	}
 
-	public async pullImage(
-		hostId: number,
-		imageName: string
-	): Promise<void> {
+	public async pullImage(hostId: number, imageName: string): Promise<void> {
 		this.checkDisposed()
 		const docker = this.getDockerInstance(hostId)
 		const stream = await docker.pull(imageName)
@@ -1018,9 +980,7 @@ class DockerClient {
 		}
 	}
 
-	public async checkAllHostsHealth(): Promise<
-		Record<number, boolean>
-	> {
+	public async checkAllHostsHealth(): Promise<Record<number, boolean>> {
 		this.checkDisposed()
 		const hosts = this.hostHandler.getHosts()
 		const healthChecks = await Promise.allSettled(
@@ -1032,7 +992,7 @@ class DockerClient {
 
 		const result = {} as Record<number, boolean>
 		for (const check of healthChecks) {
-			if (check.status === 'fulfilled') {
+			if (check.status === "fulfilled") {
 				result[check.value.hostId] = check.value.healthy
 			}
 		}
@@ -1042,7 +1002,7 @@ class DockerClient {
 
 	public async getSystemInfo(
 		hostId: number
-	): Promise<DOCKER.DockerAPIResponse['systemInfo']> {
+	): Promise<DOCKER.DockerAPIResponse["systemInfo"]> {
 		this.checkDisposed()
 		const docker = this.getDockerInstance(hostId)
 		return await withRetry(
@@ -1064,7 +1024,7 @@ class DockerClient {
 
 	public async getDiskUsage(
 		hostId: number
-	): Promise<DOCKER.DockerAPIResponse['diskUsage']> {
+	): Promise<DOCKER.DockerAPIResponse["diskUsage"]> {
 		this.checkDisposed()
 		const docker = this.getDockerInstance(hostId)
 		return await withRetry(
@@ -1091,7 +1051,10 @@ class DockerClient {
 		if (this.monitoringManager) {
 			this.monitoringManager.startMonitoring()
 		} else {
-			this.events.emitWarning('Monitoring manager not initialized')
+			proxyEvent(
+				"warning",
+				`Monitoring manager not initialized on ${this.name}`
+			)
 		}
 	}
 
@@ -1102,9 +1065,7 @@ class DockerClient {
 	}
 
 	public isMonitoring(): boolean {
-		return (
-			this.monitoringManager?.getMonitoringState().isMonitoring ?? false
-		)
+		return this.monitoringManager?.getMonitoringState().isMonitoring ?? false
 	}
 
 	public getStreamManager(): StreamManager | undefined {
@@ -1123,10 +1084,7 @@ class DockerClient {
 		}
 	}
 
-	public handleStreamMessage(
-		connectionId: string,
-		message: string
-	): void {
+	public handleStreamMessage(connectionId: string, message: string): void {
 		if (this.streamManager) {
 			this.streamManager.handleMessage(connectionId, message)
 		}

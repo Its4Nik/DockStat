@@ -1,25 +1,22 @@
-import type { DATABASE } from '@dockstat/typings'
-import type { DOCKER } from '@dockstat/typings'
-import type Dockerode from 'dockerode'
-import type { DockerEventEmitter } from '../events/docker-events'
-import Logger from '@dockstat/logger'
+import type { DATABASE } from "@dockstat/typings"
+import type { DOCKER } from "@dockstat/typings"
+import type Dockerode from "dockerode"
+import Logger from "@dockstat/logger"
+import { proxyEvent } from "../events/workerEventProxy"
 
-const logger = new Logger('MonitoringManager')
+const logger = new Logger("MonitoringManager")
 
 export default class MonitoringManager {
-	private eventEmitter: DockerEventEmitter
 	private dockerInstances: Map<number, Dockerode>
 	private hosts: DATABASE.DB_target_host[]
 	private options: Required<DOCKER.MonitoringOptions>
 	private state: DOCKER.MonitoringState
 
 	constructor(
-		eventEmitter: DockerEventEmitter,
 		dockerInstances: Map<number, Dockerode>,
 		hosts: DATABASE.DB_target_host[],
 		options: DOCKER.MonitoringOptions = {}
 	) {
-		this.eventEmitter = eventEmitter
 		this.dockerInstances = dockerInstances
 		this.hosts = hosts
 		this.options = {
@@ -40,17 +37,17 @@ export default class MonitoringManager {
 			lastContainerStates: new Map(),
 			dockerEventStreams: new Map(),
 		}
-		logger.info('Initialized MonitoringManager')
+		logger.info("Initialized MonitoringManager")
 	}
 
 	public startMonitoring(): void {
 		if (this.state.isMonitoring) {
-			this.eventEmitter.emitWarning('Monitoring is already running')
+			logger.info("Monitoring is already running")
 			return
 		}
 
 		this.state.isMonitoring = true
-		this.eventEmitter.emitInfo('Starting monitoring services')
+		logger.info("Starting monitoring services")
 
 		if (this.options.enableHealthChecks) {
 			this.startHealthChecks()
@@ -70,12 +67,12 @@ export default class MonitoringManager {
 
 	public stopMonitoring(): void {
 		if (!this.state.isMonitoring) {
-			this.eventEmitter.emitWarning('Monitoring is not running')
+			logger.warn("Monitoring is not running")
 			return
 		}
 
 		this.state.isMonitoring = false
-		this.eventEmitter.emitInfo('Stopping monitoring services')
+		logger.info("Stopping monitoring services")
 
 		// Clear intervals
 		if (this.state.healthCheckInterval) {
@@ -107,9 +104,7 @@ export default class MonitoringManager {
 		}
 	}
 
-	public updateDockerInstances(
-		dockerInstances: Map<number, Dockerode>
-	): void {
+	public updateDockerInstances(dockerInstances: Map<number, Dockerode>): void {
 		this.dockerInstances = dockerInstances
 
 		if (this.state.isMonitoring) {
@@ -133,8 +128,10 @@ export default class MonitoringManager {
 
 		// Initial health check
 		this.performHealthChecks().catch((error) => {
-			this.eventEmitter.emitError(error, {
-				context: 'initial_health_check',
+			proxyEvent("error", {
+				message: error.message || String(error),
+				name: "",
+				stack: error.stack,
 			})
 		})
 	}
@@ -152,18 +149,27 @@ export default class MonitoringManager {
 				const wasHealthy = this.state.lastHealthStatus.get(host.id)
 				if (wasHealthy !== true) {
 					this.state.lastHealthStatus.set(host.id, true)
-					this.eventEmitter.emitHostHealthChanged(host.id, true)
+					proxyEvent("host:health:changed", {
+						healthy: true,
+						hostId: host.id,
+						hostName: host.name,
+					})
 				}
 			} catch (error) {
 				const wasHealthy = this.state.lastHealthStatus.get(host.id)
 				if (wasHealthy !== false) {
 					this.state.lastHealthStatus.set(host.id, false)
-					this.eventEmitter.emitHostHealthChanged(host.id, false)
+					proxyEvent("host:health:changed", {
+						healthy: false,
+						hostId: host.id,
+						hostName: host.name,
+					})
 				}
 
-				this.eventEmitter.emitError(
+				proxyEvent(
+					"error",
 					error instanceof Error ? error : new Error(String(error)),
-					{ context: 'health_check', hostId: host.id, hostName: host.name }
+					{ hostId: host.id, message: "Error while performing Health Checks" }
 				)
 			}
 		})
@@ -181,9 +187,10 @@ export default class MonitoringManager {
 
 		// Initial container state capture
 		this.captureInitialContainerStates().catch((error) => {
-			this.eventEmitter.emitError(error, {
-				context: 'initial_container_state',
-			})
+			proxyEvent(
+				"error",
+				error instanceof Error ? error : new Error(String(error))
+			)
 		})
 	}
 
@@ -193,9 +200,10 @@ export default class MonitoringManager {
 				const containers = await this.getContainersForHost(host.id)
 				this.state.lastContainerStates.set(`host-${host.id}`, containers)
 			} catch (error) {
-				this.eventEmitter.emitError(
+				proxyEvent(
+					"error",
 					error instanceof Error ? error : new Error(String(error)),
-					{ context: 'capture_container_state', hostId: host.id }
+					{ hostId: host.id }
 				)
 			}
 		})
@@ -210,19 +218,13 @@ export default class MonitoringManager {
 				const lastContainers =
 					this.state.lastContainerStates.get(`host-${host.id}`) || []
 
-				this.detectContainerChanges(
-					host.id,
-					lastContainers,
-					currentContainers
-				)
-				this.state.lastContainerStates.set(
-					`host-${host.id}`,
-					currentContainers
-				)
+				this.detectContainerChanges(host.id, lastContainers, currentContainers)
+				this.state.lastContainerStates.set(`host-${host.id}`, currentContainers)
 			} catch (error) {
-				this.eventEmitter.emitError(
+				proxyEvent(
+					"error",
 					error instanceof Error ? error : new Error(String(error)),
-					{ context: 'monitor_container_changes', hostId: host.id }
+					{ hostId: host.id }
 				)
 			}
 		})
@@ -235,43 +237,39 @@ export default class MonitoringManager {
 		lastContainers: DOCKER.ContainerInfo[],
 		currentContainers: DOCKER.ContainerInfo[]
 	): void {
-		const lastContainerMap = new Map(
-			lastContainers.map((c) => [c.id, c])
-		)
-		const currentContainerMap = new Map(
-			currentContainers.map((c) => [c.id, c])
-		)
+		const lastContainerMap = new Map(lastContainers.map((c) => [c.id, c]))
+		const currentContainerMap = new Map(currentContainers.map((c) => [c.id, c]))
 
 		// Detect new containers
 		for (const container of currentContainers) {
 			if (!lastContainerMap.has(container.id)) {
-				this.eventEmitter.emitContainerCreated(
-					hostId,
-					container.id,
-					container
-				)
+				proxyEvent("container:created", {
+					containerId: container.id,
+					containerInfo: container,
+					hostId: hostId,
+				})
 			} else {
 				// Detect state changes
 				const lastContainer = lastContainerMap.get(container.id)
 				if (lastContainer && lastContainer.state !== container.state) {
 					if (
-						container.state === 'running' &&
-						lastContainer.state !== 'running'
+						container.state === "running" &&
+						lastContainer.state !== "running"
 					) {
-						this.eventEmitter.emitContainerStarted(
-							hostId,
-							container.id,
-							container
-						)
+						proxyEvent("container:started", {
+							containerId: container.id,
+							containerInfo: container,
+							hostId: hostId,
+						})
 					} else if (
-						container.state !== 'running' &&
-						lastContainer.state === 'running'
+						container.state !== "running" &&
+						lastContainer.state === "running"
 					) {
-						this.eventEmitter.emitContainerStopped(
-							hostId,
-							container.id,
-							container
-						)
+						proxyEvent("container:stopped", {
+							containerId: container.id,
+							containerInfo: container,
+							hostId: hostId,
+						})
 					}
 				}
 			}
@@ -280,7 +278,10 @@ export default class MonitoringManager {
 		// Detect removed containers
 		for (const lastContainer of lastContainers) {
 			if (!currentContainerMap.has(lastContainer.id)) {
-				this.eventEmitter.emitContainerRemoved(hostId, lastContainer.id)
+				proxyEvent("container:removed", {
+					containerId: lastContainer.id,
+					hostId: hostId,
+				})
 			}
 		}
 	}
@@ -295,9 +296,7 @@ export default class MonitoringManager {
 
 		// Initial metrics collection
 		this.collectHostMetrics().catch((error) => {
-			this.eventEmitter.emitError(error, {
-				context: 'initial_host_metrics',
-			})
+			proxyEvent("error", error, { message: "Initial Host monitoring failed!" })
 		})
 	}
 
@@ -305,11 +304,16 @@ export default class MonitoringManager {
 		const metricsPromises = this.hosts.map(async (host) => {
 			try {
 				const metrics = await this.getHostMetrics(host.id)
-				this.eventEmitter.emitHostMetrics(host.id, metrics)
+				proxyEvent("host:metrics", {
+					hostId: host.id,
+					metrics: metrics,
+					hostName: host.name,
+				})
 			} catch (error) {
-				this.eventEmitter.emitError(
+				proxyEvent(
+					"error",
 					error instanceof Error ? error : new Error(String(error)),
-					{ context: 'collect_host_metrics', hostId: host.id }
+					{ hostId: host.id, message: "Collecting Host metrics failed" }
 				)
 			}
 		})
@@ -318,9 +322,7 @@ export default class MonitoringManager {
 	}
 
 	private startDockerEventStreams(): void {
-		logger.info(
-			`Starting Docker event streams for ${this.hosts.length} hosts`
-		)
+		logger.info(`Starting Docker event streams for ${this.hosts.length} hosts`)
 		for (const host of this.hosts) {
 			try {
 				const docker = this.dockerInstances.get(host.id)
@@ -330,14 +332,14 @@ export default class MonitoringManager {
 
 				const eventStreamPromise = docker.getEvents({
 					filters: {
-						type: ['container'],
-						event: ['start', 'stop', 'die', 'create', 'destroy'],
+						type: ["container"],
+						event: ["start", "stop", "die", "create", "destroy"],
 					},
 				})
 
 				eventStreamPromise
 					.then((eventStream) => {
-						eventStream.on('data', (chunk: Buffer) => {
+						eventStream.on("data", (chunk: Buffer) => {
 							try {
 								const info = JSON.parse(chunk.toString()) as {
 									Action: string
@@ -345,36 +347,38 @@ export default class MonitoringManager {
 								}
 								this.handleDockerEvent(host.id, info)
 							} catch (error) {
-								this.eventEmitter.emitError(
+								proxyEvent(
+									"error",
 									error instanceof Error ? error : new Error(String(error)),
-									{
-										context: 'parse_docker_event',
-										hostId: host.id,
-										message: 'Failed to parse Docker event',
-									}
+									{ hostId: host.id, message: "Failed to handle Docker Event" }
 								)
 							}
 						})
 
-						eventStream.on('error', (error: Error) => {
-							this.eventEmitter.emitError(error, {
-								context: 'docker_event_stream',
+						eventStream.on("error", (error: Error) => {
+							proxyEvent("error", error, {
 								hostId: host.id,
+								message: "Docker event Stream failed",
 							})
 						})
 
 						this.state.dockerEventStreams.set(host.id, eventStream)
 					})
 					.catch((error) => {
-						this.eventEmitter.emitError(
+						proxyEvent(
+							"error",
 							error instanceof Error ? error : new Error(String(error)),
-							{ context: 'start_docker_event_stream', hostId: host.id }
+							{
+								hostId: host.id,
+								message: "Failed to Start docker event Stream",
+							}
 						)
 					})
 			} catch (error) {
-				this.eventEmitter.emitError(
+				proxyEvent(
+					"error",
 					error instanceof Error ? error : new Error(String(error)),
-					{ context: 'start_docker_event_stream', hostId: host.id }
+					{ hostId: host.id, message: "Could not Start docker event Stream" }
 				)
 			}
 		}
@@ -383,13 +387,14 @@ export default class MonitoringManager {
 	private stopDockerEventStreams(): void {
 		this.state.dockerEventStreams.forEach((stream, hostId) => {
 			try {
-				if ('destroy' in stream && typeof stream.destroy === 'function') {
+				if ("destroy" in stream && typeof stream.destroy === "function") {
 					stream.destroy()
 				}
 			} catch (error) {
-				this.eventEmitter.emitError(
+				proxyEvent(
+					"error",
 					error instanceof Error ? error : new Error(String(error)),
-					{ context: 'stop_docker_event_stream', hostId }
+					{ hostId: hostId, message: "Could not Stop Docker Event Streams" }
 				)
 			}
 		})
@@ -406,50 +411,67 @@ export default class MonitoringManager {
 		}
 
 		switch (event.Action) {
-			case 'start':
+			case "start":
 				// We'll get the container info and emit the event
 				this.getContainerInfo(hostId, containerId)
 					.then((containerInfo) => {
-						this.eventEmitter.emitContainerStarted(
-							hostId,
+						proxyEvent("container:started", {
 							containerId,
-							containerInfo
-						)
+							containerInfo,
+							hostId,
+						})
 					})
 					.catch((error) => {
-						this.eventEmitter.emitError(error, {
-							context: 'handle_container_start_event',
-							hostId,
+						proxyEvent("error", error, {
 							containerId,
+							hostId,
+							message: "Could not handle docker Start Event",
 						})
 					})
 				break
 
-			case 'stop':
-			case 'die':
-				this.eventEmitter.emitContainerDied(hostId, containerId)
-				break
-
-			case 'create':
+			case "stop":
 				this.getContainerInfo(hostId, containerId)
 					.then((containerInfo) => {
-						this.eventEmitter.emitContainerCreated(
-							hostId,
+						proxyEvent("container:stopped", {
 							containerId,
-							containerInfo
-						)
-					})
-					.catch((error) => {
-						this.eventEmitter.emitError(error, {
-							context: 'handle_container_create_event',
+							containerInfo,
 							hostId,
-							containerId,
 						})
 					})
+					.catch((error) =>
+						proxyEvent("error", error, {
+							containerId,
+							hostId,
+							message: "Could not Handle docker Stop event",
+						})
+					)
 				break
 
-			case 'destroy':
-				this.eventEmitter.emitContainerRemoved(hostId, containerId)
+			case "die":
+				proxyEvent("container:died", { containerId, hostId })
+				break
+
+			case "create":
+				this.getContainerInfo(hostId, containerId)
+					.then((containerInfo) =>
+						proxyEvent("container:created", {
+							containerId,
+							containerInfo,
+							hostId,
+						})
+					)
+					.catch((error) =>
+						proxyEvent("error", error, {
+							containerId,
+							hostId,
+							message: "Could not handle container create event",
+						})
+					)
+				break
+
+			case "destroy":
+				proxyEvent("container:destroyed", { containerId, hostId })
 				break
 		}
 	}
@@ -465,7 +487,7 @@ export default class MonitoringManager {
 
 		const container = docker.getContainer(containerId)
 		const containerInfo = await this.withRetry<
-			DOCKER.DockerAPIResponse['containerInspect']
+			DOCKER.DockerAPIResponse["containerInspect"]
 		>(() => container.inspect())
 
 		return this.mapContainerInfoFromInspect(containerInfo, hostId)
@@ -487,20 +509,16 @@ export default class MonitoringManager {
 		)
 	}
 
-	private async getHostMetrics(
-		hostId: number
-	): Promise<DOCKER.HostMetrics> {
+	private async getHostMetrics(hostId: number): Promise<DOCKER.HostMetrics> {
 		const docker = this.dockerInstances.get(hostId)
 		const host = this.hosts.find((h) => h.id === hostId)
 
 		if (!docker || !host) {
-			throw new Error(
-				`Docker instance or host not found for ID ${hostId}`
-			)
+			throw new Error(`Docker instance or host not found for ID ${hostId}`)
 		}
 
 		const [info, version] = await Promise.all([
-			this.withRetry<DOCKER.DockerAPIResponse['systemInfo']>(() =>
+			this.withRetry<DOCKER.DockerAPIResponse["systemInfo"]>(() =>
 				docker.info()
 			),
 			this.withRetry(() => docker.version()),
@@ -527,16 +545,11 @@ export default class MonitoringManager {
 
 	private async withRetry<T>(operation: () => Promise<T>): Promise<T> {
 		let lastError: Error | null = null
-		for (
-			let attempt = 1;
-			attempt <= this.options.retryAttempts;
-			attempt++
-		) {
+		for (let attempt = 1; attempt <= this.options.retryAttempts; attempt++) {
 			try {
 				return await operation()
 			} catch (error) {
-				lastError =
-					error instanceof Error ? error : new Error(String(error))
+				lastError = error instanceof Error ? error : new Error(String(error))
 
 				if (attempt === this.options.retryAttempts && lastError) {
 					throw lastError
@@ -547,7 +560,7 @@ export default class MonitoringManager {
 				)
 			}
 		}
-		throw new Error('Unexpected retry logic failure')
+		throw new Error("Unexpected retry logic failure")
 	}
 
 	private mapContainerInfo(
@@ -557,7 +570,7 @@ export default class MonitoringManager {
 		return {
 			id: container.Id,
 			hostId,
-			name: container.Names[0]?.replace('/', '') || 'unknown',
+			name: container.Names[0]?.replace("/", "") || "unknown",
 			image: container.Image,
 			status: container.Status,
 			state: container.State,
@@ -583,22 +596,20 @@ export default class MonitoringManager {
 		return {
 			id: containerInfo.Id,
 			hostId,
-			name: containerInfo.Name.replace('/', ''),
+			name: containerInfo.Name.replace("/", ""),
 			image: containerInfo.Config.Image,
 			status: containerInfo.State.Status,
 			state: containerInfo.State.Status,
-			created: Math.floor(
-				new Date(containerInfo.Created).getTime() / 1000
+			created: Math.floor(new Date(containerInfo.Created).getTime() / 1000),
+			ports: Object.entries(containerInfo.NetworkSettings.Ports || {}).map(
+				([port, bindings]) => ({
+					privatePort: Number.parseInt(port.split("/")[0]),
+					publicPort: bindings?.[0]?.HostPort
+						? Number.parseInt(bindings[0].HostPort)
+						: undefined,
+					type: port.split("/")[1] || "tcp",
+				})
 			),
-			ports: Object.entries(
-				containerInfo.NetworkSettings.Ports || {}
-			).map(([port, bindings]) => ({
-				privatePort: Number.parseInt(port.split('/')[0]),
-				publicPort: bindings?.[0]?.HostPort
-					? Number.parseInt(bindings[0].HostPort)
-					: undefined,
-				type: port.split('/')[1] || 'tcp',
-			})),
 			labels: containerInfo.Config.Labels || {},
 			networkSettings: {
 				networks: containerInfo.NetworkSettings.Networks || {},

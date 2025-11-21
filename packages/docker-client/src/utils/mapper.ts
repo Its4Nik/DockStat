@@ -1,6 +1,6 @@
-import type { DOCKER } from '@dockstat/typings'
-import type Dockerode from 'dockerode'
-import type { ContainerStats } from 'dockerode'
+import type { DOCKER } from "@dockstat/typings"
+import type Dockerode from "dockerode"
+import type { ContainerStats } from "dockerode"
 
 export function mapContainerInfo(
 	container: Dockerode.ContainerInfo,
@@ -9,7 +9,7 @@ export function mapContainerInfo(
 	return {
 		id: container.Id,
 		hostId,
-		name: container.Names[0]?.replace('/', '') || 'unknown',
+		name: container.Names[0]?.replace("/", "") || "unknown",
 		image: container.Image,
 		status: container.Status,
 		state: container.State,
@@ -20,9 +20,7 @@ export function mapContainerInfo(
 			type: port.Type,
 		})),
 		labels: container.Labels || {},
-		networkSettings: container.NetworkSettings
-			? { networks: {} }
-			: undefined,
+		networkSettings: container.NetworkSettings ? { networks: {} } : undefined,
 	}
 }
 
@@ -33,22 +31,20 @@ export function mapContainerInfoFromInspect(
 	return {
 		id: containerInfo.Id,
 		hostId,
-		name: containerInfo.Name.replace('/', ''),
+		name: containerInfo.Name.replace("/", ""),
 		image: containerInfo.Config.Image,
 		status: containerInfo.State.Status,
 		state: containerInfo.State.Status,
-		created: Math.floor(
-			new Date(containerInfo.Created).getTime() / 1000
+		created: Math.floor(new Date(containerInfo.Created).getTime() / 1000),
+		ports: Object.entries(containerInfo.NetworkSettings.Ports || {}).map(
+			([port, bindings]) => ({
+				privatePort: Number.parseInt(port.split("/")[0], 10),
+				publicPort: bindings?.[0]?.HostPort
+					? Number.parseInt(bindings[0].HostPort, 10)
+					: undefined,
+				type: port.split("/")[1] || "tcp",
+			})
 		),
-		ports: Object.entries(
-			containerInfo.NetworkSettings.Ports || {}
-		).map(([port, bindings]) => ({
-			privatePort: Number.parseInt(port.split('/')[0], 10),
-			publicPort: bindings?.[0]?.HostPort
-				? Number.parseInt(bindings[0].HostPort, 10)
-				: undefined,
-			type: port.split('/')[1] || 'tcp',
-		})),
 		labels: containerInfo.Config.Labels || {},
 		networkSettings: {
 			networks: containerInfo.NetworkSettings.Networks || {},
@@ -86,12 +82,12 @@ export function mapContainerStats(
 
 	const blockRead =
 		stats.blkio_stats?.io_service_bytes_recursive?.find(
-			(stat) => stat.op === 'Read'
+			(stat) => stat.op === "Read"
 		)?.value || 0
 
 	const blockWrite =
 		stats.blkio_stats?.io_service_bytes_recursive?.find(
-			(stat) => stat.op === 'Write'
+			(stat) => stat.op === "Write"
 		)?.value || 0
 
 	return {

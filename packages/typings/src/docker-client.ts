@@ -1,9 +1,5 @@
-import type {
-	ContainerInspectInfo,
-	ContainerStats,
-	Version,
-} from 'dockerode'
-import { t } from 'elysia'
+import type { ContainerInspectInfo, ContainerStats, Version } from "dockerode"
+import { t } from "elysia"
 
 export interface SysInfo {
 	OperatingSystem: string
@@ -184,11 +180,11 @@ export interface StreamOptions {
 
 export interface DockerStreamData {
 	type:
-		| 'container_stats'
-		| 'host_metrics'
-		| 'container_list'
-		| 'all_stats'
-		| 'error'
+		| "container_stats"
+		| "host_metrics"
+		| "container_list"
+		| "all_stats"
+		| "error"
 	hostId: number
 	timestamp: number
 	data:
@@ -249,38 +245,36 @@ interface StreamErrorCtx extends BaseStreamCtx {
 }
 
 export interface DockerClientEvents {
-	'host:added': (ctx: BaseHostCtx) => void
-	'host:removed': (ctx: BaseHostCtx) => void
-	'host:updated': (ctx: BaseHostCtx) => void
-	'host:health:changed': (ctx: HostHealthContext) => void
-	'host:metrics': (ctx: HostMetricsContext) => void
+	"host:added": (ctx: BaseHostCtx) => void
+	"host:removed": (ctx: BaseHostCtx) => void
+	"host:updated": (ctx: BaseHostCtx) => void
+	"host:health:changed": (ctx: HostHealthContext) => void
+	"host:metrics": (ctx: HostMetricsContext) => void
 
-	'container:stats': (ctx: ContainerStatsCtx) => void
-	'container:started': (ctx: ContainerInfoCtx) => void
-	'container:stopped': (ctx: ContainerInfoCtx) => void
-	'container:removed': (ctx: ContainerBaseCtx) => void
-	'container:created': (ctx: ContainerInfoCtx) => void
-	'container:died': (ctx: ContainerBaseCtx) => void
+	"container:stats": (ctx: ContainerStatsCtx) => void
+	"container:started": (ctx: ContainerInfoCtx) => void
+	"container:stopped": (ctx: ContainerInfoCtx) => void
+	"container:removed": (ctx: ContainerBaseCtx) => void
+	"container:destroyed": (ctx: ContainerBaseCtx) => void
+	"container:created": (ctx: ContainerInfoCtx) => void
+	"container:died": (ctx: ContainerBaseCtx) => void
 
-	'stream:started': (ctx: BaseStreamCtx) => void
-	'stream:stopped': (ctx: BaseStreamCtx) => void
-	'stream:data': (ctx: StreamDataCtx) => void
-	'stream:error': (ctx: StreamErrorCtx) => void
+	"stream:started": (ctx: BaseStreamCtx) => void
+	"stream:stopped": (ctx: BaseStreamCtx) => void
+	"stream:data": (ctx: StreamDataCtx) => void
+	"stream:error": (ctx: StreamErrorCtx) => void
 
 	error: (
 		error: Error,
-		context?: Record<
-			string,
-			{ hostId?: number; containerId?: string; message?: string }
-		>
+		context?: { hostId?: number; containerId?: string; message?: string }
 	) => void
 	warning: (
 		message: string,
-		context?: Record<string, { hostId?: number; containerId?: string }>
+		context?: { hostId?: number; containerId?: string }
 	) => void
 	info: (
 		message: string,
-		context?: Record<string, { hostId?: number; containerId?: string }>
+		context?: { hostId?: number; containerId?: string }
 	) => void
 }
 
@@ -301,9 +295,7 @@ export interface DockerEventEmitterInterface {
 		event: K,
 		listener: DockerClientEvents[K]
 	): this
-	removeAllListeners<K extends keyof DockerClientEvents>(
-		event?: K
-	): this
+	removeAllListeners<K extends keyof DockerClientEvents>(event?: K): this
 	listenerCount<K extends keyof DockerClientEvents>(event: K): number
 }
 
@@ -319,13 +311,7 @@ export interface MonitoringState {
 
 export interface StreamMessage {
 	id: string
-	type:
-		| 'subscribe'
-		| 'unsubscribe'
-		| 'data'
-		| 'error'
-		| 'ping'
-		| 'pong'
+	type: "subscribe" | "unsubscribe" | "data" | "error" | "ping" | "pong"
 	channel?: string
 	data?:
 		| ContainerStatsInfo
@@ -341,7 +327,7 @@ export interface StreamMessage {
 		| {
 				subscriptionId: string
 				channel: string
-				status: 'subscribed' | 'unsubscribed' | 'not_found'
+				status: "subscribed" | "unsubscribed" | "not_found"
 				options: StreamOptions
 		  }
 	timestamp: number
@@ -382,12 +368,12 @@ export interface StreamOptions {
 export interface StreamChannel {
 	name: string
 	type:
-		| 'container_stats'
-		| 'host_metrics'
-		| 'container_list'
-		| 'container_logs'
-		| 'docker_events'
-		| 'all_stats'
+		| "container_stats"
+		| "host_metrics"
+		| "container_list"
+		| "container_logs"
+		| "docker_events"
+		| "all_stats"
 	description: string
 	defaultInterval: number
 	requiresHostId: boolean

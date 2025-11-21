@@ -1,6 +1,6 @@
-import Logger from '@dockstat/logger'
-import { type DB, column } from '@dockstat/sqlite-wrapper'
-import type { DATABASE } from '@dockstat/typings'
+import Logger from "@dockstat/logger"
+import { type DB, column } from "@dockstat/sqlite-wrapper"
+import type { DATABASE } from "@dockstat/typings"
 
 export default class HostHandler {
 	private logger
@@ -8,8 +8,8 @@ export default class HostHandler {
 
 	constructor(id: number, hostDB: DB) {
 		this.logger = new Logger(`HostHandler-${id}`)
-		this.logger.info('Initializing HostHandler')
-		this.logger.debug('Creating hosts table')
+		this.logger.info("Initializing HostHandler")
+		this.logger.debug("Creating hosts table")
 		this.hostTable = hostDB.createTable<DATABASE.DB_target_host>(
 			`host_handler_${id}`,
 			{
@@ -34,7 +34,7 @@ export default class HostHandler {
 	}
 
 	public getHosts() {
-		this.logger.debug('Fetching all hosts')
+		this.logger.debug("Fetching all hosts")
 		return this.hostTable.all()
 	}
 

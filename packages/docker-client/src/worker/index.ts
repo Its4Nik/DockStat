@@ -1,5 +1,6 @@
-import DockerClient from '../docker-client'
-import type { WorkerRequest, WorkerResponse } from '../types'
+import DockerClient from "../docker-client"
+import type { WorkerRequest, WorkerResponse } from "../types"
+import DB from "@dockstat/sqlite-wrapper"
 
 declare var self: Worker
 
@@ -7,14 +8,14 @@ let client: DockerClient | null = null
 let clientId: number
 let clientName: string
 
-// Handle initialization message
 self.onmessage = async (event: MessageEvent) => {
-	const message = event.data
+	const message = event.data as
+		| WorkerRequest
+		| { type: string; [k: string]: any }
 
-	// Handle initialization
-	if (message.type === '__init__') {
+	// Handle worker-internal messages first
+	if (message.type === "__init__") {
 		try {
-			const { default: DB } = await import('@dockstat/sqlite-wrapper')
 			const dbInstance = new DB(message.dbPath)
 
 			clientId = message.clientId
@@ -30,32 +31,30 @@ self.onmessage = async (event: MessageEvent) => {
 			client.init()
 
 			self.postMessage({
-				type: '__init_complete__',
+				type: "__init_complete__",
 				success: true,
 			})
-			return
 		} catch (error) {
 			self.postMessage({
-				type: '__init_complete__',
+				type: "__init_complete__",
 				success: false,
 				error: error instanceof Error ? error.message : String(error),
 			})
-			return
 		}
+		return
 	}
 
-	// Handle metrics request
-	if (message.type === '__get_metrics__') {
+	if (message.type === "__get_metrics__") {
 		if (!client) {
 			self.postMessage({
-				type: '__metrics__',
+				type: "__metrics__",
 				data: null,
 			})
 			return
 		}
 
 		self.postMessage({
-			type: '__metrics__',
+			type: "__metrics__",
 			data: {
 				...client.getMetrics(),
 				clientId,
@@ -70,22 +69,22 @@ self.onmessage = async (event: MessageEvent) => {
 
 	try {
 		if (!client) {
-			throw new Error('DockerClient not initialized')
+			throw new Error("DockerClient not initialized")
 		}
 
 		let result: unknown
 
 		switch (request.type) {
-			case 'init':
+			case "init":
 				client.init(request.hosts)
 				result = undefined
 				break
 
-			case 'ping':
+			case "ping":
 				result = await client.ping()
 				break
 
-			case 'addHost':
+			case "addHost":
 				result = client.addHost(
 					request.data.hostname,
 					request.data.name,
@@ -95,77 +94,73 @@ self.onmessage = async (event: MessageEvent) => {
 				)
 				break
 
-			case 'removeHost': {
+			case "removeHost":
 				result = client.removeHost(request.hostId)
 				break
-			}
 
-			case 'updateHost':
+			case "updateHost":
 				result = client.updateHost(request.host)
 				break
 
-			case 'getHosts':
+			case "getHosts":
 				result = client.getHosts()
 				break
 
-			case 'getAllContainers':
+			case "getAllContainers":
 				result = await client.getAllContainers()
 				break
 
-			case 'getContainersForHost':
+			case "getContainersForHost":
 				result = await client.getContainersForHost(request.hostId)
 				break
 
-			case 'getContainer':
-				result = await client.getContainer(
-					request.hostId,
-					request.containerId
-				)
+			case "getContainer":
+				result = await client.getContainer(request.hostId, request.containerId)
 				break
 
-			case 'getAllContainerStats':
+			case "getAllContainerStats":
 				result = await client.getAllContainerStats()
 				break
 
-			case 'getContainerStatsForHost':
+			case "getContainerStatsForHost":
 				result = await client.getContainerStatsForHost(request.hostId)
 				break
 
-			case 'getContainerStats':
+			case "getContainerStats":
 				result = await client.getContainerStats(
 					request.hostId,
 					request.containerId
 				)
 				break
 
-			case 'getAllHostMetrics':
+			case "getAllHostMetrics":
 				result = await client.getAllHostMetrics()
 				break
 
-			case 'getHostMetrics':
+			case "getHostMetrics":
 				result = await client.getHostMetrics(request.hostId)
 				break
 
-			case 'getAllStats':
+			case "getAllStats":
 				result = await client.getAllStats()
 				break
 
-			case 'startContainer':
+			case "startContainer":
 				await client.startContainer(request.hostId, request.containerId)
 				result = undefined
 				break
 
-			case 'stopContainer':
+			case "stopContainer":
 				await client.stopContainer(request.hostId, request.containerId)
 				result = undefined
 				break
 
-			case 'restartContainer':
+			case "restartContainer":
 				await client.restartContainer(request.hostId, request.containerId)
 				result = undefined
 				break
 
-			case 'removeContainer':
+			case "removeContainer":
 				await client.removeContainer(
 					request.hostId,
 					request.containerId,
@@ -174,17 +169,17 @@ self.onmessage = async (event: MessageEvent) => {
 				result = undefined
 				break
 
-			case 'pauseContainer':
+			case "pauseContainer":
 				await client.pauseContainer(request.hostId, request.containerId)
 				result = undefined
 				break
 
-			case 'unpauseContainer':
+			case "unpauseContainer":
 				await client.unpauseContainer(request.hostId, request.containerId)
 				result = undefined
 				break
 
-			case 'killContainer':
+			case "killContainer":
 				await client.killContainer(
 					request.hostId,
 					request.containerId,
@@ -193,7 +188,7 @@ self.onmessage = async (event: MessageEvent) => {
 				result = undefined
 				break
 
-			case 'renameContainer':
+			case "renameContainer":
 				await client.renameContainer(
 					request.hostId,
 					request.containerId,
@@ -202,7 +197,7 @@ self.onmessage = async (event: MessageEvent) => {
 				result = undefined
 				break
 
-			case 'getContainerLogs':
+			case "getContainerLogs":
 				result = await client.getContainerLogs(
 					request.hostId,
 					request.containerId,
@@ -210,7 +205,7 @@ self.onmessage = async (event: MessageEvent) => {
 				)
 				break
 
-			case 'execInContainer':
+			case "execInContainer":
 				result = await client.execInContainer(
 					request.hostId,
 					request.containerId,
@@ -219,70 +214,68 @@ self.onmessage = async (event: MessageEvent) => {
 				)
 				break
 
-			case 'getImages':
+			case "getImages":
 				result = await client.getImages(request.hostId)
 				break
 
-			case 'pullImage':
+			case "pullImage":
 				await client.pullImage(request.hostId, request.imageName)
 				result = undefined
 				break
 
-			case 'getNetworks':
+			case "getNetworks":
 				result = await client.getNetworks(request.hostId)
 				break
 
-			case 'getVolumes':
+			case "getVolumes":
 				result = await client.getVolumes(request.hostId)
 				break
 
-			case 'checkHostHealth':
+			case "checkHostHealth":
 				result = await client.checkHostHealth(request.hostId)
 				break
 
-			case 'checkAllHostsHealth':
+			case "checkAllHostsHealth":
 				result = await client.checkAllHostsHealth()
 				break
 
-			case 'getSystemInfo':
+			case "getSystemInfo":
 				result = await client.getSystemInfo(request.hostId)
 				break
 
-			case 'getSystemVersion':
+			case "getSystemVersion":
 				result = await client.getSystemVersion(request.hostId)
 				break
 
-			case 'getDiskUsage':
+			case "getDiskUsage":
 				result = await client.getDiskUsage(request.hostId)
 				break
 
-			case 'pruneSystem':
+			case "pruneSystem":
 				result = await client.pruneSystem(request.hostId)
 				break
 
-			case 'startMonitoring':
+			case "startMonitoring":
 				client.startMonitoring()
 				result = undefined
 				break
 
-			case 'stopMonitoring':
+			case "stopMonitoring":
 				client.stopMonitoring()
 				result = undefined
 				break
 
-			case 'isMonitoring':
+			case "isMonitoring":
 				result = client.isMonitoring()
 				break
 
-			case 'cleanup':
+			case "cleanup":
 				await client.cleanup()
 				result = undefined
 				break
 
 			default:
-				throw new Error(
-					`Unknown request type: ${JSON.stringify(request)}`
-				)
+				throw new Error(`Unknown request type: ${JSON.stringify(request)}`)
 		}
 
 		const response: WorkerResponse = {
