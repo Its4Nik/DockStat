@@ -1,7 +1,8 @@
-import type { ColumnDefinition } from '@dockstat/sqlite-wrapper'
-import { type AnyElysia, t } from 'elysia'
-import type { DockerClientEvents } from '../docker-client'
-import { Repo } from './db'
+import type { ColumnDefinition } from "@dockstat/sqlite-wrapper"
+import { type AnyElysia, t } from "elysia"
+import type { DockerClientEvents } from "../docker-client"
+import { Repo } from "./db"
+import { EVENTS } from ".."
 
 /**
  * name: The Plugins name
@@ -24,9 +25,9 @@ export const PluginMeta = {
 	manifest: t.String(),
 	author: t.Object({
 		name: t.String(),
-		website: t.Optional(t.String({ format: 'uri' })),
-		license: t.String({ default: 'MIT' }),
-		email: t.Optional(t.String({ format: 'email' })),
+		website: t.Optional(t.String({ format: "uri" })),
+		license: t.String({ default: "MIT" }),
+		email: t.Optional(t.String({ format: "email" })),
 	}),
 	tags: t.Optional(t.Array(t.String())),
 }
@@ -57,9 +58,9 @@ export interface DBPlugin<Columns = Record<string, ColumnDefinition>>
 
 export interface Plugin
 	extends WrappedPluginMetaType,
-		Omit<DBPlugin, 'plugin'> {
+		Omit<DBPlugin, "plugin"> {
 	routes?: AnyElysia
-	dockerClientEvents?: Partial<DockerClientEvents>
+	events?: Partial<EVENTS>
 	init?: () => void
 }
 

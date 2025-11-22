@@ -11,7 +11,12 @@ import type {
 	DBPluginShemaT,
 } from "./plugins"
 import type { RepoManifest } from "./dockstore"
+
 export type { DockerStreamManagerProxy } from "../docker-monitoring-manager"
+export type {
+	ProxyEventMessage,
+	buildMessageFromProxyRes,
+} from "../docker-client-worker"
 
 type DockStatConfigTableType = typeof DockStatConfigTable.static
 type RepoType = typeof Repo.static

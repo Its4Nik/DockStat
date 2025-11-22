@@ -1,19 +1,17 @@
 import Logger from "@dockstat/logger"
-import type { DOCKER } from "@dockstat/typings"
-import type { DockerStreamManagerProxy } from "@dockstat/typings/types"
+import type { EVENTS } from "@dockstat/typings"
 
 declare var self: Worker
 
 const logger = new Logger("DEM")
 
-type events = DOCKER.DockerClientEvents & DockerStreamManagerProxy
-
-export function proxyEvent<K extends keyof events>(
+export function proxyEvent<K extends keyof EVENTS>(
 	eventType: K,
-	ctx: Omit<Parameters<events[K]>[0], "logger">,
-	additionalDockerClientCtx?: Parameters<events[K]>[1]
+	ctx: Omit<Parameters<EVENTS[K]>[0], "logger">,
+	additionalDockerClientCtx?: Parameters<EVENTS[K]>[1]
 ) {
 	logger.info(`Proxying Event (${eventType}) to DCM`)
+
 	self.postMessage({
 		type: "__event__",
 		data: {

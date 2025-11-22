@@ -1,7 +1,8 @@
 import Logger from "@dockstat/logger"
 import type DB from "@dockstat/sqlite-wrapper"
 import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
-import type { DATABASE, DOCKER } from "@dockstat/typings"
+import { worker as workerUtils } from "@dockstat/utils"
+import type { DATABASE, DOCKER, EVENTS } from "@dockstat/typings"
 import type {
 	PoolMetrics,
 	WorkerMetrics,
@@ -9,6 +10,7 @@ import type {
 	WorkerResponse,
 } from "../types"
 import { logger } from "../../"
+import { buildMessageFromProxyRes, Plugin } from "@dockstat/typings/types"
 
 interface WorkerWrapper {
 	worker: Worker
@@ -30,11 +32,6 @@ type DockerClientTable = {
 	options: DOCKER.DockerAdapterOptions
 }
 
-type triggerHookListener = <K extends keyof DOCKER.DockerClientEvents>(
-	hook: K,
-	...args: Parameters<DOCKER.DockerClientEvents[K]>
-) => void
-
 export class DockerClientManager {
 	private DB: DB
 	private table: QueryBuilder<DockerClientTable>
@@ -42,23 +39,23 @@ export class DockerClientManager {
 	private workers: Map<number, WorkerWrapper> = new Map()
 	private maxWorkers: number
 	private dbPath: string
-	private triggerHook: triggerHookListener | undefined
+	private events: Map<number, Plugin["events"]> = new Map()
 
 	constructor(
 		db: DB,
 		options: {
 			maxWorkers?: number
-			triggerHook?: <K extends keyof DOCKER.DockerClientEvents>(
-				hook: K,
-				...args: Parameters<DOCKER.DockerClientEvents[K]>
-			) => void
+			events?: Record<number, Plugin["events"]>
 		}
 	) {
 		this.logger.info("Creating Docker Client Manager")
 		this.DB = db
 		this.dbPath = db.getDb().filename
 		this.maxWorkers = options.maxWorkers ?? 4
-		this.triggerHook = options.triggerHook
+
+		for (const [pluginId, events] of Object.entries(options.events ?? {})) {
+			this.events.set(Number(pluginId), events)
+		}
 
 		this.table = this.DB.createTable<DockerClientTable>(
 			"docker_clients",
@@ -901,5 +898,59 @@ export class DockerClientManager {
 		this.workers.clear()
 
 		this.logger.info("DockerClientManager disposed")
+	}
+
+	public listenForEvents({
+		eventType,
+		clientId,
+	}: {
+		clientId?: string
+		eventType: keyof EVENTS
+	}) {
+		if (!eventType && !clientId) {
+			const wrappers = this.workers.values()
+			for (const { worker, clientId, clientName } of wrappers) {
+				this.logger.debug(
+					`Setting up listening for events on worker ${clientId} (${clientName})`
+				)
+				worker.onmessage = (event) => {
+					const message = workerUtils.buildMessage.buildMessageFromProxy(
+						event.data
+					)
+					this.triggerHooks(message)
+				}
+				this.logger.debug(`Listening for events on worker ${clientId}`)
+			}
+		}
+	}
+
+	private triggerHooks<K extends keyof EVENTS>(
+		message: buildMessageFromProxyRes<K>
+	) {
+		for (const hooks of this.events.values()) {
+			if (!hooks) continue
+
+			const handler = hooks[message.type] as unknown as (
+				...args: unknown[]
+			) => unknown
+			if (!handler || typeof handler !== "function") continue
+
+			try {
+				// Call plugin handler with ctx and optional additionalCtx when present.
+				// Most event handlers accept a single ctx argument; some accept a second arg.
+				if (message.additionalCtx !== undefined) {
+					handler(message.ctx as unknown, message.additionalCtx as unknown)
+				} else {
+					handler(message.ctx as unknown)
+				}
+			} catch (err: unknown) {
+				this.logger.error(
+					`Error in plugin event handler for event "${String(message.type)}": ${JSON.stringify(
+						err,
+						Object.getOwnPropertyNames(err ?? {})
+					)}`
+				)
+			}
+		}
 	}
 }
