@@ -1,5 +1,6 @@
-import DockerClient from "../docker-client"
-import type { WorkerRequest, WorkerResponse } from "../types"
+import type { DOCKER } from "@dockstat/typings"
+import DockerClient from "./docker-client"
+import type { WorkerRequest, WorkerResponse } from "./types"
 import DB from "@dockstat/sqlite-wrapper"
 
 declare var self: Worker
@@ -11,14 +12,20 @@ let clientName: string
 self.onmessage = async (event: MessageEvent) => {
 	const message = event.data as
 		| WorkerRequest
-		| { type: string; [k: string]: any }
+		| {
+				type: string
+				dbPath: string
+				clientId: string
+				clientName: string
+				options: DOCKER.DockerAdapterOptions
+		  }
 
 	// Handle worker-internal messages first
 	if (message.type === "__init__") {
 		try {
 			const dbInstance = new DB(message.dbPath)
 
-			clientId = message.clientId
+			clientId = Number(message.clientId)
 			clientName = message.clientName
 
 			client = new DockerClient(

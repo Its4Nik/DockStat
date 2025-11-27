@@ -1,5 +1,7 @@
 import Logger from "@dockstat/logger"
 import type { EVENTS } from "@dockstat/typings"
+import { ProxyEventMessage } from "@dockstat/typings/types"
+import { worker } from "@dockstat/utils"
 
 declare var self: Worker
 
@@ -14,10 +16,10 @@ export function proxyEvent<K extends keyof EVENTS>(
 
 	self.postMessage({
 		type: "__event__",
-		data: {
-			type: eventType,
-			ctx: ctx,
-			additionalDockerClientCtx: additionalDockerClientCtx,
-		},
-	})
+		data: worker.buildMessage.buildMessageData(
+			eventType,
+			ctx as Parameters<EVENTS[K]>[0],
+			additionalDockerClientCtx
+		),
+	} satisfies ProxyEventMessage<K>)
 }

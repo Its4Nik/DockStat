@@ -4,7 +4,6 @@ export const logger = new Logger("docker-client")
 export { default } from "./src/docker-client"
 export { default as DockerClient } from "./src/docker-client"
 export { default as HostHandler } from "./src/hosts-handler/index"
-export { DockerEventEmitter } from "./src/events/docker-events"
 export { default as MonitoringManager } from "./src/monitoring/monitoring-manager"
 export {
 	StreamManager,

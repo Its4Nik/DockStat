@@ -74,7 +74,9 @@ const ElysiaDockerInstance = new Elysia({
 						clientId: t.Number(),
 					}),
 				})
-				.get("/all", () => DCM.getAllClients())
+				.get("/all/:stored", ({ params }) => DCM.getAllClients(params.stored), {
+					params: t.Object({ stored: t.Optional(t.Boolean()) }),
+				})
 				.post(
 					"/monitoring/:clientId/start",
 					({ params }) => DCM.startMonitoring(params.clientId),
@@ -102,27 +104,11 @@ const ElysiaDockerInstance = new Elysia({
 			},
 		},
 		(EDI) =>
-			EDI.get("/", async () => {
-				// Return hosts per client. If fetching hosts for a client fails,
-				// include the error message for that client instead of silently
-				// returning an empty value.
-				const allClients = DCM.getAllClients()
-				const allHosts: Record<string, unknown> = {}
-				for (const c of allClients) {
-					try {
-						allHosts[c.name] = await DCM.getHosts(c.id)
-					} catch (err) {
-						allHosts[c.name] = {
-							success: false,
-							error: err instanceof Error ? err.message : String(err),
-						}
-					}
-				}
-				return allHosts
-			})
+			EDI.get("/", async () => await DCM.getAllHosts())
 				.get(
 					"/:clientId",
-					async ({ params: { clientId } }) => await DCM.getHosts(clientId),
+					async ({ params: { clientId } }) =>
+						await DCM.getAllHostMetrics(clientId),
 					{
 						params: t.Object({
 							clientId: t.Number(),

@@ -255,28 +255,19 @@ class PluginHandler {
 		return await plugin.routes.handle(req)
 	}
 
-	public triggerDockerClientHooks<K extends keyof DOCKER.DockerClientEvents>(
-		hook: K,
-		...args: Parameters<DOCKER.DockerClientEvents[K]>
-	): void {
+	public getHookHandlers() {
+		this.logger.info("Getting Hook Handlers")
 		const loadedPlugins = this.loadedPluginsMap.values()
 
-		for (const plug of loadedPlugins) {
-			const handler = plug.dockerClientEvents?.[hook] as
-				| DOCKER.DockerClientEvents[K]
-				| undefined
+		const loadedPluginsHooksMap = new Map<number, Plugin["events"]>()
 
-			if (typeof handler === "function") {
-				try {
-					// Call the handler with the strongly-typed args.
-					;(handler as (...a: unknown[]) => unknown)(...args)
-				} catch (error: unknown) {
-					this.logger.error(
-						`Plugin hook "${String(hook)}" failed: ${String(error)}`
-					)
-				}
-			}
-		}
+		loadedPlugins.map((p) => {
+			this.logger.info(`Caching Hooks for Plugin ${p.id}`)
+			return loadedPluginsHooksMap.set(Number(p.id), p.events)
+		})
+
+		this.logger.info(`Cached ${loadedPluginsHooksMap.size} Hooks`)
+		return loadedPluginsHooksMap
 	}
 }
 
