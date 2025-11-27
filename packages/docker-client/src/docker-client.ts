@@ -4,7 +4,7 @@ import type DB from "@dockstat/sqlite-wrapper"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
 import Dockerode, { type ContainerStats } from "dockerode"
 import HostHandler from "./hosts-handler/index"
-import MonitoringManager from "./monitoring/monitoring-manager"
+import MonitoringManager from "./monitoring/MonitoringManager"
 import { StreamManager } from "./stream/stream-manager"
 import { withRetry } from "./utils/retry"
 import {

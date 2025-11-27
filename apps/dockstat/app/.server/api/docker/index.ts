@@ -75,7 +75,7 @@ const ElysiaDockerInstance = new Elysia({
 					}),
 				})
 				.get("/all/:stored", ({ params }) => DCM.getAllClients(params.stored), {
-					params: t.Object({ stored: t.Optional(t.Boolean()) }),
+					params: t.Object({ stored: t.Boolean({ default: false }) }),
 				})
 				.post(
 					"/monitoring/:clientId/start",

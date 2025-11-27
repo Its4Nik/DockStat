@@ -65,8 +65,10 @@ export type MonitoringOptions = {
 	healthCheckInterval?: number
 	containerEventPollingInterval?: number
 	hostMetricsInterval?: number
+	containerMetricsInterval?: number
 	enableContainerEvents?: boolean
 	enableHostMetrics?: boolean
+	enableContainerMetrics?: boolean
 	enableHealthChecks?: boolean
 	retryAttempts?: number
 	retryDelay?: number
@@ -223,7 +225,7 @@ interface ContainerBaseCtx extends BaseCtx {
 	containerId: string
 }
 
-interface ContainerStatsCtx extends ContainerBaseCtx {
+interface ContainerMetricCtx extends ContainerBaseCtx {
 	stats: ContainerStatsInfo
 }
 
@@ -251,7 +253,7 @@ export interface DockerClientEvents {
 	"host:health:changed": (ctx: HostHealthContext) => void
 	"host:metrics": (ctx: HostMetricsContext) => void
 
-	"container:stats": (ctx: ContainerStatsCtx) => void
+	"container:metrics": (ctx: ContainerMetricCtx) => void
 	"container:started": (ctx: ContainerInfoCtx) => void
 	"container:stopped": (ctx: ContainerInfoCtx) => void
 	"container:removed": (ctx: ContainerBaseCtx) => void
@@ -304,6 +306,7 @@ export interface MonitoringState {
 	healthCheckInterval?: NodeJS.Timeout
 	containerEventInterval?: NodeJS.Timeout
 	hostMetricsInterval?: NodeJS.Timeout
+	contaienrMetricsInterval?: NodeJS.Timeout
 	lastHealthStatus: Map<number, boolean>
 	lastContainerStates: Map<string, ContainerInfo[]>
 	dockerEventStreams: Map<number, NodeJS.ReadableStream>

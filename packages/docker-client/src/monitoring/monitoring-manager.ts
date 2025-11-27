@@ -1,4 +1,4 @@
-import type { DATABASE } from "@dockstat/typings"
+import type { DATABASE, DockerClientEvents } from "@dockstat/typings"
 import type { DOCKER } from "@dockstat/typings"
 import type Dockerode from "dockerode"
 import Logger from "@dockstat/logger"
@@ -24,6 +24,8 @@ export default class MonitoringManager {
 			containerEventPollingInterval:
 				options.containerEventPollingInterval ?? 5000,
 			hostMetricsInterval: options.hostMetricsInterval ?? 10000,
+			containerMetricsInterval: options.containerMetricsInterval ?? 10000,
+			enableContainerMetrics: options.enableContainerMetrics ?? true,
 			enableContainerEvents: options.enableContainerEvents ?? true,
 			enableHostMetrics: options.enableHostMetrics ?? true,
 			enableHealthChecks: options.enableHealthChecks ?? true,
@@ -59,6 +61,10 @@ export default class MonitoringManager {
 
 		if (this.options.enableHostMetrics) {
 			this.startHostMetricsMonitoring()
+		}
+
+		if (this.options.enableContainerMetrics) {
+			this.startHostMetricsMonitoring
 		}
 
 		// Start Docker event streams for real-time container events
@@ -297,6 +303,15 @@ export default class MonitoringManager {
 		// Initial metrics collection
 		this.collectHostMetrics().catch((error) => {
 			proxyEvent("error", error, { message: "Initial Host monitoring failed!" })
+		})
+	}
+	private startContainerMetricsMonitoring(): void {
+		logger.info(
+			`Starting container metrics monitoring at an interval of ${this.options.containerMetricsInterval}ms`
+		)
+
+		this.state.contaienrMetricsInterval = setInterval(async () => {
+			await this.collectHostMetrics
 		})
 	}
 

@@ -394,24 +394,24 @@ export class DockerClientManagerCore {
 			return Array.from(this.workers.values()).map((w) => ({
 				id: w.clientId,
 				name: w.clientName,
+				initialized: true,
 			}))
 		}
 
 		const storedClients = this.table.select(["id", "name"]).all()
 
-		return [
-			...Array.from(this.workers.values()).map((w) => ({
-				id: w.clientId,
-				name: w.clientName,
-			})),
-			...storedClients.map((element) => {
-				return {
-					id: Number(element.id),
-					name: element.name,
-					_notIninitalized: true,
-				}
-			}),
-		]
+		const initialized = [...this.workers.values()].map((w) => ({
+			id: w.clientId,
+			name: w.clientName,
+		}))
+
+		const stored = storedClients.map(({ id, name }) => ({
+			id: Number(id),
+			name,
+			initialized: !!initialized.find((i) => i.id === Number(id)),
+		}))
+
+		return [...stored, ...initialized]
 	}
 
 	public async removeClient(clientId: number): Promise<void> {
@@ -529,6 +529,11 @@ export class DockerClientManagerCore {
 				message.type
 			)} - ctx: ${JSON.stringify(message.ctx)}"`
 		)
+
+		if (!message.type) {
+			this.logger.error("No message type!")
+			return
+		}
 
 		for (const hooks of this.events.values()) {
 			if (!hooks) continue

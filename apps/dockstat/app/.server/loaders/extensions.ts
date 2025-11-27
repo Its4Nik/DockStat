@@ -57,7 +57,5 @@ export async function ExtensionLoader({ context: _ }: Route.LoaderArgs) {
 		repoManifests,
 	}
 
-	logger.debug(JSON.stringify(pDat))
-
 	return pDat
 }

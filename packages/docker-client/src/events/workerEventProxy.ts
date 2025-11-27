@@ -1,6 +1,6 @@
 import Logger from "@dockstat/logger"
 import type { EVENTS } from "@dockstat/typings"
-import { ProxyEventMessage } from "@dockstat/typings/types"
+import type { ProxyEventMessage } from "@dockstat/typings/types"
 import { worker } from "@dockstat/utils"
 
 declare var self: Worker

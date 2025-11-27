@@ -50,6 +50,8 @@ const DockStatElysiaHandlers = new Elysia()
 					status: 400,
 				})
 			}
+			ElysiaLogger.error(`Undefined error: ${code} - ${error}`)
+			return new Response(JSON.stringify(error), { status: 401 })
 		}
 	)
 	.onAfterResponse(
