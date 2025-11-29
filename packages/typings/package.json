@@ -1,29 +1,29 @@
 {
-  "name": "@dockstat/typings",
-  "version": "1.0.1",
-  "exports": {
-    ".": "./src/index.ts",
-    "./schemas": "./src/typebox/_schemas.ts",
-    "./types": "./src/typebox/_types.ts"
-  },
-  "scripts": {
-    "lint": "biome lint .",
-    "lint:fix": "biome lint --write .",
-    "lint:gh": "turbo run lint -- --reporter=github",
-    "check-types": "tsc --noEmit",
-    "clean": "rm -rf dist"
-  },
-  "peerDependencies": {
-    "typescript": "^5.9.3"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/dockerode": "^3.3.44",
-    "@dockstat/sqlite-wrapper": "latest",
-    "@dockstat/logger": "latest"
-  },
-  "dependencies": {
-    "elysia": "^1.4.12",
-    "js-yaml": "^4.1.0"
-  }
+	"name": "@dockstat/typings",
+	"version": "1.0.1",
+	"exports": {
+		".": "./src/index.ts",
+		"./schemas": "./src/typebox/_schemas.ts",
+		"./types": "./src/typebox/_types.ts"
+	},
+	"scripts": {
+		"lint": "biome lint .",
+		"lint:fix": "biome lint --write .",
+		"lint:gh": "turbo run lint -- --reporter=github",
+		"check-types": "tsc --noEmit",
+		"clean": "rm -rf dist"
+	},
+	"peerDependencies": {
+		"typescript": "^5.9.3"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"@types/dockerode": "^3.3.44",
+		"@dockstat/sqlite-wrapper": "workspace:*",
+		"@dockstat/logger": "workspace:*"
+	},
+	"dependencies": {
+		"elysia": "^1.4.12",
+		"js-yaml": "^4.1.0"
+	}
 }

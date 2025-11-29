@@ -5,6 +5,7 @@ import type {
 	Version,
 } from "dockerode"
 import { t } from "elysia"
+import type { ExtendObject } from "./events"
 
 export interface SysInfo {
 	OperatingSystem: string
@@ -205,16 +206,8 @@ export interface DockerStreamData {
 }
 
 export type StreamCallback = (data: DockerStreamData) => void
-interface BaseCtx {
-	logger: {
-		debug: (msg: string) => void
-		info: (msg: string) => void
-		error: (msg: string) => void
-		warn: (msg: string) => void
-	}
-}
 
-interface BaseHostCtx extends BaseCtx {
+interface BaseHostCtx {
 	hostId: number
 	hostName: string
 }
@@ -226,7 +219,7 @@ interface HostMetricsContext extends BaseHostCtx {
 	metrics: HostMetrics
 }
 
-interface ContainerBaseCtx extends BaseCtx {
+interface ContainerBaseCtx {
 	hostId: number
 	containerId: string
 }
@@ -239,7 +232,7 @@ interface ContainerInfoCtx extends ContainerBaseCtx {
 	containerInfo: ContainerInfo
 }
 
-interface BaseStreamCtx extends BaseCtx {
+interface BaseStreamCtx {
 	streamKey: string
 	streamType: string
 }
@@ -252,14 +245,20 @@ interface StreamErrorCtx extends BaseStreamCtx {
 	error: Error
 }
 
+type BaseCtx = {
+	docker_client_id: number
+	host_id: number
+}
+
 export interface DockerClientEvents {
-	"host:added": (ctx: BaseHostCtx) => void
+	"host:added": (ctx: BaseHostCtx & BaseCtx) => void
 	"host:removed": (ctx: BaseHostCtx) => void
 	"host:updated": (ctx: BaseHostCtx) => void
 	"host:health:changed": (ctx: HostHealthContext) => void
-	"host:metrics": (ctx: HostMetricsContext) => void
 
+	"host:metrics": (ctx: HostMetricsContext & BaseCtx) => void
 	"container:metrics": (ctx: ContainerMetricCtx) => void
+
 	"container:started": (ctx: ContainerInfoCtx) => void
 	"container:stopped": (ctx: ContainerInfoCtx) => void
 	"container:removed": (ctx: ContainerBaseCtx) => void

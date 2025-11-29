@@ -1,5 +1,3 @@
-import type { DockerStreamManagerProxy } from "./docker-monitoring-manager"
-
 import type * as ADAPTER from "./adapter"
 import type * as DATABASE from "./database"
 import type * as DOCKER from "./docker-client"
@@ -7,7 +5,7 @@ import type * as HOTKEY from "./hotkeys"
 import type * as PLUGIN from "./plugins"
 import type * as THEME from "./themes"
 
-type EVENTS = DOCKER.DockerClientEvents & DockerStreamManagerProxy
+import type { EVENTS } from "./events"
 
 export type { THEME, DATABASE, DOCKER, ADAPTER, HOTKEY, PLUGIN, EVENTS }
 

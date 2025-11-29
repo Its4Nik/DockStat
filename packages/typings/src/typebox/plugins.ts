@@ -1,8 +1,7 @@
 import type { ColumnDefinition } from "@dockstat/sqlite-wrapper"
 import { type AnyElysia, t } from "elysia"
-import type { DockerClientEvents } from "../docker-client"
 import { Repo } from "./db"
-import { EVENTS } from ".."
+import type { EVENTS, PluginActions, PluginConfig } from ".."
 
 /**
  * name: The Plugins name
@@ -56,11 +55,14 @@ export interface DBPlugin<Columns = Record<string, ColumnDefinition>>
 	plugin: string
 }
 
-export interface Plugin
-	extends WrappedPluginMetaType,
+export interface Plugin<
+	T extends Record<string, unknown> = Record<string, unknown>,
+	K extends PluginActions<T> = PluginActions<T>,
+> extends WrappedPluginMetaType,
 		Omit<DBPlugin, "plugin"> {
 	routes?: AnyElysia
-	events?: Partial<EVENTS>
+	config?: PluginConfig<T, K>
+	events?: Partial<EVENTS<T>>
 	init?: () => void
 }
 
