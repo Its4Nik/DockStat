@@ -1,5 +1,5 @@
 // monitors/HostMetricsMonitor.ts
-import type { DATABASE, DOCKER } from "@dockstat/typings"
+import { DATABASE, DOCKER } from "@dockstat/typings"
 import type Dockerode from "dockerode"
 import Logger from "@dockstat/logger"
 import { proxyEvent } from "../../events/workerEventProxy"
@@ -53,6 +53,7 @@ export class HostMetricsMonitor {
 	}
 
 	private async collectMetrics(): Promise<void> {
+		this.logger.debug("Collecting Host Metrics")
 		const promises = this.hosts.map(async (host) => {
 			try {
 				const metrics = await this.getHostMetrics(host.id)
@@ -73,25 +74,33 @@ export class HostMetricsMonitor {
 	}
 
 	private async getHostMetrics(hostId: number): Promise<DOCKER.HostMetrics> {
+		this.logger.debug(
+			`Collecting Host Metrics for ${JSON.stringify({ hostId })}`
+		)
 		const docker = this.dockerInstances.get(hostId)
 		const host = this.hosts.find((h) => h.id === hostId)
 
 		if (!docker || !host) {
+			this.logger.error(`Docker instance or host not found for ID ${hostId}`)
 			throw new Error(`Docker instance or host not found for ID ${hostId}`)
 		}
 
 		const [info, version] = await Promise.all([
-			withRetry(
-				() => docker.info() as Promise<DOCKER.DockerAPIResponse["systemInfo"]>,
+			withRetry<DOCKER.DockerAPIResponse["systemInfo"]>(
+				() => docker.info(),
 				this.options.retryAttempts,
 				this.options.retryDelay
 			),
-			withRetry(
+			withRetry<DOCKER.DockerAPIResponse["dockerVersion"]>(
 				() => docker.version(),
 				this.options.retryAttempts,
 				this.options.retryDelay
 			),
 		])
+
+		this.logger.debug(
+			`Collected Host Metrics for ${JSON.stringify({ hostId })}: ${JSON.stringify({ info, version })}`
+		)
 
 		return {
 			hostId,

@@ -5,7 +5,7 @@ import { worker } from "@dockstat/utils"
 
 declare var self: Worker
 
-const logger = new Logger("DEM")
+const logger = new Logger("DEP")
 
 export function proxyEvent<K extends keyof EVENTS>(
 	eventType: K,

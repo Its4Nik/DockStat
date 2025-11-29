@@ -4,13 +4,13 @@ import Logger from "@dockstat/logger"
 import { proxyEvent } from "../../events/workerEventProxy"
 import { withRetry } from "../utils/retry"
 
-const logger = new Logger("HealthCheckMonitor")
-
 export class HealthCheckMonitor {
 	private intervalId?: ReturnType<typeof setInterval>
 	private lastHealthStatus = new Map<number, boolean>()
+	private logger: Logger
 
 	constructor(
+		loggerParents: string[],
 		private dockerInstances: Map<number, Dockerode>,
 		private hosts: DATABASE.DB_target_host[],
 		private options: {
@@ -18,10 +18,12 @@ export class HealthCheckMonitor {
 			retryAttempts: number
 			retryDelay: number
 		}
-	) {}
+	) {
+		this.logger = new Logger("HCM", loggerParents)
+	}
 
 	start(): void {
-		logger.debug(
+		this.logger.debug(
 			`Starting health checks at interval ${this.options.interval}ms`
 		)
 		this.intervalId = setInterval(
@@ -57,6 +59,7 @@ export class HealthCheckMonitor {
 	}
 
 	private async performChecks(): Promise<void> {
+		this.logger.debug("Performing health checks")
 		const promises = this.hosts.map((host) => this.checkHost(host))
 		await Promise.allSettled(promises)
 	}

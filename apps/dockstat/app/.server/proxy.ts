@@ -17,7 +17,7 @@ export async function proxyQuery(req: Request, reqId: string) {
 			`API Res Headers: ${[...apiRes.headers.entries()]}`,
 			reqId
 		)
-		queryLogger.info("ApiHandler returned Response", reqId)
+		queryLogger.debug("ApiHandler returned Response", reqId)
 		return apiRes
 	} catch (err) {
 		queryLogger.error(`Proxy error: ${(err as Error).message}`, reqId)

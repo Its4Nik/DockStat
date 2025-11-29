@@ -5,19 +5,23 @@ import { proxyEvent } from "../../events/workerEventProxy"
 import { withRetry } from "../utils/retry"
 import { mapContainerInfoFromInspect } from "../utils/containerMapper"
 
-const logger = new Logger("DockerEventStreamManager")
-
 export class DockerEventStreamManager {
 	private streams = new Map<number, NodeJS.ReadableStream>()
+	private logger: Logger
 
 	constructor(
+		loggerParents: string[],
 		private dockerInstances: Map<number, Dockerode>,
 		private hosts: DATABASE.DB_target_host[],
 		private options: { retryAttempts: number; retryDelay: number }
-	) {}
+	) {
+		this.logger = new Logger("DESM", loggerParents)
+	}
 
 	start(): void {
-		logger.info(`Starting Docker event streams for ${this.hosts.length} hosts`)
+		this.logger.info(
+			`Starting Docker event streams for ${this.hosts.length} hosts`
+		)
 		for (const host of this.hosts) {
 			this.startStreamForHost(host)
 		}
@@ -58,6 +62,7 @@ export class DockerEventStreamManager {
 	}
 
 	private startStreamForHost(host: DATABASE.DB_target_host): void {
+		this.logger.debug(`Starting Docker Event Stream for host ${host.id}`)
 		try {
 			const docker = this.dockerInstances.get(host.id)
 			if (!docker) {
@@ -119,6 +124,10 @@ export class DockerEventStreamManager {
 	): void {
 		const containerId = event.Actor?.ID
 		if (!containerId) return
+
+		this.logger.debug(
+			`Handling Docker Event (${event.Action}) for container ${containerId}`
+		)
 
 		switch (event.Action) {
 			case "start":

@@ -4,8 +4,8 @@
 	"type": "module",
 	"scripts": {
 		"build": "bun run --bun react-router build",
-		"dev": "bun run --bun react-router dev",
-		"d": "bun run --bun react-router dev",
+		"dev": "bun run --watch --bun react-router dev",
+		"d": "bun dev",
 		"start": "bun run --bun react-router-serve ./build/server/index.js",
 		"typecheck": "react-router typegen && tsc",
 		"typegen": "react-router typegen",

@@ -1,19 +1,21 @@
 export async function withRetry<T>(
 	operation: () => Promise<T>,
-	retryAttempts: number,
+	retries: number,
 	retryDelay: number
 ): Promise<T> {
-	let lastError: Error | null = null
-	for (let attempt = 1; attempt <= retryAttempts; attempt++) {
+	const maxAttempts = retries + 1
+
+	for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 		try {
 			return await operation()
 		} catch (error) {
-			lastError = error instanceof Error ? error : new Error(String(error))
-			if (attempt === retryAttempts && lastError) {
-				throw lastError
+			const err = error instanceof Error ? error : new Error(String(error))
+			if (attempt === maxAttempts) {
+				throw err
 			}
 			await new Promise((resolve) => setTimeout(resolve, retryDelay))
 		}
 	}
+
 	throw new Error("Unexpected retry logic failure")
 }

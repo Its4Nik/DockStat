@@ -1,4 +1,3 @@
-// monitors/ContainerEventMonitor.ts
 import type { DATABASE, DOCKER } from "@dockstat/typings"
 import type Dockerode from "dockerode"
 import Logger from "@dockstat/logger"
@@ -6,13 +5,13 @@ import { proxyEvent } from "../../events/workerEventProxy"
 import { withRetry } from "../utils/retry"
 import { mapContainerInfo } from "../utils/containerMapper"
 
-const logger = new Logger("ContainerEventMonitor")
-
 export class ContainerEventMonitor {
+	private logger: Logger
 	private intervalId?: ReturnType<typeof setInterval>
 	private lastContainerStates = new Map<string, DOCKER.ContainerInfo[]>()
 
 	constructor(
+		loggerParents: string[],
 		private dockerInstances: Map<number, Dockerode>,
 		private hosts: DATABASE.DB_target_host[],
 		private options: {
@@ -20,10 +19,12 @@ export class ContainerEventMonitor {
 			retryAttempts: number
 			retryDelay: number
 		}
-	) {}
+	) {
+		this.logger = new Logger("CEM", loggerParents)
+	}
 
 	start(): void {
-		logger.info(
+		this.logger.info(
 			`Starting container event monitoring at interval ${this.options.interval}ms`
 		)
 		this.intervalId = setInterval(
@@ -74,6 +75,7 @@ export class ContainerEventMonitor {
 	}
 
 	private async monitorChanges(): Promise<void> {
+		this.logger.debug(`Checking for changes`)
 		const promises = this.hosts.map(async (host) => {
 			try {
 				const current = await this.getContainersForHost(host.id)

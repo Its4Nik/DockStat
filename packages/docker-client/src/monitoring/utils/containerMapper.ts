@@ -1,10 +1,12 @@
 import type { DOCKER } from "@dockstat/typings"
 import type Dockerode from "dockerode"
+import { logger } from "."
 
 export function mapContainerInfo(
 	container: Dockerode.ContainerInfo,
 	hostId: number
 ): DOCKER.ContainerInfo {
+	logger.debug("Mapping container info")
 	return {
 		id: container.Id,
 		hostId,
@@ -29,6 +31,7 @@ export function mapContainerInfoFromInspect(
 	containerInfo: Dockerode.ContainerInspectInfo,
 	hostId: number
 ): DOCKER.ContainerInfo {
+	logger.debug("Mapping container info from inspect")
 	return {
 		id: containerInfo.Id,
 		hostId,

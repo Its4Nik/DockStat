@@ -1,4 +1,3 @@
-// MonitoringManager.ts
 import type { DATABASE, DOCKER } from "@dockstat/typings"
 import type Dockerode from "dockerode"
 import Logger from "@dockstat/logger"
@@ -7,9 +6,8 @@ import { ContainerEventMonitor } from "./monitors/ContainerEventMonitor"
 import { HostMetricsMonitor } from "./monitors/HostMetricsMonitor"
 import { DockerEventStreamManager } from "./monitors/DockerEventStreamManager"
 
-const logger = new Logger("MonitoringManager")
-
 export default class MonitoringManager {
+	private logger: Logger
 	private options: Required<DOCKER.MonitoringOptions>
 	private isMonitoring = false
 
@@ -21,12 +19,14 @@ export default class MonitoringManager {
 	private hosts: DATABASE.DB_target_host[]
 
 	constructor(
+		loggerParents: string[],
 		dockerInstances: Map<number, Dockerode>,
 		hosts: DATABASE.DB_target_host[],
 		options: DOCKER.MonitoringOptions = {}
 	) {
 		this.dockerInstances = dockerInstances
 		this.hosts = hosts
+		this.logger = new Logger("MM", loggerParents)
 
 		this.options = {
 			healthCheckInterval: options.healthCheckInterval ?? 30000,
@@ -47,7 +47,10 @@ export default class MonitoringManager {
 			retryDelay: this.options.retryDelay,
 		}
 
+		const parents = this.logger.getParentsForLoggerChaining()
+
 		this.healthCheckMonitor = new HealthCheckMonitor(
+			parents,
 			this.dockerInstances,
 			this.hosts,
 			{
@@ -57,6 +60,7 @@ export default class MonitoringManager {
 		)
 
 		this.containerEventMonitor = new ContainerEventMonitor(
+			parents,
 			this.dockerInstances,
 			this.hosts,
 			{
@@ -66,9 +70,9 @@ export default class MonitoringManager {
 		)
 
 		this.hostMetricsMonitor = new HostMetricsMonitor(
-			logger.getParentsForLoggerChaining(),
-			dockerInstances,
-			hosts,
+			parents,
+			this.dockerInstances,
+			this.hosts,
 			{
 				interval: this.options.hostMetricsInterval,
 				...retryOpts,
@@ -76,33 +80,34 @@ export default class MonitoringManager {
 		)
 
 		this.dockerEventStreamManager = new DockerEventStreamManager(
+			parents,
 			this.dockerInstances,
 			this.hosts,
 			retryOpts
 		)
 
-		logger.info("Initialized MonitoringManager")
+		this.logger.info("Initialized MonitoringManager")
 	}
 
 	public startMonitoring(): void {
 		if (this.isMonitoring) {
-			logger.info("Monitoring is already running")
+			this.logger.info("Monitoring is already running")
 			return
 		}
 
 		this.isMonitoring = true
-		logger.info("Starting monitoring services")
+		this.logger.info("Starting monitoring services")
 
 		if (this.options.enableHealthChecks) {
-			logger.debug("Starting Health Check monitor")
+			this.logger.debug("Starting Health Check monitor")
 			this.healthCheckMonitor.start()
 		}
 		if (this.options.enableContainerEvents) {
-			logger.debug("Starting Container Events monitor")
+			this.logger.debug("Starting Container Events monitor")
 			this.containerEventMonitor.start()
 		}
 		if (this.options.enableHostMetrics) {
-			logger.debug("Starting Host Metrics Monitor")
+			this.logger.debug("Starting Host Metrics Monitor")
 			this.hostMetricsMonitor.start()
 		}
 
@@ -111,12 +116,12 @@ export default class MonitoringManager {
 
 	public stopMonitoring(): void {
 		if (!this.isMonitoring) {
-			logger.warn("Monitoring is not running")
+			this.logger.warn("Monitoring is not running")
 			return
 		}
 
 		this.isMonitoring = false
-		logger.info("Stopping monitoring services")
+		this.logger.info("Stopping monitoring services")
 
 		this.healthCheckMonitor.stop()
 		this.containerEventMonitor.stop()

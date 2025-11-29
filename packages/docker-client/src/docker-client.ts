@@ -58,6 +58,7 @@ class DockerClient {
 		this.logger.debug(`Monitoring enabled: ${this.options.enableMonitoring}`)
 		if (this.options.enableMonitoring) {
 			this.monitoringManager = new MonitoringManager(
+				this.logger.getParentsForLoggerChaining(),
 				this.dockerInstances,
 				this.hostHandler.getHosts()
 			)

@@ -1,4 +1,9 @@
-import type { ContainerInspectInfo, ContainerStats, Version } from "dockerode"
+import type {
+	DockerVersion,
+	ContainerInspectInfo,
+	ContainerStats,
+	Version,
+} from "dockerode"
 import { t } from "elysia"
 
 export interface SysInfo {
@@ -18,6 +23,7 @@ export interface SysInfo {
 export interface DockerAPIResponse {
 	systemInfo: SysInfo
 	version: Version
+	dockerVersion: DockerVersion
 	containerInspect: ContainerInspectInfo
 	diskUsage: {
 		LayersSize: number
