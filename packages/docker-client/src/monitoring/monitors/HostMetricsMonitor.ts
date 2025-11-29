@@ -1,5 +1,4 @@
-// monitors/HostMetricsMonitor.ts
-import { DATABASE, DOCKER } from "@dockstat/typings"
+import type { DATABASE, DOCKER } from "@dockstat/typings"
 import type Dockerode from "dockerode"
 import Logger from "@dockstat/logger"
 import { proxyEvent } from "../../events/workerEventProxy"
@@ -59,6 +58,7 @@ export class HostMetricsMonitor {
 				const metrics = await this.getHostMetrics(host.id)
 				proxyEvent("host:metrics", {
 					hostId: host.id,
+					docker_client_id: host.docker_client_id,
 					metrics,
 					hostName: host.name,
 				})
@@ -99,7 +99,7 @@ export class HostMetricsMonitor {
 		])
 
 		this.logger.debug(
-			`Collected Host Metrics for ${JSON.stringify({ hostId })}: ${JSON.stringify({ info, version })}`
+			`Collected Host Metrics for ${JSON.stringify({ hostId })}`
 		)
 
 		return {

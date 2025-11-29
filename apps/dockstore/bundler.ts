@@ -161,137 +161,138 @@ function renderProgress() {
 
 /* --- Build all --- */
 async function buildAll() {
-	if (records.length === 0) {
-		console.log(clr.warn("No plugins found."))
-		return
-	}
+  if (records.length === 0) {
+    console.log(clr.warn("No plugins found."))
+    return
+  }
 
-	const tick = setInterval(renderProgress, 10)
+  const tick = setInterval(renderProgress, 10)
 
-	async function buildPlugin(rec: PluginRecord) {
-		rec.status = "building"
-		rec.startedAt = Date.now()
-		try {
-			const build = await Bun.build({
-				entrypoints: [rec.path],
-				outdir: getPluginBuildDir(rec.path),
-				minify: true,
-				sourcemap: "external",
-				splitting: false,
-				env: `${rec.name.toUpperCase()}_*`,
-				banner: `/*　Bundled by DockStore　*/`,
-			})
+  async function buildPlugin(rec: PluginRecord) {
+    rec.status = "building"
+    rec.startedAt = Date.now()
+    try {
+      const build = await Bun.build({
+        entrypoints: [rec.path],
+        outdir: getPluginBuildDir(rec.path),
+        minify: true,
+        sourcemap: "external",
+        splitting: false,
+        env: `${rec.name.toUpperCase()}_*`,
+        banner: `/*　Bundled by DockStore　*/`,
+      })
 
-			const imported = await import(`./${rec.path}`)
-			const { meta } = imported as { meta: PluginMetaType }
-			validatePluginMeta(meta)
+      const imported = await import(`./${rec.path}`)
+      const { meta } = imported as { meta: PluginMetaType }
+      validatePluginMeta(meta)
 
-			await Bun.write(getPluginManifestPath(rec.path), YAML.dump(meta))
-			rec.status = "done"
-			rec.finishedAt = Date.now()
-			rec.message = `${getPluginBuildDir(rec.path)}/index.js`
-			BUNDLED_PLUGINS.push(meta)
+      await Bun.write(getPluginManifestPath(rec.path), YAML.dump(meta))
+      rec.status = "done"
+      rec.finishedAt = Date.now()
+      rec.message = `${getPluginBuildDir(rec.path)}/index.js`
+      BUNDLED_PLUGINS.push(meta)
 
-			console.log(
-				`${clr.ok("✔")} ${clr.strong(rec.name)} → ${clr.path(rec.message)}`
-			)
-			return { ok: true, rec, build }
-		} catch (err) {
-			const e = err as Error
-			rec.status = "failed"
-			rec.finishedAt = Date.now()
-			rec.message = e.message
-			errors.push({
-				name: rec.name,
-				path: rec.path,
-				message: e.message,
-				stack: e.stack,
-				phase: "build",
-			})
-			return { ok: false, rec, error: e }
-		}
-	}
+      console.log(
+        `${clr.ok("✔")} ${clr.strong(rec.name)} → ${clr.path(rec.message)}`
+      )
+      return { ok: true, rec, build }
+    } catch (err) {
+      const e = err as Error
+      rec.status = "failed"
+      rec.finishedAt = Date.now()
+      rec.message = e.message
+      errors.push({
+        name: rec.name,
+        path: rec.path,
+        message: e.message,
+        stack: e.stack,
+        phase: "build",
+      })
+      return { ok: false, rec, error: e }
+    }
+  }
 
-	const pluginBuildRecords = records.filter((r) => r.path.endsWith("/index.ts"))
-	const results = await Promise.allSettled(
-		pluginBuildRecords.map((r) => buildPlugin(r))
-	)
+  const pluginBuildRecords = records.filter((r) => r.path.endsWith("/index.ts"))
+  const results = await Promise.allSettled(
+    pluginBuildRecords.map((r) => buildPlugin(r))
+  )
 
-	const succeeded = results.filter(
-		(r) => r.status === "fulfilled" && r.value.ok
-	).length
-	const failedCount = results.filter(
-		(r) => r.status === "fulfilled" && !r.value.ok
-	).length
+  const succeeded = results.filter(
+    (r) => r.status === "fulfilled" && r.value.ok
+  ).length
+  const failedCount = results.filter(
+    (r) => r.status === "fulfilled" && !r.value.ok
+  ).length
 
-	console.log(
-		"\n" +
-			clr.header("Plugin build phase complete —") +
-			" " +
-			clr.ok(`${succeeded} succeeded`) +
-			", " +
-			clr.fail(`${failedCount} failed.`) +
-			"\n"
-	)
+  console.log(
+    "\n" +
+    clr.header("Plugin build phase complete —") +
+    " " +
+    clr.ok(`${succeeded} succeeded`) +
+    ", " +
+    clr.fail(`${failedCount} failed.`) +
+    "\n"
+  )
 
-	/* Step 1: Generate Schemas */
-	{
-		const rec = records.find((r) => r.path === "__TASK__GENERATE_SCHEMAS")
-		if (rec) {
-			rec.status = "building"
-			rec.startedAt = Date.now()
-			try {
-				await createSchemas()
-				rec.status = "done"
-				rec.finishedAt = Date.now()
-				rec.message = "./.schemas/plugin-meta.schema.json"
-				console.log(clr.ok("Schemas generated."))
-			} catch (err) {
-				const e = err as Error
-				rec.status = "failed"
-				rec.finishedAt = Date.now()
-				rec.message = e.message
-				errors.push({
-					name: rec.name,
-					path: rec.path,
-					message: e.message,
-					stack: e.stack,
-					phase: "schema",
-				})
-				console.error(clr.fail("Schema generation failed: ") + e.message)
-			}
-		}
-	}
+  /* Step 1: Generate Schemas */
+  {
+    const rec = records.find((r) => r.path === "__TASK__GENERATE_SCHEMAS")
+    if (rec) {
+      rec.status = "building"
+      rec.startedAt = Date.now()
+      try {
+        await createSchemas()
+        rec.status = "done"
+        rec.finishedAt = Date.now()
+        rec.message = "./.schemas/plugin-meta.schema.json"
+        console.log(clr.ok("Schemas generated."))
+      } catch (err) {
+        const e = err as Error
+        rec.status = "failed"
+        rec.finishedAt = Date.now()
+        rec.message = e.message
+        errors.push({
+          name: rec.name,
+          path: rec.path,
+          message: e.message,
+          stack: e.stack,
+          phase: "schema",
+        })
+        console.error(clr.fail("Schema generation failed: ") + e.message)
+      }
+    }
+  }
 
-	/* Step 2: Write Manifest */
-	{
-		const rec = records.find((r) => r.path === "__TASK__WRITE_REPO_MANIFEST")
-		if (rec) {
-			rec.status = "building"
-			rec.startedAt = Date.now()
-			try {
-				const RepoManifestData = { plugins: BUNDLED_PLUGINS }
-				await Bun.write("./manifest.yml", YAML.dump(RepoManifestData))
-				rec.status = "done"
-				rec.finishedAt = Date.now()
-				rec.message = "./manifest.yml"
-				console.log(clr.ok("Wrote Repo Manifest"))
-			} catch (err) {
-				const e = err as Error
-				rec.status = "failed"
-				rec.finishedAt = Date.now()
-				rec.message = e.message
-				errors.push({
-					name: rec.name,
-					path: rec.path,
-					message: e.message,
-					stack: e.stack,
-					phase: "manifest",
-				})
-				console.error(clr.fail("Writing repo manifest failed: ") + e.message)
-			}
-		}
-	}
+  /* Step 2: Write Manifest */
+  {
+    const rec = records.find((r) => r.path === "__TASK__WRITE_REPO_MANIFEST")
+    if (rec) {
+      rec.status = "building"
+      rec.startedAt = Date.now()
+      try {
+        const RepoManifestData = { plugins: BUNDLED_PLUGINS }
+        await Bun.write("./manifest.yml", YAML.dump(RepoManifestData))
+        rec.status = "done"
+        rec.finishedAt = Date.now()
+        rec.message = "./manifest.yml"
+        console.log(clr.ok("Wrote Repo Manifest"))
+      } catch (err) {
+        const e = err as Error
+        rec.status = "failed"
+        rec.finishedAt = Date.now()
+        rec.message = e.message
+        errors.push({
+          name: rec.name,
+          path: rec.path,
+          message: e.message,
+          stack: e.stack,
+          phase: "manifest",
+        })
+        console.error(clr.fail("Writing repo manifest failed: ") + e.message)
+      }
+    }
+  }
+
 
 	renderProgress()
 	clearInterval(tick)

@@ -247,7 +247,7 @@ interface StreamErrorCtx extends BaseStreamCtx {
 
 type BaseCtx = {
 	docker_client_id: number
-	host_id: number
+	hostId: number
 }
 
 export interface DockerClientEvents {

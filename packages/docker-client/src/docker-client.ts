@@ -30,6 +30,7 @@ class DockerClient {
 	private streamManager?: StreamManager
 	private disposed = false
 	private startTime = Date.now()
+	private clientId: number
 
 	constructor(
 		id: number,
@@ -37,6 +38,7 @@ class DockerClient {
 		DB: DB,
 		options: DOCKER.DockerAdapterOptions = {}
 	) {
+		this.clientId = id
 		this.logger = new Logger(
 			`DockerClient-${id}`,
 			logger.getParentsForLoggerChaining()
@@ -171,7 +173,11 @@ class DockerClient {
 			this.monitoringManager.updateDockerInstances(this.dockerInstances)
 		}
 
-		proxyEvent("host:added", { hostId: host.id, hostName: String(host.name) })
+		proxyEvent("host:added", {
+			hostId: host.id,
+			docker_client_id: Number(host.docker_client_id ?? 0),
+			hostName: String(host.name),
+		})
 		return host as DATABASE.DB_target_host
 	}
 

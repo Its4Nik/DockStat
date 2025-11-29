@@ -336,13 +336,6 @@ export class DockerClientManagerCore {
 				finalize()
 				wrapper.worker.removeEventListener("message", messageHandler)
 
-				if (!isWorkerResponse<T>(raw)) {
-					wrapper.lastError = "Unexpected worker response shape"
-					wrapper.errorCount += 1
-					reject(new Error("Unexpected worker response shape"))
-					return
-				}
-
 				const response = raw
 
 				if (response.success) {
@@ -541,7 +534,15 @@ export class DockerClientManagerCore {
 			const handler = hooks[message.type] as unknown as
 				| ((...args: unknown[]) => unknown)
 				| undefined
-			if (!handler || typeof handler !== "function") continue
+			if (!handler) {
+				this.logger.debug(`No handler for event "${String(message.type)}"`)
+				continue
+			}
+
+			if (typeof handler !== "function") {
+				this.logger.error(`Invalid handler for event "${String(message.type)}"`)
+				continue
+			}
 
 			try {
 				if (message.additionalCtx !== undefined) {

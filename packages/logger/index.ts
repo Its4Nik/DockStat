@@ -4,9 +4,14 @@ import sourceMapSupport from "source-map-support"
 sourceMapSupport.install()
 
 let callerMatchesDepth = 2
+let ignoreMessages: string[] = []
 
 if (Bun.env.DOCKSTAT_LOGGER_FULL_FILE_PATH === "true") {
 	callerMatchesDepth = 1
+}
+
+if (Bun.env.DOCKSTAT_LOGGER_IGNORE_MESSAGES) {
+	ignoreMessages = Bun.env.DOCKSTAT_LOGGER_IGNORE_MESSAGES.split(",")
 }
 
 const DISABLED_LOGGERS: string[] = (
@@ -71,6 +76,11 @@ const levelColors: Record<LogLevel, (msg: string) => string> = {
 	debug: chalk.blue.bold,
 }
 
+const shouldIgnore = (msg: string, ignoreMessages: string[]) => {
+	const lower = msg.toLowerCase()
+	return ignoreMessages.some((s) => lower.includes(s.toLowerCase()))
+}
+
 class Logger {
 	protected name: string
 	protected parents: string[] = []
@@ -87,24 +97,28 @@ class Logger {
 			this.disabled =
 				!ONLY_SHOW.includes(prefix) === true ? true : this.disabled
 		}
-		this.debug(`Logger Status: ${this.disabled ? "disabled" : "active"}`)
+		this.debug(
+			`Logger Status: ${this.disabled ? "disabled" : "active"} - ignoring messages: ${ignoreMessages.join(", ")}`
+		)
 	}
 
 	error(msg: string, requestid?: string) {
-		if (!this.disabled)
+		if (!this.disabled && !shouldIgnore(msg, ignoreMessages))
 			console.error(this.formatMessage("error", msg, requestid))
 	}
 
 	warn(msg: string, requestid?: string) {
-		if (!this.disabled) console.warn(this.formatMessage("warn", msg, requestid))
+		if (!this.disabled && !shouldIgnore(msg, ignoreMessages))
+			console.warn(this.formatMessage("warn", msg, requestid))
 	}
 
 	info(msg: string, requestid?: string) {
-		if (!this.disabled) console.info(this.formatMessage("info", msg, requestid))
+		if (!this.disabled && !shouldIgnore(msg, ignoreMessages))
+			console.info(this.formatMessage("info", msg, requestid))
 	}
 
 	debug(msg: string, requestid?: string) {
-		if (!this.disabled)
+		if (!this.disabled && !shouldIgnore(msg, ignoreMessages))
 			console.debug(this.formatMessage("debug", msg, requestid))
 	}
 

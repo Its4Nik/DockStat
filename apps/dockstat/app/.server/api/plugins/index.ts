@@ -2,11 +2,14 @@ import Elysia, { t } from "elysia"
 import PluginHandlerFactory from "@dockstat/plugin-handler"
 import { DockStatDB } from "~/.server/db"
 import { ElysiaLogger } from "../logger"
+import { saveDefaultPlugins } from "./utils/saveDefaultPlugins"
 
 export const PluginHandler = new PluginHandlerFactory(
 	DockStatDB._sqliteWrapper,
 	ElysiaLogger.getParentsForLoggerChaining()
 )
+
+await saveDefaultPlugins(PluginHandler)
 
 const DockStatPluginElysiaInstance = new Elysia({
 	name: "DockStatPluginElysiaInstance",

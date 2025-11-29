@@ -18,6 +18,7 @@ export default class HostHandler {
 				host: column.text({ notNull: true }),
 				port: column.integer({ notNull: true }),
 				secure: column.boolean({ default: 0 }),
+				docker_client_id: column.integer({ notNull: true }),
 				createdAt: column.createdAt(),
 				updatedAt: column.updatedAt(),
 			},

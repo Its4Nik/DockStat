@@ -2,7 +2,9 @@ import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type DB from "@dockstat/sqlite-wrapper"
 import type { DBPluginShemaT, Plugin } from "@dockstat/typings/types"
 import Logger from "@dockstat/logger"
-import type { DOCKER } from "@dockstat/typings"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { unlink } from "node:fs/promises"
 
 class PluginHandler {
 	private loadedPluginsMap = new Map<number, Plugin>()
@@ -21,7 +23,7 @@ class PluginHandler {
 			"plugins",
 			{
 				id: column.id(),
-				repoType: column.enum(["github", "gitlab", "local"]),
+				repoType: column.enum(["github", "gitlab", "local", "default"]),
 				// Plugin Metadata
 				name: column.text({ notNull: true, unique: true }),
 				description: column.text({ notNull: false }),
@@ -31,20 +33,12 @@ class PluginHandler {
 				manifest: column.text({ notNull: true }),
 				author: column.json({ notNull: true }),
 
-				plugin: column.module(),
+				plugin: column.text(),
 			},
 			{
 				ifNotExists: true,
 				parser: {
 					JSON: ["author", "tags"],
-					MODULE: {
-						plugin: {
-							loader: "ts",
-							minifyWhitespace: true,
-							allowBunRuntime: true,
-							target: "bun",
-						},
-					},
 				},
 			}
 		)
@@ -67,9 +61,12 @@ class PluginHandler {
 			.all()
 	}
 
-	public savePlugin(plugin: DBPluginShemaT) {
+	public savePlugin(plugin: DBPluginShemaT, update = false) {
 		try {
 			this.logger.debug(`Saving Plugin ${plugin.name} to DB`)
+			if (update) {
+				this.table.insertOrReplace(plugin)
+			}
 			const res = this.table.insert(plugin)
 			this.logger.debug(`Plugin ${plugin.name} saved`)
 			return {
@@ -130,38 +127,43 @@ class PluginHandler {
 
 	public async loadAllPlugins() {
 		const plugins = this.table.select(["*"]).all()
-
 		const loadedPlugins = this.loadedPluginsMap
 
 		const validPlugins = plugins.filter((p): p is DBPluginShemaT => {
 			if (loadedPlugins.get(p.id as number)) {
 				return false
 			}
-
-			return Boolean(p.plugin && p.id)
+			const valid = Boolean(p.plugin && p.id)
+			this.logger.info(`Validating plugin ${p.id}: ${valid}`)
+			return valid
 		})
 
 		const imports = await Promise.allSettled(
 			validPlugins.map(async (plugin) => {
+				const tempPath = join(tmpdir(), `plugin-${plugin.id}-${Date.now()}.js`)
+				this.logger.debug(`Writing plugin ${plugin.id} to ${tempPath}`)
 				try {
-					const mod = (await import(/* @vite-ignore */ plugin.plugin)) as Plugin
+					await Bun.write(tempPath, plugin.plugin)
+					const mod = (await import(/* @vite-ignore */ tempPath)) as Plugin
 					return { id: plugin.id, module: mod }
 				} catch (err) {
-					console.error(`Failed to import plugin ${plugin.plugin}:`, err)
+					this.logger.error(`Failed to import plugin ${plugin.id}: ${err}`)
 					return null
+				} finally {
+					await unlink(tempPath).catch(() => {})
 				}
 			})
 		)
 
 		for (const result of imports) {
 			if (result.status === "fulfilled" && result.value) {
+				this.logger.info(`Loaded plugin ${result.value.id}`)
 				this.loadedPluginsMap.set(
 					result.value.id as number,
 					result.value.module
 				)
 			}
 		}
-		return
 	}
 
 	public unloadAllPlugins() {
@@ -183,9 +185,16 @@ class PluginHandler {
 			throw new Error(`Plugin already loaded: ${id}`)
 		}
 
-		const mod = (await import(/* @vite-ignore */ pluginToLoad.plugin)) as Plugin
+		const tempPath = join(tmpdir(), `plugin-${id}-${Date.now()}.js`)
 
-		return this.loadedPluginsMap.set(pluginToLoad.id as number, mod)
+		try {
+			await Bun.write(tempPath, pluginToLoad.plugin)
+			const mod = (await import(/* @vite-ignore */ tempPath)) as Plugin
+			this.loadedPluginsMap.set(pluginToLoad.id as number, mod)
+			return this.loadedPluginsMap.get(id)
+		} finally {
+			await unlink(tempPath).catch(() => {})
+		}
 	}
 
 	public getTable(): QueryBuilder<DBPluginShemaT> {
@@ -257,7 +266,9 @@ class PluginHandler {
 
 	public getHookHandlers() {
 		this.logger.info("Getting Hook Handlers")
-		const loadedPlugins = this.loadedPluginsMap.values()
+		const loadedPlugins = Array.from(this.loadedPluginsMap.values())
+
+		this.logger.debug(`Loaded ${(loadedPlugins).length} Plugins`)
 
 		const loadedPluginsHooksMap = new Map<number, Plugin["events"]>()
 

@@ -138,7 +138,10 @@ const ElysiaDockerInstance = new Elysia({
 				.post(
 					"/update",
 					async ({ body: { clientId, host } }) =>
-						await DCM.updateHost(clientId, host),
+						await DCM.updateHost(clientId, {
+							...host,
+							docker_client_id: clientId,
+						}),
 					{
 						body: t.Object({
 							clientId: t.Number(),
