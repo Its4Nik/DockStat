@@ -7,6 +7,8 @@ import PluginElysiaInstance from "./plugins"
 import ExtensionElysiaInstance from "./extensions"
 import DockStatMetricsElysiaInstance from "./metrics"
 import ElysiaDockerInstance from "./docker"
+import ElysiaComponentHandler from "./components"
+import ElysiaPagesHandler from "./pages"
 
 export const DockStatAPI = new Elysia({
 	prefix: "/api",
@@ -23,6 +25,8 @@ export const DockStatAPI = new Elysia({
 	.use(PluginElysiaInstance)
 	.use(ElysiaDockerInstance)
 	.use(ExtensionElysiaInstance)
+	.use(ElysiaComponentHandler)
+	.use(ElysiaPagesHandler)
 
 if (import.meta.main) {
 	DockStatAPI.listen(3000, console.log)
