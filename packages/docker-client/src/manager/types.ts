@@ -4,6 +4,7 @@ import type { WorkerRequest, WorkerResponse } from "../types"
 import type DB from "@dockstat/sqlite-wrapper"
 import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DOCKER } from "@dockstat/typings"
+import type Logger from "@dockstat/logger"
 
 export type { WorkerRequest, WorkerResponse }
 
@@ -30,6 +31,13 @@ export interface WorkerWrapper {
 	lastError: string | null
 	errorCount: number
 	messageListener?: (event: MessageEvent) => void
+	serverHooks: Map<
+		number,
+		{
+			table: QueryBuilder
+			logger: Logger
+		}
+	>
 }
 
 export type DockerClientTable = {
@@ -115,12 +123,7 @@ export const looksLikeEventMessage = (
 	payload: unknown
 ): payload is EventMessage<keyof EVENTS> => {
 	const p = payload as Record<string, unknown>
-	return (
-		typeof payload === "object" &&
-		payload !== null &&
-		typeof p.type !== "undefined" &&
-		(typeof p.ctx !== "undefined" || typeof p.additionalCtx !== "undefined")
-	)
+	return typeof payload === "object" && typeof p.success === "boolean"
 }
 
 // For convenience in mixins

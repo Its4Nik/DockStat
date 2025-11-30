@@ -64,6 +64,11 @@ const DockStatConfigTable = t.Object({
 		light: t.Number(),
 	}),
 
+	config_database_rev: t.String({
+		pattern:
+			"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$",
+	}),
+
 	/* Trusted repos will be added later on */
 	allow_untrusted_repo: t.Boolean({ default: false }),
 
@@ -115,6 +120,8 @@ const DockStatConfigTable = t.Object({
 		t.String(),
 		t.UnionEnum(["open:nav", "close:nav", "toggle:nav"])
 	),
+
+	autostart_handlers_monitoring: t.Boolean(),
 })
 
 const UpdateDockStatConfigTableResponse = t.Object({

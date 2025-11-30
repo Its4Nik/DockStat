@@ -1,5 +1,5 @@
 import Logger from "@dockstat/logger"
-import { column } from "@dockstat/sqlite-wrapper"
+import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import { worker as workerUtils } from "@dockstat/utils"
 import type { DOCKER, EVENTS } from "@dockstat/typings"
 import type {
@@ -14,34 +14,44 @@ import {
 	isInitCompleteMessage,
 	isInternalWorkerMessage,
 	isProxyEventEnvelope,
-	isWorkerResponse,
 	looksLikeEventMessage,
 } from "./types"
 import type { PoolMetrics, WorkerMetrics } from "../types"
 import { logger } from "../../"
-import type { Plugin, buildMessageFromProxyRes } from "@dockstat/typings/types"
+import type { buildMessageFromProxyRes } from "@dockstat/typings/types"
+import PluginHandler from "@dockstat/plugin-handler"
 
 export class DockerClientManagerCore {
 	readonly table: DockerClientTableQuery
+	readonly db: DBType
 	readonly logger = new Logger("DCM", logger.getParentsForLoggerChaining())
 	readonly workers: Map<number, WorkerWrapper> = new Map()
 	readonly maxWorkers: number
 	readonly dbPath: string
-	readonly events: Map<number, Plugin["events"]> = new Map()
+	readonly events: Map<number, Partial<EVENTS>> = new Map()
+	readonly serverHooks: Map<number, { table: QueryBuilder; logger: Logger }> =
+		new Map()
+	readonly pluginHandler: PluginHandler
 
 	constructor(
 		db: DBType,
+		pluginHandler: PluginHandler,
 		options: {
 			maxWorkers?: number
-			events?: Map<number, Plugin["events"]>
+			events?: Map<number, Partial<EVENTS>>
 		}
 	) {
 		this.logger.info("Creating Docker Client Manager")
 		this.dbPath = db.getDb().filename
+		this.db = db
 		this.maxWorkers = options.maxWorkers ?? 4
+		this.pluginHandler = pluginHandler
 
-		if (options.events) {
-			for (const [pluginId, pluginEvents] of options.events) {
+		const ev = options.events || pluginHandler.getHookHandlers()
+
+		if (ev) {
+			for (const [pluginId, pluginEvents] of ev) {
+				this.logger.debug(`Registering events for plugin ${pluginId}`)
 				this.events.set(pluginId, pluginEvents)
 			}
 		}
@@ -163,6 +173,7 @@ export class DockerClientManagerCore {
 				initialized: false,
 				lastError: null,
 				errorCount: 0,
+				serverHooks: this.serverHooks,
 			}
 
 			worker.addEventListener("error", (error: ErrorEvent) => {
@@ -518,9 +529,7 @@ export class DockerClientManagerCore {
 		message: buildMessageFromProxyRes<K>
 	) => {
 		this.logger.debug(
-			`Triggering hooks for event "${String(
-				message.type
-			)} - ctx: ${JSON.stringify(message.ctx)}"`
+			`Triggering hooks for event "${String(message.type)} - ctx: ${JSON.stringify(message.ctx)}"`
 		)
 
 		if (!message.type) {
@@ -528,33 +537,40 @@ export class DockerClientManagerCore {
 			return
 		}
 
-		for (const hooks of this.events.values()) {
-			if (!hooks) continue
+		for (const [id, hooks] of this.events.entries()) {
+			const serverHooks = this.pluginHandler.getServerHooks(id)
 
-			const handler = hooks[message.type] as unknown as
-				| ((...args: unknown[]) => unknown)
-				| undefined
-			if (!handler) {
-				this.logger.debug(`No handler for event "${String(message.type)}"`)
+			if (!hooks) {
+				this.logger.warn(`No hooks found for plugin ${id}`)
 				continue
 			}
 
-			if (typeof handler !== "function") {
-				this.logger.error(`Invalid handler for event "${String(message.type)}"`)
+			if (!serverHooks) {
+				this.logger.warn(`No server hooks found for plugin ${id}`)
+				continue
+			}
+
+			const hook = hooks[message.type]
+
+			if (!hook) {
+				this.logger.debug(`No hook for event "${String(message.type)}"`)
+				continue
+			}
+
+			if (typeof hook !== "function") {
+				this.logger.error(`Invalid hook for event "${String(message.type)}"`)
 				continue
 			}
 
 			try {
-				if (message.additionalCtx !== undefined) {
-					handler(message.ctx as unknown, message.additionalCtx as unknown)
+				if (message.additionalCtx) {
+					hook(message.ctx as any, message.additionalCtx, serverHooks)
 				} else {
-					handler(message.ctx as unknown)
+					hook(message.ctx as any, serverHooks)
 				}
 			} catch (err: unknown) {
 				this.logger.error(
-					`Error in plugin event handler for event "${String(
-						message.type
-					)}": ${JSON.stringify(err, Object.getOwnPropertyNames(err ?? {}))}`
+					`Error in plugin event handler for event "${String(message.type)}": ${JSON.stringify(err, Object.getOwnPropertyNames(err ?? {}))}`
 				)
 			}
 		}

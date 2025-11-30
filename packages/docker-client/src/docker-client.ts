@@ -128,31 +128,16 @@ class DockerClient {
 		return { reachableInstances: good, unreachableInstances: bad }
 	}
 
-	public addHost(
-		hostname: string,
-		name: string,
-		secure: boolean,
-		port: number,
-		id?: number,
-		update = false
-	): DATABASE.DB_target_host {
+	public addHost(host: DATABASE.DB_target_host): DATABASE.DB_target_host {
 		this.checkDisposed()
-		const host: Partial<DATABASE.DB_target_host> = {
-			name,
-			secure,
-			port,
-			host: hostname,
-		}
 
-		if (!id) {
+		if (!Number(host.id)) {
 			this.logger.info(`Adding new host: ${host.name}`)
 			host.id = this.hostHandler.addHost(host)
-		} else if (update) {
-			this.logger.info(`Updating host action: ${host.name}`)
-			host.id = this.hostHandler.addHost(host)
 		} else {
-			this.logger.info(`Host ${name} (${id}) already exists. Initializing...`)
-			host.id = id
+			this.logger.info(
+				`Host ${host.name} (${Number(host.id)}) already exists. Initializing...`
+			)
 		}
 
 		const instanceCfg: Dockerode.DockerOptions = {
@@ -166,7 +151,7 @@ class DockerClient {
 			`Creating new Docker Instance ${JSON.stringify(instanceCfg)}`
 		)
 		const dockerInstance = new Dockerode(instanceCfg)
-		this.dockerInstances.set(host.id, dockerInstance)
+		this.dockerInstances.set(Number(host.id), dockerInstance)
 
 		if (this.monitoringManager) {
 			this.monitoringManager.updateHosts(this.hostHandler.getHosts())
@@ -174,7 +159,7 @@ class DockerClient {
 		}
 
 		proxyEvent("host:added", {
-			hostId: host.id,
+			hostId: Number(host.id),
 			docker_client_id: Number(host.docker_client_id ?? 0),
 			hostName: String(host.name),
 		})
@@ -185,8 +170,8 @@ class DockerClient {
 		this.checkDisposed()
 		this.logger.info("Initializing...")
 		for (const host of hosts) {
-			this.logger.info(`Initializing ${host.name} (${host.id})`)
-			this.addHost(host.host, host.name, host.secure, host.port, host.id)
+			this.logger.info(`Initializing ${host.name} (${Number(host.id)})`)
+			this.addHost(host)
 		}
 	}
 
@@ -216,33 +201,33 @@ class DockerClient {
 
 	public updateHost(host: DATABASE.DB_target_host): void {
 		this.checkDisposed()
-		this.logger.info(`Updating host: ${host.name} (ID: ${host.id})`)
+		this.logger.info(`Updating host: ${host.name} (ID: ${Number(host.id)})`)
 
 		// Verify host exists in DB
-		const existing = this.getHosts().find((h) => h.id === host.id)
+		const existing = this.getHosts().find((h) => h.id === Number(host.id))
 		if (!existing) {
-			this.logger.error(`Host with ID ${host.id} not found for update`)
-			throw new Error(`Host with ID ${host.id} not found`)
+			this.logger.error(`Host with ID ${Number(host.id)} not found for update`)
+			throw new Error(`Host with ID ${Number(host.id)} not found`)
 		}
 
 		// Update the database record first
 		try {
 			this.hostHandler.updateHost(host)
-			this.logger.info(`Host DB record updated for ID ${host.id}`)
+			this.logger.info(`Host DB record updated for ID ${Number(host.id)}`)
 		} catch (err) {
 			this.logger.error(
-				`Failed to update host record for ID ${host.id}: ${err}`
+				`Failed to update host record for ID ${Number(host.id)}: ${err}`
 			)
 			throw err
 		}
 
 		// Stop any active streams related to this host
 		const streamsToRemove = Array.from(this.activeStreams.keys()).filter(
-			(key) => key.includes(`host-${host.id}`)
+			(key) => key.includes(`host-${Number(host.id)}`)
 		)
 		for (const streamKey of streamsToRemove) {
 			this.logger.debug(
-				`Stopping stream ${streamKey} for updated host ${host.id}`
+				`Stopping stream ${streamKey} for updated host ${Number(host.id)}`
 			)
 			this.stopStream(streamKey)
 		}
@@ -257,17 +242,17 @@ class DockerClient {
 			}
 
 			this.logger.info(
-				`Creating/updating Docker Instance for host ID ${host.id}: ${JSON.stringify(
+				`Creating/updating Docker Instance for host ID ${Number(host.id)}: ${JSON.stringify(
 					instanceCfg
 				)}`
 			)
 			// Replace any existing instance
-			this.dockerInstances.delete(host.id)
+			this.dockerInstances.delete(Number(Number(host.id)))
 			const dockerInstance = new Dockerode(instanceCfg)
-			this.dockerInstances.set(host.id, dockerInstance)
+			this.dockerInstances.set(Number(host.id), dockerInstance)
 		} catch (err) {
 			this.logger.error(
-				`Failed to create Docker instance for updated host ${host.id}: ${err}`
+				`Failed to create Docker instance for updated host ${Number(host.id)}: ${err}`
 			)
 			// Re-throw to let callers handle; at this point DB is updated but docker instance may be inconsistent
 			throw err
@@ -278,16 +263,18 @@ class DockerClient {
 			try {
 				this.monitoringManager.updateHosts(this.hostHandler.getHosts())
 				this.monitoringManager.updateDockerInstances(this.dockerInstances)
-				this.logger.info(`Monitoring manager updated for host ID ${host.id}`)
+				this.logger.info(
+					`Monitoring manager updated for host ID ${Number(host.id)}`
+				)
 			} catch (err) {
 				this.logger.error(
-					`Failed to update monitoring manager for host ${host.id}: ${err}`
+					`Failed to update monitoring manager for host ${Number(host.id)}: ${err}`
 				)
 			}
 		}
 
 		// Emit event to notify listeners
-		proxyEvent("host:updated", { hostId: host.id, hostName: host.name })
+		proxyEvent("host:updated", { hostId: Number(host.id), hostName: host.name })
 	}
 
 	public getHosts(): DATABASE.DB_target_host[] {
@@ -304,7 +291,7 @@ class DockerClient {
 		await Promise.allSettled(
 			hosts.map(async (host) => {
 				try {
-					const containers = await this.getContainersForHost(host.id)
+					const containers = await this.getContainersForHost(Number(host.id))
 					allContainers.push(...containers)
 				} catch (error) {
 					this.logger.error(
@@ -356,7 +343,7 @@ class DockerClient {
 		await Promise.allSettled(
 			hosts.map(async (host) => {
 				try {
-					const stats = await this.getContainerStatsForHost(host.id)
+					const stats = await this.getContainerStatsForHost(Number(host.id))
 					allStats.push(...stats)
 				} catch (error) {
 					this.logger.error(
@@ -426,7 +413,7 @@ class DockerClient {
 		const hosts = this.hostHandler.getHosts()
 		const metricsPromises = hosts.map(async (host) => {
 			try {
-				return await this.getHostMetrics(host.id)
+				return await this.getHostMetrics(Number(host.id))
 			} catch (error) {
 				this.logger.error(
 					`Failed to get metrics for host ${host.name}: ${error}`
@@ -992,8 +979,8 @@ class DockerClient {
 		const hosts = this.hostHandler.getHosts()
 		const healthChecks = await Promise.allSettled(
 			hosts.map(async (host) => ({
-				hostId: host.id,
-				healthy: await this.checkHostHealth(host.id),
+				hostId: Number(host.id),
+				healthy: await this.checkHostHealth(Number(host.id)),
 			}))
 		)
 

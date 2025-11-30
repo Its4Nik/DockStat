@@ -92,13 +92,7 @@ self.onmessage = async (event: MessageEvent) => {
 				break
 
 			case "addHost":
-				result = client.addHost(
-					request.data.hostname,
-					request.data.name,
-					request.data.secure,
-					request.data.port,
-					request.data.id
-				)
+				result = client.addHost(request.data)
 				break
 
 			case "removeHost":

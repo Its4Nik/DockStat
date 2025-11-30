@@ -6,7 +6,7 @@ type DB_target_host = {
 	docker_client_id: number
 	port: number
 	name: string
-	id: number
+	id?: number
 	createdAt?: Date
 	updatedAt?: Date
 }

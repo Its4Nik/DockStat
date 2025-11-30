@@ -112,6 +112,7 @@
       "version": "1.0.2",
       "dependencies": {
         "@dockstat/logger": "workspace:*",
+        "@dockstat/plugin-handler": "workspace:*",
         "@dockstat/sqlite-wrapper": "workspace:*",
         "@dockstat/typings": "workspace:*",
         "@dockstat/utils": "workspace:*",

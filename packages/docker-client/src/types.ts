@@ -5,13 +5,7 @@ export type WorkerRequest =
 	| { type: "ping" }
 	| {
 			type: "addHost"
-			data: {
-				hostname: string
-				name: string
-				secure: boolean
-				port: number
-				id?: number
-			}
+			data: DATABASE.DB_target_host
 	  }
 	| { type: "removeHost"; hostId: number }
 	| {

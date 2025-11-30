@@ -7,7 +7,7 @@ export function mapFromHostMetricHookToDb(
 	return {
 		container_id: null,
 		docker_client_id: hostMetricEvent.docker_client_id,
-		host_id: hostMetricEvent.host_id,
+		host_id: hostMetricEvent.hostId,
 		type: "HOST",
 		data: { host_metrics: hostMetricEvent.metrics },
 	}

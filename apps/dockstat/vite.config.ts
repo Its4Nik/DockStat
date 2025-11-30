@@ -5,6 +5,8 @@ import tsconfigPaths from "vite-tsconfig-paths"
 
 export default defineConfig({
 	plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+	appType: "custom",
+	clearScreen: false,
 	dev: {
 		sourcemap: {
 			css: true,

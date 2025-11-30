@@ -23,7 +23,14 @@ export class Hosts extends DockerClientManagerCore {
 	): Promise<DATABASE.DB_target_host> {
 		const result = await this.sendRequest<DATABASE.DB_target_host>(clientId, {
 			type: "addHost",
-			data: { hostname, name, secure, port, id },
+			data: {
+				host: hostname,
+				name,
+				secure,
+				port,
+				id,
+				docker_client_id: clientId,
+			},
 		})
 
 		const wrapper = this.workers.get(clientId)
@@ -71,8 +78,8 @@ export class Hosts extends DockerClientManagerCore {
 		for (const client of clients) {
 			const clientsHosts = (await this.getHosts(client.id)).map((c) => ({
 				name: c.name,
-				id: c.id,
-				clientId: client.id,
+				id: Number(c.id),
+				clientId: Number(client.id),
 			}))
 			this.logger.debug(`Clients Hosts: ${JSON.stringify(clientsHosts)}`)
 			hosts = hosts.concat(clientsHosts)

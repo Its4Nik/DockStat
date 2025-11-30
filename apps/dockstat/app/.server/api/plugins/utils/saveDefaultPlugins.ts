@@ -25,10 +25,10 @@ export async function saveDefaultPlugins(
 		const build = await Bun.build({
 			entrypoints: [p],
 			minify: {
-			  identifiers: false,
-			  keepNames: true,
-			  syntax: false,
-			  whitespace: true,
+				identifiers: false,
+				keepNames: true,
+				syntax: false,
+				whitespace: true,
 			},
 			splitting: false,
 			banner: "/*　Bundled by DockStat　*/",

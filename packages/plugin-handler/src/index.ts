@@ -1,13 +1,18 @@
-import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
+import { column, QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type DB from "@dockstat/sqlite-wrapper"
 import type { DBPluginShemaT, Plugin } from "@dockstat/typings/types"
 import Logger from "@dockstat/logger"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { unlink } from "node:fs/promises"
+import type { EVENTS } from "@dockstat/typings"
 
 class PluginHandler {
 	private loadedPluginsMap = new Map<number, Plugin>()
+	private pluginServerHooks = new Map<
+		number,
+		{ table: QueryBuilder; logger: Logger }
+	>()
 	private DB: DB
 	private table: QueryBuilder<DBPluginShemaT>
 	private logger: Logger
@@ -61,11 +66,18 @@ class PluginHandler {
 			.all()
 	}
 
-	public savePlugin(plugin: DBPluginShemaT, update = false) {
+	public savePlugin(plugin: DBPluginShemaT, update?: boolean) {
 		try {
 			this.logger.debug(`Saving Plugin ${plugin.name} to DB`)
 			if (update) {
-				this.table.insertOrReplace(plugin)
+				this.logger.info(`Updating Plugin ${plugin.name}`)
+				this.unloadPlugin(Number(plugin.id))
+				this.deletePlugin(Number(plugin.id))
+				this.savePlugin(plugin, false)
+				return {
+					success: true,
+					message: "Plugin saved successfully",
+				}
 			}
 			const res = this.table.insert(plugin)
 			this.logger.debug(`Plugin ${plugin.name} saved`)
@@ -144,7 +156,47 @@ class PluginHandler {
 				this.logger.debug(`Writing plugin ${plugin.id} to ${tempPath}`)
 				try {
 					await Bun.write(tempPath, plugin.plugin)
-					const mod = (await import(/* @vite-ignore */ tempPath)) as Plugin
+					const mod = (await import(/* @vite-ignore */ tempPath))
+						.default as Plugin
+					//console.debug(mod)
+
+					mod.id = plugin.id as number
+
+					this.logger.debug(
+						`Creating table for plugin ${plugin.id} if needed - ${JSON.stringify(mod.config)}`
+					)
+
+					let table = null
+
+					if (mod.config?.table) {
+						table = this.DB.createTable<Record<string, unknown>>(
+							mod.config.table.name,
+							mod.config?.table.columns,
+							{
+								parser: { JSON: mod.config.table.jsonColumns },
+								ifNotExists: true,
+							}
+						)
+					}
+
+					if (table) {
+						this.logger.debug(
+							`Registering server Hooks for plugin ${plugin.id}`
+						)
+						this.pluginServerHooks.set(mod.id as number, {
+							table,
+							logger: new Logger(
+								mod.name,
+								this.logger.getParentsForLoggerChaining()
+							),
+						})
+					}
+
+					if (!plugin.id) {
+						this.logger.error(`Plugin ${plugin.id} has no ID`)
+						throw new Error(`Plugin ${plugin.id} has no ID`)
+					}
+
 					return { id: plugin.id, module: mod }
 				} catch (err) {
 					this.logger.error(`Failed to import plugin ${plugin.id}: ${err}`)
@@ -164,6 +216,10 @@ class PluginHandler {
 				)
 			}
 		}
+	}
+
+	public getServerHooks(id: number) {
+		return this.pluginServerHooks.get(id)
 	}
 
 	public unloadAllPlugins() {
@@ -189,8 +245,18 @@ class PluginHandler {
 
 		try {
 			await Bun.write(tempPath, pluginToLoad.plugin)
-			const mod = (await import(/* @vite-ignore */ tempPath)) as Plugin
+			const mod = (await import(/* @vite-ignore */ tempPath)).default as Plugin
 			this.loadedPluginsMap.set(pluginToLoad.id as number, mod)
+			mod.id = pluginToLoad.id
+			this.logger.debug(
+				`Creating table for plugin ${pluginToLoad.id} if needed`
+			)
+			mod.config?.table &&
+				this.DB.createTable(mod.config.table.name, mod.config?.table.columns, {
+					parser: { JSON: mod.config.table.jsonColumns },
+					ifNotExists: true,
+				})
+
 			return this.loadedPluginsMap.get(id)
 		} finally {
 			await unlink(tempPath).catch(() => {})
@@ -268,14 +334,18 @@ class PluginHandler {
 		this.logger.info("Getting Hook Handlers")
 		const loadedPlugins = Array.from(this.loadedPluginsMap.values())
 
-		this.logger.debug(`Loaded ${(loadedPlugins).length} Plugins`)
+		this.logger.debug(
+			`Loaded ${loadedPlugins.length} Plugins (${JSON.stringify(loadedPlugins)})`
+		)
 
-		const loadedPluginsHooksMap = new Map<number, Plugin["events"]>()
+		const loadedPluginsHooksMap = new Map<number, Partial<EVENTS>>()
 
-		loadedPlugins.map((p) => {
-			this.logger.info(`Caching Hooks for Plugin ${p.id}`)
-			return loadedPluginsHooksMap.set(Number(p.id), p.events)
-		})
+		for (const p of loadedPlugins) {
+			if (p.events) {
+				this.logger.info(`Caching Hooks for Plugin ${p.id}`)
+				loadedPluginsHooksMap.set(Number(p.id), p.events)
+			}
+		}
 
 		this.logger.info(`Cached ${loadedPluginsHooksMap.size} Hooks`)
 		return loadedPluginsHooksMap

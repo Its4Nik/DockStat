@@ -50,6 +50,7 @@
 		"@dockstat/sqlite-wrapper": "workspace:*",
 		"@dockstat/utils": "workspace:*",
 		"@dockstat/typings": "workspace:*",
+		"@dockstat/plugin-handler": "workspace:*",
 		"@dockstat/logger": "workspace:*",
 		"@types/dockerode": "^3.3.44",
 		"dockerode": "^4.0.9"

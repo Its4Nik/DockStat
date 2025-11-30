@@ -271,6 +271,7 @@ export interface DockerClientEvents {
 	"stream:data": (ctx: StreamDataCtx) => void
 	"stream:error": (ctx: StreamErrorCtx) => void
 
+	/*
 	error: (
 		error: Error,
 		context?: { hostId?: number; containerId?: string; message?: string }
@@ -283,6 +284,7 @@ export interface DockerClientEvents {
 		message: string,
 		context?: { hostId?: number; containerId?: string }
 	) => void
+	*/
 }
 
 export interface DockerEventEmitterInterface {
