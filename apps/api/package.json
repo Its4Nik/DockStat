@@ -1,0 +1,26 @@
+{
+	"name": "@dockstat/api",
+	"version": "1.0.0",
+	"types": "./src/types.ts",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"dev": "bun run --watch src/index.ts"
+	},
+	"dependencies": {
+		"@dockstat/db": "workspace:*",
+		"@dockstat/docker-client": "workspace:*",
+		"@dockstat/logger": "workspace:*",
+		"@dockstat/plugin-handler": "workspace:*",
+		"@dockstat/sqlite-wrapper": "workspace:*",
+		"@dockstat/typings": "workspace:*",
+		"@dockstat/ui": "workspace:*",
+		"@dockstat/utils": "workspace:*",
+		"@elysiajs/openapi": "^1.4.11",
+		"@elysiajs/server-timing": "^1.4.0",
+		"elysia": "latest"
+	},
+	"devDependencies": {
+		"bun-types": "latest"
+	},
+	"module": "src/index.ts"
+}

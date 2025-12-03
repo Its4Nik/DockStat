@@ -16,6 +16,26 @@
         "typescript": "5.8.3",
       },
     },
+    "apps/api": {
+      "name": "@dockstat/api",
+      "version": "1.0.0",
+      "dependencies": {
+        "@dockstat/db": "workspace:*",
+        "@dockstat/docker-client": "workspace:*",
+        "@dockstat/logger": "workspace:*",
+        "@dockstat/plugin-handler": "workspace:*",
+        "@dockstat/sqlite-wrapper": "workspace:*",
+        "@dockstat/typings": "workspace:*",
+        "@dockstat/ui": "workspace:*",
+        "@dockstat/utils": "workspace:*",
+        "@elysiajs/openapi": "^1.4.11",
+        "@elysiajs/server-timing": "^1.4.0",
+        "elysia": "latest",
+      },
+      "devDependencies": {
+        "bun-types": "latest",
+      },
+    },
     "apps/docknode": {
       "name": "docknode",
       "version": "1.0.50",
@@ -366,6 +386,8 @@
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.3.3", "", { "os": "win32", "cpu": "x64" }, "sha512-klJKPPQvUk9Rlp0Dd56gQw/+Wt6uUprHdHWtbDC93f3Iv+knA2tLWpcYoOZJgPV+9s+RBmYv0DGy4mUlr20esg=="],
 
     "@borewit/text-codec": ["@borewit/text-codec@0.1.1", "", {}, "sha512-5L/uBxmjaCIX5h8Z+uu+kA9BQLkc/Wl06UGR5ajNRxu+/XjonB5i8JpgFMrPj3LXTCPA0pv8yxUvbUi+QthGGA=="],
+
+    "@dockstat/api": ["@dockstat/api@workspace:apps/api"],
 
     "@dockstat/create-rr-elysia": ["@dockstat/create-rr-elysia@workspace:packages/react-router-elysia"],
 

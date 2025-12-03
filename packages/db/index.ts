@@ -10,6 +10,7 @@ import type { DockStatConfigTableType } from "@dockstat/typings/types"
 class DockStatDB {
 	protected db: DB
 	private config_table: QueryBuilder<DockStatConfigTableType>
+	private metrics_table
 	private logger: Logger
 
 	constructor(prefix = "DockStatDB", parents: string[] = []) {
@@ -26,8 +27,6 @@ class DockStatDB {
 			})
 			this.logger.debug("Created DB instance for dockstat.sqlite")
 
-			// Create config table
-			this.logger.debug("Creating config table")
 			this.config_table = this.db.createTable<DockStatConfigTableType>(
 				"config",
 				{
@@ -62,7 +61,33 @@ class DockStatDB {
 					},
 				}
 			)
-			this.logger.debug("Config table created successfully")
+			this.logger.debug("Config table successfully initialized")
+
+			this.metrics_table = this.db.createTable(
+				"metrics",
+				{
+					id: column.id(),
+					totalRequests: column.integer(),
+					requestsByMethod: column.json(),
+					requestsByPath: column.json(),
+					requestsByStatus: column.json(),
+					requestDurations: column.json(),
+					errors: column.integer(),
+				},
+				{
+					ifNotExists: true,
+					parser: {
+						JSON: [
+							"requestsByMethod",
+							"requestsByPath",
+							"requestsByStatus",
+							"requestDurations",
+						],
+					},
+				}
+			)
+
+			this.logger.debug("Metrics table successfully initialized")
 
 			// Initializing periodic tasks
 			this.initializePeriodicTasks()
@@ -174,6 +199,10 @@ class DockStatDB {
 
 	public getConfigTable() {
 		return this.config_table
+	}
+
+	public getMetricsTable() {
+		return this.metrics_table
 	}
 
 	// Database Management

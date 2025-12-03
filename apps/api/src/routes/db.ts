@@ -1,0 +1,52 @@
+import Elysia from "elysia"
+import { DatabaseModel } from "../models/database"
+import { updateConfig } from "../database/utils"
+import { DockStatDB } from "../database"
+
+const DBRoutes = new Elysia({
+	name: "DatabaseElysiaInstance",
+	prefix: "/db",
+	detail: {
+		tags: ["DB"],
+	},
+})
+	.post(
+		"config",
+		({ body, status }) => {
+			try {
+				const res = updateConfig(body)
+				return status(200, res)
+			} catch (error) {
+				return status(400, {
+					message: "Error while updating Database",
+					error: error,
+				})
+			}
+		},
+		{
+			body: DatabaseModel.updateBody,
+			response: {
+				200: DatabaseModel.updateRes,
+				400: DatabaseModel.updateError,
+			},
+		}
+	)
+	.get(
+		"config",
+		({ status }) => {
+			try {
+				const res = DockStatDB.configTable.select(["*"]).all()[0]
+				return status(200, res)
+			} catch (_error) {
+				return status(400, "Error while opening Database")
+			}
+		},
+		{
+			response: {
+				200: DatabaseModel.configRes,
+				400: DatabaseModel.error,
+			},
+		}
+	)
+
+export default DBRoutes

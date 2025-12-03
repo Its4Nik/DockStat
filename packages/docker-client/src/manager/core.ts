@@ -17,14 +17,13 @@ import {
 	looksLikeEventMessage,
 } from "./types"
 import type { PoolMetrics, WorkerMetrics } from "../types"
-import { logger } from "../../"
 import type { buildMessageFromProxyRes } from "@dockstat/typings/types"
-import PluginHandler from "@dockstat/plugin-handler"
+import type PluginHandler from "@dockstat/plugin-handler"
 
 export class DockerClientManagerCore {
 	readonly table: DockerClientTableQuery
 	readonly db: DBType
-	readonly logger = new Logger("DCM", logger.getParentsForLoggerChaining())
+	readonly logger
 	readonly workers: Map<number, WorkerWrapper> = new Map()
 	readonly maxWorkers: number
 	readonly dbPath: string
@@ -36,11 +35,13 @@ export class DockerClientManagerCore {
 	constructor(
 		db: DBType,
 		pluginHandler: PluginHandler,
+		logger: Logger,
 		options: {
 			maxWorkers?: number
 			events?: Map<number, Partial<EVENTS>>
 		}
 	) {
+		this.logger = logger.spawn("DCM")
 		this.logger.info("Creating Docker Client Manager")
 		this.dbPath = db.getDb().filename
 		this.db = db
@@ -391,9 +392,11 @@ export class DockerClientManagerCore {
 		return this.workers.has(clientId)
 	}
 
-	public getAllClients(
-		all = false
-	): Array<{ id: number; name: string; _notIninitalized?: boolean }> {
+	public getAllClients(all = false): Array<{
+		id: number
+		name: string
+		initialized: boolean | null | undefined
+	}> {
 		if (!all) {
 			return Array.from(this.workers.values()).map((w) => ({
 				id: w.clientId,
@@ -407,6 +410,7 @@ export class DockerClientManagerCore {
 		const initialized = [...this.workers.values()].map((w) => ({
 			id: w.clientId,
 			name: w.clientName,
+			initialized: true,
 		}))
 
 		const stored = storedClients.map(({ id, name }) => ({
@@ -415,7 +419,7 @@ export class DockerClientManagerCore {
 			initialized: !!initialized.find((i) => i.id === Number(id)),
 		}))
 
-		return [...stored, ...initialized]
+		return [...stored]
 	}
 
 	public async removeClient(clientId: number): Promise<void> {

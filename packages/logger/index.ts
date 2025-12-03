@@ -102,6 +102,10 @@ class Logger {
 		)
 	}
 
+	spawn(prefix: string) {
+		return new Logger(prefix, [this.name, ...this.parents])
+	}
+
 	error(msg: string, requestid?: string) {
 		if (!this.disabled && !shouldIgnore(msg, ignoreMessages))
 			console.error(this.formatMessage("error", msg, requestid))
