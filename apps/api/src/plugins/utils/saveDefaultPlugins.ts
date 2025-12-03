@@ -5,15 +5,20 @@ import { logger } from "./logger"
 
 let id = 1
 
+const defaultPluginDir =
+	Bun.env.DOCKSTATAPI_DEFAULT_PLUGIN_DIR ??
+	`${process.cwd()}/../api/src/plugins/default-plugins`
+
 export async function saveDefaultPlugins(
 	pluginHandlerFactory: PluginHandlerFactory
 ) {
 	logger.info("Saving default plugins")
-	const path = `${process.cwd()}/app/.server/api/plugins/default-plugins/*/*.ts`
-	const plugins = new Glob(path)
+	const plugins = new Glob(defaultPluginDir)
 	const pluginPaths = Array.from(plugins.scanSync({ absolute: true }))
 
-	logger.debug(`Found ${pluginPaths.length} default plugins in ${path}`)
+	logger.debug(
+		`Found ${pluginPaths.length} default plugins in ${defaultPluginDir}`
+	)
 
 	for (const p of pluginPaths) {
 		logger.debug(`Processing plugin ${p}`)
@@ -32,8 +37,8 @@ export async function saveDefaultPlugins(
 			},
 			splitting: false,
 			banner: "/*　Bundled by DockStat　*/",
-			outdir: "./.bundled",
-			target: "node",
+			outdir: "./.bundle",
+			target: "bun",
 		})
 
 		const js = await build.outputs[0].text()

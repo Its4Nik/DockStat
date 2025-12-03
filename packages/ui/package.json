@@ -6,6 +6,7 @@
 	"types": "./src/components/index.ts",
 	"exports": {
 		".": "./src/components/index.ts",
+		"./welcome": "./src/welcome/Onboarding.tsx",
 		"./css": "./src/App.css"
 	},
 	"files": [

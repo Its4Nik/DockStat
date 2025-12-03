@@ -20,14 +20,12 @@ export namespace DockerModel {
 				activeStreams: t.Number(),
 				isMonitoring: t.Boolean(),
 				initialized: t.Boolean(),
-				memoryUsage: t
-					.Object({
-						rss: t.Number(),
-						heapTotal: t.Number(),
-						heapUsed: t.Number(),
-						external: t.Number(),
-					})
-					.Optional(),
+				memoryUsage: t.Object({
+					rss: t.Number(),
+					heapTotal: t.Number(),
+					heapUsed: t.Number(),
+					external: t.Number(),
+				}),
 				uptime: t.Number(),
 			})
 		),
@@ -52,14 +50,12 @@ export namespace DockerModel {
 				activeStreams: t.Number(),
 				isMonitoring: t.Boolean(),
 				initialized: t.Boolean(),
-				memoryUsage: t
-					.Object({
-						rss: t.Number(),
-						heapTotal: t.Number(),
-						heapUsed: t.Number(),
-						external: t.Number(),
-					})
-					.Optional(),
+				memoryUsage: t.Object({
+					rss: t.Number(),
+					heapTotal: t.Number(),
+					heapUsed: t.Number(),
+					external: t.Number(),
+				}),
 				uptime: t.Number(),
 			})
 		),

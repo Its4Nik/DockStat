@@ -240,7 +240,9 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
 							typeof transformed[columnKey] === "string") ||
 						typeof transformed[columnKey] === "number"
 					) {
-						transformed[columnKey] = Boolean(transformed[columnKey])
+						transformed[columnKey] = ["true", "True", 1, true].includes(
+							transformed[columnKey]
+						)
 					}
 				}
 			}

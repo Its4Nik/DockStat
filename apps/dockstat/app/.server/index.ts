@@ -1,13 +1,8 @@
-import { DockStatAPI } from "./api"
-import Logger from "@dockstat/logger"
-import { logger as BaseLogger } from "./logger"
+import { DockStatAPI, type TreatyType } from "@dockstat/api"
+import { treaty } from "@elysiajs/eden"
 
-const logger = new Logger("Server", BaseLogger.getParentsForLoggerChaining())
+const API = DockStatAPI
 
-const PORT = Number(Bun.env.DOCKSTAT_BACKEND_PORT ?? 3000)
+export const ServerAPI = treaty<TreatyType>("http://localhost:3000").api.v2
 
-DockStatAPI.listen(PORT)
-
-logger.info(
-	`Started Elysia on port ${PORT} with config ${JSON.stringify(DockStatAPI.config)}`
-)
+API.listen({ port: 3000, reusePort: true })

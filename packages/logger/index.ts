@@ -102,8 +102,12 @@ class Logger {
 		)
 	}
 
-	spawn(prefix: string) {
-		return new Logger(prefix, [this.name, ...this.parents])
+	spawn(prefix: string, additionalParents?: string[]) {
+		return new Logger(prefix, [
+			this.name,
+			...(additionalParents || []),
+			...this.parents,
+		])
 	}
 
 	error(msg: string, requestid?: string) {

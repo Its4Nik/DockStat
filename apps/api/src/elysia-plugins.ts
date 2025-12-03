@@ -11,6 +11,7 @@ const DockStatElysiaPlugins = new Elysia()
 	)
 	.use(
 		serverTiming({
+			enabled: Boolean(Bun.env.DOCKSTATAPI_SHOW_TRACES) ?? true,
 			trace: {
 				afterHandle: true,
 				beforeHandle: true,

@@ -1,8 +1,8 @@
-import { Link } from 'react-router'
-import { Badge } from '../Badge/Badge'
-import { Card } from '../Card/Card'
-import DockStatLogo from './DockStat2-06.png'
-import { Divider } from '../Divider/Divider'
+import { Link } from "react-router"
+import { Badge } from "../Badge/Badge"
+import { Card } from "../Card/Card"
+import DockStatLogo from "./DockStat2-06.png"
+import { Divider } from "../Divider/Divider"
 
 type NavbarProps = {
 	isNavigating: boolean
@@ -11,31 +11,28 @@ type NavbarProps = {
 
 const paths: Array<{ slug: string; path: string }> = [
 	{
-		slug: 'Extensions',
-		path: '/extensions',
+		slug: "Extensions",
+		path: "/extensions",
 	},
 	{
-		slug: 'Plugins',
-		path: '/plugins',
+		slug: "Plugins",
+		path: "/plugins",
 	},
 ]
 
 export function Navbar({ isNavigating, location }: NavbarProps) {
 	return (
 		<>
-			<Card
-				size="sm"
-				className="w-full p-0 mb-4 relative overflow-hidden"
-			>
+			<Card size="sm" className="w-full p-0 mb-4 relative overflow-hidden">
 				{/* Animated gradient background */}
 				<div
 					className={`absolute inset-0 bg-linear-to-r from-blue-500 via-purple-500 to-pink-500 bg-size-[200%_200%] transition-opacity duration-500 ${
 						isNavigating
-							? 'opacity-20 animate-[gradient_1s_ease_infinite]'
-							: 'opacity-0'
+							? "opacity-20 animate-[gradient_1s_ease_infinite]"
+							: "opacity-0"
 					}`}
 					style={{
-						animation: isNavigating ? 'gradient 3s ease infinite' : 'none',
+						animation: isNavigating ? "gradient 3s ease infinite" : "none",
 					}}
 				/>
 

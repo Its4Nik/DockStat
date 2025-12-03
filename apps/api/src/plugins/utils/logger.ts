@@ -1,7 +1,3 @@
-import Logger from "@dockstat/logger"
-import { ElysiaLogger } from "../../logger"
+import BaseLogger from "../../logger"
 
-export const logger = new Logger(
-	"Plugins",
-	ElysiaLogger.getParentsForLoggerChaining()
-)
+export const logger = BaseLogger.spawn("Utils", ["Plugins"])

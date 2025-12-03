@@ -14,6 +14,7 @@
 	"dependencies": {
 		"@dockstat/db": "workspace:*",
 		"@dockstat/logger": "workspace:*",
+		"@dockstat/api": "workspace:*",
 		"@dockstat/plugin-handler": "workspace:*",
 		"@dockstat/sqlite-wrapper": "workspace:*",
 		"@dockstat/docker-client": "workspace:*",

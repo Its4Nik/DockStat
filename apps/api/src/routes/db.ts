@@ -1,7 +1,9 @@
-import Elysia from "elysia"
+import Elysia, { t } from "elysia"
 import { DatabaseModel } from "../models/database"
 import { updateConfig } from "../database/utils"
 import { DockStatDB } from "../database"
+
+//const logger = BaseLogger.spawn("Test")
 
 const DBRoutes = new Elysia({
 	name: "DatabaseElysiaInstance",
@@ -31,22 +33,13 @@ const DBRoutes = new Elysia({
 			},
 		}
 	)
-	.get(
-		"config",
-		({ status }) => {
-			try {
-				const res = DockStatDB.configTable.select(["*"]).all()[0]
-				return status(200, res)
-			} catch (_error) {
-				return status(400, "Error while opening Database")
-			}
-		},
-		{
-			response: {
-				200: DatabaseModel.configRes,
-				400: DatabaseModel.error,
-			},
+	.get("config", ({ status }) => {
+		try {
+			const res = DockStatDB.configTable.select(["*"]).all()[0]
+			return status(200, res)
+		} catch (_error) {
+			return status(400, "Error while opening Database")
 		}
-	)
+	})
 
 export default DBRoutes
