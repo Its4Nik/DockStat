@@ -1,9 +1,9 @@
 .DS_Store
 .env
 /node_modules/
-./.bundled
 # React Router
 /.react-router/
 /build/
 ./dockstat.sqlite-wal
 ./dockstat.sqlite-shm
+./.bundle

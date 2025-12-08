@@ -1,6 +1,6 @@
 import type PluginHandlerFactory from "@dockstat/plugin-handler"
 import type { DBPluginShemaT, PluginMetaType } from "@dockstat/typings/types"
-import { Glob } from "bun"
+import { Glob, $ } from "bun"
 import { logger } from "./logger"
 import { fileURLToPath } from "node:url"
 import { dirname, join } from "node:path"
@@ -11,7 +11,7 @@ let id = 1
 
 const defaultPluginDir =
 	Bun.env.DOCKSTATAPI_DEFAULT_PLUGIN_DIR ??
-	join(__dirname, "../api/src/plugins/default-plugins")
+	join(__dirname, "../default-plugins")
 
 const pattern = join(defaultPluginDir, "**/index.{ts,js}")
 
@@ -35,16 +35,18 @@ export async function saveDefaultPlugins(
 
 		const build = await Bun.build({
 			entrypoints: [p],
-			minify: {
-				identifiers: false,
-				keepNames: true,
-				syntax: false,
-				whitespace: true,
-			},
+			minify: false,
 			splitting: false,
-			banner: "/*　Bundled by DockStat　*/",
+			banner: `
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+Object.defineProperty(import.meta, 'require', {
+  value: require,
+  enumerable: true,
+});`,
 			outdir: "./.bundle",
 			target: "bun",
+			format: "esm",
 		})
 
 		const js = await build.outputs[0].text()
@@ -73,15 +75,19 @@ function saveDefaultPlugin(
 		tags: [...(meta.tags ?? []), "default"],
 	}
 
-	id++
-
 	logger.debug(`Saving default plugin ${pPlug.name}	(${pPlug.repoType})`)
 
 	const saveRes = pluginHandler.savePlugin(pPlug, true)
+
+	//if (saveRes.success) {
+	//	pluginHandler.loadPlugin(id)
+	//}
 
 	if (saveRes.success) {
 		logger.info(`Default plugin ${meta.name} saved successfully`)
 	} else {
 		logger.error(`Failed to save default plugin ${meta.name}: ${saveRes.error}`)
 	}
+
+	id++
 }

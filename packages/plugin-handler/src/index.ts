@@ -1,4 +1,4 @@
-import { column, QueryBuilder } from "@dockstat/sqlite-wrapper"
+import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type DB from "@dockstat/sqlite-wrapper"
 import type { DBPluginShemaT, Plugin } from "@dockstat/typings/types"
 import Logger from "@dockstat/logger"
@@ -68,7 +68,6 @@ class PluginHandler {
 
 	public savePlugin(plugin: DBPluginShemaT, update?: boolean) {
 		try {
-			this.logger.debug(`Saving Plugin ${plugin.name} to DB`)
 			if (update) {
 				this.logger.info(`Updating Plugin ${plugin.name}`)
 				this.unloadPlugin(Number(plugin.id))
@@ -79,6 +78,7 @@ class PluginHandler {
 					message: "Plugin saved successfully",
 				}
 			}
+			this.logger.debug(`Saving Plugin ${plugin.name} to DB`)
 			const res = this.table.insert(plugin)
 			this.logger.debug(`Plugin ${plugin.name} saved`)
 			return {
@@ -118,7 +118,7 @@ class PluginHandler {
 	public async loadPlugins(ids: number[]) {
 		this.logger.debug(`Loading plugins: ${ids}`)
 		const successes: number[] = []
-		const errors: number[] = []
+		const errors: { pluginId: number; error: string }[] = []
 		let step = 0
 
 		for (const id of ids) {
@@ -127,8 +127,9 @@ class PluginHandler {
 				await this.loadPlugin(id)
 				successes.push(id)
 			} catch (error: unknown) {
-				this.logger.error(`Could not load ${id} - ${error}`)
-				errors.push(id)
+				const msg = `Could not load ${id} - ${error}`
+				this.logger.error(msg)
+				errors.push({ pluginId: id, error: msg })
 			}
 		}
 
@@ -146,19 +147,20 @@ class PluginHandler {
 				return false
 			}
 			const valid = Boolean(p.plugin && p.id)
-			this.logger.info(`Validating plugin ${p.id}: ${valid}`)
+			this.logger.info(`Valid plugin ${p.id}: ${valid}`)
 			return valid
 		})
 
 		const imports = await Promise.allSettled(
 			validPlugins.map(async (plugin) => {
-				const tempPath = join(tmpdir(), `plugin-${plugin.id}-${Date.now()}.js`)
+				const tempPath = join(
+					tmpdir(),
+					`/dockstat-plugins/plugin-${plugin.id}-${Date.now()}.js`
+				)
 				this.logger.debug(`Writing plugin ${plugin.id} to ${tempPath}`)
 				try {
 					await Bun.write(tempPath, plugin.plugin)
-					const mod = (await import(/* @vite-ignore */ tempPath))
-						.default as Plugin
-					//console.debug(mod)
+					const { default: mod } = await import(/* @vite-ignore */ tempPath)
 
 					mod.id = plugin.id as number
 
@@ -197,7 +199,7 @@ class PluginHandler {
 						throw new Error(`Plugin ${plugin.id} has no ID`)
 					}
 
-					return { id: plugin.id, module: mod }
+					if (mod) return { id: plugin.id, module: mod }
 				} catch (err) {
 					this.logger.error(`Failed to import plugin ${plugin.id}: ${err}`)
 					return null
@@ -207,6 +209,8 @@ class PluginHandler {
 			})
 		)
 
+		const success: number[] = []
+
 		for (const result of imports) {
 			if (result.status === "fulfilled" && result.value) {
 				this.logger.info(`Loaded plugin ${result.value.id}`)
@@ -214,8 +218,12 @@ class PluginHandler {
 					result.value.id as number,
 					result.value.module
 				)
+				success.push(result.value.id)
+			} else {
+				this.logger.error(`Could not import - ${result.status}`)
 			}
 		}
+		this.loadPlugins(success)
 	}
 
 	public getServerHooks(id: number) {
@@ -241,16 +249,17 @@ class PluginHandler {
 			throw new Error(`Plugin already loaded: ${id}`)
 		}
 
-		const tempPath = join(tmpdir(), `plugin-${id}-${Date.now()}.js`)
+		const tempPath = join(
+			tmpdir(),
+			`/dockstat-plugins/plugin-${id}-${Date.now()}.js`
+		)
 
 		try {
 			await Bun.write(tempPath, pluginToLoad.plugin)
 			const mod = (await import(/* @vite-ignore */ tempPath)).default as Plugin
 			this.loadedPluginsMap.set(pluginToLoad.id as number, mod)
+			console.log(this.loadedPluginsMap.get(pluginToLoad.id as number))
 			mod.id = pluginToLoad.id
-			this.logger.debug(
-				`Creating table for plugin ${pluginToLoad.id} if needed`
-			)
 			mod.config?.table &&
 				this.DB.createTable(mod.config.table.name, mod.config?.table.columns, {
 					parser: { JSON: mod.config.table.jsonColumns },
@@ -276,7 +285,14 @@ class PluginHandler {
 	}
 
 	public getStatus() {
-		const installedPlugins = this.table.select(["*"]).all()
+		const installedPlugins = this.table
+			.select(["*"])
+			.all()
+			.map(({ plugin, ...p }) => {
+				return {
+					...p,
+				}
+			})
 		const loadedPlugins = this.getLoadedPlugins()
 		const repos = installedPlugins.map((l) => l.repository)
 
@@ -332,6 +348,7 @@ class PluginHandler {
 
 	public getHookHandlers() {
 		this.logger.info("Getting Hook Handlers")
+
 		const loadedPlugins = Array.from(this.loadedPluginsMap.values())
 
 		this.logger.debug(

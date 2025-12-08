@@ -1,4 +1,4 @@
-import Logger from "@dockstat/logger"
+import type Logger from "@dockstat/logger"
 import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import { worker as workerUtils } from "@dockstat/utils"
 import type { DOCKER, EVENTS } from "@dockstat/typings"
@@ -45,10 +45,10 @@ export class DockerClientManagerCore {
 		this.logger.info("Creating Docker Client Manager")
 		this.dbPath = db.getDb().filename
 		this.db = db
-		this.maxWorkers = options.maxWorkers ?? 4
+		this.maxWorkers = Number(options.maxWorkers || 4)
 		this.pluginHandler = pluginHandler
 
-		const ev = options.events || pluginHandler.getHookHandlers()
+		const ev = pluginHandler.getHookHandlers()
 
 		if (ev) {
 			for (const [pluginId, pluginEvents] of ev) {
@@ -550,14 +550,16 @@ export class DockerClientManagerCore {
 	readonly triggerHooks = <K extends keyof EVENTS>(
 		message: buildMessageFromProxyRes<K>
 	) => {
+		if (!message.type) {
+			this.logger.error(`No message type! ${JSON.stringify(message)}`)
+			return
+		}
+
 		this.logger.debug(
 			`Triggering hooks for event "${String(message.type)} - ctx: ${JSON.stringify(message.ctx)}"`
 		)
 
-		if (!message.type) {
-			this.logger.error("No message type!")
-			return
-		}
+		this.logger.debug(`${this.events.size} Events registered`)
 
 		for (const [id, hooks] of this.events.entries()) {
 			const serverHooks = this.pluginHandler.getServerHooks(id)
@@ -566,6 +568,8 @@ export class DockerClientManagerCore {
 				this.logger.warn(`No hooks found for plugin ${id}`)
 				continue
 			}
+
+			this.logger.debug(`Found ${JSON.stringify(Object.keys(hooks))}`)
 
 			if (!serverHooks) {
 				this.logger.warn(`No server hooks found for plugin ${id}`)

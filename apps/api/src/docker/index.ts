@@ -8,7 +8,7 @@ const DCM = new DockerClientManager(
 	PluginHandler,
 	BaseLogger,
 	{
-		maxWorkers: Number(Bun.env.DOCKSTAT_MAX_WORKERS) ?? 200,
+		maxWorkers: Number(Bun.env.DOCKSTAT_MAX_WORKERS) || 200,
 	}
 )
 

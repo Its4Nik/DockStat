@@ -9,6 +9,9 @@ const PluginRoutes = new Elysia({
 	},
 })
 	.get("/all", () => PluginHandler.getAll())
+	.get("/hooks", () => {
+		return Array.from(PluginHandler.getHookHandlers())
+	})
 	.get("/status", () => PluginHandler.getStatus())
 	.post("/install", ({ body }) => PluginHandler.savePlugin(body), {
 		body: PluginModel.installPluginBody,
