@@ -392,34 +392,52 @@ export class DockerClientManagerCore {
 		return this.workers.has(clientId)
 	}
 
-	public getAllClients(all = false): Array<{
-		id: number
-		name: string
-		initialized: boolean | null | undefined
-	}> {
-		if (!all) {
-			return Array.from(this.workers.values()).map((w) => ({
-				id: w.clientId,
-				name: w.clientName,
+	public getAllClients(
+		all = false
+	): Array<{ id: number; name: string; initialized: boolean }> {
+		const liveMap = new Map<
+			number,
+			{ id: number; name: string; initialized: true }
+		>()
+		for (const w of this.workers.values()) {
+			liveMap.set(Number(w.clientId), {
+				id: Number(w.clientId),
+				name: w.clientName ?? String(w.clientId),
 				initialized: true,
-			}))
+			})
 		}
 
-		const storedClients = this.table.select(["id", "name"]).all()
+		if (!all) {
+			return Array.from(liveMap.values())
+		}
 
-		const initialized = [...this.workers.values()].map((w) => ({
-			id: w.clientId,
-			name: w.clientName,
-			initialized: true,
-		}))
+		const storedClients = this.table.select(["id", "name"]).all() as Array<{
+			id: number | string
+			name: string
+		}>
 
-		const stored = storedClients.map(({ id, name }) => ({
-			id: Number(id),
-			name,
-			initialized: !!initialized.find((i) => i.id === Number(id)),
-		}))
+		const resultMap = new Map<
+			number,
+			{ id: number; name: string; initialized: boolean }
+		>()
 
-		return [...stored]
+		for (const { id, name } of storedClients) {
+			const numId = Number(id)
+			const live = liveMap.get(numId)
+			resultMap.set(numId, {
+				id: numId,
+				name: live?.name ?? name,
+				initialized: Boolean(live),
+			})
+		}
+
+		for (const [id, live] of liveMap.entries()) {
+			if (!resultMap.has(id)) {
+				resultMap.set(id, live)
+			}
+		}
+
+		return Array.from(resultMap.values())
 	}
 
 	public async removeClient(clientId: number): Promise<void> {

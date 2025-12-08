@@ -2,18 +2,24 @@ import type PluginHandlerFactory from "@dockstat/plugin-handler"
 import type { DBPluginShemaT, PluginMetaType } from "@dockstat/typings/types"
 import { Glob } from "bun"
 import { logger } from "./logger"
+import { fileURLToPath } from "node:url"
+import { dirname, join } from "node:path"
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 let id = 1
 
 const defaultPluginDir =
 	Bun.env.DOCKSTATAPI_DEFAULT_PLUGIN_DIR ??
-	`${process.cwd()}/../api/src/plugins/default-plugins`
+	join(__dirname, "../api/src/plugins/default-plugins")
+
+const pattern = join(defaultPluginDir, "**/index.{ts,js}")
 
 export async function saveDefaultPlugins(
 	pluginHandlerFactory: PluginHandlerFactory
 ) {
 	logger.info("Saving default plugins")
-	const plugins = new Glob(defaultPluginDir)
+	const plugins = new Glob(pattern)
 	const pluginPaths = Array.from(plugins.scanSync({ absolute: true }))
 
 	logger.debug(
