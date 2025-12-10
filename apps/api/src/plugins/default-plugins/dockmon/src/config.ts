@@ -1,14 +1,16 @@
 import { column } from "@dockstat/sqlite-wrapper"
 import type { PluginConfig } from "@dockstat/typings"
 import type { DockMonTable } from "./types"
+import DockMonActions from "./actions"
 
-export const config: PluginConfig<DockMonTable, {}> = {
+export const config: PluginConfig<DockMonTable, typeof DockMonActions> = {
 	apiRoutes: {
 		"/all": {
-			actions: [],
+			actions: ["getSavedMetrics"],
 			method: "GET",
 		},
 	},
+	actions: DockMonActions,
 	table: {
 		columns: {
 			id: column.id(),

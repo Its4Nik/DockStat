@@ -23,8 +23,8 @@ const DockMon: Plugin<DockMonTable> = {
 	...meta,
 	config: config,
 	events: {
-		"host:metrics": (ctx, { table }) => {
-			console.info("Saving Host metrics to DB")
+		"host:metrics": (ctx, { table, logger }) => {
+			logger.info("Saving Host metrics to DB")
 			table.insert(mapFromHostMetricHookToDb(ctx))
 		},
 	},

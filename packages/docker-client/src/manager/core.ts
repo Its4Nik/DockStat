@@ -552,7 +552,6 @@ export class DockerClientManagerCore {
 	) => {
 		if (!message.type) {
 			this.logger.error(`No message type! ${JSON.stringify(message)}`)
-			return
 		}
 
 		this.logger.debug(
@@ -590,7 +589,7 @@ export class DockerClientManagerCore {
 
 			try {
 				if (message.additionalCtx) {
-					hook(message.ctx as any, message.additionalCtx, serverHooks)
+					hook(message.ctx as any, message.additionalCtx as any, serverHooks)
 				} else {
 					hook(message.ctx as any, serverHooks)
 				}

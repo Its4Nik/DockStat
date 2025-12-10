@@ -3285,8 +3285,8 @@ var DockMon = {
   ...meta,
   config,
   events: {
-    "host:metrics": (ctx, { table }) => {
-      console.info("Saving Host metrics to DB");
+    "host:metrics": (ctx, { table, logger: logger2 }) => {
+      logger2.info("Saving Host metrics to DB");
       table.insert(mapFromHostMetricHookToDb(ctx));
     }
   }

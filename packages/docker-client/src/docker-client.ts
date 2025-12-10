@@ -30,7 +30,6 @@ class DockerClient {
 	private streamManager?: StreamManager
 	private disposed = false
 	private startTime = Date.now()
-	private clientId: number
 
 	constructor(
 		id: number,
@@ -38,7 +37,6 @@ class DockerClient {
 		DB: DB,
 		options: DOCKER.DockerAdapterOptions = {}
 	) {
-		this.clientId = id
 		this.logger = new Logger(
 			`DockerClient-${id}`,
 			logger.getParentsForLoggerChaining()
@@ -1045,10 +1043,7 @@ class DockerClient {
 		if (this.monitoringManager) {
 			this.monitoringManager.startMonitoring()
 		} else {
-			proxyEvent(
-				"warning",
-				`Monitoring manager not initialized on ${this.name}`
-			)
+			proxyEvent("error", `Monitoring manager not initialized on ${this.name}`)
 		}
 	}
 

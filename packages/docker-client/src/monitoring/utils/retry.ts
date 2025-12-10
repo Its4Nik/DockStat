@@ -9,6 +9,11 @@ export async function withRetry<T>(
 		try {
 			return await operation()
 		} catch (error) {
+			if (error instanceof Error) {
+				console.error(`Attempt ${attempt} failed: ${error.message}`)
+			} else {
+				console.error(`Attempt ${attempt} failed: ${String(error)}`)
+			}
 			const err = error instanceof Error ? error : new Error(String(error))
 			if (attempt === maxAttempts) {
 				throw err

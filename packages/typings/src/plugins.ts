@@ -1,27 +1,37 @@
-export * from "./plugin-base";
-import type {
-  ColumnDefinition,
-  JsonColumnConfig,
-} from "@dockstat/sqlite-wrapper";
-import type { PluginActions } from "./plugin-base";
+export * from "./plugin-base"
+import type { ColumnDefinition } from "@dockstat/sqlite-wrapper"
+import type { PluginActions } from "./plugin-base"
 
 /* PluginRoute defines the API route configuration for a plugin action */
-export type PluginRoute<A extends PluginActions<any>> = {
-  method: "GET" | "POST";
-  actions: (keyof A)[]; // must be keys from the actions map
-};
+export type PluginRoute<
+	T extends Record<string, unknown>,
+	A extends PluginActions<T>,
+> = {
+	method: "GET" | "POST"
+	actions: (keyof A)[]
+}
 
-export type FrontendRoute = unknown; // Placeholder for future frontend route definitions
+export type FrontendRoute = unknown // Placeholder for future frontend route definitions
 
 /* PluginConfig defines the complete configuration for a plugin */
 export type PluginConfig<
-  T extends Record<string, unknown>,
-  A extends PluginActions<T>
+	T extends Record<string, unknown>,
+	A extends PluginActions<T>,
 > = {
-  table?: {
-    name: string;
-    jsonColumns: JsonColumnConfig<T>;
-    columns: Record<string, ColumnDefinition>;
-  };
-  apiRoutes?: Record<string, PluginRoute<A>>; // routes.actions must be keys of A
-};
+	table?: {
+		name: string
+		jsonColumns: JsonColumnConfig<T>
+		columns: Record<string, ColumnDefinition>
+	}
+	apiRoutes?: Record<string, PluginRoute<T, A>>
+	actions?: PluginActions<T>
+}
+
+// Helper type to validate that actions exist in A
+export type ValidatedPluginRoute<
+	T extends Record<string, unknown>,
+	A extends PluginActions<T>,
+	K extends string,
+> = PluginRoute<T, A> & {
+	actions: Extract<keyof A, K>[] // Ensures all actions actually exist in A
+}

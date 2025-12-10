@@ -60,7 +60,6 @@ export interface Plugin<
 	K extends PluginActions<T> = PluginActions<T>,
 > extends WrappedPluginMetaType,
 		Omit<DBPlugin, "plugin"> {
-	routes?: AnyElysia
 	config?: PluginConfig<T, K>
 	events?: Partial<EVENTS<T>>
 	init?: () => void

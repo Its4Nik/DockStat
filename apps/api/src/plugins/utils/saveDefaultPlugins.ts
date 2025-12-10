@@ -54,7 +54,7 @@ Object.defineProperty(import.meta, 'require', {
 		saveDefaultPlugin(pluginHandlerFactory, meta, js)
 	}
 
-	pluginHandlerFactory.loadAllPlugins()
+	await pluginHandlerFactory.loadAllPlugins()
 }
 
 function saveDefaultPlugin(

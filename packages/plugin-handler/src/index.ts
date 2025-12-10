@@ -37,7 +37,6 @@ class PluginHandler {
 				repository: column.text({ notNull: true }),
 				manifest: column.text({ notNull: true }),
 				author: column.json({ notNull: true }),
-
 				plugin: column.text(),
 			},
 			{
@@ -223,7 +222,6 @@ class PluginHandler {
 				this.logger.error(`Could not import - ${result.status}`)
 			}
 		}
-		this.loadPlugins(success)
 	}
 
 	public getServerHooks(id: number) {
@@ -326,9 +324,7 @@ class PluginHandler {
 		throw new Error("Unsupported manifest")
 	}
 
-	public async handleRoute(req: Request, params: Record<string, string>) {
-		const { id } = params
-
+	public async handleRoute(id: number, path: string, request: Request) {
 		if (!id) {
 			throw new Error("PluginID not provided!")
 		}
@@ -339,11 +335,24 @@ class PluginHandler {
 			throw new Error(`No loaded Plugin with ID ${id} found`)
 		}
 
-		if (!plugin.routes) {
+		if (!plugin.config?.apiRoutes) {
 			throw new Error(`No routes defined for Plugin ${id}`)
 		}
 
-		return await plugin.routes.handle(req)
+		const route = plugin.config.apiRoutes[path]
+
+		if (!route) {
+			throw new Error(`No route config found for ${path}`)
+		}
+
+		let body: null | unknown = null
+		const { actions, method } = route
+
+		if (method === "POST") {
+			body = request.body
+		}
+
+		const action = plugin.return
 	}
 
 	public getHookHandlers() {
