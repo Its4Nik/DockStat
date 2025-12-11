@@ -28,6 +28,9 @@ export class OutlineSync {
   private getDocumentPath(doc: Document, collectionName: string): string {
     const customPath = this.customPaths[doc.id]
     if (customPath) {
+      if (customPath.startsWith("..")) {
+        return join(process.cwd(), customPath)
+      }
       return join(this.outputDir, customPath)
     }
 
