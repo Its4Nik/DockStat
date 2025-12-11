@@ -1,6 +1,6 @@
 import Elysia from "elysia"
-import { formatPrometheusMetrics } from "../../middleware/metrics"
 import { DockStatDB } from "../../database"
+import { formatPrometheusMetrics } from "../../middleware/metrics"
 import { MetricsModel } from "../../models/metrics"
 
 const PrometheusMetricsRoute = new Elysia({ prefix: "/metrics" }).get(

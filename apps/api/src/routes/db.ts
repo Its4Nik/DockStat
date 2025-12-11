@@ -1,7 +1,7 @@
 import Elysia, { t } from "elysia"
-import { DatabaseModel } from "../models/database"
-import { updateConfig } from "../database/utils"
 import { DockStatDB } from "../database"
+import { updateConfig } from "../database/utils"
+import { DatabaseModel } from "../models/database"
 
 //const logger = BaseLogger.spawn("Test")
 

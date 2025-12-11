@@ -10,11 +10,11 @@ import {
   Store,
   Zap,
 } from "lucide-react"
+import { Badge } from "../components/Badge/Badge"
+import { Divider } from "../components/Divider/Divider"
 import { HoverBubble } from "../components/HoverBubble/HoverBubble"
 import { LinkWithIcon } from "../components/Link/Link"
-import { Badge } from "../components/Badge/Badge"
 import type { Slide } from "./types"
-import { Divider } from "../components/Divider/Divider"
 
 export const slides: Slide[] = [
   {

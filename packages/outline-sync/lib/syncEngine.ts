@@ -1,14 +1,9 @@
-import fs from "node:fs/promises"
 import { existsSync } from "node:fs"
+import fs from "node:fs/promises"
 import path from "node:path"
-import { loadTopConfig, getCollectionFilesBase, loadCollectionConfig } from "./config"
-import {
-  normalizeContentIgnoreWhitespace,
-  getLocalTimestampMs,
-  safeWriteFile,
-  slugifyTitle,
-} from "./utils"
-import { fetchDocumentInfo, updateDocument, createDocument } from "./outlineApi"
+import { logger } from "../bin/cli"
+import { getCollectionFilesBase, loadCollectionConfig, loadTopConfig } from "./config"
+import { createDocument, fetchDocumentInfo, updateDocument } from "./outlineApi"
 import type {
   Collection,
   CollectionConfig,
@@ -19,7 +14,12 @@ import type {
   PageEntry,
   SingleDocumentResponse,
 } from "./types"
-import { logger } from "../bin/cli"
+import {
+  getLocalTimestampMs,
+  normalizeContentIgnoreWhitespace,
+  safeWriteFile,
+  slugifyTitle,
+} from "./utils"
 
 /**
  * Load pages.json for a collection (if missing, error/ask to init)

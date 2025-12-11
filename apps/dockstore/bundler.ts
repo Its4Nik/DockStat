@@ -1,9 +1,9 @@
-import { Glob } from "bun"
-import YAML from "js-yaml"
 import { PluginMeta, WrappedPluginMeta } from "@dockstat/typings/schemas"
 import type { PluginMetaType } from "@dockstat/typings/types"
 import Ajv from "ajv"
+import { Glob } from "bun"
 import chalk from "chalk"
+import YAML from "js-yaml"
 
 /* --- Color helpers --- */
 const clr = {

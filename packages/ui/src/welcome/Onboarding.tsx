@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react"
 import { Card, CardBody } from "../components/Card/Card"
-import type { OnboardingProps } from "./types"
 import { slides } from "./CONSTS"
+import IntroScreen from "./Intro"
+import { OnboardingFooter } from "./OnboardingFooter"
 import { OnboardingHeader } from "./OnboardingHeader"
 import { OnboardingSlide } from "./OnboardingSlide"
-import { OnboardingFooter } from "./OnboardingFooter"
-import IntroScreen from "./Intro"
+import type { OnboardingProps } from "./types"
 
 export function Onboarding({ setOnBoardingComplete }: OnboardingProps) {
   const [currentIndex, setCurrentIndex] = useState(0)

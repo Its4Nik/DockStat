@@ -1,11 +1,11 @@
-import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
-import type DB from "@dockstat/sqlite-wrapper"
-import type { DBPluginShemaT, Plugin } from "@dockstat/typings/types"
-import Logger from "@dockstat/logger"
+import { unlink } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { unlink } from "node:fs/promises"
+import Logger from "@dockstat/logger"
+import type DB from "@dockstat/sqlite-wrapper"
+import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { EVENTS } from "@dockstat/typings"
+import type { DBPluginShemaT, Plugin } from "@dockstat/typings/types"
 
 class PluginHandler {
   private loadedPluginsMap = new Map<number, Plugin>()

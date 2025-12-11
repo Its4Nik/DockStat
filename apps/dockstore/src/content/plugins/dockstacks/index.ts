@@ -1,6 +1,6 @@
 import type { Plugin } from "@dockstat/typings/types"
-import { PluginMeta } from "./src/meta"
 import DockStacksElysia from "./src/elyisa"
+import { PluginMeta } from "./src/meta"
 
 const DockStacks: Plugin = {
   ...PluginMeta,

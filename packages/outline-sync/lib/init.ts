@@ -1,18 +1,18 @@
-import { listCollectionsPaged, listDocumentsInCollection } from "./outlineApi"
+import { existsSync } from "node:fs"
+import fs from "node:fs/promises"
+import path from "node:path"
+import { logger } from "../bin/cli"
 import {
-  loadTopConfig,
-  saveTopConfig,
-  getCollectionFilesBase,
-  saveCollectionConfig,
   ensureConfigDir,
   ensureConfigDirs,
+  getCollectionFilesBase,
+  loadTopConfig,
+  saveCollectionConfig,
+  saveTopConfig,
 } from "./config"
-import fs from "node:fs/promises"
-import { existsSync } from "node:fs"
-import path from "node:path"
+import { listCollectionsPaged, listDocumentsInCollection } from "./outlineApi"
+import type { Document, Manifest, PageEntry } from "./types"
 import { slugifyTitle } from "./utils"
-import type { PageEntry, Manifest, Document } from "./types"
-import { logger } from "../bin/cli"
 
 /**
  * Prompt helper (simple): prints numbered list and reads a line from stdin.

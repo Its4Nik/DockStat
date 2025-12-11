@@ -1,7 +1,7 @@
 import { column } from "@dockstat/sqlite-wrapper"
 import type { PluginConfig } from "@dockstat/typings"
-import type { DockMonTable } from "./types"
 import DockMonActions from "./actions"
+import type { DockMonTable } from "./types"
 
 export const config: PluginConfig<DockMonTable, typeof DockMonActions> = {
   apiRoutes: {

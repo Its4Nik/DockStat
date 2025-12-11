@@ -1,5 +1,5 @@
-import Elysia, { t } from "elysia"
 import { openapi } from "@elysiajs/openapi"
+import Elysia, { t } from "elysia"
 import { WebSocketElysiaInstance } from "./websocket"
 
 const Store = Bun.file("./posts.json")

@@ -1,4 +1,4 @@
-import { DB, column } from "./index"
+import { column, DB } from "./index"
 
 interface User extends Record<string, unknown> {
   id?: number
@@ -297,9 +297,9 @@ async function runComprehensiveTests() {
       test.assertGreaterThan(users.length, 0, "Should return users")
       // Check that only selected columns exist (plus any default values)
       const user = users[0]
-      test.assert(Object.prototype.hasOwnProperty.call(user, "id"), "Should have id")
-      test.assert(Object.prototype.hasOwnProperty.call(user, "name"), "Should have name")
-      test.assert(Object.prototype.hasOwnProperty.call(user, "email"), "Should have email")
+      test.assert(Object.hasOwn(user, "id"), "Should have id")
+      test.assert(Object.hasOwn(user, "name"), "Should have name")
+      test.assert(Object.hasOwn(user, "email"), "Should have email")
     })
 
     test.test("Select with WHERE conditions", () => {

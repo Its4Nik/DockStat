@@ -1,10 +1,9 @@
-import type { EVENTS } from "@dockstat/typings"
-import type { buildMessageFromProxyRes } from "@dockstat/typings/types"
-import type { WorkerRequest, WorkerResponse } from "../types"
+import type Logger from "@dockstat/logger"
 import type DB from "@dockstat/sqlite-wrapper"
 import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
-import type { DOCKER } from "@dockstat/typings"
-import type Logger from "@dockstat/logger"
+import type { DOCKER, EVENTS } from "@dockstat/typings"
+import type { buildMessageFromProxyRes } from "@dockstat/typings/types"
+import type { WorkerRequest, WorkerResponse } from "../types"
 
 export type { WorkerRequest, WorkerResponse }
 

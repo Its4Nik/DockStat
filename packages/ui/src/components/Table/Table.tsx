@@ -1,8 +1,8 @@
+import { ArrowUpDown, ChevronDown, Filter, Search } from "lucide-react"
 import type React from "react"
-import { useState, useMemo } from "react"
-import { Search, Filter, ArrowUpDown, ChevronDown } from "lucide-react"
-import { Input } from "../Forms/Input"
+import { useMemo, useState } from "react"
 import { Button } from "../Button/Button"
+import { Input } from "../Forms/Input"
 
 export interface Column<T> {
   key: keyof T

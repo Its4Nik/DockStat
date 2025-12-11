@@ -1,5 +1,5 @@
-import { useState } from "react"
 import type { Meta, StoryFn } from "@storybook/react-vite"
+import { useState } from "react"
 import { Slider, type SliderProps } from "../components/Slider/Slider"
 
 export default {

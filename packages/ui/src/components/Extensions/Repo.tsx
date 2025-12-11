@@ -1,26 +1,26 @@
 import type { PluginMetaType, RepoType } from "@dockstat/typings/types"
-import { Card, CardBody, CardHeader } from "../Card/Card"
-import { Badge } from "../Badge/Badge"
 import {
-  LockOpen,
-  Lock,
-  Check,
-  X,
-  PaintBucket,
-  BookTemplate,
-  Puzzle,
-  Link,
-  Table,
   Blocks,
+  BookTemplate,
+  Check,
+  Link,
+  Lock,
+  LockOpen,
+  PaintBucket,
+  Puzzle,
+  Table,
+  X,
 } from "lucide-react"
-import { HoverBubble } from "../HoverBubble/HoverBubble"
-import { Divider } from "../Divider/Divider"
-import { getRepoIcon } from "../../utils/repoIcons"
-import { Button } from "../Button/Button"
 import { useState } from "react"
-import { RepoPluginSlide } from "./slides/Plugin"
-import { LinkWithIcon } from "../Link/Link"
+import { getRepoIcon } from "../../utils/repoIcons"
+import { Badge } from "../Badge/Badge"
+import { Button } from "../Button/Button"
+import { Card, CardBody, CardHeader } from "../Card/Card"
+import { Divider } from "../Divider/Divider"
 import { Checkbox } from "../Forms/Checkbox"
+import { HoverBubble } from "../HoverBubble/HoverBubble"
+import { LinkWithIcon } from "../Link/Link"
+import { RepoPluginSlide } from "./slides/Plugin"
 
 function Plugins({
   pluginsAsTable = false,

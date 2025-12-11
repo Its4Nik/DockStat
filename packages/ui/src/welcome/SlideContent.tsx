@@ -1,6 +1,6 @@
+import { Button } from "../components/Button/Button"
 import { Card, CardBody, CardFooter } from "../components/Card/Card"
 import { SlideBullet } from "./SlideBullet"
-import { Button } from "../components/Button/Button"
 import type { Slide } from "./types"
 
 export const SlideContent = ({ slide, isActive }: { slide: Slide; isActive: boolean }) => (

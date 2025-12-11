@@ -1,7 +1,7 @@
 import type { ColumnDefinition } from "@dockstat/sqlite-wrapper"
 import { type AnyElysia, t } from "elysia"
-import { Repo } from "./db"
 import type { EVENTS, PluginActions, PluginConfig } from ".."
+import { Repo } from "./db"
 
 /**
  * name: The Plugins name

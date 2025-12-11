@@ -1,14 +1,17 @@
 import type Logger from "@dockstat/logger"
+import type PluginHandler from "@dockstat/plugin-handler"
 import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
-import { worker as workerUtils } from "@dockstat/utils"
 import type { DOCKER, EVENTS } from "@dockstat/typings"
+import type { buildMessageFromProxyRes } from "@dockstat/typings/types"
+import { worker as workerUtils } from "@dockstat/utils"
+import type { PoolMetrics, WorkerMetrics } from "../types"
 import type {
   DBType,
   DockerClientTable,
   DockerClientTableQuery,
   EventMessage,
-  WorkerWrapper,
   WorkerRequest,
+  WorkerWrapper,
 } from "./types"
 import {
   isInitCompleteMessage,
@@ -16,9 +19,6 @@ import {
   isProxyEventEnvelope,
   looksLikeEventMessage,
 } from "./types"
-import type { PoolMetrics, WorkerMetrics } from "../types"
-import type { buildMessageFromProxyRes } from "@dockstat/typings/types"
-import type PluginHandler from "@dockstat/plugin-handler"
 
 export class DockerClientManagerCore {
   readonly table: DockerClientTableQuery

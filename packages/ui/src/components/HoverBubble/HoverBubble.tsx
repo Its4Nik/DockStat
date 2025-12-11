@@ -1,5 +1,5 @@
 import { Triangle } from "lucide-react"
-import type { ReactNode, FC } from "react"
+import type { FC, ReactNode } from "react"
 
 export interface HoverBubbleProps {
   label: string

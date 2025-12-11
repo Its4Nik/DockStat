@@ -1,6 +1,6 @@
 import Elysia from "elysia"
-import PluginHandler from "../../plugins"
 import { PluginModel } from "../../models/plugins"
+import PluginHandler from "../../plugins"
 
 const PluginRoutes = new Elysia({
   prefix: "/plugins",

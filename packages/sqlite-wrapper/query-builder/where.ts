@@ -1,5 +1,5 @@
 import type { SQLQueryBindings } from "bun:sqlite"
-import type { WhereCondition, RegexCondition } from "../types"
+import type { RegexCondition, WhereCondition } from "../types"
 import { BaseQueryBuilder } from "./base"
 
 /**

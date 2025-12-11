@@ -4,8 +4,8 @@ var { getPrototypeOf: B7, defineProperty: jQ, getOwnPropertyNames: G7 } = Object
 var N7 = Object.prototype.hasOwnProperty
 var P8 = ($, X, Q) => {
   Q = $ != null ? M7(B7($)) : {}
-  let J = X || !$ || !$.__esModule ? jQ(Q, "default", { value: $, enumerable: !0 }) : Q
-  for (let Y of G7($)) if (!N7.call(J, Y)) jQ(J, Y, { get: () => $[Y], enumerable: !0 })
+  const J = X || !$ || !$.__esModule ? jQ(Q, "default", { value: $, enumerable: !0 }) : Q
+  for (const Y of G7($)) if (!N7.call(J, Y)) jQ(J, Y, { get: () => $[Y], enumerable: !0 })
   return J
 }
 var U6 = ($, X) => () => (X || $((X = { exports: {} }).exports, X), X.exports)
@@ -119,13 +119,13 @@ function YH($) {
   let X = "",
     Q = 0
   while (Q < $.length) {
-    let J = $[Q++]
+    const J = $[Q++]
     if (J < 128) X += String.fromCharCode(J)
     else if (J < 224) {
-      let Y = $[Q++] & 63
+      const Y = $[Q++] & 63
       X += String.fromCharCode(((J & 31) << 6) | Y)
     } else if (J < 240) {
-      let Y = $[Q++] & 63,
+      const Y = $[Q++] & 63,
         Z = $[Q++] & 63
       X += String.fromCharCode(((J & 15) << 12) | (Y << 6) | Z)
     } else {
@@ -151,7 +151,7 @@ function qH($) {
 }
 function MH($) {
   let X = ""
-  for (let Q of $)
+  for (const Q of $)
     if (Q >= 128 && Q <= 159 && _J[Q]) X += _J[Q]
     else X += String.fromCharCode(Q)
   return X
@@ -188,7 +188,7 @@ var jW = h0(() => {
     159: "Ÿ",
   }),
     (JH = {})
-  for (let [$, X] of Object.entries(_J)) JH[X] = Number.parseInt($)
+  for (const [$, X] of Object.entries(_J)) JH[X] = Number.parseInt($)
 })
 function v1($) {
   return new DataView($.buffer, $.byteOffset)
@@ -198,7 +198,7 @@ class s1 {
     ;(this.len = $), (this.encoding = X)
   }
   get($, X = 0) {
-    let Q = $.subarray(X, X + this.len)
+    const Q = $.subarray(X, X + this.len)
     return CW(Q, this.encoding)
   }
 }
@@ -290,7 +290,7 @@ class a8 {
     ;(this.endOfStream = !1), (this.interrupted = !1), (this.peekQueue = [])
   }
   async peek($, X = !1) {
-    let Q = await this.read($, X)
+    const Q = await this.read($, X)
     return this.peekQueue.push($.subarray(0, Q)), Q
   }
   async read($, X = !1) {
@@ -304,9 +304,9 @@ class a8 {
     let X = $.length,
       Q = 0
     while (this.peekQueue.length > 0 && X > 0) {
-      let J = this.peekQueue.pop()
+      const J = this.peekQueue.pop()
       if (!J) throw Error("peekData should be defined")
-      let Y = Math.min(J.length, X)
+      const Y = Math.min(J.length, X)
       if (($.set(J.subarray(0, Y), Q), (Q += Y), (X -= Y), Y < J.length))
         this.peekQueue.push(J.subarray(Y))
     }
@@ -316,7 +316,7 @@ class a8 {
     let Q = 0
     while (Q < $.length && !this.endOfStream) {
       if (this.interrupted) throw new r8()
-      let J = await this.readFromStream($.subarray(Q), X)
+      const J = await this.readFromStream($.subarray(Q), X)
       if (J === 0) break
       Q += J
     }
@@ -353,7 +353,7 @@ var xJ = h0(() => {
   tX = class tX extends EJ {
     async readFromStream($, X) {
       if ($.length === 0) return 0
-      let Q = await this.reader.read(new Uint8Array($.length), { min: X ? void 0 : $.length })
+      const Q = await this.reader.read(new Uint8Array($.length), { min: X ? void 0 : $.length })
       if (Q.done) this.endOfStream = Q.done
       if (Q.value) return $.set(Q.value), Q.value.length
       return 0
@@ -370,7 +370,7 @@ var IJ = h0(() => {
       ;(this.reader = $), (this.buffer = null)
     }
     writeChunk($, X) {
-      let Q = Math.min(X.length, $.length)
+      const Q = Math.min(X.length, $.length)
       if (($.set(X.subarray(0, Q)), Q < X.length)) this.buffer = X.subarray(Q)
       else this.buffer = null
       return Q
@@ -380,7 +380,7 @@ var IJ = h0(() => {
       let Q = 0
       if (this.buffer) Q += this.writeChunk($, this.buffer)
       while (Q < $.length && !this.endOfStream) {
-        let J = await this.reader.read()
+        const J = await this.reader.read()
         if (J.done) {
           this.endOfStream = !0
           break
@@ -400,7 +400,7 @@ var IJ = h0(() => {
 })
 function TJ($) {
   try {
-    let X = $.getReader({ mode: "byob" })
+    const X = $.getReader({ mode: "byob" })
     if (X instanceof ReadableStreamDefaultReader) return new m6(X)
     return new tX(X)
   } catch (X) {
@@ -432,12 +432,12 @@ class M8 {
       })
   }
   async readToken($, X = this.position) {
-    let Q = new Uint8Array($.len)
+    const Q = new Uint8Array($.len)
     if ((await this.readBuffer(Q, { position: X })) < $.len) throw new l0()
     return $.get(Q, 0)
   }
   async peekToken($, X = this.position) {
-    let Q = new Uint8Array($.len)
+    const Q = new Uint8Array($.len)
     if ((await this.peekBuffer(Q, { position: X })) < $.len) throw new l0()
     return $.get(Q, 0)
   }
@@ -451,7 +451,7 @@ class M8 {
   }
   async ignore($) {
     if (this.fileInfo.size !== void 0) {
-      let X = this.fileInfo.size - this.position
+      const X = this.fileInfo.size - this.position
       if ($ > X) return (this.position += X), X
     }
     return (this.position += $), $
@@ -482,13 +482,13 @@ var TW = h0(() => {
       ;(this.streamReader = $), (this.fileInfo = X?.fileInfo ?? {})
     }
     async readBuffer($, X) {
-      let Q = this.normalizeOptions($, X),
+      const Q = this.normalizeOptions($, X),
         J = Q.position - this.position
       if (J > 0) return await this.ignore(J), this.readBuffer($, X)
       if (J < 0)
         throw Error("`options.position` must be equal or greater than `tokenizer.position`")
       if (Q.length === 0) return 0
-      let Y = await this.streamReader.read($.subarray(0, Q.length), Q.mayBeLess)
+      const Y = await this.streamReader.read($.subarray(0, Q.length), Q.mayBeLess)
       if (((this.position += Y), (!X || !X.mayBeLess) && Y < Q.length)) throw new l0()
       return Y
     }
@@ -496,9 +496,9 @@ var TW = h0(() => {
       let Q = this.normalizeOptions($, X),
         J = 0
       if (Q.position) {
-        let Y = Q.position - this.position
+        const Y = Q.position - this.position
         if (Y > 0) {
-          let Z = new Uint8Array(Q.length + Y)
+          const Z = new Uint8Array(Q.length + Y)
           return (
             (J = await this.peekBuffer(Z, { mayBeLess: Q.mayBeLess })), $.set(Z.subarray(Y)), J - Y
           )
@@ -521,7 +521,7 @@ var TW = h0(() => {
         Q = new Uint8Array(X),
         J = 0
       while (J < $) {
-        let Y = $ - J,
+        const Y = $ - J,
           Z = await this.readBuffer(Q, { length: Math.min(X, Y) })
         if (Z < 0) return Z
         J += Z
@@ -550,11 +550,11 @@ var bW = h0(() => {
     }
     async readBuffer($, X) {
       if (X?.position) this.position = X.position
-      let Q = await this.peekBuffer($, X)
+      const Q = await this.peekBuffer($, X)
       return (this.position += Q), Q
     }
     async peekBuffer($, X) {
-      let Q = this.normalizeOptions($, X),
+      const Q = this.normalizeOptions($, X),
         J = Math.min(this.uint8Array.length - Q.position, Q.length)
       if (!Q.mayBeLess && J < Q.length) throw new l0()
       return $.set(this.uint8Array.subarray(Q.position, Q.position + J)), J
@@ -575,7 +575,7 @@ var kW = h0(() => {
   u6()
 })
 function gW($, X) {
-  let Q = TJ($),
+  const Q = TJ($),
     J = X ?? {},
     Y = J.onClose
   return (
@@ -620,7 +620,7 @@ var a1,
   vW,
   dW,
   HH,
-  hW = function ($, X) {
+  hW = ($, X) => {
     var Q = new e8(31)
     for (var J = 0; J < 31; ++J) Q[J] = X += 1 << $[J - 1]
     var Y = new zH(Q[30])
@@ -636,7 +636,7 @@ var a1,
   yJ,
   u2,
   Y0,
-  c6 = function ($, X, Q) {
+  c6 = ($, X, Q) => {
     var J = $.length,
       Y = 0,
       Z = new e8(X)
@@ -669,35 +669,33 @@ var a1,
   Y0,
   OH,
   PH,
-  gJ = function ($) {
+  gJ = ($) => {
     var X = $[0]
     for (var Q = 1; Q < $.length; ++Q) if ($[Q] > X) X = $[Q]
     return X
   },
-  I2 = function ($, X, Q) {
+  I2 = ($, X, Q) => {
     var J = (X / 8) | 0
     return (($[J] | ($[J + 1] << 8)) >> (X & 7)) & Q
   },
-  fJ = function ($, X) {
+  fJ = ($, X) => {
     var Q = (X / 8) | 0
     return ($[Q] | ($[Q + 1] << 8) | ($[Q + 2] << 16)) >> (X & 7)
   },
-  LH = function ($) {
-    return (($ + 7) / 8) | 0
-  },
-  KH = function ($, X, Q) {
+  LH = ($) => (($ + 7) / 8) | 0,
+  KH = ($, X, Q) => {
     if (X == null || X < 0) X = 0
     if (Q == null || Q > $.length) Q = $.length
     return new a1($.subarray(X, Q))
   },
   SH,
-  r1 = function ($, X, Q) {
+  r1 = ($, X, Q) => {
     var J = Error(X || SH[$])
     if (((J.code = $), Error.captureStackTrace)) Error.captureStackTrace(J, r1)
     if (!Q) throw J
     return J
   },
-  vJ = function ($, X, Q, J) {
+  vJ = ($, X, Q, J) => {
     var Y = $.length,
       Z = J ? J.length : 0
     if (!Y || (X.f && !X.l)) return Q || new a1(0)
@@ -705,7 +703,7 @@ var a1,
       q = W || X.i != 2,
       M = X.i
     if (W) Q = new a1(Y * 3)
-    var G = function (U) {
+    var G = (U) => {
         var D = Q.length
         if (U > D) {
           var z = new a1(Math.max(D * 2, U))
@@ -823,7 +821,7 @@ var a1,
     return P != Q.length && W ? KH(Q, 0, P) : Q.subarray(0, P)
   },
   CH,
-  jH = function ($) {
+  jH = ($) => {
     if ($[0] != 31 || $[1] != 139 || $[2] != 8) r1(6, "invalid gzip data")
     var X = $[3],
       Q = 10
@@ -831,11 +829,11 @@ var a1,
     for (var J = ((X >> 3) & 1) + ((X >> 4) & 1); J > 0; J -= !$[Q++]);
     return Q + (X & 2)
   },
-  FH = function ($) {
+  FH = ($) => {
     var X = $.length
     return ($[X - 4] | ($[X - 3] << 8) | ($[X - 2] << 16) | ($[X - 1] << 24)) >>> 0
   },
-  RH = function ($, X) {
+  RH = ($, X) => {
     if (($[0] & 15) != 8 || $[0] >> 4 > 7 || (($[0] << 8) | $[1]) % 31) r1(6, "invalid zlib data")
     if ((($[1] >> 5) & 1) == +!X)
       r1(6, "invalid zlib data: " + ($[1] & 32 ? "need" : "unexpected") + " dictionary")
@@ -904,7 +902,7 @@ var lW = U6((II, oW) => {
     B8 = Q6 * 24,
     TH = B8 * 7,
     bH = B8 * 365.25
-  oW.exports = function ($, X) {
+  oW.exports = ($, X) => {
     X = X || {}
     var Q = typeof $
     if (Q === "string" && $.length > 0) return kH($)
@@ -1013,7 +1011,7 @@ var sW = U6((TI, tW) => {
         H
       function A(...S) {
         if (!A.enabled) return
-        let j = A,
+        const j = A,
           K = Number(new Date()),
           y = K - (N || K)
         if (
@@ -1029,9 +1027,9 @@ var sW = U6((TI, tW) => {
         ;(S[0] = S[0].replace(/%([a-zA-Z%])/g, (f, I) => {
           if (f === "%%") return "%"
           o++
-          let k = Q.formatters[I]
+          const k = Q.formatters[I]
           if (typeof k === "function") {
-            let b = S[o]
+            const b = S[o]
             ;(f = k.call(j, b)), S.splice(o, 1), o--
           }
           return f
@@ -1063,17 +1061,17 @@ var sW = U6((TI, tW) => {
       return A
     }
     function J(B, N) {
-      let P = Q(this.namespace + (typeof N > "u" ? ":" : N) + B)
+      const P = Q(this.namespace + (typeof N > "u" ? ":" : N) + B)
       return (P.log = this.log), P
     }
     function Y(B) {
       Q.save(B), (Q.namespaces = B), (Q.names = []), (Q.skips = [])
-      let N = (typeof B === "string" ? B : "")
+      const N = (typeof B === "string" ? B : "")
         .trim()
         .replace(/\s+/g, ",")
         .split(",")
         .filter(Boolean)
-      for (let P of N)
+      for (const P of N)
         if (P[0] === "-") Q.skips.push(P.slice(1))
         else Q.names.push(P)
     }
@@ -1092,12 +1090,12 @@ var sW = U6((TI, tW) => {
       return w === N.length
     }
     function W() {
-      let B = [...Q.names, ...Q.skips.map((N) => "-" + N)].join(",")
+      const B = [...Q.names, ...Q.skips.map((N) => "-" + N)].join(",")
       return Q.enable(""), B
     }
     function q(B) {
-      for (let N of Q.skips) if (Z(B, N)) return !1
-      for (let N of Q.names) if (Z(B, N)) return !0
+      for (const N of Q.skips) if (Z(B, N)) return !1
+      for (const N of Q.names) if (Z(B, N)) return !0
       return !1
     }
     function M(B) {
@@ -1251,7 +1249,7 @@ var aW = U6((rW, rX) => {
       !this.useColors)
     )
       return
-    let X = "color: " + this.color
+    const X = "color: " + this.color
     $.splice(1, 0, X, "color: inherit")
     let Q = 0,
       J = 0
@@ -1283,7 +1281,7 @@ var aW = U6((rW, rX) => {
   }
   rX.exports = sW()(rW)
   var { formatters: cH } = rX.exports
-  cH.j = function ($) {
+  cH.j = ($) => {
     try {
       return JSON.stringify($)
     } catch (X) {
@@ -1302,7 +1300,7 @@ var Q5 = h0(() => {
   }),
     (dJ = {
       get($) {
-        let X = v0.get($, 6)
+        const X = v0.get($, 6)
         return {
           signature: e0.get($, 0),
           compressedSize: e0.get($, 8),
@@ -1313,7 +1311,7 @@ var Q5 = h0(() => {
     }),
     (eW = {
       get($) {
-        let X = v0.get($, 6)
+        const X = v0.get($, 6)
         return {
           signature: e0.get($, 0),
           minVersion: v0.get($, 4),
@@ -1345,7 +1343,7 @@ var Q5 = h0(() => {
     }),
     (X5 = {
       get($) {
-        let X = v0.get($, 8)
+        const X = v0.get($, 8)
         return {
           signature: e0.get($, 0),
           minVersion: v0.get($, 6),
@@ -1364,7 +1362,7 @@ var Q5 = h0(() => {
     })
 })
 function Y5($) {
-  let X = new Uint8Array(e0.len)
+  const X = new Uint8Array(e0.len)
   return e0.put(X, 0, $), X
 }
 class mJ {
@@ -1378,7 +1376,7 @@ class mJ {
     return this.tokenizer.peekToken(e0)
   }
   async findEndOfCentralDirectoryLocator() {
-    let $ = this.tokenizer,
+    const $ = this.tokenizer,
       X = Math.min(16384, $.fileInfo.size),
       Q = this.syncBuffer.subarray(0, X)
     await this.tokenizer.readBuffer(Q, { position: $.fileInfo.size - X })
@@ -1393,15 +1391,15 @@ class mJ {
       return
     }
     c2("Reading central-directory...")
-    let $ = this.tokenizer.position,
+    const $ = this.tokenizer.position,
       X = await this.findEndOfCentralDirectoryLocator()
     if (X > 0) {
       c2("Central-directory 32-bit signature found")
-      let Q = await this.tokenizer.readToken($5, X),
+      const Q = await this.tokenizer.readToken($5, X),
         J = []
       this.tokenizer.setPosition(Q.offsetOfStartOfCd)
       for (let Y = 0; Y < Q.nrOfEntriesOfSize; ++Y) {
-        let Z = await this.tokenizer.readToken(X5)
+        const Z = await this.tokenizer.readToken(X5)
         if (Z.signature !== G8.CentralFileHeader)
           throw Error("Expected Central-File-Header signature")
         ;(Z.filename = await this.tokenizer.readToken(new s1(Z.filenameLength, "utf-8"))),
@@ -1415,13 +1413,13 @@ class mJ {
     this.tokenizer.setPosition($)
   }
   async unzip($) {
-    let X = await this.readCentralDirectory()
+    const X = await this.readCentralDirectory()
     if (X) return this.iterateOverCentralDirectory(X, $)
     let Q = !1
     do {
-      let J = await this.readLocalFileHeader()
+      const J = await this.readLocalFileHeader()
       if (!J) break
-      let Y = $(J)
+      const Y = $(J)
       Q = !!Y.stop
       let Z = void 0
       if (
@@ -1435,9 +1433,9 @@ class mJ {
         while (M < 0 && q === hJ) {
           ;(q = await this.tokenizer.peekBuffer(this.syncBuffer, { mayBeLess: !0 })),
             (M = aH(this.syncBuffer.subarray(0, q), rH))
-          let G = M >= 0 ? M : q
+          const G = M >= 0 ? M : q
           if (Y.handler) {
-            let B = new Uint8Array(G)
+            const B = new Uint8Array(G)
             await this.tokenizer.readBuffer(B), W.push(B)
           } else await this.tokenizer.ignore(G)
         }
@@ -1460,14 +1458,14 @@ class mJ {
     } while (!Q)
   }
   async iterateOverCentralDirectory($, X) {
-    for (let Q of $) {
-      let J = X(Q)
+    for (const Q of $) {
+      const J = X(Q)
       if (J.handler) {
         this.tokenizer.setPosition(Q.relativeOffsetOfLocalHeader)
-        let Y = await this.readLocalFileHeader()
+        const Y = await this.readLocalFileHeader()
         if (Y) {
           await this.tokenizer.ignore(Y.extraFieldLength)
-          let Z = new Uint8Array(Q.compressedSize)
+          const Z = new Uint8Array(Q.compressedSize)
           await this.tokenizer.readBuffer(Z), await this.inflate(Y, Z, J.handler)
         }
       }
@@ -1477,13 +1475,13 @@ class mJ {
   inflate($, X, Q) {
     if ($.compressedMethod === 0) return Q(X)
     c2(`Decompress filename=${$.filename}, compressed-size=${X.length}`)
-    let J = iW(X)
+    const J = iW(X)
     return Q(J)
   }
   async readLocalFileHeader() {
-    let $ = await this.tokenizer.peekToken(e0)
+    const $ = await this.tokenizer.peekToken(e0)
     if ($ === G8.LocalFileHeader) {
-      let X = await this.tokenizer.readToken(eW)
+      const X = await this.tokenizer.readToken(eW)
       return (X.filename = await this.tokenizer.readToken(new s1(X.filenameLength, "utf-8"))), X
     }
     if ($ === G8.CentralFileHeader) return !1
@@ -1492,7 +1490,7 @@ class mJ {
   }
 }
 function aH($, X) {
-  let Q = $.length,
+  const Q = $.length,
     J = X.length
   if (J > Q) return -1
   for (let Y = 0; Y <= Q - J; Y++) {
@@ -1510,7 +1508,7 @@ function eH($) {
   let X = $.reduce((Y, Z) => Y + Z.length, 0),
     Q = new Uint8Array(X),
     J = 0
-  for (let Y of $) Q.set(Y, J), (J += Y.length)
+  for (const Y of $) Q.set(Y, J), (J += Y.length)
   return Q
 }
 var J5,
@@ -1528,7 +1526,7 @@ var Z5 = h0(() => {
     (aX = Y5(G8.EndOfCentralDirectory))
 })
 function uJ($) {
-  let { byteLength: X } = $
+  const { byteLength: X } = $
   if (X === 6) return $.getUint16(0) * 4294967296 + $.getUint32(2)
   if (X === 5) return $.getUint8(0) * 4294967296 + $.getUint32(1)
   if (X === 4) return $.getUint32(0)
@@ -1546,7 +1544,7 @@ function q5($) {
   return [...$].map((X) => X.charCodeAt(0))
 }
 function M5($, X = 0) {
-  let Q = Number.parseInt(new s1(6).get($, 148).replace(/\0.*$/, "").trim(), 8)
+  const Q = Number.parseInt(new s1(6).get($, 148).replace(/\0.*$/, "").trim(), 8)
   if (Number.isNaN(Q)) return !1
   let J = 256
   for (let Y = X; Y < X + 148; Y++) J += $[Y]
@@ -1992,7 +1990,7 @@ function cJ($) {
 }
 function p2($, X, Q) {
   Q = { offset: 0, ...Q }
-  for (let [J, Y] of X.entries())
+  for (const [J, Y] of X.entries())
     if (Q.mask) {
       if (Y !== (Q.mask[J] & $[J + Q.offset])) return !1
     } else if (Y !== $[J + Q.offset]) return !1
@@ -2015,9 +2013,9 @@ class N8 {
       (this.tokenizerOptions = { abortSignal: $?.signal })
   }
   async fromTokenizer($) {
-    let X = $.position
-    for (let Q of this.detectors) {
-      let J = await Q.detect($)
+    const X = $.position
+    for (const Q of this.detectors) {
+      const J = await Q.detect($)
       if (J) return J
       if (X !== $.position) return
     }
@@ -2027,7 +2025,7 @@ class N8 {
       throw TypeError(
         `Expected the \`input\` argument to be of type \`Uint8Array\` or \`ArrayBuffer\`, got \`${typeof $}\``
       )
-    let X = $ instanceof Uint8Array ? $ : new Uint8Array($)
+    const X = $ instanceof Uint8Array ? $ : new Uint8Array($)
     if (!(X?.length > 1)) return
     return this.fromTokenizer(fW(X, this.tokenizerOptions))
   }
@@ -2035,7 +2033,7 @@ class N8 {
     return this.fromStream($.stream())
   }
   async fromStream($) {
-    let X = await gW($, this.tokenizerOptions)
+    const X = await gW($, this.tokenizerOptions)
     try {
       return await this.fromTokenizer(X)
     } finally {
@@ -2048,7 +2046,7 @@ class N8 {
       Y,
       Z = $.getReader({ mode: "byob" })
     try {
-      let { value: M, done: G } = await Z.read(new Uint8Array(Q))
+      const { value: M, done: G } = await Z.read(new Uint8Array(Q))
       if (((Y = M), !G && M))
         try {
           J = await this.fromBuffer(M.subarray(0, Q))
@@ -2060,7 +2058,7 @@ class N8 {
     } finally {
       Z.releaseLock()
     }
-    let W = new TransformStream({
+    const W = new TransformStream({
         async start(M) {
           M.enqueue(Y)
         },
@@ -2108,7 +2106,7 @@ class N8 {
     if (this.check([66, 90, 104])) return { ext: "bz2", mime: "application/x-bzip2" }
     if (this.checkString("ID3")) {
       await $.ignore(6)
-      let X = await $.readToken(B5)
+      const X = await $.readToken(B5)
       if ($.position + X > $.fileInfo.size) return { ext: "mp3", mime: "audio/mpeg" }
       return await $.ignore(X), this.fromTokenizer($)
     }
@@ -2137,7 +2135,7 @@ class N8 {
             case "mimetype":
               return {
                 async handler(J) {
-                  let Y = new TextDecoder("utf-8").decode(J).trim()
+                  const Y = new TextDecoder("utf-8").decode(J).trim()
                   X = cJ(Y)
                 },
                 stop: !0,
@@ -2156,7 +2154,7 @@ class N8 {
                       X = cJ("application/vnd.ms-package.3dmanufacturing-3dmodel+xml")
                   } else {
                     Y = Y.slice(0, Math.max(0, Z))
-                    let W = Y.lastIndexOf('"'),
+                    const W = Y.lastIndexOf('"'),
                       q = Y.slice(Math.max(0, W + 1))
                     X = cJ(q)
                   }
@@ -2177,7 +2175,7 @@ class N8 {
     }
     if (this.checkString("OggS")) {
       await $.ignore(28)
-      let X = new Uint8Array(8)
+      const X = new Uint8Array(8)
       if ((await $.readBuffer(X), p2(X, [79, 112, 117, 115, 72, 101, 97, 100])))
         return { ext: "opus", mime: "audio/ogg; codecs=opus" }
       if (p2(X, [128, 116, 104, 101, 111, 114, 97])) return { ext: "ogv", mime: "video/ogg" }
@@ -2214,11 +2212,11 @@ class N8 {
     if (this.checkString("%PDF")) return { ext: "pdf", mime: "application/pdf" }
     if (this.check([0, 97, 115, 109])) return { ext: "wasm", mime: "application/wasm" }
     if (this.check([73, 73])) {
-      let X = await this.readTiffHeader(!1)
+      const X = await this.readTiffHeader(!1)
       if (X) return X
     }
     if (this.check([77, 77])) {
-      let X = await this.readTiffHeader(!0)
+      const X = await this.readTiffHeader(!0)
       if (X) return X
     }
     if (this.checkString("MAC ")) return { ext: "ape", mime: "audio/ape" }
@@ -2228,26 +2226,26 @@ class N8 {
           q = 128,
           M = 0
         while ((W & q) === 0 && q !== 0) ++M, (q >>= 1)
-        let G = new Uint8Array(M + 1)
+        const G = new Uint8Array(M + 1)
         return await $.readBuffer(G), G
       }
       async function Q() {
-        let W = await X(),
+        const W = await X(),
           q = await X()
         q[0] ^= 128 >> (q.length - 1)
-        let M = Math.min(6, q.length),
+        const M = Math.min(6, q.length),
           G = new DataView(W.buffer),
           B = new DataView(q.buffer, q.length - M, M)
         return { id: uJ(G), len: uJ(B) }
       }
       async function J(W) {
         while (W > 0) {
-          let q = await Q()
+          const q = await Q()
           if (q.id === 17026) return (await $.readToken(new s1(q.len))).replaceAll(/\00.*$/g, "")
           await $.ignore(q.len), --W
         }
       }
-      let Y = await Q()
+      const Y = await Q()
       switch (await J(Y.len)) {
         case "webm":
           return { ext: "webm", mime: "video/webm" }
@@ -2309,7 +2307,7 @@ class N8 {
       return { ext: "rar", mime: "application/x-rar-compressed" }
     if (this.checkString("solid ")) return { ext: "stl", mime: "model/stl" }
     if (this.checkString("AC")) {
-      let X = new s1(4, "latin1").get(this.buffer, 2)
+      const X = new s1(4, "latin1").get(this.buffer, 2)
       if (X.match("^d*") && X >= 1000 && X <= 1050) return { ext: "dwg", mime: "image/vnd.dwg" }
     }
     if (this.checkString("070707")) return { ext: "cpio", mime: "application/x-cpio" }
@@ -2337,7 +2335,7 @@ class N8 {
         return { length: await $.readToken(VW), type: await $.readToken(new s1(4, "latin1")) }
       }
       do {
-        let Q = await X()
+        const Q = await X()
         if (Q.length < 0) return
         switch (Q.type) {
           case "IDAT":
@@ -2364,7 +2362,7 @@ class N8 {
       return { ext: "orf", mime: "image/x-olympus-orf" }
     if (this.checkString("gimp xcf ")) return { ext: "xcf", mime: "image/x-xcf" }
     if (this.checkString("ftyp", { offset: 4 }) && (this.buffer[8] & 96) !== 0) {
-      let X = new s1(4, "latin1").get(this.buffer, 8).replace("\x00", " ").trim()
+      const X = new s1(4, "latin1").get(this.buffer, 8).replace("\x00", " ").trim()
       switch (X) {
         case "avif":
         case "avis":
@@ -2419,7 +2417,7 @@ class N8 {
       return { ext: "rw2", mime: "image/x-panasonic-rw2" }
     if (this.check([48, 38, 178, 117, 142, 102, 207, 17, 166, 217])) {
       async function X() {
-        let Q = new Uint8Array(16)
+        const Q = new Uint8Array(16)
         return await $.readBuffer(Q), { id: Q, size: Number(await $.readToken(_W)) }
       }
       await $.ignore(30)
@@ -2427,7 +2425,7 @@ class N8 {
         let Q = await X(),
           J = Q.size - 24
         if (p2(Q.id, [145, 7, 220, 183, 183, 169, 207, 17, 142, 230, 0, 192, 12, 32, 83, 101])) {
-          let Y = new Uint8Array(16)
+          const Y = new Uint8Array(16)
           if (
             ((J -= await $.readBuffer(Y)),
             p2(Y, [64, 158, 105, 248, 77, 91, 207, 17, 168, 253, 0, 128, 95, 92, 68, 43]))
@@ -2488,10 +2486,10 @@ class N8 {
     if (this.checkString("Extended Module:")) return { ext: "xm", mime: "audio/x-xm" }
     if (this.checkString("Creative Voice File")) return { ext: "voc", mime: "audio/x-voc" }
     if (this.check([4, 0, 0, 0]) && this.buffer.length >= 16) {
-      let X = new DataView(this.buffer.buffer).getUint32(12, !0)
+      const X = new DataView(this.buffer.buffer).getUint32(12, !0)
       if (X > 12 && this.buffer.length >= X + 16)
         try {
-          let Q = new TextDecoder().decode(this.buffer.subarray(16, X + 16))
+          const Q = new TextDecoder().decode(this.buffer.subarray(16, X + 16))
           if (JSON.parse(Q).files) return { ext: "asar", mime: "application/x-asar" }
         } catch {}
     }
@@ -2564,12 +2562,12 @@ class N8 {
       this.buffer.length >= 2 + this.options.mpegOffsetTolerance)
     )
       for (let X = 0; X <= this.options.mpegOffsetTolerance; ++X) {
-        let Q = this.scanMpeg(X)
+        const Q = this.scanMpeg(X)
         if (Q) return Q
       }
   }
   async readTiffTag($) {
-    let X = await this.tokenizer.readToken($ ? s8 : v0)
+    const X = await this.tokenizer.readToken($ ? s8 : v0)
     switch ((this.tokenizer.ignore(10), X)) {
       case 50341:
         return { ext: "arw", mime: "image/x-sony-arw" }
@@ -2579,20 +2577,20 @@ class N8 {
     }
   }
   async readTiffIFD($) {
-    let X = await this.tokenizer.readToken($ ? s8 : v0)
+    const X = await this.tokenizer.readToken($ ? s8 : v0)
     for (let Q = 0; Q < X; ++Q) {
-      let J = await this.readTiffTag($)
+      const J = await this.readTiffTag($)
       if (J) return J
     }
   }
   async readTiffHeader($) {
-    let X = ($ ? s8 : v0).get(this.buffer, 2),
+    const X = ($ ? s8 : v0).get(this.buffer, 2),
       Q = ($ ? RW : e0).get(this.buffer, 4)
     if (X === 42) {
       if (Q >= 6) {
         if (this.checkString("CR", { offset: 8 })) return { ext: "cr2", mime: "image/x-canon-cr2" }
         if (Q >= 8) {
-          let Y = ($ ? s8 : v0).get(this.buffer, 8),
+          const Y = ($ ? s8 : v0).get(this.buffer, 8),
             Z = ($ ? s8 : v0).get(this.buffer, 10)
           if ((Y === 28 && Z === 254) || (Y === 31 && Z === 11))
             return { ext: "nef", mime: "image/x-nikon-nef" }
@@ -2639,29 +2637,29 @@ var _5 = U6((V5) => {
     IA = /^[\u0020-\u003A\u003D-\u007E]*$/,
     TA = Object.prototype.toString,
     bA = (() => {
-      let $ = function () {}
+      const $ = () => {}
       return ($.prototype = Object.create(null)), $
     })()
   function kA($, X) {
-    let Q = new bA(),
+    const Q = new bA(),
       J = $.length
     if (J < 2) return Q
     let Y = X?.decode || fA,
       Z = 0
     do {
-      let W = $.indexOf("=", Z)
+      const W = $.indexOf("=", Z)
       if (W === -1) break
-      let q = $.indexOf(";", Z),
+      const q = $.indexOf(";", Z),
         M = q === -1 ? J : q
       if (W > M) {
         Z = $.lastIndexOf(";", W - 1) + 1
         continue
       }
-      let G = F5($, Z, W),
+      const G = F5($, Z, W),
         B = R5($, W, G),
         N = $.slice(G, B)
       if (Q[N] === void 0) {
-        let P = F5($, W + 1, M),
+        const P = F5($, W + 1, M),
           w = R5($, M, P),
           H = Y($.slice(P, w))
         Q[N] = H
@@ -2672,22 +2670,22 @@ var _5 = U6((V5) => {
   }
   function F5($, X, Q) {
     do {
-      let J = $.charCodeAt(X)
+      const J = $.charCodeAt(X)
       if (J !== 32 && J !== 9) return X
     } while (++X < Q)
     return Q
   }
   function R5($, X, Q) {
     while (X > Q) {
-      let J = $.charCodeAt(--X)
+      const J = $.charCodeAt(--X)
       if (J !== 32 && J !== 9) return X + 1
     }
     return Q
   }
   function gA($, X, Q) {
-    let J = Q?.encode || encodeURIComponent
+    const J = Q?.encode || encodeURIComponent
     if (!_A.test($)) throw TypeError(`argument name is invalid: ${$}`)
-    let Y = J(X)
+    const Y = J(X)
     if (!EA.test(Y)) throw TypeError(`argument val is invalid: ${X}`)
     let Z = $ + "=" + Y
     if (!Q) return Z
@@ -2771,8 +2769,8 @@ var FQ = {
   repoType: "github",
 }
 var L8 = ($, X) => {
-    let Q = X?.length ? {} : null
-    if (Q) for (let J of X) Q[J.part.charCodeAt(0)] = J
+    const Q = X?.length ? {} : null
+    if (Q) for (const J of X) Q[J.part.charCodeAt(0)] = J
     return { part: $, store: null, inert: Q, params: null, wildcardStore: null }
   },
   qY = ($, X) => ({ ...$, part: X }),
@@ -2796,10 +2794,10 @@ var L8 = ($, X) => {
     }
     build() {
       if (!this.config.lazy) return
-      for (let [X, Q, J] of this.deferred) this.add(X, Q, J, { lazy: !1, ignoreHistory: !0 })
+      for (const [X, Q, J] of this.deferred) this.add(X, Q, J, { lazy: !1, ignoreHistory: !0 })
       ;(this.deferred = []),
         (this.find = (X, Q) => {
-          let J = this.root[X]
+          const J = this.root[X]
           if (!J) return null
           return XX(Q, Q.length, J, 0, this.config.onParam)
         })
@@ -2809,13 +2807,13 @@ var L8 = ($, X) => {
       if (typeof Q !== "string") throw TypeError("Route path must be a string")
       if (Q === "") Q = "/"
       else if (Q[0] !== "/") Q = `/${Q}`
-      let q = Q[Q.length - 1] === "*",
+      const q = Q[Q.length - 1] === "*",
         M = Q.match($.regex.optionalParams)
       if (M) {
-        let w = Q.replaceAll("?", "")
+        const w = Q.replaceAll("?", "")
         this.add(X, w, J, { ignoreError: Y, ignoreHistory: Z, lazy: W })
         for (let H = 0; H < M.length; H++) {
-          let A = Q.replace(M[H], "")
+          const A = Q.replace(M[H], "")
           this.add(X, A, J, { ignoreError: !0, ignoreHistory: Z, lazy: W })
         }
         return J
@@ -2824,7 +2822,7 @@ var L8 = ($, X) => {
       if (this.history.find(([w, H, A]) => w === X && H === Q)) return J
       if (q || (M && Q.charCodeAt(Q.length - 1) === 63)) Q = Q.slice(0, -1)
       if (!Z) this.history.push([X, Q, J])
-      let G = Q.split($.regex.static),
+      const G = Q.split($.regex.static),
         B = Q.match($.regex.params) || []
       if (G[G.length - 1] === "") G.pop()
       let N
@@ -2834,7 +2832,7 @@ var L8 = ($, X) => {
       for (let w = 0; w < G.length; ++w) {
         let H = G[w]
         if (w > 0) {
-          let A = B[P++].slice(1)
+          const A = B[P++].slice(1)
           if (N.params === null) N.params = MY(A)
           else if (N.params.name !== A)
             if (Y) return J
@@ -2842,7 +2840,7 @@ var L8 = ($, X) => {
               throw Error(
                 `Cannot create route "${Q}" with parameter "${A}" because a route already exists with a different parameter name ("${N.params.name}") in the same location`
               )
-          let S = N.params
+          const S = N.params
           if (S.inert === null) {
             N = S.inert = L8(H)
             continue
@@ -2852,24 +2850,24 @@ var L8 = ($, X) => {
         for (let A = 0; ; ) {
           if (A === H.length) {
             if (A < N.part.length) {
-              let S = qY(N, N.part.slice(A))
+              const S = qY(N, N.part.slice(A))
               Object.assign(N, L8(H, [S]))
             }
             break
           }
           if (A === N.part.length) {
             if (N.inert === null) N.inert = {}
-            let S = N.inert[H.charCodeAt(A)]
+            const S = N.inert[H.charCodeAt(A)]
             if (S) {
               ;(N = S), (H = H.slice(A)), (A = 0)
               continue
             }
-            let j = L8(H.slice(A))
+            const j = L8(H.slice(A))
             ;(N.inert[H.charCodeAt(A)] = j), (N = j)
             break
           }
           if (H[A] !== N.part[A]) {
-            let S = qY(N, N.part.slice(A)),
+            const S = qY(N, N.part.slice(A)),
               j = L8(H.slice(A))
             Object.assign(N, L8(N.part.slice(0, A), [S, j])), (N = j)
             break
@@ -2878,7 +2876,7 @@ var L8 = ($, X) => {
         }
       }
       if (P < B.length) {
-        let H = B[P].slice(1)
+        const H = B[P].slice(1)
         if (N.params === null) N.params = MY(H)
         else if (N.params.name !== H)
           if (Y) return J
@@ -2897,13 +2895,13 @@ var L8 = ($, X) => {
       return N.store
     }
     find(X, Q) {
-      let J = this.root[X]
+      const J = this.root[X]
       if (!J) return null
       return XX(Q, Q.length, J, 0, this.config.onParam)
     }
   },
   XX = ($, X, Q, J, Y) => {
-    let Z = Q.part,
+    const Z = Q.part,
       W = Z.length,
       q = J + W
     if (W > 1) {
@@ -2919,32 +2917,32 @@ var L8 = ($, X) => {
       return null
     }
     if (Q.inert !== null) {
-      let M = Q.inert[$.charCodeAt(q)]
+      const M = Q.inert[$.charCodeAt(q)]
       if (M !== void 0) {
-        let G = XX($, X, M, q, Y)
+        const G = XX($, X, M, q, Y)
         if (G !== null) return G
       }
     }
     if (Q.params !== null) {
-      let { store: M, name: G, inert: B } = Q.params,
+      const { store: M, name: G, inert: B } = Q.params,
         N = $.indexOf("/", q)
       if (N !== q) {
         if (N === -1 || N >= X) {
           if (M !== null) {
-            let P = {}
+            const P = {}
             if (((P[G] = $.substring(q, X)), Y))
               for (let w = 0; w < Y.length; w++) {
-                let H = Y[w](P[G], G)
+                const H = Y[w](P[G], G)
                 if (H !== void 0) P[G] = H
               }
             return { store: M, params: P }
           }
         } else if (B !== null) {
-          let P = XX($, X, B, N, Y)
+          const P = XX($, X, B, N, Y)
           if (P !== null) {
             if (((P.params[G] = $.substring(q, N)), Y))
               for (let w = 0; w < Y.length; w++) {
-                let H = Y[w](P.params[G], G)
+                const H = Y[w](P.params[G], G)
                 if (H !== void 0) P.params[G] = H
               }
             return P
@@ -3036,9 +3034,9 @@ function H7($) {
   return new RegExp($.source, $.flags)
 }
 function A7($) {
-  let X = {}
-  for (let Q of Object.getOwnPropertyNames($)) X[Q] = JX($[Q])
-  for (let Q of Object.getOwnPropertySymbols($)) X[Q] = JX($[Q])
+  const X = {}
+  for (const Q of Object.getOwnPropertyNames($)) X[Q] = JX($[Q])
+  for (const Q of Object.getOwnPropertySymbols($)) X[Q] = JX($[Q])
   return X
 }
 function JX($) {
@@ -3121,7 +3119,7 @@ function u1($) {
   return z1($) || y2($) || r2($) || u($) || q0($) || a2($) || x0($)
 }
 var V0
-;(function ($) {
+;(($) => {
   ;($.InstanceMode = "default"),
     ($.ExactOptionalPropertyTypes = !1),
     ($.AllowArrayObject = !1),
@@ -3132,7 +3130,7 @@ var V0
   }
   $.IsExactOptionalProperty = X
   function Q(W) {
-    let q = l(W)
+    const q = l(W)
     return $.AllowArrayObject ? q : q && !c(W)
   }
   $.IsObjectLike = Q
@@ -3145,7 +3143,7 @@ var V0
   }
   $.IsNumberLike = Y
   function Z(W) {
-    let q = x0(W)
+    const q = x0(W)
     return $.AllowNullVoid ? q || W === null : q
   }
   $.IsVoidLike = Z
@@ -3163,16 +3161,16 @@ function L7($) {
   return $
 }
 function K7($) {
-  let X = {}
-  for (let Q of Object.getOwnPropertyNames($)) X[Q] = A6($[Q])
-  for (let Q of Object.getOwnPropertySymbols($)) X[Q] = A6($[Q])
+  const X = {}
+  for (const Q of Object.getOwnPropertyNames($)) X[Q] = A6($[Q])
+  for (const Q of Object.getOwnPropertySymbols($)) X[Q] = A6($[Q])
   return globalThis.Object.freeze(X)
 }
 function A6($) {
   return s0($) ? D7($) : i$($) ? O7($) : s2($) ? P7($) : H6($) ? L7($) : P0($) ? K7($) : $
 }
 function F($, X) {
-  let Q = X !== void 0 ? { ...X, ...$ } : $
+  const Q = X !== void 0 ? { ...X, ...$ } : $
   switch (V0.InstanceMode) {
     case "freeze":
       return A6(Q)
@@ -3461,7 +3459,7 @@ function wY($) {
 function fQ($) {
   if (!j0($)) return !1
   for (let X = 0; X < $.length; X++) {
-    let Q = $.charCodeAt(X)
+    const Q = $.charCodeAt(X)
     if ((Q >= 7 && Q <= 13) || Q === 27 || Q === 127) return !1
   }
   return !0
@@ -3676,7 +3674,7 @@ function dY($) {
     UY($.additionalProperties) &&
     P0($.patternProperties) &&
     ((X) => {
-      let Q = Object.getOwnPropertyNames(X.patternProperties)
+      const Q = Object.getOwnPropertyNames(X.patternProperties)
       return Q.length === 1 && wY(Q[0]) && P0(X.patternProperties) && T0(X.patternProperties[Q[0]])
     })($)
   )
@@ -3890,8 +3888,8 @@ function Z4($) {
   return $.length === 1 ? $[0] : $.length > 1 ? r7($.slice(1), $[0]) : []
 }
 function W4($) {
-  let X = []
-  for (let Q of $) X.push(...Q)
+  const X = []
+  for (const Q of $) X.push(...Q)
   return X
 }
 function I$($) {
@@ -3910,7 +3908,7 @@ function _0($, X, Q) {
   return F({ [L]: "Computed", target: $, parameters: X }, Q)
 }
 function a7($, X) {
-  let { [X]: Q, ...J } = $
+  const { [X]: Q, ...J } = $
   return J
 }
 function u0($, X) {
@@ -4003,12 +4001,12 @@ function q9($) {
     if (J$($, Z)) X += 1
     if (S6($, Z)) X -= 1
     if (B4($, Z) && X === 0) {
-      let W = $.slice(Q, Z)
+      const W = $.slice(Q, Z)
       if (W.length > 0) J.push(E8(W))
       Q = Z + 1
     }
   }
-  let Y = $.slice(Q)
+  const Y = $.slice(Q)
   if (Y.length > 0) J.push(E8(Y))
   if (J.length === 0) return { type: "const", const: "" }
   if (J.length === 1) return J[0]
@@ -4029,14 +4027,14 @@ function M9($) {
     for (let W = Z; W < Y.length; W++) if (J$(Y, W)) return [Z, W]
     return [Z, Y.length]
   }
-  let J = []
+  const J = []
   for (let Y = 0; Y < $.length; Y++)
     if (J$($, Y)) {
-      let [Z, W] = X($, Y),
+      const [Z, W] = X($, Y),
         q = $.slice(Z, W + 1)
       J.push(E8(q)), (Y = W)
     } else {
-      let [Z, W] = Q($, Y),
+      const [Z, W] = Q($, Y),
         q = $.slice(Z, W)
       if (q.length > 0) J.push(E8(q))
       Y = W - 1
@@ -4093,19 +4091,19 @@ function r$($) {
               })()
 }
 function NX($) {
-  let X = x8($.pattern)
+  const X = x8($.pattern)
   return r$(X)
 }
 class N4 extends p {}
 function* w4($) {
   if ($.length === 1) return yield* $[0]
-  for (let X of $[0]) for (let Q of w4($.slice(1))) yield `${X}${Q}`
+  for (const X of $[0]) for (const Q of w4($.slice(1))) yield `${X}${Q}`
 }
 function* w9($) {
   return yield* w4($.expr.map((X) => [...C6(X)]))
 }
 function* U9($) {
-  for (let X of $.expr) yield* C6(X)
+  for (const X of $.expr) yield* C6(X)
 }
 function* z9($) {
   return yield $.const
@@ -4122,7 +4120,7 @@ function* C6($) {
           })()
 }
 function I8($) {
-  let X = x8($.pattern)
+  const X = x8($.pattern)
   return r$(X) ? [...C6(X)] : []
 }
 function W0($, X) {
@@ -4141,7 +4139,7 @@ function _1($) {
   return F({ [L]: "String", type: "string" }, $)
 }
 function* H9($) {
-  let X = $.trim().replace(/"|'/g, "")
+  const X = $.trim().replace(/"|'/g, "")
   return X === "boolean"
     ? yield wX()
     : X === "number"
@@ -4151,19 +4149,19 @@ function* H9($) {
         : X === "string"
           ? yield _1()
           : yield (() => {
-              let Q = X.split("|").map((J) => W0(J.trim()))
+              const Q = X.split("|").map((J) => W0(J.trim()))
               return Q.length === 0 ? s() : Q.length === 1 ? Q[0] : d2(Q)
             })()
 }
 function* A9($) {
   if ($[1] !== "{") {
-    let X = W0("$"),
+    const X = W0("$"),
       Q = mQ($.slice(1))
     return yield* [X, ...Q]
   }
   for (let X = 2; X < $.length; X++)
     if ($[X] === "}") {
-      let Q = H9($.slice(2, X)),
+      const Q = H9($.slice(2, X)),
         J = mQ($.slice(X + 1))
       return yield* [...Q, ...J]
     }
@@ -4172,7 +4170,7 @@ function* A9($) {
 function* mQ($) {
   for (let X = 0; X < $.length; X++)
     if ($[X] === "$") {
-      let Q = W0($.slice(0, X)),
+      const Q = W0($.slice(0, X)),
         J = A9($.slice(X))
       return yield* [Q, ...J]
     }
@@ -4210,19 +4208,19 @@ function uQ($) {
   return `^${$.map((X) => H4(X, "")).join("")}$`
 }
 function a$($) {
-  let Q = I8($).map((J) => W0(J))
+  const Q = I8($).map((J) => W0(J))
   return d2(Q)
 }
 function UX($, X) {
-  let Q = j0($) ? uQ(U4($)) : uQ($)
+  const Q = j0($) ? uQ(U4($)) : uQ($)
   return F({ [L]: "TemplateLiteral", type: "string", pattern: Q }, X)
 }
 function O9($) {
   return I8($).map((Q) => Q.toString())
 }
 function P9($) {
-  let X = []
-  for (let Q of $) X.push(...b1(Q))
+  const X = []
+  for (const Q of $) X.push(...b1(Q))
   return X
 }
 function L9($) {
@@ -4246,15 +4244,15 @@ function b1($) {
   ]
 }
 function K9($, X, Q) {
-  let J = {}
-  for (let Y of Object.getOwnPropertyNames(X)) J[Y] = T$($, b1(X[Y]), Q)
+  const J = {}
+  for (const Y of Object.getOwnPropertyNames(X)) J[Y] = T$($, b1(X[Y]), Q)
   return J
 }
 function S9($, X, Q) {
   return K9($, X.properties, Q)
 }
 function A4($, X, Q) {
-  let J = S9($, X, Q)
+  const J = S9($, X, Q)
   return G0(J)
 }
 function O4($, X) {
@@ -4322,19 +4320,19 @@ function T9($, X, Q) {
   return I9($, X.keys, Q)
 }
 function L4($, X, Q) {
-  let J = T9($, X, Q)
+  const J = T9($, X, Q)
   return G0(J)
 }
 function b8($, X) {
   return F({ [L]: "Iterator", type: "Iterator", items: $ }, X)
 }
 function b9($) {
-  let X = []
-  for (let Q in $) if (!T1($[Q])) X.push(Q)
+  const X = []
+  for (const Q in $) if (!T1($[Q])) X.push(Q)
   return X
 }
 function k9($, X) {
-  let Q = b9($),
+  const Q = b9($),
     J =
       Q.length > 0
         ? { [L]: "Object", type: "object", properties: $, required: Q }
@@ -4355,19 +4353,19 @@ function y9($, X) {
   return X === !1 ? g9($) : f9($)
 }
 function k1($, X) {
-  let Q = X ?? !0
+  const Q = X ?? !0
   return I0($) ? K4($, Q) : y9($, Q)
 }
 function v9($, X) {
-  let Q = {}
-  for (let J of globalThis.Object.getOwnPropertyNames($)) Q[J] = k1($[J], X)
+  const Q = {}
+  for (const J of globalThis.Object.getOwnPropertyNames($)) Q[J] = k1($[J], X)
   return Q
 }
 function d9($, X) {
   return v9($.properties, X)
 }
 function K4($, X) {
-  let Q = d9($, X)
+  const Q = d9($, X)
   return G0(Q)
 }
 function J2($, X) {
@@ -4392,27 +4390,27 @@ function h9($) {
   return { [$]: W0($) }
 }
 function m9($) {
-  let X = {}
-  for (let Q of $) X[Q] = W0(Q)
+  const X = {}
+  for (const Q of $) X[Q] = W0(Q)
   return X
 }
 function u9($, X) {
   return J4(X, $) ? h9($) : m9(X)
 }
 function c9($, X) {
-  let Q = u9($, X)
+  const Q = u9($, X)
   return S4($, Q)
 }
 function F6($, X) {
   return X.map((Q) => Y2($, Q))
 }
 function p9($, X) {
-  let Q = {}
-  for (let J of globalThis.Object.getOwnPropertyNames(X)) Q[J] = Y2($, X[J])
+  const Q = {}
+  for (const J of globalThis.Object.getOwnPropertyNames(X)) Q[J] = Y2($, X[J])
   return Q
 }
 function Y2($, X) {
-  let Q = { ...X }
+  const Q = { ...X }
   return T1(X)
     ? K1(Y2($, u0(X, [Z1])))
     : C8(X)
@@ -4444,12 +4442,12 @@ function Y2($, X) {
                               : X
 }
 function i9($, X) {
-  let Q = {}
-  for (let J of $) Q[J] = Y2(J, X)
+  const Q = {}
+  for (const J of $) Q[J] = Y2(J, X)
   return Q
 }
 function C4($, X, Q) {
-  let J = g0($) ? b1($) : $,
+  const J = g0($) ? b1($) : $,
     Y = X({ [L]: "MappedKey", keys: J }),
     Z = i9(J, Y)
   return H0(Z, Q)
@@ -4464,23 +4462,23 @@ function l9($, X) {
   return X === !1 ? n9($) : o9($)
 }
 function K1($, X) {
-  let Q = X ?? !0
+  const Q = X ?? !0
   return I0($) ? j4($, Q) : l9($, Q)
 }
 function t9($, X) {
-  let Q = {}
-  for (let J of globalThis.Object.getOwnPropertyNames($)) Q[J] = K1($[J], X)
+  const Q = {}
+  for (const J of globalThis.Object.getOwnPropertyNames($)) Q[J] = K1($[J], X)
   return Q
 }
 function s9($, X) {
   return t9($.properties, X)
 }
 function j4($, X) {
-  let Q = s9($, X)
+  const Q = s9($, X)
   return G0(Q)
 }
 function R6($, X = {}) {
-  let Q = $.every((Y) => a0(Y)),
+  const Q = $.every((Y) => a0(Y)),
     J = g0(X.unevaluatedProperties) ? { unevaluatedProperties: X.unevaluatedProperties } : {}
   return F(
     X.unevaluatedProperties === !1 || g0(X.unevaluatedProperties) || Q
@@ -4514,7 +4512,7 @@ function S1($, X) {
   return R6($, X)
 }
 function Z2(...$) {
-  let [X, Q] = typeof $[0] === "string" ? [$[0], $[1]] : [$[0].$id, $[1]]
+  const [X, Q] = typeof $[0] === "string" ? [$[0], $[1]] : [$[0].$id, $[1]]
   if (typeof X !== "string") throw new p("Ref: $ref must be a string")
   return F({ [L]: "Ref", $ref: X }, Q)
 }
@@ -4553,16 +4551,16 @@ function k8($, X) {
   )
 }
 function V4($) {
-  let X = []
-  for (let Q of $) X.push(g1(Q))
+  const X = []
+  for (const Q of $) X.push(g1(Q))
   return X
 }
 function Zq($) {
-  let X = V4($)
+  const X = V4($)
   return W4(X)
 }
 function Wq($) {
-  let X = V4($)
+  const X = V4($)
   return Z4(X)
 }
 function qq($) {
@@ -4598,7 +4596,7 @@ function g1($) {
 var cQ = !1
 function Y$($) {
   cQ = !0
-  let X = g1($)
+  const X = g1($)
   return (cQ = !1), `^(${X.map((J) => `(${J})`).join("|")})$`
 }
 function Nq($, X) {
@@ -4608,7 +4606,7 @@ function wq($) {
   return _0("KeyOf", [Z2($)])
 }
 function Uq($, X) {
-  let Q = g1($),
+  const Q = g1($),
     J = zq(Q),
     Y = d2(J)
   return F(Y, X)
@@ -4620,42 +4618,42 @@ function g8($, X) {
   return U2($) ? Nq($.target, $.parameters) : n0($) ? wq($.$ref) : I0($) ? _4($, X) : Uq($, X)
 }
 function Hq($, X) {
-  let Q = {}
-  for (let J of globalThis.Object.getOwnPropertyNames($)) Q[J] = g8($[J], E0(X))
+  const Q = {}
+  for (const J of globalThis.Object.getOwnPropertyNames($)) Q[J] = g8($[J], E0(X))
   return Q
 }
 function Aq($, X) {
   return Hq($.properties, X)
 }
 function _4($, X) {
-  let Q = Aq($, X)
+  const Q = Aq($, X)
   return G0(Q)
 }
 function AX($) {
-  let X = g1($),
+  const X = g1($),
     Q = j6($, X)
   return X.map((J, Y) => [X[Y], Q[Y]])
 }
 function Dq($) {
-  let X = []
-  for (let Q of $) X.push(...g1(Q))
+  const X = []
+  for (const Q of $) X.push(...g1(Q))
   return Y4(X)
 }
 function Oq($) {
   return $.filter((X) => !V$(X))
 }
 function Pq($, X) {
-  let Q = []
-  for (let J of $) Q.push(...j6(J, [X]))
+  const Q = []
+  for (const J of $) Q.push(...j6(J, [X]))
   return Oq(Q)
 }
 function Lq($, X) {
-  let Q = {}
-  for (let J of X) Q[J] = zX(Pq($, J))
+  const Q = {}
+  for (const J of X) Q[J] = zX(Pq($, J))
   return Q
 }
 function E4($, X) {
-  let Q = Dq($),
+  const Q = Dq($),
     J = Lq($, Q)
   return H0(J, X)
 }
@@ -4681,8 +4679,8 @@ function Kq($) {
   return $.map((X) => pQ(X, !1))
 }
 function Sq($) {
-  let X = {}
-  for (let Q of globalThis.Object.getOwnPropertyNames($)) X[Q] = k1(pQ($[Q], !1))
+  const X = {}
+  for (const Q of globalThis.Object.getOwnPropertyNames($)) X[Q] = k1(pQ($[Q], !1))
   return X
 }
 function SX($, X) {
@@ -4727,7 +4725,7 @@ function I4($, X) {
 }
 function T4($, X) {
   if (r0($)) throw Error("Enum undefined or empty")
-  let Q = globalThis.Object.getOwnPropertyNames($)
+  const Q = globalThis.Object.getOwnPropertyNames($)
       .filter((Z) => isNaN(Z))
       .map((Z) => $[Z]),
     Y = [...new Set(Q)].map((Z) => W0(Z))
@@ -4735,7 +4733,7 @@ function T4($, X) {
 }
 class y4 extends p {}
 var R
-;(function ($) {
+;(($) => {
   ;($[($.Union = 0)] = "Union"), ($[($.True = 1)] = "True"), ($[($.False = 2)] = "False")
 })(R || (R = {}))
 function W2($) {
@@ -4976,7 +4974,7 @@ function uq($) {
   return jX($)
 }
 function cq($) {
-  let X = Q2()
+  const X = Q2()
   return (
     f1($, 0) || (f1($, 1) && "length" in $.properties && W2(K0($.properties.length, X)) === R.True)
   )
@@ -4985,13 +4983,13 @@ function pq($) {
   return f1($, 0)
 }
 function jX($) {
-  let X = Q2()
+  const X = Q2()
   return (
     f1($, 0) || (f1($, 1) && "length" in $.properties && W2(K0($.properties.length, X)) === R.True)
   )
 }
 function iq($) {
-  let X = v2([I$()], I$())
+  const X = v2([I$()], I$())
   return f1($, 0) || (f1($, 1) && "then" in $.properties && W2(K0($.properties.then, X)) === R.True)
 }
 function u4($, X) {
@@ -5036,7 +5034,7 @@ function nq($, X) {
       : !O.IsObject(X)
         ? R.False
         : (() => {
-            for (let Q of Object.getOwnPropertyNames(X.properties)) {
+            for (const Q of Object.getOwnPropertyNames(X.properties)) {
               if (!(Q in $.properties) && !O.IsOptional(X.properties[Q])) return R.False
               if (O.IsOptional(X.properties[Q])) return R.True
               if (u4($.properties[Q], X.properties[Q]) === R.False) return R.False
@@ -5068,7 +5066,7 @@ function oQ($) {
       : f8("Unable to get record value schema")
 }
 function q2($, X) {
-  let [Q, J] = [nQ(X), oQ(X)]
+  const [Q, J] = [nQ(X), oQ(X)]
   return O.IsLiteralString($) && O.IsNumber(Q) && W2(K0($, J)) === R.True
     ? R.True
     : O.IsUint8Array($) && O.IsNumber(Q)
@@ -5079,7 +5077,7 @@ function q2($, X) {
           ? K0($, J)
           : O.IsObject($)
             ? (() => {
-                for (let Y of Object.getOwnPropertyNames($.properties))
+                for (const Y of Object.getOwnPropertyNames($.properties))
                   if (u4(J, $.properties[Y]) === R.False) return R.False
                 return R.True
               })()
@@ -5089,7 +5087,7 @@ function lq($, X) {
   return X1(X) ? Q1($, X) : O.IsObject(X) ? C1($, X) : !O.IsRecord(X) ? R.False : K0(oQ($), oQ(X))
 }
 function tq($, X) {
-  let Q = O.IsRegExp($) ? _1() : $,
+  const Q = O.IsRegExp($) ? _1() : $,
     J = O.IsRegExp(X) ? _1() : X
   return K0(Q, J)
 }
@@ -5294,19 +5292,19 @@ function b$($, X) {
   return K0($, X)
 }
 function MM($, X, Q, J, Y) {
-  let Z = {}
-  for (let W of globalThis.Object.getOwnPropertyNames($)) Z[W] = y8($[W], X, Q, J, E0(Y))
+  const Z = {}
+  for (const W of globalThis.Object.getOwnPropertyNames($)) Z[W] = y8($[W], X, Q, J, E0(Y))
   return Z
 }
 function BM($, X, Q, J, Y) {
   return MM($.properties, X, Q, J, Y)
 }
 function i4($, X, Q, J, Y) {
-  let Z = BM($, X, Q, J, Y)
+  const Z = BM($, X, Q, J, Y)
   return G0(Z)
 }
 function GM($, X, Q, J) {
-  let Y = b$($, X)
+  const Y = b$($, X)
   return Y === R.Union ? z0([Q, J]) : Y === R.True ? Q : J
 }
 function y8($, X, Q, J, Y) {
@@ -5324,7 +5322,7 @@ function UM($, X, Q, J, Y) {
   return wM($.keys, X, Q, J, Y)
 }
 function n4($, X, Q, J, Y) {
-  let Z = UM($, X, Q, J, Y)
+  const Z = UM($, X, Q, J, Y)
   return G0(Z)
 }
 function zM($) {
@@ -5351,7 +5349,7 @@ function o4($, X) {
   return v8(a$($), X)
 }
 function DM($, X) {
-  let Q = $.filter((J) => b$(J, X) === R.False)
+  const Q = $.filter((J) => b$(J, X) === R.False)
   return Q.length === 1 ? Q[0] : z0(Q)
 }
 function v8($, X, Q = {}) {
@@ -5360,22 +5358,22 @@ function v8($, X, Q = {}) {
   return F(M0($) ? DM($.anyOf, X) : b$($, X) !== R.False ? s() : $, Q)
 }
 function OM($, X) {
-  let Q = {}
-  for (let J of globalThis.Object.getOwnPropertyNames($)) Q[J] = v8($[J], X)
+  const Q = {}
+  for (const J of globalThis.Object.getOwnPropertyNames($)) Q[J] = v8($[J], X)
   return Q
 }
 function PM($, X) {
   return OM($.properties, X)
 }
 function l4($, X) {
-  let Q = PM($, X)
+  const Q = PM($, X)
   return G0(Q)
 }
 function t4($, X) {
   return d8(a$($), X)
 }
 function LM($, X) {
-  let Q = $.filter((J) => b$(J, X) !== R.False)
+  const Q = $.filter((J) => b$(J, X) !== R.False)
   return Q.length === 1 ? Q[0] : z0(Q)
 }
 function d8($, X, Q) {
@@ -5384,15 +5382,15 @@ function d8($, X, Q) {
   return F(M0($) ? LM($.anyOf, X) : b$($, X) !== R.False ? $ : s(), Q)
 }
 function KM($, X) {
-  let Q = {}
-  for (let J of globalThis.Object.getOwnPropertyNames($)) Q[J] = d8($[J], X)
+  const Q = {}
+  for (const J of globalThis.Object.getOwnPropertyNames($)) Q[J] = d8($[J], X)
   return Q
 }
 function SM($, X) {
   return KM($.properties, X)
 }
 function s4($, X) {
-  let Q = SM($, X)
+  const Q = SM($, X)
   return G0(Q)
 }
 function r4($, X) {
@@ -5405,8 +5403,8 @@ function e$($, X, Q) {
   return F({ [L]: "Record", type: "object", patternProperties: { [$]: X } }, Q)
 }
 function sQ($, X, Q) {
-  let J = {}
-  for (let Y of $) J[Y] = X
+  const J = {}
+  for (const Y of $) J[Y] = X
   return H0(J, { ...Q, [X2]: "Record" })
 }
 function CM($, X, Q) {
@@ -5422,7 +5420,7 @@ function RM($, X, Q) {
   return e$($.source, X, Q)
 }
 function VM($, X, Q) {
-  let J = r0($.pattern) ? x$ : $.pattern
+  const J = r0($.pattern) ? x$ : $.pattern
   return e$(J, X, Q)
 }
 function _M($, X, Q) {
@@ -5467,7 +5465,7 @@ function VX($) {
   return globalThis.Object.getOwnPropertyNames($.patternProperties)[0]
 }
 function a4($) {
-  let X = VX($)
+  const X = VX($)
   return X === x$ ? _1() : X === E$ ? Q2() : _1({ pattern: X })
 }
 function _X($) {
@@ -5502,11 +5500,11 @@ function mM($, X) {
   return (X.item = P2($, X.item)), X
 }
 function uM($, X) {
-  let Q = nM($, X.properties)
+  const Q = nM($, X.properties)
   return { ...X, ...H0(Q) }
 }
 function cM($, X) {
-  let Q = P2($, a4(X)),
+  const Q = P2($, a4(X)),
     J = P2($, _X(X)),
     Y = RX(Q, J)
   return { ...X, ...Y }
@@ -5515,7 +5513,7 @@ function pM($, X) {
   return X.index in $ ? $[X.index] : O2()
 }
 function iM($, X) {
-  let Q = C8(X),
+  const Q = C8(X),
     J = T1(X),
     Y = P2($, X)
   return Q && J ? FX(Y) : Q && !J ? k1(Y) : !Q && J ? K1(Y) : Y
@@ -5573,15 +5571,15 @@ function tM($, X, Q) {
   return lM($.keys, X, Q)
 }
 function XZ($, X, Q) {
-  let J = tM($, X, Q)
+  const J = tM($, X, Q)
   return G0(J)
 }
 function sM($) {
-  let [X, Q] = [$.slice(0, 1), $.slice(1)]
+  const [X, Q] = [$.slice(0, 1), $.slice(1)]
   return [X.toLowerCase(), Q].join("")
 }
 function rM($) {
-  let [X, Q] = [$.slice(0, 1), $.slice(1)]
+  const [X, Q] = [$.slice(0, 1), $.slice(1)]
   return [X.toUpperCase(), Q].join("")
 }
 function aM($) {
@@ -5591,9 +5589,9 @@ function eM($) {
   return $.toLowerCase()
 }
 function $B($, X, Q) {
-  let J = x8($.pattern)
+  const J = x8($.pattern)
   if (!r$(J)) return { ...$, pattern: QZ($.pattern, X) }
-  let W = [...C6(J)].map((G) => W0(G)),
+  const W = [...C6(J)].map((G) => W0(G)),
     q = JZ(W, X),
     M = z0(q)
   return UX([M], Q)
@@ -5638,15 +5636,15 @@ function qZ($, X = {}) {
   return L2($, "Uppercase", X)
 }
 function XB($, X, Q) {
-  let J = {}
-  for (let Y of globalThis.Object.getOwnPropertyNames($)) J[Y] = k$($[Y], X, E0(Q))
+  const J = {}
+  for (const Y of globalThis.Object.getOwnPropertyNames($)) J[Y] = k$($[Y], X, E0(Q))
   return J
 }
 function QB($, X, Q) {
   return XB($.properties, X, Q)
 }
 function MZ($, X, Q) {
-  let J = QB($, X, Q)
+  const J = QB($, X, Q)
   return G0(J)
 }
 function JB($, X) {
@@ -5656,26 +5654,26 @@ function YB($, X) {
   return $.map((Q) => rQ(Q, X))
 }
 function ZB($, X) {
-  let { [X]: Q, ...J } = $
+  const { [X]: Q, ...J } = $
   return J
 }
 function WB($, X) {
   return X.reduce((Q, J) => ZB(Q, J), $)
 }
 function qB($, X) {
-  let Q = u0($, [C0, "$id", "required", "properties"]),
+  const Q = u0($, [C0, "$id", "required", "properties"]),
     J = WB($.properties, X)
   return H0(J, Q)
 }
 function MB($) {
-  let X = $.reduce((Q, J) => (MX(J) ? [...Q, W0(J)] : Q), [])
+  const X = $.reduce((Q, J) => (MX(J) ? [...Q, W0(J)] : Q), [])
   return z0(X)
 }
 function rQ($, X) {
   return m0($) ? S1(JB($.allOf, X)) : M0($) ? z0(YB($.anyOf, X)) : a0($) ? qB($, X) : H0({})
 }
 function k$($, X, Q) {
-  let J = s0(X) ? MB(X) : X,
+  const J = s0(X) ? MB(X) : X,
     Y = g0(X) ? b1(X) : X,
     Z = n0($),
     W = n0(X)
@@ -5703,19 +5701,19 @@ function NB($, X, Q) {
   return GB($, X.keys, Q)
 }
 function BZ($, X, Q) {
-  let J = NB($, X, Q)
+  const J = NB($, X, Q)
   return G0(J)
 }
 function wB($, X, Q) {
-  let J = {}
-  for (let Y of globalThis.Object.getOwnPropertyNames($)) J[Y] = g$($[Y], X, E0(Q))
+  const J = {}
+  for (const Y of globalThis.Object.getOwnPropertyNames($)) J[Y] = g$($[Y], X, E0(Q))
   return J
 }
 function UB($, X, Q) {
   return wB($.properties, X, Q)
 }
 function GZ($, X, Q) {
-  let J = UB($, X, Q)
+  const J = UB($, X, Q)
   return G0(J)
 }
 function zB($, X) {
@@ -5725,24 +5723,24 @@ function HB($, X) {
   return $.map((Q) => aQ(Q, X))
 }
 function AB($, X) {
-  let Q = {}
-  for (let J of X) if (J in $) Q[J] = $[J]
+  const Q = {}
+  for (const J of X) if (J in $) Q[J] = $[J]
   return Q
 }
 function DB($, X) {
-  let Q = u0($, [C0, "$id", "required", "properties"]),
+  const Q = u0($, [C0, "$id", "required", "properties"]),
     J = AB($.properties, X)
   return H0(J, Q)
 }
 function OB($) {
-  let X = $.reduce((Q, J) => (MX(J) ? [...Q, W0(J)] : Q), [])
+  const X = $.reduce((Q, J) => (MX(J) ? [...Q, W0(J)] : Q), [])
   return z0(X)
 }
 function aQ($, X) {
   return m0($) ? S1(zB($.allOf, X)) : M0($) ? z0(HB($.anyOf, X)) : a0($) ? DB($, X) : H0({})
 }
 function g$($, X, Q) {
-  let J = s0(X) ? OB(X) : X,
+  const J = s0(X) ? OB(X) : X,
     Y = g0(X) ? b1(X) : X,
     Z = n0($),
     W = n0(X)
@@ -5770,7 +5768,7 @@ function KB($, X, Q) {
   return LB($, X.keys, Q)
 }
 function NZ($, X, Q) {
-  let J = KB($, X, Q)
+  const J = KB($, X, Q)
   return G0(J)
 }
 function SB($, X) {
@@ -5780,12 +5778,12 @@ function CB($) {
   return _0("Partial", [Z2($)])
 }
 function jB($) {
-  let X = {}
-  for (let Q of globalThis.Object.getOwnPropertyNames($)) X[Q] = K1($[Q])
+  const X = {}
+  for (const Q of globalThis.Object.getOwnPropertyNames($)) X[Q] = K1($[Q])
   return X
 }
 function FB($) {
-  let X = u0($, [C0, "$id", "required", "properties"]),
+  const X = u0($, [C0, "$id", "required", "properties"]),
     Q = jB($.properties)
   return H0(Q, X)
 }
@@ -5828,15 +5826,15 @@ function h8($, X) {
   else return F({ ...UZ($), ...X })
 }
 function RB($, X) {
-  let Q = {}
-  for (let J of globalThis.Object.getOwnPropertyNames($)) Q[J] = h8($[J], E0(X))
+  const Q = {}
+  for (const J of globalThis.Object.getOwnPropertyNames($)) Q[J] = h8($[J], E0(X))
   return Q
 }
 function VB($, X) {
   return RB($.properties, X)
 }
 function zZ($, X) {
-  let Q = VB($, X)
+  const Q = VB($, X)
   return G0(Q)
 }
 function _B($, X) {
@@ -5846,12 +5844,12 @@ function EB($) {
   return _0("Required", [Z2($)])
 }
 function xB($) {
-  let X = {}
-  for (let Q of globalThis.Object.getOwnPropertyNames($)) X[Q] = u0($[Q], [Z1])
+  const X = {}
+  for (const Q of globalThis.Object.getOwnPropertyNames($)) X[Q] = u0($[Q], [Z1])
   return X
 }
 function IB($) {
-  let X = u0($, [C0, "$id", "required", "properties"]),
+  const X = u0($, [C0, "$id", "required", "properties"]),
     Q = xB($.properties)
   return H0(Q, X)
 }
@@ -5894,15 +5892,15 @@ function m8($, X) {
   else return F({ ...AZ($), ...X })
 }
 function TB($, X) {
-  let Q = {}
-  for (let J of globalThis.Object.getOwnPropertyNames($)) Q[J] = m8($[J], X)
+  const Q = {}
+  for (const J of globalThis.Object.getOwnPropertyNames($)) Q[J] = m8($[J], X)
   return Q
 }
 function bB($, X) {
   return TB($.properties, X)
 }
 function DZ($, X) {
-  let Q = bB($, X)
+  const Q = bB($, X)
   return G0(Q)
 }
 function kB($, X) {
@@ -5935,7 +5933,7 @@ function mB($) {
   return m8($[0])
 }
 function uB($, X, Q) {
-  let J = kB($, Q)
+  const J = kB($, Q)
   return X === "Awaited"
     ? gB(J)
     : X === "Index"
@@ -5978,7 +5976,7 @@ function tB($, X) {
   )
 }
 function sB($, X) {
-  let [Q, J] = [o1($, _X(X)), VX(X)],
+  const [Q, J] = [o1($, _X(X)), VX(X)],
     Y = K8(X)
   return (Y.patternProperties[J] = Q), Y
 }
@@ -6035,12 +6033,12 @@ function OZ($) {
 }
 class PZ {
   constructor($) {
-    let X = OZ($),
+    const X = OZ($),
       Q = this.WithIdentifiers(X)
     this.$defs = Q
   }
   Import($, X) {
-    let Q = { ...this.$defs, [$]: F(this.$defs[$], X) }
+    const Q = { ...this.$defs, [$]: F(this.$defs[$], X) }
     return F({ [L]: "Import", $defs: Q, $ref: $ })
   }
   WithIdentifiers($) {
@@ -6061,11 +6059,11 @@ function SZ($, X) {
 var XG = 0
 function CZ($, X = {}) {
   if (r0(X.$id)) X.$id = `T${XG++}`
-  let Q = K8($({ [L]: "This", $ref: `${X.$id}` }))
+  const Q = K8($({ [L]: "This", $ref: `${X.$id}` }))
   return (Q.$id = X.$id), F({ [X2]: "Recursive", ...Q }, X)
 }
 function jZ($, X) {
-  let Q = j0($) ? new globalThis.RegExp($) : $
+  const Q = j0($) ? new globalThis.RegExp($) : $
   return F({ [L]: "RegExp", type: "RegExp", source: Q.source, flags: Q.flags }, X)
 }
 function QG($) {
@@ -6090,11 +6088,11 @@ class _Z {
     ;(this.schema = $), (this.decode = X)
   }
   EncodeTransform($, X) {
-    let Y = { Encode: (Z) => X[C0].Encode($(Z)), Decode: (Z) => this.decode(X[C0].Decode(Z)) }
+    const Y = { Encode: (Z) => X[C0].Encode($(Z)), Decode: (Z) => this.decode(X[C0].Decode(Z)) }
     return { ...X, [C0]: Y }
   }
   EncodeSchema($, X) {
-    let Q = { Decode: this.decode, Encode: $ }
+    const Q = { Decode: this.decode, Encode: $ }
     return { ...X, [C0]: Q }
   }
   Encode($) {
@@ -6324,7 +6322,7 @@ class gZ extends p {
   }
 }
 function MG($, X) {
-  let Q = X.find((J) => J.$id === $.$ref)
+  const Q = X.find((J) => J.$id === $.$ref)
   if (Q === void 0) throw new gZ($)
   return B0(Q, X)
 }
@@ -6342,7 +6340,7 @@ class fZ extends p {
   }
 }
 var l1
-;(function ($) {
+;(($) => {
   ;($[($.Undefined = 0)] = "Undefined"),
     ($[($.Null = 1)] = "Null"),
     ($[($.Boolean = 2)] = "Boolean"),
@@ -6362,19 +6360,19 @@ var u8 = BigInt("14695981039346656037"),
   vZ = new DataView(yZ.buffer),
   dZ = new Uint8Array(yZ.buffer)
 function* wG($) {
-  let X = $ === 0 ? 1 : Math.ceil(Math.floor(Math.log2($) + 1) / 8)
+  const X = $ === 0 ? 1 : Math.ceil(Math.floor(Math.log2($) + 1) / 8)
   for (let Q = 0; Q < X; Q++) yield ($ >> (8 * (X - 1 - Q))) & 255
 }
 function UG($) {
   j1(l1.Array)
-  for (let X of $) c8(X)
+  for (const X of $) c8(X)
 }
 function zG($) {
   j1(l1.Boolean), j1($ ? 1 : 0)
 }
 function HG($) {
   j1(l1.BigInt), vZ.setBigInt64(0, $)
-  for (let X of dZ) j1(X)
+  for (const X of dZ) j1(X)
 }
 function AG($) {
   j1(l1.Date), c8($.getTime())
@@ -6384,15 +6382,15 @@ function DG($) {
 }
 function OG($) {
   j1(l1.Number), vZ.setFloat64(0, $)
-  for (let X of dZ) j1(X)
+  for (const X of dZ) j1(X)
 }
 function PG($) {
   j1(l1.Object)
-  for (let X of globalThis.Object.getOwnPropertyNames($).sort()) c8(X), c8($[X])
+  for (const X of globalThis.Object.getOwnPropertyNames($).sort()) c8(X), c8($[X])
 }
 function LG($) {
   j1(l1.String)
-  for (let X = 0; X < $.length; X++) for (let Q of wG($.charCodeAt(X))) j1(Q)
+  for (let X = 0; X < $.length; X++) for (const Q of wG($.charCodeAt(X))) j1(Q)
 }
 function KG($) {
   j1(l1.Symbol), c8($.description)
@@ -6449,10 +6447,10 @@ function VG($, X, Q) {
   if (!Q.every((Z) => w1($.items, X, Z))) return !1
   if (
     $.uniqueItems === !0 &&
-    !(function () {
-      let Z = new Set()
-      for (let W of Q) {
-        let q = f$(W)
+    !(() => {
+      const Z = new Set()
+      for (const W of Q) {
+        const q = f$(W)
         if (Z.has(q)) return !1
         else Z.add(q)
       }
@@ -6461,7 +6459,7 @@ function VG($, X, Q) {
   )
     return !1
   if (!(Q0($.contains) || u($.minContains) || u($.maxContains))) return !0
-  let J = Q0($.contains) ? $.contains : s(),
+  const J = Q0($.contains) ? $.contains : s(),
     Y = Q.reduce((Z, W) => (w1(J, X, W) ? Z + 1 : Z), 0)
   if (Y === 0) return !1
   if (u($.minContains) && Y < $.minContains) return !1
@@ -6499,7 +6497,7 @@ function bG($, X, Q) {
   return R$(Q)
 }
 function kG($, X, Q) {
-  let J = globalThis.Object.values($.$defs),
+  const J = globalThis.Object.values($.$defs),
     Y = $.$defs[$.$ref]
   return w1(Y, [...X, ...J], Q)
 }
@@ -6513,13 +6511,13 @@ function gG($, X, Q) {
   return !0
 }
 function fG($, X, Q) {
-  let J = $.allOf.every((Y) => w1(Y, X, Q))
+  const J = $.allOf.every((Y) => w1(Y, X, Q))
   if ($.unevaluatedProperties === !1) {
-    let Y = new RegExp(Y$($)),
+    const Y = new RegExp(Y$($)),
       Z = Object.getOwnPropertyNames(Q).every((W) => Y.test(W))
     return J && Z
   } else if (g0($.unevaluatedProperties)) {
-    let Y = new RegExp(Y$($)),
+    const Y = new RegExp(Y$($)),
       Z = Object.getOwnPropertyNames(Q).every(
         (W) => Y.test(W) || w1($.unevaluatedProperties, X, Q[W])
       )
@@ -6554,16 +6552,16 @@ function cG($, X, Q) {
   if (!V0.IsObjectLike(Q)) return !1
   if (Q0($.minProperties) && !(Object.getOwnPropertyNames(Q).length >= $.minProperties)) return !1
   if (Q0($.maxProperties) && !(Object.getOwnPropertyNames(Q).length <= $.maxProperties)) return !1
-  let J = Object.getOwnPropertyNames($.properties)
-  for (let Y of J) {
-    let Z = $.properties[Y]
+  const J = Object.getOwnPropertyNames($.properties)
+  for (const Y of J) {
+    const Z = $.properties[Y]
     if ($.required && $.required.includes(Y)) {
       if (!w1(Z, X, Q[Y])) return !1
       if ((Z$(Z) || jG(Z)) && !(Y in Q)) return !1
     } else if (V0.IsExactOptionalProperty(Q, Y) && !w1(Z, X, Q[Y])) return !1
   }
   if ($.additionalProperties === !1) {
-    let Y = Object.getOwnPropertyNames(Q)
+    const Y = Object.getOwnPropertyNames(Q)
     if ($.required && $.required.length === J.length && Y.length === J.length) return !0
     else return Y.every((Z) => J.includes(Z))
   } else if (typeof $.additionalProperties === "object")
@@ -6579,7 +6577,7 @@ function iG($, X, Q) {
   if (!V0.IsRecordLike(Q)) return !1
   if (Q0($.minProperties) && !(Object.getOwnPropertyNames(Q).length >= $.minProperties)) return !1
   if (Q0($.maxProperties) && !(Object.getOwnPropertyNames(Q).length <= $.maxProperties)) return !1
-  let [J, Y] = Object.entries($.patternProperties)[0],
+  const [J, Y] = Object.entries($.patternProperties)[0],
     Z = new RegExp(J),
     W = Object.entries(Q).every(([G, B]) => {
       return Z.test(G) ? w1(Y, X, B) : !0
@@ -6602,7 +6600,7 @@ function nG($, X, Q) {
   return w1(B0($, X), X, Q)
 }
 function oG($, X, Q) {
-  let J = new RegExp($.source, $.flags)
+  const J = new RegExp($.source, $.flags)
   if (Q0($.minLength)) {
     if (!(Q.length >= $.minLength)) return !1
   }
@@ -6668,7 +6666,7 @@ function YN($, X, Q) {
   return W1.Get($[L])($, Q)
 }
 function w1($, X, Q) {
-  let J = Q0($.$id) ? N1($, X) : X,
+  const J = Q0($.$id) ? N1($, X) : X,
     Y = $
   switch (Y[L]) {
     case "Any":
@@ -6746,7 +6744,7 @@ function r(...$) {
   return $.length === 3 ? w1($[0], $[1], $[2]) : w1($[0], [], $[1])
 }
 var C
-;(function ($) {
+;(($) => {
   ;($[($.ArrayContains = 0)] = "ArrayContains"),
     ($[($.ArrayMaxContains = 1)] = "ArrayMaxContains"),
     ($[($.ArrayMaxItems = 2)] = "ArrayMaxItems"),
@@ -6832,7 +6830,7 @@ class $8 {
     return this.iterator
   }
   First() {
-    let $ = this.iterator.next()
+    const $ = this.iterator.next()
     return $.done ? void 0 : $.value
   }
 }
@@ -6855,10 +6853,10 @@ function* qN($, X, Q, J) {
   for (let W = 0; W < J.length; W++) yield* U1($.items, X, `${Q}/${W}`, J[W])
   if (
     $.uniqueItems === !0 &&
-    !(function () {
-      let W = new Set()
-      for (let q of J) {
-        let M = f$(q)
+    !(() => {
+      const W = new Set()
+      for (const q of J) {
+        const M = f$(q)
         if (W.has(M)) return !1
         else W.add(M)
       }
@@ -6867,7 +6865,7 @@ function* qN($, X, Q, J) {
   )
     yield h(C.ArrayUniqueItems, $, Q, J)
   if (!(J0($.contains) || J0($.minContains) || J0($.maxContains))) return
-  let Y = J0($.contains) ? $.contains : s(),
+  const Y = J0($.contains) ? $.contains : s(),
     Z = J.reduce((W, q, M) => (U1(Y, X, `${Q}${M}`, q).next().done === !0 ? W + 1 : W), 0)
   if (Z === 0) yield h(C.ArrayContains, $, Q, J)
   if (u($.minContains) && Z < $.minContains) yield h(C.ArrayMinContains, $, Q, J)
@@ -6909,7 +6907,7 @@ function* UN($, X, Q, J) {
   if (!R$(J)) yield h(C.Function, $, Q, J)
 }
 function* zN($, X, Q, J) {
-  let Y = globalThis.Object.values($.$defs),
+  const Y = globalThis.Object.values($.$defs),
     Z = $.$defs[$.$ref]
   yield* U1(Z, [...X, ...Y], Q, J)
 }
@@ -6925,18 +6923,18 @@ function* HN($, X, Q, J) {
 }
 function* AN($, X, Q, J) {
   let Y = !1
-  for (let Z of $.allOf) for (let W of U1(Z, X, Q, J)) (Y = !0), yield W
+  for (const Z of $.allOf) for (const W of U1(Z, X, Q, J)) (Y = !0), yield W
   if (Y) return yield h(C.Intersect, $, Q, J)
   if ($.unevaluatedProperties === !1) {
-    let Z = new RegExp(Y$($))
-    for (let W of Object.getOwnPropertyNames(J))
+    const Z = new RegExp(Y$($))
+    for (const W of Object.getOwnPropertyNames(J))
       if (!Z.test(W)) yield h(C.IntersectUnevaluatedProperties, $, `${Q}/${W}`, J)
   }
   if (typeof $.unevaluatedProperties === "object") {
-    let Z = new RegExp(Y$($))
-    for (let W of Object.getOwnPropertyNames(J))
+    const Z = new RegExp(Y$($))
+    for (const W of Object.getOwnPropertyNames(J))
       if (!Z.test(W)) {
-        let q = U1($.unevaluatedProperties, X, `${Q}/${W}`, J[W]).next()
+        const q = U1($.unevaluatedProperties, X, `${Q}/${W}`, J[W]).next()
         if (!q.done) yield q.value
       }
   }
@@ -6972,24 +6970,24 @@ function* CN($, X, Q, J) {
     yield h(C.ObjectMinProperties, $, Q, J)
   if (J0($.maxProperties) && !(Object.getOwnPropertyNames(J).length <= $.maxProperties))
     yield h(C.ObjectMaxProperties, $, Q, J)
-  let Y = Array.isArray($.required) ? $.required : [],
+  const Y = Array.isArray($.required) ? $.required : [],
     Z = Object.getOwnPropertyNames($.properties),
     W = Object.getOwnPropertyNames(J)
-  for (let q of Y) {
+  for (const q of Y) {
     if (W.includes(q)) continue
     yield h(C.ObjectRequiredProperty, $.properties[q], `${Q}/${W$(q)}`, void 0)
   }
   if ($.additionalProperties === !1) {
-    for (let q of W)
+    for (const q of W)
       if (!Z.includes(q)) yield h(C.ObjectAdditionalProperties, $, `${Q}/${W$(q)}`, J[q])
   }
   if (typeof $.additionalProperties === "object")
-    for (let q of W) {
+    for (const q of W) {
       if (Z.includes(q)) continue
       yield* U1($.additionalProperties, X, `${Q}/${W$(q)}`, J[q])
     }
-  for (let q of Z) {
-    let M = $.properties[q]
+  for (const q of Z) {
+    const M = $.properties[q]
     if ($.required && $.required.includes(q)) {
       if ((yield* U1(M, X, `${Q}/${W$(q)}`, J[q]), Z$($) && !(q in J)))
         yield h(C.ObjectRequiredProperty, M, `${Q}/${W$(q)}`, void 0)
@@ -7005,15 +7003,15 @@ function* FN($, X, Q, J) {
     yield h(C.ObjectMinProperties, $, Q, J)
   if (J0($.maxProperties) && !(Object.getOwnPropertyNames(J).length <= $.maxProperties))
     yield h(C.ObjectMaxProperties, $, Q, J)
-  let [Y, Z] = Object.entries($.patternProperties)[0],
+  const [Y, Z] = Object.entries($.patternProperties)[0],
     W = new RegExp(Y)
-  for (let [q, M] of Object.entries(J)) if (W.test(q)) yield* U1(Z, X, `${Q}/${W$(q)}`, M)
+  for (const [q, M] of Object.entries(J)) if (W.test(q)) yield* U1(Z, X, `${Q}/${W$(q)}`, M)
   if (typeof $.additionalProperties === "object") {
-    for (let [q, M] of Object.entries(J))
+    for (const [q, M] of Object.entries(J))
       if (!W.test(q)) yield* U1($.additionalProperties, X, `${Q}/${W$(q)}`, M)
   }
   if ($.additionalProperties === !1)
-    for (let [q, M] of Object.entries(J)) {
+    for (const [q, M] of Object.entries(J)) {
       if (W.test(q)) continue
       return yield h(C.ObjectAdditionalProperties, $, `${Q}/${W$(q)}`, M)
     }
@@ -7061,7 +7059,7 @@ function* bN($, X, Q, J) {
 }
 function* kN($, X, Q, J) {
   if (r($, X, J)) return
-  let Y = $.anyOf.map((Z) => new $8(U1(Z, X, Q, J)))
+  const Y = $.anyOf.map((Z) => new $8(U1(Z, X, Q, J)))
   yield h(C.Union, $, Q, J, Y)
 }
 function* gN($, X, Q, J) {
@@ -7079,7 +7077,7 @@ function* vN($, X, Q, J) {
   if (!W1.Get($[L])($, J)) yield h(C.Kind, $, Q, J)
 }
 function* U1($, X, Q, J) {
-  let Y = J0($.$id) ? [...X, $] : X,
+  const Y = J0($.$id) ? [...X, $] : X,
     Z = $
   switch (Z[L]) {
     case "Any":
@@ -7154,17 +7152,17 @@ function* U1($, X, Q, J) {
   }
 }
 function h2(...$) {
-  let X = $.length === 3 ? U1($[0], $[1], "", $[2]) : U1($[0], [], "", $[1])
+  const X = $.length === 3 ? U1($[0], $[1], "", $[2]) : U1($[0], [], "", $[1])
   return new $8(X)
 }
-var dN = function ($, X, Q, J, Y) {
+var dN = ($, X, Q, J, Y) => {
     if (J === "m") throw TypeError("Private method is not writable")
     if (J === "a" && !Y) throw TypeError("Private accessor was defined without a setter")
     if (typeof X === "function" ? $ !== X || !Y : !X.has($))
       throw TypeError("Cannot write private member to an object whose class did not declare it")
     return J === "a" ? Y.call($, Q) : Y ? (Y.value = Q) : X.set($, Q), Q
   },
-  cZ = function ($, X, Q, J) {
+  cZ = ($, X, Q, J) => {
     if (Q === "a" && !J) throw TypeError("Private accessor was defined without a getter")
     if (typeof X === "function" ? $ !== X || !J : !X.has($))
       throw TypeError("Cannot read private member from an object whose class did not declare it")
@@ -7175,7 +7173,7 @@ var dN = function ($, X, Q, J, Y) {
   pZ
 class iZ extends p {
   constructor($) {
-    let X = $.First()
+    const X = $.First()
     super(X === void 0 ? "Invalid Value" : X.message)
     QJ.add(this), xX.set(this, void 0), dN(this, xX, $, "f"), (this.error = X)
   }
@@ -7197,9 +7195,9 @@ function IX(...$) {
   return $.length === 3 ? uZ($[0], $[1], $[2]) : uZ($[0], [], $[1])
 }
 function hN($) {
-  let X = {}
-  for (let Q of Object.getOwnPropertyNames($)) X[Q] = N0($[Q])
-  for (let Q of Object.getOwnPropertySymbols($)) X[Q] = N0($[Q])
+  const X = {}
+  for (const Q of Object.getOwnPropertyNames($)) X[Q] = N0($[Q])
+  for (const Q of Object.getOwnPropertySymbols($)) X[Q] = N0($[Q])
   return X
 }
 function mN($) {
@@ -7273,13 +7271,12 @@ function aN($, X) {
 function eN($, X) {
   if (i($, "default")) return w0($.default)
   else {
-    let Q = t1($.returns, X)
+    const Q = t1($.returns, X)
     if (typeof Q === "object" && !Array.isArray(Q))
       return class {
         constructor() {
-          for (let [J, Y] of Object.entries(Q)) {
-            let Z = this
-            Z[J] = Y
+          for (const [J, Y] of Object.entries(Q)) {
+            this[J] = Y
           }
         }
       }
@@ -7296,7 +7293,7 @@ function Xw($, X) {
   else return () => t1($.returns, X)
 }
 function Qw($, X) {
-  let Q = globalThis.Object.values($.$defs),
+  const Q = globalThis.Object.values($.$defs),
     J = $.$defs[$.$ref]
   return t1(J, [...X, ...Q])
 }
@@ -7308,8 +7305,8 @@ function Jw($, X) {
 function Yw($, X) {
   if (i($, "default")) return w0($.default)
   else {
-    let Q = $.allOf.reduce((J, Y) => {
-      let Z = t1(Y, X)
+    const Q = $.allOf.reduce((J, Y) => {
+      const Z = t1(Y, X)
       return typeof Z === "object" ? { ...J, ...Z } : Z
     }, {})
     if (!r($, X, Q))
@@ -7345,9 +7342,9 @@ function Gw($, X) {
 function Nw($, X) {
   if (i($, "default")) return w0($.default)
   else {
-    let Q = new Set($.required),
+    const Q = new Set($.required),
       J = {}
-    for (let [Y, Z] of Object.entries($.properties)) {
+    for (const [Y, Z] of Object.entries($.properties)) {
       if (!Q.has(Y)) continue
       J[Y] = t1(Z, X)
     }
@@ -7440,7 +7437,7 @@ function Rw($, X) {
   else throw Error("User defined types must specify a default value")
 }
 function t1($, X) {
-  let Q = N1($, X),
+  const Q = N1($, X),
     J = $
   switch (J[L]) {
     case "Any":
@@ -7527,24 +7524,24 @@ class JJ extends p {
 }
 function oZ($, X, Q) {
   if ($[L] === "Object" && typeof Q === "object" && !r2(Q)) {
-    let J = $,
+    const J = $,
       Y = Object.getOwnPropertyNames(Q)
     return Object.entries(J.properties).reduce((W, [q, M]) => {
-      let G = M[L] === "Literal" && M.const === Q[q] ? 100 : 0,
+      const G = M[L] === "Literal" && M.const === Q[q] ? 100 : 0,
         B = r(M, X, Q[q]) ? 10 : 0,
         N = Y.includes(q) ? 1 : 0
       return W + (G + B + N)
     }, 0)
   } else if ($[L] === "Union") {
-    let Y = $.anyOf.map((Z) => B0(Z, X)).map((Z) => oZ(Z, X, Q))
+    const Y = $.anyOf.map((Z) => B0(Z, X)).map((Z) => oZ(Z, X, Q))
     return Math.max(...Y)
   } else return r($, X, Q) ? 1 : 0
 }
 function _w($, X, Q) {
   let J = $.anyOf.map((W) => B0(W, X)),
     [Y, Z] = [J[0], 0]
-  for (let W of J) {
-    let q = oZ(W, X, Q)
+  for (const W of J) {
+    const q = oZ(W, X, Q)
     if (q > Z) (Y = W), (Z = q)
   }
   return Y
@@ -7552,7 +7549,7 @@ function _w($, X, Q) {
 function Ew($, X, Q) {
   if ("default" in $) return typeof Q === "function" ? $.default : N0($.default)
   else {
-    let J = _w($, X, Q)
+    const J = _w($, X, Q)
     return x6(J, X, Q)
   }
 }
@@ -7564,7 +7561,7 @@ function Iw($, X, Q) {
 }
 function Tw($, X, Q) {
   if (r($, X, Q)) return N0(Q)
-  let J = c(Q) ? N0(Q) : S2($, X),
+  const J = c(Q) ? N0(Q) : S2($, X),
     Y =
       u($.minItems) && J.length < $.minItems
         ? [...J, ...Array.from({ length: $.minItems - J.length }, () => null)]
@@ -7573,22 +7570,22 @@ function Tw($, X, Q) {
       C2($.items, X, M)
     )
   if ($.uniqueItems !== !0) return W
-  let q = [...new Set(W)]
+  const q = [...new Set(W)]
   if (!r($, X, q)) throw new JJ($, "Array cast produced invalid data due to uniqueItems constraint")
   return q
 }
 function bw($, X, Q) {
   if (r($, X, Q)) return S2($, X)
-  let J = new Set($.returns.required || []),
-    Y = function () {}
-  for (let [Z, W] of Object.entries($.returns.properties)) {
+  const J = new Set($.returns.required || []),
+    Y = () => {}
+  for (const [Z, W] of Object.entries($.returns.properties)) {
     if (!J.has(Z) && Q.prototype[Z] === void 0) continue
     Y.prototype[Z] = C2(W, X, Q.prototype[Z])
   }
   return Y
 }
 function kw($, X, Q) {
-  let J = globalThis.Object.values($.$defs),
+  const J = globalThis.Object.values($.$defs),
     Y = $.$defs[$.$ref]
   return C2(Y, [...X, ...J], Q)
 }
@@ -7596,13 +7593,13 @@ function lZ($, X) {
   if ((l($) && !l(X)) || (!l($) && l(X))) return $
   if (!l($) || !l(X)) return X
   return globalThis.Object.getOwnPropertyNames($).reduce((Q, J) => {
-    let Y = J in X ? lZ($[J], X[J]) : $[J]
+    const Y = J in X ? lZ($[J], X[J]) : $[J]
     return { ...Q, [J]: Y }
   }, {})
 }
 function gw($, X, Q) {
   if (r($, X, Q)) return Q
-  let J = S2($, X),
+  const J = S2($, X),
     Y = lZ(J, Q)
   return r($, X, Y) ? Y : J
 }
@@ -7612,15 +7609,15 @@ function fw($, X, Q) {
 function yw($, X, Q) {
   if (r($, X, Q)) return Q
   if (Q === null || typeof Q !== "object") return S2($, X)
-  let J = new Set($.required || []),
+  const J = new Set($.required || []),
     Y = {}
-  for (let [Z, W] of Object.entries($.properties)) {
+  for (const [Z, W] of Object.entries($.properties)) {
     if (!J.has(Z) && Q[Z] === void 0) continue
     Y[Z] = C2(W, X, Q[Z])
   }
   if (typeof $.additionalProperties === "object") {
-    let Z = Object.getOwnPropertyNames($.properties)
-    for (let W of Object.getOwnPropertyNames(Q)) {
+    const Z = Object.getOwnPropertyNames($.properties)
+    for (const W of Object.getOwnPropertyNames(Q)) {
       if (Z.includes(W)) continue
       Y[W] = C2($.additionalProperties, X, Q[W])
     }
@@ -7630,10 +7627,10 @@ function yw($, X, Q) {
 function vw($, X, Q) {
   if (r($, X, Q)) return N0(Q)
   if (Q === null || typeof Q !== "object" || Array.isArray(Q) || Q instanceof Date) return S2($, X)
-  let J = Object.getOwnPropertyNames($.patternProperties)[0],
+  const J = Object.getOwnPropertyNames($.patternProperties)[0],
     Y = $.patternProperties[J],
     Z = {}
-  for (let [W, q] of Object.entries(Q)) Z[W] = C2(Y, X, q)
+  for (const [W, q] of Object.entries(Q)) Z[W] = C2(Y, X, q)
   return Z
 }
 function dw($, X, Q) {
@@ -7652,7 +7649,7 @@ function uw($, X, Q) {
   return r($, X, Q) ? N0(Q) : Ew($, X, Q)
 }
 function C2($, X, Q) {
-  let J = q0($.$id) ? N1($, X) : X,
+  const J = q0($.$id) ? N1($, X) : X,
     Y = $
   switch ($[L]) {
     case "Array":
@@ -7696,16 +7693,16 @@ function pw($, X, Q) {
   return Q.map((J) => y1($.items, X, J))
 }
 function iw($, X, Q) {
-  let J = globalThis.Object.values($.$defs),
+  const J = globalThis.Object.values($.$defs),
     Y = $.$defs[$.$ref]
   return y1(Y, [...X, ...J], Q)
 }
 function nw($, X, Q) {
-  let J = $.unevaluatedProperties,
+  const J = $.unevaluatedProperties,
     Z = $.allOf.map((q) => y1(q, X, N0(Q))).reduce((q, M) => (l(M) ? { ...q, ...M } : M), {})
   if (!l(Q) || !l(Z) || !_$(J)) return Z
-  let W = g1($)
-  for (let q of Object.getOwnPropertyNames(Q)) {
+  const W = g1($)
+  for (const q of Object.getOwnPropertyNames(Q)) {
     if (W.includes(q)) continue
     if (r(J, X, Q[q])) Z[q] = y1(J, X, Q[q])
   }
@@ -7713,8 +7710,8 @@ function nw($, X, Q) {
 }
 function ow($, X, Q) {
   if (!l(Q) || c(Q)) return Q
-  let J = $.additionalProperties
-  for (let Y of Object.getOwnPropertyNames(Q)) {
+  const J = $.additionalProperties
+  for (const Y of Object.getOwnPropertyNames(Q)) {
     if (i($.properties, Y)) {
       Q[Y] = y1($.properties[Y], X, Q[Y])
       continue
@@ -7729,11 +7726,11 @@ function ow($, X, Q) {
 }
 function lw($, X, Q) {
   if (!l(Q)) return Q
-  let J = $.additionalProperties,
+  const J = $.additionalProperties,
     Y = Object.getOwnPropertyNames(Q),
     [Z, W] = Object.entries($.patternProperties)[0],
     q = new RegExp(Z)
-  for (let M of Y) {
+  for (const M of Y) {
     if (q.test(M)) {
       Q[M] = y1(W, X, Q[M])
       continue
@@ -7755,16 +7752,16 @@ function sw($, X, Q) {
 function rw($, X, Q) {
   if (!c(Q)) return Q
   if (x0($.items)) return []
-  let J = Math.min(Q.length, $.items.length)
+  const J = Math.min(Q.length, $.items.length)
   for (let Y = 0; Y < J; Y++) Q[Y] = y1($.items[Y], X, Q[Y])
   return Q.length > J ? Q.slice(0, J) : Q
 }
 function aw($, X, Q) {
-  for (let J of $.anyOf) if (cw(J) && r(J, X, Q)) return y1(J, X, Q)
+  for (const J of $.anyOf) if (cw(J) && r(J, X, Q)) return y1(J, X, Q)
   return Q
 }
 function y1($, X, Q) {
-  let J = q0($.$id) ? N1($, X) : X,
+  const J = q0($.$id) ? N1($, X) : X,
     Y = $
   switch (Y[L]) {
     case "Array":
@@ -7837,15 +7834,15 @@ function YU($) {
   return q0($) && /^\d\d\d\d-[0-1]\d-[0-3]\d$/i.test($)
 }
 function ZU($, X) {
-  let Q = sZ($)
+  const Q = sZ($)
   return Q === X ? Q : $
 }
 function WU($, X) {
-  let Q = rZ($)
+  const Q = rZ($)
   return Q === X ? Q : $
 }
 function qU($, X) {
-  let Q = tZ($)
+  const Q = tZ($)
   return Q === X ? Q : $
 }
 function MU($, X) {
@@ -7861,7 +7858,7 @@ function tZ($) {
   return I6($) ? !0 : T6($) ? !1 : $
 }
 function BU($) {
-  let X = (Q) => Q.split(".")[0]
+  const X = (Q) => Q.split(".")[0]
   return bX($)
     ? BigInt(X($))
     : u($)
@@ -7926,7 +7923,7 @@ function OU($, X, Q) {
   return UU(Q)
 }
 function PU($, X, Q) {
-  let J = globalThis.Object.values($.$defs),
+  const J = globalThis.Object.values($.$defs),
     Y = $.$defs[$.$ref]
   return j2(Y, [...X, ...J], Q)
 }
@@ -7947,7 +7944,7 @@ function jU($, X, Q) {
 }
 function FU($, X, Q) {
   if (!l(Q) || c(Q)) return Q
-  for (let J of Object.getOwnPropertyNames($.properties)) {
+  for (const J of Object.getOwnPropertyNames($.properties)) {
     if (!i(Q, J)) continue
     Q[J] = j2($.properties[J], X, Q[J])
   }
@@ -7955,9 +7952,9 @@ function FU($, X, Q) {
 }
 function RU($, X, Q) {
   if (!(l(Q) && !c(Q))) return Q
-  let Y = Object.getOwnPropertyNames($.patternProperties)[0],
+  const Y = Object.getOwnPropertyNames($.patternProperties)[0],
     Z = $.patternProperties[Y]
-  for (let [W, q] of Object.entries(Q)) Q[W] = j2(Z, X, q)
+  for (const [W, q] of Object.entries(Q)) Q[W] = j2(Z, X, q)
   return Q
 }
 function VU($, X, Q) {
@@ -7982,16 +7979,16 @@ function TU($, X, Q) {
   return wU(Q)
 }
 function bU($, X, Q) {
-  for (let J of $.anyOf) if (r(J, X, Q)) return Q
-  for (let J of $.anyOf) {
-    let Y = j2(J, X, N0(Q))
+  for (const J of $.anyOf) if (r(J, X, Q)) return Q
+  for (const J of $.anyOf) {
+    const Y = j2(J, X, N0(Q))
     if (!r(J, X, Y)) continue
     return Y
   }
   return Q
 }
 function j2($, X, Q) {
-  let J = N1($, X),
+  const J = N1($, X),
     Y = $
   switch ($[L]) {
     case "Array":
@@ -8069,19 +8066,19 @@ function kU($, X, Q, J) {
 }
 function gU($, X, Q, J) {
   if (!l(J) || u1(J)) return f0($, Q, J)
-  let Y = AX($),
+  const Y = AX($),
     Z = Y.map((B) => B[0]),
     W = { ...J }
-  for (let [B, N] of Y) if (B in W) W[B] = F2(N, X, `${Q}/${B}`, W[B])
+  for (const [B, N] of Y) if (B in W) W[B] = F2(N, X, `${Q}/${B}`, W[B])
   if (!U0($.unevaluatedProperties)) return f0($, Q, W)
-  let q = Object.getOwnPropertyNames(W),
+  const q = Object.getOwnPropertyNames(W),
     M = $.unevaluatedProperties,
     G = { ...W }
-  for (let B of q) if (!Z.includes(B)) G[B] = f0(M, `${Q}/${B}`, G[B])
+  for (const B of q) if (!Z.includes(B)) G[B] = f0(M, `${Q}/${B}`, G[B])
   return f0($, Q, G)
 }
 function fU($, X, Q, J) {
-  let Y = globalThis.Object.values($.$defs),
+  const Y = globalThis.Object.values($.$defs),
     Z = $.$defs[$.$ref],
     W = F2(Z, [...X, ...Y], Q, J)
   return f0($, Q, W)
@@ -8091,40 +8088,40 @@ function yU($, X, Q, J) {
 }
 function vU($, X, Q, J) {
   if (!l(J)) return f0($, Q, J)
-  let Y = g1($),
+  const Y = g1($),
     Z = { ...J }
-  for (let G of Y) {
+  for (const G of Y) {
     if (!i(Z, G)) continue
     if (x0(Z[G]) && (!X$($.properties[G]) || V0.IsExactOptionalProperty(Z, G))) continue
     Z[G] = F2($.properties[G], X, `${Q}/${G}`, Z[G])
   }
   if (!g0($.additionalProperties)) return f0($, Q, Z)
-  let W = Object.getOwnPropertyNames(Z),
+  const W = Object.getOwnPropertyNames(Z),
     q = $.additionalProperties,
     M = { ...Z }
-  for (let G of W) if (!Y.includes(G)) M[G] = f0(q, `${Q}/${G}`, M[G])
+  for (const G of W) if (!Y.includes(G)) M[G] = f0(q, `${Q}/${G}`, M[G])
   return f0($, Q, M)
 }
 function dU($, X, Q, J) {
   if (!l(J)) return f0($, Q, J)
-  let Y = Object.getOwnPropertyNames($.patternProperties)[0],
+  const Y = Object.getOwnPropertyNames($.patternProperties)[0],
     Z = new RegExp(Y),
     W = { ...J }
-  for (let B of Object.getOwnPropertyNames(J))
+  for (const B of Object.getOwnPropertyNames(J))
     if (Z.test(B)) W[B] = F2($.patternProperties[Y], X, `${Q}/${B}`, W[B])
   if (!g0($.additionalProperties)) return f0($, Q, W)
-  let q = Object.getOwnPropertyNames(W),
+  const q = Object.getOwnPropertyNames(W),
     M = $.additionalProperties,
     G = { ...W }
-  for (let B of q) if (!Z.test(B)) G[B] = f0(M, `${Q}/${B}`, G[B])
+  for (const B of q) if (!Z.test(B)) G[B] = f0(M, `${Q}/${B}`, G[B])
   return f0($, Q, G)
 }
 function hU($, X, Q, J) {
-  let Y = B0($, X)
+  const Y = B0($, X)
   return f0($, Q, F2(Y, X, Q, J))
 }
 function mU($, X, Q, J) {
-  let Y = B0($, X)
+  const Y = B0($, X)
   return f0($, Q, F2(Y, X, Q, J))
 }
 function uU($, X, Q, J) {
@@ -8137,15 +8134,15 @@ function uU($, X, Q, J) {
     : f0($, Q, J)
 }
 function cU($, X, Q, J) {
-  for (let Y of $.anyOf) {
+  for (const Y of $.anyOf) {
     if (!r(Y, X, J)) continue
-    let Z = F2(Y, X, Q, J)
+    const Z = F2(Y, X, Q, J)
     return f0($, Q, Z)
   }
   return f0($, Q, J)
 }
 function F2($, X, Q, J) {
-  let Y = N1($, X),
+  const Y = N1($, X),
     Z = $
   switch ($[L]) {
     case "Array":
@@ -8197,93 +8194,93 @@ function H1($, X, Q) {
   }
 }
 function pU($, X, Q, J) {
-  let Y = H1($, Q, J)
+  const Y = H1($, Q, J)
   return c(Y) ? Y.map((Z, W) => R2($.items, X, `${Q}/${W}`, Z)) : Y
 }
 function iU($, X, Q, J) {
-  let Y = globalThis.Object.values($.$defs),
+  const Y = globalThis.Object.values($.$defs),
     Z = $.$defs[$.$ref],
     W = H1($, Q, J)
   return R2(Z, [...X, ...Y], Q, W)
 }
 function nU($, X, Q, J) {
-  let Y = H1($, Q, J)
+  const Y = H1($, Q, J)
   if (!l(J) || u1(J)) return Y
-  let Z = AX($),
+  const Z = AX($),
     W = Z.map((N) => N[0]),
     q = { ...Y }
-  for (let [N, P] of Z) if (N in q) q[N] = R2(P, X, `${Q}/${N}`, q[N])
+  for (const [N, P] of Z) if (N in q) q[N] = R2(P, X, `${Q}/${N}`, q[N])
   if (!U0($.unevaluatedProperties)) return q
-  let M = Object.getOwnPropertyNames(q),
+  const M = Object.getOwnPropertyNames(q),
     G = $.unevaluatedProperties,
     B = { ...q }
-  for (let N of M) if (!W.includes(N)) B[N] = H1(G, `${Q}/${N}`, B[N])
+  for (const N of M) if (!W.includes(N)) B[N] = H1(G, `${Q}/${N}`, B[N])
   return B
 }
 function oU($, X, Q, J) {
   return H1($.not, Q, H1($, Q, J))
 }
 function lU($, X, Q, J) {
-  let Y = H1($, Q, J)
+  const Y = H1($, Q, J)
   if (!l(Y)) return Y
-  let Z = g1($),
+  const Z = g1($),
     W = { ...Y }
-  for (let B of Z) {
+  for (const B of Z) {
     if (!i(W, B)) continue
     if (x0(W[B]) && (!X$($.properties[B]) || V0.IsExactOptionalProperty(W, B))) continue
     W[B] = R2($.properties[B], X, `${Q}/${B}`, W[B])
   }
   if (!g0($.additionalProperties)) return W
-  let q = Object.getOwnPropertyNames(W),
+  const q = Object.getOwnPropertyNames(W),
     M = $.additionalProperties,
     G = { ...W }
-  for (let B of q) if (!Z.includes(B)) G[B] = H1(M, `${Q}/${B}`, G[B])
+  for (const B of q) if (!Z.includes(B)) G[B] = H1(M, `${Q}/${B}`, G[B])
   return G
 }
 function tU($, X, Q, J) {
-  let Y = H1($, Q, J)
+  const Y = H1($, Q, J)
   if (!l(J)) return Y
-  let Z = Object.getOwnPropertyNames($.patternProperties)[0],
+  const Z = Object.getOwnPropertyNames($.patternProperties)[0],
     W = new RegExp(Z),
     q = { ...Y }
-  for (let N of Object.getOwnPropertyNames(J))
+  for (const N of Object.getOwnPropertyNames(J))
     if (W.test(N)) q[N] = R2($.patternProperties[Z], X, `${Q}/${N}`, q[N])
   if (!g0($.additionalProperties)) return q
-  let M = Object.getOwnPropertyNames(q),
+  const M = Object.getOwnPropertyNames(q),
     G = $.additionalProperties,
     B = { ...q }
-  for (let N of M) if (!W.test(N)) B[N] = H1(G, `${Q}/${N}`, B[N])
+  for (const N of M) if (!W.test(N)) B[N] = H1(G, `${Q}/${N}`, B[N])
   return B
 }
 function sU($, X, Q, J) {
-  let Y = B0($, X),
+  const Y = B0($, X),
     Z = R2(Y, X, Q, J)
   return H1($, Q, Z)
 }
 function rU($, X, Q, J) {
-  let Y = B0($, X),
+  const Y = B0($, X),
     Z = R2(Y, X, Q, J)
   return H1($, Q, Z)
 }
 function aU($, X, Q, J) {
-  let Y = H1($, Q, J)
+  const Y = H1($, Q, J)
   return c($.items) ? $.items.map((Z, W) => R2(Z, X, `${Q}/${W}`, Y[W])) : []
 }
 function eU($, X, Q, J) {
-  for (let Y of $.anyOf) {
+  for (const Y of $.anyOf) {
     if (!r(Y, X, J)) continue
-    let Z = R2(Y, X, Q, J)
+    const Z = R2(Y, X, Q, J)
     return H1($, Q, Z)
   }
-  for (let Y of $.anyOf) {
-    let Z = R2(Y, X, Q, J)
+  for (const Y of $.anyOf) {
+    const Z = R2(Y, X, Q, J)
     if (!r($, X, Z)) continue
     return H1($, Q, Z)
   }
   return H1($, Q, J)
 }
 function R2($, X, Q, J) {
-  let Y = N1($, X),
+  const Y = N1($, X),
     Z = $
   switch ($[L]) {
     case "Array":
@@ -8329,7 +8326,7 @@ function Yz($, X) {
   return U0($) || U0($.unevaluatedProperties) || $.allOf.some((Q) => q1(Q, X))
 }
 function Zz($, X) {
-  let Q = globalThis.Object.getOwnPropertyNames($.$defs).reduce((Y, Z) => [...Y, $.$defs[Z]], []),
+  const Q = globalThis.Object.getOwnPropertyNames($.$defs).reduce((Y, Z) => [...Y, $.$defs[Z]], []),
     J = $.$defs[$.$ref]
   return U0($) || q1(J, [...Q, ...X])
 }
@@ -8350,7 +8347,7 @@ function Bz($, X) {
   return U0($) || q1($.item, X)
 }
 function Gz($, X) {
-  let Q = Object.getOwnPropertyNames($.patternProperties)[0],
+  const Q = Object.getOwnPropertyNames($.patternProperties)[0],
     J = $.patternProperties[Q]
   return U0($) || q1(J, X) || (g0($.additionalProperties) && U0($.additionalProperties))
 }
@@ -8369,7 +8366,7 @@ function zz($, X) {
   return U0($) || $.anyOf.some((Q) => q1(Q, X))
 }
 function q1($, X) {
-  let Q = N1($, X),
+  const Q = N1($, X),
     J = $
   if ($.$id && YJ.has($.$id)) return !1
   if ($.$id) YJ.add($.$id)
@@ -8413,12 +8410,12 @@ function q$($, X) {
   return YJ.clear(), q1($, X)
 }
 function eZ(...$) {
-  let [X, Q, J] = $.length === 3 ? [$[0], $[1], $[2]] : [$[0], [], $[1]]
+  const [X, Q, J] = $.length === 3 ? [$[0], $[1], $[2]] : [$[0], [], $[1]]
   if (!r(X, Q, J)) throw new b6(X, J, h2(X, Q, J).First())
   return q$(X, Q) ? p8(X, Q, J) : J
 }
 function M$($, X) {
-  let Q = i($, "default") ? $.default : void 0,
+  const Q = i($, "default") ? $.default : void 0,
     J = R$(Q) ? Q() : N0(Q)
   return x0(X) ? J : l(X) && l(J) ? Object.assign(J, X) : X
 }
@@ -8430,7 +8427,7 @@ function Hz($, X, Q) {
     for (let Y = 0; Y < Q.length; Y++) Q[Y] = E1($.items, X, Q[Y])
     return Q
   }
-  let J = M$($, Q)
+  const J = M$($, Q)
   if (!c(J)) return J
   for (let Y = 0; Y < J.length; Y++) J[Y] = E1($.items, X, J[Y])
   return J
@@ -8439,45 +8436,45 @@ function Az($, X, Q) {
   return V1(Q) ? Q : M$($, Q)
 }
 function Dz($, X, Q) {
-  let J = globalThis.Object.values($.$defs),
+  const J = globalThis.Object.values($.$defs),
     Y = $.$defs[$.$ref]
   return E1(Y, [...X, ...J], Q)
 }
 function Oz($, X, Q) {
-  let J = M$($, Q)
+  const J = M$($, Q)
   return $.allOf.reduce((Y, Z) => {
-    let W = E1(Z, X, J)
+    const W = E1(Z, X, J)
     return l(W) ? { ...Y, ...W } : W
   }, {})
 }
 function Pz($, X, Q) {
-  let J = M$($, Q)
+  const J = M$($, Q)
   if (!l(J)) return J
-  let Y = Object.getOwnPropertyNames($.properties)
-  for (let Z of Y) {
-    let W = E1($.properties[Z], X, J[Z])
+  const Y = Object.getOwnPropertyNames($.properties)
+  for (const Z of Y) {
+    const W = E1($.properties[Z], X, J[Z])
     if (x0(W)) continue
     J[Z] = E1($.properties[Z], X, J[Z])
   }
   if (!ZJ($.additionalProperties)) return J
-  for (let Z of Object.getOwnPropertyNames(J)) {
+  for (const Z of Object.getOwnPropertyNames(J)) {
     if (Y.includes(Z)) continue
     J[Z] = E1($.additionalProperties, X, J[Z])
   }
   return J
 }
 function Lz($, X, Q) {
-  let J = M$($, Q)
+  const J = M$($, Q)
   if (!l(J)) return J
-  let Y = $.additionalProperties,
+  const Y = $.additionalProperties,
     [Z, W] = Object.entries($.patternProperties)[0],
     q = new RegExp(Z)
-  for (let M of Object.getOwnPropertyNames(J)) {
+  for (const M of Object.getOwnPropertyNames(J)) {
     if (!(q.test(M) && ZJ(W))) continue
     J[M] = E1(W, X, J[M])
   }
   if (!ZJ(Y)) return J
-  for (let M of Object.getOwnPropertyNames(J)) {
+  for (const M of Object.getOwnPropertyNames(J)) {
     if (q.test(M)) continue
     J[M] = E1(Y, X, J[M])
   }
@@ -8490,22 +8487,22 @@ function Sz($, X, Q) {
   return E1(B0($, X), X, Q)
 }
 function Cz($, X, Q) {
-  let J = M$($, Q)
+  const J = M$($, Q)
   if (!c(J) || x0($.items)) return J
-  let [Y, Z] = [$.items, Math.max($.items.length, J.length)]
+  const [Y, Z] = [$.items, Math.max($.items.length, J.length)]
   for (let W = 0; W < Z; W++) if (W < Y.length) J[W] = E1(Y[W], X, J[W])
   return J
 }
 function jz($, X, Q) {
-  let J = M$($, Q)
-  for (let Y of $.anyOf) {
-    let Z = E1(Y, X, N0(J))
+  const J = M$($, Q)
+  for (const Y of $.anyOf) {
+    const Z = E1(Y, X, N0(J))
     if (r(Y, X, Z)) return Z
   }
   return J
 }
 function E1($, X, Q) {
-  let J = N1($, X),
+  const J = N1($, X),
     Y = $
   switch (Y[L]) {
     case "Array":
@@ -8573,7 +8570,7 @@ function* g6($) {
 function Fz($, X, Q) {
   if (X === "") throw new WJ($, X, Q)
   let [J, Y, Z] = [null, $, ""]
-  for (let W of g6(X)) {
+  for (const W of g6(X)) {
     if (Y[W] === void 0) Y[W] = {}
     ;(J = Y), (Y = Y[W]), (Z = W)
   }
@@ -8582,19 +8579,19 @@ function Fz($, X, Q) {
 function Rz($, X) {
   if (X === "") throw new qJ($, X)
   let [Q, J, Y] = [null, $, ""]
-  for (let Z of g6(X)) {
+  for (const Z of g6(X)) {
     if (J[Z] === void 0 || J[Z] === null) return
     ;(Q = J), (J = J[Z]), (Y = Z)
   }
   if (Array.isArray(Q)) {
-    let Z = parseInt(Y)
+    const Z = parseInt(Y)
     Q.splice(Z, 1)
   } else delete Q[Y]
 }
 function Vz($, X) {
   if (X === "") return !0
   let [Q, J, Y] = [null, $, ""]
-  for (let Z of g6(X)) {
+  for (const Z of g6(X)) {
     if (J[Z] === void 0) return !1
     ;(Q = J), (J = J[Z]), (Y = Z)
   }
@@ -8603,7 +8600,7 @@ function Vz($, X) {
 function _z($, X) {
   if (X === "") return $
   let Q = $
-  for (let J of g6(X)) {
+  for (const J of g6(X)) {
     if (Q[J] === void 0) return
     Q = Q[J]
   }
@@ -8611,7 +8608,7 @@ function _z($, X) {
 }
 function Ez($, X) {
   if (!l(X)) return !1
-  let Q = [...Object.keys($), ...Object.getOwnPropertySymbols($)],
+  const Q = [...Object.keys($), ...Object.getOwnPropertySymbols($)],
     J = [...Object.keys(X), ...Object.getOwnPropertySymbols(X)]
   if (Q.length !== J.length) return !1
   return Q.every((Y) => X8($[Y], X[Y]))
@@ -8668,18 +8665,18 @@ function XW($) {
 }
 function* yz($, X, Q) {
   if ((XW(X), XW(Q), !TQ(Q))) return yield yX($, Q)
-  let J = globalThis.Object.getOwnPropertyNames(X),
+  const J = globalThis.Object.getOwnPropertyNames(X),
     Y = globalThis.Object.getOwnPropertyNames(Q)
-  for (let Z of Y) {
+  for (const Z of Y) {
     if (i(X, Z)) continue
     yield JW(`${$}/${Z}`, Q[Z])
   }
-  for (let Z of J) {
+  for (const Z of J) {
     if (!i(Q, Z)) continue
     if (X8(X, Q)) continue
     yield* vX(`${$}/${Z}`, X[Z], Q[Z])
   }
-  for (let Z of J) {
+  for (const Z of J) {
     if (i(Q, Z)) continue
     yield YW(`${$}/${Z}`)
   }
@@ -8729,8 +8726,8 @@ function uz($) {
 function WW($, X) {
   if (mz(X)) return N0(X[0].value)
   if (uz(X)) return N0($)
-  let Q = N0($)
-  for (let J of X)
+  const Q = N0($)
+  for (const J of X)
     switch (J.type) {
       case "insert": {
         V2.Set(Q, J.path, J.value)
@@ -8748,7 +8745,7 @@ function WW($, X) {
   return Q
 }
 function qW(...$) {
-  let [X, Q, J] = $.length === 3 ? [$[0], $[1], $[2]] : [$[0], [], $[1]],
+  const [X, Q, J] = $.length === 3 ? [$[0], $[1], $[2]] : [$[0], [], $[1]],
     Y = q$(X, Q) ? i8(X, Q, J) : J
   if (!r(X, Q, Y)) throw new k6(X, Y, h2(X, Q, Y).First())
   return Y
@@ -8764,11 +8761,11 @@ class BJ extends p {
 function cz($, X, Q, J) {
   if (!dX(Q)) V2.Set($, X, N0(J))
   else {
-    let Y = Object.getOwnPropertyNames(Q),
+    const Y = Object.getOwnPropertyNames(Q),
       Z = Object.getOwnPropertyNames(J)
-    for (let W of Y) if (!Z.includes(W)) delete Q[W]
-    for (let W of Z) if (!Y.includes(W)) Q[W] = null
-    for (let W of Z) GJ($, `${X}/${W}`, Q[W], J[W])
+    for (const W of Y) if (!Z.includes(W)) delete Q[W]
+    for (const W of Z) if (!Y.includes(W)) Q[W] = null
+    for (const W of Z) GJ($, `${X}/${W}`, Q[W], J[W])
   }
 }
 function pz($, X, Q, J) {
@@ -8809,8 +8806,8 @@ class wJ extends p {
   }
 }
 var NJ
-;(function ($) {
-  let X = new Map([
+;(($) => {
+  const X = new Map([
     [
       "Assert",
       (Z, W, q) => {
@@ -8841,13 +8838,13 @@ var NJ
 var GW = ["Clone", "Clean", "Default", "Convert", "Assert", "Decode"]
 function lz($, X, Q, J) {
   return $.reduce((Y, Z) => {
-    let W = NJ.Get(Z)
+    const W = NJ.Get(Z)
     if (x0(W)) throw new wJ(`Unable to find Parse operation '${Z}'`)
     return W(X, Q, Y)
   }, J)
 }
 function NW(...$) {
-  let [X, Q, J, Y] =
+  const [X, Q, J, Y] =
     $.length === 4
       ? [$[0], $[1], $[2], $[3]]
       : $.length === 3
@@ -8911,13 +8908,13 @@ class wW {
     return this.hasTransform ? p8(this.schema, this.references, $) : $
   }
   Encode($) {
-    let X = this.hasTransform ? i8(this.schema, this.references, $) : $
+    const X = this.hasTransform ? i8(this.schema, this.references, $) : $
     if (!this.checkFunc(X)) throw new k6(this.schema, $, this.Errors($).First())
     return X
   }
 }
 var B$
-;(function ($) {
+;(($) => {
   function X(Z) {
     return Z === 36
   }
@@ -8936,7 +8933,7 @@ var B$
   $.IsNumeric = Y
 })(B$ || (B$ = {}))
 var hX
-;(function ($) {
+;(($) => {
   function X(Z) {
     if (Z.length === 0) return !1
     return B$.IsNumeric(Z.charCodeAt(0))
@@ -8944,7 +8941,7 @@ var hX
   function Q(Z) {
     if (X(Z)) return !1
     for (let W = 0; W < Z.length; W++) {
-      let q = Z.charCodeAt(W)
+      const q = Z.charCodeAt(W)
       if (!(B$.IsAlpha(q) || B$.IsNumeric(q) || B$.DollarSign(q) || B$.IsUnderscore(q))) return !1
     }
     return !0
@@ -8958,11 +8955,11 @@ var hX
   $.Encode = Y
 })(hX || (hX = {}))
 var UJ
-;(function ($) {
+;(($) => {
   function X(Q) {
-    let J = []
+    const J = []
     for (let Y = 0; Y < Q.length; Y++) {
-      let Z = Q.charCodeAt(Y)
+      const Z = Q.charCodeAt(Y)
       if (B$.IsNumeric(Z) || B$.IsAlpha(Z)) J.push(Q.charAt(Y))
       else J.push(`_${Z}_`)
     }
@@ -8971,7 +8968,7 @@ var UJ
   $.Encode = X
 })(UJ || (UJ = {}))
 var zJ
-;(function ($) {
+;(($) => {
   function X(Q) {
     return Q.replace(/'/g, "\\'")
   }
@@ -8990,7 +8987,7 @@ class HJ extends p {
   }
 }
 var Q8
-;(function ($) {
+;(($) => {
   function X(W, q, M) {
     return V0.ExactOptionalPropertyTypes
       ? `('${q}' in ${W} ? ${M} : true)`
@@ -9019,7 +9016,7 @@ var Q8
   $.IsVoidLike = Z
 })(Q8 || (Q8 = {}))
 var _2
-;(function ($) {
+;(($) => {
   function X(U) {
     return U[L] === "Any" || U[L] === "Unknown"
   }
@@ -9031,14 +9028,14 @@ var _2
   }
   function* Y(U, D, z) {
     yield `Array.isArray(${z})`
-    let [x, E] = [R1("value", "any"), R1("acc", "number")]
+    const [x, E] = [R1("value", "any"), R1("acc", "number")]
     if (u(U.maxItems)) yield `${z}.length <= ${U.maxItems}`
     if (u(U.minItems)) yield `${z}.length >= ${U.minItems}`
-    let g = $1(U.items, D, "value")
+    const g = $1(U.items, D, "value")
     if (
       (yield `${z}.every((${x}) => ${g})`, T0(U.contains) || u(U.minContains) || u(U.maxContains))
     ) {
-      let t = T0(U.contains) ? U.contains : s(),
+      const t = T0(U.contains) ? U.contains : s(),
         D0 = $1(t, D, "value"),
         i0 = u(U.minContains) ? [`(count >= ${U.minContains})`] : [],
         G1 = u(U.maxContains) ? [`(count <= ${U.maxContains})`] : [],
@@ -9081,7 +9078,7 @@ var _2
     yield `(typeof ${z} === 'function')`
   }
   function* N(U, D, z) {
-    let x = globalThis.Object.getOwnPropertyNames(U.$defs).reduce((E, g) => {
+    const x = globalThis.Object.getOwnPropertyNames(U.$defs).reduce((E, g) => {
       return [...E, U.$defs[g]]
     }, [])
     yield* G2(Z2(U.$ref), [...D, ...x], z)
@@ -9095,13 +9092,13 @@ var _2
     if (u(U.multipleOf)) yield `(${z} % ${U.multipleOf}) === 0`
   }
   function* w(U, D, z) {
-    let x = U.allOf.map((E) => $1(E, D, z)).join(" && ")
+    const x = U.allOf.map((E) => $1(E, D, z)).join(" && ")
     if (U.unevaluatedProperties === !1) {
-      let E = F1(`${new RegExp(Y$(U))};`),
+      const E = F1(`${new RegExp(Y$(U))};`),
         g = `Object.getOwnPropertyNames(${z}).every(key => ${E}.test(key))`
       yield `(${x} && ${g})`
     } else if (T0(U.unevaluatedProperties)) {
-      let E = F1(`${new RegExp(Y$(U))};`),
+      const E = F1(`${new RegExp(Y$(U))};`),
         g = `Object.getOwnPropertyNames(${z}).every(key => ${E}.test(key) || ${$1(U.unevaluatedProperties, D, `${z}[key]`)})`
       yield `(${x} && ${g})`
     } else yield `(${x})`
@@ -9133,14 +9130,14 @@ var _2
     if ((yield Q8.IsObjectLike(z), u(U.minProperties)))
       yield `Object.getOwnPropertyNames(${z}).length >= ${U.minProperties}`
     if (u(U.maxProperties)) yield `Object.getOwnPropertyNames(${z}).length <= ${U.maxProperties}`
-    let x = Object.getOwnPropertyNames(U.properties)
-    for (let E of x) {
-      let g = hX.Encode(z, E),
+    const x = Object.getOwnPropertyNames(U.properties)
+    for (const E of x) {
+      const g = hX.Encode(z, E),
         t = U.properties[E]
       if (U.required && U.required.includes(E)) {
         if ((yield* G2(t, D, g), Z$(t) || X(t))) yield `('${E}' in ${z})`
       } else {
-        let D0 = $1(t, D, g)
+        const D0 = $1(t, D, g)
         yield Q8.IsExactOptionalProperty(z, E, D0)
       }
     }
@@ -9148,11 +9145,11 @@ var _2
       if (U.required && U.required.length === x.length)
         yield `Object.getOwnPropertyNames(${z}).length === ${x.length}`
       else {
-        let E = `[${x.map((g) => `'${g}'`).join(", ")}]`
+        const E = `[${x.map((g) => `'${g}'`).join(", ")}]`
         yield `Object.getOwnPropertyNames(${z}).every(key => ${E}.includes(key))`
       }
     if (typeof U.additionalProperties === "object") {
-      let E = $1(U.additionalProperties, D, `${z}[key]`),
+      const E = $1(U.additionalProperties, D, `${z}[key]`),
         g = `[${x.map((t) => `'${t}'`).join(", ")}]`
       yield `(Object.getOwnPropertyNames(${z}).every(key => ${g}.includes(key) || ${E}))`
     }
@@ -9164,7 +9161,7 @@ var _2
     if ((yield Q8.IsRecordLike(z), u(U.minProperties)))
       yield `Object.getOwnPropertyNames(${z}).length >= ${U.minProperties}`
     if (u(U.maxProperties)) yield `Object.getOwnPropertyNames(${z}).length <= ${U.maxProperties}`
-    let [x, E] = Object.entries(U.patternProperties)[0],
+    const [x, E] = Object.entries(U.patternProperties)[0],
       g = F1(`${new RegExp(x)}`),
       t = $1(E, D, "value"),
       D0 = T0(U.additionalProperties)
@@ -9176,12 +9173,12 @@ var _2
     yield `(Object.entries(${z}).every(([key, value]) => ${i0}))`
   }
   function* I(U, D, z) {
-    let x = B0(U, D)
+    const x = B0(U, D)
     if (d0.functions.has(U.$ref)) return yield `${t0(U.$ref)}(${z})`
     yield* G2(x, D, z)
   }
   function* k(U, D, z) {
-    let x = F1(`${new RegExp(U.source, U.flags)};`)
+    const x = F1(`${new RegExp(U.source, U.flags)};`)
     if ((yield `(typeof ${z} === 'string')`, u(U.maxLength))) yield `${z}.length <= ${U.maxLength}`
     if (u(U.minLength)) yield `${z}.length >= ${U.minLength}`
     yield `${x}.test(${z})`
@@ -9224,18 +9221,18 @@ var _2
     yield Q8.IsVoidLike(z)
   }
   function* h1(U, D, z) {
-    let x = d0.instances.size
+    const x = d0.instances.size
     d0.instances.set(x, U), yield `kind('${U[L]}', ${x}, ${z})`
   }
   function* G2(U, D, z, x = !0) {
-    let E = q0(U.$id) ? [...D, U] : D,
+    const E = q0(U.$id) ? [...D, U] : D,
       g = U
     if (x && q0(U.$id)) {
-      let t = t0(U.$id)
+      const t = t0(U.$id)
       if (d0.functions.has(t)) return yield `${t}(${z})`
       else {
         d0.functions.set(t, "<deferred>")
-        let D0 = g2(t, U, D, "value", !1)
+        const D0 = g2(t, U, D, "value", !1)
         return d0.functions.set(t, D0), yield `${t}(${z})`
       }
     }
@@ -9311,7 +9308,7 @@ var _2
         return yield* h1(g, E, z)
     }
   }
-  let d0 = {
+  const d0 = {
     language: "javascript",
     functions: new Map(),
     variables: new Map(),
@@ -9324,11 +9321,11 @@ var _2
     return `check_${UJ.Encode(U)}`
   }
   function F1(U) {
-    let D = `local_${d0.variables.size}`
+    const D = `local_${d0.variables.size}`
     return d0.variables.set(D, `const ${D} = ${U}`), D
   }
   function g2(U, D, z, x, E = !0) {
-    let [g, t] = [
+    const [g, t] = [
         `
 `,
         (P1) => "".padStart(P1, " "),
@@ -9340,14 +9337,14 @@ var _2
 }`
   }
   function R1(U, D) {
-    let z = d0.language === "typescript" ? `: ${D}` : ""
+    const z = d0.language === "typescript" ? `: ${D}` : ""
     return `${U}${z}`
   }
   function f2(U) {
     return d0.language === "typescript" ? `: ${U}` : ""
   }
   function D8(U, D, z) {
-    let x = g2("check", U, D, "value"),
+    const x = g2("check", U, D, "value"),
       E = R1("value", "any"),
       g = f2("boolean"),
       t = [...d0.functions.values()],
@@ -9361,7 +9358,7 @@ var _2
 `)
   }
   function e1(...U) {
-    let D = { language: "javascript" },
+    const D = { language: "javascript" },
       [z, x, E] =
         U.length === 2 && c(U[1])
           ? [U[0], U[1], D]
@@ -9380,17 +9377,17 @@ var _2
       !T0(z))
     )
       throw new HJ(z)
-    for (let g of x) if (!T0(g)) throw new HJ(g)
+    for (const g of x) if (!T0(g)) throw new HJ(g)
     return D8(z, x, E)
   }
   $.Code = e1
   function v(U, D = []) {
-    let z = e1(U, D, { language: "javascript" }),
+    const z = e1(U, D, { language: "javascript" }),
       x = globalThis.Function("kind", "format", "hash", z),
       E = new Map(d0.instances)
     function g(G1, P1, p$) {
       if (!W1.Has(G1) || !E.has(P1)) return !1
-      let O8 = W1.Get(G1),
+      const O8 = W1.Get(G1),
         q7 = E.get(P1)
       return O8(q7, p$)
     }
@@ -9401,7 +9398,7 @@ var _2
     function D0(G1) {
       return f$(G1)
     }
-    let i0 = x(g, t, D0)
+    const i0 = x(g, t, D0)
     return new wW(U, D, i0, z)
   }
   $.Compile = v
@@ -9485,7 +9482,7 @@ var OJ = {
     "7z": "application/x-7z-compressed",
   },
   tz = ($) => {
-    let X = $.lastIndexOf(".")
+    const X = $.lastIndexOf(".")
     return X === -1 ? "" : $.slice(X + 1)
   }
 var AJ, DJ
@@ -9498,7 +9495,7 @@ class J8 {
           console.warn("Browser environment does not support file")
           return
         }
-        let X = (J) =>
+        const X = (J) =>
           console.warn(
             Error(
               `[elysia] \`file\` require \`fs${J ? "." + J : ""}\` ${J?.includes(".") ? "module " : ""}which is not available in this environment`
@@ -9508,7 +9505,7 @@ class J8 {
           X()
           return
         }
-        let Q = process.getBuiltinModule("fs")
+        const Q = process.getBuiltinModule("fs")
         if (!Q) {
           X()
           return
@@ -9535,7 +9532,7 @@ class J8 {
 }
 var f6 = "toJSON" in new Headers(),
   uX = ($, X) => {
-    let Q = new URL($)
+    const Q = new URL($)
     return (Q.pathname = X), Q.toString()
   },
   sz = ($) =>
@@ -9544,11 +9541,11 @@ var f6 = "toJSON" in new Headers(),
     A0(Object.getPrototypeOf($)),
   PJ = ($) => $ && typeof $ == "object" && !Array.isArray($),
   Y1 = ($, X, Q) => {
-    let J = Q?.skipKeys,
+    const J = Q?.skipKeys,
       Y = Q?.override ?? !0,
       Z = Q?.mergeArray ?? !1
     if (!PJ($) || !PJ(X)) return $
-    for (let [W, q] of Object.entries(X))
+    for (const [W, q] of Object.entries(X))
       if (!J?.includes(W)) {
         if (Z && Array.isArray(q)) {
           $[W] = Array.isArray($[W]) ? [...$[W], ...q] : ($[W] = q)
@@ -9569,20 +9566,20 @@ var f6 = "toJSON" in new Headers(),
     return $
   },
   y6 = ($, X) => {
-    let Q = Y1(Object.assign({}, $), X, { skipKeys: ["properties"], mergeArray: !1 })
+    const Q = Y1(Object.assign({}, $), X, { skipKeys: ["properties"], mergeArray: !1 })
     return Q.properties && delete Q.properties, Q
   },
   y0 = ($, X) => {
     if (!X) return $
-    let Q = [],
+    const Q = [],
       J = []
     if ($) {
       Array.isArray($) || ($ = [$])
-      for (let Y of $) Q.push(Y), Y.checksum && J.push(Y.checksum)
+      for (const Y of $) Q.push(Y), Y.checksum && J.push(Y.checksum)
     }
     if (X) {
       Array.isArray(X) || (X = [X])
-      for (let Y of X) J.includes(Y.checksum) || Q.push(Y)
+      for (const Y of X) J.includes(Y.checksum) || Q.push(Y)
     }
     return Q
   },
@@ -9637,7 +9634,7 @@ var f6 = "toJSON" in new Headers(),
     if (!X) return $ ?? {}
     if (!$) return X ?? {}
     if (!Object.values(X).find((J) => J != null)) return { ...$ }
-    let Q = {
+    const Q = {
       ...$,
       ...X,
       body: X.body ?? $.body,
@@ -9700,11 +9697,11 @@ var f6 = "toJSON" in new Headers(),
   x2 = ($, X) => {
     if (!X) return
     if (!Array.isArray(X)) {
-      let J = X
+      const J = X
       return $ && !J.checksum && (J.checksum = $), J.scope === "scoped" && (J.scope = "local"), J
     }
-    let Q = [...X]
-    for (let J of Q)
+    const Q = [...X]
+    for (const J of Q)
       $ && !J.checksum && (J.checksum = $), J.scope === "scoped" && (J.scope = "local")
     return Q
   },
@@ -9727,7 +9724,7 @@ var f6 = "toJSON" in new Headers(),
   DW = ($, X, { skipIfHasType: Q = !1 }) => {
     if (!$) return $
     if (!Array.isArray($)) return Q ? ($.scope ??= X) : ($.scope = X), $
-    for (let J of $) Q ? (J.scope ??= X) : (J.scope = X)
+    for (const J of $) Q ? (J.scope ??= X) : (J.scope = X)
     return $
   },
   y$ = ($) => {
@@ -9740,8 +9737,8 @@ var f6 = "toJSON" in new Headers(),
         default:
           return { fn: $ }
       }
-    let X = []
-    for (let Q of $)
+    const X = []
+    for (const Q of $)
       switch (Q.scope) {
         case "global":
         case "scoped":
@@ -9839,7 +9836,7 @@ var zW = new TextEncoder(),
       X === null)
     )
       throw TypeError("Secret key must be provided.")
-    let Q = await crypto.subtle.importKey(
+    const Q = await crypto.subtle.importKey(
         "raw",
         zW.encode(X),
         { name: "HMAC", hash: "SHA-256" },
@@ -9852,7 +9849,7 @@ var zW = new TextEncoder(),
   SJ = async ($, X) => {
     if (typeof $ != "string") throw TypeError("Signed cookie string must be provided.")
     if (X === null) throw TypeError("Secret key must be provided.")
-    let Q = $.slice(0, $.lastIndexOf("."))
+    const Q = $.slice(0, $.lastIndexOf("."))
     return (await o8(Q, X)) === $ ? Q : !1
   },
   OW = ($, X, Q) => {
@@ -9860,19 +9857,19 @@ var zW = new TextEncoder(),
       $.standaloneValidator = [{ [X]: Q }]
       return
     }
-    let J = $.standaloneValidator[$.standaloneValidator.length - 1]
+    const J = $.standaloneValidator[$.standaloneValidator.length - 1]
     X in J ? $.standaloneValidator.push({ [X]: Q }) : (J[X] = Q)
   },
   $H = ($) => {
     if (typeof $ == "number") return $
     if ($.length < 16) {
       if ($.trim().length === 0) return null
-      let X = Number($)
+      const X = Number($)
       return Number.isNaN(X) ? null : X
     }
     if ($.length === 16) {
       if ($.trim().length === 0) return null
-      let X = Number($)
+      const X = Number($)
       return Number.isNaN(X) || X.toString() !== $ ? null : X
     }
     return null
@@ -9915,8 +9912,8 @@ var J1 = ($, X) => {
         return X ? { fn: $, subType: X } : { fn: $ }
       if ("fn" in $) return $
     }
-    let Q = []
-    for (let J of $)
+    const Q = []
+    for (const J of $)
       typeof J == "function" || typeof J == "string"
         ? Q.push(X ? { fn: J, subType: X } : { fn: J })
         : "fn" in J && Q.push(J)
@@ -9937,7 +9934,7 @@ var J1 = ($, X) => {
     $
   ),
   FJ = ($) => {
-    let X = Object.create(null)
+    const X = Object.create(null)
     return (
       $.start?.map && (X.start = $.start.map((Q) => Q.fn)),
       $.request?.map && (X.request = $.request.map((Q) => Q.fn)),
@@ -9968,12 +9965,12 @@ var J1 = ($, X) => {
   G$ = Symbol("ElysiaFormData"),
   z$ = Symbol("ElysiaRequestId"),
   RJ = ($) => {
-    let X = new FormData()
+    const X = new FormData()
     if (((X[G$] = {}), $))
-      for (let [Q, J] of Object.entries($)) {
+      for (const [Q, J] of Object.entries($)) {
         if (Array.isArray(J)) {
           X[G$][Q] = []
-          for (let Y of J)
+          for (const Y of J)
             J instanceof File
               ? X.append(Q, J, J.name)
               : J instanceof J8
@@ -10001,14 +9998,14 @@ var J1 = ($, X) => {
           return $
         }
       : () => {
-          let $ = crypto.randomUUID()
+          const $ = crypto.randomUUID()
           return $.slice(0, 8) + $.slice(24, 32)
         },
   VJ = ($) => {
     if (!$.length) return []
-    let X = []
+    const X = []
     for (let Q = 0; Q < $.length; Q++) {
-      let J = $[Q]
+      const J = $[Q]
       J.checksum && (X.includes(J.checksum) && ($.splice(Q, 1), Q--), X.push(J.checksum))
     }
     return $
@@ -10016,16 +10013,16 @@ var J1 = ($, X) => {
   H$ = ($, X = "scoped") => {
     if ($) {
       if (X === "scoped") {
-        for (let Q of $) "scope" in Q && Q.scope === "local" && (Q.scope = "scoped")
+        for (const Q of $) "scope" in Q && Q.scope === "local" && (Q.scope = "scoped")
         return
       }
-      for (let Q of $) "scope" in Q && (Q.scope = "global")
+      for (const Q of $) "scope" in Q && (Q.scope = "global")
     }
   },
   Y8 = ($) => ($.charCodeAt($.length - 1) === 47 ? $.slice(0, $.length - 1) : $ + "/"),
   A0 = ($) => {
     if (!$) return !1
-    for (let X in $) return !0
+    for (const X in $) return !0
     return !1
   },
   Z8 = ($, { dynamic: X = !1 } = {}) => {
@@ -10038,7 +10035,7 @@ async function PW($) {
   let X = 0,
     Q = $.body.getReader()
   for (;;) {
-    let { done: J, value: Y } = await Q.read()
+    const { done: J, value: Y } = await Q.read()
     if (J) break
     X += Y.byteLength
   }
@@ -10051,7 +10048,7 @@ var KW = typeof Bun < "u" ? Bun.env : typeof process < "u" ? process?.env : void
   XH = { 101: void 0, 204: void 0, 205: void 0, 304: void 0, 307: void 0, 308: void 0 }
 class o0 {
   constructor($, X) {
-    let Q = X ?? ($ in cX ? cX[$] : $)
+    const Q = X ?? ($ in cX ? cX[$] : $)
     ;(this.code = w$[$] ?? $), $ in XH ? (this.response = void 0) : (this.response = Q)
   }
 }
@@ -10076,7 +10073,7 @@ class v6 extends Error {
 }
 var M1 = ($) => {
   if (!$) return { summary: void 0 }
-  let { message: X, path: Q, value: J, type: Y } = $,
+  const { message: X, path: Q, value: J, type: Y } = $,
     Z = Q.slice(1).replaceAll("/", "."),
     W = Q === ""
   switch (Y) {
@@ -10087,21 +10084,23 @@ var M1 = ($) => {
       }
     case 45:
       return { ...$, summary: W ? "Value is missing" : `Property '${Z}' is missing` }
-    case 50:
-      let q = X.indexOf("'"),
+    case 50: {
+      const q = X.indexOf("'"),
         M = X.slice(q + 1, X.indexOf("'", q + 1))
       return { ...$, summary: W ? "Value should be an email" : `Property '${Z}' should be ${M}` }
+    }
     case 54:
       return {
         ...$,
         summary: `${X.slice(0, 9).trim()} property '${Z}' to be ${X.slice(8).trim()} but found: ${J}`,
       }
-    case 62:
-      let G = $.schema.anyOf.map((B) => `'${B?.format ?? B.type}'`).join(", ")
+    case 62: {
+      const G = $.schema.anyOf.map((B) => `'${B?.format ?? B.type}'`).join(", ")
       return {
         ...$,
         summary: W ? `Value should be one of ${G}` : `Property '${Z}' should be one of: ${G}`,
       }
+    }
     default:
       return { summary: X, ...$ }
   }
@@ -10142,7 +10141,7 @@ class a extends Error {
       W,
       q
     if (X?.provider === "standard" || "~standard" in X || (X.schema && "~standard" in X.schema)) {
-      let M = ("~standard" in X ? X : X.schema)["~standard"]
+      const M = ("~standard" in X ? X : X.schema)["~standard"]
       ;(Z = (J ?? M.validate(Q).issues)?.[0]),
         A$
           ? (Y = JSON.stringify({ type: "validation", on: $, found: Q }))
@@ -10164,7 +10163,7 @@ class a extends Error {
     } else {
       Q && typeof Q == "object" && Q instanceof o0 && (Q = Q.response),
         (Z = J?.First() ?? ("Errors" in X ? X.Errors(Q).First() : S0.Errors(X, Q).First()))
-      let M = Z?.path || "root",
+      const M = Z?.path || "root",
         G = X?.schema ?? X
       if (!A$)
         try {
@@ -10230,7 +10229,7 @@ class a extends Error {
       : [...S0.Errors(this.validator, this.value)].map(M1)
   }
   static simplifyModel($) {
-    let X = "schema" in $ ? $.schema : $
+    const X = "schema" in $ ? $.schema : $
     try {
       return S0.Create(X)
     } catch {
@@ -10248,7 +10247,7 @@ class a extends Error {
   }
   detail($) {
     if (!this.customError) return this.message
-    let X = this.validator,
+    const X = this.validator,
       Q = this.value,
       J = this.expected,
       Y = this.all
@@ -10278,7 +10277,7 @@ function Y6($, X) {
 }
 var i2 = ($) => {
     try {
-      let X = _2.Compile($)
+      const X = _2.Compile($)
       return (
         (X.Create = () => S0.Create($)), (X.Error = (Q) => new a("property", $, Q, X.Errors(Q))), X
       )
@@ -10335,7 +10334,7 @@ var i2 = ($) => {
   JQ = async ($, X, Q = $?.name ?? "") => {
     if (Array.isArray($)) return await Promise.all($.map((Y) => JQ(Y, X, Q))), !0
     if (!$) return !1
-    let J = await MA($)
+    const J = await MA($)
     if (!J) throw new t8(Q, X)
     if (typeof X == "string" && !$Q(J.mime, X)) throw new t8(Q, X)
     for (let Y = 0; Y < X.length; Y++) if ($Q(J.mime, X[Y])) return !0
@@ -10394,19 +10393,19 @@ function BA($) {
 var GA = /^(\d\d\d\d)-(\d\d)-(\d\d)$/,
   NA = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 function j5($) {
-  let X = GA.exec($)
+  const X = GA.exec($)
   if (!X) return !1
-  let Q = +X[1],
+  const Q = +X[1],
     J = +X[2],
     Y = +X[3]
   return J >= 1 && J <= 12 && Y >= 1 && Y <= (J === 2 && BA(Q) ? 29 : NA[J])
 }
 var wA = /^(\d\d):(\d\d):(\d\d(?:\.\d+)?)(z|([+-])(\d\d)(?::?(\d\d))?)?$/i
 function pJ($) {
-  return function (X) {
-    let Q = wA.exec(X)
+  return (X) => {
+    const Q = wA.exec(X)
     if (!Q) return !1
-    let J = +Q[1],
+    const J = +Q[1],
       Y = +Q[2],
       Z = +Q[3],
       W = Q[4],
@@ -10415,7 +10414,7 @@ function pJ($) {
       G = +(Q[7] || 0)
     if (M > 23 || G > 59 || ($ && !W)) return !1
     if (J <= 23 && Y <= 59 && Z < 60) return !0
-    let B = Y - G * q,
+    const B = Y - G * q,
       N = J - M * q - (B < 0 ? 1 : 0)
     return (N === 23 || N === -1) && (B === 59 || B === -1) && Z < 61
   }
@@ -10423,9 +10422,9 @@ function pJ($) {
 var ZQ = ($) => ($.charCodeAt($.length - 6) === 32 ? $.slice(0, -6) + "+" + $.slice(-5) : $),
   UA = /t|\s/i
 function O5($) {
-  let X = pJ($)
-  return function (Q) {
-    let J = Q.split(UA)
+  const X = pJ($)
+  return (Q) => {
+    const J = Q.split(UA)
     return J.length === 2 && j5(J[0]) && X(J[1])
   }
 }
@@ -10469,24 +10468,24 @@ var K5 =
   FA = iJ["date-time"]
 O0.Has("date") ||
   O0.Set("date", ($) => {
-    let X = ZQ($).replace(/"/g, "")
+    const X = ZQ($).replace(/"/g, "")
     if (K5.test(X) || S5.test(X) || C5.test(X) || jA(X)) {
-      let Q = new Date(X)
+      const Q = new Date(X)
       if (!Number.isNaN(Q.getTime())) return !0
     }
     return !1
   }),
   O0.Has("date-time") ||
     O0.Set("date-time", ($) => {
-      let X = $.replace(/"/g, "")
+      const X = $.replace(/"/g, "")
       if (K5.test(X) || S5.test(X) || C5.test(X) || FA(X)) {
-        let Q = new Date(X)
+        const Q = new Date(X)
         if (!Number.isNaN(Q.getTime())) return !0
       }
       return !1
     }),
   Object.entries(iJ).forEach(($) => {
-    let [X, Q] = $
+    const [X, Q] = $
     O0.Has(X) ||
       (Q instanceof RegExp ? O0.Set(X, (J) => Q.test(J)) : typeof Q == "function" && O0.Set(X, Q))
   }),
@@ -10545,11 +10544,11 @@ var RA = Y6("Files", ($, X) => {
   A1 = {
     String: ($) => K2.String($),
     Numeric: ($) => {
-      let X = K2.Number($),
+      const X = K2.Number($),
         Q = i2(X)
       return T.Transform(T.Union([T.String({ format: "numeric", default: 0 }), T.Number($)], $))
         .Decode((J) => {
-          let Y = +J
+          const Y = +J
           if (isNaN(Y)) return J
           if ($ && !Q.Check(Y)) throw Q.Error(Y)
           return Y
@@ -10557,18 +10556,18 @@ var RA = Y6("Files", ($, X) => {
         .Encode((J) => J)
     },
     Integer: ($) => {
-      let X = K2.Integer($),
+      const X = K2.Integer($),
         Q = i2(X)
       return T.Transform(T.Union([T.String({ format: "integer", default: 0 }), K2.Integer($)], $))
         .Decode((J) => {
-          let Y = +J
+          const Y = +J
           if (!Q.Check(Y)) throw Q.Error(Y)
           return Y
         })
         .Encode((J) => J)
     },
     Date: ($) => {
-      let X = K2.Date($),
+      const X = K2.Date($),
         Q = i2(X),
         J = $?.default ? new Date($.default) : void 0
       return T.Transform(
@@ -10584,12 +10583,12 @@ var RA = Y6("Files", ($, X) => {
       )
         .Decode((Y) => {
           if (typeof Y == "number") {
-            let W = new Date(Y)
+            const W = new Date(Y)
             if (!Q.Check(W)) throw Q.Error(W)
             return W
           }
           if (Y instanceof Date) return Y
-          let Z = new Date(ZQ(Y))
+          const Z = new Date(ZQ(Y))
           if (!Z || isNaN(Z.getTime())) throw new a("property", X, Z)
           if (!Q.Check(Z)) throw Q.Error(Z)
           return Z
@@ -10605,7 +10604,7 @@ var RA = Y6("Files", ($, X) => {
         })
     },
     BooleanString: ($) => {
-      let X = K2.Boolean($),
+      const X = K2.Boolean($),
         Q = i2(X)
       return T.Transform(T.Union([T.Boolean($), T.String({ format: "boolean", default: !1 })], $))
         .Decode((J) => {
@@ -10616,7 +10615,7 @@ var RA = Y6("Files", ($, X) => {
         .Encode((J) => J)
     },
     ObjectString: ($, X) => {
-      let Q = T.Object($, X),
+      const Q = T.Object($, X),
         J = i2(Q)
       return T.Transform(
         T.Union([T.String({ format: "ObjectString", default: "{}" }), Q], {
@@ -10638,7 +10637,7 @@ var RA = Y6("Files", ($, X) => {
         })
     },
     ArrayString: ($ = T.String(), X) => {
-      let Q = T.Array($, X),
+      const Q = T.Array($, X),
         J = i2(Q),
         Y = (Z, W = !1) => {
           if (Z.charCodeAt(0) === 91) {
@@ -10653,9 +10652,9 @@ var RA = Y6("Files", ($, X) => {
           if (Array.isArray(Z)) {
             let W = []
             for (let q = 0; q < Z.length; q++) {
-              let M = Z[q]
+              const M = Z[q]
               if (typeof M == "string") {
-                let G = Y(M, !0)
+                const G = Y(M, !0)
                 Array.isArray(G) ? (W = W.concat(G)) : W.push(G)
                 continue
               }
@@ -10673,7 +10672,7 @@ var RA = Y6("Files", ($, X) => {
         })
     },
     ArrayQuery: ($ = T.String(), X) => {
-      let Q = T.Array($, X),
+      const Q = T.Array($, X),
         J = i2(Q),
         Y = (Z) => (Z.indexOf(",") !== -1 ? J.Decode(Z.split(",")) : [Z])
       return T.Transform(
@@ -10683,9 +10682,9 @@ var RA = Y6("Files", ($, X) => {
           if (Array.isArray(Z)) {
             let W = []
             for (let q = 0; q < Z.length; q++) {
-              let M = Z[q]
+              const M = Z[q]
               if (typeof M == "string") {
-                let G = Y(M)
+                const G = Y(M)
                 Array.isArray(G) ? (W = W.concat(G)) : W.push(G)
                 continue
               }
@@ -10725,7 +10724,7 @@ var RA = Y6("Files", ($, X) => {
         ...N
       } = {}
     ) => {
-      let P = T.Object($, N)
+      const P = T.Object($, N)
       return (
         (P.config = {
           domain: X,
@@ -10743,7 +10742,7 @@ var RA = Y6("Files", ($, X) => {
       )
     },
     UnionEnum: ($, X = {}) => {
-      let Q = $.every((J) => typeof J == "string")
+      const Q = $.every((J) => typeof J == "string")
         ? { type: "string" }
         : $.every((J) => typeof J == "number")
           ? { type: "number" }
@@ -10756,7 +10755,7 @@ var RA = Y6("Files", ($, X) => {
     },
     NoValidate: ($, X = !0) => (($.noValidate = X), $),
     Form: ($, X = {}) => {
-      let Q = T.Object($, { default: RJ({}), ...X }),
+      const Q = T.Object($, { default: RJ({}), ...X }),
         J = i2(Q)
       return T.Union([Q, VA({ compiler: J })])
     },
@@ -10764,7 +10763,7 @@ var RA = Y6("Files", ($, X) => {
       return { default: [1, 2, 3], ...$, [L]: "ArrayBuffer" }
     },
     Uint8Array: ($) => {
-      let X = K2.Uint8Array($),
+      const X = K2.Uint8Array($),
         Q = i2(X)
       return T.Transform(T.Union([T.ArrayBuffer(), K2.Uint8Array($)]))
         .Decode((J) => {
@@ -10927,15 +10926,15 @@ var E5 = ($, X, Q) => (
   ),
   qQ = async ($, X, { secrets: Q, sign: J, ...Y } = {}) => {
     if (!X) return E5($, {}, Y)
-    let Z = typeof Q == "string"
+    const Z = typeof Q == "string"
     J && J !== !0 && !Array.isArray(J) && (J = [J])
-    let W = {},
+    const W = {},
       q = WQ.parse(X)
-    for (let [M, G] of Object.entries(q)) {
+    for (const [M, G] of Object.entries(q)) {
       if (G === void 0) continue
       let B = x5.default(G)
       if (B) {
-        let N = B.charCodeAt(0),
+        const N = B.charCodeAt(0),
           P = B.charCodeAt(B.length - 1)
         if ((N === 123 && P === 125) || (N === 91 && P === 93))
           try {
@@ -10945,13 +10944,13 @@ var E5 = ($, X, Q) => (
       if (J === !0 || J?.includes(M)) {
         if (!Q) throw Error("No secret is provided to cookie plugin")
         if (Z) {
-          let N = await SJ(B, Q)
+          const N = await SJ(B, Q)
           if (N === !1) throw new v6(M)
           B = N
         } else {
           let N = !0
           for (let P = 0; P < Q.length; P++) {
-            let w = await SJ(B, Q[P])
+            const w = await SJ(B, Q[P])
             if (w !== !1) {
               ;(N = !0), (B = w)
               break
@@ -10966,17 +10965,17 @@ var E5 = ($, X, Q) => (
   },
   n6 = ($) => {
     if (!$ || !A0($)) return
-    let X = []
-    for (let [Q, J] of Object.entries($)) {
+    const X = []
+    for (const [Q, J] of Object.entries($)) {
       if (!Q || !J) continue
-      let Y = J.value
+      const Y = J.value
       Y != null && X.push(WQ.serialize(Q, typeof Y == "object" ? JSON.stringify(Y) : Y + "", J))
     }
     if (X.length !== 0) return X.length === 1 ? X[0] : X
   }
 var b0 = ($, X) => {
     if (!E2 && $ instanceof Promise) return $.then((Z) => b0(Z, X))
-    let Q = $.size,
+    const Q = $.size,
       J = X && (X.status === 206 || X.status === 304 || X.status === 412 || X.status === 416),
       Y = J
         ? { "transfer-encoding": "chunked" }
@@ -10988,7 +10987,7 @@ var b0 = ($, X) => {
     if (!X && !Q) return new Response($)
     if (!X) return new Response($, { headers: Y })
     if (X.headers instanceof Headers) {
-      for (let Z of Object.keys(Y)) Z in X.headers && X.headers.append(Z, Y[Z])
+      for (const Z of Object.keys(Y)) Z in X.headers && X.headers.append(Z, Y[Z])
       return (
         J && (X.headers.delete("content-length"), X.headers.delete("accept-ranges")),
         new Response($, X)
@@ -11002,7 +11001,7 @@ var b0 = ($, X) => {
     if (!$) return $
     $.delete("set-cookie")
     for (let Q = 0; Q < X.length; Q++) {
-      let J = X[Q].indexOf("=")
+      const J = X[Q].indexOf("=")
       $.append("set-cookie", `${X[Q].slice(0, J)}=${X[Q].slice(J + 1) || ""}`)
     }
     return $
@@ -11011,7 +11010,7 @@ var b0 = ($, X) => {
     if (X?.headers) {
       if ($)
         if (f6) Object.assign(X.headers, $.headers.toJSON())
-        else for (let [Q, J] of $.headers.entries()) Q in X.headers && (X.headers[Q] = J)
+        else for (const [Q, J] of $.headers.entries()) Q in X.headers && (X.headers[Q] = J)
       return (
         X.status === 200 && (X.status = $.status),
         X.headers["content-encoding"] && delete X.headers["content-encoding"],
@@ -11026,7 +11025,7 @@ var b0 = ($, X) => {
         X
       )
     X = { headers: {}, status: X?.status ?? 200 }
-    for (let [Q, J] of $.headers.entries())
+    for (const [Q, J] of $.headers.entries())
       Q !== "content-encoding" && Q in X.headers && (X.headers[Q] = J)
     return X
   },
@@ -11037,7 +11036,7 @@ var b0 = ($, X) => {
       if ((J && w8(J), Z instanceof Promise && (Z = await Z), Z?.value instanceof ReadableStream))
         Q = Z.value
       else if (Z && (typeof Z?.done > "u" || Z?.done)) return J ? $(Z.value, J, Y) : X(Z.value, Y)
-      let W =
+      const W =
           Z?.value?.sse ?? Q?.sse ?? J?.headers["content-type"]?.startsWith("text/event-stream"),
         q = W
           ? (G) => `data: ${G}
@@ -11087,7 +11086,7 @@ var b0 = ($, X) => {
                   else G.enqueue(q(Z.value.toString()))
               }
               try {
-                for await (let N of Q) {
+                for await (const N of Q) {
                   if (B) break
                   if (N != null)
                     if (N.toSSE) G.enqueue(N.toSSE())
@@ -11115,13 +11114,13 @@ var b0 = ($, X) => {
       )
     }
 async function* T5($) {
-  let X = $.body
+  const X = $.body
   if (!X) return
-  let Q = X.getReader(),
+  const Q = X.getReader(),
     J = new TextDecoder()
   try {
     for (;;) {
-      let { done: Y, value: Z } = await Q.read()
+      const { done: Y, value: Z } = await Q.read()
       if (Y) break
       typeof Z == "string" ? yield Z : yield J.decode(Z)
     }
@@ -11131,7 +11130,7 @@ async function* T5($) {
 }
 var w8 = ($) => {
     if ((typeof $.status == "string" && ($.status = w$[$.status]), $.cookie && A0($.cookie))) {
-      let X = n6($.cookie)
+      const X = n6($.cookie)
       X && ($.headers["set-cookie"] = X)
     }
     $.headers["set-cookie"] &&
@@ -11139,20 +11138,20 @@ var w8 = ($) => {
       ($.headers = nJ(new Headers($.headers), $.headers["set-cookie"]))
   },
   MQ = ($) => {
-    let X = o6($)
+    const X = o6($)
     return (Q, J, Y) => {
       let Z = !1
       if (J.headers instanceof Headers)
-        for (let q of J.headers.keys())
+        for (const q of J.headers.keys())
           if (q === "set-cookie") {
             if (Z) continue
             Z = !0
-            for (let M of J.headers.getSetCookie()) Q.headers.append("set-cookie", M)
+            for (const M of J.headers.getSetCookie()) Q.headers.append("set-cookie", M)
           } else Q.headers.append(q, J.headers?.get(q) ?? "")
-      else for (let q in J.headers) Q.headers.append(q, J.headers[q])
-      let W = J.status ?? 200
+      else for (const q in J.headers) Q.headers.append(q, J.headers[q])
+      const W = J.status ?? 200
       if (Q.status !== W && W !== 200 && (Q.status <= 300 || Q.status > 400)) {
-        let q = new Response(Q.body, { headers: Q.headers, status: J.status })
+        const q = new Response(Q.body, { headers: Q.headers, status: J.status })
         return !q.headers.has("content-length") && q.headers.get("transfer-encoding") === "chunked"
           ? X(T5(q), I5(q, J), Y)
           : q
@@ -11163,13 +11162,13 @@ var w8 = ($) => {
     }
   }
 var BQ = ($, X = { headers: {} }) => {
-    let Q = $.path,
+    const Q = $.path,
       J = OJ[Q.slice(Q.lastIndexOf(".") + 1)]
     return (
       J && (X.headers["content-type"] = J),
       $.stats && X.status !== 206 && X.status !== 304 && X.status !== 412 && X.status !== 416
         ? $.stats.then((Y) => {
-            let Z = Y.size
+            const Z = Y.size
             return (
               Z !== void 0 &&
                 ((X.headers["content-range"] = `bytes 0-${Z - 1}/${Z}`),
@@ -11224,7 +11223,7 @@ var BQ = ($, X = { headers: {} }) => {
           if (typeof $?.then == "function") return $.then((J) => I1(J, X))
           if (typeof $?.toResponse == "function") return I1($.toResponse(), X)
           if ("charCodeAt" in $) {
-            let J = $.charCodeAt(0)
+            const J = $.charCodeAt(0)
             if (J === 123 || J === 91)
               return (
                 X.headers["Content-Type"] || (X.headers["Content-Type"] = "application/json"),
@@ -11280,7 +11279,7 @@ var BQ = ($, X = { headers: {} }) => {
             if (typeof $?.then == "function") return $.then((J) => x1(J, X))
             if (typeof $?.toResponse == "function") return x1($.toResponse(), X)
             if ("charCodeAt" in $) {
-              let J = $.charCodeAt(0)
+              const J = $.charCodeAt(0)
               if (J === 123 || J === 91)
                 return (
                   X.headers["Content-Type"] || (X.headers["Content-Type"] = "application/json"),
@@ -11314,7 +11313,7 @@ var BQ = ($, X = { headers: {} }) => {
             return $
           case "Promise":
             return $.then((J) => {
-              let Y = x1(J, X)
+              const Y = x1(J, X)
               if (Y !== void 0) return Y
             })
           case "Error":
@@ -11337,7 +11336,7 @@ var BQ = ($, X = { headers: {} }) => {
             if (typeof $?.then == "function") return $.then((J) => x1(J, X))
             if (typeof $?.toResponse == "function") return x1($.toResponse(), X)
             if ("charCodeAt" in $) {
-              let J = $.charCodeAt(0)
+              const J = $.charCodeAt(0)
               if (J === 123 || J === 91)
                 return (
                   X.headers["Content-Type"] || (X.headers["Content-Type"] = "application/json"),
@@ -11388,7 +11387,7 @@ var BQ = ($, X = { headers: {} }) => {
         if (typeof $?.then == "function") return $.then((Q) => I1(Q, set))
         if (typeof $?.toResponse == "function") return n2($.toResponse())
         if ("charCodeAt" in $) {
-          let Q = $.charCodeAt(0)
+          const Q = $.charCodeAt(0)
           if (Q === 123 || Q === 91)
             return new Response(JSON.stringify($), {
               headers: { "Content-Type": "application/json" },
@@ -11404,7 +11403,7 @@ var BQ = ($, X = { headers: {} }) => {
     }),
   b5 = ($, X, Q = {}) => {
     if (typeof $ == "function") return
-    let J = I1($, { headers: Q })
+    const J = I1($, { headers: Q })
     if (
       !X.parse?.length &&
       !X.transform?.length &&
@@ -11479,8 +11478,8 @@ else c.body[key]=value}`
       let X = "",
         Q = "",
         J = $.setHeaders
-      for (let W of Object.keys($.decorator)) X += `,'${W}':decorator['${W}']`
-      let Y = $.config.handler?.standardHostname ?? !0,
+      for (const W of Object.keys($.decorator)) X += `,'${W}':decorator['${W}']`
+      const Y = $.config.handler?.standardHostname ?? !0,
         Z = !!$.event.trace?.length
       return (
         (Q += `const u=r.url,s=u.indexOf('/',${Y ? 11 : 7}),qi=u.indexOf('?',s+1)
@@ -11558,7 +11557,7 @@ var _T = {
   composeGeneralHandler: {
     ...D$.composeGeneralHandler,
     error404($, X, Q) {
-      let { code: J } = D$.composeGeneralHandler.error404($, X, Q)
+      const { code: J } = D$.composeGeneralHandler.error404($, X, Q)
       return {
         code: J,
         declare: X
@@ -11570,7 +11569,7 @@ const error404={clone:()=>new Response(error404Message,{status:404})}
     },
   },
   beforeCompile($) {
-    for (let X of $.routes) X.compile()
+    for (const X of $.routes) X.compile()
   },
   listen($) {
     return (X, Q) => {
@@ -11602,12 +11601,12 @@ var hA = ($) => {
     }
     if ($.startsWith("function")) {
       X = $.indexOf("(")
-      let Y = $.indexOf(")")
+      const Y = $.indexOf(")")
       return [$.slice(X + 1, Y), $.slice(Y + 2), { isArrowReturn: !1 }]
     }
-    let Q = $.indexOf("(")
+    const Q = $.indexOf("(")
     if (Q !== -1) {
-      let Y = $.indexOf(
+      const Y = $.indexOf(
           `
 `,
           2
@@ -11617,7 +11616,7 @@ var hA = ($) => {
         q = $.slice(Y + 1)
       return [Z.slice(Q, W), "{" + q, { isArrowReturn: !1 }]
     }
-    let J = $.split(
+    const J = $.split(
       `
 `,
       2
@@ -11625,30 +11624,30 @@ var hA = ($) => {
     return [J[0], J[1], { isArrowReturn: !1 }]
   },
   mA = ($) => {
-    let X = $.indexOf("{")
+    const X = $.indexOf("{")
     if (X === -1) return [-1, 0]
     let Q = X + 1,
       J = 1
     for (; Q < $.length; Q++) {
-      let Y = $.charCodeAt(Q)
+      const Y = $.charCodeAt(Q)
       if ((Y === 123 ? J++ : Y === 125 && J--, J === 0)) break
     }
     return J !== 0 ? [0, $.length] : [X, Q + 1]
   },
   uA = ($) => {
-    let X = $.lastIndexOf("}")
+    const X = $.lastIndexOf("}")
     if (X === -1) return [-1, 0]
     let Q = X - 1,
       J = 1
     for (; Q >= 0; Q--) {
-      let Y = $.charCodeAt(Q)
+      const Y = $.charCodeAt(Q)
       if ((Y === 125 ? J++ : Y === 123 && J--, J === 0)) break
     }
     return J !== 0 ? [-1, 0] : [Q, X + 1]
   },
   f5 = ($) => {
     for (;;) {
-      let X = $.indexOf(":")
+      const X = $.indexOf(":")
       if (X === -1) break
       let Q = $.indexOf(",", X)
       Q === -1 && (Q = $.indexOf("}", X) - 1),
@@ -11669,18 +11668,18 @@ var hA = ($) => {
       Q.push($.slice(0, Y - 1)), $.charCodeAt(Z) === 44 && Z++, ($ = $.slice(Z))
     }
     ;($ = f5($)), $ && (Q = Q.concat($.split(",")))
-    let J = Object.create(null)
-    for (let Y of Q) {
+    const J = Object.create(null)
+    for (const Y of Q) {
       if (Y.indexOf(",") === -1) {
         J[Y] = !0
         continue
       }
-      for (let Z of Y.split(",")) J[Z.trim()] = !0
+      for (const Z of Y.split(",")) J[Z.trim()] = !0
     }
     return { hasParenthesis: X, parameters: J }
   },
   cA = ($, X) => {
-    let { parameters: Q, hasParenthesis: J } = y5($)
+    const { parameters: Q, hasParenthesis: J } = y5($)
     return (
       Q.query && (X.query = !0),
       Q.headers && (X.headers = !0),
@@ -11695,9 +11694,9 @@ var hA = ($) => {
     )
   },
   g5 = ($, X, Q) => {
-    let J = new RegExp(`${$.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[\\n\\t,; ]`)
+    const J = new RegExp(`${$.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[\\n\\t,; ]`)
     Q !== void 0 && (J.lastIndex = Q)
-    let Y = J.exec(X)
+    const Y = J.exec(X)
     return Y ? Y.index : -1
   }
 var v5 = ($, X, Q = 0) => {
@@ -11715,7 +11714,7 @@ var v5 = ($, X, Q = 0) => {
         q = W.lastIndexOf(" "),
         M = W.slice(q !== -1 ? q + 1 : -1)
       if (M === "}") {
-        let [G, B] = uA(W)
+        const [G, B] = uA(W)
         J.push(f5(Y.slice(G, B))), (Y = Y.slice(Z + 3 + $.length))
         continue
       }
@@ -11723,9 +11722,9 @@ var v5 = ($, X, Q = 0) => {
       for (; M.charCodeAt(0) === 9; ) M = M.slice(1)
       M.includes("(") || J.push(M), (Y = Y.slice(Z + 3 + $.length))
     }
-    for (let Z of J) {
+    for (const Z of J) {
       if (Z.charCodeAt(0) === 123) continue
-      let W = v5(Z, X)
+      const W = v5(Z, X)
       W.length > 0 && J.push(...W)
     }
     return J
@@ -11735,15 +11734,15 @@ var v5 = ($, X, Q = 0) => {
     if ($.charCodeAt(0) !== 123) return $
     if ((($ = $.slice(2, -2)), !$.includes(",")))
       return $.indexOf("...") !== -1 ? $.slice($.indexOf("...") + 3) : void 0
-    let X = $.indexOf("...")
+    const X = $.indexOf("...")
     if (X !== -1) return $.slice(X + 3).trimEnd()
   },
   iA = ($, X, Q) => {
-    let J = (Y, Z) => new RegExp(`${Z}\\.(${Y})|${Z}\\["${Y}"\\]|${Z}\\['${Y}'\\]`).test($)
-    for (let Y of X)
+    const J = (Y, Z) => new RegExp(`${Z}\\.(${Y})|${Z}\\["${Y}"\\]|${Z}\\['${Y}'\\]`).test($)
+    for (const Y of X)
       if (Y) {
         if (Y.charCodeAt(0) === 123) {
-          let Z = y5(Y).parameters
+          const Z = y5(Y).parameters
           Z.query && (Q.query = !0),
             Z.headers && (Q.headers = !0),
             Z.body && (Q.body = !0),
@@ -11783,9 +11782,9 @@ var v5 = ($, X, Q = 0) => {
   }
 var nA = ($, X, Q) => {
     try {
-      let J = new RegExp(`\\w\\((.*?)?${$}`, "gs")
+      const J = new RegExp(`\\w\\((.*?)?${$}`, "gs")
       J.test(X)
-      let Y = X.charCodeAt(J.lastIndex)
+      const Y = X.charCodeAt(J.lastIndex)
       return Y === 41 || Y === 44
         ? ((Q.query = !0),
           (Q.headers = !0),
@@ -11848,7 +11847,7 @@ var nA = ($, X, Q) => {
     },
     Q = {}
   ) => {
-    let J = []
+    const J = []
     $.request?.length && J.push(...$.request),
       $.beforeHandle?.length && J.push(...$.beforeHandle),
       $.parse?.length && J.push(...$.parse),
@@ -11859,11 +11858,11 @@ var nA = ($, X, Q) => {
       $.afterResponse?.length && J.push(...$.afterResponse),
       $.handler && typeof $.handler == "function" && J.push($.handler)
     for (let Y = 0; Y < J.length; Y++) {
-      let Z = J[Y]
+      const Z = J[Y]
       if (!Z) continue
-      let W = typeof Z == "object" ? Z.fn : Z
+      const W = typeof Z == "object" ? Z.fn : Z
       if (typeof W != "function") continue
-      let q = W.toString(),
+      const q = W.toString(),
         M = v$(q),
         G = wQ[M]
       if (G) {
@@ -11871,7 +11870,7 @@ var nA = ($, X, Q) => {
         continue
       }
       oA(Q.gcTime)
-      let B = {
+      const B = {
           query: !1,
           headers: !1,
           body: !1,
@@ -11886,7 +11885,7 @@ var nA = ($, X, Q) => {
         w = cA(N, B),
         H = pA(w)
       if (H) {
-        let A = v5(H, P.slice(1, -1))
+        const A = v5(H, P.slice(1, -1))
         A.splice(0, -1, H)
         let S = P
         S.charCodeAt(0) === 123 && S.charCodeAt(P.length - 1) === 125 && (S = S.slice(1, -1)),
@@ -11954,7 +11953,7 @@ var O1 = ($, X, Q) => {
           if (typeof $?.then == "function") return $.then((J) => O1(J, X))
           if (typeof $?.toResponse == "function") return O1($.toResponse(), X)
           if ("charCodeAt" in $) {
-            let J = $.charCodeAt(0)
+            const J = $.charCodeAt(0)
             if (J === 123 || J === 91)
               return (
                 X.headers["Content-Type"] || (X.headers["Content-Type"] = "application/json"),
@@ -12010,7 +12009,7 @@ var O1 = ($, X, Q) => {
             if (typeof $?.then == "function") return $.then((J) => D1(J, X))
             if (typeof $?.toResponse == "function") return D1($.toResponse(), X)
             if ("charCodeAt" in $) {
-              let J = $.charCodeAt(0)
+              const J = $.charCodeAt(0)
               if (J === 123 || J === 91)
                 return (
                   X.headers["Content-Type"] || (X.headers["Content-Type"] = "application/json"),
@@ -12044,7 +12043,7 @@ var O1 = ($, X, Q) => {
             return $
           case "Promise":
             return $.then((J) => {
-              let Y = D1(J, X)
+              const Y = D1(J, X)
               if (Y !== void 0) return Y
             })
           case "Error":
@@ -12067,7 +12066,7 @@ var O1 = ($, X, Q) => {
             if (typeof $?.then == "function") return $.then((J) => D1(J, X))
             if (typeof $?.toResponse == "function") return D1($.toResponse(), X)
             if ("charCodeAt" in $) {
-              let J = $.charCodeAt(0)
+              const J = $.charCodeAt(0)
               if (J === 123 || J === 91)
                 return (
                   X.headers["Content-Type"] || (X.headers["Content-Type"] = "application/json"),
@@ -12118,7 +12117,7 @@ var O1 = ($, X, Q) => {
         if (typeof $?.then == "function") return $.then((Q) => O1(Q, set))
         if (typeof $?.toResponse == "function") return o2($.toResponse())
         if ("charCodeAt" in $) {
-          let Q = $.charCodeAt(0)
+          const Q = $.charCodeAt(0)
           if (Q === 123 || Q === 91)
             return new Response(JSON.stringify($), {
               headers: { "Content-Type": "application/json" },
@@ -12134,7 +12133,7 @@ var O1 = ($, X, Q) => {
     }),
   d5 = ($, X, Q = {}) => {
     if (typeof $ == "function") return
-    let J = O1($, { headers: Q })
+    const J = O1($, { headers: Q })
     if (
       !X.parse?.length &&
       !X.transform?.length &&
@@ -12174,7 +12173,7 @@ function oJ($, X = 0, Q, J) {
     }
   return q < W && G($, W), Y
   function G(B, N) {
-    let P = M > q,
+    const P = M > q,
       w = P ? M : N,
       H = B.slice(q + 1, w)
     if (!P && H.length === 0) return
@@ -12185,7 +12184,7 @@ function oJ($, X = 0, Q, J) {
       let K = B.slice(M + 1, N)
       Z & q6 && (K = K.replace(/\+/g, " ")), Z & O$ && (K = z8.default(K) || K), (S = K)
     }
-    let j = Y[A]
+    const j = Y[A]
     Q?.[A]
       ? S.charCodeAt(0) === 91
         ? (J?.[A] ? (S = JSON.parse(S)) : (S = S.slice(1, -1).split(",")),
@@ -12225,7 +12224,7 @@ function h5($, X = 0) {
     }
   return Z < Y && q($, Y), Q
   function q(M, G) {
-    let B = W > Z,
+    const B = W > Z,
       N = B ? W : G,
       P = M.slice(Z + 1, N)
     if (!B && P.length === 0) return
@@ -12236,7 +12235,7 @@ function h5($, X = 0) {
       let S = M.slice(W + 1, G)
       J & q6 && (S = S.replace(/\+/g, " ")), J & O$ && (S = z8.default(S) || S), (H = S)
     }
-    let A = Q[w]
+    const A = Q[w]
     if (H.charCodeAt(0) === 91 && H.charCodeAt(H.length - 1) === 93) {
       try {
         H = JSON.parse(H)
@@ -12275,7 +12274,7 @@ function u$($) {
     }
   return Y < J && W($, J), X
   function W(q, M) {
-    let G = Z > Y,
+    const G = Z > Y,
       B = G ? Z : M,
       N = q.slice(Y + 1, B)
     if (!G && N.length === 0) return
@@ -12286,13 +12285,13 @@ function u$($) {
       let A = q.slice(Z + 1, M)
       Q & q6 && (A = A.replace(/\+/g, " ")), Q & O$ && (A = z8.default(A) || A), (w = A)
     }
-    let H = X[P]
+    const H = X[P]
     H === void 0 ? (X[P] = w) : Array.isArray(H) ? H.push(w) : (X[P] = [H, w])
   }
 }
 var H8 = Symbol("ElysiaTrace"),
   P$ = () => {
-    let { promise: $, resolve: X } = Promise.withResolvers(),
+    const { promise: $, resolve: X } = Promise.withResolvers(),
       { promise: Q, resolve: J } = Promise.withResolvers(),
       { promise: Y, resolve: Z } = Promise.withResolvers(),
       W = [],
@@ -12304,14 +12303,14 @@ var H8 = Symbol("ElysiaTrace"),
           B = [],
           N = null
         for (let w = 0; w < (M.total ?? 0); w++) {
-          let { promise: H, resolve: A } = Promise.withResolvers(),
+          const { promise: H, resolve: A } = Promise.withResolvers(),
             { promise: S, resolve: j } = Promise.withResolvers(),
             { promise: K, resolve: y } = Promise.withResolvers(),
             o = [],
             n = []
           G.push((f) => (f && o.push(f), H)),
             B.push((f) => {
-              let I = {
+              const I = {
                 ...f,
                 end: S,
                 error: K,
@@ -12323,9 +12322,9 @@ var H8 = Symbol("ElysiaTrace"),
               A(I)
               for (let k = 0; k < o.length; k++) o[k](I)
               return (k = null) => {
-                let b = performance.now()
+                const b = performance.now()
                 k && (N = k)
-                let _ = {
+                const _ = {
                   end: b,
                   error: k,
                   get elapsed() {
@@ -12337,7 +12336,7 @@ var H8 = Symbol("ElysiaTrace"),
               }
             })
         }
-        let P = {
+        const P = {
           ...M,
           end: Q,
           error: Y,
@@ -12353,9 +12352,9 @@ var H8 = Symbol("ElysiaTrace"),
         return {
           resolveChild: B,
           resolve(w = null) {
-            let H = performance.now()
+            const H = performance.now()
             !w && N && (w = N)
-            let A = {
+            const A = {
               end: H,
               error: w,
               get elapsed() {
@@ -12370,7 +12369,7 @@ var H8 = Symbol("ElysiaTrace"),
     ]
   },
   m5 = ($) => (X) => {
-    let [Q, J] = P$(),
+    const [Q, J] = P$(),
       [Y, Z] = P$(),
       [W, q] = P$(),
       [M, G] = P$(),
@@ -12411,7 +12410,7 @@ var H8 = Symbol("ElysiaTrace"),
   }
 var d1 = Symbol.for("TypeBox.Kind"),
   lA = Symbol.for("TypeBox.Hint"),
-  c5 = ($) => /(\ |-|\t|\n|\.)/.test($) || !isNaN(+$[0]),
+  c5 = ($) => /( |-|\t|\n|\.)/.test($) || !isNaN(+$[0]),
   p5 = ($, X, Q = !1) => {
     if (typeof X === "number") return `${$}[${X}]`
     if (c5(X)) return `${$}${Q ? "?." : ""}["${X}"]`
@@ -12426,34 +12425,34 @@ var d1 = Symbol.for("TypeBox.Kind"),
   },
   i5 = ($) => {
     if (!$.allOf || (d1 in $ && ($[d1] !== "Intersect" || $.type !== "object"))) return $
-    let { allOf: X, ...Q } = $
+    const { allOf: X, ...Q } = $
     if (((Q.properties = {}), d1 in Q)) Q[d1] = "Object"
-    for (let J of X) {
+    for (const J of X) {
       if (J.type !== "object") continue
-      let { properties: Y, required: Z, type: W, [d1]: q, ...M } = J
+      const { properties: Y, required: Z, type: W, [d1]: q, ...M } = J
       if (Z) Q.required = Q.required ? Q.required.concat(Z) : Z
       Object.assign(Q, M)
-      for (let G in J.properties) Q.properties[G] = i5(J.properties[G])
+      for (const G in J.properties) Q.properties[G] = i5(J.properties[G])
     }
     return Q
   },
   sA = ($, X, Q) => {
-    let J =
+    const J =
       $.patternProperties["^(.*)$"] ?? $.patternProperties[Object.keys($.patternProperties)[0]]
     if (!J) return X
-    let Y = Q.array
+    const Y = Q.array
     Q.array++
     let Z = `(()=>{const ar${Y}s=Object.keys(${X}),ar${Y}v={};for(let i=0;i<ar${Y}s.length;i++){const ar${Y}p=${X}[ar${Y}s[i]];ar${Y}v[ar${Y}s[i]]=${L$(J, `ar${Y}p`, Q)}`,
       W = Q.optionalsInArray[Y + 1]
     if (W)
       for (let q = 0; q < W.length; q++) {
-        let M = `ar${Y}v[ar${Y}s[i]].${W[q]}`
+        const M = `ar${Y}v[ar${Y}s[i]].${W[q]}`
         Z += `;if(${M}===undefined)delete ${M}`
       }
     return (Z += `}return ar${Y}v})()`), Z
   },
   rA = ($, X, Q) => {
-    let J = Q.array
+    const J = Q.array
     Q.array++
     let Y = X === "v" && !Q.unions.length,
       Z = ""
@@ -12470,15 +12469,15 @@ function HQ($, X = new WeakMap()) {
   if ($ === null || typeof $ !== "object" || typeof $ === "function") return $
   if (X.has($)) return X.get($)
   if (Array.isArray($)) {
-    let Q = Array($.length)
+    const Q = Array($.length)
     X.set($, Q)
     for (let J = 0; J < $.length; J++) Q[J] = HQ($[J], X)
     return Q
   }
   if (typeof $ === "object") {
-    let Q = Object.keys($).concat(Object.getOwnPropertySymbols($)),
+    const Q = Object.keys($).concat(Object.getOwnPropertySymbols($)),
       J = {}
-    for (let Y of Q) J[Y] = HQ($[Y], X)
+    for (const Y of Q) J[Y] = HQ($[Y], X)
     return J
   }
   return $
@@ -12507,7 +12506,7 @@ var aA = ($, X, Q) => {
         return q
       }
     for (let q = 0; q < $.length; q++) {
-      let M = W($[q])
+      const M = W($[q])
       if (Array.isArray(M.anyOf))
         for (let G = 0; G < M.anyOf.length; G++) M.anyOf[G] = W(M.anyOf[G])
       else if (M.items)
@@ -12522,7 +12521,7 @@ var aA = ($, X, Q) => {
   },
   L$ = ($, X, Q) => {
     if (!$) return ""
-    let J = X === "v" && !Q.unions.length
+    const J = X === "v" && !Q.unions.length
     if (d1 in $ && $[d1] === "Import" && $.$ref in $.$defs)
       return L$($.$defs[$.$ref], X, { ...Q, definitions: Object.assign(Q.definitions, $.$defs) })
     if (J && $.type !== "object" && $.type !== "array" && !$.anyOf)
@@ -12531,36 +12530,37 @@ var aA = ($, X, Q) => {
     let Y = ""
     if ($.$id && lA in $) Q.definitions[$.$id] = $
     switch ($.type) {
-      case "object":
+      case "object": {
         if ($[d1] === "Record") {
           Y = sA($, X, Q)
           break
         }
         if ((($ = i5($)), (Y += "{"), $.additionalProperties)) Y += `...${X},`
-        let Z = Object.keys($.properties)
+        const Z = Object.keys($.properties)
         for (let G = 0; G < Z.length; G++) {
-          let B = Z[G],
+          const B = Z[G],
             N =
               !$.required ||
               ($.required && !$.required.includes(B)) ||
               Array.isArray($.properties[B].anyOf),
             P = p5(X, B, Q.parentIsOptional)
           if (N) {
-            let H = Q.array
+            const H = Q.array
             if (X.startsWith("ar")) {
-              let A = P.slice(P.indexOf(".") + 1),
+              const A = P.slice(P.indexOf(".") + 1),
                 S = Q.optionalsInArray
               if (S[H]) S[H].push(A)
               else S[H] = [A]
             } else Q.optionals.push(P)
           }
-          let w = $.properties[B]
+          const w = $.properties[B]
           if (G !== 0) Y += ","
           Y += `${tA(B)}:${N ? `${P}===undefined?undefined:` : ""}${L$(w, P, { ...Q, recursion: Q.recursion + 1, parentIsOptional: N })}`
         }
         Y += "}"
         break
-      case "array":
+      }
+      case "array": {
         if ($.items.type !== "object" && $.items.type !== "array")
           if (Array.isArray($.items)) {
             Y = rA($.items, X, Q)
@@ -12580,20 +12580,21 @@ var aA = ($, X, Q) => {
             Y = X
             break
           }
-        let W = Q.array
+        const W = Q.array
         Q.array++
         let q = X
         if (J) Y = `const ar${W}v=new Array(${X}.length);`
         else (q = `ar${W}s`), (Y = `((${q})=>{const ar${W}v=new Array(${q}.length);`)
         Y += `for(let i=0;i<${q}.length;i++){const ar${W}p=${q}[i];ar${W}v[i]=${L$($.items, `ar${W}p`, Q)}`
-        let M = Q.optionalsInArray[W + 1]
+        const M = Q.optionalsInArray[W + 1]
         if (M)
           for (let G = 0; G < M.length; G++) {
-            let B = `ar${W}v[i].${M[G]}`
+            const B = `ar${W}v[i].${M[G]}`
             Y += `;if(${B}===undefined)delete ${B}`
           }
         if (((Y += "}"), !J)) Y += `return ar${W}v})(${X})`
         break
+      }
       default:
         if ($.$ref && $.$ref in Q.definitions) return L$(Q.definitions[$.$ref], X, Q)
         if (Array.isArray($.anyOf)) {
@@ -12609,10 +12610,10 @@ var aA = ($, X, Q) => {
       Y = `const x=${Y}
 `
     for (let Z = 0; Z < Q.optionals.length; Z++) {
-      let W = Q.optionals[Z],
+      const W = Q.optionals[Z],
         q = W.slice(1)
       if (((Y += `if(${W}===undefined`), Q.unionKeys[W])) Y += `||x${q}===undefined`
-      let M = q.charCodeAt(0) !== 63 && $.type !== "array"
+      const M = q.charCodeAt(0) !== 63 && $.type !== "array"
       Y += `)delete x${M ? (q.charCodeAt(0) === 91 ? "?." : "?") : ""}${q}
 `
     }
@@ -12629,9 +12630,9 @@ var aA = ($, X, Q) => {
       removeUnknownUnionType: W = !1,
     } = {}
   ) => {
-    let q = []
+    const q = []
     if (typeof Y === "function") Y = [Y]
-    let M = L$($, "v", {
+    const M = L$($, "v", {
       optionals: [],
       optionalsInArray: [],
       array: 0,
@@ -12662,18 +12663,18 @@ var rJ = ($) =>
       : !1,
   l2 = ($) => {
     if (!$) return !1
-    let X = $?.schema ?? $
+    const X = $?.schema ?? $
     if (X[L] === "Import" && $.References) return $.References().some(l2)
     if (X.anyOf) return X.anyOf.some(l2)
     if (X.someOf) return X.someOf.some(l2)
     if (X.allOf) return X.allOf.some(l2)
     if (X.not) return X.not.some(l2)
     if (X.type === "object") {
-      let Q = X.properties
+      const Q = X.properties
       if ("additionalProperties" in X) return X.additionalProperties
       if ("patternProperties" in X) return !1
-      for (let J of Object.keys(Q)) {
-        let Y = Q[J]
+      for (const J of Object.keys(Q)) {
+        const Y = Q[J]
         if (Y.type === "object") {
           if (l2(Y)) return !0
         } else if (Y.anyOf) {
@@ -12689,10 +12690,10 @@ var rJ = ($) =>
     if (!X) return !1
     if (L in X && X[L] === $) return !0
     if (X.type === "object") {
-      let Q = X.properties
+      const Q = X.properties
       if (!Q) return !1
-      for (let J of Object.keys(Q)) {
-        let Y = Q[J]
+      for (const J of Object.keys(Q)) {
+        const Y = Q[J]
         if (Y.type === "object") {
           if (K$($, Y)) return !0
         } else if (Y.anyOf) {
@@ -12706,7 +12707,7 @@ var rJ = ($) =>
   },
   T2 = ($, X) => {
     if (!X) return !1
-    let Q = X?.schema ?? X
+    const Q = X?.schema ?? X
     if (Q.elysiaMeta === $) return !0
     if (Q[L] === "Import" && X.References) return X.References().some((J) => T2($, J))
     if (Q.anyOf) return Q.anyOf.some((J) => T2($, J))
@@ -12714,9 +12715,9 @@ var rJ = ($) =>
     if (Q.allOf) return Q.allOf.some((J) => T2($, J))
     if (Q.not) return Q.not.some((J) => T2($, J))
     if (Q.type === "object") {
-      let J = Q.properties
-      for (let Y of Object.keys(J)) {
-        let Z = J[Y]
+      const J = Q.properties
+      for (const Y of Object.keys(J)) {
+        const Z = J[Y]
         if (Z.type === "object") {
           if (T2($, Z)) return !0
         } else if (Z.anyOf) {
@@ -12730,13 +12731,13 @@ var rJ = ($) =>
   },
   s6 = ($, X) => {
     if (!X) return
-    let Q = X.schema ?? X
+    const Q = X.schema ?? X
     if (Q[L] === "Import" && X.References) return X.References().some((J) => s6($, J))
     if (Q.type === "object") {
-      let J = Q.properties
+      const J = Q.properties
       if (!J) return !1
-      for (let Y of Object.keys(J)) {
-        let Z = J[Y]
+      for (const Y of Object.keys(J)) {
+        const Z = J[Y]
         if ($ in Z) return !0
         if (Z.type === "object") {
           if (s6($, Z)) return !0
@@ -12764,9 +12765,9 @@ var rJ = ($) =>
     }
     if ($.not && b2($.not)) return !0
     if ($.type === "object" && $.properties) {
-      let X = $.properties
-      for (let Q of Object.keys(X)) {
-        let J = X[Q]
+      const X = $.properties
+      for (const Q of Object.keys(X)) {
+        const J = X[Q]
         if (b2(J) || (J.type === "array" && J.items && b2(J.items))) return !0
       }
     }
@@ -12786,26 +12787,26 @@ var rJ = ($) =>
     }
     if ($.not && k2($.not)) return !0
     if ($.type === "object" && $.properties) {
-      let X = $.properties
-      for (let Q of Object.keys(X)) {
-        let J = X[Q]
+      const X = $.properties
+      for (const Q of Object.keys(X)) {
+        const J = X[Q]
         if (k2(J) || (J.type === "array" && J.items && k2(J.items))) return !0
       }
     }
     return $.type === "array" && $.items && k2($.items) ? !0 : C0 in $
   },
   DQ = ($, X, Q = {}) => {
-    let J = Q
+    const J = Q
     if (((J.root = !0), !Array.isArray(X))) return (X.original = $), B1($, X, J)
-    for (let Y of X) (Y.original = $), ($ = B1($, Y, J))
+    for (const Y of X) (Y.original = $), ($ = B1($, Y, J))
     return $
   },
   B1 = ($, X, Q) => {
     if (!$) return $
-    let J = Q.root
+    const J = Q.root
     if (X.onlyFirst && $.type === X.onlyFirst) return X.to($) ?? $
     if (X.untilObjectFound && !J && $.type === "object") return $
-    let Y = X.from[L]
+    const Y = X.from[L]
     if ($.oneOf) {
       for (let q = 0; q < $.oneOf.length; q++) $.oneOf[q] = B1($.oneOf[q], X, Q)
       return $
@@ -12819,24 +12820,24 @@ var rJ = ($) =>
       return $
     }
     if ($.not) return B1($.not, X, Q)
-    let Z = J && !!X.excludeRoot
+    const Z = J && !!X.excludeRoot
     if ($[L] === Y) {
-      let { anyOf: q, oneOf: M, allOf: G, not: B, properties: N, items: P, ...w } = $,
+      const { anyOf: q, oneOf: M, allOf: G, not: B, properties: N, items: P, ...w } = $,
         H = X.to(w)
       if (!H) return $
       let A,
         S = (K) => {
-          let y = j(K)
+          const y = j(K)
           return y.$id && delete y.$id, y
         },
         j = (K) => {
           if (N && K.type === "object") {
-            let o = {}
-            for (let [n, f] of Object.entries(N)) o[n] = B1(f, X, { ...Q, root: !1 })
+            const o = {}
+            for (const [n, f] of Object.entries(N)) o[n] = B1(f, X, { ...Q, root: !1 })
             return { ...w, ...K, properties: o }
           }
           if (P && K.type === "array") return { ...w, ...K, items: B1(P, X, { ...Q, root: !1 }) }
-          let y = { ...w, ...K }
+          const y = { ...w, ...K }
           return (
             delete y.required,
             N && K.type === "string" && K.format === "ObjectString" && K.default === "{}"
@@ -12851,8 +12852,8 @@ var rJ = ($) =>
         }
       if (Z) {
         if (N) {
-          let K = {}
-          for (let [y, o] of Object.entries(N)) K[y] = B1(o, X, { ...Q, root: !1 })
+          const K = {}
+          for (const [y, o] of Object.entries(N)) K[y] = B1(o, X, { ...Q, root: !1 })
           return { ...w, properties: K }
         } else if (P?.map) return { ...w, items: P.map((K) => B1(K, X, { ...Q, root: !1 })) }
         return w
@@ -12863,18 +12864,18 @@ var rJ = ($) =>
       else H.not && (H.not = S(H.not))
       if ((A && (H[C0] = A[C0]), H.anyOf || H.oneOf || H.allOf || H.not)) return H
       if (N) {
-        let K = {}
-        for (let [y, o] of Object.entries(N)) K[y] = B1(o, X, { ...Q, root: !1 })
+        const K = {}
+        for (const [y, o] of Object.entries(N)) K[y] = B1(o, X, { ...Q, root: !1 })
         return { ...w, ...H, properties: K }
       } else if (P?.map) return { ...w, ...H, items: P.map((K) => B1(K, X, { ...Q, root: !1 })) }
       return { ...w, ...H }
     }
-    let W = $?.properties
+    const W = $?.properties
     if (W && J && X.rootOnly !== !0)
-      for (let [q, M] of Object.entries(W))
+      for (const [q, M] of Object.entries(W))
         switch (M[L]) {
-          case Y:
-            let { anyOf: G, oneOf: B, allOf: N, not: P, type: w, ...H } = M,
+          case Y: {
+            const { anyOf: G, oneOf: B, allOf: N, not: P, type: w, ...H } = M,
               A = X.to(H)
             if (!A) return $
             if (A.anyOf)
@@ -12886,6 +12887,7 @@ var rJ = ($) =>
             else A.not && (A.not = { ...H, ...A.not })
             W[q] = { ...H, ...B1(H, X, { ...Q, root: !1 }) }
             break
+          }
           case "Object":
           case "Union":
             W[q] = B1(M, X, { ...Q, root: !1 })
@@ -12954,7 +12956,7 @@ var rJ = ($) =>
           if (K[L] === "Import")
             b2(K.$defs[K.$ref]) || ((K = K.$defs[K.$ref]), (q || M) && (K = P(K)))
           else if (b2(K)) {
-            let y = d$()
+            const y = d$()
             K = T.Module({ ...J?.$defs, [y]: K }).Import(y)
           } else (q || M) && (K = P(K))
         return K
@@ -12965,7 +12967,7 @@ var rJ = ($) =>
       "~standard" in H ||
       (G?.length && G.some((j) => j && typeof j != "string" && "~standard" in j))
     ) {
-      let j = (f) => {
+      const j = (f) => {
           let I
           if (Y === !0 || Y === "exactMirror")
             try {
@@ -12977,7 +12979,7 @@ var rJ = ($) =>
                 console.warn(f),
                 (I = M6(f))
             }
-          let k = c0(f, {
+          const k = c0(f, {
             models: X,
             modules: J,
             dynamic: Q,
@@ -12995,7 +12997,7 @@ var rJ = ($) =>
         K = H["~standard"] ? H["~standard"].validate : j(H),
         y = []
       if (G?.length) {
-        for (let f of G)
+        for (const f of G)
           if (f && typeof f != "string") {
             if (f?.["~standard"]) {
               y.push(f["~standard"])
@@ -13003,14 +13005,13 @@ var rJ = ($) =>
             }
             if (L in f) {
               y.push(j(f))
-              continue
             }
           }
       }
       async function o(f) {
         let I = K(f)
         if ((I instanceof Promise && (I = await I), I.issues)) return I
-        let k = []
+        const k = []
         I && typeof I == "object" && k.push(I.value)
         for (let _ = 0; _ < y.length; _++) {
           if (((I = y[_].validate(f)), I instanceof Promise && (I = await I), I.issues)) return I
@@ -13023,7 +13024,7 @@ var rJ = ($) =>
         for (let _ = 2; _ < k.length; _++) b = Y1(b, k[_])
         return { value: b }
       }
-      let n = {
+      const n = {
         provider: "standard",
         schema: H,
         references: "",
@@ -13052,7 +13053,7 @@ var rJ = ($) =>
           try {
             return { success: !0, data: n.Decode(n.Clean?.(f) ?? f), error: null }
           } catch {
-            let I = [...S.Errors(f)].map(M1)
+            const I = [...S.Errors(f)].map(M1)
             return { success: !1, data: null, error: I[0]?.summary, errors: I }
           }
         }),
@@ -13066,7 +13067,7 @@ var rJ = ($) =>
         ((H = T.Intersect([
           ...(y ? [y] : []),
           ...o.map((n) => {
-            let f = w(n)
+            const f = w(n)
             return (
               f.type === "object" &&
                 "additionalProperties" in f &&
@@ -13089,7 +13090,7 @@ var rJ = ($) =>
           }))
     if (Q)
       if (L in H) {
-        let j = {
+        const j = {
           provider: "typebox",
           schema: H,
           references: "",
@@ -13149,14 +13150,14 @@ var rJ = ($) =>
             try {
               return { success: !0, data: j.Decode(j.Clean?.(K) ?? K), error: null }
             } catch {
-              let y = [...S.Errors(K)].map(M1)
+              const y = [...S.Errors(K)].map(M1)
               return { success: !1, data: null, error: y[0]?.summary, errors: y }
             }
           }),
           j
         )
       } else {
-        let j = {
+        const j = {
           provider: "standard",
           schema: H,
           references: "",
@@ -13164,14 +13165,14 @@ var rJ = ($) =>
           code: "",
           Check: (K) => H["~standard"].validate(K),
           Errors(K) {
-            let y = H["~standard"].validate(K)
+            const y = H["~standard"].validate(K)
             if (y instanceof Promise)
               throw Error("Async validation is not supported in non-dynamic schema")
             return y.issues
           },
           Code: () => "",
           Decode(K) {
-            let y = H["~standard"].validate(K)
+            const y = H["~standard"].validate(K)
             if (y instanceof Promise)
               throw Error("Async validation is not supported in non-dynamic schema")
             return y
@@ -13195,7 +13196,7 @@ var rJ = ($) =>
             try {
               return { success: !0, data: j.Decode(j.Clean?.(K) ?? K), error: null }
             } catch {
-              let y = [...S.Errors(K)].map(M1)
+              const y = [...S.Errors(K)].map(M1)
               return { success: !1, data: null, error: y[0]?.summary, errors: y }
             }
           }),
@@ -13229,7 +13230,7 @@ var rJ = ($) =>
         schema: H,
         references: "",
         checkFunc(j) {
-          let K = H["~standard"].validate(j)
+          const K = H["~standard"].validate(j)
           if (K instanceof Promise)
             throw Error("Async validation is not supported in non-dynamic schema")
           return K
@@ -13237,14 +13238,14 @@ var rJ = ($) =>
         code: "",
         Check: (j) => H["~standard"].validate(j),
         Errors(j) {
-          let K = H["~standard"].validate(j)
+          const K = H["~standard"].validate(j)
           if (K instanceof Promise)
             throw Error("Async validation is not supported in non-dynamic schema")
           return K.issues
         },
         Code: () => "",
         Decode(j) {
-          let K = H["~standard"].validate(j)
+          const K = H["~standard"].validate(j)
           if (K instanceof Promise)
             throw Error("Async validation is not supported in non-dynamic schema")
           return K
@@ -13268,7 +13269,7 @@ var rJ = ($) =>
         try {
           return { success: !0, data: S.Decode(S.Clean?.(j) ?? j), error: null }
         } catch {
-          let K = [...S.Errors(j)].map(M1)
+          const K = [...S.Errors(j)].map(M1)
           return { success: !1, data: null, error: K[0]?.summary, errors: K }
         }
       }),
@@ -13309,7 +13310,7 @@ var rJ = ($) =>
       Q = [],
       J = !1,
       Y = !1
-    for (let Z of $) {
+    for (const Z of $) {
       if (Z.type !== "object") {
         Q.push(Z)
         continue
@@ -13370,14 +13371,14 @@ var rJ = ($) =>
           sanitize: q,
         }),
       }
-    let G = {}
+    const G = {}
     return (
       Object.keys(M).forEach((B) => {
         if (isNaN(+B)) return
-        let N = M[+B]
+        const N = M[+B]
         if (typeof N == "string") {
           if (N in X) {
-            let P = X[N]
+            const P = X[N]
             if (!P) return
             G[+B] =
               L in P || "~standard" in P
@@ -13507,7 +13508,7 @@ var p0 = ($, X) => (X ? $ : ""),
 `)
     return (J, { name: Y, total: Z = 0 } = {}) => {
       Y || (Y = "anonymous")
-      let W = J === "error" ? "reportErr" : "report"
+      const W = J === "error" ? "reportErr" : "report"
       for (let q = 0; q < X.length; q++)
         Q(`${W}${q} = trace${q}.${J}({id,event:'${J}',name:'${Y}',begin:performance.now(),total:${Z}})
 `)
@@ -13565,7 +13566,7 @@ var p0 = ($, X) => (X ? $ : ""),
 `
       q += `if(${W} instanceof ElysiaCustomStatusResponse){c.set.status=${W}.code
 ${W}=${W}.response}if(${W} instanceof Response === false)switch(c.set.status){`
-      for (let [M, G] of Object.entries(Q.response)) {
+      for (const [M, G] of Object.entries(Q.response)) {
         if (
           ((q += `
 case ${M}:
@@ -13583,11 +13584,11 @@ break
         }
         let B = G.schema?.noValidate === !0
         if (!B && G.schema?.$ref && G.schema?.$defs) {
-          let H = G.schema.$ref,
+          const H = G.schema.$ref,
             A = typeof H == "string" && H.includes("/") ? H.split("/").pop() : H
           G.schema.$defs[A]?.noValidate === !0 && (B = !0)
         }
-        let N = B || Z,
+        const N = B || Z,
           P = ({ ignoreTryCatch: H = !1 } = {}) =>
             a6({
               name: W,
@@ -13598,7 +13599,7 @@ break
               ignoreTryCatch: H,
             })
         N && (q += P())
-        let w = !N && X && !B
+        const w = !N && X && !B
         J && G.hasTransform && !B
           ? ((q += `try{${W}=validator.response[${M}].Encode(${W})
 `),
@@ -13628,27 +13629,27 @@ c.set.status=${M}
   QD = /=>\s?response\.clone\(/,
   JD = /(?:return|=>)\s?\S+\(|a(?:sync|wait)/,
   k0 = ($) => {
-    let X = typeof $ == "object"
+    const X = typeof $ == "object"
     if (X && $.isAsync !== void 0) return $.isAsync
-    let Q = X ? $.fn : $
+    const Q = X ? $.fn : $
     if (Q.constructor.name === "AsyncFunction") return !0
-    let J = Q.toString()
+    const J = Q.toString()
     if (QD.test(J)) return X && ($.isAsync = !1), !1
-    let Y = JD.test(J)
+    const Y = JD.test(J)
     return X && ($.isAsync = Y), Y
   },
   e6 = ($) => {
-    let X = typeof $ == "object"
+    const X = typeof $ == "object"
     if (X && $.hasReturn !== void 0) return $.hasReturn
-    let Q = X ? $.fn.toString() : typeof $ == "string" ? $.toString() : $,
+    const Q = X ? $.fn.toString() : typeof $ == "string" ? $.toString() : $,
       J = Q.indexOf(")")
     if (Q.charCodeAt(J + 2) === 61 && Q.charCodeAt(J + 5) !== 123)
       return X && ($.hasReturn = !0), !0
-    let Y = Q.includes("return")
+    const Y = Q.includes("return")
     return X && ($.hasReturn = Y), Y
   },
   PQ = ($) => {
-    let X = $?.fn ?? $
+    const X = $?.fn ?? $
     return (
       X.constructor.name === "AsyncGeneratorFunction" || X.constructor.name === "GeneratorFunction"
     )
@@ -13669,12 +13670,12 @@ throw error.error ?? new ValidationError('${X}',validator.${X},${Q})}}`,
     allowMeta: W = !1,
     inference: q,
   }) => {
-    let M = $["~adapter"].composeHandler,
+    const M = $["~adapter"].composeHandler,
       G = $["~adapter"].handler,
       B = typeof Z == "function"
     if (!B) {
       Z = G.mapResponse(Z, { headers: $.setHeaders ?? {} })
-      let v =
+      const v =
         Z instanceof Response ||
         (Z?.constructor?.name === "Response" && typeof Z?.clone == "function")
       if (J.parse?.length && J.transform?.length && J.beforeHandle?.length && J.afterHandle?.length)
@@ -13690,7 +13691,7 @@ return function(){return a.clone()}`
 return function(){return a}`
             )(Z)
       if (v) {
-        let U = Z
+        const U = Z
         Z = () => U.clone()
       }
     }
@@ -13698,7 +13699,7 @@ return function(){return a}`
       P = !!J.trace?.length,
       w = ""
     if (((q = U8(Object.assign({ handler: Z }, J), q, $.config.sucrose)), M.declare)) {
-      let v = M.declare(q)
+      const v = M.declare(q)
       v && (w += v)
     }
     q.server &&
@@ -13725,7 +13726,7 @@ return function(){return a}`
         if (I) return I
         if (f?.sign) {
           if (!f.secrets) throw Error(`t.Cookie required secret which is not set in (${Q}) ${X}.`)
-          let v = f.secrets ? (typeof f.secrets == "string" ? f.secrets : f.secrets[0]) : void 0
+          const v = f.secrets ? (typeof f.secrets == "string" ? f.secrets : f.secrets[0]) : void 0
           if (
             ((I += `const _setCookie = c.set.cookie
 if(_setCookie){`),
@@ -13733,7 +13734,7 @@ if(_setCookie){`),
           )
             I += `for(const [key, cookie] of Object.entries(_setCookie)){c.set.cookie[key].value=await signCookie(cookie.value,'${v}')}`
           else
-            for (let U of f.sign)
+            for (const U of f.sign)
               I += `if(_setCookie['${U}']?.value)c.set.cookie['${U}'].value=await signCookie(_setCookie['${U}'].value,'${v}')
 `
           I += `}
@@ -13754,15 +13755,15 @@ if(_setCookie){`),
       P &&
         (w += `const id=c[ELYSIA_REQUEST_ID]
 `)
-    let d = $X({
+    const d = $X({
       trace: J.trace,
       addFn: (v) => {
         w += v
       },
     })
     if (((w += "try{"), n)) {
-      let v = (D, z) => {
-          let x = f?.[D] ?? z
+      const v = (D, z) => {
+          const x = f?.[D] ?? z
           return x
             ? typeof x == "string"
               ? `${D}:'${x}',`
@@ -13799,9 +13800,9 @@ c.cookie=await parseCookie(c.set,c.request.headers.get('cookie'),${U})
         D = !1,
         z = !1
       if (Y.query?.schema) {
-        let x = A8(Y.query?.schema)
+        const x = A8(Y.query?.schema)
         if (L in x && x.properties)
-          for (let [E, g] of Object.entries(x.properties))
+          for (const [E, g] of Object.entries(x.properties))
             T2("ArrayQuery", g) && ((v[E] = 1), (D = !0)),
               T2("ObjectString", g) && ((U[E] = 1), (z = !0))
       }
@@ -13841,7 +13842,7 @@ c.cookie=await parseCookie(c.set,c.request.headers.get('cookie'),${U})
           U = J.afterResponse?.some(k0) ? "async " : ""
         v += `
 setImmediate(${U}()=>{`
-        let D = $X({
+        const D = $X({
           trace: J.trace,
           addFn: (z) => {
             v += z
@@ -13849,7 +13850,7 @@ setImmediate(${U}()=>{`
         })("afterResponse", { total: J.afterResponse?.length })
         if (J.afterResponse?.length && J.afterResponse)
           for (let z = 0; z < J.afterResponse.length; z++) {
-            let x = D.resolveChild(J.afterResponse[z].fn.name),
+            const x = D.resolveChild(J.afterResponse[z].fn.name),
               E = k0(J.afterResponse[z]) ? "await " : ""
             ;(v += `
 ${E}e.afterResponse[${z}](c)
@@ -13864,7 +13865,7 @@ ${E}e.afterResponse[${z}](c)
         )
       },
       t0 = (v = "r") => {
-        let U = $1(),
+        const U = $1(),
           D = `${G2 ? "mapResponse" : "mapCompactResponse"}(${X0}${v}${G2 ? ",c.set" : ""}${F1})
 `
         return U ? `const _res=${D}` + U + "return _res" : `return ${D}`
@@ -13873,9 +13874,9 @@ ${E}e.afterResponse[${z}](c)
     ;(P || q.route) &&
       (w += `c.route=\`${X}\`
 `)
-    let g2 = d("parse", { total: J.parse?.length })
+    const g2 = d("parse", { total: J.parse?.length })
     if (j) {
-      let v = !!J.parse?.length || q.body || Y.body
+      const v = !!J.parse?.length || q.body || Y.body
       M.parser.declare && (w += M.parser.declare),
         (w += `
 try{`)
@@ -13890,7 +13891,7 @@ try{`)
                 : void 0
             : void 0
       if (!U && Y.body && !J.parse?.length) {
-        let D = Y.body.schema
+        const D = Y.body.schema
         D &&
           D.anyOf &&
           D[L] === "Union" &&
@@ -13899,7 +13900,7 @@ try{`)
           (U = "formdata")
       }
       if (U && $D.includes(U)) {
-        let D = d("parse", { total: J.parse?.length }),
+        const D = d("parse", { total: J.parse?.length }),
           z = !!Y.body?.isOptional
         switch (U) {
           case "json":
@@ -13960,7 +13961,7 @@ c.contentType=contentType
 `
         else {
           D = !0
-          let x = !!Y.body?.isOptional
+          const x = !!Y.body?.isOptional
           w +=
             `if(contentType)switch(contentType.charCodeAt(12)){
 case 106:` +
@@ -13980,17 +13981,17 @@ default:if(contentType.charCodeAt(0)===116){` +
             `}break
 }`
         }
-        let z = d("parse", { total: J.parse?.length })
+        const z = d("parse", { total: J.parse?.length })
         if (J.parse)
           for (let x = 0; x < J.parse.length; x++) {
-            let E = `bo${x}`
+            const E = `bo${x}`
             if (
               (x !== 0 &&
                 (w += `
 if(!used){`),
               typeof J.parse[x].fn == "string")
             ) {
-              let g = z.resolveChild(J.parse[x].fn),
+              const g = z.resolveChild(J.parse[x].fn),
                 t = !!Y.body?.isOptional
               switch (J.parse[x].fn) {
                 case "json":
@@ -14021,7 +14022,7 @@ if(${E}!==undefined){c.body=${E};used=true;}
               }
               g()
             } else {
-              let g = z.resolveChild(J.parse[x].fn.name)
+              const g = z.resolveChild(J.parse[x].fn.name)
               ;(w += `let ${E}=e.parse[${x}]
 ${E}=${E}(c,contentType)
 if(${E} instanceof Promise)${E}=await ${E}
@@ -14031,7 +14032,7 @@ if(${E}!==undefined){c.body=${E};used=true}`),
             if ((x !== 0 && (w += "}"), D)) break
           }
         if ((z.resolve(), !D)) {
-          let x = !!Y.body?.isOptional
+          const x = !!Y.body?.isOptional
           J.parse?.length &&
             (w += `
 if(!used){
@@ -14054,7 +14055,7 @@ case 'multipart/form-data':` +
               M.parser.formData(x) +
               `break
 `)
-          for (let E of Object.keys($["~parser"]))
+          for (const E of Object.keys($["~parser"]))
             w +=
               `case '${E}':let bo${E}=parser['${E}'](c,contentType)
 if(bo${E} instanceof Promise)bo${E}=await bo${E}
@@ -14072,12 +14073,12 @@ delete c.contentType`)
       w += "}catch(error){throw new ParseError(error)}"
     }
     if ((g2.resolve(), J?.transform || P)) {
-      let v = d("transform", { total: J.transform?.length })
+      const v = d("transform", { total: J.transform?.length })
       if (J.transform?.length) {
         w += `let transformed
 `
         for (let U = 0; U < J.transform.length; U++) {
-          let D = J.transform[U],
+          const D = J.transform[U],
             z = v.resolveChild(D.fn.name)
           ;(w += k0(D)
             ? `transformed=await e.transform[${U}](c)
@@ -14107,12 +14108,12 @@ c=transformed}`)
       }
       v.resolve()
     }
-    let R1 = []
+    const R1 = []
     if (Y) {
       if (Y.headers) {
         if (Y.headers.hasDefault)
-          for (let [v, U] of Object.entries(S0.Default(Y.headers.schema, {}))) {
-            let D = typeof U == "object" ? JSON.stringify(U) : typeof U == "string" ? `'${U}'` : U
+          for (const [v, U] of Object.entries(S0.Default(Y.headers.schema, {}))) {
+            const D = typeof U == "object" ? JSON.stringify(U) : typeof U == "string" ? `'${U}'` : U
             D !== void 0 &&
               (w += `c.headers['${v}']??=${D}
 `)
@@ -14140,8 +14141,8 @@ if(vah.issues){` +
       }
       if (Y.params) {
         if (Y.params.hasDefault)
-          for (let [v, U] of Object.entries(S0.Default(Y.params.schema, {}))) {
-            let D = typeof U == "object" ? JSON.stringify(U) : typeof U == "string" ? `'${U}'` : U
+          for (const [v, U] of Object.entries(S0.Default(Y.params.schema, {}))) {
+            const D = typeof U == "object" ? JSON.stringify(U) : typeof U == "string" ? `'${U}'` : U
             D !== void 0 &&
               (w += `c.params['${v}']??=${D}
 `)
@@ -14165,8 +14166,8 @@ if(vap.issues){` +
       }
       if (Y.query) {
         if (L in Y.query?.schema && Y.query.hasDefault)
-          for (let [v, U] of Object.entries(S0.Default(Y.query.schema, {}))) {
-            let D = typeof U == "object" ? JSON.stringify(U) : typeof U == "string" ? `'${U}'` : U
+          for (const [v, U] of Object.entries(S0.Default(Y.query.schema, {}))) {
+            const D = typeof U == "object" ? JSON.stringify(U) : typeof U == "string" ? `'${U}'` : U
             D !== void 0 &&
               (w += `if(c.query['${v}']===undefined)c.query['${v}']=${D}
 `)
@@ -14210,10 +14211,10 @@ if(vaq.issues){` +
             z = A8(Y.body.schema)
           if (!v && D && typeof D == "object" && (K$("File", z) || K$("Files", z))) {
             U = !0
-            for (let [E, g] of Object.entries(D)) (g === "File" || g === "Files") && delete D[E]
+            for (const [E, g] of Object.entries(D)) (g === "File" || g === "Files") && delete D[E]
             A0(D) || (D = void 0)
           }
-          let x = typeof D == "object" ? JSON.stringify(D) : typeof D == "string" ? `'${D}'` : D
+          const x = typeof D == "object" ? JSON.stringify(D) : typeof D == "string" ? `'${D}'` : D
           D != null &&
             (Array.isArray(D)
               ? (w += `if(!c.body)c.body=${x}
@@ -14265,11 +14266,11 @@ if(vab.issues){` +
             )),
           v && Y.body.schema.anyOf?.length)
         ) {
-          let D = Object.values(Y.body.schema.anyOf)
+          const D = Object.values(Y.body.schema.anyOf)
           for (let z = 0; z < D.length; z++) {
-            let x = D[z]
+            const x = D[z]
             if (K$("File", x) || K$("Files", x)) {
-              let E = c0(x, {
+              const E = c0(x, {
                 modules: $.definitions.typebox,
                 dynamic: !$.config.aot,
                 models: $.definitions.type,
@@ -14288,7 +14289,7 @@ if(vab.issues){` +
                 let i0 = "",
                   G1 = 0
                 for (let P1 = 0; P1 < t.length; P1++) {
-                  let [p$, O8] = t[P1]
+                  const [p$, O8] = t[P1]
                   !O8.extension ||
                     (O8[L] !== "File" && O8[L] !== "Files") ||
                     (G1 && (i0 += ","),
@@ -14311,7 +14312,7 @@ if(vab.issues){` +
         } else if (U || (!v && (K$("File", A8(Y.body.schema)) || K$("Files", A8(Y.body.schema))))) {
           let D = "",
             z = 0
-          for (let [x, E] of Object.entries(A8(Y.body.schema).properties))
+          for (const [x, E] of Object.entries(A8(Y.body.schema).properties))
             !E.extension ||
               (E[L] !== "File" && E[L] !== "Files") ||
               (z && (D += ","),
@@ -14361,7 +14362,7 @@ if(vac.issues){` +
         U = !1
       if (J.beforeHandle?.length)
         for (let D = 0; D < J.beforeHandle.length; D++) {
-          let z = J.beforeHandle[D],
+          const z = J.beforeHandle[D],
             x = v.resolveChild(z.fn.name),
             E = e6(z)
           if (z.subType === "resolve" || z.subType === "mapResolve")
@@ -14414,10 +14415,10 @@ c=resolved}`)
               J.afterHandle?.length || P)
             ) {
               d("handle", { name: B ? Z.name : void 0 }).resolve()
-              let t = d("afterHandle", { total: J.afterHandle?.length })
+              const t = d("afterHandle", { total: J.afterHandle?.length })
               if (J.afterHandle?.length)
                 for (let D0 = 0; D0 < J.afterHandle.length; D0++) {
-                  let i0 = J.afterHandle[D0],
+                  const i0 = J.afterHandle[D0],
                     G1 = e6(i0),
                     P1 = t.resolveChild(i0.fn.name)
                   ;(w += `c.response=c.responseValue=be
@@ -14440,12 +14441,12 @@ c=resolved}`)
               t.resolve()
             }
             Y.response && (w += V.response("be"))
-            let g = d("mapResponse", { total: J.mapResponse?.length })
+            const g = d("mapResponse", { total: J.mapResponse?.length })
             if (J.mapResponse?.length) {
               w += `c.response=c.responseValue=be
 `
               for (let t = 0; t < J.mapResponse.length; t++) {
-                let D0 = J.mapResponse[t],
+                const D0 = J.mapResponse[t],
                   i0 = g.resolveChild(D0.fn.name)
                 ;(w += `if(mr===undefined){mr=${c$(D0) ? "await " : ""}e.mapResponse[${t}](c)
 if(mr!==undefined)be=c.response=c.responseValue=mr}`),
@@ -14462,7 +14463,7 @@ if(mr!==undefined)be=c.response=c.responseValue=mr}`),
       v.resolve()
     }
     if (J.afterHandle?.length || P) {
-      let v = d("handle", { name: B ? Z.name : void 0 })
+      const v = d("handle", { name: B ? Z.name : void 0 })
       J.afterHandle?.length
         ? (w += m
             ? `let r=c.response=c.responseValue=await ${N}
@@ -14475,10 +14476,10 @@ if(mr!==undefined)be=c.response=c.responseValue=mr}`),
             : `let r=${N}
 `),
         v.resolve()
-      let U = d("afterHandle", { total: J.afterHandle?.length })
+      const U = d("afterHandle", { total: J.afterHandle?.length })
       if (J.afterHandle?.length)
         for (let z = 0; z < J.afterHandle.length; z++) {
-          let x = J.afterHandle[z],
+          const x = J.afterHandle[z],
             E = e6(x),
             g = U.resolveChild(x.fn.name)
           E
@@ -14509,10 +14510,10 @@ if(mr!==undefined)be=c.response=c.responseValue=mr}`),
 `),
         Y.response && (w += V.response()),
         (w += k())
-      let D = d("mapResponse", { total: J.mapResponse?.length })
+      const D = d("mapResponse", { total: J.mapResponse?.length })
       if (J.mapResponse?.length)
         for (let z = 0; z < J.mapResponse.length; z++) {
-          let x = J.mapResponse[z],
+          const x = J.mapResponse[z],
             E = D.resolveChild(x.fn.name)
           ;(w += `mr=${c$(x) ? "await " : ""}e.mapResponse[${z}](c)
 if(mr!==undefined)r=c.response=c.responseValue=mr
@@ -14521,7 +14522,7 @@ if(mr!==undefined)r=c.response=c.responseValue=mr
         }
       D.resolve(), (w += t0())
     } else {
-      let v = d("handle", { name: B ? Z.name : void 0 })
+      const v = d("handle", { name: B ? Z.name : void 0 })
       if (Y.response || J.mapResponse?.length || P) {
         ;(w += m
           ? `let r=await ${N}
@@ -14530,13 +14531,13 @@ if(mr!==undefined)r=c.response=c.responseValue=mr
 `),
           v.resolve(),
           Y.response && (w += V.response())
-        let U = d("mapResponse", { total: J.mapResponse?.length })
+        const U = d("mapResponse", { total: J.mapResponse?.length })
         if (J.mapResponse?.length) {
           w += `
 c.response=c.responseValue=r
 `
           for (let D = 0; D < J.mapResponse.length; D++) {
-            let z = J.mapResponse[D],
+            const z = J.mapResponse[D],
               x = U.resolveChild(z.fn.name)
             ;(w += `
 if(mr===undefined){mr=${c$(z) ? "await " : ""}e.mapResponse[${D}](c)
@@ -14563,12 +14564,12 @@ else return ${N}.clone()`
           : `let r=${N}
 `),
           v.resolve()
-        let U = d("mapResponse", { total: J.mapResponse?.length })
+        const U = d("mapResponse", { total: J.mapResponse?.length })
         if (J.mapResponse?.length) {
           w += `c.response=c.responseValue= r
 `
           for (let D = 0; D < J.mapResponse.length; D++) {
-            let z = J.mapResponse[D],
+            const z = J.mapResponse[D],
               x = U.resolveChild(z.fn.name)
             ;(w += `if(mr===undefined){mr=${c$(z) ? "await " : ""}e.mapResponse[${D}](c)
 if(mr!==undefined)r=c.response=c.responseValue=mr}`),
@@ -14578,7 +14579,7 @@ if(mr!==undefined)r=c.response=c.responseValue=mr}`),
         U.resolve(), (w += k() + t0())
       } else {
         v.resolve()
-        let U = m ? `await ${N}` : N
+        const U = m ? `await ${N}` : N
         Z instanceof Response
           ? ((w += $1()),
             (w += q.set
@@ -14603,7 +14604,7 @@ if(!set.status||set.status<300)set.status=error?.status||500
       for (let v = 0; v < J.trace.length; v++)
         w += `report${v}?.resolve(error);reportChild${v}?.(error)
 `
-    let f2 = d("error", { total: J.error?.length })
+    const f2 = d("error", { total: J.error?.length })
     if (J.error?.length) {
       ;(w += `c.error=error
 `),
@@ -14618,7 +14619,7 @@ c.set.status=422}else{c.code=error.code??error[ERROR_CODE]??"UNKNOWN"}`)
           (w += `let mep
 `)
       for (let v = 0; v < J.error.length; v++) {
-        let U = f2.resolveChild(J.error[v].fn.name)
+        const U = f2.resolveChild(J.error[v].fn.name)
         if (
           (k0(J.error[v])
             ? (w += `er=await e.error[${v}](c)
@@ -14629,9 +14630,9 @@ if(er instanceof Promise)er=await er
           U(),
           J.mapResponse?.length)
         ) {
-          let D = d("mapResponse", { total: J.mapResponse?.length })
+          const D = d("mapResponse", { total: J.mapResponse?.length })
           for (let z = 0; z < J.mapResponse.length; z++) {
-            let x = J.mapResponse[z],
+            const x = J.mapResponse[z],
               E = D.resolveChild(x.fn.name)
             ;(w += `c.response=c.responseValue=er
 mep=e.mapResponse[${z}](c)
@@ -14736,7 +14737,7 @@ c.defs=definitions
         ...M.inject,
       })
     } catch (v) {
-      let U = FJ(J)
+      const U = FJ(J)
       console.log("[Composer] failed to generate optimized handler"),
         console.log("---"),
         console.log({
@@ -14775,7 +14776,7 @@ c.defs=definitions
     if ($.event.request?.length) {
       Q += "try{"
       for (let Y = 0; Y < $.event.request.length; Y++) {
-        let Z = $.event.request[Y],
+        const Z = $.event.request[Y],
           W = e6(Z),
           q = k0(Z),
           M = J.resolveChild($.event.request[Y].fn.name)
@@ -14794,7 +14795,7 @@ c.defs=definitions
     return J.resolve(), Q
   },
   $Y = ($, X = "map") => {
-    let Q = $.extender.higherOrderFunctions
+    const Q = $.extender.higherOrderFunctions
     if (!Q.length) return "return " + X
     let J = $["~adapter"].composeGeneralHandler,
       Y = X
@@ -14802,7 +14803,7 @@ c.defs=definitions
     return `return function hocMap(${J.parameters}){return ${Y}(${J.parameters})}`
   },
   LQ = ($) => {
-    let X = $["~adapter"].composeGeneralHandler
+    const X = $["~adapter"].composeGeneralHandler
     $.router.http.build()
     let Q = $["~adapter"].isWebStandard,
       J = $.event.trace?.length,
@@ -14829,11 +14830,11 @@ return new Response(null,{status:_res.status,statusText:_res.statusText,headers:
       q = `
 c.error=notFound
 `
-      let H = $.event.afterResponse.some(k0) ? "async" : ""
+      const H = $.event.afterResponse.some(k0) ? "async" : ""
       q += `
 setImmediate(${H}()=>{`
       for (let A = 0; A < $.event.afterResponse.length; A++) {
-        let S = $.event.afterResponse[A].fn
+        const S = $.event.afterResponse[A].fn
         q += `
 ${c$(S) ? "await " : ""}afterResponse[${A}](c)
 `
@@ -14844,7 +14845,7 @@ ${c$(S) ? "await " : ""}afterResponse[${A}](c)
     $.inference.query &&
       (q += `
 if(c.qi===-1){c.query={}}else{c.query=parseQueryFromURL(c.url,c.qi+1)}`)
-    let M = X.error404(!!$.event.request?.length, !!$.event.error?.length, q)
+    const M = X.error404(!!$.event.request?.length, !!$.event.error?.length, q)
     ;(W += M.code),
       (W += `
 c.params=route.params
@@ -14852,9 +14853,9 @@ if(route.store.handler)return route.store.handler(c)
 return route.store.compile()(c)
 `)
     let G = ""
-    for (let [H, A] of Object.entries(Z.static)) {
+    for (const [H, A] of Object.entries(Z.static)) {
       ;(G += `case'${H}':`), $.config.strictPath !== !0 && (G += `case'${Y8(H)}':`)
-      let S = Z8(H)
+      const S = Z8(H)
       H !== S && (G += `case'${S}':`),
         (G += "switch(r.method){"),
         ("GET" in A || "WS" in A) &&
@@ -14879,7 +14880,7 @@ return getResponseLength(_res).then((length)=>{_res.headers.set('content-length'
 return new Response(null,{status:_res.status,statusText:_res.statusText,headers:_res.headers})
 })
 `)
-      for (let [j, K] of Object.entries(A))
+      for (const [j, K] of Object.entries(A))
         j === "ALL" ||
           j === "GET" ||
           j === "WS" ||
@@ -14892,7 +14893,7 @@ return new Response(null,{status:_res.status,statusText:_res.statusText,headers:
 `),
         (G += "}")
     }
-    let B = !!$.event.request?.some(k0),
+    const B = !!$.event.request?.some(k0),
       N = X.inject ? Object.keys(X.inject).join(",") + "," : ""
     ;(Y +=
       `
@@ -14948,9 +14949,9 @@ map: switch(p){
         `}
 ` +
         $Y($))
-    let P = XY($)
+    const P = XY($)
     $.handleError = P
-    let w = Function(
+    const w = Function(
       "data",
       `"use strict";
 ` + Y
@@ -14992,7 +14993,7 @@ map: switch(p){
       Z &&
         (Q += `const id=context[ELYSIA_REQUEST_ID]
 `)
-    let W = $X({
+    const W = $X({
         context: "context",
         trace: X.trace,
         addFn: (N) => {
@@ -15005,7 +15006,7 @@ map: switch(p){
           P = X.afterResponse?.some(k0) ? "async" : ""
         N += `
 setImmediate(${P}()=>{`
-        let w = $X({
+        const w = $X({
           context: "context",
           trace: X.trace,
           addFn: (H) => {
@@ -15014,7 +15015,7 @@ setImmediate(${P}()=>{`
         })("afterResponse", { total: X.afterResponse?.length, name: "context" })
         if (X.afterResponse?.length && X.afterResponse)
           for (let H = 0; H < X.afterResponse.length; H++) {
-            let A = X.afterResponse[H].fn,
+            const A = X.afterResponse[H].fn,
               S = w.resolveChild(A.name)
             ;(N += `
 ${c$(A) ? "await " : ""}afterResponse[${H}](context)
@@ -15035,10 +15036,10 @@ if(!(context.error instanceof Error))context.error=error
 if(error instanceof ElysiaCustomStatusResponse){set.status=error.status=error.code
 error.message=error.response}`),
       J.declare && (Q += J.declare)
-    let M = Z || X.afterResponse?.length ? "context.response = " : ""
+    const M = Z || X.afterResponse?.length ? "context.response = " : ""
     if ($.event.error)
       for (let N = 0; N < $.event.error.length; N++) {
-        let P = $.event.error[N],
+        const P = $.event.error[N],
           w = `${k0(P) ? "await " : ""}onError[${N}](context)
 `
         if (((Q += "if(skipGlobal!==true){"), e6(P))) {
@@ -15049,10 +15050,10 @@ if(_r!==undefined){if(_r instanceof Response){` +
             `return mapResponse(_r,set${J.mapResponseContext})}if(_r instanceof ElysiaCustomStatusResponse){error.status=error.code
 error.message = error.response}if(set.status===200||!set.status)set.status=error.status
 `
-          let H = W("mapResponse", { total: X.mapResponse?.length, name: "context" })
+          const H = W("mapResponse", { total: X.mapResponse?.length, name: "context" })
           if (X.mapResponse?.length)
             for (let A = 0; A < X.mapResponse.length; A++) {
-              let S = X.mapResponse[A],
+              const S = X.mapResponse[A],
                 j = H.resolveChild(S.fn.name)
               ;(Q += `context.response=context.responseValue=_r_r=${c$(S) ? "await " : ""}onMapResponse[${A}](context)
 `),
@@ -15081,7 +15082,7 @@ if(typeof error.toResponse==='function')return context.response=context.response
         J.unknownError +
         `
 }`)
-    let G = W("mapResponse", { total: X.mapResponse?.length, name: "context" })
+    const G = W("mapResponse", { total: X.mapResponse?.length, name: "context" })
     if (
       ((Q += `
 if(!context.response)context.response=context.responseValue=error.message??error
@@ -15091,7 +15092,7 @@ if(!context.response)context.response=context.responseValue=error.message??error
       Q += `let mr
 `
       for (let N = 0; N < X.mapResponse.length; N++) {
-        let P = X.mapResponse[N],
+        const P = X.mapResponse[N],
           w = G.resolveChild(P.fn.name)
         ;(Q += `if(mr===undefined){mr=${c$(P) ? "await " : ""}onMapResponse[${N}](context)
 if(mr!==undefined)error=context.response=context.responseValue=mr}`),
@@ -15103,7 +15104,7 @@ if(mr!==undefined)error=context.response=context.responseValue=mr}`),
         q() +
         `
 return mapResponse(${M}error,set${J.mapResponseContext})}`)
-    let B = (N) => (typeof N == "function" ? N : N.fn)
+    const B = (N) => (typeof N == "function" ? N : N.fn)
     return Function(
       "inject",
       `"use strict";
@@ -15129,7 +15130,7 @@ var S$ = ($, X) => (X ? $ : ""),
     W &&
       (Y += `const id=randomId()
 `)
-    let q = /[:*]/.test(X.path),
+    const q = /[:*]/.test(X.path),
       M = `const u=request.url,s=u.indexOf('/',${($.config.handler?.standardHostname ?? !0) ? 11 : 7}),qi=u.indexOf('?', s + 1)
 `,
       G =
@@ -15138,7 +15139,7 @@ var S$ = ($, X) => (X ? $ : ""),
         !!X.hooks.standaloneValidator?.find((N) => N.query) ||
         $.event.request?.length
     G && (Y += M)
-    let B = Q.path
+    const B = Q.path
       ? q
         ? "get path(){" +
           (G ? "" : M) +
@@ -15161,7 +15162,7 @@ return u.substring(s,qi)
       W && (Y += ",[ELYSIA_REQUEST_ID]:id")
     {
       let N = ""
-      for (let P of Object.keys($.singleton.decorator)) N += `,'${P}':decorator['${P}']`
+      for (const P of Object.keys($.singleton.decorator)) N += `,'${P}':decorator['${P}']`
       Y += N
     }
     return (
@@ -15188,7 +15189,7 @@ return u.substring(s,qi)
       (Z += `const onRequest=app.event.request.map(x=>x.fn)
 `),
       (Z += `${$.event.request?.find(k0) ? "async" : ""} function map(request){`)
-    let W = Y.query || !!X.hooks.query || !!X.hooks.standaloneValidator?.find((q) => q.query)
+    const W = Y.query || !!X.hooks.query || !!X.hooks.standaloneValidator?.find((q) => q.query)
     return (
       Q || W || $.event.request?.length
         ? ((Z += s5($, X, Y)), (Z += eJ($)), (Z += "return handler(c)}"))
@@ -15217,7 +15218,7 @@ return u.substring(s,qi)
 var r5 = ($, X, Q) => {
   if (typeof $ == "function" || $ instanceof Blob) return
   if (SQ($)) return () => $
-  let J = O1($, Q ?? { headers: {} })
+  const J = O1($, Q ?? { headers: {} })
   if (!X.parse?.length && !X.transform?.length && !X.beforeHandle?.length && !X.afterHandle?.length)
     return J instanceof Promise
       ? J.then((Y) => {
@@ -15304,10 +15305,10 @@ class N6 {
   }
 }
 var a5 = ($) => {
-    let X = typeof $ == "function" ? [$] : $
-    return async function (Q, J) {
+    const X = typeof $ == "function" ? [$] : $
+    return async (Q, J) => {
       if (typeof J == "string") {
-        let Y = J?.charCodeAt(0)
+        const Y = J?.charCodeAt(0)
         if (Y === 34 || Y === 47 || Y === 91 || Y === 123)
           try {
             J = JSON.parse(J)
@@ -15330,37 +15331,38 @@ var a5 = ($) => {
     }
   },
   e5 = ($) => {
-    let X = (Q, J) => {
+    const X = (Q, J) => {
       if (J instanceof Promise) return J.then((W) => X(Q, W))
       if (Buffer.isBuffer(J)) return Q.send(J.toString())
       if (J === void 0) return
-      let Y = (W) => {
+      const Y = (W) => {
         if ($?.Check(W) === !1) return Q.send(new a("message", $, W).message)
         if (typeof W == "object") return Q.send(JSON.stringify(W))
         Q.send(W)
       }
       if (typeof J?.next != "function") return void Y(J)
-      let Z = J.next()
+      const Z = J.next()
       if (Z instanceof Promise)
         return (async () => {
-          let W = await Z
+          const W = await Z
           if ($?.Check(W) === !1) return Q.send(new a("message", $, W).message)
-          if ((Y(W.value), !W.done)) for await (let q of J) Y(q)
+          if ((Y(W.value), !W.done)) for await (const q of J) Y(q)
         })()
-      if ((Y(Z.value), !Z.done)) for (let W of J) Y(W)
+      if ((Y(Z.value), !Z.done)) for (const W of J) Y(W)
     }
     return X
   }
 var YD = /:.+?\?(?=\/|$)/,
   $7 = ($) => {
-    let X = YD.exec($)
+    const X = YD.exec($)
     if (!X) return [$]
-    let Q = [],
+    const Q = [],
       J = $.slice(0, X.index),
       Y = X[0].slice(0, -1),
       Z = $.slice(X.index + X[0].length)
     Q.push(J.slice(0, -1)), Q.push(J + Y)
-    for (let W of $7(Z)) W && (W.startsWith("/:") || Q.push(J.slice(0, -1) + W), Q.push(J + Y + W))
+    for (const W of $7(Z))
+      W && (W.startsWith("/:") || Q.push(J.slice(0, -1) + W), Q.push(J + Y + W))
     return Q
   },
   SQ = ($) =>
@@ -15370,15 +15372,15 @@ var YD = /:.+?\?(?=\/|$)/,
   X7 = { GET: !0, HEAD: !0, OPTIONS: !0, DELETE: !0, PATCH: !0, POST: !0, PUT: !0 },
   JY = ($) => {
     if (!$.config.aot || !$.config.systemRouter) return
-    let X = {},
+    const X = {},
       Q = (Y, Z) => {
-        let W = encodeURI(Y.path)
+        const W = encodeURI(Y.path)
         X[W] ? X[W][Y.method] || (X[W][Y.method] = Z) : (X[W] = { [Y.method]: Z })
       },
       J = $.routeTree
-    for (let Y of $.router.history) {
+    for (const Y of $.router.history) {
       if (typeof Y.handler != "function") continue
-      let Z = Y.method
+      const Z = Y.method
       if (
         (Z === "GET" && `WS_${Y.path}` in J) ||
         Z === "WS" ||
@@ -15397,13 +15399,13 @@ var YD = /:.+?\?(?=\/|$)/,
       }
       let W,
         q = $.config.precompile ? KQ($, Y) : (M) => (W ? W(M) : (W = KQ($, Y))(M))
-      for (let M of $7(Y.path)) Q({ method: Z, path: M }, q)
+      for (const M of $7(Y.path)) Q({ method: Z, path: M }, q)
     }
     return X
   },
   w6 = ($, X) => {
     if (!X) return $
-    for (let Q of Object.keys(X))
+    for (const Q of Object.keys(X))
       if ($[Q] !== X[Q]) {
         if (!$[Q]) {
           $[Q] = X[Q]
@@ -15448,13 +15450,13 @@ for(const [k,v] of c.request.headers.entries())c.headers[k]=v
           if (!pX(X)) throw Error("Port must be a numeric value")
           X = parseInt(X)
         }
-        let J = (Z, { withAsync: W = !1 } = {}) => {
-            let q = {},
+        const J = (Z, { withAsync: W = !1 } = {}) => {
+            const q = {},
               M = []
             for (let [G, B] of Object.entries(Z))
               if (((G = encodeURI(G)), nX)) {
                 if (!B) continue
-                for (let [N, P] of Object.entries(B))
+                for (const [N, P] of Object.entries(B))
                   if (!(!P || !(N in X7))) {
                     if (P instanceof Promise) {
                       W &&
@@ -15539,7 +15541,7 @@ for(const [k,v] of c.request.headers.entries())c.headers[k]=v
         console.log("Elysia isn't running. Call `app.listen` to start the server.", Error().stack)
     },
     ws($, X, Q) {
-      let { parse: J, body: Y, response: Z, ...W } = Q,
+      const { parse: J, body: Y, response: Z, ...W } = Q,
         q = c0(Y, {
           modules: $.definitions.typebox,
           models: $.definitions.type,
@@ -15554,15 +15556,15 @@ for(const [k,v] of c.request.headers.entries())c.headers[k]=v
         "WS",
         X,
         async (G) => {
-          let B = G.server ?? $.server,
+          const B = G.server ?? $.server,
             { set: N, path: P, qi: w, headers: H, query: A, params: S } = G
           if (((G.validator = M), Q.upgrade))
             if (typeof Q.upgrade == "function") {
-              let I = Q.upgrade(G)
+              const I = Q.upgrade(G)
               I instanceof Promise && (await I)
             } else Q.upgrade && Object.assign(N.headers, Q.upgrade)
           if (N.cookie && A0(N.cookie)) {
-            let I = n6(N.cookie)
+            const I = n6(N.cookie)
             I && (N.headers["set-cookie"] = I)
           }
           N.headers["set-cookie"] &&
@@ -15572,17 +15574,17 @@ for(const [k,v] of c.request.headers.entries())c.headers[k]=v
             K = a5(J),
             y
           if (typeof Q.beforeHandle == "function") {
-            let I = Q.beforeHandle(G)
+            const I = Q.beforeHandle(G)
             I instanceof Promise && (await I)
           }
-          let o = [
+          const o = [
               ...(Q.error ? (Array.isArray(Q.error) ? Q.error : [Q.error]) : []),
               ...($.event.error ?? []).map((I) => (typeof I == "function" ? I : I.fn)),
             ].filter((I) => I),
             n = o.length > 0,
             f = n
               ? async (I, k) => {
-                  for (let b of o) {
+                  for (const b of o) {
                     let _ = b(Object.assign(G, { error: k }))
                     if ((_ instanceof Promise && (_ = await _), await j(I, _), _)) break
                   }
@@ -15611,9 +15613,9 @@ for(const [k,v] of c.request.headers.entries())c.headers[k]=v
                   }
                 },
                 message: async (I, k) => {
-                  let b = await K(I, k)
+                  const b = await K(I, k)
                   if (q?.Check(b) === !1) {
-                    let _ = new a("message", q, b)
+                    const _ = new a("message", q, b)
                     return n ? f(I, _) : void I.send(_.message)
                   }
                   try {
@@ -15649,13 +15651,13 @@ var CQ = E2 ? Bun.env : typeof process < "u" && process?.env ? process.env : {}
 var YY = ($, X) => {
     let Q = $.schema
     if (Q && (Q.$defs?.[Q.$ref] && (Q = Q.$defs[Q.$ref]), !!Q?.properties))
-      for (let [J, Y] of Object.entries(Q.properties)) X[J] ??= Y.default
+      for (const [J, Y] of Object.entries(Q.properties)) X[J] ??= Y.default
   },
   ZY = ($) => {
-    let { mapResponse: X, mapEarlyResponse: Q } = $["~adapter"].handler,
+    const { mapResponse: X, mapEarlyResponse: Q } = $["~adapter"].handler,
       J = $.setHeaders
     return async (Y) => {
-      let Z = Y.url,
+      const Z = Y.url,
         W = Z.indexOf("/", 11),
         q = Z.indexOf("?", W + 1),
         M = q === -1 ? Z.substring(W) : Z.substring(W, q),
@@ -15677,7 +15679,7 @@ var YY = ($, X) => {
               V = _(B)
             if ((V instanceof Promise && (V = await V), (V = Q(V, G)), V)) return (B.response = V)
           }
-        let N =
+        const N =
             Y.method === "GET" && Y.headers.get("upgrade")?.toLowerCase() === "websocket"
               ? "WS"
               : Y.method,
@@ -15703,23 +15705,24 @@ var YY = ($, X) => {
               case "application/octet-stream":
                 K = await Y.arrayBuffer()
                 break
-              case "multipart/form-data":
+              case "multipart/form-data": {
                 K = {}
-                let b = await Y.formData()
-                for (let _ of b.keys()) {
+                const b = await Y.formData()
+                for (const _ of b.keys()) {
                   if (K[_]) continue
-                  let V = b.getAll(_)
+                  const V = b.getAll(_)
                   V.length === 1 ? (K[_] = V[0]) : (K[_] = V)
                 }
                 break
+              }
             }
           else {
             let b
             if ((Y.body && (b = Y.headers.get("content-type")), b)) {
-              let _ = b.indexOf(";")
+              const _ = b.indexOf(";")
               if ((_ !== -1 && (b = b.slice(0, _)), (B.contentType = b), H.parse))
                 for (let V = 0; V < H.parse.length; V++) {
-                  let d = H.parse[V].fn
+                  const d = H.parse[V].fn
                   if (typeof d == "string")
                     switch (d) {
                       case "json":
@@ -15739,17 +15742,18 @@ var YY = ($, X) => {
                         K = await Y.arrayBuffer()
                         break
                       case "formdata":
-                      case "multipart/form-data":
+                      case "multipart/form-data": {
                         K = {}
-                        let m = await Y.formData()
-                        for (let R0 of m.keys()) {
+                        const m = await Y.formData()
+                        for (const R0 of m.keys()) {
                           if (K[R0]) continue
-                          let e = m.getAll(R0)
+                          const e = m.getAll(R0)
                           e.length === 1 ? (K[R0] = e[0]) : (K[R0] = e)
                         }
                         break
-                      default:
-                        let X0 = $["~parser"][d]
+                      }
+                      default: {
+                        const X0 = $["~parser"][d]
                         if (X0) {
                           let R0 = X0(B, b)
                           if ((R0 instanceof Promise && (R0 = await R0), R0)) {
@@ -15758,6 +15762,7 @@ var YY = ($, X) => {
                           }
                         }
                         break
+                      }
                     }
                   else {
                     let m = d(B, b)
@@ -15781,15 +15786,16 @@ var YY = ($, X) => {
                   case "application/octet-stream":
                     K = await Y.arrayBuffer()
                     break
-                  case "multipart/form-data":
+                  case "multipart/form-data": {
                     K = {}
-                    let V = await Y.formData()
-                    for (let d of V.keys()) {
+                    const V = await Y.formData()
+                    for (const d of V.keys()) {
                       if (K[d]) continue
-                      let m = V.getAll(d)
+                      const m = V.getAll(d)
                       m.length === 1 ? (K[d] = m[0]) : (K[d] = m)
                     }
                     break
+                  }
                 }
             }
           }
@@ -15798,8 +15804,8 @@ var YY = ($, X) => {
           (B.params = P?.params || void 0),
           (B.query = q === -1 ? {} : u$(Z.substring(q + 1))),
           (B.headers = {})
-        for (let [b, _] of Y.headers.entries()) B.headers[b] = _
-        let y = {
+        for (const [b, _] of Y.headers.entries()) B.headers[b] = _
+        const y = {
             domain: $.config.cookie?.domain ?? A?.cookie?.config.domain,
             expires: $.config.cookie?.expires ?? A?.cookie?.config.expires,
             httpOnly: $.config.cookie?.httpOnly ?? A?.cookie?.config.httpOnly,
@@ -15814,34 +15820,34 @@ var YY = ($, X) => {
           },
           o = Y.headers.get("cookie")
         B.cookie = await qQ(B.set, o, y)
-        let n = A?.createHeaders?.()
+        const n = A?.createHeaders?.()
         n && YY(n, B.headers)
-        let f = A?.createParams?.()
+        const f = A?.createParams?.()
         f && YY(f, B.params)
-        let I = A?.createQuery?.()
+        const I = A?.createQuery?.()
         if ((I && YY(I, B.query), H.transform))
           for (let b = 0; b < H.transform.length; b++) {
             let _ = H.transform[b],
               V = _.fn(B)
             if ((V instanceof Promise && (V = await V), V instanceof o0)) {
-              let d = Q(V, B.set)
+              const d = Q(V, B.set)
               if (d) return (B.response = d)
             }
             _.subType === "derive" && Object.assign(B, V)
           }
         if (A) {
           if (n) {
-            let b = structuredClone(B.headers)
-            for (let [_, V] of Y.headers) b[_] = V
+            const b = structuredClone(B.headers)
+            for (const [_, V] of Y.headers) b[_] = V
             if (A.headers.Check(b) === !1) throw new a("header", A.headers, b)
           } else A.headers?.Decode && (B.headers = A.headers.Decode(B.headers))
           if (f?.Check(B.params) === !1) throw new a("params", A.params, B.params)
           if ((A.params?.Decode && (B.params = A.params.Decode(B.params)), A.query?.schema)) {
             let b = A.query.schema
             b.$defs?.[b.$ref] && (b = b.$defs[b.$ref])
-            let _ = b.properties
-            for (let V of Object.keys(_)) {
-              let d = _[V]
+            const _ = b.properties
+            for (const V of Object.keys(_)) {
+              const d = _[V]
               ;(d.type === "array" || d.items?.type === "string") &&
                 typeof B.query[V] == "string" &&
                 B.query[V] &&
@@ -15851,7 +15857,7 @@ var YY = ($, X) => {
           if (I?.Check(B.query) === !1) throw new a("query", A.query, B.query)
           if ((A.query?.Decode && (B.query = A.query.Decode(B.query)), A.createCookie?.())) {
             let b = {}
-            for (let [_, V] of Object.entries(B.cookie)) b[_] = V.value
+            for (const [_, V] of Object.entries(B.cookie)) b[_] = V.value
             if (A.cookie.Check(b) === !1) throw new a("cookie", A.cookie, b)
             A.cookie?.Decode && (b = A.cookie.Decode(b))
           }
@@ -15863,7 +15869,7 @@ var YY = ($, X) => {
             let _ = H.beforeHandle[b],
               V = _.fn(B)
             if ((V instanceof Promise && (V = await V), V instanceof o0)) {
-              let d = Q(V, B.set)
+              const d = Q(V, B.set)
               if (d) return (B.response = d)
             }
             if (_.subType === "resolve") {
@@ -15876,7 +15882,7 @@ var YY = ($, X) => {
                   let X0 = H.afterHandle[m].fn(B)
                   X0 instanceof Promise && (X0 = await X0), X0 && (V = X0)
                 }
-              let d = Q(V, B.set)
+              const d = Q(V, B.set)
               if (d) return (B.response = d)
             }
           }
@@ -15886,7 +15892,7 @@ var YY = ($, X) => {
           for (let b = 0; b < H.afterHandle.length; b++) {
             let _ = H.afterHandle[b].fn(B)
             _ instanceof Promise && (_ = await _)
-            let V = _ instanceof o0,
+            const V = _ instanceof o0,
               d = V
                 ? _.code
                 : G.status
@@ -15895,19 +15901,19 @@ var YY = ($, X) => {
                     : G.status
                   : 200
             V && ((G.status = d), (_ = _.response))
-            let m = A?.createResponse?.()?.[d]
+            const m = A?.createResponse?.()?.[d]
             if (m?.Check(_) === !1)
               if (m?.Clean) {
-                let R0 = m.Clean(_)
+                const R0 = m.Clean(_)
                 if (m?.Check(R0) === !1) throw new a("response", m, _)
                 _ = R0
               } else throw new a("response", m, _)
             m?.Encode && (B.response = _ = m.Encode(_)), m?.Clean && (B.response = _ = m.Clean(_))
-            let X0 = Q(_, B.set)
+            const X0 = Q(_, B.set)
             if (X0 !== void 0) return (B.response = X0)
           }
         } else {
-          let b = k instanceof o0,
+          const b = k instanceof o0,
             _ = b
               ? k.code
               : G.status
@@ -15916,25 +15922,25 @@ var YY = ($, X) => {
                   : G.status
                 : 200
           b && ((G.status = _), (k = k.response))
-          let V = A?.createResponse?.()?.[_]
+          const V = A?.createResponse?.()?.[_]
           if (V?.Check(k) === !1)
             if (V?.Clean) {
-              let d = V.Clean(k)
+              const d = V.Clean(k)
               if (V?.Check(d) === !1) throw new a("response", V, k)
               k = d
             } else throw new a("response", V, k)
           V?.Encode && (k = V.Encode(k)), V?.Clean && (k = V.Clean(k))
         }
         if (B.set.cookie && y?.sign) {
-          let b = y.secrets ? (typeof y.secrets == "string" ? y.secrets : y.secrets[0]) : void 0
+          const b = y.secrets ? (typeof y.secrets == "string" ? y.secrets : y.secrets[0]) : void 0
           if (y.sign === !0) {
             if (b)
-              for (let [_, V] of Object.entries(B.set.cookie))
+              for (const [_, V] of Object.entries(B.set.cookie))
                 B.set.cookie[_].value = await o8(V.value, b)
           } else {
-            let _ = A?.cookie?.schema?.properties
+            const _ = A?.cookie?.schema?.properties
             if (b)
-              for (let V of y.sign)
+              for (const V of y.sign)
                 V in _ &&
                   B.set.cookie[V]?.value &&
                   (B.set.cookie[V].value = await o8(B.set.cookie[V].value, b))
@@ -15942,20 +15948,20 @@ var YY = ($, X) => {
         }
         return X((B.response = k), B.set)
       } catch (N) {
-        let P = N instanceof gX && N.error ? N.error : N
+        const P = N instanceof gX && N.error ? N.error : N
         return $.handleError(B, P)
       } finally {
         $.event.afterResponse &&
           setImmediate(async () => {
-            for (let N of $.event.afterResponse) await N.fn(B)
+            for (const N of $.event.afterResponse) await N.fn(B)
           })
       }
     }
   },
   J7 = ($) => {
-    let { mapResponse: X } = $["~adapter"].handler
+    const { mapResponse: X } = $["~adapter"].handler
     return async (Q, J) => {
-      let Y = Object.assign(Q, { error: J, code: J.code })
+      const Y = Object.assign(Q, { error: J, code: J.code })
       if (((Y.set = Q.set), $.event.error))
         for (let Z = 0; Z < $.event.error.length; Z++) {
           let W = $.event.error[Z].fn(Y)
@@ -16098,7 +16104,7 @@ var ZD = class $ {
           sanitize: () => this.config.sanitize,
         }).Check(Q) === !1
       ) {
-        let J = new a("env", X, Q)
+        const J = new a("env", X, Q)
         throw Error(
           J.all
             .map((Y) => Y.summary)
@@ -16124,13 +16130,13 @@ var ZD = class $ {
       )
     }
     get models() {
-      let X = {}
-      for (let Q of Object.keys(this.definitions.type))
+      const X = {}
+      for (const Q of Object.keys(this.definitions.type))
         X[Q] = c0(this.definitions.typebox.Import(Q))
       return (X.modules = this.definitions.typebox), X
     }
     add(X, Q, J, Y, Z) {
-      let W = Z?.skipPrefix ?? !1,
+      const W = Z?.skipPrefix ?? !1,
         q = Z?.allowMeta ?? !1
       ;(Y ??= {}), this.applyMacro(Y)
       let M = []
@@ -16162,7 +16168,7 @@ var ZD = class $ {
           default:
             break
         }
-      let G = this.validator.getCandidate(),
+      const G = this.validator.getCandidate(),
         B = {
           body: Y?.body ?? G?.body,
           headers: Y?.headers ?? G?.headers,
@@ -16175,7 +16181,7 @@ var ZD = class $ {
           this.config.precompile === !0 ||
           (typeof this.config.precompile == "object" && this.config.precompile.compose === !0),
         P = () => {
-          let _ = this.definitions.type,
+          const _ = this.definitions.type,
             V = !this.config.aot,
             d = this.config.normalize,
             m = this.definitions.typebox,
@@ -16321,9 +16327,9 @@ var ZD = class $ {
       ;(G.body || G.cookie || G.headers || G.params || G.query || G.response) && (Y = N$(Y, G)),
         Y.tags && (Y.detail ? (Y.detail.tags = Y.tags) : (Y.detail = { tags: Y.tags })),
         A0(this.config.detail) && (Y.detail = Y1(Object.assign({}, this.config.detail), Y.detail))
-      let w = A0(this.event) ? N$(this.event, jJ(Y)) : { ...AW(jJ(Y)) }
+      const w = A0(this.event) ? N$(this.event, jJ(Y)) : { ...AW(jJ(Y)) }
       if ((M.length && Object.assign(w, { standaloneValidator: M }), this.config.aot === !1)) {
-        let _ = P()
+        const _ = P()
         this.router.dynamic.add(X, Q, {
           validator: _,
           hooks: w,
@@ -16331,7 +16337,7 @@ var ZD = class $ {
           handle: J,
           route: Q,
         })
-        let V = Z8(Q, { dynamic: !0 })
+        const V = Z8(Q, { dynamic: !0 })
         if (
           (Q !== V &&
             this.router.dynamic.add(X, V, {
@@ -16343,7 +16349,7 @@ var ZD = class $ {
             }),
           this.config.strictPath === !1)
         ) {
-          let d = Y8(Q)
+          const d = Y8(Q)
           this.router.dynamic.add(X, d, {
             validator: _,
             hooks: w,
@@ -16351,7 +16357,7 @@ var ZD = class $ {
             handle: J,
             route: Q,
           })
-          let m = Z8(d)
+          const m = Z8(d)
           d !== m &&
             this.router.dynamic.add(X, d, {
               validator: _,
@@ -16371,11 +16377,11 @@ var ZD = class $ {
         })
         return
       }
-      let H = this["~adapter"].handler,
+      const H = this["~adapter"].handler,
         A =
           typeof J != "function"
             ? () => {
-                let _ = {
+                const _ = {
                   redirect: U$,
                   request: this["~adapter"].isWebStandard
                     ? new Request(`http://e.ly${Q}`, { method: X })
@@ -16399,7 +16405,7 @@ var ZD = class $ {
                     }),
                     m !== void 0 && (J = m)
                 }
-                let V = H.createNativeStaticHandler?.(J, w, _.set)
+                const V = H.createNativeStaticHandler?.(J, w, _.set)
                 return V instanceof Promise
                   ? V.then((d) => {
                       if (d) return d
@@ -16435,14 +16441,14 @@ var ZD = class $ {
         o
       if (`${X}_${Q}` in this.routeTree)
         for (let _ = 0; _ < this.router.history.length; _++) {
-          let V = this.router.history[_]
+          const V = this.router.history[_]
           if (V.path === Q && V.method === X) {
             o = _
             break
           }
         }
       else this.routeTree[`${X}_${Q}`] = this.router.history.length
-      let n = o ?? this.router.history.length,
+      const n = o ?? this.router.history.length,
         f = N ? y() : (_) => (this.router.history[n].composed = y())(_)
       o !== void 0
         ? (this.router.history[o] = Object.assign(
@@ -16456,7 +16462,7 @@ var ZD = class $ {
               Y.webSocket ? { websocket: Y.websocket } : void 0
             )
           )
-      let I = {
+      const I = {
           handler: N ? f : void 0,
           compile() {
             return (this.handler = y())
@@ -16471,17 +16477,17 @@ var ZD = class $ {
         }
         this.router.http.add("WS", Q, I),
           this.config.strictPath || this.router.http.add("WS", Y8(Q), I)
-        let _ = Z8(Q, { dynamic: !0 })
+        const _ = Z8(Q, { dynamic: !0 })
         Q !== _ && this.router.http.add("WS", _, I)
         return
       }
       if (b) Q in k ? (k[Q][X] = n) : (k[Q] = { [X]: n }), this.config.strictPath || j(Y8(Q))
       else {
         if ((this.router.http.add(X, Q, I), !this.config.strictPath)) {
-          let V = Y8(Q)
+          const V = Y8(Q)
           j(V), this.router.http.add(X, V, I)
         }
-        let _ = Z8(Q, { dynamic: !0 })
+        const _ = Z8(Q, { dynamic: !0 })
         Q !== _ && (this.router.http.add(X, _, I), j(_))
       }
     }
@@ -16513,12 +16519,12 @@ var ZD = class $ {
     }
     resolve(X, Q) {
       Q || ((Q = X), (X = { as: "local" }))
-      let J = { subType: "resolve", fn: Q }
+      const J = { subType: "resolve", fn: Q }
       return this.onBeforeHandle(X, J)
     }
     mapResolve(X, Q) {
       Q || ((Q = X), (X = { as: "local" }))
-      let J = { subType: "mapResolve", fn: Q }
+      const J = { subType: "mapResolve", fn: Q }
       return this.onBeforeHandle(X, J)
     }
     onBeforeHandle(X, Q) {
@@ -16535,7 +16541,7 @@ var ZD = class $ {
     }
     trace(X, Q) {
       Q || ((Q = X), (X = { as: "local" })), Array.isArray(Q) || (Q = [Q])
-      for (let J of Q) this.on(X, "trace", m5(J))
+      for (const J of Q) this.on(X, "trace", m5(J))
       return this
     }
     error(X, Q) {
@@ -16545,7 +16551,7 @@ var ZD = class $ {
         case "function":
           return (this.definitions.error = X(this.definitions.error)), this
       }
-      for (let [J, Y] of Object.entries(X)) (Y.prototype[W8] = J), (this.definitions.error[J] = Y)
+      for (const [J, Y] of Object.entries(X)) (Y.prototype[W8] = J), (this.definitions.error[J] = Y)
       return this
     }
     onError(X, Q) {
@@ -16565,14 +16571,14 @@ var ZD = class $ {
           break
       }
       Array.isArray(J) ? (J = J1(J)) : typeof J == "function" ? (J = [{ fn: J }]) : (J = [J])
-      let Z = J
-      for (let W of Z)
+      const Z = J
+      for (const W of Z)
         (W.scope = typeof X == "string" ? "local" : (X?.as ?? "local")),
           (Y === "resolve" || Y === "derive") && (W.subType = Y)
       Y !== "trace" &&
         (this.inference = U8({ [Y]: Z.map((W) => W.fn) }, this.inference, this.config.sucrose))
-      for (let W of Z) {
-        let q = DW(W, "global", { skipIfHasType: !0 })
+      for (const W of Z) {
+        const q = DW(W, "global", { skipIfHasType: !0 })
         switch (Y) {
           case "start":
             ;(this.event.start ??= []), this.event.start.push(q)
@@ -16653,7 +16659,7 @@ var ZD = class $ {
       )
     }
     group(X, Q, J) {
-      let Y = new $({ ...this.config, prefix: "" })
+      const Y = new $({ ...this.config, prefix: "" })
       ;(Y.singleton = { ...this.singleton }),
         (Y.definitions = { ...this.definitions }),
         (Y.getServer = () => this.getServer()),
@@ -16665,7 +16671,7 @@ var ZD = class $ {
           scoped: [...(this.standaloneValidator.scoped ?? [])],
           global: [...(this.standaloneValidator.global ?? [])],
         })
-      let Z = typeof Q == "object",
+      const Z = typeof Q == "object",
         W = (Z ? J : Q)(Y)
       return (
         (this.singleton = Y1(this.singleton, Y.singleton)),
@@ -16680,7 +16686,7 @@ var ZD = class $ {
         this.model(W.definitions.type),
         Object.values(Y.router.history).forEach(({ method: q, path: M, handler: G, hooks: B }) => {
           if (((M = (Z ? "" : (this.config.prefix ?? "")) + X + M), Z)) {
-            let { body: N, headers: P, query: w, params: H, cookie: A, response: S, ...j } = Q,
+            const { body: N, headers: P, query: w, params: H, cookie: A, response: S, ...j } = Q,
               K = B,
               y = N || P || w || H || A || S
             this.add(
@@ -16720,10 +16726,10 @@ var ZD = class $ {
               (this.config.detail
                 ? (this.config.detail.tags = X.tags)
                 : (this.config.detail = { tags: X.tags }))
-          let Z = X.as ?? "local"
+          const Z = X.as ?? "local"
           if (X.schema === "standalone") {
             this.standaloneValidator[Z] || (this.standaloneValidator[Z] = [])
-            let W = X?.response
+            const W = X?.response
               ? typeof X.response == "string" || L in X.response || "~standard" in X.response
                 ? { 200: X.response }
                 : X?.response
@@ -16760,13 +16766,13 @@ var ZD = class $ {
         }
         return this.guard({}, X)
       }
-      let J = new $({ ...this.config, prefix: "" })
+      const J = new $({ ...this.config, prefix: "" })
       ;(J.singleton = { ...this.singleton }),
         (J.definitions = { ...this.definitions }),
         (J.inference = iX(this.inference)),
         (J.extender = { ...this.extender }),
         (J.getServer = () => this.getServer())
-      let Y = Q(J)
+      const Y = Q(J)
       return (
         (this.singleton = Y1(this.singleton, J.singleton)),
         (this.definitions = Y1(this.definitions, J.definitions)),
@@ -16780,7 +16786,7 @@ var ZD = class $ {
           ]),
         this.model(Y.definitions.type),
         Object.values(J.router.history).forEach(({ method: Z, path: W, handler: q, hooks: M }) => {
-          let { body: G, headers: B, query: N, params: P, cookie: w, response: H, ...A } = X,
+          const { body: G, headers: B, query: N, params: P, cookie: w, response: H, ...A } = X,
             S = G || B || N || P || w || H
           this.add(
             Z,
@@ -16809,7 +16815,7 @@ var ZD = class $ {
       if (!X) return this
       if (Array.isArray(X)) {
         let Q = this
-        for (let J of X) Q = Q.use(J)
+        for (const J of X) Q = Q.use(J)
         return Q
       }
       return X instanceof Promise
@@ -16839,11 +16845,11 @@ var ZD = class $ {
     }
     propagatePromiseModules(X) {
       if (X.promisedModules.size <= 0) return this
-      for (let Q of X.promisedModules.promises)
+      for (const Q of X.promisedModules.promises)
         this.promisedModules.add(
           Q.then((J) => {
             if (!J) return
-            let Y = this._use(J)
+            const Y = this._use(J)
             return Y instanceof Promise
               ? Y.then((Z) => {
                   Z ? Z.compile() : J.compile()
@@ -16855,7 +16861,7 @@ var ZD = class $ {
     }
     _use(X) {
       if (typeof X == "function") {
-        let Y = X(this)
+        const Y = X(this)
         return Y instanceof Promise
           ? (this.promisedModules.add(
               Y.then((Z) => {
@@ -16865,7 +16871,7 @@ var ZD = class $ {
                     (Z.getGlobalDefinitions = () => this.getGlobalDefinitions()),
                     Z.model(this.definitions.type),
                     Z.error(this.definitions.error)
-                  for (let { method: W, path: q, handler: M, hooks: G } of Object.values(
+                  for (const { method: W, path: q, handler: M, hooks: G } of Object.values(
                     Z.router.history
                   ))
                     this.add(W, q, M, G, void 0)
@@ -16882,7 +16888,7 @@ var ZD = class $ {
           : Y
       }
       this.propagatePromiseModules(X)
-      let Q = X.config.name,
+      const Q = X.config.name,
         J = X.config.seed
       if (
         ((X.getParent = () => this),
@@ -16906,7 +16912,7 @@ var ZD = class $ {
         Q)
       ) {
         Q in this.dependencies || (this.dependencies[Q] = [])
-        let Y = J !== void 0 ? v$(Q + JSON.stringify(J)) : 0
+        const Y = J !== void 0 ? v$(Q + JSON.stringify(J)) : 0
         this.dependencies[Q].some(({ checksum: Z }) => Y === Z) ||
           ((this.extender.macro = { ...this.extender.macro, ...X.extender.macro }),
           (this.extender.higherOrderFunctions = this.extender.higherOrderFunctions.concat(
@@ -16921,9 +16927,9 @@ var ZD = class $ {
             ))
       if (X.extender.higherOrderFunctions.length) {
         VJ(this.extender.higherOrderFunctions)
-        let Y = []
+        const Y = []
         for (let Z = 0; Z < this.extender.higherOrderFunctions.length; Z++) {
-          let W = this.extender.higherOrderFunctions[Z]
+          const W = this.extender.higherOrderFunctions[Z]
           W.checksum &&
             (Y.includes(W.checksum) && (this.extender.higherOrderFunctions.splice(Z, 1), Z--),
             Y.push(W.checksum))
@@ -16937,11 +16943,11 @@ var ZD = class $ {
         A0(X.definitions.error) && this.error(X.definitions.error),
         A0(X.extender.macro) &&
           (this.extender.macro = { ...this.extender.macro, ...X.extender.macro })
-      for (let { method: Y, path: Z, handler: W, hooks: q } of Object.values(X.router.history))
+      for (const { method: Y, path: Z, handler: W, hooks: q } of Object.values(X.router.history))
         this.add(Y, Z, W, q)
       if (Q) {
         Q in this.dependencies || (this.dependencies[Q] = [])
-        let Y = J !== void 0 ? v$(Q + JSON.stringify(J)) : 0
+        const Y = J !== void 0 ? v$(Q + JSON.stringify(J)) : 0
         if (this.dependencies[Q].some(({ checksum: Z }) => Y === Z)) return this
         this.dependencies[Q].push(
           this.config?.analytic
@@ -16990,12 +16996,12 @@ var ZD = class $ {
     }
     applyMacro(X, Q = X, { iteration: J = 0, applied: Y = {} } = {}) {
       if (J >= 16) return
-      let Z = this.extender.macro
-      for (let [W, q] of Object.entries(Q)) {
+      const Z = this.extender.macro
+      for (const [W, q] of Object.entries(Q)) {
         if (!(W in Z)) continue
-        let M = typeof Z[W] == "function" ? Z[W](q) : Z[W]
+        const M = typeof Z[W] == "function" ? Z[W](q) : Z[W]
         if (!M || (typeof Z[W] == "object" && q === !1)) return
-        let G = v$(W + JSON.stringify(M.seed ?? q))
+        const G = v$(W + JSON.stringify(M.seed ?? q))
         if (!(G in Y)) {
           Y[G] = !0
           for (let [B, N] of Object.entries(M))
@@ -17037,7 +17043,7 @@ var ZD = class $ {
     }
     mount(X, Q, J) {
       if (X instanceof $ || typeof X == "function" || X.length === 0 || X === "/") {
-        let q =
+        const q =
             typeof X == "function"
               ? X
               : X instanceof $
@@ -17075,7 +17081,7 @@ var ZD = class $ {
           this
         )
       }
-      let Y =
+      const Y =
           Q instanceof $
             ? Q.compile().fetch
             : typeof Q == "function"
@@ -17161,7 +17167,7 @@ var ZD = class $ {
           (typeof X == "string"
             ? ((J = Q), (Q = X), (X = { as: "append" }))
             : typeof X == "object" && ((J = Q), (Q = "")))
-      let { as: Y } = X
+      const { as: Y } = X
       if (typeof Q != "string") return this
       switch (typeof J) {
         case "object":
@@ -17201,7 +17207,7 @@ var ZD = class $ {
           (typeof X == "string"
             ? ((J = Q), (Q = X), (X = { as: "append" }))
             : typeof X == "object" && ((J = Q), (Q = "")))
-      let { as: Y } = X
+      const { as: Y } = X
       if (typeof Q != "string") return this
       switch (typeof J) {
         case "object":
@@ -17236,21 +17242,21 @@ var ZD = class $ {
     }
     derive(X, Q) {
       Q || ((Q = X), (X = { as: "local" }))
-      let J = { subType: "derive", fn: Q }
+      const J = { subType: "derive", fn: Q }
       return this.onTransform(X, J)
     }
     model(X, Q) {
-      let J = (Y) => {
-        let Z = {}
-        for (let W in Y) "~standard" in Y[W] || (Z[W] = Y[W])
+      const J = (Y) => {
+        const Z = {}
+        for (const W in Y) "~standard" in Y[W] || (Z[W] = Y[W])
         return Z
       }
       switch (typeof X) {
-        case "object":
-          let Y = {},
+        case "object": {
+          const Y = {},
             Z = Object.entries(X)
           if (!Z.length) return this
-          for (let [M, G] of Z)
+          for (const [M, G] of Z)
             M in this.definitions.type ||
               ("~standard" in G
                 ? (this.definitions.type[M] = G)
@@ -17259,16 +17265,19 @@ var ZD = class $ {
           return (
             (this.definitions.typebox = T.Module({ ...this.definitions.typebox.$defs, ...Y })), this
           )
-        case "function":
-          let W = X(this.definitions.type)
+        }
+        case "function": {
+          const W = X(this.definitions.type)
           return (this.definitions.type = W), (this.definitions.typebox = T.Module(J(W))), this
-        case "string":
+        }
+        case "string": {
           if (!Q) break
           if (((this.definitions.type[X] = Q), "~standard" in Q)) return this
-          let q = { ...Q, id: Q.$id ?? `#/components/schemas/${X}` }
+          const q = { ...Q, id: Q.$id ?? `#/components/schemas/${X}` }
           return (
             (this.definitions.typebox = T.Module({ ...this.definitions.typebox.$defs, ...q })), this
           )
+        }
       }
       return Q
         ? ((this.definitions.type[X] = Q),
@@ -17283,12 +17292,12 @@ var ZD = class $ {
     }
     mapDerive(X, Q) {
       Q || ((Q = X), (X = { as: "local" }))
-      let J = { subType: "mapDerive", fn: Q }
+      const J = { subType: "mapDerive", fn: Q }
       return this.onTransform(X, J)
     }
     affix(X, Q, J) {
       if (J === "") return this
-      let Y = ["_", "-", " "],
+      const Y = ["_", "-", " "],
         Z = (G) => G[0].toUpperCase() + G.slice(1),
         W =
           X === "prefix"
@@ -17297,28 +17306,29 @@ var ZD = class $ {
               ? (G, B) => B + G
               : (G, B) => B + Z(G),
         q = (G) => {
-          let B = {}
+          const B = {}
           switch (G) {
             case "decorator":
-              for (let N in this.singleton.decorator) B[W(J, N)] = this.singleton.decorator[N]
+              for (const N in this.singleton.decorator) B[W(J, N)] = this.singleton.decorator[N]
               this.singleton.decorator = B
               break
             case "state":
-              for (let N in this.singleton.store) B[W(J, N)] = this.singleton.store[N]
+              for (const N in this.singleton.store) B[W(J, N)] = this.singleton.store[N]
               this.singleton.store = B
               break
             case "model":
-              for (let N in this.definitions.type) B[W(J, N)] = this.definitions.type[N]
+              for (const N in this.definitions.type) B[W(J, N)] = this.definitions.type[N]
               this.definitions.type = B
               break
             case "error":
-              for (let N in this.definitions.error) B[W(J, N)] = this.definitions.error[N]
+              for (const N in this.definitions.error) B[W(J, N)] = this.definitions.error[N]
               this.definitions.error = B
               break
           }
         },
         M = Array.isArray(Q) ? Q : [Q]
-      for (let G of M.some((B) => B === "all") ? ["decorator", "state", "model", "error"] : M) q(G)
+      for (const G of M.some((B) => B === "all") ? ["decorator", "state", "model", "error"] : M)
+        q(G)
       return this
     }
     prefix(X, Q) {

@@ -1,4 +1,4 @@
-import type { DockerVersion, ContainerInspectInfo, ContainerStats, Version } from "dockerode"
+import type { ContainerInspectInfo, ContainerStats, DockerVersion, Version } from "dockerode"
 import { t } from "elysia"
 import type { ExtendObject } from "./events"
 

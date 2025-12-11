@@ -1,6 +1,7 @@
 // @bun
 
 import { createRequire } from "module"
+
 const require = createRequire(import.meta.url)
 Object.defineProperty(import.meta, "require", {
   value: require,
@@ -17,7 +18,7 @@ var __toESM = (mod, isNodeMode, target) => {
     isNodeMode || !mod || !mod.__esModule
       ? __defProp(target, "default", { value: mod, enumerable: true })
       : target
-  for (let key of __getOwnPropNames(mod))
+  for (const key of __getOwnPropNames(mod))
     if (!__hasOwnProp.call(to, key))
       __defProp(to, key, {
         get: () => mod[key],
@@ -31,13 +32,13 @@ var __require = import.meta.require
 // ../../node_modules/.bun/source-map@0.6.1/node_modules/source-map/lib/base64.js
 var require_base64 = __commonJS((exports) => {
   var intToCharMap = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".split("")
-  exports.encode = function (number) {
+  exports.encode = (number) => {
     if (0 <= number && number < intToCharMap.length) {
       return intToCharMap[number]
     }
     throw new TypeError("Must be between 0 and 63: " + number)
   }
-  exports.decode = function (charCode) {
+  exports.decode = (charCode) => {
     var bigA = 65
     var bigZ = 90
     var littleA = 97
@@ -132,7 +133,7 @@ var require_util = __commonJS((exports) => {
   }
   exports.getArg = getArg
   var urlRegexp = /^(?:([\w+\-.]+):)?\/\/(?:(\w+:\w+)@)?([\w.-]*)(?::(\d+))?(.*)$/
-  var dataUrlRegexp = /^data:.+\,.+$/
+  var dataUrlRegexp = /^data:.+,.+$/
   function urlParse(aUrl) {
     var match = aUrl.match(urlRegexp)
     if (!match) {
@@ -240,9 +241,7 @@ var require_util = __commonJS((exports) => {
     return joined
   }
   exports.join = join
-  exports.isAbsolute = function (aPath) {
-    return aPath.charAt(0) === "/" || urlRegexp.test(aPath)
-  }
+  exports.isAbsolute = (aPath) => aPath.charAt(0) === "/" || urlRegexp.test(aPath)
   function relative(aRoot, aPath) {
     if (aRoot === "") {
       aRoot = "."
@@ -255,7 +254,7 @@ var require_util = __commonJS((exports) => {
         return aPath
       }
       aRoot = aRoot.slice(0, index)
-      if (aRoot.match(/^([^\/]+:\/)?\/*$/)) {
+      if (aRoot.match(/^([^/]+:\/)?\/*$/)) {
         return aPath
       }
       ++level
@@ -263,7 +262,7 @@ var require_util = __commonJS((exports) => {
     return Array(level + 1).join("../") + aPath.substr(aRoot.length + 1)
   }
   exports.relative = relative
-  var supportsNullProto = (function () {
+  var supportsNullProto = (() => {
     var obj = Object.create(null)
     return !("__proto__" in obj)
   })()
@@ -563,7 +562,7 @@ var require_source_map_generator = __commonJS((exports) => {
       file: aSourceMapConsumer.file,
       sourceRoot,
     })
-    aSourceMapConsumer.eachMapping(function (mapping) {
+    aSourceMapConsumer.eachMapping((mapping) => {
       var newMapping = {
         generated: {
           line: mapping.generatedLine,
@@ -585,7 +584,7 @@ var require_source_map_generator = __commonJS((exports) => {
       }
       generator.addMapping(newMapping)
     })
-    aSourceMapConsumer.sources.forEach(function (sourceFile) {
+    aSourceMapConsumer.sources.forEach((sourceFile) => {
       var sourceRelative = sourceFile
       if (sourceRoot !== null) {
         sourceRelative = util.relative(sourceRoot, sourceFile)
@@ -670,7 +669,7 @@ var require_source_map_generator = __commonJS((exports) => {
     }
     var newSources = new ArraySet()
     var newNames = new ArraySet()
-    this._mappings.unsortedForEach(function (mapping) {
+    this._mappings.unsortedForEach((mapping) => {
       if (mapping.source === sourceFile && mapping.originalLine != null) {
         var original = aSourceMapConsumer.originalPositionFor({
           line: mapping.originalLine,
@@ -826,9 +825,7 @@ var require_source_map_generator = __commonJS((exports) => {
           source = util.relative(aSourceRoot, source)
         }
         var key = util.toSetString(source)
-        return Object.prototype.hasOwnProperty.call(this._sourcesContents, key)
-          ? this._sourcesContents[key]
-          : null
+        return Object.hasOwn(this._sourcesContents, key) ? this._sourcesContents[key] : null
       }, this)
     }
   SourceMapGenerator.prototype.toJSON = function SourceMapGenerator_toJSON() {
@@ -937,7 +934,7 @@ var require_quick_sort = __commonJS((exports) => {
       doQuickSort(ary, comparator, q + 1, r)
     }
   }
-  exports.quickSort = function (ary, comparator) {
+  exports.quickSort = (ary, comparator) => {
     doQuickSort(ary, comparator, 0, ary.length - 1)
   }
 })
@@ -958,9 +955,8 @@ var require_source_map_consumer = __commonJS((exports) => {
       ? new IndexedSourceMapConsumer(sourceMap, aSourceMapURL)
       : new BasicSourceMapConsumer(sourceMap, aSourceMapURL)
   }
-  SourceMapConsumer.fromSourceMap = function (aSourceMap, aSourceMapURL) {
-    return BasicSourceMapConsumer.fromSourceMap(aSourceMap, aSourceMapURL)
-  }
+  SourceMapConsumer.fromSourceMap = (aSourceMap, aSourceMapURL) =>
+    BasicSourceMapConsumer.fromSourceMap(aSourceMap, aSourceMapURL)
   SourceMapConsumer.prototype._version = 3
   SourceMapConsumer.prototype.__generatedMappings = null
   Object.defineProperty(SourceMapConsumer.prototype, "_generatedMappings", {
@@ -1106,16 +1102,16 @@ var require_source_map_consumer = __commonJS((exports) => {
     sources = sources
       .map(String)
       .map(util.normalize)
-      .map(function (source) {
-        return sourceRoot && util.isAbsolute(sourceRoot) && util.isAbsolute(source)
+      .map((source) =>
+        sourceRoot && util.isAbsolute(sourceRoot) && util.isAbsolute(source)
           ? util.relative(sourceRoot, source)
           : source
-      })
+      )
     this._names = ArraySet.fromArray(names.map(String), true)
     this._sources = ArraySet.fromArray(sources, true)
-    this._absoluteSources = this._sources.toArray().map(function (s) {
-      return util.computeSourceURL(sourceRoot, s, aSourceMapURL)
-    })
+    this._absoluteSources = this._sources
+      .toArray()
+      .map((s) => util.computeSourceURL(sourceRoot, s, aSourceMapURL))
     this.sourceRoot = sourceRoot
     this.sourcesContent = sourcesContent
     this._mappings = mappings
@@ -1151,9 +1147,9 @@ var require_source_map_consumer = __commonJS((exports) => {
     smc.sourcesContent = aSourceMap._generateSourcesContent(smc._sources.toArray(), smc.sourceRoot)
     smc.file = aSourceMap._file
     smc._sourceMapURL = aSourceMapURL
-    smc._absoluteSources = smc._sources.toArray().map(function (s) {
-      return util.computeSourceURL(smc.sourceRoot, s, aSourceMapURL)
-    })
+    smc._absoluteSources = smc._sources
+      .toArray()
+      .map((s) => util.computeSourceURL(smc.sourceRoot, s, aSourceMapURL))
     var generatedMappings = aSourceMap._mappings.toArray().slice()
     var destGeneratedMappings = (smc.__generatedMappings = [])
     var destOriginalMappings = (smc.__originalMappings = [])
@@ -1346,9 +1342,7 @@ var require_source_map_consumer = __commonJS((exports) => {
       }
       return (
         this.sourcesContent.length >= this._sources.size() &&
-        !this.sourcesContent.some(function (sc) {
-          return sc == null
-        })
+        !this.sourcesContent.some((sc) => sc == null)
       )
     }
   BasicSourceMapConsumer.prototype.sourceContentFor = function SourceMapConsumer_sourceContentFor(
@@ -1439,7 +1433,7 @@ var require_source_map_consumer = __commonJS((exports) => {
       line: -1,
       column: 0,
     }
-    this._sections = sections.map(function (s) {
+    this._sections = sections.map((s) => {
       if (s.url) {
         throw new Error("Support for url field in sections not implemented.")
       }
@@ -1482,7 +1476,7 @@ var require_source_map_consumer = __commonJS((exports) => {
         generatedLine: util.getArg(aArgs, "line"),
         generatedColumn: util.getArg(aArgs, "column"),
       }
-      var sectionIndex = binarySearch.search(needle, this._sections, function (needle2, section2) {
+      var sectionIndex = binarySearch.search(needle, this._sections, (needle2, section2) => {
         var cmp = needle2.generatedLine - section2.generatedOffset.generatedLine
         if (cmp) {
           return cmp
@@ -1510,9 +1504,7 @@ var require_source_map_consumer = __commonJS((exports) => {
     }
   IndexedSourceMapConsumer.prototype.hasContentsOfAllSources =
     function IndexedSourceMapConsumer_hasContentsOfAllSources() {
-      return this._sections.every(function (s) {
-        return s.consumer.hasContentsOfAllSources()
-      })
+      return this._sections.every((s) => s.consumer.hasContentsOfAllSources())
     }
   IndexedSourceMapConsumer.prototype.sourceContentFor =
     function IndexedSourceMapConsumer_sourceContentFor(aSource, nullOnMissing) {
@@ -1622,7 +1614,7 @@ var require_source_node = __commonJS((exports) => {
     var node = new SourceNode()
     var remainingLines = aGeneratedCode.split(REGEX_NEWLINE)
     var remainingLinesIndex = 0
-    var shiftNextLine = function () {
+    var shiftNextLine = () => {
       var lineContents = getNextLine()
       var newLine = getNextLine() || ""
       return lineContents + newLine
@@ -1635,7 +1627,7 @@ var require_source_node = __commonJS((exports) => {
     var lastGeneratedLine = 1,
       lastGeneratedColumn = 0
     var lastMapping = null
-    aSourceMapConsumer.eachMapping(function (mapping) {
+    aSourceMapConsumer.eachMapping((mapping) => {
       if (lastMapping !== null) {
         if (lastGeneratedLine < mapping.generatedLine) {
           addMappingWithCode(lastMapping, shiftNextLine())
@@ -1671,7 +1663,7 @@ var require_source_node = __commonJS((exports) => {
       }
       node.add(remainingLines.splice(remainingLinesIndex).join(""))
     }
-    aSourceMapConsumer.sources.forEach(function (sourceFile) {
+    aSourceMapConsumer.sources.forEach((sourceFile) => {
       var content = aSourceMapConsumer.sourceContentFor(sourceFile)
       if (content != null) {
         if (aRelativePath != null) {
@@ -1785,7 +1777,7 @@ var require_source_node = __commonJS((exports) => {
   }
   SourceNode.prototype.toString = function SourceNode_toString() {
     var str = ""
-    this.walk(function (chunk) {
+    this.walk((chunk) => {
       str += chunk
     })
     return str
@@ -1802,7 +1794,7 @@ var require_source_node = __commonJS((exports) => {
     var lastOriginalLine = null
     var lastOriginalColumn = null
     var lastOriginalName = null
-    this.walk(function (chunk, original) {
+    this.walk((chunk, original) => {
       generated.code += chunk
       if (original.source !== null && original.line !== null && original.column !== null) {
         if (
@@ -1865,7 +1857,7 @@ var require_source_node = __commonJS((exports) => {
         }
       }
     })
-    this.walkSourceContents(function (sourceFile, sourceContent) {
+    this.walkSourceContents((sourceFile, sourceContent) => {
       map.setSourceContent(sourceFile, sourceContent)
     })
     return { code: generated.code, map }
@@ -1987,7 +1979,7 @@ var require_source_map_support = __commonJS((exports, module) => {
     }
   }
   function handlerExec(list) {
-    return function (arg) {
+    return (arg) => {
       for (var i = 0; i < list.length; i++) {
         var ret = list[i](arg)
         if (ret) {
@@ -1998,12 +1990,10 @@ var require_source_map_support = __commonJS((exports, module) => {
     }
   }
   var retrieveFile = handlerExec(retrieveFileHandlers)
-  retrieveFileHandlers.push(function (path2) {
+  retrieveFileHandlers.push((path2) => {
     path2 = path2.trim()
     if (/^file:/.test(path2)) {
-      path2 = path2.replace(/file:\/\/\/(\w:)?/, function (protocol, drive) {
-        return drive ? "" : "/"
-      })
+      path2 = path2.replace(/file:\/\/\/(\w:)?/, (protocol, drive) => (drive ? "" : "/"))
     }
     if (path2 in fileContentsCache) {
       return fileContentsCache[path2]
@@ -2026,10 +2016,10 @@ var require_source_map_support = __commonJS((exports, module) => {
   function supportRelativeURL(file, url) {
     if (!file) return url
     var dir = path.dirname(file)
-    var match = /^\w+:\/\/[^\/]*/.exec(dir)
+    var match = /^\w+:\/\/[^/]*/.exec(dir)
     var protocol = match ? match[0] : ""
     var startPath = dir.slice(protocol.length)
-    if (protocol && /^\/\w\:/.test(startPath)) {
+    if (protocol && /^\/\w:/.test(startPath)) {
       protocol += "/"
       return protocol + path.resolve(dir.slice(protocol.length), url).replace(/\\/g, "/")
     }
@@ -2059,7 +2049,7 @@ var require_source_map_support = __commonJS((exports, module) => {
     return lastMatch[1]
   }
   var retrieveSourceMap = handlerExec(retrieveMapHandlers)
-  retrieveMapHandlers.push(function (source) {
+  retrieveMapHandlers.push((source) => {
     var sourceMappingURL = retrieveSourceMapURL(source)
     if (!sourceMappingURL) return null
     var sourceMapData
@@ -2089,7 +2079,7 @@ var require_source_map_support = __commonJS((exports, module) => {
           map: new SourceMapConsumer(urlAndMap.map),
         }
         if (sourceMap.map.sourcesContent) {
-          sourceMap.map.sources.forEach(function (source, i) {
+          sourceMap.map.sources.forEach((source, i) => {
             var contents = sourceMap.map.sourcesContent[i]
             if (contents) {
               var url = supportRelativeURL(sourceMap.url, source)
@@ -2204,12 +2194,8 @@ var require_source_map_support = __commonJS((exports, module) => {
   }
   function cloneCallSite(frame) {
     var object = {}
-    Object.getOwnPropertyNames(Object.getPrototypeOf(frame)).forEach(function (name) {
-      object[name] = /^(?:is|get)/.test(name)
-        ? function () {
-            return frame[name].call(frame)
-          }
-        : frame[name]
+    Object.getOwnPropertyNames(Object.getPrototypeOf(frame)).forEach((name) => {
+      object[name] = /^(?:is|get)/.test(name) ? () => frame[name].call(frame) : frame[name]
     })
     object.toString = CallSiteToString
     return object
@@ -2239,33 +2225,23 @@ var require_source_map_support = __commonJS((exports, module) => {
       state.curPosition = position
       frame = cloneCallSite(frame)
       var originalFunctionName = frame.getFunctionName
-      frame.getFunctionName = function () {
+      frame.getFunctionName = () => {
         if (state.nextPosition == null) {
           return originalFunctionName()
         }
         return state.nextPosition.name || originalFunctionName()
       }
-      frame.getFileName = function () {
-        return position.source
-      }
-      frame.getLineNumber = function () {
-        return position.line
-      }
-      frame.getColumnNumber = function () {
-        return position.column + 1
-      }
-      frame.getScriptNameOrSourceURL = function () {
-        return position.source
-      }
+      frame.getFileName = () => position.source
+      frame.getLineNumber = () => position.line
+      frame.getColumnNumber = () => position.column + 1
+      frame.getScriptNameOrSourceURL = () => position.source
       return frame
     }
     var origin = frame.isEval() && frame.getEvalOrigin()
     if (origin) {
       origin = mapEvalOrigin(origin)
       frame = cloneCallSite(frame)
-      frame.getEvalOrigin = function () {
-        return origin
-      }
+      frame.getEvalOrigin = () => origin
       return frame
     }
     return frame
@@ -2291,7 +2267,7 @@ var require_source_map_support = __commonJS((exports, module) => {
     return errorString + processedStack.reverse().join("")
   }
   function getErrorSource(error) {
-    var match = /\n    at [^(]+ \((.*):(\d+):(\d+)\)/.exec(error.stack)
+    var match = /\n {4}at [^(]+ \((.*):(\d+):(\d+)\)/.exec(error.stack)
     if (match) {
       var source = match[1]
       var line = +match[2]
@@ -2356,7 +2332,7 @@ var require_source_map_support = __commonJS((exports, module) => {
   exports.getErrorSource = getErrorSource
   exports.mapSourcePosition = mapSourcePosition
   exports.retrieveSourceMap = retrieveSourceMap
-  exports.install = function (options) {
+  exports.install = (options) => {
     options = options || {}
     if (options.environment) {
       environment = options.environment
@@ -2413,7 +2389,7 @@ var require_source_map_support = __commonJS((exports, module) => {
       }
     }
   }
-  exports.resetRetrieveHandlers = function () {
+  exports.resetRetrieveHandlers = () => {
     retrieveFileHandlers.length = 0
     retrieveMapHandlers.length = 0
     retrieveFileHandlers = originalRetrieveFileHandlers.slice(0)
@@ -2610,10 +2586,11 @@ function assembleStyles() {
 var ansiStyles = assembleStyles()
 var ansi_styles_default = ansiStyles
 
+import os from "os"
 // ../../node_modules/.bun/chalk@5.6.2/node_modules/chalk/source/vendor/supports-color/index.js
 import process2 from "process"
-import os from "os"
 import tty from "tty"
+
 function hasFlag(flag, argv = globalThis.Deno ? globalThis.Deno.args : process2.argv) {
   const prefix = flag.startsWith("-") ? "" : flag.length === 1 ? "-" : "--"
   const position = argv.indexOf(prefix + flag)

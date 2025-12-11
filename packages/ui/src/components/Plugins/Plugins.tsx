@@ -1,9 +1,9 @@
 import type { DBPluginShemaT } from "@dockstat/typings/types"
 import { Card, CardBody, CardHeader } from "../Card/Card"
+import { Divider } from "../Divider/Divider"
 import { PluginsOverviewCard } from "./Overview"
 import { PluginCard } from "./Plugin"
 import { RepositoriesList } from "./RepoList"
-import { Divider } from "../Divider/Divider"
 
 interface PluginStatus {
   installed_plugins: {

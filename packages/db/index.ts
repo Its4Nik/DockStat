@@ -1,5 +1,5 @@
 import Logger from "@dockstat/logger"
-import { DB, type QueryBuilder, column, addLoggerParents } from "@dockstat/sqlite-wrapper"
+import { addLoggerParents, column, DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DockStatConfigTableType } from "@dockstat/typings/types"
 
 class DockStatDB {

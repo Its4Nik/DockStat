@@ -1,5 +1,5 @@
+import type React from "react"
 import type { MouseEventHandler, ReactNode } from "react"
-import React from "react"
 
 export type CardVariant = "default" | "outlined" | "elevated" | "flat" | "dark"
 export type CardSize = "sm" | "md" | "lg"

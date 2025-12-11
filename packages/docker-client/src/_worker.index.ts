@@ -1,7 +1,7 @@
+import DB from "@dockstat/sqlite-wrapper"
 import type { DOCKER } from "@dockstat/typings"
 import DockerClient from "./docker-client"
 import type { WorkerRequest, WorkerResponse } from "./types"
-import DB from "@dockstat/sqlite-wrapper"
 
 declare var self: Worker
 

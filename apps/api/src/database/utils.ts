@@ -1,5 +1,5 @@
-import { DockStatDB } from "."
 import type { DatabaseModel } from "../models/database"
+import { DockStatDB } from "."
 
 export function updateConfig(config: DatabaseModel.updateBody) {
   const updateRes = DockStatDB.configTable

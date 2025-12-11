@@ -1,8 +1,8 @@
-import { CardHeader } from "../components/Card/Card"
-import { Button } from "../components/Button/Button"
-import { Divider } from "../components/Divider/Divider"
 import { X } from "lucide-react"
 import DockStatLogo from "../../public/DockStat2-06.png"
+import { Button } from "../components/Button/Button"
+import { CardHeader } from "../components/Card/Card"
+import { Divider } from "../components/Divider/Divider"
 import { HoverBubble } from "../components/HoverBubble/HoverBubble"
 
 export const OnboardingHeader = ({ onSkip }: { onSkip: () => void }) => (

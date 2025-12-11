@@ -25,6 +25,10 @@ export {
   type DividerVariant,
 } from "./Divider/Divider"
 export {
+  ExtensionBrowser,
+  type ExtensionBrowserProps,
+} from "./Extensions/Browser"
+export {
   Checkbox,
   type CheckboxProps,
   type CheckboxSize,
@@ -51,11 +55,7 @@ export {
 } from "./HoverBubble/HoverBubble"
 export { LinkWithIcon, type LinkWithIconProps } from "./Link/Link"
 export { Modal, type ModalProps } from "./Modal/Modal"
-export { Slider, type SliderProps } from "./Slider/Slider"
-export { Table, type Column, type TableProps } from "./Table/Table"
-export {
-  ExtensionBrowser,
-  type ExtensionBrowserProps,
-} from "./Extensions/Browser"
 export { Navbar } from "./Navbar/Navbar"
 export { PluginsPage } from "./Plugins/Plugins"
+export { Slider, type SliderProps } from "./Slider/Slider"
+export { type Column, Table, type TableProps } from "./Table/Table"

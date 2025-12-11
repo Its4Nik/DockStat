@@ -1,5 +1,6 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
 import Logger from "@dockstat/logger"
+import { logger } from ".."
 import type {
   ArrayKey,
   ColumnNames,
@@ -8,7 +9,6 @@ import type {
   Parser,
   QueryBuilderState,
 } from "../types"
-import { logger } from ".."
 
 /**
  * Base QueryBuilder class that manages core state and shared functionality.

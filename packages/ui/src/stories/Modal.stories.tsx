@@ -1,8 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/react-vite"
-import { Modal } from "../components/Modal/Modal"
 import { useArgs } from "@storybook/client-api"
-import { Button } from "../components/Button/Button"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { Badge } from "../components/Badge/Badge"
+import { Button } from "../components/Button/Button"
+import { Modal } from "../components/Modal/Modal"
 
 const meta: Meta<typeof Modal> = {
   title: "Feedback/Modal",

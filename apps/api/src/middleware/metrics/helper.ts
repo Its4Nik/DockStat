@@ -1,8 +1,8 @@
-import type { Elysia } from "elysia"
 import type { Database } from "bun:sqlite"
-import BaseLogger from "../../logger"
-import { renderPrometheusMetrics, type MetricFamily } from "./prometheus"
+import type { Elysia } from "elysia"
 import { DockStatDB } from "../../database"
+import BaseLogger from "../../logger"
+import { type MetricFamily, renderPrometheusMetrics } from "./prometheus"
 
 /**
  * In-memory metrics (current server session)

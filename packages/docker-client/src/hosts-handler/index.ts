@@ -1,5 +1,5 @@
 import Logger from "@dockstat/logger"
-import { type DB, column } from "@dockstat/sqlite-wrapper"
+import { column, type DB } from "@dockstat/sqlite-wrapper"
 import type { DATABASE } from "@dockstat/typings"
 
 export default class HostHandler {

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { LinkWithIcon } from "../components/Link/Link"
 import { ArrowLeft, ArrowRight, Link } from "lucide-react"
+import { LinkWithIcon } from "../components/Link/Link"
 
 const meta: Meta<typeof LinkWithIcon> = {
   title: "Navigation/LinkWithIcon",

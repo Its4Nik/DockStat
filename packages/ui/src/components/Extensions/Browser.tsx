@@ -1,6 +1,6 @@
 import type { DBPluginShemaT, RepoManifestType, RepoType } from "@dockstat/typings/types"
-import { Card, CardBody, CardHeader } from "../Card/Card"
 import { Badge } from "../Badge/Badge"
+import { Card, CardBody, CardHeader } from "../Card/Card"
 import { Repo } from "./Repo"
 
 export interface ExtensionBrowserProps {

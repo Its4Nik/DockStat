@@ -1,5 +1,5 @@
-import type { ContainerStats } from "dockerode"
 import type { DOCKER } from "@dockstat/typings"
+import type { ContainerStats } from "dockerode"
 
 /**
  * Utility functions for Docker client operations

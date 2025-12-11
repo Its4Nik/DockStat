@@ -1,5 +1,5 @@
 import type { SQLQueryBindings } from "bun:sqlite"
-import type { InsertResult, InsertOptions } from "../types"
+import type { InsertOptions, InsertResult } from "../types"
 import { WhereQueryBuilder } from "./where"
 
 /**

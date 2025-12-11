@@ -1,7 +1,6 @@
-import type { DATABASE, DockerClientEvents } from "@dockstat/typings"
-import type { DOCKER } from "@dockstat/typings"
-import type Dockerode from "dockerode"
 import Logger from "@dockstat/logger"
+import type { DATABASE, DOCKER, DockerClientEvents } from "@dockstat/typings"
+import type Dockerode from "dockerode"
 import { proxyEvent } from "../events/workerEventProxy"
 
 const logger = new Logger("MonitoringManager")

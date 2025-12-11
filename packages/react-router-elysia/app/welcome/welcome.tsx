@@ -1,6 +1,6 @@
+import elysiaLogo from "./elysia_v.webp"
 import logoDark from "./logo-dark.svg"
 import logoLight from "./logo-light.svg"
-import elysiaLogo from "./elysia_v.webp"
 
 export function Welcome() {
   return (

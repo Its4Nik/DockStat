@@ -1,9 +1,9 @@
+import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
 import type PluginHandlerFactory from "@dockstat/plugin-handler"
 import type { DBPluginShemaT, PluginMetaType } from "@dockstat/typings/types"
-import { Glob, $ } from "bun"
+import { $, Glob } from "bun"
 import { logger } from "./logger"
-import { fileURLToPath } from "node:url"
-import { dirname, join } from "node:path"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import { Card, CardBody } from "../components/Card/Card"
 import DockStatLogo from "../../public/DockStat2-06.png"
+import { Card, CardBody } from "../components/Card/Card"
 
 export default function IntroScreen({ message }: { message?: string }) {
   const [visible, setVisible] = useState(true)

@@ -1,13 +1,13 @@
 import type { DBPluginShemaT, PluginMetaType } from "@dockstat/typings/types"
+import { Download, Info, RefreshCcwDot, Trash } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useFetcher } from "react-router"
 import { toast } from "sonner"
-import { Card, CardBody, CardFooter, CardHeader } from "../../Card/Card"
 import { Badge } from "../../Badge/Badge"
-import { Modal } from "../../Modal/Modal"
-import { useEffect, useState } from "react"
-import { Download, Info, RefreshCcwDot, Trash } from "lucide-react"
 import { Button } from "../../Button/Button"
+import { Card, CardBody, CardFooter, CardHeader } from "../../Card/Card"
 import { LinkWithIcon } from "../../Link/Link"
+import { Modal } from "../../Modal/Modal"
 
 type RepoPluginSlideProps = {
   plugins: PluginMetaType[]

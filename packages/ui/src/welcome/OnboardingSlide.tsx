@@ -1,7 +1,7 @@
+import { slides } from "./CONSTS"
 import { SlideContent } from "./SlideContent"
 import { SlideHeader } from "./SlideHeader"
 import type { Slide } from "./types"
-import { slides } from "./CONSTS"
 
 export const OnboardingSlide = ({
   slide,

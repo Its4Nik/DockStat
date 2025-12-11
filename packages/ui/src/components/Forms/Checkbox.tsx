@@ -1,5 +1,5 @@
-import React from "react"
 import { Check, Minus } from "lucide-react"
+import React from "react"
 
 export type CheckboxSize = "sm" | "md" | "lg"
 export type CheckboxVariant = "default" | "icon"

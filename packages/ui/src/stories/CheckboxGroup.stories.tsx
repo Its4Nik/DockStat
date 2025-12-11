@@ -1,6 +1,6 @@
+import { useArgs } from "@storybook/client-api"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { CheckboxGroup } from "../components/Forms/CheckboxGroup"
-import { useArgs } from "@storybook/client-api"
 
 const meta: Meta<typeof CheckboxGroup> = {
   title: "Inputs/CheckboxGroup",

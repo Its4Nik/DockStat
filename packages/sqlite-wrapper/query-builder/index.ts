@@ -1,19 +1,19 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
 import type {
   ColumnNames,
-  WhereCondition,
-  RegexCondition,
-  InsertResult,
-  UpdateResult,
   DeleteResult,
   InsertOptions,
-  QueryBuilderState,
+  InsertResult,
   Parser,
+  QueryBuilderState,
+  RegexCondition,
+  UpdateResult,
+  WhereCondition,
 } from "../types"
-import { SelectQueryBuilder } from "./select"
-import { InsertQueryBuilder } from "./insert"
-import { UpdateQueryBuilder } from "./update"
 import { DeleteQueryBuilder } from "./delete"
+import { InsertQueryBuilder } from "./insert"
+import { SelectQueryBuilder } from "./select"
+import { UpdateQueryBuilder } from "./update"
 
 /**
  * Main QueryBuilder class that combines all functionality using composition.

@@ -1,10 +1,10 @@
+import Logger from "@dockstat/logger"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
 import type Dockerode from "dockerode"
-import Logger from "@dockstat/logger"
-import { HealthCheckMonitor } from "./monitors/HealthCheckMonitor"
 import { ContainerEventMonitor } from "./monitors/ContainerEventMonitor"
-import { HostMetricsMonitor } from "./monitors/HostMetricsMonitor"
 import { DockerEventStreamManager } from "./monitors/DockerEventStreamManager"
+import { HealthCheckMonitor } from "./monitors/HealthCheckMonitor"
+import { HostMetricsMonitor } from "./monitors/HostMetricsMonitor"
 
 export default class MonitoringManager {
   private logger: Logger

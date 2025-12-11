@@ -1,8 +1,8 @@
-import fs from "node:fs/promises"
 import { existsSync } from "node:fs"
+import fs from "node:fs/promises"
 import path from "node:path"
-import type { TopConfig, TopCollectionConfig, CollectionConfig } from "./types"
 import { logger } from "../bin/cli"
+import type { CollectionConfig, TopCollectionConfig, TopConfig } from "./types"
 
 export const TOP_CONFIG_FILE = path.join("outline-sync.json")
 

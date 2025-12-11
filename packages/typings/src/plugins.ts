@@ -1,4 +1,5 @@
 export * from "./plugin-base"
+
 import type { ColumnDefinition } from "@dockstat/sqlite-wrapper"
 import type { PluginActions } from "./plugin-base"
 

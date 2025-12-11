@@ -1,8 +1,8 @@
 import { Link } from "react-router"
 import { Badge } from "../Badge/Badge"
 import { Card } from "../Card/Card"
-import DockStatLogo from "./DockStat2-06.png"
 import { Divider } from "../Divider/Divider"
+import DockStatLogo from "./DockStat2-06.png"
 
 type NavbarProps = {
   isNavigating: boolean

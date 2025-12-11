@@ -1,6 +1,6 @@
+import Logger from "@dockstat/logger"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
 import type Dockerode from "dockerode"
-import Logger from "@dockstat/logger"
 import { proxyEvent } from "../../events/workerEventProxy"
 import { withRetry } from "../utils/retry"
 

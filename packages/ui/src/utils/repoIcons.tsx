@@ -1,5 +1,5 @@
 import type { RepoType } from "@dockstat/typings/types"
-import { Github, Gitlab, Coffee, Link, Folder } from "lucide-react"
+import { Coffee, Folder, Github, Gitlab, Link } from "lucide-react"
 
 export function getRepoIcon(repoType: RepoType["type"]) {
   switch (repoType) {

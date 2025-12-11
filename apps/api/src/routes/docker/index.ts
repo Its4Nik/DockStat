@@ -1,10 +1,10 @@
 import Elysia from "elysia"
 import DCM from "../../docker"
 import { DockerModel } from "../../models/docker"
-import { DockerManager } from "./manager"
 import { DockerClientElysia } from "./client"
-import { DockerHostElysia } from "./hosts"
 import { DockerContainerElysia } from "./container"
+import { DockerHostElysia } from "./hosts"
+import { DockerManager } from "./manager"
 
 const DockerRoutes = new Elysia({
   prefix: "/docker",

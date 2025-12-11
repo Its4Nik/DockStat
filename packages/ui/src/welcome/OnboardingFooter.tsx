@@ -2,8 +2,8 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react"
 import { Button } from "../components/Button/Button"
 import { CardFooter } from "../components/Card/CardFooter"
 import { Divider } from "../components/Divider/Divider"
-import type { Slide } from "./types"
 import { ProgressDots } from "./ProgressDots"
+import type { Slide } from "./types"
 
 export const OnboardingFooter = ({
   currentIndex,
