@@ -1,4 +1,4 @@
-import Elysia, { t } from "elysia"
+import Elysia from "elysia"
 import { PluginModel } from "../../models/plugins"
 import PluginHandler from "../../plugins"
 

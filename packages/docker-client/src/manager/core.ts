@@ -548,8 +548,10 @@ export class DockerClientManagerCore {
 
       try {
         if (message.additionalCtx) {
+          // biome-ignore lint/suspicious/noExplicitAny: Custom plugin typings and contexts typings as any
           hook(message.ctx as any, message.additionalCtx as any, serverHooks)
         } else {
+          // biome-ignore lint/suspicious/noExplicitAny: Custom plugin typings and contexts typings as any
           hook(message.ctx as any, serverHooks)
         }
       } catch (err: unknown) {

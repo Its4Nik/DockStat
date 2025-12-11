@@ -1,14 +1,7 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
 import Logger from "@dockstat/logger"
 import { logger } from ".."
-import type {
-  ArrayKey,
-  ColumnNames,
-  DatabaseRowData,
-  OrderDirection,
-  Parser,
-  QueryBuilderState,
-} from "../types"
+import type { DatabaseRowData, Parser, QueryBuilderState } from "../types"
 
 /**
  * Base QueryBuilder class that manages core state and shared functionality.
@@ -60,11 +53,11 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
     this.state.whereParams = []
     this.state.regexConditions = []
     // Reset any ordering, limit, offset, selected columns if present
-    if ("orderColumn" in this) (this as any).orderColumn = undefined
-    if ("orderDirection" in this) (this as any).orderDirection = "ASC"
-    if ("limitValue" in this) (this as any).limitValue = undefined
-    if ("offsetValue" in this) (this as any).offsetValue = undefined
-    if ("selectedColumns" in this) (this as any).selectedColumns = ["*"]
+    if ("orderColumn" in this) this.orderColumn = undefined
+    if ("orderDirection" in this) this.orderDirection = "ASC"
+    if ("limitValue" in this) this.limitValue = undefined
+    if ("offsetValue" in this) this.offsetValue = undefined
+    if ("selectedColumns" in this) this.selectedColumns = ["*"]
   }
 
   /**

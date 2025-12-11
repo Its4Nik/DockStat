@@ -1,16 +1,6 @@
-import type { DB, QueryBuilder } from "@dockstat/sqlite-wrapper"
+import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DockerClientEvents } from "./docker-client"
 import type { PluginConfig } from "./plugins"
-
-export interface PluginRecord extends Record<string, unknown> {
-  id?: number
-  meta: PluginMeta
-  plugin: {
-    backendConfig: PluginConfig<any, any>
-    actions: PluginActions<any>
-    frontendConfig?: unknown
-  }
-}
 
 export interface PluginMeta {
   name: string

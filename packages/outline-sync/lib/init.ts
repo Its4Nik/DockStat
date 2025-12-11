@@ -7,7 +7,6 @@ import {
   ensureConfigDirs,
   getCollectionFilesBase,
   loadTopConfig,
-  saveCollectionConfig,
   saveTopConfig,
 } from "./config"
 import { listCollectionsPaged, listDocumentsInCollection } from "./outlineApi"

@@ -1,5 +1,5 @@
 import Logger from "@dockstat/logger"
-import type { DATABASE, DOCKER, DockerClientEvents } from "@dockstat/typings"
+import type { DATABASE, DOCKER } from "@dockstat/typings"
 import type Dockerode from "dockerode"
 import { proxyEvent } from "../events/workerEventProxy"
 
@@ -580,8 +580,8 @@ export default class MonitoringManager {
       state: containerInfo.State.Status,
       created: Math.floor(new Date(containerInfo.Created).getTime() / 1000),
       ports: Object.entries(containerInfo.NetworkSettings.Ports || {}).map(([port, bindings]) => ({
-        privatePort: Number.parseInt(port.split("/")[0]),
-        publicPort: bindings?.[0]?.HostPort ? Number.parseInt(bindings[0].HostPort) : undefined,
+        privatePort: Number.parseInt(port.split("/")[0], 10),
+        publicPort: bindings?.[0]?.HostPort ? Number.parseInt(bindings[0].HostPort, 10) : undefined,
         type: port.split("/")[1] || "tcp",
       })),
       labels: containerInfo.Config.Labels || {},

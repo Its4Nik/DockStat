@@ -301,14 +301,10 @@ function MessageBubble({ text, isOwn }: { text: string; isOwn: boolean }) {
     ? "bg-blue-600 text-white"
     : "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-100 dark:border-gray-700"
   return (
-    <>
-      <div className={`flex ${alignment}`}>
-        <div className={`max-w-[80%] px-4 py-2 rounded-lg shadow-sm ${bg}`}>
-          <pre className="whitespace-pre-wrap text-sm font-mono leading-relaxed">
-            {String(text)}
-          </pre>
-        </div>
+    <div className={`flex ${alignment}`}>
+      <div className={`max-w-[80%] px-4 py-2 rounded-lg shadow-sm ${bg}`}>
+        <pre className="whitespace-pre-wrap text-sm font-mono leading-relaxed">{String(text)}</pre>
       </div>
-    </>
+    </div>
   )
 }

@@ -1,7 +1,6 @@
 import { DockStatConfigTable, UpdateDockStatConfigTableResponse } from "@dockstat/typings/schemas"
 import type { DockStatConfigTableType } from "@dockstat/typings/types"
 import { t } from "elysia"
-import { config } from "../plugins/default-plugins/dockmon/src/config"
 
 export namespace DatabaseModel {
   export const updateBody = DockStatConfigTable

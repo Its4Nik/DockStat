@@ -17,7 +17,7 @@ export function Onboarding({ setOnBoardingComplete }: OnboardingProps) {
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [])
+  }, [goNext, goPrev])
 
   const goNext = () => setCurrentIndex((i) => Math.min(i + 1, slides.length - 1))
   const goPrev = () => setCurrentIndex((i) => Math.max(i - 1, 0))

@@ -1,5 +1,5 @@
 import type { ColumnDefinition } from "@dockstat/sqlite-wrapper"
-import { type AnyElysia, t } from "elysia"
+import { t } from "elysia"
 import type { EVENTS, PluginActions, PluginConfig } from ".."
 import { Repo } from "./db"
 

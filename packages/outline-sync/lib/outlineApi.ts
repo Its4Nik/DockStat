@@ -9,7 +9,6 @@ const HEADERS = {
 
 import { logger } from "../bin/cli"
 import type {
-  Collection,
   CollectionResponse,
   Document,
   DocumentResponse,

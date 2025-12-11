@@ -1,4 +1,4 @@
-import { Card, Table } from "@dockstat/ui"
+import { Card } from "@dockstat/ui"
 
 export default function Index() {
   return (

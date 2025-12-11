@@ -21,12 +21,12 @@ export interface LogChunk {
 export interface ContainerStatsSnapshot {
   read: string // timestamp string returned by docker stats
   preread?: string
-  cpu_stats: any
-  precpu_stats?: any
-  memory_stats: any
-  networks?: Record<string, any>
-  pids_stats?: any
-  [k: string]: any
+  cpu_stats: unknown
+  precpu_stats?: unknown
+  memory_stats: unknown
+  networks?: Record<string, unknown>
+  pids_stats?: unknown
+  [k: string]: unknown
 }
 
 export interface NetworkStats {

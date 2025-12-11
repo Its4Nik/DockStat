@@ -1,9 +1,5 @@
 import { INSTANCE_UUID_BUN_FILE } from "./constants"
-import type {
-  InstanceUUIDFailure,
-  InstanceUUIDResult,
-  InstanceUUIDSuccess,
-} from "./instanceUUIDtypes"
+import type { InstanceUUIDResult } from "./instanceUUIDtypes"
 
 export async function createInstanceUUID(): Promise<InstanceUUIDResult> {
   if (await INSTANCE_UUID_BUN_FILE.exists()) {

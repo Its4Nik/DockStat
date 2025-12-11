@@ -42,9 +42,9 @@ async function createSchemas() {
 }
 
 /* --- Helpers --- */
-const getPluginBuildDir = (path: string) => path.replaceAll("/index.ts", "") + "/bundle"
+const getPluginBuildDir = (path: string) => `${path.replaceAll("/index.ts", "")}/bundle`
 
-const getPluginManifestPath = (path: string) => path.replaceAll("/index.ts", "") + "/manifest.yml"
+const getPluginManifestPath = (path: string) => `${path.replaceAll("/index.ts", "")}/manifest.yml`
 
 const getPluginName = (path: string) =>
   path.replaceAll("/index.ts", "").replaceAll(`${pluginPath}/`, "")
@@ -115,8 +115,7 @@ function renderProgress() {
   const pct = Math.round((completed / total) * 100)
 
   const filled = Math.round((completed / total) * barWidth)
-  const bar =
-    "[" + chalk.green("█".repeat(filled)) + chalk.gray(" ".repeat(barWidth - filled)) + "]"
+  const bar = `[${chalk.green("█".repeat(filled))}${chalk.gray(" ".repeat(barWidth - filled))}]`
 
   if (CLEAR_UI) console.clear()
   console.log(clr.header(`Building plugins — ${completed}/${total} (${pct}%) ${bar}`))
@@ -126,7 +125,7 @@ function renderProgress() {
 
   for (const rec of records) {
     const elapsed =
-      rec.finishedAt && rec.startedAt ? " " + formatDuration(rec.finishedAt - rec.startedAt) : ""
+      rec.finishedAt && rec.startedAt ? ` ${formatDuration(rec.finishedAt - rec.startedAt)}` : ""
     let line = ""
     switch (rec.status) {
       case "pending":
@@ -284,7 +283,7 @@ async function buildAll() {
 
   /* Error summary */
   if (errors.length > 0) {
-    console.log("\n" + clr.header("========== ERROR SUMMARY =========="))
+    console.log(`\n${clr.header("========== ERROR SUMMARY ==========")}`)
 
     for (const e of errors) {
       console.log(
@@ -297,14 +296,14 @@ async function buildAll() {
           clr.dim("  Stack:\n") +
             e.stack
               .split("\n")
-              .map((l) => "    " + clr.dim(l))
+              .map((l) => `    ${clr.dim(l)}`)
               .join("\n")
         )
       }
     }
     console.log(clr.header("\n===================================\n"))
   } else {
-    console.log("\n" + clr.ok("✅ No errors encountered.") + "\n")
+    console.log(`\n${clr.ok("✅ No errors encountered.")}\n`)
   }
 
   return results

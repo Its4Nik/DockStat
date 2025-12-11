@@ -1,5 +1,4 @@
 import {
-  Box,
   Github,
   Hand,
   Layers,
@@ -8,7 +7,6 @@ import {
   Puzzle,
   ShoppingBag,
   Store,
-  Zap,
 } from "lucide-react"
 import { Badge } from "../components/Badge/Badge"
 import { Divider } from "../components/Divider/Divider"

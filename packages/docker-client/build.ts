@@ -1,4 +1,3 @@
-import { chmodSync } from "node:fs"
 import dts from "bun-plugin-dts"
 
 function now() {

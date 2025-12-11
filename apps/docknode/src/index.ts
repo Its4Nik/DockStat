@@ -6,7 +6,6 @@ export const dockNodeLoggerParents: string[] = dockNodeLogger.getParents()
 import { openapi } from "@elysiajs/openapi"
 import { logger } from "@tqman/nice-logger"
 import Elysia from "elysia"
-import { authPlugin } from "./handlers/auth/elysia-adapter"
 import { DockStackHandler } from "./handlers/dockstack"
 
 new Elysia({ prefix: "/api" })

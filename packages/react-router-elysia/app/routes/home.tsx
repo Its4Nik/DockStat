@@ -1,5 +1,4 @@
 import { Welcome } from "../welcome/welcome"
-import type { Route } from "./+types/home"
 
 export function meta() {
   return [

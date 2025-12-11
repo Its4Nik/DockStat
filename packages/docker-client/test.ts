@@ -66,7 +66,7 @@ async function runTests() {
   try {
     const healthResults = await dockerClient.checkAllHostsHealth()
     for (const [hostId, healthy] of Object.entries(healthResults)) {
-      const host = testHosts.find((h) => h.id === Number.parseInt(hostId))
+      const host = testHosts.find((h) => h.id === Number.parseInt(hostId, 10))
       console.log(
         `${healthy ? "✅" : "❌"} Host ${host?.name || hostId}: ${healthy ? "Healthy" : "Unhealthy"}`
       )

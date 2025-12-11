@@ -1,4 +1,4 @@
-import type { BaseMeta, ContentItem, PluginMeta, StackMeta, ThemeMeta } from "../.."
+import type { ContentItem, PluginMeta, StackMeta, ThemeMeta } from "../.."
 
 function addHeader(body: string) {
   return `# DockStore

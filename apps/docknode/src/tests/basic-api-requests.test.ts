@@ -9,7 +9,7 @@ test("Basic API Status Test", async () => {
 })
 
 test("Basic Unauthorized Call", async () => {
-  const res = await (
+  const _res = await (
     await fetch("http://localhost:4000/api/dockstack/deploy", {
       method: "POST",
     })

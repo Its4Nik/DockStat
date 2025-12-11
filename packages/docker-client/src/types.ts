@@ -49,14 +49,14 @@ export type WorkerRequest =
       type: "getContainerLogs"
       hostId: number
       containerId: string
-      options?: any
+      options?: unknown
     }
   | {
       type: "execInContainer"
       hostId: number
       containerId: string
       command: string[]
-      options?: any
+      options?: unknown
     }
   | { type: "getImages"; hostId: number }
   | { type: "pullImage"; hostId: number; imageName: string }
@@ -73,7 +73,9 @@ export type WorkerRequest =
   | { type: "isMonitoring" }
   | { type: "cleanup" }
 
-export type WorkerResponse<T = any> = { success: true; data: T } | { success: false; error: string }
+export type WorkerResponse<T = unknown> =
+  | { success: true; data: T }
+  | { success: false; error: string }
 
 export interface WorkerMetrics {
   workerId: number

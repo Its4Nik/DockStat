@@ -1,6 +1,5 @@
 import type { ContainerInspectInfo, ContainerStats, DockerVersion, Version } from "dockerode"
 import { t } from "elysia"
-import type { ExtendObject } from "./events"
 
 export interface SysInfo {
   OperatingSystem: string

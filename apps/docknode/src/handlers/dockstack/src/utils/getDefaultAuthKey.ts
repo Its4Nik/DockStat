@@ -1,7 +1,4 @@
-// src/getDefaultAuthKey.ts
-import { Replace } from "elysia/dist/types"
-import { dockStackLogger } from "../.."
-import { createInstanceUUID, getInstanceUUID } from "./createResponses"
+import { getInstanceUUID } from "./createResponses"
 import { type InstanceUUIDSuccess, isInstanceUUID } from "./instanceUUIDtypes"
 import { dockNodeAuthHandlerLogger } from "./loggers"
 

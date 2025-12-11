@@ -2,18 +2,9 @@ import { existsSync } from "node:fs"
 import fs from "node:fs/promises"
 import path from "node:path"
 import { logger } from "../bin/cli"
-import { getCollectionFilesBase, loadCollectionConfig, loadTopConfig } from "./config"
+import { getCollectionFilesBase, loadCollectionConfig } from "./config"
 import { createDocument, fetchDocumentInfo, updateDocument } from "./outlineApi"
-import type {
-  Collection,
-  CollectionConfig,
-  Document,
-  DocumentWithPoliciesResponse,
-  Manifest,
-  Node,
-  PageEntry,
-  SingleDocumentResponse,
-} from "./types"
+import type { CollectionConfig, Document, Manifest, Node, PageEntry } from "./types"
 import {
   getLocalTimestampMs,
   normalizeContentIgnoreWhitespace,

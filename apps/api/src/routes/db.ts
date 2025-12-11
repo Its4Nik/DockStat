@@ -1,4 +1,4 @@
-import Elysia, { t } from "elysia"
+import Elysia from "elysia"
 import { DockStatDB } from "../database"
 import { updateConfig } from "../database/utils"
 import { DatabaseModel } from "../models/database"

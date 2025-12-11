@@ -5,7 +5,7 @@ import { useFetcher } from "react-router"
 import { toast } from "sonner"
 import { Badge } from "../../Badge/Badge"
 import { Button } from "../../Button/Button"
-import { Card, CardBody, CardFooter, CardHeader } from "../../Card/Card"
+import { Card, CardBody, CardHeader } from "../../Card/Card"
 import { LinkWithIcon } from "../../Link/Link"
 import { Modal } from "../../Modal/Modal"
 

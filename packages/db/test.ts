@@ -1,6 +1,5 @@
 import { exists, rm } from "node:fs/promises"
 import type { THEME } from "@dockstat/typings"
-import { darkDockStatTheme } from "./default_theme"
 import DockStatDB from "./index"
 
 interface TestResult {

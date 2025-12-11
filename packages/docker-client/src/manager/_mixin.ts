@@ -1,6 +1,8 @@
-type Constructor<T = unknown> = new (...args: any[]) => T
+type Constructor<T = unknown> = new (...args: unknown[]) => T
 
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
+type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (
+  k: infer I
+) => void
   ? I
   : never
 
@@ -29,5 +31,8 @@ export function applyMixins<Base extends Constructor, Mixins extends readonly Co
     })
   })
 
-  return BaseClass as any
+  return BaseClass as Constructor<
+    InstanceType<Base> & UnionToIntersection<InstanceType<Mixins[number]>>
+  > &
+    Base
 }
