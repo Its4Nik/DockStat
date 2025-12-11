@@ -9,14 +9,14 @@ import { Monitoring } from "./monitoring"
 import { applyMixins } from "./_mixin"
 
 const DCM = applyMixins(
-	DockerClientManagerCore,
-	Hosts,
-	Containers,
-	Images,
-	Networks,
-	Volumes,
-	System,
-	Monitoring
+  DockerClientManagerCore,
+  Hosts,
+  Containers,
+  Images,
+  Networks,
+  Volumes,
+  System,
+  Monitoring
 )
 
 export default DCM

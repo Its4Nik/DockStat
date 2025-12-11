@@ -3,11 +3,11 @@ import { useState } from "react"
 import { Navigate } from "react-router"
 
 export default function Onboarding() {
-	const [onboardingComplete, setOnboardingComplete] = useState(false)
+  const [onboardingComplete, setOnboardingComplete] = useState(false)
 
-	if (onboardingComplete) {
-		return <Navigate to="/" replace />
-	}
+  if (onboardingComplete) {
+    return <Navigate to="/" replace />
+  }
 
-	return <WelcomeToDockStat setOnBoardingComplete={setOnboardingComplete} />
+  return <WelcomeToDockStat setOnBoardingComplete={setOnboardingComplete} />
 }

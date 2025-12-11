@@ -4,8 +4,8 @@ import BaseLogger from "../logger"
 import { saveDefaultPlugins } from "./utils/saveDefaultPlugins"
 
 const PluginHandler = new PluginHandlerFactory(
-	DockStatDB._sqliteWrapper,
-	BaseLogger.getParentsForLoggerChaining()
+  DockStatDB._sqliteWrapper,
+  BaseLogger.getParentsForLoggerChaining()
 )
 
 await saveDefaultPlugins(PluginHandler)

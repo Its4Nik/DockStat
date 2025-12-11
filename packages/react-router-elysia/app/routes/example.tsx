@@ -5,7 +5,7 @@ import { api } from "~/.server/treaty"
 export async function loader() {
   return {
     posts: await api.posts.get(),
-    ws: api.ws.test.subscribe().url
+    ws: api.ws.test.subscribe().url,
   }
 }
 
@@ -19,7 +19,7 @@ export default function ExampleRoute() {
 
   // append incoming messages (most recent first)
   const handleNewMessage = useCallback((message: string) => {
-    setMessages(prev => [message, ...prev])
+    setMessages((prev) => [message, ...prev])
   }, [])
 
   useEffect(() => {
@@ -75,24 +75,21 @@ export default function ExampleRoute() {
     }
   }, [ws, handleNewMessage])
 
-  const sendMessage = useCallback(
-    (raw: string) => {
-      const socket = wsRef.current
-      if (!socket || socket.readyState !== WebSocket.OPEN) {
-        console.warn("WebSocket not open — cannot send")
-        return false
-      }
-      try {
-        setMessages(prev => [raw, ...prev])
-        socket.send(raw)
-        return true
-      } catch (err) {
-        console.error("Failed to send message:", err)
-        return false
-      }
-    },
-    []
-  )
+  const sendMessage = useCallback((raw: string) => {
+    const socket = wsRef.current
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      console.warn("WebSocket not open — cannot send")
+      return false
+    }
+    try {
+      setMessages((prev) => [raw, ...prev])
+      socket.send(raw)
+      return true
+    } catch (err) {
+      console.error("Failed to send message:", err)
+      return false
+    }
+  }, [])
 
   const handleSendClick = () => {
     if (!input.trim()) return
@@ -119,11 +116,18 @@ export default function ExampleRoute() {
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Response status: <span className="font-medium text-gray-700 dark:text-gray-200">{posts?.status ?? "—"}</span></p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Response status:{" "}
+                <span className="font-medium text-gray-700 dark:text-gray-200">
+                  {posts?.status ?? "—"}
+                </span>
+              </p>
               <h1 className="mt-1 text-3xl font-extrabold text-gray-900 dark:text-gray-100">
                 ElysiaJS Example Posts
               </h1>
-              <p className="mt-1 text-gray-600 dark:text-gray-300">These posts were loaded via an ElysiaJS endpoint.</p>
+              <p className="mt-1 text-gray-600 dark:text-gray-300">
+                These posts were loaded via an ElysiaJS endpoint.
+              </p>
             </div>
           </div>
         </header>
@@ -148,15 +152,24 @@ export default function ExampleRoute() {
         <section className="mt-10 rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">WebSocket Example</h3>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Live messages and connection status.</p>
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                WebSocket Example
+              </h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Live messages and connection status.
+              </p>
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-600 dark:text-gray-300 break-all">Connected to: <span className="font-medium text-gray-800 dark:text-gray-100">{ws ?? "—"}</span></div>
+              <div className="text-sm text-gray-600 dark:text-gray-300 break-all">
+                Connected to:{" "}
+                <span className="font-medium text-gray-800 dark:text-gray-100">{ws ?? "—"}</span>
+              </div>
               <div className="inline-flex items-center gap-2">
                 <StatusDot status={status} />
-                <span className="text-sm text-gray-600 dark:text-gray-300">{status ?? "unknown"}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300">
+                  {status ?? "unknown"}
+                </span>
               </div>
             </div>
           </div>
@@ -164,7 +177,9 @@ export default function ExampleRoute() {
           {/* Input */}
           <div className="mt-6">
             <div className="flex items-center gap-3">
-              <label htmlFor="ws-input" className="sr-only">Message</label>
+              <label htmlFor="ws-input" className="sr-only">
+                Message
+              </label>
               <input
                 id="ws-input"
                 value={input}
@@ -180,12 +195,19 @@ export default function ExampleRoute() {
                 type="button"
                 onClick={handleSendClick}
                 disabled={wsRef?.current?.readyState !== WebSocket.OPEN}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition ${wsRef?.current?.readyState === WebSocket.OPEN
-                  ? "bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-300"
-                  : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                  }`}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition ${
+                  wsRef?.current?.readyState === WebSocket.OPEN
+                    ? "bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-300"
+                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                }`}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden
+                >
                   <path d="M2.94 2.94a1 1 0 011.414 0L17 15.586V11a1 1 0 112 0v6a1 1 0 01-1 1h-6a1 1 0 110-2h4.586L4.354 4.354a1 1 0 010-1.414z" />
                 </svg>
                 Send
@@ -199,37 +221,44 @@ export default function ExampleRoute() {
               <p className="text-sm text-gray-500 dark:text-gray-400">No messages yet.</p>
             ) : (
               messages.map((m, i) => (
-                <MessageBubble key={`${i}-${String(m).slice(0, 40)}`} text={`${m}`} isOwn={!m.startsWith("Elysia received:")} />
+                <MessageBubble
+                  key={`${i}-${String(m).slice(0, 40)}`}
+                  text={`${m}`}
+                  isOwn={!m.startsWith("Elysia received:")}
+                />
               ))
             )}
           </div>
         </section>
       </div>
     </main>
-  );
+  )
 }
-
 
 /** small status dot helper */
 function StatusDot({ status }: { status: string }) {
   const color =
-    status === "open" ? "bg-green-500" :
-      status === "connecting" ? "bg-yellow-400" :
-        status === "closed" || status === "error" ? "bg-red-500" : "bg-gray-300"
+    status === "open"
+      ? "bg-green-500"
+      : status === "connecting"
+        ? "bg-yellow-400"
+        : status === "closed" || status === "error"
+          ? "bg-red-500"
+          : "bg-gray-300"
 
   return <span className={`h-3 w-3 rounded-full ${color}`} aria-hidden />
 }
 
-function PostCard({ obj }: { obj: { name: string, url: string, description: string } }) {
+function PostCard({ obj }: { obj: { name: string; url: string; description: string } }) {
   function getInitials(name = "") {
     return name
       .split(" ")
       .map((p) => p[0]?.toUpperCase() ?? "")
       .slice(0, 2)
-      .join("");
+      .join("")
   }
 
-  const initials = getInitials(obj.name);
+  const initials = getInitials(obj.name)
   return (
     <Link
       to={obj.url}
@@ -250,26 +279,36 @@ function PostCard({ obj }: { obj: { name: string, url: string, description: stri
         </div>
 
         <div className="ml-auto self-center">
-          <svg className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+          <svg
+            className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </div>
       </div>
     </Link>
-  );
+  )
 }
 
-function MessageBubble({ text, isOwn }: { text: string, isOwn: boolean }) {
-  const alignment = isOwn ? "justify-end" : "justify-start";
-  const bg = isOwn ? "bg-blue-600 text-white" : "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-100 dark:border-gray-700";
+function MessageBubble({ text, isOwn }: { text: string; isOwn: boolean }) {
+  const alignment = isOwn ? "justify-end" : "justify-start"
+  const bg = isOwn
+    ? "bg-blue-600 text-white"
+    : "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-100 dark:border-gray-700"
   return (
     <>
       <div className={`flex ${alignment}`}>
         <div className={`max-w-[80%] px-4 py-2 rounded-lg shadow-sm ${bg}`}>
-          <pre className="whitespace-pre-wrap text-sm font-mono leading-relaxed">{String(text)}</pre>
+          <pre className="whitespace-pre-wrap text-sm font-mono leading-relaxed">
+            {String(text)}
+          </pre>
         </div>
       </div>
-
     </>
-  );
+  )
 }

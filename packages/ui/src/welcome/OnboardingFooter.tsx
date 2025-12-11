@@ -1,9 +1,9 @@
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { Button } from "../components/Button/Button";
-import { CardFooter } from "../components/Card/CardFooter";
-import { Divider } from "../components/Divider/Divider";
-import type { Slide } from "./types";
-import { ProgressDots } from "./ProgressDots";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react"
+import { Button } from "../components/Button/Button"
+import { CardFooter } from "../components/Card/CardFooter"
+import { Divider } from "../components/Divider/Divider"
+import type { Slide } from "./types"
+import { ProgressDots } from "./ProgressDots"
 
 export const OnboardingFooter = ({
   currentIndex,
@@ -14,12 +14,12 @@ export const OnboardingFooter = ({
   slides,
   goToSlide,
 }: {
-  currentIndex: number;
-  totalSlides: number;
-  onPrev: () => void;
-  onNext: () => void;
-  onFinish: () => void;
-  slides: Slide[];
+  currentIndex: number
+  totalSlides: number
+  onPrev: () => void
+  onNext: () => void
+  onFinish: () => void
+  slides: Slide[]
   goToSlide: (index: number) => void
 }) => (
   <>
@@ -30,11 +30,7 @@ export const OnboardingFooter = ({
           <ArrowLeft className="w-4 h-4 mr-1" /> Prev
         </Button>
 
-        <ProgressDots
-          slides={slides}
-          currentIndex={currentIndex}
-          onDotClick={goToSlide}
-        />
+        <ProgressDots slides={slides} currentIndex={currentIndex} onDotClick={goToSlide} />
       </div>
 
       <div className="flex items-center gap-2 w-full md:w-auto justify-center md:justify-end">
@@ -43,11 +39,16 @@ export const OnboardingFooter = ({
             Next <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         ) : (
-          <Button onClick={onFinish} className="flex items-center gap-2" aria-label="Finish onboarding" size="sm">
+          <Button
+            onClick={onFinish}
+            className="flex items-center gap-2"
+            aria-label="Finish onboarding"
+            size="sm"
+          >
             Get started <Check className="w-4 h-4" />
           </Button>
         )}
       </div>
     </CardFooter>
   </>
-);
+)

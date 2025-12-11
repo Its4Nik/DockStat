@@ -1,4 +1,4 @@
-import Logger from "@dockstat/logger";
+import Logger from "@dockstat/logger"
 
 const HTTPLogger = new Logger("HTTP", ["Utils", "DockStat"])
 

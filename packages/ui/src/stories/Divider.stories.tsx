@@ -1,41 +1,41 @@
-import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Divider } from '../components/Divider/Divider';
+import type { Meta, StoryObj } from "@storybook/react-vite"
+import { Divider } from "../components/Divider/Divider"
 
 const meta: Meta<typeof Divider> = {
-  title: 'Layout/Divider',
+  title: "Layout/Divider",
   component: Divider,
   argTypes: {
     variant: {
-      control: 'radio',
-      options: ['solid', 'dashed', 'dotted'],
-      defaultValue: 'solid',
+      control: "radio",
+      options: ["solid", "dashed", "dotted"],
+      defaultValue: "solid",
     },
-    label: { control: 'text' },
+    label: { control: "text" },
   },
-};
+}
 
-export default meta;
+export default meta
 
-type Story = StoryObj<typeof Divider>;
+type Story = StoryObj<typeof Divider>
 
 /**
  * Basic horizontal divider
  */
 export const Default: Story = {
   args: {
-    variant: 'solid',
+    variant: "solid",
   },
-};
+}
 
 /**
  * Divider with centered label
  */
 export const WithLabel: Story = {
   args: {
-    label: 'Section Title',
-    variant: 'solid',
+    label: "Section Title",
+    variant: "solid",
   },
-};
+}
 
 /**
  * Variants demo
@@ -49,4 +49,4 @@ export const Variants: Story = {
       <Divider label="With Label" />
     </div>
   ),
-};
+}

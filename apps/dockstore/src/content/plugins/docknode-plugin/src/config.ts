@@ -1,12 +1,9 @@
-import { column } from "@dockstat/sqlite-wrapper";
-import type { PLUGIN } from "@dockstat/typings";
-import type { actions } from "./actions";
-import type { DockNodePluginTable } from "./types";
+import { column } from "@dockstat/sqlite-wrapper"
+import type { PLUGIN } from "@dockstat/typings"
+import type { actions } from "./actions"
+import type { DockNodePluginTable } from "./types"
 
-export const DockNodeConfig: PLUGIN.PluginConfig<
-  DockNodePluginTable,
-  typeof actions
-> = {
+export const DockNodeConfig: PLUGIN.PluginConfig<DockNodePluginTable, typeof actions> = {
   table: {
     name: "docknode",
     columns: {
@@ -25,4 +22,4 @@ export const DockNodeConfig: PLUGIN.PluginConfig<
       actions: [""],
     },
   },
-} as const satisfies PLUGIN.PluginConfig<DockNodePluginTable, typeof actions>;
+} as const satisfies PLUGIN.PluginConfig<DockNodePluginTable, typeof actions>

@@ -6,8 +6,8 @@ export { default as DockerClient } from "./src/docker-client"
 export { default as HostHandler } from "./src/hosts-handler/index"
 export { default as MonitoringManager } from "./src/monitoring/monitoring-manager"
 export {
-	StreamManager,
-	STREAM_CHANNELS,
+  StreamManager,
+  STREAM_CHANNELS,
 } from "./src/stream/stream-manager"
 
 export type { ContainerStats } from "dockerode"

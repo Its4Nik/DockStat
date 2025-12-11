@@ -7,7 +7,10 @@
   "bin": {
     "outline-sync": "./dist/cli.js"
   },
-  "files": ["dist/**/*", "README.md"],
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
   "scripts": {
     "build": "bun run ./build.ts",
     "dev": "bun build sync.ts",

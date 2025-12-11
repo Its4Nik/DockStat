@@ -1,16 +1,16 @@
-import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Card, CardHeader, CardBody, CardFooter } from '../components/Card/Card';
+import type { Meta, StoryObj } from "@storybook/react-vite"
+import { Card, CardHeader, CardBody, CardFooter } from "../components/Card/Card"
 
 const meta: Meta<typeof Card> = {
-  title: 'Components/Card',
+  title: "Components/Card",
   component: Card,
   parameters: {
-    layout: 'padded',
+    layout: "padded",
   },
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof Card>;
+export default meta
+type Story = StoryObj<typeof Card>
 
 export const Default: Story = {
   render: () => (
@@ -21,7 +21,7 @@ export const Default: Story = {
       </CardBody>
     </Card>
   ),
-};
+}
 
 export const Variants: Story = {
   render: () => (
@@ -40,20 +40,14 @@ export const Variants: Story = {
       </Card>
     </div>
   ),
-};
+}
 
 export const WithSections: Story = {
   render: () => (
     <Card>
-      <CardHeader>
-        Card Title
-      </CardHeader>
-      <CardBody>
-        This is the main content of the card
-      </CardBody>
-      <CardFooter>
-        Card footer
-      </CardFooter>
+      <CardHeader>Card Title</CardHeader>
+      <CardBody>This is the main content of the card</CardBody>
+      <CardFooter>Card footer</CardFooter>
     </Card>
   ),
-};
+}

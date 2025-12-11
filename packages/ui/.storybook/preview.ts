@@ -1,13 +1,13 @@
-import type { Preview } from '@storybook/react-vite'
-import "../src/App.css";
+import type { Preview } from "@storybook/react-vite"
+import "../src/App.css"
 
 const preview: Preview = {
   parameters: {
     backgrounds: {
       options: {
-        "main-bg": { name: "Tailwind --color-main-bg", value: 'var(--color-main-bg)' },
-        light: { name: "Light", value: "#F7F9F2" }
-      }
+        "main-bg": { name: "Tailwind --color-main-bg", value: "var(--color-main-bg)" },
+        light: { name: "Light", value: "#F7F9F2" },
+      },
     },
     controls: {
       matchers: {
@@ -18,9 +18,9 @@ const preview: Preview = {
   },
   initialGlobals: {
     backgrounds: {
-      value: "main-bg"
-    }
-  }
-};
+      value: "main-bg",
+    },
+  },
+}
 
-export default preview;
+export default preview

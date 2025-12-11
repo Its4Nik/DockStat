@@ -1,13 +1,13 @@
 {
-	"compilerOptions": {
-		"outDir": "./dist",
-		"rootDirs": ["./"],
-		"composite": true,
-		"target": "ES2022",
-		"module": "ES2022",
-		"moduleResolution": "bundler",
-		"strict": true
-	},
-	"include": ["index.ts", "src/**/*.ts"],
-	"exclude": ["node_modules", "dist"]
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDirs": ["./"],
+    "composite": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "strict": true
+  },
+  "include": ["index.ts", "src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

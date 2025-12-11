@@ -1,9 +1,13 @@
-import type { Slide } from "./types";
+import type { Slide } from "./types"
 
-const SlideHeader = ({ slide, currentStep, totalSteps }: {
-  slide: Slide;
-  currentStep: number;
-  totalSteps: number;
+const SlideHeader = ({
+  slide,
+  currentStep,
+  totalSteps,
+}: {
+  slide: Slide
+  currentStep: number
+  totalSteps: number
 }) => (
   <div className="flex items-start justify-between gap-4">
     <div className="flex items-start gap-4">
@@ -17,8 +21,6 @@ const SlideHeader = ({ slide, currentStep, totalSteps }: {
       Step {currentStep + 1} / {totalSteps}
     </div>
   </div>
-);
+)
 
-export {
-  SlideHeader
-}
+export { SlideHeader }

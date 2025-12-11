@@ -1,0 +1,21 @@
+name: Lint + Format
+on: [push, pull_request]
+
+permissions:
+  contents: write
+
+jobs:
+  lint:
+    name: Lint All packages and Apps
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: |
+          bunx turbo run lint
+      - name: Commit report
+        run: |
+          git config --global user.name 'actions user'
+          git config --global user.email 'your-username@users.noreply.github.com'
+          git commit -am "Lint"
+          git push

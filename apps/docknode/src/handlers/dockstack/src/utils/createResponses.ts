@@ -1,8 +1,8 @@
-import type { ErrorResponse, SuccessResponse } from "../types";
-import type { InstanceUUIDResult } from "./instanceUUIDtypes";
+import type { ErrorResponse, SuccessResponse } from "../types"
+import type { InstanceUUIDResult } from "./instanceUUIDtypes"
 
-const INSTANCE_UUID_PATH = "./.dockstacks_instance_uuid.txt";
-const INSTANCE_UUID_BUN_FILE = Bun.file(INSTANCE_UUID_PATH);
+const INSTANCE_UUID_PATH = "./.dockstacks_instance_uuid.txt"
+const INSTANCE_UUID_BUN_FILE = Bun.file(INSTANCE_UUID_PATH)
 
 /**
  * Creates a standardized success response object
@@ -11,15 +11,12 @@ const INSTANCE_UUID_BUN_FILE = Bun.file(INSTANCE_UUID_PATH);
  * @param {T} [data] - Optional data payload to be included in the response
  * @returns {SuccessResponse<T>} A success response object with the message, data, and timestamp
  */
-export const createSuccessResponse = <T>(
-  message: string,
-  data?: T
-): SuccessResponse<T> => ({
+export const createSuccessResponse = <T>(message: string, data?: T): SuccessResponse<T> => ({
   success: true,
   message,
   data,
   timestamp: new Date().toISOString(),
-});
+})
 
 /**
  * Creates a standardized error response object
@@ -40,7 +37,7 @@ export const createErrorResponse = (
     code,
     details,
   },
-});
+})
 
 /**
  * Creates a new UUID for the instance and saves it to a file
@@ -55,10 +52,10 @@ export async function createInstanceUUID() {
     return {
       message: "UUID File already exists. Please call 'getInstanceUUID()'",
       code: { success: false, file: true },
-    };
+    }
   }
-  const local = { uuid: crypto.randomUUID() } as const;
-  await INSTANCE_UUID_BUN_FILE.write(local.uuid);
+  const local = { uuid: crypto.randomUUID() } as const
+  await INSTANCE_UUID_BUN_FILE.write(local.uuid)
   return {
     message: "UUID created succesfully.",
     data: {
@@ -67,7 +64,7 @@ export async function createInstanceUUID() {
     code: {
       success: true,
     },
-  };
+  }
 }
 
 /**
@@ -85,14 +82,14 @@ export async function getInstanceUUID(): Promise<InstanceUUIDResult> {
       message: "UUID File does not exist. Please class 'createInstanceUUID()'",
       code: { file: false, success: false },
       data: null,
-    };
+    }
   }
-  const data = await INSTANCE_UUID_BUN_FILE.text();
+  const data = await INSTANCE_UUID_BUN_FILE.text()
   return {
     message: "UUID file read succesfully.",
     data: {
       uuid: data,
     },
     code: { success: true },
-  };
+  }
 }

@@ -1,9 +1,20 @@
-import { Box, Github, Hand, Layers, LockIcon, PlaneTakeoff, Puzzle, ShoppingBag, Store, Zap } from "lucide-react";
-import { HoverBubble } from "../components/HoverBubble/HoverBubble";
-import { LinkWithIcon } from "../components/Link/Link";
-import { Badge } from "../components/Badge/Badge";
-import type { Slide } from "./types";
-import { Divider } from "../components/Divider/Divider";
+import {
+  Box,
+  Github,
+  Hand,
+  Layers,
+  LockIcon,
+  PlaneTakeoff,
+  Puzzle,
+  ShoppingBag,
+  Store,
+  Zap,
+} from "lucide-react"
+import { HoverBubble } from "../components/HoverBubble/HoverBubble"
+import { LinkWithIcon } from "../components/Link/Link"
+import { Badge } from "../components/Badge/Badge"
+import type { Slide } from "./types"
+import { Divider } from "../components/Divider/Divider"
 
 export const slides: Slide[] = [
   {
@@ -11,16 +22,23 @@ export const slides: Slide[] = [
     subtitle: "Next-gen container management and orchestration — modular, extensible, TS-first.",
     icon: <Hand className="w-10 h-10 animate-wave rotate-45" />,
     bullets: [
-      { title: "Plugin-first design", desc: "Extend everything: deployers, notifiers, themes. The only limit is your imagination!" },
+      {
+        title: "Plugin-first design",
+        desc: "Extend everything: deployers, notifiers, themes. The only limit is your imagination!",
+      },
       { title: "Modern JS/TS ecosystem", desc: "Use the huge library ecosystem without limits." },
       { title: "DockStore", desc: "Browse Stacks, Plugins and Themes from the store." },
     ],
     footer: (
       <div className="space-y-2">
-        <LinkWithIcon icon={<Puzzle />} href="https://github.com/its4nik/dockstat">Plugin Development</LinkWithIcon>
-        <LinkWithIcon icon={<ShoppingBag />} href="https://dockstore.itsnik.de">Browse</LinkWithIcon>
+        <LinkWithIcon icon={<Puzzle />} href="https://github.com/its4nik/dockstat">
+          Plugin Development
+        </LinkWithIcon>
+        <LinkWithIcon icon={<ShoppingBag />} href="https://dockstore.itsnik.de">
+          Browse
+        </LinkWithIcon>
       </div>
-    )
+    ),
   },
   {
     title: "DockStacks",
@@ -66,22 +84,24 @@ export const slides: Slide[] = [
       <div className="space-y-1">
         <div className="flex gap-2 items-center">
           <HoverBubble label="github.com/its4nik/dockstat">
-            <LinkWithIcon href="https://github.com/its4nik/dockstat" icon={<Github />} iconPosition="left">
+            <LinkWithIcon
+              href="https://github.com/its4nik/dockstat"
+              icon={<Github />}
+              iconPosition="left"
+            >
               <span className="text-sm">Contribute plugins & themes</span>
-              <Badge variant="success" className="ml-2" outlined>Open Source</Badge>
+              <Badge variant="success" className="ml-2" outlined>
+                Open Source
+              </Badge>
             </LinkWithIcon>
           </HoverBubble>
         </div>
         <Divider label="Next Steps" variant="dashed" />
         <div className="flex flex-col flex-2 gap-2">
-          <Badge outlined>
-            Deploy Your First Stack
-          </Badge>
-          <Badge outlined>
-            Setup Hosts to Monitor
-          </Badge>
+          <Badge outlined>Deploy Your First Stack</Badge>
+          <Badge outlined>Setup Hosts to Monitor</Badge>
         </div>
       </div>
     ),
   },
-];
+]

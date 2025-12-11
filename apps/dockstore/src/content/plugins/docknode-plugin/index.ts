@@ -7,8 +7,8 @@ import type { DockNodePluginTable } from "./src/types"
 export const meta = DockNodePluginMeta
 
 const DockNodePlugin: Plugin<DockNodePluginTable> = {
-	...DockNodePluginMeta,
-	config: DockNodeConfig,
+  ...DockNodePluginMeta,
+  config: DockNodeConfig,
 }
 
 export default DockNodePlugin

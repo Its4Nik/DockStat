@@ -15,9 +15,9 @@ export const cleanReqId = (reqId: string) => {
 export const getRequestID = (isProxy = false, isTreaty = false) => {
   let id = ""
   if (isProxy) {
-    id = `${Bun.randomUUIDv7().split('-')[4]}|RR-Proxy`
+    id = `${Bun.randomUUIDv7().split("-")[4]}|RR-Proxy`
   } else if (isTreaty) {
-    id = `${Bun.randomUUIDv7().split('-')[4]}|treaty`
+    id = `${Bun.randomUUIDv7().split("-")[4]}|treaty`
   } else {
     id = `${Bun.randomUUIDv7().split("-")[4]}`
   }

@@ -1,4 +1,4 @@
-import { build } from "bun";
+import { build } from "bun"
 
 await build({
   sourcemap: "linked",
@@ -11,4 +11,4 @@ await build({
     keepNames: false,
   },
   outdir: "./dist",
-});
+})

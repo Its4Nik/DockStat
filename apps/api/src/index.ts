@@ -8,12 +8,12 @@ import { errorHandler } from "./handlers/onError"
 import { cors } from "@elysiajs/cors"
 
 export const DockStatAPI = new Elysia({ prefix: "/api/v2" })
-	.use(cors())
-	.use(DockStatElysiaPlugins)
-	.use(errorHandler)
-	.use(DBRoutes)
-	.use(PrometheusMetricsRoute)
-	.use(DockerRoutes)
-	.use(PluginRoutes)
+  .use(cors())
+  .use(DockStatElysiaPlugins)
+  .use(errorHandler)
+  .use(DBRoutes)
+  .use(PrometheusMetricsRoute)
+  .use(DockerRoutes)
+  .use(PluginRoutes)
 
 export type TreatyType = typeof DockStatAPI

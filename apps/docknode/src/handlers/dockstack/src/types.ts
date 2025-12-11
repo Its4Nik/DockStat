@@ -1,20 +1,20 @@
 export interface BaseResponse {
-  success: boolean;
-  message: string;
-  timestamp: string;
+  success: boolean
+  message: string
+  timestamp: string
 }
 
 export interface SuccessResponse<T = undefined> extends BaseResponse {
-  success: true;
-  data?: T;
+  success: true
+  data?: T
 }
 
 export interface ErrorResponse extends BaseResponse {
-  success: false;
+  success: false
   error: {
-    code: string;
-    details?: string;
-  };
+    code: string
+    details?: string
+  }
 }
 
 export const ErrorCodes = {
@@ -35,7 +35,7 @@ export const ErrorCodes = {
   BAD_REQUEST: "BAD_REQUEST",
   NOT_FOUND: "NOT_FOUND",
   FORBIDDEN: "FORBIDDEN",
-} as const;
+} as const
 
 // HTTP Status Codes
 export const HttpStatus = {
@@ -47,4 +47,4 @@ export const HttpStatus = {
   NOT_FOUND: 404,
   INTERNAL_SERVER_ERROR: 500,
   SERVICE_UNAVAILABLE: 503,
-} as const;
+} as const

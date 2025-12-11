@@ -1,5 +1,5 @@
-import logoDark from "./logo-dark.svg";
-import logoLight from "./logo-light.svg";
+import logoDark from "./logo-dark.svg"
+import logoLight from "./logo-light.svg"
 import elysiaLogo from "./elysia_v.webp"
 
 export function Welcome() {
@@ -8,26 +8,12 @@ export function Welcome() {
       <div className="flex-1 flex flex-col items-center gap-16 min-h-0">
         <header className="flex flex-col items-center gap-9">
           <div className="flex flex-row">
-            <img
-              src={logoLight}
-              alt="React Router"
-              className="w-[20vw] dark:hidden"
-            />
-            <img
-              src={logoDark}
-              alt="React Router"
-              className="hidden w-[20vw] dark:block"
-            />
+            <img src={logoLight} alt="React Router" className="w-[20vw] dark:hidden" />
+            <img src={logoDark} alt="React Router" className="hidden w-[20vw] dark:block" />
 
-            <span className="text-7xl mx-5 flex">
-              +
-            </span>
+            <span className="text-7xl mx-5 flex">+</span>
 
-            <img
-              src={elysiaLogo}
-              alt="ElysiaJS Logo"
-              className="w-[20vw]"
-            />
+            <img src={elysiaLogo} alt="ElysiaJS Logo" className="w-[20vw]" />
           </div>
         </header>
         <div className="max-w-[300px] w-full space-y-6 px-4">
@@ -83,7 +69,7 @@ export function Welcome() {
         </div>
       </div>
     </main>
-  );
+  )
 }
 
 const resources = [
@@ -127,4 +113,4 @@ const resources = [
       </svg>
     ),
   },
-];
+]

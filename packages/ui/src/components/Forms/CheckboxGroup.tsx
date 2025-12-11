@@ -1,36 +1,37 @@
-import type React from 'react';
-import { Checkbox } from './Checkbox';
+import type React from "react"
+import { Checkbox } from "./Checkbox"
 
 export interface CheckboxGroupOption {
-  value: string;
-  label: string;
-  disabled?: boolean;
+  value: string
+  label: string
+  disabled?: boolean
 }
 
 export interface CheckboxGroupProps {
-  options: CheckboxGroupOption[];
-  selectedValues: string[];
-  onChange: (values: string[]) => void;
-  direction?: 'horizontal' | 'vertical';
-  className?: string;
+  options: CheckboxGroupOption[]
+  selectedValues: string[]
+  onChange: (values: string[]) => void
+  direction?: "horizontal" | "vertical"
+  className?: string
 }
 
 export const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
   options,
   selectedValues,
   onChange,
-  direction = 'vertical',
-  className = '',
+  direction = "vertical",
+  className = "",
 }) => {
   const handleCheckboxChange = (value: string, checked: boolean) => {
     if (checked) {
-      onChange([...selectedValues, value]);
+      onChange([...selectedValues, value])
     } else {
-      onChange(selectedValues.filter(v => v !== value));
+      onChange(selectedValues.filter((v) => v !== value))
     }
-  };
+  }
 
-  const directionClass = direction === 'horizontal' ? 'flex flex-row space-x-4' : 'flex flex-col space-y-2';
+  const directionClass =
+    direction === "horizontal" ? "flex flex-row space-x-4" : "flex flex-col space-y-2"
 
   return (
     <div className={`${directionClass} ${className}`}>
@@ -44,5 +45,5 @@ export const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
         />
       ))}
     </div>
-  );
-};
+  )
+}

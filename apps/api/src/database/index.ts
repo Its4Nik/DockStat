@@ -4,19 +4,16 @@ import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DockStatConfigTableType } from "@dockstat/typings/types"
 import BaseLogger from "../logger"
 
-const InitialDockStatDB = new DBFactory(
-	"DB",
-	BaseLogger.getParentsForLoggerChaining()
-)
+const InitialDockStatDB = new DBFactory("DB", BaseLogger.getParentsForLoggerChaining())
 
 export const DockStatDB: {
-	_sqliteWrapper: DB
-	_dbPath: string
-	configTable: QueryBuilder<DockStatConfigTableType>
-	metricsTable: unknown
+  _sqliteWrapper: DB
+  _dbPath: string
+  configTable: QueryBuilder<DockStatConfigTableType>
+  metricsTable: unknown
 } = {
-	_sqliteWrapper: InitialDockStatDB.getDB(),
-	_dbPath: InitialDockStatDB.getDatabasePath(),
-	configTable: InitialDockStatDB.getConfigTable(),
-	metricsTable: InitialDockStatDB.getMetricsTable(),
+  _sqliteWrapper: InitialDockStatDB.getDB(),
+  _dbPath: InitialDockStatDB.getDatabasePath(),
+  configTable: InitialDockStatDB.getConfigTable(),
+  metricsTable: InitialDockStatDB.getMetricsTable(),
 }
