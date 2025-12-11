@@ -13,8 +13,9 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: |
           bun ci
-          bun run lint:all:ci
-      - name: Commit report
+          bun run lint:fix:all
+      - name: Commit changes
+        if: always()
         run: |
           git config --global user.name 'actions user'
           git config --global user.email 'your-username@users.noreply.github.com'
