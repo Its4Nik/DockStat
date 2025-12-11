@@ -32,20 +32,16 @@ export type PluginActionHandler<T extends Record<string, unknown>> = <K = undefi
   ctx: PluginActionContext<T, K>
 ) => Promise<unknown> | unknown
 
-export interface PluginActionContext<T extends Record<string, unknown>, K = unknown, U = unknown> {
+export interface PluginActionContext<T extends Record<string, unknown>, K = unknown> {
   table: QueryBuilder<T> | null
-  instanceId: string
-  db: DB
-  params?: Record<string, unknown>
+  body: K | undefined
   logger: {
     error: (msg: string) => void
     warn: (msg: string) => void
     info: (msg: string) => void
     debug: (msg: string) => void
   }
-  data: K
   previousAction: unknown
-  dockerClient: U
 }
 
 export type PluginActions<T extends Record<string, unknown>> = Record<

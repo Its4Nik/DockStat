@@ -1,5 +1,4 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
-import type { TranspilerOptions } from "bun"
 
 /**
  * All SQLite data types including affinity types

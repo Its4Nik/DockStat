@@ -2,9 +2,13 @@ export * from "./plugin-base"
 
 import type { ColumnDefinition } from "@dockstat/sqlite-wrapper"
 import type { PluginActions } from "./plugin-base"
+import type { Parser } from "@dockstat/sqlite-wrapper/types"
 
 /* PluginRoute defines the API route configuration for a plugin action */
-export type PluginRoute<T extends Record<string, unknown>, A extends PluginActions<T>> = {
+export type PluginRoute<
+  T extends Record<string, unknown> = Record<string, unknown>,
+  A extends PluginActions<T> = PluginActions<T>,
+> = {
   method: "GET" | "POST"
   actions: (keyof A)[]
 }
@@ -15,7 +19,7 @@ export type FrontendRoute = unknown // Placeholder for future frontend route def
 export type PluginConfig<T extends Record<string, unknown>, A extends PluginActions<T>> = {
   table?: {
     name: string
-    jsonColumns: JsonColumnConfig<T>
+    parser: Parser<T>
     columns: Record<string, ColumnDefinition>
   }
   apiRoutes?: Record<string, PluginRoute<T, A>>

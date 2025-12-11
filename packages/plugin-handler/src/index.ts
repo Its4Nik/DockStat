@@ -3,8 +3,8 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import Logger from "@dockstat/logger"
 import type DB from "@dockstat/sqlite-wrapper"
-import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
-import type { EVENTS } from "@dockstat/typings"
+import { column, QueryBuilder } from "@dockstat/sqlite-wrapper"
+import type { EVENTS, PluginRoute } from "@dockstat/typings"
 import type { DBPluginShemaT, Plugin } from "@dockstat/typings/types"
 
 class PluginHandler {
@@ -243,8 +243,8 @@ class PluginHandler {
       mod.id = pluginToLoad.id
       mod.config?.table &&
         this.DB.createTable(mod.config.table.name, mod.config?.table.columns, {
-          parser: { JSON: mod.config.table.jsonColumns },
           ifNotExists: true,
+          parser: mod.config.table.parser,
         })
 
       return this.loadedPluginsMap.get(id)
@@ -308,6 +308,8 @@ class PluginHandler {
   }
 
   public async handleRoute(id: number, path: string, request: Request) {
+    this.logger.debug(`Handling Route for Plugin ${id} and Path ${path}`)
+
     if (!id) {
       throw new Error("PluginID not provided!")
     }
@@ -322,20 +324,16 @@ class PluginHandler {
       throw new Error(`No routes defined for Plugin ${id}`)
     }
 
-    const route = plugin.config.apiRoutes[path]
+    const pPath = path.charAt(0) === "/" ? path : `/${path}`
+
+    const route = plugin.config.apiRoutes[pPath]
 
     if (!route) {
-      throw new Error(`No route config found for ${path}`)
+      throw new Error(
+        `No route for ${plugin.name} found for: ${path} - available routes: ${Object.keys(plugin.config.apiRoutes).join(", ")}`
+      )
     }
-
-    let body: null | unknown = null
-    const { actions, method } = route
-
-    if (method === "POST") {
-      body = request.body
-    }
-
-    const action = plugin.return
+    return this.triggerRouteAction(plugin, route, request.body)
   }
 
   public getHookHandlers() {
@@ -356,6 +354,49 @@ class PluginHandler {
 
     this.logger.info(`Cached ${loadedPluginsHooksMap.size} Hooks`)
     return loadedPluginsHooksMap
+  }
+
+  private triggerRouteAction(plugin: Plugin, route: PluginRoute, body?: unknown) {
+    const { actions, method } = route
+    if (!plugin.config?.actions) {
+      throw new Error(`No actions for Plugin ${plugin.name} found`)
+    }
+
+    let actionRes: unknown
+    for (const action of actions) {
+      const act = plugin.config.actions[action]
+      if (act) {
+        actionRes = act({
+          logger: this.logger.spawn(`${plugin.name}-Actions`),
+          table: plugin.config.table?.name
+            ? new QueryBuilder(
+                this.DB.getDb(),
+                plugin.config.table.name,
+                plugin.config.table.parser
+              )
+            : null,
+          body: method === "GET" ? undefined : body,
+          previousAction: actionRes,
+        })
+      }
+    }
+    return actionRes
+  }
+
+  public getAllPluginRoutes() {
+    const plugins = this.loadedPluginsMap.values()
+    const res: Array<{
+      plugin: string
+      routes: string[]
+    }> = []
+    for (const p of plugins) {
+      const routes = Object.keys(p.config?.apiRoutes || {})
+      res.push({
+        plugin: p.name,
+        routes: routes,
+      })
+    }
+    return res
   }
 }
 

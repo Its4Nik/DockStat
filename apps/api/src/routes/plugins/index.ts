@@ -1,4 +1,4 @@
-import Elysia from "elysia"
+import Elysia, { t } from "elysia"
 import { PluginModel } from "../../models/plugins"
 import PluginHandler from "../../plugins"
 
@@ -27,11 +27,14 @@ const PluginRoutes = new Elysia({
   .post("/delete", ({ body }) => PluginHandler.deletePlugin(body.pluginId), {
     body: PluginModel.deletePluginBody,
   })
-  .post(
+  .get("/routes", () => PluginHandler.getAllPluginRoutes())
+  .all(
     "/:id/routes/*",
-    async ({ request, params }) => PluginHandler.handleRoute(request, params),
+    async ({ request, params }) =>
+      PluginHandler.handleRoute(Number(params.id), params["*"], request),
     {
       detail: {
+        tags: ["Plugin Routes"],
         description:
           "This route proxies all Plugin-API requests to the specified Plugin's Elysia Instance",
       },
