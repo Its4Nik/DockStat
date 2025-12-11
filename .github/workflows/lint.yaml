@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: |
-          bunx turbo run lint
+          bun run lint:all:ci
       - name: Commit report
         run: |
           git config --global user.name 'actions user'
