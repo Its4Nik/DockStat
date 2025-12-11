@@ -1,6 +1,12 @@
 {
   "name": "@dockstat/typings",
-  "version": "1.0.1",
+  "private": false,
+  "author": {
+    "name": "Its4Nik",
+    "email": "dockstat@itsnik.de",
+    "url": "https://itsnik.de"
+  },
+  "version": "1.1.0",
   "exports": {
     ".": "./src/index.ts",
     "./schemas": "./src/typebox/_schemas.ts",
