@@ -1,5 +1,5 @@
-import { mkdir, writeFile, readFile, readdir, stat } from "node:fs/promises"
-import { join } from "node:path"
+import { mkdir, writeFile, readFile, readdir, stat } from "fs/promises"
+import { join } from "path"
 import { watch } from "chokidar"
 import fm from "front-matter"
 import YAML from "yaml"
@@ -10,12 +10,16 @@ export class OutlineSync {
   private client: OutlineClient
   private outputDir: string
   private customPaths: Record<string, string>
+  private includeCollections?: string[]
+  private excludeCollections?: string[]
   private documentMap: Map<string, DocumentMetadata> = new Map()
 
   constructor(config: OutlineConfig) {
     this.client = new OutlineClient(config)
     this.outputDir = config.outputDir || "./outline-docs"
     this.customPaths = config.customPaths || {}
+    this.includeCollections = config.includeCollections
+    this.excludeCollections = config.excludeCollections
   }
 
   private sanitizePath(name: string): string {
@@ -25,9 +29,29 @@ export class OutlineSync {
       .toLowerCase()
   }
 
+  private shouldIncludeCollection(collectionId: string, collectionName: string): boolean {
+    // If include list is specified, only include those collections
+    if (this.includeCollections && this.includeCollections.length > 0) {
+      return this.includeCollections.some(
+        (c) => c === collectionId || c.toLowerCase() === collectionName.toLowerCase()
+      )
+    }
+
+    // If exclude list is specified, exclude those collections
+    if (this.excludeCollections && this.excludeCollections.length > 0) {
+      return !this.excludeCollections.some(
+        (c) => c === collectionId || c.toLowerCase() === collectionName.toLowerCase()
+      )
+    }
+
+    // By default, include all collections
+    return true
+  }
+
   private getDocumentPath(doc: Document, collectionName: string): string {
     const customPath = this.customPaths[doc.id]
     if (customPath) {
+      // Handle relative paths that go outside outputDir
       if (customPath.startsWith("..")) {
         return join(process.cwd(), customPath)
       }
@@ -54,8 +78,19 @@ export class OutlineSync {
   async syncDown(): Promise<void> {
     console.log("📥 Syncing from Outline to local...")
 
-    const collections = await this.client.getCollections()
-    console.log(`Found ${collections.length} collections`)
+    const allCollections = await this.client.getCollections()
+    const collections = allCollections.filter((c) => this.shouldIncludeCollection(c.id, c.name))
+
+    if (collections.length === 0) {
+      console.log("⚠️  No collections match your include/exclude filters")
+      return
+    }
+
+    if (this.includeCollections || this.excludeCollections) {
+      console.log(`Filtered to ${collections.length}/${allCollections.length} collections`)
+    } else {
+      console.log(`Found ${collections.length} collections`)
+    }
 
     for (const collection of collections) {
       console.log(`\n📚 Syncing collection: ${collection.name}`)
@@ -115,7 +150,7 @@ export class OutlineSync {
       ignoreInitial: true,
     })
 
-    watcher.on("change", async (path: string) => {
+    watcher.on("change", async (path) => {
       try {
         await this.syncUp(path)
       } catch (error) {

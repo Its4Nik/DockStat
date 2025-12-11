@@ -3,7 +3,7 @@ import { Command } from "commander"
 import { OutlineSync } from "./sync"
 import type { OutlineConfig } from "./types"
 import { existsSync } from "fs"
-import { readFile } from "fs/promises"
+import { readFile, writeFile } from "fs/promises"
 import { join } from "path"
 
 const program = new Command()
@@ -21,10 +21,14 @@ async function loadConfig(configPath?: string): Promise<Partial<OutlineConfig>> 
   return {}
 }
 
-async function getConfig(
-  options: { url?: string; token?: string; output?: string; config: string },
-  loadConfigFile = true
-): Promise<OutlineConfig> {
+function parseArrayOption(value: string): string[] {
+  return value
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
+async function getConfig(options: any, loadConfigFile = true): Promise<OutlineConfig> {
   const fileConfig = loadConfigFile ? await loadConfig(options.config) : {}
 
   const config: OutlineConfig = {
@@ -33,6 +37,12 @@ async function getConfig(
     outputDir:
       options.output || fileConfig.outputDir || process.env.OUTLINE_OUTPUT_DIR || "./outline-docs",
     customPaths: fileConfig.customPaths || {},
+    includeCollections: options.include
+      ? parseArrayOption(options.include)
+      : fileConfig.includeCollections,
+    excludeCollections: options.exclude
+      ? parseArrayOption(options.exclude)
+      : fileConfig.excludeCollections,
   }
 
   if (!config.url || !config.token) {
@@ -56,6 +66,8 @@ program
   .option("-t, --token <token>", "API token")
   .option("-o, --output <dir>", "Output directory")
   .option("-c, --config <path>", "Config file path")
+  .option("-i, --include <collections>", "Comma-separated list of collections to include")
+  .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
   .action(async (options) => {
     const config = await getConfig(options)
     const sync = new OutlineSync(config)
@@ -69,6 +81,8 @@ program
   .option("-t, --token <token>", "API token")
   .option("-o, --output <dir>", "Output directory")
   .option("-c, --config <path>", "Config file path")
+  .option("-i, --include <collections>", "Comma-separated list of collections to include")
+  .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
   .action(async (options) => {
     const config = await getConfig(options)
     const sync = new OutlineSync(config)
@@ -82,6 +96,8 @@ program
   .option("-t, --token <token>", "API token")
   .option("-o, --output <dir>", "Output directory")
   .option("-c, --config <path>", "Config file path")
+  .option("-i, --include <collections>", "Comma-separated list of collections to include")
+  .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
   .action(async (options) => {
     const config = await getConfig(options)
     const sync = new OutlineSync(config)
@@ -103,13 +119,15 @@ program
       url: "https://your-outline.com",
       token: "your_api_token",
       outputDir: "./outline-docs",
+      includeCollections: ["Engineering", "Product"],
+      excludeCollections: [],
       customPaths: {
         "example-doc-id": "../../README.md",
         "another-doc-id": "custom/path/document.md",
       },
     }
 
-    await Bun.write(configPath, JSON.stringify(sampleConfig, null, 2))
+    await writeFile(configPath, JSON.stringify(sampleConfig, null, 2), "utf-8")
     console.log("✅ Created outline-sync.config.json")
     console.log("\n📝 Edit the file and replace example values with your actual configuration")
   })

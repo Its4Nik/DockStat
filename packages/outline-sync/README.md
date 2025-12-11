@@ -5,9 +5,19 @@ Bidirectional sync for Outline wiki to local folders with CI/CD support.
 ## Installation
 
 ```bash
-bun install
-bun run build
+bun install -g @dockstat/outline-sync
 ```
+
+## Features
+
+- ✅ Sync Outline → Local
+- ✅ Sync Local → Outline
+- ✅ Each doc in own folder with README.md
+- ✅ Custom path mapping for specific documents
+- ✅ Collection filtering (include/exclude)
+- ✅ Frontmatter metadata preservation
+- ✅ CI/CD integration
+- ✅ File watching
 
 ## Configuration
 
@@ -26,6 +36,8 @@ Then edit the generated file:
   "url": "https://your-outline.com",
   "token": "your_api_token",
   "outputDir": "./outline-docs",
+  "includeCollections": ["Engineering", "Product"],
+  "excludeCollections": ["Archive", "Private"],
   "customPaths": {
     "doc-id-abc123": "../../README.md",
     "doc-id-xyz789": "custom/important-doc.md"
@@ -33,10 +45,20 @@ Then edit the generated file:
 }
 ```
 
+**Collection Filtering:**
+- `includeCollections`: Array of collection names or IDs to sync. If specified, only these collections are synced.
+- `excludeCollections`: Array of collection names or IDs to exclude from sync. Applies when `includeCollections` is not set.
+- Collections can be matched by name (case-insensitive) or by ID
+- If both are specified, `includeCollections` takes precedence
+
 **Custom Paths:**
 - Document IDs can be found in the Outline URL or via the API
 - Paths starting with `..` are relative to current working directory
 - Other paths are relative to `outputDir`
+
+**Finding Collection Names:**
+1. Look at your Outline sidebar for collection names
+2. Or run initial sync without filters to see all collections
 
 **Finding Document IDs:**
 1. Open document in Outline
@@ -68,8 +90,16 @@ outline-sync init
 **One-time sync (down only):**
 
 ```bash
+# Sync all collections
 outline-sync sync
-# or with config file
+
+# Sync specific collections
+outline-sync sync --include "Engineering,Product"
+
+# Sync all except specific collections
+outline-sync sync --exclude "Archive,Private"
+
+# With config file
 outline-sync sync --config custom-config.json
 ```
 
@@ -77,12 +107,18 @@ outline-sync sync --config custom-config.json
 
 ```bash
 outline-sync watch
+
+# With filters
+outline-sync watch --include "Engineering"
 ```
 
 **CI/CD mode:**
 
 ```bash
 outline-sync ci
+
+# With filters
+outline-sync ci --exclude "Draft,Private"
 ```
 
 ## API Reference (CLI Commands)
@@ -106,10 +142,19 @@ Performs a one-time synchronization from your Outline wiki to your local folder.
 - `--token <token>`: Your Outline API token. Can also be set via `OUTLINE_TOKEN` env var or config file.
 - `--output <dir>`: The local directory where documents will be stored. Default: `./outline-docs`
 - `--config <path>`: Path to config file. Default: `./outline-sync.config.json`
+- `--include <collections>`: Comma-separated list of collection names/IDs to include (e.g., `"Engineering,Product"`). If set, only these collections are synced.
+- `--exclude <collections>`: Comma-separated list of collection names/IDs to exclude (e.g., `"Archive,Private"`). Ignored if `--include` is set.
 
-**Example:**
+**Examples:**
 ```bash
-outline-sync sync --url https://my.outline.app --token <YOUR_TOKEN> --output ~/my-wiki
+# Sync all collections
+outline-sync sync --url https://my.outline.app --token <YOUR_TOKEN>
+
+# Sync only Engineering and Product collections
+outline-sync sync --include "Engineering,Product"
+
+# Sync all except Archive
+outline-sync sync --exclude "Archive"
 ```
 
 ### `outline-sync watch [options]`
@@ -122,10 +167,12 @@ Starts a persistent process that watches for changes in your local directory and
 - `--token <token>`: Your Outline API token.
 - `--output <dir>`: The local directory being watched. Default: `./outline-docs`
 - `--config <path>`: Path to config file. Default: `./outline-sync.config.json`
+- `--include <collections>`: Comma-separated list of collection names/IDs to include.
+- `--exclude <collections>`: Comma-separated list of collection names/IDs to exclude.
 
 **Example:**
 ```bash
-outline-sync watch
+outline-sync watch --include "Engineering"
 ```
 
 ### `outline-sync ci [options]`
@@ -138,35 +185,71 @@ Executes a CI/CD-friendly synchronization. This command first pulls all document
 - `--token <token>`: Your Outline API token.
 - `--output <dir>`: The local directory to synchronize. Default: `./outline-docs`
 - `--config <path>`: Path to config file. Default: `./outline-sync.config.json`
+- `--include <collections>`: Comma-separated list of collection names/IDs to include.
+- `--exclude <collections>`: Comma-separated list of collection names/IDs to exclude.
 
 **Example:**
 ```bash
-outline-sync ci --output ./project-docs
+outline-sync ci --exclude "Private,Draft"
 ```
 
 ---
 
 ## Examples
 
-### Example 1: Root README
+### Example 1: Sync Only Engineering Docs
 
-Place a specific document as your project's main README:
+**Config file:**
+```json
+{
+  "url": "https://outline.example.com",
+  "token": "your_token",
+  "includeCollections": ["Engineering", "API Reference"]
+}
+```
+
+**CLI:**
+```bash
+outline-sync sync --include "Engineering,API Reference"
+```
+
+### Example 2: Exclude Private Collections
+
+**Config file:**
+```json
+{
+  "url": "https://outline.example.com",
+  "token": "your_token",
+  "excludeCollections": ["Private", "Archive", "Draft"]
+}
+```
+
+**CLI:**
+```bash
+outline-sync sync --exclude "Private,Archive,Draft"
+```
+
+### Example 3: Root README with Collection Filter
+
+Place a specific document as your project's main README while only syncing specific collections:
 
 ```json
 {
+  "includeCollections": ["Public Docs"],
   "customPaths": {
     "doc-abc123": "../../README.md"
   }
 }
 ```
 
-### Example 2: Mixed Structure
+### Example 4: Mixed Structure
 
-Combine auto-organized docs with custom locations:
+Combine auto-organized docs with custom locations and collection filtering:
 
 ```json
 {
   "outputDir": "./docs",
+  "includeCollections": ["Engineering", "Product"],
   "customPaths": {
     "doc-home": "../../README.md",
     "doc-api": "../../API.md",
@@ -175,36 +258,24 @@ Combine auto-organized docs with custom locations:
 }
 ```
 
-Other documents without custom paths will be organized in `./docs` by collection.
+Other documents from included collections will be organized in `./docs` by collection.
 
-### Example 3: Getting Document IDs
+### Example 5: Getting Collection Names
 
-After first sync, check the frontmatter:
+After first sync without filters, you'll see output like:
 
-````markdown
----
-id: abc123def456
-title: My Document
-collectionId: xyz789
-parentDocumentId: null
-updatedAt: '2024-01-15T10:30:00Z'
-urlId: my-document-abc123
----
+```text
+Found 5 collections
+📚 Syncing collection: Engineering
+✓ API Documentation
+✓ System Architecture
 
-Document content here...
+📚 Syncing collection: Product
+✓ Roadmap
+✓ Feature Specs
 ```
 
-Use the `id` field in your `customPaths` configuration.
-
-## Features
-
-- ✅ Sync Outline → Local
-- ✅ Sync Local → Outline
-- ✅ Each doc in own folder with README.md
-- ✅ Custom path mapping for specific documents
-- ✅ Frontmatter metadata preservation
-- ✅ CI/CD integration
-- ✅ File watching
+Use these names in your `includeCollections` or `excludeCollections` array.
 
 ## CI/CD Integration
 
@@ -234,20 +305,3 @@ jobs:
         with:
           commit_message: "docs: sync from Outline"
 ```
-
-Store `outline-sync.config.json` in your repo (without sensitive tokens):
-
-```json
-{
-  "outputDir": "./docs",
-  "customPaths": {
-    "doc-abc123": "../../README.md"
-  }
-}
-```
-
-Tokens can be passed via environment variables in CI.
-
-## License
-
-MIT
