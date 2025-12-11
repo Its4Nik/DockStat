@@ -4,13 +4,17 @@ import DockMonActions from "./actions"
 import type { DockMonTable } from "./types"
 
 export const config: PluginConfig<DockMonTable, typeof DockMonActions> = {
+  actions: DockMonActions,
   apiRoutes: {
     "/all": {
-      actions: ["getSavedMetrics"],
+      actions: ["getAllMetrics"],
+      method: "GET",
+    },
+    "/test": {
+      actions: ["test1", "test2"],
       method: "GET",
     },
   },
-  actions: DockMonActions,
   table: {
     columns: {
       id: column.id(),
@@ -21,7 +25,9 @@ export const config: PluginConfig<DockMonTable, typeof DockMonActions> = {
       data: column.json(),
       stored_on: column.createdAt(),
     },
-    jsonColumns: ["data"],
+    parser: {
+      JSON: ["data"],
+    },
     name: "dockmon",
   },
 }

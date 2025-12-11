@@ -3227,7 +3227,15 @@ var logger = new logger_default("Sqlite-Wrapper");
 
 // ../api/src/plugins/default-plugins/dockmon/src/actions.ts
 var DockMonActions = {
-  getSavedMetrics: ({ table }) => table?.select(["*"]).all()
+  getAllMetrics: ({ table }) => table?.select(["*"]).all(),
+  getContainerMetrics: ({ table }) => table?.select(["*"]).where({ type: "CONTAINER" }).all(),
+  getHostMetrics: ({ table }) => table?.select(["*"]).where({ type: "HOST" }).all(),
+  test1: () => {
+    return "Test1";
+  },
+  test2: ({ previousAction }) => {
+    return `${previousAction} - Test2`;
+  }
 };
 var actions_default = DockMonActions;
 
@@ -3235,7 +3243,11 @@ var actions_default = DockMonActions;
 var config = {
   apiRoutes: {
     "/all": {
-      actions: ["getSavedMetrics"],
+      actions: ["getAllMetrics"],
+      method: "GET"
+    },
+    "/test": {
+      actions: ["test1", "test2"],
       method: "GET"
     }
   },
@@ -3250,7 +3262,9 @@ var config = {
       data: column.json(),
       stored_on: column.createdAt()
     },
-    jsonColumns: ["data"],
+    parser: {
+      JSON: ["data"]
+    },
     name: "dockmon"
   }
 };
