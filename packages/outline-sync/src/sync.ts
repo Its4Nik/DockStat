@@ -1,10 +1,15 @@
 import { mkdir, writeFile, readFile, readdir, stat } from "fs/promises"
-import { join } from "path"
+import { join, dirname } from "path"
 import { watch } from "chokidar"
 import fm from "front-matter"
 import YAML from "yaml"
-import type { OutlineConfig, Document, DocumentMetadata } from "./types"
+import type { OutlineConfig, Document, DocumentMetadata, Collection } from "./types"
 import { OutlineClient } from "./client"
+
+interface DocumentNode {
+  document: Document
+  children: DocumentNode[]
+}
 
 export class OutlineSync {
   private client: OutlineClient
@@ -48,7 +53,40 @@ export class OutlineSync {
     return true
   }
 
-  private getDocumentPath(doc: Document, collectionName: string): string {
+  private buildDocumentTree(documents: Document[]): DocumentNode[] {
+    const docMap = new Map<string, DocumentNode>()
+    const roots: DocumentNode[] = []
+
+    // Create nodes for all documents
+    for (const doc of documents) {
+      docMap.set(doc.id, { document: doc, children: [] })
+    }
+
+    // Build tree structure
+    for (const doc of documents) {
+      const node = docMap.get(doc.id)
+
+      if (!node) {
+        continue
+      }
+
+      if (doc.parentDocumentId && docMap.has(doc.parentDocumentId)) {
+        // Add to parent's children
+        const parent = docMap.get(doc.parentDocumentId)
+        if (parent) {
+          parent.children.push(node)
+        }
+      } else {
+        // Root level document
+        roots.push(node)
+      }
+    }
+
+    return roots
+  }
+
+  private getDocumentPath(doc: Document, collectionName: string, parentPath?: string): string {
+    // Check for custom path first
     const customPath = this.customPaths[doc.id]
     if (customPath) {
       // Handle relative paths that go outside outputDir
@@ -60,7 +98,15 @@ export class OutlineSync {
 
     const collectionPath = this.sanitizePath(collectionName)
     const docPath = this.sanitizePath(doc.title)
-    return join(this.outputDir, collectionPath, docPath)
+
+    // Build path based on hierarchy
+    if (parentPath) {
+      // Nested document
+      return join(parentPath, docPath)
+    } else {
+      // Root level document in collection
+      return join(this.outputDir, collectionPath, docPath)
+    }
   }
 
   private createFrontMatter(doc: Document): string {
@@ -73,6 +119,42 @@ export class OutlineSync {
       urlId: doc.urlId,
     }
     return `---\n${YAML.stringify(metadata)}---\n\n`
+  }
+
+  private async syncDocumentNode(
+    node: DocumentNode,
+    collectionName: string,
+    parentPath?: string,
+    depth = 0
+  ): Promise<void> {
+    const doc = node.document
+    const indent = "  ".repeat(depth)
+
+    // Get full document content
+    const fullDoc = await this.client.getDocument(doc.id)
+    const docPath = this.getDocumentPath(fullDoc, collectionName, parentPath)
+    const filePath = join(docPath, "README.md")
+
+    // Create directory and write document
+    await mkdir(docPath, { recursive: true })
+    const content = this.createFrontMatter(fullDoc) + fullDoc.text
+    await writeFile(filePath, content, "utf-8")
+
+    this.documentMap.set(filePath, {
+      id: fullDoc.id,
+      title: fullDoc.title,
+      collectionId: fullDoc.collectionId,
+      parentDocumentId: fullDoc.parentDocumentId,
+      updatedAt: fullDoc.updatedAt,
+      urlId: fullDoc.urlId,
+    })
+
+    console.log(`${indent}✓ ${fullDoc.title}`)
+
+    // Recursively sync children
+    for (const child of node.children) {
+      await this.syncDocumentNode(child, collectionName, docPath, depth + 1)
+    }
   }
 
   async syncDown(): Promise<void> {
@@ -96,25 +178,12 @@ export class OutlineSync {
       console.log(`\n📚 Syncing collection: ${collection.name}`)
       const documents = await this.client.getDocuments(collection.id)
 
-      for (const doc of documents) {
-        const fullDoc = await this.client.getDocument(doc.id)
-        const docPath = this.getDocumentPath(fullDoc, collection.name)
-        const filePath = join(docPath, "README.md")
+      // Build document tree
+      const tree = this.buildDocumentTree(documents)
 
-        await mkdir(docPath, { recursive: true })
-        const content = this.createFrontMatter(fullDoc) + fullDoc.text
-        await writeFile(filePath, content, "utf-8")
-
-        this.documentMap.set(filePath, {
-          id: fullDoc.id,
-          title: fullDoc.title,
-          collectionId: fullDoc.collectionId,
-          parentDocumentId: fullDoc.parentDocumentId,
-          updatedAt: fullDoc.updatedAt,
-          urlId: fullDoc.urlId,
-        })
-
-        console.log(`  ✓ ${fullDoc.title}`)
+      // Sync each root document and its children
+      for (const node of tree) {
+        await this.syncDocumentNode(node, collection.name)
       }
     }
 

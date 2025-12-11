@@ -1,0 +1,24 @@
+name: Outline Sync
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 */6 * * *" # Every 6 hours
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - run: bun install -g @dockstat/outline-sync
+      - run: |
+          cd ./apps/docs
+          outline-sync ci
+        env:
+          OUTLINE_TOKEN: ${{ secrets.OUTLINE_TOKEN }}
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs: sync from Outline"

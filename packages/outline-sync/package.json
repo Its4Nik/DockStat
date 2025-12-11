@@ -1,6 +1,6 @@
 {
   "name": "@dockstat/outline-sync",
-  "version": "1.2.1",
+  "version": "1.2.3",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -14,7 +14,8 @@
     "build": "bun build src/index.ts --outdir dist --target bun",
     "dev": "bun run src/index.ts",
     "sync": "bun run src/index.ts sync",
-    "watch": "bun run src/index.ts watch"
+    "watch": "bun run src/index.ts watch",
+    "prepublishOnly": "bun run build"
   },
   "dependencies": {
     "commander": "^12.0.0",
