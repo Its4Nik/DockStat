@@ -1,16 +1,16 @@
 import type { StreamMessage } from "./docker-client"
 
 interface BaseConnectionCtx {
-	connectionId: string
+  connectionId: string
 }
 
 interface MessageConnectionCtx extends BaseConnectionCtx {
-	message: StreamMessage
+  message: StreamMessage
 }
 
 export interface DockerStreamManagerProxy {
-	"connection:created": (ctx: BaseConnectionCtx) => void
-	"connection:closed": (ctx: BaseConnectionCtx) => void
+  "connection:created": (ctx: BaseConnectionCtx) => void
+  "connection:closed": (ctx: BaseConnectionCtx) => void
 
-	"message:send": (ctx: MessageConnectionCtx) => void
+  "message:send": (ctx: MessageConnectionCtx) => void
 }

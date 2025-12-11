@@ -1,1 +1,12 @@
-[{"name":"React Router and ElysiaJS","description":"This Article covers on how to use Elysia JS as Backend for React Router","url":"#"},{"name":"Wait Elysia Plugins also work with this?","description":"Yes ofc! Click on me for a working example","url":"/api/docs"}]
+[
+  {
+    "name": "React Router and ElysiaJS",
+    "description": "This Article covers on how to use Elysia JS as Backend for React Router",
+    "url": "#"
+  },
+  {
+    "name": "Wait Elysia Plugins also work with this?",
+    "description": "Yes ofc! Click on me for a working example",
+    "url": "/api/docs"
+  }
+]

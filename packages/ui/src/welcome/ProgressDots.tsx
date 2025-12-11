@@ -1,13 +1,13 @@
-import type { Slide } from "./types";
+import type { Slide } from "./types"
 
 export const ProgressDots = ({
   slides,
   currentIndex,
-  onDotClick
+  onDotClick,
 }: {
-  slides: Slide[];
-  currentIndex: number;
-  onDotClick: (index: number) => void;
+  slides: Slide[]
+  currentIndex: number
+  onDotClick: (index: number) => void
 }) => (
   <div className="flex items-center gap-2">
     {slides.map((slide, index) => (
@@ -20,4 +20,4 @@ export const ProgressDots = ({
       />
     ))}
   </div>
-);
+)

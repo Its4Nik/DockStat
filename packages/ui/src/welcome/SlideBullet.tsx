@@ -1,13 +1,13 @@
-import { Check } from "lucide-react";
+import { Check } from "lucide-react"
 
 export const SlideBullet = ({
   bullet,
   index,
   isActive,
 }: {
-  bullet: { title: string; desc?: string };
-  index: number;
-  isActive: boolean;
+  bullet: { title: string; desc?: string }
+  index: number
+  isActive: boolean
 }) => (
   <div
     className="p-3 rounded border border-slate-700 bg-slate-950/60 transition-all duration-500 wrap-break-words"
@@ -29,4 +29,4 @@ export const SlideBullet = ({
       </div>
     </div>
   </div>
-);
+)

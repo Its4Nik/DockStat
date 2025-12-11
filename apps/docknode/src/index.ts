@@ -1,13 +1,12 @@
-import Logger from "@dockstat/logger";
+import Logger from "@dockstat/logger"
 
-const dockNodeLogger = new Logger("DockNode", []);
-export const dockNodeLoggerParents: string[] = dockNodeLogger.getParents();
+const dockNodeLogger = new Logger("DockNode", [])
+export const dockNodeLoggerParents: string[] = dockNodeLogger.getParents()
 
-import { openapi } from "@elysiajs/openapi";
-import { logger } from "@tqman/nice-logger";
-import Elysia from "elysia";
-import { authPlugin } from "./handlers/auth/elysia-adapter";
-import { DockStackHandler } from "./handlers/dockstack";
+import { openapi } from "@elysiajs/openapi"
+import { logger } from "@tqman/nice-logger"
+import Elysia from "elysia"
+import { DockStackHandler } from "./handlers/dockstack"
 
 new Elysia({ prefix: "/api" })
   .use(
@@ -29,6 +28,6 @@ new Elysia({ prefix: "/api" })
   .get("/deimudda", () => "sex", {
     requireAuth: true,
   })
-  .listen(4000);
+  .listen(4000)
 
-dockNodeLogger.info("Server listening on http://localhost:4000");
+dockNodeLogger.info("Server listening on http://localhost:4000")

@@ -1,40 +1,40 @@
 {
-	"compilerOptions": {
-		/* ---- Build & Module Settings ---- */
-		"composite": true,
-		"module": "ESNext",
-		"target": "ESNext",
-		"lib": ["DOM", "DOM.Iterable", "ESNext"],
-		"moduleResolution": "Node",
+  "compilerOptions": {
+    /* ---- Build & Module Settings ---- */
+    "composite": true,
+    "module": "ESNext",
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "moduleResolution": "Node",
 
-		/* ---- Strictness & Type Safety ---- */
-		"strict": true,
-		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true,
+    /* ---- Strictness & Type Safety ---- */
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
 
-		/* ---- Interop & Convenience ---- */
-		"allowSyntheticDefaultImports": true,
-		"esModuleInterop": true,
-		"resolveJsonModule": true,
-		"isolatedModules": true,
+    /* ---- Interop & Convenience ---- */
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
 
-		/* ---- Project Structure ---- */
-		"baseUrl": ".",
-		"outDir": "dist",
+    /* ---- Project Structure ---- */
+    "baseUrl": ".",
+    "outDir": "dist",
 
-		/* ---- Emission ---- */
-		"noEmit": false
-	},
-	"include": [],
-	"exclude": ["node_modules", "dist", "build"],
-	"references": [
-		{ "path": "./packages/docker-client" },
-		{ "path": "./packages/plugin-handler" },
-		{ "path": "./packages/sqlite-wrapper" },
-		{ "path": "./packages/typings" },
-		{ "path": "./packages/logger" },
-		{ "path": "./packages/utils" },
-		{ "path": "./packages/db" },
-		{ "path": "./packages/ui" }
-	]
+    /* ---- Emission ---- */
+    "noEmit": false
+  },
+  "include": [],
+  "exclude": ["node_modules", "dist", "build"],
+  "references": [
+    { "path": "./packages/docker-client" },
+    { "path": "./packages/plugin-handler" },
+    { "path": "./packages/sqlite-wrapper" },
+    { "path": "./packages/typings" },
+    { "path": "./packages/logger" },
+    { "path": "./packages/utils" },
+    { "path": "./packages/db" },
+    { "path": "./packages/ui" }
+  ]
 }

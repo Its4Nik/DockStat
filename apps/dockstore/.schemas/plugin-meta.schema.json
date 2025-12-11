@@ -14,13 +14,7 @@
   "repoType": {
     "default": "local",
     "type": "string",
-    "enum": [
-      "local",
-      "http",
-      "github",
-      "gitlab",
-      "gitea"
-    ]
+    "enum": ["local", "http", "github", "gitlab", "gitea"]
   },
   "manifest": {
     "type": "string"
@@ -44,10 +38,7 @@
         "type": "string"
       }
     },
-    "required": [
-      "name",
-      "license"
-    ]
+    "required": ["name", "license"]
   },
   "tags": {
     "type": "array",

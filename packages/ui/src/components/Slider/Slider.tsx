@@ -1,20 +1,19 @@
-import { useEffect } from "react";
-import { useState } from "react";
-import { Card } from "../Card/Card";
+import { useEffect, useState } from "react"
+import { Card } from "../Card/Card"
 
 export type SliderProps = {
-  min?: number;
-  max?: number;
-  step?: number;
-  value?: number;
-  onChange?: (value: number) => void;
-  className?: string;
-  label?: string;
-  showValue?: boolean;
-  disabled?: boolean;
+  min?: number
+  max?: number
+  step?: number
+  value?: number
+  onChange?: (value: number) => void
+  className?: string
+  label?: string
+  showValue?: boolean
+  disabled?: boolean
   variant?: "gradient" | "solid"
   size?: "sm" | "md" | "lg"
-};
+}
 
 const sliderBase = "absolute h-[50%] top-[25%] rounded-full transition-all duration-75"
 
@@ -26,7 +25,7 @@ const sliderStyles = {
 const sizes = {
   sm: "h-1",
   md: "h-3",
-  lg: "h-5"
+  lg: "h-5",
 }
 
 export const Slider = ({
@@ -40,31 +39,31 @@ export const Slider = ({
   showValue = true,
   disabled = false,
   variant = "solid",
-  size = "md"
+  size = "md",
 }: SliderProps) => {
-  const [internalValue, setInternalValue] = useState((min + max) / 2);
-  const isControlled = externalValue !== undefined;
-  const value = isControlled ? externalValue : internalValue;
+  const [internalValue, setInternalValue] = useState((min + max) / 2)
+  const isControlled = externalValue !== undefined
+  const value = isControlled ? externalValue : internalValue
 
   useEffect(() => {
-    if (!isControlled) { setInternalValue((min + max) / 2); }
-  }, [min, max, isControlled]);
+    if (!isControlled) {
+      setInternalValue((min + max) / 2)
+    }
+  }, [min, max, isControlled])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = Number(e.target.value);
-    if (!isControlled) setInternalValue(newValue);
-    onChange?.(newValue);
-  };
+    const newValue = Number(e.target.value)
+    if (!isControlled) setInternalValue(newValue)
+    onChange?.(newValue)
+  }
 
-  const percentage = max > min ? ((value - min) / (max - min)) * 100 : 0;
+  const percentage = max > min ? ((value - min) / (max - min)) * 100 : 0
 
   return (
     <div className={`w-full ${className}`}>
       {(label || showValue) && (
         <div className="flex justify-between items-center mb-2">
-          {label && (
-            <Card className="px-2 py-1 text-sm font-medium">{label}</Card>
-          )}
+          {label && <Card className="px-2 py-1 text-sm font-medium">{label}</Card>}
           {showValue && (
             <Card className="px-2 py-1 text-sm font-medium" variant="default">
               {value}
@@ -74,7 +73,9 @@ export const Slider = ({
       )}
 
       {/* Slider pill container */}
-      <div className={`relative w-full ${sizes[size]} rounded-full bg-slider-base-bg overflow-hidden`}>
+      <div
+        className={`relative w-full ${sizes[size]} rounded-full bg-slider-base-bg overflow-hidden`}
+      >
         {/* Filled portion */}
         <div
           className={`${sliderBase} ${sliderStyles[variant]}`}
@@ -112,7 +113,6 @@ export const Slider = ({
         <span>{min}</span>
         <span>{max}</span>
       </div>
-
     </div>
-  );
-};
+  )
+}

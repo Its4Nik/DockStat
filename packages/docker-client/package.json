@@ -1,58 +1,58 @@
 {
-	"name": "@dockstat/docker-client",
-	"version": "1.0.2",
-	"description": "A docker-client library powered by Dockerode for DockStat",
-	"type": "module",
-	"main": "./index.ts",
-	"types": "./index.ts",
-	"exports": {
-		".": "./index.ts",
-		"./manager": "./src/manager/index.ts"
-	},
-	"files": [
-		"index.ts",
-		"src/**/*",
-		"README.md"
-	],
-	"scripts": {
-		"dev": "bun run --watch index.ts",
-		"clean": "rm -rf dist",
-		"format": "biome format --write",
-		"lint": "biome lint .",
-		"lint:fix": "biome lint --write .",
-		"lint:gh": "turbo run lint -- --reporter=github",
-		"check-types": "bunx tsc --noEmit",
-		"test": "bun run test.ts",
-		"example:basic": "bun run examples/basic-usage.ts",
-		"example:websocket": "bun run examples/websocket-integration.ts",
-		"prepublishOnly": "bun run clean && bun run build"
-	},
-	"author": "Its4Nik",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/Its4Nik/DockStat",
-		"directory": "packages/docker-client"
-	},
-	"bugs": {
-		"url": "https://github.com/Its4Nik/DockStat/issues"
-	},
-	"homepage": "https://github.com/Its4Nik/DockStat/tree/main/packages/docker-client",
-	"engines": {
-		"bun": ">=1.0.0"
-	},
-	"peerDependencies": {
-		"typescript": "^5.9.3"
-	},
-	"devDependencies": {
-		"@types/bun": "latest"
-	},
-	"dependencies": {
-		"@dockstat/sqlite-wrapper": "workspace:*",
-		"@dockstat/utils": "workspace:*",
-		"@dockstat/typings": "workspace:*",
-		"@dockstat/plugin-handler": "workspace:*",
-		"@dockstat/logger": "workspace:*",
-		"@types/dockerode": "^3.3.44",
-		"dockerode": "^4.0.9"
-	}
+  "name": "@dockstat/docker-client",
+  "version": "1.0.2",
+  "description": "A docker-client library powered by Dockerode for DockStat",
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./manager": "./src/manager/index.ts"
+  },
+  "files": [
+    "index.ts",
+    "src/**/*",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "bun run --watch index.ts",
+    "clean": "rm -rf dist",
+    "format": "biome format --write",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "lint:gh": "turbo run lint -- --reporter=github",
+    "check-types": "bunx tsc --noEmit",
+    "test": "bun run test.ts",
+    "example:basic": "bun run examples/basic-usage.ts",
+    "example:websocket": "bun run examples/websocket-integration.ts",
+    "prepublishOnly": "bun run clean && bun run build"
+  },
+  "author": "Its4Nik",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Its4Nik/DockStat",
+    "directory": "packages/docker-client"
+  },
+  "bugs": {
+    "url": "https://github.com/Its4Nik/DockStat/issues"
+  },
+  "homepage": "https://github.com/Its4Nik/DockStat/tree/main/packages/docker-client",
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "@dockstat/sqlite-wrapper": "workspace:*",
+    "@dockstat/utils": "workspace:*",
+    "@dockstat/typings": "workspace:*",
+    "@dockstat/plugin-handler": "workspace:*",
+    "@dockstat/logger": "workspace:*",
+    "@types/dockerode": "^3.3.44",
+    "dockerode": "^4.0.9"
+  }
 }

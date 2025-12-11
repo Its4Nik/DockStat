@@ -1,61 +1,61 @@
 export {
-	Badge,
-	type BadgeProps,
-	type BadgeSize,
-	type BadgeVariant,
-} from './Badge/Badge'
+  Badge,
+  type BadgeProps,
+  type BadgeSize,
+  type BadgeVariant,
+} from "./Badge/Badge"
 export {
-	Button,
-	type ButtonProps,
-	type ButtonSize,
-	type ButtonVariant,
-} from './Button/Button'
+  Button,
+  type ButtonProps,
+  type ButtonSize,
+  type ButtonVariant,
+} from "./Button/Button"
 export {
-	Card,
-	CardBody,
-	CardFooter,
-	CardHeader,
-	type CardProps,
-	type CardSize,
-	type CardVariant,
-} from './Card/Card'
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
+  type CardProps,
+  type CardSize,
+  type CardVariant,
+} from "./Card/Card"
 export {
-	Divider,
-	type DividerProps,
-	type DividerVariant,
-} from './Divider/Divider'
+  Divider,
+  type DividerProps,
+  type DividerVariant,
+} from "./Divider/Divider"
 export {
-	Checkbox,
-	type CheckboxProps,
-	type CheckboxSize,
-} from './Forms/Checkbox'
+  ExtensionBrowser,
+  type ExtensionBrowserProps,
+} from "./Extensions/Browser"
 export {
-	CheckboxGroup,
-	type CheckboxGroupOption,
-	type CheckboxGroupProps,
-} from './Forms/CheckboxGroup'
+  Checkbox,
+  type CheckboxProps,
+  type CheckboxSize,
+} from "./Forms/Checkbox"
 export {
-	Input,
-	type InputProps,
-	type InputSize,
-	type InputVariant,
-} from './Forms/Input'
+  CheckboxGroup,
+  type CheckboxGroupOption,
+  type CheckboxGroupProps,
+} from "./Forms/CheckboxGroup"
 export {
-	Toggle,
-	type ToggleProps,
-	type ToggleSize,
-} from './Forms/Toggle'
+  Input,
+  type InputProps,
+  type InputSize,
+  type InputVariant,
+} from "./Forms/Input"
 export {
-	HoverBubble,
-	type HoverBubbleProps,
-} from './HoverBubble/HoverBubble'
-export { LinkWithIcon, type LinkWithIconProps } from './Link/Link'
-export { Modal, type ModalProps } from './Modal/Modal'
-export { Slider, type SliderProps } from './Slider/Slider'
-export { Table, type Column, type TableProps } from './Table/Table'
+  Toggle,
+  type ToggleProps,
+  type ToggleSize,
+} from "./Forms/Toggle"
 export {
-	ExtensionBrowser,
-	type ExtensionBrowserProps,
-} from './Extensions/Browser'
-export { Navbar } from './Navbar/Navbar'
-export { PluginsPage } from './Plugins/Plugins'
+  HoverBubble,
+  type HoverBubbleProps,
+} from "./HoverBubble/HoverBubble"
+export { LinkWithIcon, type LinkWithIconProps } from "./Link/Link"
+export { Modal, type ModalProps } from "./Modal/Modal"
+export { Navbar } from "./Navbar/Navbar"
+export { PluginsPage } from "./Plugins/Plugins"
+export { Slider, type SliderProps } from "./Slider/Slider"
+export { type Column, Table, type TableProps } from "./Table/Table"

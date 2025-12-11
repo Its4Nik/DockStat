@@ -1,14 +1,14 @@
+export { DockerAdapterOptionsSchema } from "../docker-client"
 export {
-	DockStatConfigTable,
-	Repo,
-	TableMetaData,
-	UpdateDockStatConfigTableResponse,
-} from './db'
+  DockStatConfigTable,
+  Repo,
+  TableMetaData,
+  UpdateDockStatConfigTableResponse,
+} from "./db"
+export { RepoManifest } from "./dockstore"
 export {
-	PluginMeta,
-	PluginStatusRepsonse,
-	DBPluginShema,
-	WrappedPluginMeta,
-} from './plugins'
-export { RepoManifest } from './dockstore'
-export { DockerAdapterOptionsSchema } from '../docker-client'
+  DBPluginShema,
+  PluginMeta,
+  PluginStatusRepsonse,
+  WrappedPluginMeta,
+} from "./plugins"

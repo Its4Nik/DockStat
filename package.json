@@ -6,13 +6,19 @@
     "docker-up": "docker compose -f up 'docker-compose.dev.yaml' -d --remove-orphans",
     "docker-up:fg": "docker compose -f docker-compose.dev.yaml up --remove-orphans",
     "dev": "turbo run dev",
+
     "lint": "turbo run lint",
     "lint:gh": "turbo run lint -- --reporter=github",
     "lint:fix": "turbo run lint:fix",
-    "format": "biome format --write .",
-    "format:check": "biome format --check .",
+
     "check-types": "turbo run check-types",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+
+    "lint:all": "biome check .",
+    "lint:all:ci": "biome check . --reporter=github",
+    "lint:fix:all": "biome check --write .",
+    "format:all": "biome format --write .",
+    "format:check:all": "biome format --check ."
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.3",

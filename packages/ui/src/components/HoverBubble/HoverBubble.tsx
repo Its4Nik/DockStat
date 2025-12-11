@@ -1,39 +1,33 @@
-import { Triangle } from 'lucide-react';
-import type { ReactNode, FC } from 'react';
+import { Triangle } from "lucide-react"
+import type { FC, ReactNode } from "react"
 
 export interface HoverBubbleProps {
-  label: string;
-  position?: 'top' | 'bottom' | 'left' | 'right';
-  children: ReactNode;
-  className?: string;
+  label: string
+  position?: "top" | "bottom" | "left" | "right"
+  children: ReactNode
+  className?: string
 }
 
 export const HoverBubble: FC<HoverBubbleProps> = ({
   label,
-  position = 'top',
+  position = "top",
   children,
-  className = '',
+  className = "",
 }) => {
-  const positionClasses: Record<
-    "top" | "bottom" | "left" | "right",
-    string
-  > = {
-    top: 'bottom-full mb-2 left-1/2 -translate-x-1/2',
-    bottom: 'top-full mt-2 left-1/2 -translate-x-1/2',
-    left: 'right-full mr-2 top-1/2 -translate-y-1/2',
-    right: 'left-full ml-2 top-1/2 -translate-y-1/2',
-  };
+  const positionClasses: Record<"top" | "bottom" | "left" | "right", string> = {
+    top: "bottom-full mb-2 left-1/2 -translate-x-1/2",
+    bottom: "top-full mt-2 left-1/2 -translate-x-1/2",
+    left: "right-full mr-2 top-1/2 -translate-y-1/2",
+    right: "left-full ml-2 top-1/2 -translate-y-1/2",
+  }
 
   // Arrow placement - uses border trick for triangle
-  const arrowClasses: Record<
-    "top" | "bottom" | "left" | "right",
-    string
-  > = {
-    top: 'left-1/2 -translate-x-1/2 top-full',
-    bottom: 'left-1/2 -translate-x-1/2 bottom-full',
-    left: 'top-1/2 -translate-y-1/2 left-full',
-    right: 'top-1/2 -translate-y-1/2 right-full',
-  };
+  const arrowClasses: Record<"top" | "bottom" | "left" | "right", string> = {
+    top: "left-1/2 -translate-x-1/2 top-full",
+    bottom: "left-1/2 -translate-x-1/2 bottom-full",
+    left: "top-1/2 -translate-y-1/2 left-full",
+    right: "top-1/2 -translate-y-1/2 right-full",
+  }
 
   return (
     <div className="relative inline-block group">
@@ -70,5 +64,5 @@ export const HoverBubble: FC<HoverBubbleProps> = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

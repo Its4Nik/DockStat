@@ -4,13 +4,13 @@ import { defineConfig } from "vite"
 import tsconfigPaths from "vite-tsconfig-paths"
 
 export default defineConfig({
-	plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
-	appType: "custom",
-	clearScreen: false,
-	dev: {
-		sourcemap: {
-			css: true,
-			js: true,
-		},
-	},
+  plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+  appType: "custom",
+  clearScreen: false,
+  dev: {
+    sourcemap: {
+      css: true,
+      js: true,
+    },
+  },
 })

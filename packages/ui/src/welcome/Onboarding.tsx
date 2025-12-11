@@ -1,29 +1,29 @@
-import { useEffect, useState } from "react";
-import { Card, CardBody } from "../components/Card/Card";
-import type { OnboardingProps } from "./types";
-import { slides } from "./CONSTS";
-import { OnboardingHeader } from "./OnboardingHeader";
-import { OnboardingSlide } from "./OnboardingSlide";
-import { OnboardingFooter } from "./OnboardingFooter";
-import IntroScreen from "./Intro";
+import { useEffect, useState } from "react"
+import { Card, CardBody } from "../components/Card/Card"
+import { slides } from "./CONSTS"
+import IntroScreen from "./Intro"
+import { OnboardingFooter } from "./OnboardingFooter"
+import { OnboardingHeader } from "./OnboardingHeader"
+import { OnboardingSlide } from "./OnboardingSlide"
+import type { OnboardingProps } from "./types"
 
 export function Onboarding({ setOnBoardingComplete }: OnboardingProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0)
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "ArrowRight") goNext();
-      if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "ArrowRight") goNext()
+      if (e.key === "ArrowLeft") goPrev()
     }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [goNext, goPrev])
 
-  const goNext = () => setCurrentIndex((i) => Math.min(i + 1, slides.length - 1));
-  const goPrev = () => setCurrentIndex((i) => Math.max(i - 1, 0));
-  const goToSlide = (index: number) => setCurrentIndex(index);
-  const finish = () => setOnBoardingComplete(true);
-  const skip = () => setOnBoardingComplete(true);
+  const goNext = () => setCurrentIndex((i) => Math.min(i + 1, slides.length - 1))
+  const goPrev = () => setCurrentIndex((i) => Math.max(i - 1, 0))
+  const goToSlide = (index: number) => setCurrentIndex(index)
+  const finish = () => setOnBoardingComplete(true)
+  const skip = () => setOnBoardingComplete(true)
 
   return (
     <dialog
@@ -36,9 +36,7 @@ export function Onboarding({ setOnBoardingComplete }: OnboardingProps) {
       <IntroScreen />
 
       <Card className="relative flex flex-col w-full max-w-4xl h-[85vh] overflow-hidden">
-        <OnboardingHeader
-          onSkip={skip}
-        />
+        <OnboardingHeader onSkip={skip} />
 
         <CardBody className="flex-1 relative p-4 sm:p-6 md:p-7 overflow-y-auto">
           <div className="relative flex-1 min-h-full overflow-x-hidden">
@@ -64,9 +62,9 @@ export function Onboarding({ setOnBoardingComplete }: OnboardingProps) {
         />
       </Card>
     </dialog>
-  );
+  )
 }
 
 export const WelcomeToDockStat = ({ setOnBoardingComplete }: OnboardingProps) => {
-  return <Onboarding setOnBoardingComplete={setOnBoardingComplete} />;
-};
+  return <Onboarding setOnBoardingComplete={setOnBoardingComplete} />
+}

@@ -1,13 +1,13 @@
-import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Input } from '../components/Forms/Input';
+import type { Meta, StoryObj } from "@storybook/react-vite"
+import { Input } from "../components/Forms/Input"
 
 const meta: Meta<typeof Input> = {
-  title: 'Inputs/Input',
+  title: "Inputs/Input",
   component: Input,
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof Input>;
+export default meta
+type Story = StoryObj<typeof Input>
 
 export const AllInputs: Story = {
   render: () => (
@@ -20,4 +20,4 @@ export const AllInputs: Story = {
       <Input disabled placeholder="Disabled input" />
     </div>
   ),
-};
+}

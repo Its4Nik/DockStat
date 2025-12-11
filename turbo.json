@@ -1,32 +1,32 @@
 {
-	"$schema": "./node_modules/turbo/schema.json",
-	"globalDependencies": ["**/.env.*local"],
-	"tasks": {
-		"build": {
-			"dependsOn": ["^build"],
-			"outputs": ["dist/**", "build/**", ".next/**", "!.next/cache/**"]
-		},
-		"lint": {
-			"outputs": [],
-			"outputLogs": "errors-only"
-		},
-		"lint:fix": {
-			"outputs": []
-		},
-		"dev": {
-			"cache": false,
-			"persistent": true
-		},
-		"clean": {
-			"cache": false
-		},
-		"test": {
-			"dependsOn": ["build"],
-			"outputs": ["coverage/**"]
-		},
-		"publish": {},
-		"check-types": {
-			"outputs": []
-		}
-	}
+  "$schema": "./node_modules/turbo/schema.json",
+  "globalDependencies": ["**/.env.*local"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "build/**", ".next/**", "!.next/cache/**"]
+    },
+    "lint": {
+      "outputs": [],
+      "outputLogs": "errors-only"
+    },
+    "lint:fix": {
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "clean": {
+      "cache": false
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"]
+    },
+    "publish": {},
+    "check-types": {
+      "outputs": []
+    }
+  }
 }

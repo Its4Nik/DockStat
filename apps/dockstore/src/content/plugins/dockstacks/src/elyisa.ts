@@ -1,7 +1,5 @@
-import Elysia from "elysia";
+import Elysia from "elysia"
 
-const DockStacksElysia = new Elysia()
-  .get("/", () => "OK")
-
+const DockStacksElysia = new Elysia().get("/", () => "OK")
 
 export default DockStacksElysia
