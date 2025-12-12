@@ -167,7 +167,8 @@ dockstat/
 ├── packages/              # Shared libraries
 │   ├── typings/           # TypeScript definitions
 │   ├── db/                # Database layer
-│   └── plugins/           # Plugin SDK
+│   ├── create-plugin/     # Plugin Templates
+│   └── plugin-handler/    # Plugin Handling
 └── .github/               # Assets & CI
 ```
 
@@ -199,7 +200,7 @@ dockstat/
 
 DockStore is built into DockStat and provides:
 
-- **100+ ready-to-use templates** (AdGuard, Home Assistant, Plex, etc.)
+- **100+ (not yet) ready-to-use templates** (AdGuard, Home Assistant, Plex, etc.)
 - **Community plugins** - Extend functionality with one click
 - **Custom themes** - Make DockStat yours
 
@@ -211,26 +212,25 @@ Access it directly from the DockStat UI under the "Store" tab.
 
 **Pre-Alpha (Current)**
 
-- ✅ Core container management
-- ✅ Basic monitoring and visualization
+- 🔧 Core container management
+- 🔧 Basic monitoring and visualization
 - ✅ Plugin system foundation
 - ⚠️ Breaking changes likely
 
 **Short Term** (Next 3 months)
 
 - Stabilize plugin API
-- Expand template library
-- Improve mobile UI
+- Expand plugin capabilities
+- Build up the Frontend
 
 **Medium Term** (6 months)
 
 - Advanced alerting system
-- Long-term metrics storage
-- Kubernetes support
+- Support for Docker Swarm
+- Integration with multiple cloud providers and Selfhosted infrastructure via Cloud Init
 
 **Long Term** (1 year)
 
-- Multi-tenancy & RBAC
 - Rich marketplace ecosystem
 - Enterprise features
 
@@ -243,7 +243,7 @@ We love contributions! Here's how to help:
 1. **Try it out** - Install and report bugs
 2. **Create a plugin** - Extend DockStat's capabilities
 3. **Add templates** - Share your Docker Compose stacks
-4. **Improve docs** - Help others get started
+4. **Improve docs** - Help others get started ([`apps/docs/dockstat`](apps/docs/dockstat))
 
 **Getting started:**
 
