@@ -175,8 +175,20 @@ export interface AllStatsResponse {
   timestamp: number
 }
 
-// StreamOptions consolidated and exported later in this file.
-// This placeholder prevents duplicate declarations when importing partial types above.
+export interface StreamOptions {
+  hostId?: number
+  containerId?: string
+  interval?: number
+  includeStats?: boolean
+  includeMetrics?: boolean
+  includeLogs?: boolean
+  logLines?: number
+  filters?: {
+    containerNames?: string[]
+    containerStates?: string[]
+    imageNames?: string[]
+  }
+}
 
 export interface DockerStreamData {
   type: "container_stats" | "host_metrics" | "container_list" | "all_stats" | "error"
@@ -342,20 +354,7 @@ export interface StreamSubscription {
   lastActivity: number
 }
 
-export interface StreamOptions {
-  hostId?: number
-  containerId?: string
-  interval?: number
-  includeStats?: boolean
-  includeMetrics?: boolean
-  includeLogs?: boolean
-  logLines?: number
-  filters?: {
-    containerNames?: string[]
-    containerStates?: string[]
-    imageNames?: string[]
-  }
-}
+// StreamOptions defined above (single canonical definition)
 
 export interface StreamChannel {
   name: string

@@ -16,7 +16,7 @@
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "lint:gh": "turbo run lint -- --reporter=github",
-    "check-types": "tsc --noEmit",
+    "check-types": "bunx tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "peerDependencies": {

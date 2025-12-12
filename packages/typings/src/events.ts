@@ -1,6 +1,7 @@
 import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DockerClientEvents } from "./docker-client"
 import type { DockerStreamManagerProxy } from "./docker-monitoring-manager"
+import type { Logger } from "./plugin-base"
 
 type BaseEvents = DockerClientEvents & DockerStreamManagerProxy
 
@@ -12,14 +13,7 @@ type AppendServerContext<E, ExtraArgs extends Record<string, unknown>> = {
     : E[K]
 }
 
-type LoggerFn = (msg: string) => void
-
-type Logger = {
-  debug: LoggerFn
-  info: LoggerFn
-  warn: LoggerFn
-  error: LoggerFn
-}
+// Logger is imported from './plugin-base'
 
 // The context injected into each server-side event handler.
 // Exported so it can be reused elsewhere if needed.

@@ -30,7 +30,8 @@
     "dev": "bun run --bun react-router dev",
     "start": "bun run --bun react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "typegen": "bun run --bun react-router typegen"
+    "typegen": "bun run --bun react-router typegen",
+    "check-types": "bunx tsc --noEmit"
   },
   "bun-create": {
     "postinstall": [

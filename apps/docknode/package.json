@@ -5,6 +5,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "install": "bunx turbo install",
     "dev": "bun run --watch src/index.ts",
+    "check-types": "bunx tsc --noEmit",
     "build": "bun run src/build.ts"
   },
   "dependencies": {

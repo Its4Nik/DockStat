@@ -25,10 +25,10 @@
     "default": "./index.ts"
   },
   "scripts": {
+    "check-types": "bunx tsc --noEmit",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
-    "lint:gh": "turbo run lint -- --reporter=github",
-    "check-types": "bunx tsc --noEmit"
+    "lint:gh": "turbo run lint -- --reporter=github"
   },
   "type": "module",
   "devDependencies": {

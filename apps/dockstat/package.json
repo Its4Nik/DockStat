@@ -9,6 +9,7 @@
     "start": "bun run --bun react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "typegen": "react-router typegen",
+    "check-types": "bunx tsc --noEmit",
     "format": "biome format --write"
   },
   "dependencies": {

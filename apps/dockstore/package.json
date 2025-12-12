@@ -3,6 +3,9 @@
   "module": "bundler.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "check-types": "bunx tsc --noEmit"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@dockstat/plugin-handler": "workspace:*",

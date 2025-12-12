@@ -20,7 +20,8 @@
     "bundle": "bun build --minify src/components/index.ts --outdir=./dist",
     "lint": "eslint .",
     "preview": "vite preview",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "check-types": "bunx tsc --noEmit"
   },
   "dependencies": {
     "@dockstat/typings": "workspace:*",

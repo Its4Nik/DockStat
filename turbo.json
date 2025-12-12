@@ -13,6 +13,11 @@
     "lint:fix": {
       "outputs": []
     },
+    "check-types": {
+      "outputs": [],
+      "dependsOn": ["^check-types"],
+      "outputLogs": "errors-only"
+    },
     "dev": {
       "cache": false,
       "persistent": true
@@ -24,9 +29,6 @@
       "dependsOn": ["build"],
       "outputs": ["coverage/**"]
     },
-    "publish": {},
-    "check-types": {
-      "outputs": []
-    }
+    "publish": {}
   }
 }

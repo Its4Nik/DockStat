@@ -16,12 +16,12 @@
   ],
   "scripts": {
     "dev": "bun run --watch index.ts",
+    "check-types": "bunx tsc --noEmit",
     "clean": "rm -rf dist",
     "format": "biome format --write",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "lint:gh": "turbo run lint -- --reporter=github",
-    "check-types": "bunx tsc --noEmit",
     "test": "bun run test.ts",
     "example:basic": "bun run examples/basic-usage.ts",
     "example:websocket": "bun run examples/websocket-integration.ts",
