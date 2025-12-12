@@ -4,6 +4,10 @@
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
+  "files": [
+    "./defaults.ts",
+    "./index.ts"
+  ],
   "scripts": {
     "build": "bun run ./build.ts",
     "dev": "bun build index.ts",
