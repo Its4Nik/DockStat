@@ -1,4 +1,4 @@
-import type { Collection, Document, DocumentMetadata, OutlineConfig } from "./types"
+import type { Collection, Document, OutlineConfig } from "./types"
 
 export class OutlineClient {
   private baseUrl: string

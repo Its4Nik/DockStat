@@ -2,7 +2,7 @@ export * from "./plugin-base"
 
 import type { ColumnDefinition } from "@dockstat/sqlite-wrapper"
 import type { Parser } from "@dockstat/sqlite-wrapper/types"
-import type { PluginActions, Plugin } from "./plugin-base"
+import type { Plugin, PluginActions } from "./plugin-base"
 
 /**
  * PluginRoute defines the API route configuration for plugin actions.

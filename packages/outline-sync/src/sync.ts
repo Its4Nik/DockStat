@@ -1,10 +1,10 @@
+import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises"
+import { join } from "node:path"
 import { watch } from "chokidar"
 import fm from "front-matter"
-import { mkdir, readdir, readFile, stat, writeFile } from "fs/promises"
-import { dirname, join } from "path"
 import YAML from "yaml"
 import { OutlineClient } from "./client"
-import type { Collection, Document, DocumentMetadata, OutlineConfig } from "./types"
+import type { Document, DocumentMetadata, OutlineConfig } from "./types"
 
 interface DocumentNode {
   document: Document

@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
+import { existsSync } from "node:fs"
+import { readFile, writeFile } from "node:fs/promises"
+import { join } from "node:path"
 import { Command } from "commander"
-import { existsSync } from "fs"
-import { readFile, writeFile } from "fs/promises"
-import { join } from "path"
 import { OutlineSync } from "./sync"
 import type { OutlineConfig } from "./types"
 
