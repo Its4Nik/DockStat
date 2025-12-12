@@ -175,11 +175,8 @@ export interface AllStatsResponse {
   timestamp: number
 }
 
-export interface StreamOptions {
-  containerId?: string
-  hostId?: number
-  interval?: number
-}
+// StreamOptions consolidated and exported later in this file.
+// This placeholder prevents duplicate declarations when importing partial types above.
 
 export interface DockerStreamData {
   type: "container_stats" | "host_metrics" | "container_list" | "all_stats" | "error"
@@ -279,6 +276,11 @@ export interface DockerClientEvents {
 export interface DockerEventEmitterInterface {
   on<K extends keyof DockerClientEvents>(event: K, listener: DockerClientEvents[K]): this
   off<K extends keyof DockerClientEvents>(event: K, listener: DockerClientEvents[K]): this
+  addListener<K extends keyof DockerClientEvents>(event: K, listener: DockerClientEvents[K]): this
+  removeListener<K extends keyof DockerClientEvents>(
+    event: K,
+    listener: DockerClientEvents[K]
+  ): this
   emit<K extends keyof DockerClientEvents>(
     event: K,
     ...args: Parameters<DockerClientEvents[K]>
@@ -293,7 +295,7 @@ export interface MonitoringState {
   healthCheckInterval?: NodeJS.Timeout
   containerEventInterval?: NodeJS.Timeout
   hostMetricsInterval?: NodeJS.Timeout
-  contaienrMetricsInterval?: NodeJS.Timeout
+  containerMetricsInterval?: NodeJS.Timeout
   lastHealthStatus: Map<number, boolean>
   lastContainerStates: Map<string, ContainerInfo[]>
   dockerEventStreams: Map<number, NodeJS.ReadableStream>
