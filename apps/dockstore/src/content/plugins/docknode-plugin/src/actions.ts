@@ -20,9 +20,11 @@ export const actions: PluginActions<DockNodePluginTable> = {
   },
 
   registerNode: ({ table, body }) => {
-    const pParams =
-      (body as Omit<DockNodePluginTable, "id"> | undefined) ??
-      ({} as Omit<DockNodePluginTable, "id">)
+    if (!body) {
+      throw new Error("Request body is required to register a node")
+    }
+
+    const pParams = body as Omit<DockNodePluginTable, "id">
 
     if (!pParams.authenticationKey) {
       throw new Error("Authentication key needed for connection to DockNode clients needed.")
