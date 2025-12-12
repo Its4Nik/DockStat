@@ -37,8 +37,10 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     const [whereClause, whereParams] = this.buildWhereClause()
     const query = `UPDATE ${this.quoteIdentifier(this.getTableName())} SET ${setClause}${whereClause}`
 
-    const updateValues = updateColumns.map((col) => transformedData[col])
-    const allParams = [...updateValues, ...whereParams]
+    const updateValues = updateColumns.map(
+      (col) => transformedData[col] ?? null
+    ) as SQLQueryBindings[]
+    const allParams: SQLQueryBindings[] = [...updateValues, ...whereParams]
 
     const result = this.getDb()
       .prepare(query)
@@ -80,10 +82,13 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     const stmt = this.getDb().prepare(updateQuery)
 
     let totalChanges = 0
-    const updateValues = updateColumns.map((col) => transformedData[col])
+    const updateValues = updateColumns.map(
+      (col) => transformedData[col] ?? null
+    ) as SQLQueryBindings[]
 
     for (const row of matchingRows) {
-      const result = stmt.run(...updateValues, row.rowid as SQLQueryBindings)
+      const params: SQLQueryBindings[] = [...updateValues, row.rowid as SQLQueryBindings]
+      const result = stmt.run(...params)
       totalChanges += result.changes
     }
     this.reset()

@@ -81,7 +81,7 @@ const shouldIgnore = (msg: string, ignoreMessages: string[]) => {
 class Logger {
   protected name: string
   protected parents: string[] = []
-  public reqFrom: Record<string, string> = {}
+  public reqFrom: Record<string, string | undefined> = {}
   public disabled: boolean
 
   constructor(prefix: string, parents: string[] = []) {
@@ -176,15 +176,17 @@ class Logger {
     return `${prefix} — ${chalk.grey(message)}`
   }
 
-  private cleanReqId(reqId: string) {
+  private cleanReqId(reqId: string): string {
     if (reqId.includes("|")) {
-      this.reqFrom[reqId] = reqId.split("|")[1]
-      return reqId.split("|")[0]
+      const parts = reqId.split("|")
+      this.reqFrom[reqId] = parts[1] ?? undefined
+      return parts[0] ?? ""
     }
     return reqId
   }
 
-  private colorByReqID(rawReqId: string): string {
+  private colorByReqID(rawReqId?: string): string {
+    if (!rawReqId) return ""
     const reqId = this.cleanReqId(rawReqId)
     const hash = stringToHash(reqId)
     const [r, g, b] = hashToColor(hash)

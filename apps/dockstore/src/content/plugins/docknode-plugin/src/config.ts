@@ -6,6 +6,10 @@ import type { DockNodePluginTable } from "./types"
 export const DockNodeConfig: PLUGIN.PluginConfig<DockNodePluginTable, typeof actions> = {
   table: {
     name: "docknode",
+    parser: {
+      // Indicate which columns should be treated as JSON by the sqlite wrapper/parser.
+      JSON: ["host", "certData", "handlers", "authenticationKey"],
+    },
     columns: {
       id: column.id(),
       name: column.text({ notNull: true, unique: true }),
