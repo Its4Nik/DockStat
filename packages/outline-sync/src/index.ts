@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 import { Command } from "commander"
-import { OutlineSync } from "./sync"
-import type { OutlineConfig } from "./types"
 import { existsSync } from "fs"
 import { readFile, writeFile } from "fs/promises"
 import { join } from "path"
+import { OutlineSync } from "./sync"
+import type { OutlineConfig } from "./types"
 
 const program = new Command()
 
