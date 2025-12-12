@@ -37,4 +37,4 @@ jobs:
 
       - name: Lint
         run: |
-          bun run lint:all:ci
+          bun run lint:all
