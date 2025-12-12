@@ -17,8 +17,7 @@
     "lint:all": "biome check .",
     "lint:all:ci": "biome check . --reporter=github",
     "lint:fix:all": "biome check --write .",
-    "format:all": "biome format --write .",
-    "format:check:all": "biome format --check ."
+    "format:all": "biome format --write ."
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.3",
