@@ -1,5 +1,4 @@
-// Enhanced types.ts with comprehensive SQLite support
-import type { Database, SQLQueryBindings } from "bun:sqlite";
+import type { Database, SQLQueryBindings } from "bun:sqlite"
 
 /**
  * All SQLite data types including affinity types
@@ -43,9 +42,12 @@ export const SQLiteTypes = {
 
   // JSON (stored as TEXT)
   JSON: "JSON" as const,
-} as const;
 
-export type SQLiteType = (typeof SQLiteTypes)[keyof typeof SQLiteTypes];
+  // Modules (stored as TEXT)
+  MODULE: "TEXT" as const,
+} as const
+
+export type SQLiteType = (typeof SQLiteTypes)[keyof typeof SQLiteTypes]
 
 /**
  * SQLite built-in scalar functions
@@ -62,24 +64,18 @@ export const SQLiteFunctions = {
   LENGTH: (expr: string) => `LENGTH(${expr})`,
   LOWER: (expr: string) => `LOWER(${expr})`,
   UPPER: (expr: string) => `UPPER(${expr})`,
-  TRIM: (expr: string, chars?: string) =>
-    chars ? `TRIM(${expr}, '${chars}')` : `TRIM(${expr})`,
+  TRIM: (expr: string, chars?: string) => (chars ? `TRIM(${expr}, '${chars}')` : `TRIM(${expr})`),
   LTRIM: (expr: string, chars?: string) =>
     chars ? `LTRIM(${expr}, '${chars}')` : `LTRIM(${expr})`,
   RTRIM: (expr: string, chars?: string) =>
     chars ? `RTRIM(${expr}, '${chars}')` : `RTRIM(${expr})`,
   SUBSTR: (expr: string, start: number, length?: number) =>
-    length
-      ? `SUBSTR(${expr}, ${start}, ${length})`
-      : `SUBSTR(${expr}, ${start})`,
+    length ? `SUBSTR(${expr}, ${start}, ${length})` : `SUBSTR(${expr}, ${start})`,
   SUBSTRING: (expr: string, start: number, length?: number) =>
-    length
-      ? `SUBSTRING(${expr}, ${start}, ${length})`
-      : `SUBSTRING(${expr}, ${start})`,
+    length ? `SUBSTRING(${expr}, ${start}, ${length})` : `SUBSTRING(${expr}, ${start})`,
   REPLACE: (expr: string, old: string, replacement: string) =>
     `REPLACE(${expr}, '${old}', '${replacement}')`,
-  PRINTF: (format: string, ...args: string[]) =>
-    `PRINTF('${format}', ${args.join(", ")})`,
+  PRINTF: (format: string, ...args: string[]) => `PRINTF('${format}', ${args.join(", ")})`,
 
   // Math functions
   ABS: (expr: string) => `ABS(${expr})`,
@@ -95,8 +91,7 @@ export const SQLiteFunctions = {
 
   // Conditional
   COALESCE: (...exprs: string[]) => `COALESCE(${exprs.join(", ")})`,
-  IFNULL: (expr: string, replacement: string) =>
-    `IFNULL(${expr}, ${replacement})`,
+  IFNULL: (expr: string, replacement: string) => `IFNULL(${expr}, ${replacement})`,
   NULLIF: (expr1: string, expr2: string) => `NULLIF(${expr1}, ${expr2})`,
   IIF: (condition: string, trueValue: string, falseValue: string) =>
     `IIF(${condition}, ${trueValue}, ${falseValue})`,
@@ -107,20 +102,17 @@ export const SQLiteFunctions = {
   AVG: (expr: string) => `AVG(${expr})`,
   TOTAL: (expr: string) => `TOTAL(${expr})`,
   GROUP_CONCAT: (expr: string, separator?: string) =>
-    separator
-      ? `GROUP_CONCAT(${expr}, '${separator}')`
-      : `GROUP_CONCAT(${expr})`,
+    separator ? `GROUP_CONCAT(${expr}, '${separator}')` : `GROUP_CONCAT(${expr})`,
 
   // JSON functions (SQLite 3.45+)
   JSON: (expr: string) => `JSON(${expr})`,
-  JSON_EXTRACT: (json: string, path: string) =>
-    `JSON_EXTRACT(${json}, '${path}')`,
+  JSON_EXTRACT: (json: string, path: string) => `JSON_EXTRACT(${json}, '${path}')`,
   JSON_TYPE: (json: string, path?: string) =>
     path ? `JSON_TYPE(${json}, '${path}')` : `JSON_TYPE(${json})`,
   JSON_VALID: (expr: string) => `JSON_VALID(${expr})`,
   JSON_ARRAY: (...values: string[]) => `JSON_ARRAY(${values.join(", ")})`,
   JSON_OBJECT: (...pairs: string[]) => `JSON_OBJECT(${pairs.join(", ")})`,
-} as const;
+} as const
 
 /**
  * SQLite keywords and special values
@@ -142,59 +134,54 @@ export const SQLiteKeywords = {
   FAIL: "FAIL" as const,
   IGNORE: "IGNORE" as const,
   REPLACE: "REPLACE" as const,
-} as const;
+} as const
 
 /**
  * Foreign key actions
  */
-export type ForeignKeyAction =
-  | "CASCADE"
-  | "SET NULL"
-  | "RESTRICT"
-  | "NO ACTION"
-  | "SET DEFAULT";
+export type ForeignKeyAction = "CASCADE" | "SET NULL" | "RESTRICT" | "NO ACTION" | "SET DEFAULT"
 
 /**
  * Column constraint options with comprehensive support
  */
 export interface ColumnConstraints {
   /** Column is PRIMARY KEY */
-  primaryKey?: boolean;
+  primaryKey?: boolean
   /** Column has AUTOINCREMENT (only valid with INTEGER PRIMARY KEY) */
-  autoincrement?: boolean;
+  autoincrement?: boolean
   /** Column is NOT NULL */
-  notNull?: boolean;
+  notNull?: boolean
   /** Column has UNIQUE constraint */
-  unique?: boolean;
+  unique?: boolean
   /** Default value - can be literal value, function call, or keyword */
-  default?: string | number | boolean | null | DefaultExpression;
+  default?: string | number | boolean | null | DefaultExpression
   /** Custom check constraint */
-  check?: string;
+  check?: string
   /** Collation sequence */
-  collate?: "BINARY" | "NOCASE" | "RTRIM" | string;
+  collate?: "BINARY" | "NOCASE" | "RTRIM" | string
   /** References another table (foreign key) */
   references?: {
-    table: string;
-    column: string;
-    onDelete?: ForeignKeyAction;
-    onUpdate?: ForeignKeyAction;
-  };
+    table: string
+    column: string
+    onDelete?: ForeignKeyAction
+    onUpdate?: ForeignKeyAction
+  }
   /** Generated column expression (GENERATED ALWAYS AS) */
   generated?: {
-    expression: string;
-    stored?: boolean; // true for STORED, false/undefined for VIRTUAL
-  };
+    expression: string
+    stored?: boolean // true for STORED, false/undefined for VIRTUAL
+  }
   /** Column comment (stored as metadata, not in schema) */
-  comment?: string;
+  comment?: string
 }
 
 /**
  * Type-safe default value expressions
  */
 export type DefaultExpression = {
-  _type: "expression";
-  expression: string;
-};
+  _type: "expression"
+  expression: string
+}
 
 /**
  * Helper to create default expressions
@@ -202,50 +189,49 @@ export type DefaultExpression = {
 export const defaultExpr = (expression: string): DefaultExpression => ({
   _type: "expression",
   expression,
-});
+})
 
 /**
  * Type-safe column definition
  */
 export interface ColumnDefinition extends ColumnConstraints {
   /** SQLite data type */
-  type: SQLiteType;
+  type: SQLiteType
   /** Optional type parameters (e.g., VARCHAR(255)) */
-  length?: number;
+  length?: number
   /** Precision for DECIMAL/NUMERIC types */
-  precision?: number;
+  precision?: number
   /** Scale for DECIMAL/NUMERIC types */
-  scale?: number;
+  scale?: number
 }
 
 /**
  * Type-safe table schema definition
  */
-export type TableSchema = Record<string, ColumnDefinition>;
+export type TableSchema = Record<string, ColumnDefinition>
 
-
-export type TypedTableSchema<T extends string = string> = Record<T, ColumnDefinition>;
+export type TypedTableSchema<T extends string = string> = Record<T, ColumnDefinition>
 
 /**
  * Table constraint types
  */
-export interface TableConstraints {
+export interface TableConstraints<T> {
   /** PRIMARY KEY constraint on multiple columns */
-  primaryKey?: string[];
+  primaryKey?: ArrayKey<T>
   /** UNIQUE constraints */
-  unique?: string[] | string[][];
+  unique?: string[] | string[][]
   /** CHECK constraints */
-  check?: string[];
+  check?: string[]
   /** FOREIGN KEY constraints */
   foreignKeys?: Array<{
-    columns: string[];
+    columns: ArrayKey<T>[]
     references: {
-      table: string;
-      columns: string[];
-      onDelete?: ForeignKeyAction;
-      onUpdate?: ForeignKeyAction;
-    };
-  }>;
+      table: string
+      columns: string[]
+      onDelete?: ForeignKeyAction
+      onUpdate?: ForeignKeyAction
+    }
+  }>
 }
 
 /**
@@ -253,17 +239,26 @@ export interface TableConstraints {
  */
 export interface TableOptions<T> {
   /** Add IF NOT EXISTS clause */
-  ifNotExists?: boolean;
+  ifNotExists?: boolean
   /** Create WITHOUT ROWID table */
-  withoutRowId?: boolean;
+  withoutRowId?: boolean
   /** Table constraints */
-  constraints?: TableConstraints;
+  constraints?: TableConstraints<T>
   /** Temporary table */
-  temporary?: boolean;
+  temporary?: boolean
   /** Table comment */
-  comment?: string;
-  /** JSON config for table creation and returned query builder */
-  jsonConfig?: Array<keyof T>;
+  comment?: string
+
+  parser?: Partial<Parser<T>>
+}
+
+export interface Parser<T> extends ModuleParser<T> {
+  JSON?: ArrayKey<T>
+  BOOLEAN?: ArrayKey<T>
+}
+
+interface ModuleParser<T> {
+  MODULE?: Partial<Record<keyof T, Bun.TranspilerOptions>>
 }
 
 /**
@@ -275,8 +270,8 @@ export const column = {
    */
   integer: (
     constraints?: ColumnConstraints & {
-      size?: "TINYINT" | "SMALLINT" | "MEDIUMINT" | "BIGINT";
-    },
+      size?: "TINYINT" | "SMALLINT" | "MEDIUMINT" | "BIGINT"
+    }
   ): ColumnDefinition => ({
     type: constraints?.size || SQLiteTypes.INTEGER,
     ...constraints,
@@ -287,9 +282,9 @@ export const column = {
    */
   text: (
     constraints?: ColumnConstraints & {
-      length?: number;
-      variant?: "VARCHAR" | "CHAR" | "CLOB" | "NCHAR" | "NVARCHAR";
-    },
+      length?: number
+      variant?: "VARCHAR" | "CHAR" | "CLOB" | "NCHAR" | "NVARCHAR"
+    }
   ): ColumnDefinition => ({
     type: constraints?.variant || SQLiteTypes.TEXT,
     length: constraints?.length,
@@ -299,9 +294,7 @@ export const column = {
   /**
    * Create a REAL column
    */
-  real: (
-    constraints?: ColumnConstraints & { variant?: "DOUBLE" | "FLOAT" },
-  ): ColumnDefinition => ({
+  real: (constraints?: ColumnConstraints & { variant?: "DOUBLE" | "FLOAT" }): ColumnDefinition => ({
     type: constraints?.variant || SQLiteTypes.REAL,
     ...constraints,
   }),
@@ -319,10 +312,10 @@ export const column = {
    */
   numeric: (
     constraints?: ColumnConstraints & {
-      precision?: number;
-      scale?: number;
-      variant?: "DECIMAL";
-    },
+      precision?: number
+      scale?: number
+      variant?: "DECIMAL"
+    }
   ): ColumnDefinition => ({
     type: constraints?.variant || SQLiteTypes.NUMERIC,
     precision: constraints?.precision,
@@ -349,9 +342,7 @@ export const column = {
   /**
    * Create a TIMESTAMP column (stored as INTEGER by default)
    */
-  timestamp: (
-    constraints?: ColumnConstraints & { asText?: boolean },
-  ): ColumnDefinition => ({
+  timestamp: (constraints?: ColumnConstraints & { asText?: boolean }): ColumnDefinition => ({
     type: constraints?.asText ? SQLiteTypes.TEXT : SQLiteTypes.INTEGER,
     ...constraints,
   }),
@@ -376,23 +367,16 @@ export const column = {
   /**
    * Create a JSON column (stored as TEXT)
    */
-  json: (
-    constraints: ColumnConstraints & { validateJson?: boolean },
-  ): ColumnDefinition => ({
+  json: (constraints?: ColumnConstraints & { validateJson?: boolean }): ColumnDefinition => ({
     type: SQLiteTypes.JSON,
-    check: constraints?.validateJson ?? true
-      ? "JSON_VALID({{COLUMN}})"
-      : constraints?.check,
+    check: constraints?.validateJson ? "JSON_VALID({{COLUMN}})" : constraints?.check,
     ...constraints,
   }),
 
   /**
    * Create a VARCHAR column with specified length
    */
-  varchar: (
-    length: number,
-    constraints?: ColumnConstraints,
-  ): ColumnDefinition => ({
+  varchar: (length: number, constraints?: ColumnConstraints): ColumnDefinition => ({
     type: SQLiteTypes.VARCHAR,
     length,
     ...constraints,
@@ -401,10 +385,7 @@ export const column = {
   /**
    * Create a CHAR column with specified length
    */
-  char: (
-    length: number,
-    constraints?: ColumnConstraints,
-  ): ColumnDefinition => ({
+  char: (length: number, constraints?: ColumnConstraints): ColumnDefinition => ({
     type: SQLiteTypes.CHAR,
     length,
     ...constraints,
@@ -414,10 +395,7 @@ export const column = {
    * Create an auto-incrementing primary key column
    */
   id: (
-    constraints?: Omit<
-      ColumnConstraints,
-      "primaryKey" | "autoincrement" | "notNull"
-    >,
+    constraints?: Omit<ColumnConstraints, "primaryKey" | "autoincrement" | "notNull">
   ): ColumnDefinition => ({
     type: SQLiteTypes.INTEGER,
     primaryKey: true,
@@ -429,15 +407,13 @@ export const column = {
   /**
    * Create a UUID column (stored as TEXT)
    */
-  uuid: (
-    constraints?: ColumnConstraints & { generateDefault?: boolean },
-  ): ColumnDefinition => ({
+  uuid: (constraints?: ColumnConstraints & { generateDefault?: boolean }): ColumnDefinition => ({
     type: SQLiteTypes.TEXT,
     length: 36,
     default: constraints?.generateDefault
       ? defaultExpr(
-        "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))",
-      )
+          "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))"
+        )
       : constraints?.default,
     ...constraints,
   }),
@@ -447,8 +423,8 @@ export const column = {
    */
   createdAt: (
     constraints?: Omit<ColumnConstraints, "default" | "notNull"> & {
-      asText?: boolean;
-    },
+      asText?: boolean
+    }
   ): ColumnDefinition => ({
     type: constraints?.asText ? SQLiteTypes.DATETIME : SQLiteTypes.INTEGER,
     notNull: true,
@@ -459,10 +435,21 @@ export const column = {
   }),
 
   /**
+   * Creates a function Column that will be parsed and transpiled using Bun.transpiler
+   */
+  module: (constraints?: ColumnConstraints): ColumnDefinition => ({
+    type: SQLiteTypes.MODULE,
+    comment:
+      constraints?.comment ||
+      "A simple Module column, with automatic serilisation and deserilisation using Bun.Transpiler()",
+    ...constraints,
+  }),
+
+  /**
    * Create an updated_at timestamp column
    */
   updatedAt: (
-    constraints?: Omit<ColumnConstraints, "default"> & { asText?: boolean },
+    constraints?: Omit<ColumnConstraints, "default"> & { asText?: boolean }
   ): ColumnDefinition => ({
     type: constraints?.asText ? SQLiteTypes.DATETIME : SQLiteTypes.INTEGER,
     default: constraints?.asText
@@ -478,10 +465,10 @@ export const column = {
     refTable: string,
     refColumn = "id",
     constraints?: ColumnConstraints & {
-      onDelete?: ForeignKeyAction;
-      onUpdate?: ForeignKeyAction;
-      type?: SQLiteType;
-    },
+      onDelete?: ForeignKeyAction
+      onUpdate?: ForeignKeyAction
+      type?: SQLiteType
+    }
   ): ColumnDefinition => ({
     type: constraints?.type || SQLiteTypes.INTEGER,
     references: {
@@ -496,16 +483,13 @@ export const column = {
   /**
    * Create an enum column (with CHECK constraint)
    */
-  enum: (
-    values: string[],
-    constraints?: ColumnConstraints,
-  ): ColumnDefinition => ({
+  enum: (values: string[], constraints?: ColumnConstraints): ColumnDefinition => ({
     type: SQLiteTypes.TEXT,
     notNull: true,
     check: `{{COLUMN}} IN (${values.map((v) => `'${v}'`).join(", ")})`,
     ...constraints,
   }),
-};
+}
 
 /**
  * SQL function helpers for use in defaults and expressions
@@ -528,99 +512,97 @@ export const sql = {
   null: () => null,
   true: () => 1,
   false: () => 0,
-};
+}
 
 /**
  * Enhanced createTable method signature
  */
-export type CreateTableColumns = string | Record<string, string> | TableSchema;
+export type CreateTableColumns = string | Record<string, string> | TableSchema
 
 /**
  * Query builder state interface
  */
 export interface QueryBuilderState<T extends Record<string, unknown>> {
-  db: Database; // Database instance from bun:sqlite
-  tableName: string;
-  whereConditions: string[];
-  whereParams: SQLQueryBindings[];
+  db: Database // Database instance from bun:sqlite
+  tableName: string
+  whereConditions: string[]
+  whereParams: SQLQueryBindings[]
   regexConditions: Array<{
-    column: keyof T;
-    regex: RegExp;
-  }>;
-  jsonColumns?: Array<keyof T>;
+    column: keyof T
+    regex: RegExp
+  }>
+  parser?: Parser<T>
 }
 
 /**
  * Column names type for SELECT operations
  */
-export type ColumnNames<T> = ["*"] | Array<keyof T>;
+export type ColumnNames<T> = ["*"] | Array<keyof T>
 
 /**
  * Order direction for ORDER BY clauses
  */
-export type OrderDirection = "ASC" | "DESC";
+export type OrderDirection = "ASC" | "DESC"
 
 /**
  * WHERE condition object type
  */
-export type WhereCondition<T> = Partial<T>;
+export type WhereCondition<T> = Partial<T>
 
 /**
  * Regex condition object type
  */
-export type RegexCondition<T> = Partial<Record<keyof T, RegExp | string>>;
+export type RegexCondition<T> = Partial<Record<keyof T, RegExp | string>>
 
 /**
  * Insert result interface
  */
 export interface InsertResult {
-  insertId: number;
-  changes: number;
+  insertId: number
+  changes: number
 }
 
 /**
  * Update result interface
  */
 export interface UpdateResult {
-  changes: number;
+  changes: number
 }
 
 /**
  * Delete result interface
  */
 export interface DeleteResult {
-  changes: number;
+  changes: number
 }
 
 /**
  * Insert options interface
  */
 export interface InsertOptions {
-  orIgnore?: boolean;
-  orReplace?: boolean;
-  orAbort?: boolean;
-  orFail?: boolean;
-  orRollback?: boolean;
+  orIgnore?: boolean
+  orReplace?: boolean
+  orAbort?: boolean
+  orFail?: boolean
+  orRollback?: boolean
 }
 
 /**
  * JSON column configuration
  */
-export interface JsonColumnConfig<T> {
-  jsonColumns?: Array<keyof T>;
-}
+export type ArrayKey<T> = Array<keyof T>
 
 /**
  * Generic database row type
  */
-export type DatabaseRow = Record<string, unknown>;
+export type DatabaseRow = Record<string, unknown>
 
 /**
  * SQL parameter type
  */
-export type SqlParameter = SQLQueryBindings;
+export type SqlParameter = SQLQueryBindings
 
 /**
  * Database row with unknown structure
  */
-export type DatabaseRowData = Record<string, SQLQueryBindings>;
+export type DatabaseRowData = Record<string, SQLQueryBindings>

@@ -1,8 +1,8 @@
 type FontSpec = {
-    font_size: string // e.g. "0.875rem"
-    family: string;
-    font_weight?: number
-    color: string
+  font_size: string // e.g. "0.875rem"
+  family: string
+  font_weight?: number
+  color: string
 }
 
 type CardComponent = {

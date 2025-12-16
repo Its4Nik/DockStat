@@ -1,0 +1,63 @@
+{
+  "name": "@dockstat/create-rr-elysia",
+  "description": "A template for a ready to use React Router Setup and ElysiaJS endpoint",
+  "private": false,
+  "version": "1.0.2",
+  "type": "module",
+  "keywords": [
+    "template",
+    "react",
+    "react-router",
+    "elysiajs",
+    "bun",
+    "fullstack",
+    "framework"
+  ],
+  "files": [
+    "app",
+    "public",
+    ".dockerignore",
+    ".gitignore",
+    "Dockerfile",
+    "package.json",
+    "react-router.config.ts",
+    "README.md",
+    "tsconfig.json",
+    "vite.config.ts"
+  ],
+  "scripts": {
+    "build": "bun run --bun react-router build",
+    "dev": "bun run --bun react-router dev",
+    "start": "bun run --bun react-router-serve ./build/server/index.js",
+    "typecheck": "react-router typegen && tsc",
+    "typegen": "bun run --bun react-router typegen"
+  },
+  "bun-create": {
+    "postinstall": [
+      "echo 'Thank you for using this template, I would grately appreciate a Star https://github.com/its4nik/dockstat'"
+    ]
+  },
+  "dependencies": {
+    "@elysiajs/eden": "^1.4.4",
+    "@elysiajs/openapi": "^1.4.11",
+    "@react-router/node": "^7.9.2",
+    "@react-router/serve": "^7.9.2",
+    "elysia": "^1.4.12",
+    "isbot": "^5.1.31",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "memoirist": "^0.4.0",
+    "react-router": "^7.9.2"
+  },
+  "devDependencies": {
+    "@react-router/dev": "^7.9.2",
+    "@tailwindcss/vite": "^4.1.13",
+    "@types/node": "^22",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.7",
+    "vite-tsconfig-paths": "^5.1.4"
+  }
+}

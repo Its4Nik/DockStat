@@ -1,0 +1,49 @@
+{
+  "name": {
+    "type": "string"
+  },
+  "description": {
+    "type": "string"
+  },
+  "version": {
+    "type": "string"
+  },
+  "repository": {
+    "type": "string"
+  },
+  "repoType": {
+    "default": "local",
+    "type": "string",
+    "enum": ["local", "http", "github", "gitlab", "gitea"]
+  },
+  "manifest": {
+    "type": "string"
+  },
+  "author": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "website": {
+        "format": "uri",
+        "type": "string"
+      },
+      "license": {
+        "default": "MIT",
+        "type": "string"
+      },
+      "email": {
+        "format": "email",
+        "type": "string"
+      }
+    },
+    "required": ["name", "license"]
+  },
+  "tags": {
+    "type": "array",
+    "items": {
+      "type": "string"
+    }
+  }
+}

@@ -1,21 +1,16 @@
-import { reactRouter } from '@react-router/dev/vite'
-import tailwindcss from '@tailwindcss/vite'
-import { defineConfig } from 'vite'
-import tsconfigPaths from 'vite-tsconfig-paths'
+import { reactRouter } from "@react-router/dev/vite"
+import tailwindcss from "@tailwindcss/vite"
+import { defineConfig } from "vite"
+import tsconfigPaths from "vite-tsconfig-paths"
 
 export default defineConfig({
-  optimizeDeps: {
-      exclude: ["ssh2", "cpu-features"],
+  plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+  appType: "custom",
+  clearScreen: false,
+  dev: {
+    sourcemap: {
+      css: true,
+      js: true,
     },
-    build: {
-      rollupOptions: {
-        external: ["ssh2", "cpu-features"],
-      }
-      ,
-    },
-  plugins: [
-    tsconfigPaths({ root: './', projects: ['./tsconfig.json'] }),
-    tailwindcss(),
-    reactRouter(),
-  ],
+  },
 })

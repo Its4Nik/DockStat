@@ -1,14 +1,12 @@
-import type { SQLQueryBindings } from "bun:sqlite";
-import type { DeleteResult } from "../types";
-import { SelectQueryBuilder } from "./select";
+import type { SQLQueryBindings } from "bun:sqlite"
+import type { DeleteResult } from "../types"
+import { SelectQueryBuilder } from "./select"
 
 /**
  * Mixin class that adds DELETE functionality to the QueryBuilder.
  * Handles safe delete operations with mandatory WHERE conditions.
  */
-export class DeleteQueryBuilder<
-  T extends Record<string, unknown>,
-> extends SelectQueryBuilder<T> {
+export class DeleteQueryBuilder<T extends Record<string, unknown>> extends SelectQueryBuilder<T> {
   /**
    * Delete rows matching the WHERE conditions.
    * Requires at least one WHERE condition to prevent accidental full table deletion.
@@ -16,27 +14,27 @@ export class DeleteQueryBuilder<
    * @returns Delete result with changes count
    */
   delete(): DeleteResult {
-    this.requireWhereClause("DELETE");
+    this.requireWhereClause("DELETE")
 
     // Handle regex conditions by first fetching matching rows
     if (this.hasRegexConditions()) {
-      const result = this.deleteWithRegexConditions();
-      this.reset();
-      return result;
+      const result = this.deleteWithRegexConditions()
+      this.reset()
+      return result
     }
 
     // Build DELETE statement
-    const [whereClause, whereParams] = this.buildWhereClause();
-    const query = `DELETE FROM ${this.quoteIdentifier(this.getTableName())}${whereClause}`;
+    const [whereClause, whereParams] = this.buildWhereClause()
+    const query = `DELETE FROM ${this.quoteIdentifier(this.getTableName())}${whereClause}`
 
     const result = this.getDb()
       .prepare(query)
-      .run(...whereParams);
+      .run(...whereParams)
 
-    this.reset();
+    this.reset()
     return {
       changes: result.changes,
-    };
+    }
   }
 
   /**
@@ -44,33 +42,31 @@ export class DeleteQueryBuilder<
    * This requires client-side filtering and individual row deletion.
    */
   private deleteWithRegexConditions(): DeleteResult {
-    this.reset();
+    this.reset()
     // First, get all rows matching SQL conditions (without regex)
-    const [selectQuery, selectParams] = this.buildWhereClause();
+    const [selectQuery, selectParams] = this.buildWhereClause()
     const candidateRows = this.getDb()
-      .prepare(
-        `SELECT rowid, * FROM ${this.quoteIdentifier(this.getTableName())}${selectQuery}`,
-      )
-      .all(...selectParams) as (T & { rowid: number })[];
+      .prepare(`SELECT rowid, * FROM ${this.quoteIdentifier(this.getTableName())}${selectQuery}`)
+      .all(...selectParams) as (T & { rowid: number })[]
 
     // Apply regex filtering
-    const matchingRows = this.applyRegexFiltering(candidateRows);
+    const matchingRows = this.applyRegexFiltering(candidateRows)
 
     if (matchingRows.length === 0) {
-      return { changes: 0 };
+      return { changes: 0 }
     }
 
     // Delete each matching row by rowid
-    const deleteQuery = `DELETE FROM ${this.quoteIdentifier(this.getTableName())} WHERE rowid = ?`;
-    const stmt = this.getDb().prepare(deleteQuery);
+    const deleteQuery = `DELETE FROM ${this.quoteIdentifier(this.getTableName())} WHERE rowid = ?`
+    const stmt = this.getDb().prepare(deleteQuery)
 
-    let totalChanges = 0;
+    let totalChanges = 0
     for (const row of matchingRows) {
-      const result = stmt.run(row.rowid as SQLQueryBindings);
-      totalChanges += result.changes;
+      const result = stmt.run(row.rowid as SQLQueryBindings)
+      totalChanges += result.changes
     }
 
-    return { changes: totalChanges };
+    return { changes: totalChanges }
   }
 
   /**
@@ -81,19 +77,19 @@ export class DeleteQueryBuilder<
    */
   deleteAndGet(): T[] {
     // First, get the rows that will be deleted
-    const rowsToDelete = this.all();
+    const rowsToDelete = this.all()
 
     // Perform the delete
-    const deleteResult = this.delete();
+    const deleteResult = this.delete()
 
     if (deleteResult.changes === 0) {
-      return [];
+      return []
     }
 
     // Return the rows that were deleted
-    const out = rowsToDelete;
-    this.reset();
-    return out;
+    const out = rowsToDelete
+    this.reset()
+    return out
   }
 
   /**
@@ -106,29 +102,29 @@ export class DeleteQueryBuilder<
    */
   softDelete(
     deletedColumn: keyof T = "deleted_at" as keyof T,
-    deletedValue: SQLQueryBindings = Math.floor(Date.now() / 1000),
+    deletedValue: SQLQueryBindings = Math.floor(Date.now() / 1000)
   ): DeleteResult {
-    this.requireWhereClause("SOFT DELETE");
+    this.requireWhereClause("SOFT DELETE")
 
     // Handle regex conditions
     if (this.hasRegexConditions()) {
-      const result = this.softDeleteWithRegexConditions(deletedColumn, deletedValue);
-      this.reset();
-      return result;
+      const result = this.softDeleteWithRegexConditions(deletedColumn, deletedValue)
+      this.reset()
+      return result
     }
 
     // Build UPDATE statement to mark as deleted
-    const [whereClause, whereParams] = this.buildWhereClause();
-    const query = `UPDATE ${this.quoteIdentifier(this.getTableName())} SET ${this.quoteIdentifier(String(deletedColumn))} = ?${whereClause}`;
+    const [whereClause, whereParams] = this.buildWhereClause()
+    const query = `UPDATE ${this.quoteIdentifier(this.getTableName())} SET ${this.quoteIdentifier(String(deletedColumn))} = ?${whereClause}`
 
     const result = this.getDb()
       .prepare(query)
-      .run(deletedValue, ...whereParams);
+      .run(deletedValue, ...whereParams)
 
-    this.reset();
+    this.reset()
     return {
       changes: result.changes,
-    };
+    }
   }
 
   /**
@@ -136,34 +132,32 @@ export class DeleteQueryBuilder<
    */
   private softDeleteWithRegexConditions(
     deletedColumn: keyof T,
-    deletedValue: SQLQueryBindings,
+    deletedValue: SQLQueryBindings
   ): DeleteResult {
     // First, get all rows matching SQL conditions (without regex)
-    const [selectQuery, selectParams] = this.buildWhereClause();
+    const [selectQuery, selectParams] = this.buildWhereClause()
     const candidateRows = this.getDb()
-      .prepare(
-        `SELECT rowid, * FROM ${this.quoteIdentifier(this.getTableName())}${selectQuery}`,
-      )
-      .all(...selectParams) as (T & { rowid: number })[];
+      .prepare(`SELECT rowid, * FROM ${this.quoteIdentifier(this.getTableName())}${selectQuery}`)
+      .all(...selectParams) as (T & { rowid: number })[]
 
     // Apply regex filtering
-    const matchingRows = this.applyRegexFiltering(candidateRows);
+    const matchingRows = this.applyRegexFiltering(candidateRows)
 
     if (matchingRows.length === 0) {
-      return { changes: 0 };
+      return { changes: 0 }
     }
 
     // Soft delete each matching row by rowid
-    const updateQuery = `UPDATE ${this.quoteIdentifier(this.getTableName())} SET ${this.quoteIdentifier(String(deletedColumn))} = ? WHERE rowid = ?`;
-    const stmt = this.getDb().prepare(updateQuery);
+    const updateQuery = `UPDATE ${this.quoteIdentifier(this.getTableName())} SET ${this.quoteIdentifier(String(deletedColumn))} = ? WHERE rowid = ?`
+    const stmt = this.getDb().prepare(updateQuery)
 
-    let totalChanges = 0;
+    let totalChanges = 0
     for (const row of matchingRows) {
-      const result = stmt.run(deletedValue, row.rowid as SQLQueryBindings);
-      totalChanges += result.changes;
+      const result = stmt.run(deletedValue, row.rowid as SQLQueryBindings)
+      totalChanges += result.changes
     }
 
-    return { changes: totalChanges };
+    return { changes: totalChanges }
   }
 
   /**
@@ -173,27 +167,27 @@ export class DeleteQueryBuilder<
    * @returns Update result with changes count
    */
   restore(deletedColumn: keyof T = "deleted_at" as keyof T): DeleteResult {
-    this.requireWhereClause("RESTORE");
+    this.requireWhereClause("RESTORE")
 
     // Handle regex conditions
     if (this.hasRegexConditions()) {
-      const result = this.restoreWithRegexConditions(deletedColumn);
-      this.reset();
-      return result;
+      const result = this.restoreWithRegexConditions(deletedColumn)
+      this.reset()
+      return result
     }
 
     // Build UPDATE statement to clear the deleted marker
-    const [whereClause, whereParams] = this.buildWhereClause();
-    const query = `UPDATE ${this.quoteIdentifier(this.getTableName())} SET ${this.quoteIdentifier(String(deletedColumn))} = NULL${whereClause}`;
+    const [whereClause, whereParams] = this.buildWhereClause()
+    const query = `UPDATE ${this.quoteIdentifier(this.getTableName())} SET ${this.quoteIdentifier(String(deletedColumn))} = NULL${whereClause}`
 
     const result = this.getDb()
       .prepare(query)
-      .run(...whereParams);
+      .run(...whereParams)
 
-    this.reset();
+    this.reset()
     return {
       changes: result.changes,
-    };
+    }
   }
 
   /**
@@ -201,31 +195,29 @@ export class DeleteQueryBuilder<
    */
   private restoreWithRegexConditions(deletedColumn: keyof T): DeleteResult {
     // First, get all rows matching SQL conditions (without regex)
-    const [selectQuery, selectParams] = this.buildWhereClause();
+    const [selectQuery, selectParams] = this.buildWhereClause()
     const candidateRows = this.getDb()
-      .prepare(
-        `SELECT rowid, * FROM ${this.quoteIdentifier(this.getTableName())}${selectQuery}`,
-      )
-      .all(...selectParams) as (T & { rowid: number })[];
+      .prepare(`SELECT rowid, * FROM ${this.quoteIdentifier(this.getTableName())}${selectQuery}`)
+      .all(...selectParams) as (T & { rowid: number })[]
 
     // Apply regex filtering
-    const matchingRows = this.applyRegexFiltering(candidateRows);
+    const matchingRows = this.applyRegexFiltering(candidateRows)
 
     if (matchingRows.length === 0) {
-      return { changes: 0 };
+      return { changes: 0 }
     }
 
     // Restore each matching row by rowid
-    const updateQuery = `UPDATE ${this.quoteIdentifier(this.getTableName())} SET ${this.quoteIdentifier(String(deletedColumn))} = NULL WHERE rowid = ?`;
-    const stmt = this.getDb().prepare(updateQuery);
+    const updateQuery = `UPDATE ${this.quoteIdentifier(this.getTableName())} SET ${this.quoteIdentifier(String(deletedColumn))} = NULL WHERE rowid = ?`
+    const stmt = this.getDb().prepare(updateQuery)
 
-    let totalChanges = 0;
+    let totalChanges = 0
     for (const row of matchingRows) {
-      const result = stmt.run(row.rowid as SQLQueryBindings);
-      totalChanges += result.changes;
+      const result = stmt.run(row.rowid as SQLQueryBindings)
+      totalChanges += result.changes
     }
 
-    return { changes: totalChanges };
+    return { changes: totalChanges }
   }
 
   /**
@@ -237,51 +229,47 @@ export class DeleteQueryBuilder<
    */
   deleteBatch(conditions: Array<Partial<T>>): DeleteResult {
     if (!Array.isArray(conditions) || conditions.length === 0) {
-      throw new Error("deleteBatch: conditions must be a non-empty array");
+      throw new Error("deleteBatch: conditions must be a non-empty array")
     }
 
-    const db = this.getDb();
+    const db = this.getDb()
 
     // Use a transaction for batch operations
-    const transaction = db.transaction(
-      (conditionsToProcess: Array<Partial<T>>) => {
-        let totalChanges = 0;
+    const transaction = db.transaction((conditionsToProcess: Array<Partial<T>>) => {
+      let totalChanges = 0
 
-        for (const whereData of conditionsToProcess) {
-          // Build WHERE conditions for this delete
-          const whereConditions: string[] = [];
-          const whereParams: SQLQueryBindings[] = [];
+      for (const whereData of conditionsToProcess) {
+        // Build WHERE conditions for this delete
+        const whereConditions: string[] = []
+        const whereParams: SQLQueryBindings[] = []
 
-          for (const [column, value] of Object.entries(whereData)) {
-            if (value === null || value === undefined) {
-              whereConditions.push(`${this.quoteIdentifier(column)} IS NULL`);
-            } else {
-              whereConditions.push(`${this.quoteIdentifier(column)} = ?`);
-              whereParams.push(value);
-            }
+        for (const [column, value] of Object.entries(whereData)) {
+          if (value === null || value === undefined) {
+            whereConditions.push(`${this.quoteIdentifier(column)} IS NULL`)
+          } else {
+            whereConditions.push(`${this.quoteIdentifier(column)} = ?`)
+            whereParams.push(value)
           }
-
-          if (whereConditions.length === 0) {
-            throw new Error(
-              "deleteBatch: each delete must have WHERE conditions",
-            );
-          }
-
-          // Build DELETE statement
-          const whereClause = ` WHERE ${whereConditions.join(" AND ")}`;
-          const query = `DELETE FROM ${this.quoteIdentifier(this.getTableName())}${whereClause}`;
-
-          const result = db.prepare(query).run(...whereParams);
-          totalChanges += result.changes;
         }
 
-        return { changes: totalChanges };
-      },
-    );
+        if (whereConditions.length === 0) {
+          throw new Error("deleteBatch: each delete must have WHERE conditions")
+        }
 
-    const result = transaction(conditions);
-    this.reset();
-    return result;
+        // Build DELETE statement
+        const whereClause = ` WHERE ${whereConditions.join(" AND ")}`
+        const query = `DELETE FROM ${this.quoteIdentifier(this.getTableName())}${whereClause}`
+
+        const result = db.prepare(query).run(...whereParams)
+        totalChanges += result.changes
+      }
+
+      return { changes: totalChanges }
+    })
+
+    const result = transaction(conditions)
+    this.reset()
+    return result
   }
 
   /**
@@ -292,13 +280,13 @@ export class DeleteQueryBuilder<
    * @returns Delete result with changes count
    */
   truncate(): DeleteResult {
-    const query = `DELETE FROM ${this.quoteIdentifier(this.getTableName())}`;
-    const result = this.getDb().prepare(query).run();
+    const query = `DELETE FROM ${this.quoteIdentifier(this.getTableName())}`
+    const result = this.getDb().prepare(query).run()
 
-    this.reset();
+    this.reset()
     return {
       changes: result.changes,
-    };
+    }
   }
 
   /**
@@ -310,9 +298,9 @@ export class DeleteQueryBuilder<
    * @returns Delete result with changes count
    */
   deleteOlderThan(timestampColumn: keyof T, olderThan: number): DeleteResult {
-    const changes = this.whereOp(timestampColumn, "<", olderThan).delete();
-    this.reset();
-    return changes;
+    const changes = this.whereOp(timestampColumn, "<", olderThan).delete()
+    this.reset()
+    return changes
   }
 
   /**
@@ -324,13 +312,11 @@ export class DeleteQueryBuilder<
    */
   deleteDuplicates(columns: Array<keyof T>): DeleteResult {
     if (!Array.isArray(columns) || columns.length === 0) {
-      throw new Error("deleteDuplicates: columns must be a non-empty array");
+      throw new Error("deleteDuplicates: columns must be a non-empty array")
     }
 
-    const columnNames = columns.map((col) => String(col));
-    const quotedColumns = columnNames
-      .map((col) => this.quoteIdentifier(col))
-      .join(", ");
+    const columnNames = columns.map((col) => String(col))
+    const quotedColumns = columnNames.map((col) => this.quoteIdentifier(col)).join(", ")
 
     // Find duplicate rows, keeping the one with the minimum rowid
     const query = `
@@ -340,13 +326,13 @@ export class DeleteQueryBuilder<
         FROM ${this.quoteIdentifier(this.getTableName())}
         GROUP BY ${quotedColumns}
       )
-    `;
+    `
 
-    const result = this.getDb().prepare(query).run();
+    const result = this.getDb().prepare(query).run()
 
-    this.reset();
+    this.reset()
     return {
       changes: result.changes,
-    };
+    }
   }
 }

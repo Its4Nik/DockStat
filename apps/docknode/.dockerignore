@@ -1,0 +1,7 @@
+.gitignore
+.dockstacks_instance_uuid.txt
+dockerfile
+.env
+.prod.env
+.dev.envw
+node_modules

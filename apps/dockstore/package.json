@@ -1,23 +1,23 @@
 {
-  "name": "dockstacks",
-  "module": "index.ts",
-  "extends": "../../tsconfig.base.json",
+  "name": "dockstore",
+  "module": "bundler.ts",
   "type": "module",
   "private": true,
-  "scripts": {
-    "build": "bun build index.ts --outdir dist",
-    "dev": "bun run index.ts",
-    "make": "cd .generator && bun run convert.ts",
-    "lint": "biome lint .",
-    "lint:fix": "biome lint --write .",
-    "lint:gh": "turbo run lint -- --reporter=github",
-    "check-types": "tsc --noEmit",
-    "clean": "rm -rf dist"
-  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@dockstat/plugin-handler": "workspace:*",
+    "@dockstat/typings": "workspace:*",
+    "@dockstat/logger": "workspace:*",
+    "@dockstat/sqlite-wrapper": "workspace:*",
+    "@types/js-yaml": "^4.0.9"
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "chalk": "^5.6.2",
+    "elysia": "^1.4.12",
+    "js-yaml": "^4.1.0"
   }
 }

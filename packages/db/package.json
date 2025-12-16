@@ -4,6 +4,10 @@
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
+  "files": [
+    "./defaults.ts",
+    "./index.ts"
+  ],
   "scripts": {
     "build": "bun run ./build.ts",
     "dev": "bun build index.ts",
@@ -19,9 +23,9 @@
     "bun-plugin-dts": "^0.3.0"
   },
   "peerDependencies": {
-    "typescript": "^5",
-    "@dockstat/sqlite-wrapper": "workspace:*",
-    "@dockstat/logger": "workspace:*"
+    "typescript": "^5.9.3",
+    "@dockstat/sqlite-wrapper": "latest",
+    "@dockstat/logger": "latest"
   },
   "devDependencies": {
     "@types/bun": "latest"

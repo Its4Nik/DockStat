@@ -1,6 +1,9 @@
 .gitai.json
 backup
 \!archive
+
+.test-setup
+
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # Dependencies
@@ -47,3 +50,6 @@ yarn-error.log*
 *.pem
 
 *.sqlite
+
+*storybook.log
+storybook-static
