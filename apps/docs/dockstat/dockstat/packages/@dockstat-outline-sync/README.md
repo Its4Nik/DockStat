@@ -3,7 +3,7 @@ id: b931ba3f-2f39-4414-9c80-fb1ebbe92771
 title: "@dockstat/outline-sync"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: 75d80211-7262-4064-aaa6-2ead20e17f43
-updatedAt: 2025-08-19T18:44:19.206Z
+updatedAt: 2025-12-16T17:26:00.309Z
 urlId: QdSHhQ3ZXI
 ---
 

@@ -3,7 +3,7 @@ id: b4148ac3-5b60-4223-aa0d-48111649b91f
 title: "@dockstat/theme-handler"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: 75d80211-7262-4064-aaa6-2ead20e17f43
-updatedAt: 2025-08-24T18:23:52.182Z
+updatedAt: 2025-12-16T17:25:59.532Z
 urlId: zqe3ITb7jc
 ---
 

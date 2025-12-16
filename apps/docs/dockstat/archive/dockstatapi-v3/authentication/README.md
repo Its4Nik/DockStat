@@ -3,7 +3,7 @@ id: 793112f8-b6d8-4e92-a20d-395995e84486
 title: Authentication
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: f33a7ed1-f6f9-48f9-a393-e150feb09d2f
-updatedAt: 2025-08-18T22:50:54.146Z
+updatedAt: 2025-12-16T17:25:56.680Z
 urlId: VSGhxqjtXf
 ---
 

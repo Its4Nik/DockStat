@@ -3,11 +3,11 @@ id: f33a7ed1-f6f9-48f9-a393-e150feb09d2f
 title: DockStatAPI v3
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: 280f8e0a-92e7-4825-8dc0-9a8c886e3d17
-updatedAt: 2025-08-18T22:50:52.228Z
+updatedAt: 2025-12-16T17:25:56.959Z
 urlId: uHl1SoOiyt
 ---
 
-![](/api/attachments.redirect?id=f0ef5b94-2e4c-47a2-9a01-3dd799acb5cf " =708.5x156.25")                   ![CC BY-NC 4.0 License](https://img.shields.io/badge/License-CC_BY--NC_4.0-lightgrey.svg " =238x34")
+![](/api/attachments.redirect?id=f0ef5b94-2e4c-47a2-9a01-3dd799acb5cf " =708.5x156.25")                     ![CC BY-NC 4.0 License](https://img.shields.io/badge/License-CC_BY--NC_4.0-lightgrey.svg " =238x34")
 
 
 ---
@@ -93,7 +93,7 @@ Please see [Contribute](/doc/19ddc854-ab6c-4d8b-93e7-9f8d2ced1a56)
 
 ---
 
- ![SQLite Web](/api/attachments.redirect?id=2254c3a7-7d9f-4cda-bab3-cf7dbca364e7)                   ![SQLite Web - Content Viewer](/api/attachments.redirect?id=a0bdd96c-5de8-4139-8b1a-679629344c0b)
+ ![SQLite Web](/api/attachments.redirect?id=2254c3a7-7d9f-4cda-bab3-cf7dbca364e7)                     ![SQLite Web - Content Viewer](/api/attachments.redirect?id=a0bdd96c-5de8-4139-8b1a-679629344c0b)
 
 
 ---

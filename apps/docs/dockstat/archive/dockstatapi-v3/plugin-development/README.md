@@ -3,7 +3,7 @@ id: a2b23dbc-0f70-49ef-ad33-73e8421860c7
 title: Plugin Development
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: f33a7ed1-f6f9-48f9-a393-e150feb09d2f
-updatedAt: 2025-08-18T22:50:54.610Z
+updatedAt: 2025-12-16T17:25:58.092Z
 urlId: 3UBj9gNMKF
 ---
 

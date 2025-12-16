@@ -3,7 +3,7 @@ id: 112822b1-97bd-4086-a9ae-87b095bc7c7b
 title: Integrations
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: 88a86081-76f3-4056-985f-b0800ec2445f
-updatedAt: 2025-08-18T22:50:51.764Z
+updatedAt: 2025-12-16T17:25:55.294Z
 urlId: Agq1oL6HxF
 ---
 
@@ -11,7 +11,7 @@ DockStat will provide some integrations like [cup](https://github.com/sergi0g/cu
 
 # [cup](https://github.com/sergi0g/cup)
 
-## Description:                   ![Example image](/api/attachments.redirect?id=964f512c-940a-4ee8-8ece-32c438d0ce45 "right-50 =460x231")
+## Description:                     ![Example image](/api/attachments.redirect?id=964f512c-940a-4ee8-8ece-32c438d0ce45 "right-50 =460x231")
 
 Cup is the easiest way to check for container image updates.
 

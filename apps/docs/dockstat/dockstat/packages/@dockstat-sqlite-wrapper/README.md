@@ -3,13 +3,13 @@ id: 56229547-5cee-49ff-be41-1b75e7548809
 title: "@dockstat/sqlite-wrapper"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: 75d80211-7262-4064-aaa6-2ead20e17f43
-updatedAt: 2025-08-24T08:13:51.258Z
+updatedAt: 2025-12-16T17:26:01.048Z
 urlId: Lxt4IphXI5
 ---
 
 # @dockstat/sqlite-wrapper
 
- ![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=for-the-badge&logo=bun&logoColor=white)  ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)  ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+ ![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=for-the-badge&logo=bun&logoColor=white)    ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)    ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 
 **A comprehensive, type-safe TypeScript wrapper for Bun's** `**bun:sqlite**`**.**
 

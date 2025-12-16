@@ -3,7 +3,7 @@ id: 16c1541b-03ec-4444-924b-d585c300b9fd
 title: Maintaining functions
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: 9550ca5f-3b09-4e4d-9ea9-634b4cc1553d
-updatedAt: 2025-08-18T22:50:49.294Z
+updatedAt: 2025-12-16T17:26:01.469Z
 urlId: svuZbEHH9g
 ---
 
@@ -110,7 +110,7 @@ exit 2
 
 When opening the Project in VS Code you can see the testing tab in  the sidebar (typically on the left).
 
-When opening said "Testing"  tab  you can see all 2 currently available tests:                   ![Test tab](/api/attachments.redirect?id=4fb23db8-1789-4749-a400-fd033bc42ead)
+When opening said "Testing"  tab  you can see all 2 currently available tests:                     ![Test tab](/api/attachments.redirect?id=4fb23db8-1789-4749-a400-fd033bc42ead)
 
 The test take about 2 minutes since we have a timeout of 2 seconds in between request due to making sure that the previous section is done.
 

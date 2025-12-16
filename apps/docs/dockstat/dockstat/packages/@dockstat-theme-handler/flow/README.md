@@ -3,7 +3,7 @@ id: c4955c6c-2184-493e-bb07-12757a457289
 title: Flow
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: b4148ac3-5b60-4223-aa0d-48111649b91f
-updatedAt: 2025-08-28T12:36:27.384Z
+updatedAt: 2025-12-16T17:25:59.184Z
 urlId: 9ndQsUblrd
 ---
 
@@ -130,6 +130,3 @@ flowchart TD
       EH2
     end
 ```
-
-
-\

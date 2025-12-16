@@ -3,7 +3,7 @@ id: 75d80211-7262-4064-aaa6-2ead20e17f43
 title: Packages
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: 7dddd764-6483-4f84-96a3-988304e772d3
-updatedAt: 2025-08-24T17:32:02.644Z
+updatedAt: 2025-12-16T17:26:00.617Z
 urlId: kRAif1izY8
 ---
 
@@ -32,4 +32,4 @@ These packages are only internally used by DockStat, you can still use them by f
 
 :::
 
-## [[PRIVATE] @dockstat/db Features](/doc/c87977e4-e0f6-49ae-9cf5-e979c86605b1)
+## [\[PRIVATE\] @dockstat/db Features](/doc/c87977e4-e0f6-49ae-9cf5-e979c86605b1)
