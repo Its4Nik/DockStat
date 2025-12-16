@@ -1,13 +1,12 @@
-import dts from "bun-plugin-dts";
-import { chmodSync } from "node:fs";
+import dts from "bun-plugin-dts"
 
 function now() {
-  return new Date();
+  return new Date()
 }
 
-const NOW = now();
+const NOW = now()
 
-console.info(`Start at ${NOW}`);
+console.info(`Start at ${NOW}`)
 
 await Bun.build({
   entrypoints: ["./index.ts"],
@@ -16,8 +15,6 @@ await Bun.build({
   minify: true,
   target: "bun",
   sourcemap: "inline",
-});
+})
 
-console.info(
-  `Done at ${now()} - took ${new Date(now().getTime() - NOW.getTime()).getSeconds()}`,
-);
+console.info(`Done at ${now()} - took ${new Date(now().getTime() - NOW.getTime()).getSeconds()}`)

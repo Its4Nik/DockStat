@@ -5,10 +5,19 @@
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
-  "files": ["index.ts","src/**/*", "README.md"],
+  "exports": {
+    ".": "./index.ts",
+    "./manager": "./src/manager/index.ts"
+  },
+  "files": [
+    "index.ts",
+    "src/**/*",
+    "README.md"
+  ],
   "scripts": {
     "dev": "bun run --watch index.ts",
     "clean": "rm -rf dist",
+    "format": "biome format --write",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "lint:gh": "turbo run lint -- --reporter=github",
@@ -32,16 +41,18 @@
     "bun": ">=1.0.0"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "dependencies": {
     "@dockstat/sqlite-wrapper": "workspace:*",
+    "@dockstat/utils": "workspace:*",
     "@dockstat/typings": "workspace:*",
+    "@dockstat/plugin-handler": "workspace:*",
     "@dockstat/logger": "workspace:*",
-    "@types/dockerode": "^3.3.43",
-    "dockerode": "^4.0.7"
+    "@types/dockerode": "^3.3.44",
+    "dockerode": "^4.0.9"
   }
 }

@@ -1,10 +1,14 @@
 {
   "name": "@dockstat/sqlite-wrapper",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "description": "A TypeScript wrapper around bun:sqlite with type-safe query building",
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types.ts"
+  },
   "files": [
     "index.ts",
     "query-builder/**/*",
@@ -42,13 +46,13 @@
     "bun": ">=1.0.0"
   },
   "dependencies": {
-    "@dockstat/logger": "^1.0.0"
+    "@dockstat/logger": "1.0.1"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/dockerode": "^3.3.42"
+    "@types/dockerode": "^3.3.44"
   }
 }

@@ -1,0 +1,1 @@
+# @dockstat/plugin-handler

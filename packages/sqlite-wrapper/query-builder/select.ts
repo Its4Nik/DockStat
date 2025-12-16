@@ -1,28 +1,22 @@
-import type { Database, SQLQueryBindings } from 'bun:sqlite'
-import type { ColumnNames, JsonColumnConfig, OrderDirection } from '../types'
-import { WhereQueryBuilder } from './where'
+import type { Database, SQLQueryBindings } from "bun:sqlite"
+import type { ColumnNames, OrderDirection, Parser } from "../types"
+import { WhereQueryBuilder } from "./where"
 
 /**
  * Mixin class that adds SELECT-specific functionality to the QueryBuilder.
  * Handles column selection, ordering, limiting, and result execution methods.
  */
-export class SelectQueryBuilder<
-  T extends Record<string, unknown>,
-> extends WhereQueryBuilder<T> {
+export class SelectQueryBuilder<T extends Record<string, unknown>> extends WhereQueryBuilder<T> {
   private selectedColumns: ColumnNames<T>
   private orderColumn?: keyof T
   private orderDirection: OrderDirection
   private limitValue?: number
   private offsetValue?: number
 
-  constructor(
-    db: Database,
-    tableName: string,
-    jsonConfig?: JsonColumnConfig<T>
-  ) {
-    super(db, tableName, jsonConfig)
-    this.selectedColumns = ['*']
-    this.orderDirection = 'ASC'
+  constructor(db: Database, tableName: string, parser: Parser<T>) {
+    super(db, tableName, parser)
+    this.selectedColumns = ["*"]
+    this.orderDirection = "ASC"
   }
 
   /**
@@ -53,7 +47,7 @@ export class SelectQueryBuilder<
    * @returns this for method chaining
    */
   desc(): this {
-    this.orderDirection = 'DESC'
+    this.orderDirection = "DESC"
     return this
   }
 
@@ -63,7 +57,7 @@ export class SelectQueryBuilder<
    * @returns this for method chaining
    */
   asc(): this {
-    this.orderDirection = 'ASC'
+    this.orderDirection = "ASC"
     return this
   }
 
@@ -75,7 +69,7 @@ export class SelectQueryBuilder<
    */
   limit(amount: number): this {
     if (amount < 0) {
-      throw new Error('limit: amount must be non-negative')
+      throw new Error("limit: amount must be non-negative")
     }
     this.limitValue = amount
     return this
@@ -89,7 +83,7 @@ export class SelectQueryBuilder<
    */
   offset(start: number): this {
     if (start < 0) {
-      throw new Error('offset: start must be non-negative')
+      throw new Error("offset: start must be non-negative")
     }
     this.offsetValue = start
     return this
@@ -103,13 +97,9 @@ export class SelectQueryBuilder<
    * @param includeOrderAndLimit - Whether to include ORDER/LIMIT/OFFSET in SQL
    * @returns Tuple of [query, parameters]
    */
-  private buildSelectQuery(
-    includeOrderAndLimit = true
-  ): [string, SQLQueryBindings[]] {
+  private buildSelectQuery(includeOrderAndLimit = true): [string, SQLQueryBindings[]] {
     const cols =
-      this.selectedColumns[0] === '*'
-        ? '*'
-        : (this.selectedColumns as string[]).join(', ')
+      this.selectedColumns[0] === "*" ? "*" : (this.selectedColumns as string[]).join(", ")
 
     let query = `SELECT ${cols} FROM ${this.quoteIdentifier(this.getTableName())}`
 
@@ -155,8 +145,8 @@ export class SelectQueryBuilder<
         if (va === vb) return 0
         if (va === null || va === undefined) return -1
         if (vb === null || vb === undefined) return 1
-        if (va < vb) return this.orderDirection === 'ASC' ? -1 : 1
-        return this.orderDirection === 'ASC' ? 1 : -1
+        if (va < vb) return this.orderDirection === "ASC" ? -1 : 1
+        return this.orderDirection === "ASC" ? 1 : -1
       })
     }
 
@@ -179,32 +169,28 @@ export class SelectQueryBuilder<
   all(): T[] {
     if (!this.hasRegexConditions()) {
       const [query, params] = this.buildSelectQuery(true)
-      this.getLogger().debug(
-        `Executing SELECT query - query: ${query}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.jsonColumns}`
+      this.getLogger("SELECT").debug(
+        `Executing SELECT query - query: ${query}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.parser?.JSON}`
       )
-      const rows = this.getDb()
-        .prepare(query, params)
-        .all() as T[]
-      this.getLogger().debug(`Retrieved ${rows.length} rows from database`)
+      const rows = this.getDb().prepare(query, params).all() as T[]
+      this.getLogger("SELECT").debug(`Retrieved ${rows.length} rows from database`)
       const transformed = this.transformRowsFromDb(rows)
-      this.getLogger().debug(`Transformed ${transformed.length} rows`)
-       this.reset()
+      this.getLogger("SELECT").debug(`Transformed ${transformed.length} rows`)
+      this.reset()
       return transformed
     }
 
     const [query, params] = this.buildSelectQuery(false)
-    this.getLogger().debug(
-      `Executing SELECT query with regex conditions - query: ${query}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.jsonColumns}`
+    this.getLogger("SELECT").debug(
+      `Executing SELECT query with regex conditions - query: ${query}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.parser?.JSON}`
     )
     const rows = this.getDb()
       .prepare(query)
       .all(...params) as T[]
-    this.getLogger().debug(`Retrieved ${rows.length} rows for regex filtering`)
+    this.getLogger("SELECT").debug(`Retrieved ${rows.length} rows for regex filtering`)
     const transformedRows = this.transformRowsFromDb(rows)
-    this.getLogger().debug(
-      `Transformed ${transformedRows.length} rows for regex filtering`
-    )
-     this.reset()
+    this.getLogger("SELECT").debug(`Transformed ${transformedRows.length} rows for regex filtering`)
+    this.reset()
     return this.applyClientSideOperations(transformedRows)
   }
 
@@ -218,48 +204,43 @@ export class SelectQueryBuilder<
     if (!this.hasRegexConditions() && this.limitValue === undefined) {
       // No regex and no explicit limit, we can safely add LIMIT 1
       const [query, params] = this.buildSelectQuery(true)
-      const q = query.includes('LIMIT') ? query : `${query} LIMIT 1`
-      this.getLogger().debug(
-        `Executing single-row SELECT query - query: ${q}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.jsonColumns}`
+      const q = query.includes("LIMIT") ? query : `${query} LIMIT 1`
+      this.getLogger("SELECT").debug(
+        `Executing single-row SELECT query - query: ${q}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.parser?.JSON}`
       )
       const row = this.getDb()
         .prepare(q)
         .get(...params) as T | null
-      this.getLogger().debug(`Row found: ${row ? 'yes' : 'no'}`)
+      this.getLogger("SELECT").debug(`Row found: ${row ? "yes" : "no"}`)
       const transformed = row ? this.transformRowFromDb(row) : null
-      this.getLogger().debug(
-        `Transformed row available: ${transformed ? 'yes' : 'no'}`
-      )
-       this.reset()
+      this.getLogger("SELECT").debug(`Transformed row available: ${transformed ? "yes" : "no"}`)
+      this.reset()
       return transformed
     }
 
     if (!this.hasRegexConditions() && this.limitValue !== undefined) {
       // Limit is present; just use the query as-is
       const [query, params] = this.buildSelectQuery(true)
-      this.getLogger().debug(
+      this.getLogger("SELECT").debug(
         `get() - path 2: ${JSON.stringify({
           query,
           params,
-          hasJsonColumns: !!this.state.jsonColumns,
         })}`
       )
       const row = this.getDb()
         .prepare(query)
         .get(...params) as T | null
-      this.getLogger().debug(`raw row (path 2): ${row ? 'found' : 'null'}`)
+      this.getLogger("SELECT").debug(`raw row (path 2): ${row ? "found" : "null"}`)
       const transformed = row ? this.transformRowFromDb(row) : null
-      this.getLogger().debug(
-        `transformed row (path 2): ${transformed ? 'found' : 'null'}`
-      )
-       this.reset()
+      this.getLogger("SELECT").debug(`transformed row (path 2): ${transformed ? "found" : "null"}`)
+      this.reset()
       return transformed
     }
 
     // Has regex conditions, need to process client-side
-    this.getLogger().debug('path 3 (regex fallback)')
+    this.getLogger("SELECT").debug("path 3 (regex fallback)")
     const results = this.all()
-     this.reset()
+    this.reset()
     return results[0] ?? null
   }
 
@@ -275,7 +256,7 @@ export class SelectQueryBuilder<
     this.limitValue = 1
     const result = this.get()
     this.limitValue = prevLimit
-     this.reset()
+    this.reset()
     return result
   }
 
@@ -289,19 +270,16 @@ export class SelectQueryBuilder<
     if (!this.hasRegexConditions()) {
       // Safe to do COUNT(*) in SQL
       const [baseQuery, params] = this.buildSelectQuery(true)
-      const countQuery = baseQuery.replace(
-        /SELECT (.+?) FROM/i,
-        'SELECT COUNT(*) AS __count FROM'
-      )
+      const countQuery = baseQuery.replace(/SELECT (.+?) FROM/i, "SELECT COUNT(*) AS __count FROM")
       const result = this.getDb()
         .prepare(countQuery)
         .get(...params) as {
         __count: number
       }
-       this.reset()
+      this.reset()
       return result?.__count ?? 0
     }
-     this.reset()
+    this.reset()
 
     // Has regex conditions, count client-side
     return this.all().length
@@ -322,10 +300,10 @@ export class SelectQueryBuilder<
         .get(...params) as {
         __exists: number
       }
-       this.reset()
+      this.reset()
       return Boolean(result?.__exists)
     }
-     this.reset()
+    this.reset()
 
     // Has regex conditions, check client-side
     return this.count() > 0
@@ -340,7 +318,7 @@ export class SelectQueryBuilder<
    */
   value<K extends keyof T>(column: K): T[K] | null {
     const row = this.first()
-     this.reset()
+    this.reset()
     return row ? row[column] : null
   }
 
@@ -352,7 +330,7 @@ export class SelectQueryBuilder<
    */
   pluck<K extends keyof T>(column: K): T[K][] {
     const rows = this.all()
-     this.reset()
+    this.reset()
     return rows.map((row) => row[column])
   }
 }

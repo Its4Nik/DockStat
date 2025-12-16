@@ -1,0 +1,21 @@
+{
+  "name": "docknode",
+  "version": "1.0.50",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "bunx turbo install",
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun run src/build.ts"
+  },
+  "dependencies": {
+    "@dockstat/logger": "workspace:*",
+    "@elysiajs/openapi": "^1.4.0",
+    "@tqman/nice-logger": "^1.1.1",
+    "elysia": "1.4.12",
+    "elysia-basic-auth": "^1.0.7"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "module": "src/index.js"
+}

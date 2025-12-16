@@ -1,69 +1,149 @@
-import { createLogger } from '@dockstat/logger'
-import { DB, type QueryBuilder, column } from '@dockstat/sqlite-wrapper'
-import type { DATABASE, THEME } from '@dockstat/typings'
-
-const logger = createLogger('DockStatDB')
+import Logger from "@dockstat/logger"
+import { addLoggerParents, column, DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
+import type { DockStatConfigTableType } from "@dockstat/typings/types"
+import { defaultConfig } from "./defaults"
 
 class DockStatDB {
-  private db: DB
-  private config_table: QueryBuilder<DATABASE.DB_config>
+  protected db: DB
+  private config_table: QueryBuilder<DockStatConfigTableType>
+  private metrics_table
+  private logger: Logger
 
-  constructor() {
-    logger.info('Initializing DockStatDB')
+  constructor(prefix = "DockStatDB", parents: string[] = []) {
+    this.logger = new Logger(prefix, parents)
+    addLoggerParents([prefix, ...parents])
+    this.logger.info("Initializing DockStatDB")
 
     try {
-      this.db = new DB('dockstat.sqlite')
-      logger.debug('Created DB instance for dockstat.sqlite')
+      this.db = new DB("dockstat.sqlite", {
+        pragmas: [
+          ["journal_mode", "WAL"],
+          ["cache_size", -64000],
+        ],
+      })
+      this.logger.debug("Created DB instance for dockstat.sqlite")
 
-      // Create config table (stores current theme name)
-      logger.debug('Creating config table')
-      this.db.createTable(
-        'config',
+      this.config_table = this.db.createTable<DockStatConfigTableType>(
+        "config",
         {
-          id: column.integer({ primaryKey: true, notNull: true }),
-          default_theme: column.text({
-            notNull: true,
-            default: 'default',
-          }),
-          hotkeys: column.json({notNull: true})
+          name: column.text({ notNull: false }),
+          id: column.uuid(),
+          config_database_rev: column.text(),
+          allow_untrusted_repo: column.boolean({ default: false }),
+          default_themes: column.json({ notNull: true }),
+          tables: column.json({ notNull: true }),
+          tls_certs_and_keys: column.json({ notNull: true }),
+          registered_repos: column.json({ notNull: true }),
+          version: column.text({ notNull: true }),
+          hotkeys: column.json(),
+          nav_links: column.json(),
+          autostart_handlers_monitoring: column.boolean({ default: true }),
+        },
+        {
+          constraints: {
+            primaryKey: ["id"],
+          },
+          ifNotExists: true,
+          parser: {
+            JSON: [
+              "registered_repos",
+              "default_themes",
+              "tables",
+              "tls_certs_and_keys",
+              "hotkeys",
+              "nav_links",
+            ],
+            BOOLEAN: ["allow_untrusted_repo", "autostart_handlers_monitoring"],
+          },
+        }
+      )
+      this.logger.debug("Config table successfully initialized")
+
+      this.metrics_table = this.db.createTable(
+        "metrics",
+        {
+          id: column.id(),
+          totalRequests: column.integer(),
+          requestsByMethod: column.json(),
+          requestsByPath: column.json(),
+          requestsByStatus: column.json(),
+          requestDurations: column.json(),
+          errors: column.integer(),
         },
         {
           ifNotExists: true,
-          withoutRowId: false,
+          parser: {
+            JSON: ["requestsByMethod", "requestsByPath", "requestsByStatus", "requestDurations"],
+          },
         }
       )
-      logger.debug('Config table created successfully')
 
-      // Initialize query builders
-      this.config_table = this.db.table('config', {jsonColumns: ["hotkeys"]})
-      logger.debug('Query builders initialized')
+      this.logger.debug("Metrics table successfully initialized")
+
+      // Initializing periodic tasks
+      this.initializePeriodicTasks()
 
       // Initialize database with defaults if empty
       this.initializeDefaults()
     } catch (error) {
-      logger.error(`Failed to initialize database: ${error}`)
+      this.logger.error(`Failed to initialize database: ${error}`)
       throw error
     }
   }
 
+  private initializePeriodicTasks() {
+    this.logger.debug("Initializing periodic tasks")
+
+    this.db.vacuum()
+  }
+
   private initializeDefaults(): void {
-    logger.debug('Checking if database needs initialization with defaults')
+    this.logger.debug("Checking if database needs initialization with defaults")
+
     try {
-      // Initialize config table if empty
-      const existingConfig = this.config_table.select(['*']).get()
-      if (!existingConfig) {
-        logger.info('No existing config found, initializing with defaults')
-        this.config_table.insert({
-          default_theme: 'default',
-          hotkeys: {}
-        })
-        logger.debug('Default config inserted')
-      } else {
-        logger.debug('Database already initialized, skipping defaults')
+      this.config_table.where({ id: 0 }).insertOrFail(defaultConfig)
+      this.logger.debug("Default config inserted")
+    } catch (error: unknown) {
+      this.logger.error(`Failed to initialize defaults: ${error}`)
+
+      this.logger.info("Checking if migration is needed")
+      const config = this.config_table.select(["*"]).all()
+      if (config.length === 0) {
+        this.logger.error(
+          "No config found (After initialization) => Aborting, please check your database!"
+        )
+        process.exit()
       }
-    } catch (error) {
-      logger.error(`Failed to initialize defaults: ${error}`)
-      throw error
+      if (config.length > 1) {
+        this.logger.error(
+          "Multiple configs found (After initialization) => Aborting, please check your database!"
+        )
+        process.exit()
+      }
+      if (config.length === 1) {
+        this.logger.info("Config found, continuing")
+        switch (
+          Bun.semver.order(config[0].config_database_rev, defaultConfig.config_database_rev)
+        ) {
+          case -1:
+            this.logger.info(
+              "Database version is older than the default version => Version update detected!"
+            )
+            this.db.dropTable("config")
+            this.initializeDefaults()
+            break
+
+          case 1:
+            this.logger.error(
+              "Database version is newer than the default version => Aborting, please check your database!"
+            )
+            process.exit()
+            break
+          case 0:
+            this.logger.info("Database version is up to date")
+            break
+        }
+      }
     }
   }
 
@@ -71,12 +151,16 @@ class DockStatDB {
    * Get the underlying sqlite-wrapper DB instance for integration with docker-client
    */
   public getDB(): DB {
-    logger.debug('Getting DB instance')
+    this.logger.debug("Getting DB instance")
     return this.db
   }
 
-  public getConfigTable(){
+  public getConfigTable() {
     return this.config_table
+  }
+
+  public getMetricsTable() {
+    return this.metrics_table
   }
 
   // Database Management
@@ -85,12 +169,12 @@ class DockStatDB {
    * Close the database connection
    */
   public close(): void {
-    logger.info('Closing database connection')
+    this.logger.info("Closing database connection")
     try {
       this.db.close()
-      logger.debug('Database connection closed successfully')
+      this.logger.debug("Database connection closed successfully")
     } catch (error) {
-      logger.error(`Failed to close database connection: ${error}`)
+      this.logger.error(`Failed to close database connection: ${error}`)
       throw error
     }
   }
@@ -99,12 +183,12 @@ class DockStatDB {
    * Execute a raw SQL query (for advanced use cases)
    */
   public exec(sql: string): void {
-    logger.debug(`Executing raw SQL: ${sql}`)
+    this.logger.debug(`Executing raw SQL: ${sql}`)
     try {
       this.db.run(sql)
-      logger.debug('SQL executed successfully')
+      this.logger.debug("SQL executed successfully")
     } catch (error) {
-      logger.error(`Failed to execute SQL: ${error}`)
+      this.logger.error(`Failed to execute SQL: ${error}`)
       throw error
     }
   }
@@ -113,13 +197,13 @@ class DockStatDB {
    * Get database schema information
    */
   public getSchema(): unknown {
-    logger.debug('Getting database schema')
+    this.logger.debug("Getting database schema")
     try {
       const schema = this.db.getSchema()
-      logger.debug('Schema retrieved successfully')
+      this.logger.debug("Schema retrieved successfully")
       return schema
     } catch (error) {
-      logger.error(`Failed to get database schema: ${error}`)
+      this.logger.error(`Failed to get database schema: ${error}`)
       throw error
     }
   }
@@ -128,7 +212,7 @@ class DockStatDB {
    * Get database file path
    */
   public getDatabasePath(): string {
-    return 'dockstat.sqlite'
+    return "dockstat.sqlite"
   }
 }
 
