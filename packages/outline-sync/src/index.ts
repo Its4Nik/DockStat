@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
+import { existsSync } from "node:fs"
+import { readFile, writeFile } from "node:fs/promises"
+import { join } from "node:path"
 import { Command } from "commander"
 import { OutlineSync } from "./sync"
 import type { OutlineConfig } from "./types"
-import { existsSync } from "fs"
-import { readFile, writeFile } from "fs/promises"
-import { join } from "path"
 
 const program = new Command()
 
@@ -28,7 +28,18 @@ function parseArrayOption(value: string): string[] {
     .filter(Boolean)
 }
 
-async function getConfig(options: any, loadConfigFile = true): Promise<OutlineConfig> {
+async function getConfig(
+  options: {
+    url: string
+    include: string
+    exclude: string
+    token?: string
+    outputDir: string
+    output: string
+    config: string
+  },
+  loadConfigFile = true
+): Promise<OutlineConfig> {
   const fileConfig = loadConfigFile ? await loadConfig(options.config) : {}
 
   const config: OutlineConfig = {
