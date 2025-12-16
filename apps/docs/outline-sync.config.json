@@ -1,6 +1,6 @@
 {
   "url": "https://outline.itsnik.de",
   "outputDir": "./",
-  "includeCollections": ["DockStat", "dockstat"],
+  "includeCollections": ["DockStat"],
   "customPaths": {}
 }
