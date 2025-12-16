@@ -116,6 +116,21 @@ program
   })
 
 program
+  .command("push")
+  .description("Push local changes to Outline")
+  .option("-u, --url <url>", "Outline URL")
+  .option("-t, --token <token>", "API token")
+  .option("-o, --output <dir>", "Output directory")
+  .option("-c, --config <path>", "Config file path")
+  .option("-i, --include <collections>", "Comma-separated list of collections to include")
+  .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
+  .action(async (options) => {
+    const config = await getConfig(options)
+    const sync = new OutlineSync(config)
+    await sync.push()
+  })
+
+program
   .command("init")
   .description("Create a sample configuration file")
   .action(async () => {
