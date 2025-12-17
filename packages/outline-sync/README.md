@@ -9,7 +9,6 @@ bun install -g @dockstat/outline-sync
 ```
 
 ## Features
-<<<<<<< HEAD
 
 - ✅ Sync Outline → Local
 - ✅ Sync Local → Outline
@@ -41,7 +40,6 @@ Three main improvements were added:
 ## Configuration
 
 Create `outline-sync.config.json` (recommended):
-=======
 
 - ✅ Sync Outline → Local
 - ✅ Sync Local → Outline
@@ -63,7 +61,6 @@ outline-sync init
 ```
 
 Then edit the generated file:
->>>>>>> dev
 
 ```json
 {
