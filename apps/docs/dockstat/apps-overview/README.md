@@ -3,7 +3,7 @@ id: fb89c77f-9f0a-497a-bb24-c41d21b37478
 title: Apps overview
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: 7dddd764-6483-4f84-96a3-988304e772d3
-updatedAt: 2025-12-17T08:56:57.559Z
+updatedAt: 2025-12-17T09:47:18.062Z
 urlId: YM2LlgAuWf
 ---
 
@@ -630,8 +630,8 @@ cd apps/api && bun run test
 
 | Section | Description |
 |----|----|
-| [Architecture](./architecture/) | System design and component relationships |
-| [API Reference](./api-reference/) | Complete API endpoint documentation |
-| [Configuration](./configuration) | Environment variables and settings |
-| [Integration Guide](./integration-guide) | How applications work together |
-| [Packages](./packages/) | Shared package documentation |
+| [Architecture](/doc/d56ca448-563a-4206-9585-c45f8f6be5cf) | System design and component relationships |
+| [API Reference](/doc/b174143d-f906-4f8d-8cb5-9fc96512e575) | Complete API endpoint documentation |
+| [Configuration](/doc/dec1cb2c-9a13-4e67-a31c-d3a685391208) | Environment variables and settings |
+| [Integration guide](/doc/e4e04545-fd9f-4fbf-becb-94da81f48bc5) | How applications work together |
+| [Packages](/doc/bbcefaa2-6bd4-46e8-ae4b-a6b823593e67) | Shared package documentation |

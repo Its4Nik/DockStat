@@ -3,7 +3,7 @@ id: dec1cb2c-9a13-4e67-a31c-d3a685391208
 title: Configuration
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: 7dddd764-6483-4f84-96a3-988304e772d3
-updatedAt: 2025-12-17T09:29:11.989Z
+updatedAt: 2025-12-17T09:46:31.595Z
 urlId: 3dLW6L8pzR
 ---
 
@@ -601,7 +601,7 @@ app.post("/config", ({ body }) => {
 
 | Section | Description |
 |----|----|
-| [Architecture](./architecture/) | System design and component relationships |
-| [API Reference](./api-reference/) | Complete API endpoint documentation |
-| [Packages](./packages/) | Package-specific configuration details |
-| [Troubleshooting](./troubleshooting) | Configuration-related issues and solutions |
+| [Architecture](/doc/d56ca448-563a-4206-9585-c45f8f6be5cf) | System design and component relationships |
+| [API Reference](/doc/b174143d-f906-4f8d-8cb5-9fc96512e575) | Complete API endpoint documentation |
+| [Packages](/doc/bbcefaa2-6bd4-46e8-ae4b-a6b823593e67) | Package-specific configuration details |
+| [Troubleshooting](/doc/88a5f959-3f89-4266-9d8e-eb50193425b0) | Configuration-related issues and solutions |

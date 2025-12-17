@@ -3,7 +3,7 @@ id: 88a5f959-3f89-4266-9d8e-eb50193425b0
 title: Troubleshooting
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: 7dddd764-6483-4f84-96a3-988304e772d3
-updatedAt: 2025-12-17T09:07:59.574Z
+updatedAt: 2025-12-17T09:44:51.395Z
 urlId: lgGFKJhiDO
 ---
 
@@ -876,7 +876,7 @@ console.log(JSON.stringify(schema, null, 2));
 
 | Section | Description |
 |----|----|
-| [Configuration](./configuration) | Configuration options and settings |
-| [Architecture](./architecture/) | System design for debugging context |
-| [API Reference](./api-reference/) | API endpoints for diagnostics |
-| [Integration Guide](./integration-guide) | Component interaction details |
+| [Configuration](/doc/dec1cb2c-9a13-4e67-a31c-d3a685391208) | Configuration options and settings |
+| [Architecture](/doc/d56ca448-563a-4206-9585-c45f8f6be5cf) | System design for debugging context |
+| [API Reference](/doc/b174143d-f906-4f8d-8cb5-9fc96512e575) | API endpoints for diagnostics |
+| [Integration guide](/doc/e4e04545-fd9f-4fbf-becb-94da81f48bc5) | Component interaction details |

@@ -3,7 +3,7 @@ id: 7dddd764-6483-4f84-96a3-988304e772d3
 title: DockStat
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: null
-updatedAt: 2025-12-17T09:08:54.373Z
+updatedAt: 2025-12-17T09:43:38.464Z
 urlId: zqa4IyZtl0
 ---
 
@@ -27,13 +27,13 @@ urlId: zqa4IyZtl0
 
 | Section | Description |
 |----|----|
-| [Architecture](./architecture/) | System design, data flow, and component relationships |
-| [API Reference](./api-reference/) | Complete REST API endpoint documentation |
-| [Applications Overview](./apps-overview) | Guide to all DockStat applications |
-| [Configuration](./configuration) | Environment variables and settings |
-| [Integration Guide](./integration-guide) | Package interoperability and external integrations |
-| [Packages](./packages/) | Shared package documentation |
-| [Troubleshooting](./troubleshooting) | Common issues and solutions |
+| [Architecture](/doc/d56ca448-563a-4206-9585-c45f8f6be5cf) | System design, data flow, and component relationships |
+| [API Reference](/doc/b174143d-f906-4f8d-8cb5-9fc96512e575) | Complete REST API endpoint documentation |
+| [Apps overview](/doc/fb89c77f-9f0a-497a-bb24-c41d21b37478) | Guide to all DockStat applications |
+| [Configuration](/doc/dec1cb2c-9a13-4e67-a31c-d3a685391208) | Environment variables and settings |
+| [Integration guide](/doc/e4e04545-fd9f-4fbf-becb-94da81f48bc5) | Package interoperability and external integrations |
+| [Packages](/doc/bbcefaa2-6bd4-46e8-ae4b-a6b823593e67) | Shared package documentation |
+| [Troubleshooting](/doc/88a5f959-3f89-4266-9d8e-eb50193425b0) | Common issues and solutions |
 
 ## Architecture
 
@@ -129,23 +129,23 @@ The API listens on port 9876 by default with prefix `/api/v2`. The frontend dev 
 
 | Application | Type | Port | Documentation |
 |----|----|----|----|
-| `dockstat` | Frontend | 5173 / 3000 | [Apps Overview](./apps-overview) |
-| `api` | Backend API | 9876 | [API Reference](./api-reference/) |
-| `docknode` | Remote Agent | 4000 | [Apps Overview](./apps-overview) |
-| `dockstore` | Plugin Registry | — | [Apps Overview](./apps-overview) |
+| `dockstat` | Frontend | 5173 / 3000 | [Apps overview](/doc/fb89c77f-9f0a-497a-bb24-c41d21b37478) |
+| `api` | Backend API | 9876 | [API Reference](/doc/b174143d-f906-4f8d-8cb5-9fc96512e575) |
+| `docknode` | Remote Agent | 4000 | [Apps overview](/doc/fb89c77f-9f0a-497a-bb24-c41d21b37478) |
+| `dockstore` | Plugin Registry | — | [Apps overview](/doc/fb89c77f-9f0a-497a-bb24-c41d21b37478) |
 
 ## Packages
 
-| Package | Description | Documentation |
-|----|----|----|
-| `@dockstat/sqlite-wrapper` | Type-safe SQLite query builder | [Docs](./packages/@dockstat-sqlite-wrapper/) |
-| `@dockstat/docker-client` | Docker operations with monitoring | [Docs](./packages/@dockstat-docker-client/) |
-| `@dockstat/db` | Database layer with themes | [Docs](./packages/@dockstat-db/) |
-| `@dockstat/plugin-handler` | Plugin lifecycle management | [Docs](./packages/@dockstat-plugin-handler/) |
-| `@dockstat/logger` | Colorized logging utility | [Docs](./packages/@dockstat-logger/) |
-| `@dockstat/typings` | Shared TypeScript types | [Docs](./packages/@dockstat-typings/) |
-| `@dockstat/ui` | React UI components | [Docs](./packages/@dockstat-ui/) |
-| `@dockstat/utils` | Common utilities | [Docs](./packages/@dockstat-utils/) |
+| Package | Description |
+|----|----|
+| [@dockstat/sqlite-wrapper](/doc/f543683b-68be-431f-a6d5-7b4012b1345a) | Type-safe SQLite query builder |
+| [@dockstat/docker-client](/doc/ef12194c-404e-4bcd-a5b0-31aaf7b1b798) | Docker operations with monitoring |
+| [@dockstat/db](/doc/5176f3ba-1242-4c85-8290-491dcc0f9963) | Database layer with themes |
+| [@dockstat/plugin-handler](/doc/eadaaa93-6c65-4207-a4ac-9b19afc8f2a5) | Plugin lifecycle management |
+| [@dockstat/logger](/doc/e913e6bd-3f7c-485f-812d-3e626b4f6b5b) | Colorized logging utility |
+| [@dockstat/typings](/doc/ecb9e07b-37e7-430a-b3fc-eb51515ab9ac) | Shared TypeScript types |
+| [@dockstat/ui](/doc/a04555b5-b827-4441-ae20-9cad1a2be714) | React UI components |
+| [@dockstat/utils](/doc/d3039895-f53c-46ab-89ce-de0ad22ce03c) | Common utilities |
 
 ## Environment Variables
 
