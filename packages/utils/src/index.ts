@@ -15,60 +15,55 @@ export const http = {
   requestId: HTTP_RequestID,
 }
 
-// String utilities
+// Async utilities
 export {
-  truncate,
-  capitalize,
-  camelToKebab,
-  kebabToCamel,
-  slugify,
-  escapeHtml,
-} from "./string"
-
-// Formatting utilities
+  debounce,
+  retry,
+  sleep,
+  throttle,
+  timeout,
+} from "./async"
+// Container utilities
 export {
-  formatBytes,
-  formatDuration,
-  formatNumber,
-  formatPercent,
-  formatDate,
-  relativeTime,
-} from "./format"
-
-// Type utilities
-export {
-  isNotNullish,
-  isString,
-  isNumber,
-  isObject,
-  isArray,
-  isFunction,
-} from "./type"
-
+  calculateCpuPercent,
+  calculateMemoryPercent,
+  parseContainerName,
+  parseImageName,
+} from "./container"
 // Data utilities
 export {
   deepClone,
   deepMerge,
-  pick,
-  omit,
   groupBy,
-  uniqueBy,
+  omit,
+  pick,
   sortBy,
+  uniqueBy,
 } from "./data"
-
-// Async utilities
+// Formatting utilities
 export {
-  debounce,
-  throttle,
-  sleep,
-  retry,
-  timeout,
-} from "./async"
-
-// Container utilities
+  formatBytes,
+  formatDate,
+  formatDuration,
+  formatNumber,
+  formatPercent,
+  relativeTime,
+} from "./format"
+// String utilities
 export {
-  parseContainerName,
-  parseImageName,
-  calculateCpuPercent,
-  calculateMemoryPercent,
-} from "./container"
+  camelToKebab,
+  capitalize,
+  escapeHtml,
+  kebabToCamel,
+  slugify,
+  truncate,
+} from "./string"
+// Type utilities
+export {
+  isArray,
+  isFunction,
+  isNotNullish,
+  isNumber,
+  isObject,
+  isString,
+} from "./type"
