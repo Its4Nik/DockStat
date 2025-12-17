@@ -9,6 +9,7 @@ bun install -g @dockstat/outline-sync
 ```
 
 ## Features
+<<<<<<< HEAD
 
 - ✅ Sync Outline → Local
 - ✅ Sync Local → Outline
@@ -40,6 +41,29 @@ Three main improvements were added:
 ## Configuration
 
 Create `outline-sync.config.json` (recommended):
+=======
+
+- ✅ Sync Outline → Local
+- ✅ Sync Local → Outline
+- ✅ Each doc in own folder with README.md
+- ✅ Custom path mapping for specific documents
+- ✅ Collection filtering (include/exclude)
+- ✅ Frontmatter metadata preservation
+- ✅ CI/CD integration
+- ✅ File watching
+
+## Configuration
+
+### Option 1: Config File (Recommended)
+
+Create `outline-sync.config.json`:
+
+```bash
+outline-sync init
+```
+
+Then edit the generated file:
+>>>>>>> dev
 
 ```json
 {
@@ -163,7 +187,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 */6 * * *" # Every 6 hours
 
 jobs:
   sync:
