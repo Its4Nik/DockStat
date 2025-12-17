@@ -47,10 +47,6 @@ Create `outline-sync.config.json` (recommended):
   "token": "your_api_token",
   "outputDir": "./outline-docs",
   "includeCollections": ["Engineering", "Product"],
-  "excludeCollections": [],
-  "customPaths": {
-    "example-doc-id": "../../README.md",
-    "another-doc-id": "custom/path/document.md"
   }
 }
 ```
@@ -163,7 +159,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 */6 * * *" # Every 6 hours
 
 jobs:
   sync:
