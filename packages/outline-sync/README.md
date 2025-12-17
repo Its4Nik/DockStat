@@ -68,10 +68,10 @@ Then edit the generated file:
   "token": "your_api_token",
   "outputDir": "./outline-docs",
   "includeCollections": ["Engineering", "Product"],
-  "excludeCollections": [],
+  "excludeCollections": ["Archive", "Private"],
   "customPaths": {
-    "example-doc-id": "../../README.md",
-    "another-doc-id": "custom/path/document.md"
+    "doc-id-abc123": "../../README.md",
+    "doc-id-xyz789": "custom/important-doc.md"
   }
 }
 ```
