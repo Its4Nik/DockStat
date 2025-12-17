@@ -76,8 +76,8 @@ export const Table = <T extends Record<string, unknown>>({
     // Sort
     if (sortConfig.key) {
       result.sort((a, b) => {
-        const aVal = a[sortConfig.key!]
-        const bVal = b[sortConfig.key!]
+        const aVal = a[sortConfig.key as string] as number
+        const bVal = b[sortConfig.key as string] as number
 
         if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1
         if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1

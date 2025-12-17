@@ -1,10 +1,10 @@
-import { mkdir, writeFile, readFile, readdir, stat } from "fs/promises"
-import { join, dirname } from "path"
+import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises"
+import { join } from "node:path"
 import { watch } from "chokidar"
 import fm from "front-matter"
 import YAML from "yaml"
-import type { OutlineConfig, Document, DocumentMetadata, Collection } from "./types"
 import { OutlineClient } from "./client"
+import type { Document, DocumentMetadata, OutlineConfig } from "./types"
 
 interface DocumentNode {
   document: Document
@@ -100,12 +100,22 @@ export class OutlineSync {
     const docPath = this.sanitizePath(doc.title)
 
     // Build path based on hierarchy
-    if (parentPath) {
+    // Avoid creating a duplicate nested folder when the document title equals the collection name.
+    // Example: collection "DockStat" with a root doc titled "DockStat" should produce:
+    //   ./dockstat/README.md
+    // not:
+    //   ./dockstat/dockstat/README.md
+    if (!parentPath) {
+      // If root-level and the sanitized document name equals the collection folder name,
+      // place the README directly inside the collection folder.
+      if (docPath === collectionPath) {
+        return join(this.outputDir, collectionPath)
+      }
+      // Root level document with a different name -> subfolder under collection
+      return join(this.outputDir, collectionPath, docPath)
+    } else {
       // Nested document
       return join(parentPath, docPath)
-    } else {
-      // Root level document in collection
-      return join(this.outputDir, collectionPath, docPath)
     }
   }
 
@@ -268,11 +278,19 @@ export class OutlineSync {
         continue
       }
 
-      // Compare content or modification time
+      // Prefer frontmatter updatedAt if present, otherwise fall back to file mtime.
+      // Compare those timestamps against the cached remote updatedAt (from last syncDown).
+      const fileFrontUpdated = parsed.attributes.updatedAt
+        ? new Date(parsed.attributes.updatedAt)
+        : null
       const fileStat = await stat(file)
+      const fileMtime = fileStat.mtime
       const cachedTime = new Date(cached.updatedAt)
 
-      if (fileStat.mtime > cachedTime) {
+      if (
+        (fileFrontUpdated && fileFrontUpdated > cachedTime) ||
+        (!fileFrontUpdated && fileMtime > cachedTime)
+      ) {
         changed.push(file)
       }
     }
@@ -300,5 +318,74 @@ export class OutlineSync {
     }
 
     return files
+  }
+
+  /**
+   * Compare local files against the remote Outline documents by fetching the remote
+   * document for each file ID and comparing timestamps. This method is used by the
+   * `push` flow where we want to push local changes up without first doing a syncDown.
+   */
+  private async findChangedFilesAgainstRemote(): Promise<string[]> {
+    const changed: string[] = []
+    const files = await this.getAllMarkdownFiles(this.outputDir)
+
+    for (const file of files) {
+      const content = await readFile(file, "utf-8")
+      const parsed = fm<DocumentMetadata>(content)
+
+      if (!parsed.attributes?.id) continue
+
+      const id = parsed.attributes.id
+
+      try {
+        const remote = await this.client.getDocument(id)
+        const remoteTime = new Date(remote.updatedAt)
+
+        const fileFrontUpdated = parsed.attributes.updatedAt
+          ? new Date(parsed.attributes.updatedAt)
+          : null
+        const fileStat = await stat(file)
+        const fileMtime = fileStat.mtime
+
+        if (
+          (fileFrontUpdated && fileFrontUpdated > remoteTime) ||
+          (!fileFrontUpdated && fileMtime > remoteTime)
+        ) {
+          changed.push(file)
+        }
+      } catch (_) {
+        // If we can't fetch the remote document (deleted/permission/etc.), mark for push so the user can inspect.
+        changed.push(file)
+      }
+    }
+
+    return changed
+  }
+
+  /**
+   * Push local changes to Outline by comparing each local file to the remote document.
+   * This does NOT perform a syncDown first; it queries the server for each document ID
+   * and pushes anything that appears newer locally.
+   */
+  async push(): Promise<void> {
+    console.log("📤 Pushing local changes to Outline...")
+
+    const changedFiles = await this.findChangedFilesAgainstRemote()
+
+    if (changedFiles.length === 0) {
+      console.log("✅ No local changes to push")
+      return
+    }
+
+    console.log(`\n📤 Pushing ${changedFiles.length} changed file(s) to Outline...`)
+    for (const file of changedFiles) {
+      try {
+        await this.syncUp(file)
+      } catch (error) {
+        console.error(`Error pushing ${file}:`, error)
+      }
+    }
+
+    console.log("\n✅ Push complete!")
   }
 }

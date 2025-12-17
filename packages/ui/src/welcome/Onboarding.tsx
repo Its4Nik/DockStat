@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Card, CardBody } from "../components/Card/Card"
 import { slides } from "./CONSTS"
 import IntroScreen from "./Intro"
@@ -8,22 +8,41 @@ import { OnboardingSlide } from "./OnboardingSlide"
 import type { OnboardingProps } from "./types"
 
 export function Onboarding({ setOnBoardingComplete }: OnboardingProps) {
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const totalSlides = slides.length
+
+  const [currentIndex, setCurrentIndex] = useState<number>(0)
+
+  const goNext = useCallback(() => {
+    setCurrentIndex((i) => Math.min(i + 1, totalSlides - 1))
+  }, [totalSlides])
+
+  const goPrev = useCallback(() => {
+    setCurrentIndex((i) => Math.max(i - 1, 0))
+  }, [])
+
+  const goToSlide = useCallback(
+    (index: number) => {
+      const next = Math.max(0, Math.min(Math.trunc(index), totalSlides - 1))
+      setCurrentIndex(next)
+    },
+    [totalSlides]
+  )
+
+  const finish = useCallback(() => setOnBoardingComplete(true), [setOnBoardingComplete])
+
+  const skip = useCallback(() => setOnBoardingComplete(true), [setOnBoardingComplete])
 
   useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.repeat) return
+
       if (e.key === "ArrowRight") goNext()
       if (e.key === "ArrowLeft") goPrev()
     }
+
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [goNext, goPrev])
-
-  const goNext = () => setCurrentIndex((i) => Math.min(i + 1, slides.length - 1))
-  const goPrev = () => setCurrentIndex((i) => Math.max(i - 1, 0))
-  const goToSlide = (index: number) => setCurrentIndex(index)
-  const finish = () => setOnBoardingComplete(true)
-  const skip = () => setOnBoardingComplete(true)
 
   return (
     <dialog

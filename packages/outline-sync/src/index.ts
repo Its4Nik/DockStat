@@ -1,10 +1,9 @@
-#!/usr/bin/env bun
+import { existsSync } from "node:fs"
+import { readFile, writeFile } from "node:fs/promises"
+import { join } from "node:path"
 import { Command } from "commander"
 import { OutlineSync } from "./sync"
 import type { OutlineConfig } from "./types"
-import { existsSync } from "fs"
-import { readFile, writeFile } from "fs/promises"
-import { join } from "path"
 
 const program = new Command()
 
@@ -28,7 +27,18 @@ function parseArrayOption(value: string): string[] {
     .filter(Boolean)
 }
 
-async function getConfig(options: any, loadConfigFile = true): Promise<OutlineConfig> {
+async function getConfig(
+  options: {
+    url: string
+    include: string
+    exclude: string
+    token?: string
+    outputDir: string
+    output: string
+    config: string
+  },
+  loadConfigFile = true
+): Promise<OutlineConfig> {
   const fileConfig = loadConfigFile ? await loadConfig(options.config) : {}
 
   const config: OutlineConfig = {
@@ -102,6 +112,21 @@ program
     const config = await getConfig(options)
     const sync = new OutlineSync(config)
     await sync.ciSync()
+  })
+
+program
+  .command("push")
+  .description("Push local changes to Outline")
+  .option("-u, --url <url>", "Outline URL")
+  .option("-t, --token <token>", "API token")
+  .option("-o, --output <dir>", "Output directory")
+  .option("-c, --config <path>", "Config file path")
+  .option("-i, --include <collections>", "Comma-separated list of collections to include")
+  .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
+  .action(async (options) => {
+    const config = await getConfig(options)
+    const sync = new OutlineSync(config)
+    await sync.push()
   })
 
 program

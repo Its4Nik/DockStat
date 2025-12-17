@@ -16,7 +16,7 @@
 
     "lint:all": "biome check .",
     "lint:all:ci": "biome check . --reporter=github",
-    "lint:fix:all": "biome check --write .",
+    "lint:fix:all": "biome check --write --assist-enabled=true .",
     "format:all": "biome format --write .",
     "format:check:all": "biome format --check ."
   },

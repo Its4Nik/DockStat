@@ -208,6 +208,7 @@ export default function ExampleRoute() {
                   fill="currentColor"
                   aria-hidden
                 >
+                  <title>Send</title>
                   <path d="M2.94 2.94a1 1 0 011.414 0L17 15.586V11a1 1 0 112 0v6a1 1 0 01-1 1h-6a1 1 0 110-2h4.586L4.354 4.354a1 1 0 010-1.414z" />
                 </svg>
                 Send
@@ -287,6 +288,7 @@ function PostCard({ obj }: { obj: { name: string; url: string; description: stri
             stroke="currentColor"
             aria-hidden
           >
+            <title>icon</title>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </div>

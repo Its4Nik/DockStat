@@ -1,628 +1,298 @@
 ---
-id: c85f4dd0-6855-418c-854d-062d86adb158
-title: API reference
+id: b174143d-f906-4f8d-8cb5-9fc96512e575
+title: API Reference
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
-parentDocumentId: 9550ca5f-3b09-4e4d-9ea9-634b4cc1553d
-updatedAt: 2025-08-18T22:50:49.841Z
-urlId: 1PTxqx1MQ6
+parentDocumentId: 7dddd764-6483-4f84-96a3-988304e772d3
+updatedAt: 2025-12-16T19:16:50.491Z
+urlId: gVYlljv3Fs
 ---
 
-Since the new backend is currently under active development this page might be outdated. Please see the following issue for a more up-to-date status:
-
-<https://github.com/Its4Nik/dockstatapi/issues/16> (hover this link for quick overview).
-
-# Available root-routes:
-
-| Root-Routes | Functionality |
-|----|----|
-| /auth | Controlling of authentication service |
-| /data | Database queries, used for historic data and database management |
-| /frontend | Exposed routes for configuring various settings for a/the frontend |
-| /api | Only get endpoints, used for fetching configuration data and forcing a new request to the docker sockets instead of querying the database. |
-| /conf | Endpoints for configuring backend options |
-| /notification-service | configuration of the notification service integrated into the DockStatApi. |
-| /ha | Only used for the High Availability synchro |
-
-
----
-
-# Symbol legend
-
-| **✅** | Required |
-|----|----|
-| **❌** | Optional |
-| ⛔ | Not needed |
-
-## Auth routes:
-
-### POST: /auth/enable
-
-
-:::info
-sets a current password and enables auth for all endpoints, except the api-docs
-
-:::
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Query | password | :white_check_mark: |
-
-
----
-
-### POST: /auth/disable
-
-
-:::info
-Disables authentication for all endpoints
-
-:::
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Query | password | :white_check_mark: |
-
-
----
-
-## Database queries
-
-### GET: /data/latest
-
-
-:::info
-Queries the latest entry of the database and provides it as a JSON response.
-
-:::
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| None | None | :no_entry: |
-
-
----
-
-### GET: /data/time/24h
-
-
-:::info
-Queries all the latest data of the database in a 24h timeframe and organizes them in a JSON array.
-
-:::
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| None | None | **⛔** |
-
-
----
-
-### DELETE: /data/clear
-
-
-:::info
-Clears \*\*\*ALL \*\*\*entries of the SQLite database.
-
-:::
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| None | None | **⛔** |
-
-
----
-
-## Frontend routes:
-
-
-:::info
-**\***) When referring to a config the frontend config at the path: `/data/frontendConfiguration.json` is meant.
-
-:::
-
-### POST: /frontend/show/{==containerName==}
-
-
-:::info
-Sets a container to visible in the config\*\*\*\*\*
-
-:::
-
-| Parameter Type | Parameter name | Required? |
-|----|----|----|
-| Path | ==containerName== | :white_check_mark: |
-
-
----
-
-### POST: /frontend/tag/{==containerName==/{==tag==}
-
-
-:::info
-Adds a tag to a container inside the config\*, as an array for multiple tags
-
-:::
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Path | ==containerName== | :white_check_mark: |
-| Path | ==tag== | :white_check_mark: |
-
-
----
-
-### POST: /frontend/pin/{==containerName==}
-
-
-:::info
-#### Sets "pinned" to true, inside the config\*
-
-:::
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Path | ==containerName== | :white_check_mark: |
-
-
----
-
-### POST: /frontend/add-link/{==containerName==}/{==link==}
-
-
-:::info
-Sets the "link" string inside the config\*
-
-:::
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Path | ==containerName== | :white_check_mark: |
-| Path (might change) | ==link== | :white_check_mark: |
-
-
----
-
-### POST: /frontend/add-icon/{==containerName==}/{==icon==}/{==useCustomIcon==}
-
-
-:::info
-Configures the icon string inside the config, when useCustomIcon is true the path file path of the icon gets to adjust with custom/{==icon==}.png
-
-:::
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Path | ==containerName== | :white_check_mark: |
-| Path (string WITHOUT file type) | ==icon== | :white_check_mark: |
-| Path (boolean) | ==useCustomicon== | :x: |
-
-### DELETE: /frontend/hide/{==containerName==}
-
-
-:::info
-Sets "hidden" to true inside the config\*
-
-:::
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Path | ==containerName== | :white_check_mark: |
-
-
----
-
-### DELETE: /frontend/remove-tag/{==containerName==}/{==tag==}
-
-
-:::info
-Removes the specified tag from the frontend config\* tag-array
-
-:::
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Path | ==containerName== | :white_check_mark: |
-| Path | ==tag== | :white_check_mark: |
-
-
----
-
-### DELETE: /frontend/unpin/{==containerName==}
-
-
-:::info
-Sets "pinned" to false inside the config\*
-
-:::
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Path | ==containerName== | :white_check_mark: |
-
-
----
-
-### DELETE: /frontend/remove-link/{==containerName==}
-
-
-:::info
-Removes the "link" string from the config\*
-
-:::
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Path | ==cotnainerName== | :white_check_mark: |
-
-
----
-
-### DELETE: /frontend/remove-icon/{==containerName==}
-
-
-:::info
-Removes the "icon" string from the config\*
-
-:::
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Path | ==containerName== | :white_check_mark: |
-
-## API
-
-### GET: /api/hosts
-
-
-:::info
-Retrieves a JSON list of all available hosts
-
-:::
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| None | None | **⛔** |
-
-
----
-
-### GET: /api/host/{==hostName==}/stats
-
-
-:::info
-Queries a specified host and provides data as a JSON structure
-
-:::
-
-Example response:
-
-```javascript
-{
-  "hostName": "XXX",
-  "info": {
-    "ID": "XXX",
-    "Containers": 19,
-    "ContainersRunning": 19,
-    "ContainersPaused": 0,
-    "ContainersStopped": 0,
-    "Images": 17,
-    "OperatingSystem": "Ubuntu 22.04.5 LTS",
-    "KernelVersion": "5.15.0-121-generic",
-    "Architecture": "x86_64",
-    "MemTotal": 8123764736,
-    "NCPU": 4
-  },
-  "version": {
-    "Components": {
-      "Engine": "27.3.1",
-      "containerd": "1.7.22",
-      "runc": "1.1.14",
-      "docker-init": "0.19.0"
-    }
-  }
-}
+> The DockStatAPI is implemented with Elysia and exposed under the prefix `/api/v2`. The canonical route definitions are in `apps/api/src/routes/` with schemas in `apps/api/src/models/`.
+
+## Base URL
+
+Development: `http://localhost:9876/api/v2`
+
+## Route Overview
+
+```mermaidjs
+graph LR
+    subgraph /api/v2
+        direction TB
+        DOCKER["/docker"]
+        METRICS["/metrics"]
+        PLUGINS["/plugins"]
+        DB["/db"]
+    end
+
+    subgraph Docker Routes
+        DOCKER --> STATUS[GET /status]
+        DOCKER --> HOSTS["/hosts"]
+        DOCKER --> CLIENT["/client"]
+        DOCKER --> CONTAINERS["/containers"]
+        DOCKER --> MANAGER["/manager"]
+    end
+
+    subgraph Host Routes
+        HOSTS --> H_LIST[GET /]
+        HOSTS --> H_GET[GET /:clientId]
+        HOSTS --> H_ADD[POST /add]
+        HOSTS --> H_UPDATE[POST /update]
+    end
+
+    subgraph Client Routes
+        CLIENT --> C_REG[POST /register]
+        CLIENT --> C_DEL[DELETE /delete]
+        CLIENT --> C_ALL[GET /all/:stored]
+        CLIENT --> C_MON_START[POST /monitoring/:clientId/start]
+        CLIENT --> C_MON_STOP[POST /monitoring/:clientId/stop]
+    end
 ```
 
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Path | ==hostName== | :white_check_mark: |
+## Docker Routes `/api/v2/docker`
 
+### GET `/docker/status`
 
----
+Returns the overall DockerClientManager status, including worker pool metrics.
 
-### GET: /api/containers
+**Response 200:**
 
-
-:::info
-Queries all docker hosts directly and provides a JSON output
-
-:::
-
-Example response:
-
-```javascript
+```json
 {
-  "XXX": [
+  "hosts": [{ "name": "string", "id": 1, "clientId": 1 }],
+  "totalWorkers": 4,
+  "activeWorkers": 2,
+  "totalHosts": 3,
+  "totalClients": 2,
+  "averageHostsPerWorker": 1,
+  "workers": [
     {
-      "name": "portainer",
-      "id": "XXX",
-      "hostName": "XXX",
-      "state": "running",
-      "cpu_usage": 1670000,
-      "mem_usage": 10727424,
-      "mem_limit": 8123764736,
-      "net_rx": 584519242,
-      "net_tx": 27036706,
-      "current_net_rx": 584519242,
-      "current_net_tx": 27036706,
-      "networkMode": "docker-important_default"
-    }
-   ],
-   "YYY": [
-    {
-      "name": "dozzle",
-      "id": "XXX",
-      "hostName": "YYY",
-      "state": "running",
-      "cpu_usage": 1670000,
-      "mem_usage": 10727424,
-      "mem_limit": 8123764736,
-      "net_rx": 584519242,
-      "net_tx": 27036706,
-      "current_net_rx": 584519242,
-      "current_net_tx": 27036706,
-      "networkMode": "default"
-    }
-   ]
-  }
-```
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| None | None | ⛔ |
-
-
----
-
-### GET: /api/config
-
-
-:::info
-Provides the current backend config as JSON
-
-:::
-
-Example response:
-
-```javascript
-{
-  "hosts": [
-    {
-      "name": "XXX",
-      "url": "YYY",
-      "port": "ZZZ"
+      "workerId": 1,
+      "clientId": 1,
+      "clientName": "local",
+      "hostsManaged": 2,
+      "activeStreams": 0,
+      "isMonitoring": true,
+      "initialized": true,
+      "memoryUsage": { "rss": 0, "heapTotal": 0, "heapUsed": 0, "external": 0 },
+      "uptime": 3600
     }
   ]
 }
 ```
 
-| Parameter type | Parameter name | Required? |
+### Hosts `/docker/hosts`
+
+| Method | Path | Description |
 |----|----|----|
-| None | None | ⛔ |
+| GET | `/hosts/` | List all hosts |
+| GET | `/hosts/:clientId` | Get metrics for a specific client |
+| POST | `/hosts/add` | Add a new host |
+| POST | `/hosts/update` | Update an existing host |
 
+**POST** `**/hosts/add**` **body:**
 
----
-
-### GET: /api/current-shedule
-
-
-:::info
-Retrieves and provides the current schedule settings in seconds
-
-:::
-
-Example response:
-
-```javascript
+```json
 {
-  "interval": 300
+  "clientId": 1,
+  "hostname": "docker.local",
+  "name": "Local Docker",
+  "secure": false,
+  "port": 2375
 }
 ```
 
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| None | None | ⛔ |
+**POST** `**/hosts/update**` **body:**
 
-
----
-
-### GET: /api/frontend-config
-
-
-:::info
-Provides the frontend config used for various settings
-
-:::
-
-Example response:
-
-```javascript
-[
-  {
-    "name": "XXX",
-    "hidden": true,
-    "tags": [
-      "YYY"
-    ],
-    "pinned": true
+```json
+{
+  "clientId": 1,
+  "host": {
+    "id": 1,
+    "host": "docker.local",
+    "name": "Updated Name",
+    "secure": true,
+    "port": 2376
   }
-]
+}
 ```
 
-| Parameter type | Parameter name | Required? |
+### Client `/docker/client`
+
+| Method | Path | Description |
 |----|----|----|
-| None | None | ⛔ |
+| POST | `/client/register` | Register a new Docker client |
+| DELETE | `/client/delete` | Remove a client |
+| GET | `/client/all/:stored` | List all clients |
+| POST | `/client/monitoring/:id/start` | Start monitoring for a client |
+| POST | `/client/monitoring/:id/stop` | Stop monitoring for a client |
 
-
----
-
-### GET: /api/status
-
-
-:::info
-Returns a 200 status with an "up" message to indicate the server is up and running. Used for Health checks
-
-:::
-
-Example response:
+**POST** `**/client/register**` **body:**
 
 ```json
 {
-  "status": "up"
+  "clientName": "production",
+  "options": null
 }
 ```
 
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| None | None | ⛔ |
-
-
----
-
-### PUT: /conf/addHost
-
-
-:::info
-Adds another host as target
-
-:::
-
-| Response Code | Description |
-|----|----|
-| 200 | Host added successfully. |
-| 400 | Bad request, invalid input. |
-| 500 | An error occurred while adding the host. |
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Query | name | :white_check_mark: |
-| Query | URL | :white_check_mark: |
-| Query | port | :white_check_mark: |
-
-
----
-
-## Conf
-
-### PUT: /conf/scheduler
-
-
-:::info
-Set a new scheduler interval (has to be 5 minutes or more)
-
-:::
-
-| Response code | Description |
-|----|----|
-| 200 | Fetch interval set successfully. |
-| 400 | Invalid interval format or out of range. |
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Query | interval | :white_check_mark: |
-
-
----
-
-### DELETE: /conf/removeHost
-
-
-:::info
-Removes a specified host from the config
-
-:::
-
-| Response code | Description |
-|----|----|
-| 200 | Host removed successfully. |
-| 404 | Host not found. |
-| 500 | An error occurred while removing the host. |
-
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Query | hostName | :white_check_mark: |
-
-
----
-
-## Notification Services
-
-### GET: /notification-service/get-template
-
-
-:::info
-Retrieve the notification template
-
-:::
-
-Example response:
+**Response 200:**
 
 ```json
 {
-  "message": "{{name}} is {{state}}"
+  "success": true,
+  "message": "Client registered",
+  "clientId": 1
 }
 ```
 
-| Parameter type | Parameter name | Required? |
+### Containers `/docker/containers`
+
+| Method | Path | Description |
 |----|----|----|
-| None | None | ⛔ |
+| GET | `/containers/all/:clientId` | Get all containers for a client |
 
+**Response:** Array of container objects with stats.
 
----
+### Manager `/docker/manager`
 
-### POST: /notification-service/set-template
+| Method | Path | Description |
+|----|----|----|
+| GET | `/manager/pool-stats` | Get worker pool statistics |
+| POST | `/manager/init-all-clients` | Initialize all registered clients |
 
+## Metrics Routes `/api/v2/metrics`
 
-:::info
-Update the notification text with templating functionality
+### GET `/metrics/`
 
-:::
+Returns Prometheus-formatted metrics for the API and database.
 
-Example Request body:
+**Response 200:** Prometheus text format with:
 
-```javascript
+* HTTP request counters
+* Request duration histograms
+* Database size and table metrics
+* Memory usage statistics
+
+## Plugin Routes `/api/v2/plugins`
+
+```mermaidjs
+
+sequenceDiagram
+    participant Client
+    participant API
+    participant PluginHandler
+    participant DB
+
+    Client->>API: POST /plugins/install
+    API->>PluginHandler: savePlugin()
+    PluginHandler->>DB: INSERT plugin
+    DB-->>PluginHandler: success
+    PluginHandler-->>API: { success: true, id: 1 }
+    API-->>Client: 200 OK
+
+    Client->>API: POST /plugins/activate
+    API->>PluginHandler: loadPlugins([1])
+    PluginHandler->>DB: SELECT plugin code
+    PluginHandler->>PluginHandler: Dynamic import
+    PluginHandler-->>API: { successes: [1], errors: [] }
+    API-->>Client: 200 OK
+```
+
+| Method | Path | Description |
+|----|----|----|
+| GET | `/plugins/all` | List all installed plugins |
+| GET | `/plugins/hooks` | Get available hook handlers |
+| GET | `/plugins/status` | Get plugin system status |
+| POST | `/plugins/install` | Install a plugin |
+| POST | `/plugins/activate` | Activate plugins by ID |
+| POST | `/plugins/delete` | Delete a plugin |
+| GET | `/plugins/routes` | List plugin-provided routes |
+| ALL | `/plugins/:id/routes/*` | Proxy requests to plugin Elysia instance |
+
+**POST** `**/plugins/install**` **body:**
+
+```json
 {
-  "message": "string"
+  "name": "my-plugin",
+  "version": "1.0.0",
+  "description": "Plugin description",
+  "repoType": "github",
+  "repository": "user/repo",
+  "manifest": "manifest.yml",
+  "author": { "name": "Author", "email": "a@b.com" },
+  "plugin": "/* JS code */"
 }
 ```
 
-| Parameter type | Parameter name | Required? |
+**POST** `**/plugins/activate**` **body:**
+
+```json
+[1, 2, 3]
+```
+
+**Response 200:**
+
+```json
+{
+  "successes": [1, 2],
+  "errors": [{ "pluginId": 3, "error": "..." }]
+}
+```
+
+## Database Routes `/api/v2/db`
+
+| Method | Path | Description |
 |----|----|----|
-| Request body | None | :white_check_mark: |
+| GET | `/db/config` | Get current configuration |
+| POST | `/db/config` | Update configuration |
 
+**POST** `**/db/config**` **body:** Configuration object matching `DockStatConfigTable` schema from `@dockstat/typings`.
 
----
+## OpenAPI Documentation
 
-### POST: /notification-service/test/{==type==}/{==containerId==}
+The API exposes OpenAPI documentation via `@elysiajs/openapi` at `/api/v2/docs` using the Scalar provider.
 
+## Error Handling
 
-:::info
-Send a test notification using an existing container as a data source for the template
+All routes use a global error handler that returns structured errors:
 
-:::
+**Validation Error (400):**
 
-> might change in the future to use a standart test message
+```json
+{
+  "error": "Validation failed",
+  "path": "/api/v2/docker/hosts/add",
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
 
-| Parameter type | Parameter name | Required? |
-|----|----|----|
-| Path | ==type==\* | **✅** |
-| Path | ==containerId== | :white_check_mark: |
+**Server Error (500):**
 
-*Type\*: this is the notification service you are trying to test, for example: telegram, mail, pushbullet, …*
+```json
+{
+  "error": "Response validation failed",
+  "message": "...",
+  "path": "/api/v2/...",
+  "timestamp": "..."
+}
+```
 
+## Authentication
 
----
+The current API implementation does not enforce authentication at the route level. For production deployments, add an authentication layer via reverse proxy or Elysia middleware.
 
-## High Availability
+## Source Files
 
-WIP
+| File | Description |
+|----|----|
+| `apps/api/src/index.ts` | API entry point |
+| `apps/api/src/routes/docker/index.ts` | Docker route aggregator |
+| `apps/api/src/routes/docker/hosts.ts` | Host management routes |
+| `apps/api/src/routes/docker/client.ts` | Client management routes |
+| `apps/api/src/routes/docker/container.ts` | Container routes |
+| `apps/api/src/routes/docker/manager.ts` | Manager routes |
+| `apps/api/src/routes/plugins/index.ts` | Plugin routes |
+| `apps/api/src/routes/db.ts` | Database configuration routes |
+| `apps/api/src/routes/metrics/prometheus.ts` | Metrics endpoint |
+| `apps/api/src/models/*.ts` | Request/response schemas |

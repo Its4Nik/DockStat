@@ -215,7 +215,7 @@ class DockerClient {
         )}`
       )
       // Replace any existing instance
-      this.dockerInstances.delete(Number(Number(host.id)))
+      this.dockerInstances.delete(Number(host.id))
       const dockerInstance = new Dockerode(instanceCfg)
       this.dockerInstances.set(Number(host.id), dockerInstance)
     } catch (err) {
