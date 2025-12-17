@@ -3,11 +3,14 @@ id: 7dddd764-6483-4f84-96a3-988304e772d3
 title: DockStat
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: null
-updatedAt: 2025-12-16T19:19:22.857Z
+updatedAt: 2025-12-17T09:08:54.373Z
 urlId: zqa4IyZtl0
 ---
 
 ![](/api/attachments.redirect?id=2c39d8bf-6a65-43f6-9781-287b6950d350 "full-width =2834x274")
+
+
+---
 
 
 :::warning
@@ -18,7 +21,19 @@ urlId: zqa4IyZtl0
 
 ---
 
-DockStat is a Docker container monitoring and management platform built as a monorepo. The system consists of a Bun/Elysia backend API, a React Router frontend, companion services (DockNode, DockStore), and shared packages.
+> ***DockStat is a Docker container monitoring and management platform built as a monorepo. The system consists of a Bun/Elysia backend API, a React Router frontend, companion services (DockNode, DockStore), and shared packages.***
+
+## Documentation Index
+
+| Section | Description |
+|----|----|
+| [Architecture](./architecture/) | System design, data flow, and component relationships |
+| [API Reference](./api-reference/) | Complete REST API endpoint documentation |
+| [Applications Overview](./apps-overview) | Guide to all DockStat applications |
+| [Configuration](./configuration) | Environment variables and settings |
+| [Integration Guide](./integration-guide) | Package interoperability and external integrations |
+| [Packages](./packages/) | Shared package documentation |
+| [Troubleshooting](./troubleshooting) | Common issues and solutions |
 
 ## Architecture
 
@@ -110,6 +125,28 @@ bun run dev
 
 The API listens on port 9876 by default with prefix `/api/v2`. The frontend dev server runs on port 5173.
 
+## Applications
+
+| Application | Type | Port | Documentation |
+|----|----|----|----|
+| `dockstat` | Frontend | 5173 / 3000 | [Apps Overview](./apps-overview) |
+| `api` | Backend API | 9876 | [API Reference](./api-reference/) |
+| `docknode` | Remote Agent | 4000 | [Apps Overview](./apps-overview) |
+| `dockstore` | Plugin Registry | — | [Apps Overview](./apps-overview) |
+
+## Packages
+
+| Package | Description | Documentation |
+|----|----|----|
+| `@dockstat/sqlite-wrapper` | Type-safe SQLite query builder | [Docs](./packages/@dockstat-sqlite-wrapper/) |
+| `@dockstat/docker-client` | Docker operations with monitoring | [Docs](./packages/@dockstat-docker-client/) |
+| `@dockstat/db` | Database layer with themes | [Docs](./packages/@dockstat-db/) |
+| `@dockstat/plugin-handler` | Plugin lifecycle management | [Docs](./packages/@dockstat-plugin-handler/) |
+| `@dockstat/logger` | Colorized logging utility | [Docs](./packages/@dockstat-logger/) |
+| `@dockstat/typings` | Shared TypeScript types | [Docs](./packages/@dockstat-typings/) |
+| `@dockstat/ui` | React UI components | [Docs](./packages/@dockstat-ui/) |
+| `@dockstat/utils` | Common utilities | [Docs](./packages/@dockstat-utils/) |
+
 ## Environment Variables
 
 ### API (`apps/api`)
@@ -139,6 +176,8 @@ The API listens on port 9876 by default with prefix `/api/v2`. The frontend dev 
 | `DOCKNODE_DOCKSTACK_AUTH_PRIORITY` | Auth method priority |
 | `PORT` | Server port (default `4000`) |
 
+[Full Configuration Documentation →](./configuration)
+
 ## Build for Production
 
 Frontend:
@@ -153,16 +192,6 @@ bun run start
 
 The frontend Dockerfile at `apps/dockstat/Dockerfile` produces a production image.
 
-## Documentation Index
-
-| Section | Description |
-|----|----|
-| [API Reference](https://api-reference/) | Endpoint documentation for `/api/v2` |
-| [Architecture](https://architecture/) | System design and data flow |
-| [Packages](https://packages/) | Shared package documentation |
-| [Notifications](https://notifications/) | Notification provider setup |
-| [Archive](https://archive/) | Deprecated v1/v3 docs |
-
 ## Tech Stack
 
 | Layer | Technology |
@@ -174,3 +203,21 @@ The frontend Dockerfile at `apps/dockstat/Dockerfile` produces a production imag
 | Docker Integration | Dockerode (via `@dockstat/docker-client`) |
 | UI Styling | TailwindCSS |
 | Type Safety | TypeScript + Typebox schemas |
+
+## Key Features
+
+* **Multi-Host Docker Management**: Manage multiple Docker hosts from a single interface
+* **Real-Time Monitoring**: Live container statistics and event streaming
+* **Plugin System**: Extensible plugin architecture for custom functionality
+* **Theme Support**: CSS variable-based theming system
+* **Type Safety**: End-to-end TypeScript with runtime validation
+
+## Getting Help
+
+* **Troubleshooting**: [Common issues and solutions](./troubleshooting)
+* **GitHub Issues**: [github.com/Its4Nik/DockStat/issues](https://github.com/Its4Nik/DockStat/issues)
+* **Wiki**: [outline.itsnik.de](https://outline.itsnik.de/s/9d88c471-373e-4ef2-a955-b1058eb7dc99)
+
+## Contributing
+
+Contributions, ideas and bug reports are welcome. See the main repository README for contribution guidelines.
