@@ -9,7 +9,6 @@ bun install -g @dockstat/outline-sync
 ```
 
 ## Features
-<<<<<<< HEAD
 
 - ✅ Sync Outline → Local
 - ✅ Sync Local → Outline
@@ -41,7 +40,6 @@ Three main improvements were added:
 ## Configuration
 
 Create `outline-sync.config.json` (recommended):
-=======
 
 - ✅ Sync Outline → Local
 - ✅ Sync Local → Outline
@@ -63,7 +61,6 @@ outline-sync init
 ```
 
 Then edit the generated file:
->>>>>>> fc102f80d85485391e48e88e7431dd52b58e3cc7
 
 ```json
 {
@@ -71,17 +68,10 @@ Then edit the generated file:
   "token": "your_api_token",
   "outputDir": "./outline-docs",
   "includeCollections": ["Engineering", "Product"],
-<<<<<<< HEAD
-  "excludeCollections": [],
-  "customPaths": {
-    "example-doc-id": "../../README.md",
-    "another-doc-id": "custom/path/document.md"
-=======
   "excludeCollections": ["Archive", "Private"],
   "customPaths": {
     "doc-id-abc123": "../../README.md",
     "doc-id-xyz789": "custom/important-doc.md"
->>>>>>> fc102f80d85485391e48e88e7431dd52b58e3cc7
   }
 }
 ```
@@ -194,11 +184,7 @@ on:
   push:
     branches: [main]
   schedule:
-<<<<<<< HEAD
-    - cron: "0 */6 * * *"
-=======
     - cron: "0 */6 * * *" # Every 6 hours
->>>>>>> fc102f80d85485391e48e88e7431dd52b58e3cc7
 
 jobs:
   sync:
@@ -215,12 +201,9 @@ jobs:
         with:
           commit_message: "docs: sync from Outline"
 ```
-<<<<<<< HEAD
 
 ## Troubleshooting
 
 - If you see files being pushed unexpectedly, inspect their frontmatter `updatedAt` values and file `mtime`.
 - If push fails due to permissions, confirm the API token has the required document update scope.
 - For large repos, consider running `sync` in a scheduled job and using `push` only when necessary to reduce API calls.
-=======
->>>>>>> fc102f80d85485391e48e88e7431dd52b58e3cc7
