@@ -54,9 +54,10 @@ export function slugify(str: string): string {
   return str
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, "-") // Replace special chars with dash
-    .replace(/[\s_-]+/g, "-") // Replace spaces, underscores, multiple dashes with single dash
-    .replace(/^-+|-+$/g, "") // Remove leading/trailing dashes
+    .replace(/[^a-z0-9\s-]/g, "-") // Explicit allowed chars
+    .replace(/\s+/g, "-") // Collapse whitespace
+    .replace(/-+/g, "-") // Collapse dashes
+    .replace(/^-|-$/g, "") // Trim leading/trailing dash
 }
 
 /**
