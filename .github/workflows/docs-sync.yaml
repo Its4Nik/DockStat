@@ -1,4 +1,6 @@
 name: Outline Sync
+permissions:
+  contents: write
 
 on:
   push:
