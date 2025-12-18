@@ -44,19 +44,6 @@ export default function Adapters() {
 
   return (
     <div className="w-[95vw] mx-auto py-6 space-y-6">
-      {/* Header */}
-      <Slides
-        connected={true}
-        buttonPosition="right"
-        className="w-full"
-        header="Docker Adapters Overview"
-        hideable={true}
-      >
-        {{
-          "+ Add Client": <RegisterClientForm />,
-          "+ Add Host": <AddHostForm clients={clients} />,
-        }}
-      </Slides>
       {/* Stats Row - Now using StatusBar component with correct values */}
       <StatusBar
         totalClients={status.totalClients}
@@ -68,6 +55,19 @@ export default function Adapters() {
       />
 
       <Divider />
+
+      <Slides
+        connected={true}
+        buttonPosition="right"
+        className="w-full"
+        header="Overview"
+        hideable={true}
+      >
+        {{
+          "+ Add Client": <RegisterClientForm />,
+          "+ Add Host": <AddHostForm clients={clients} />,
+        }}
+      </Slides>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -15,7 +15,7 @@ export function StatusBar({
   const workersVariant = activeWorkers > 0 ? "success" : "warning"
 
   return (
-    <div className="flex w-full justify-between flex-wrap gap-4">
+    <div className="-mt-4 flex w-full justify-between flex-wrap gap-4">
       <StatCard
         label="Total Clients"
         value={totalClients}

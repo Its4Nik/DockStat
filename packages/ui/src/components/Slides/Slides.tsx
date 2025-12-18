@@ -180,7 +180,7 @@ export function Slides({
 
   const show = hasContent || !isCollapsed
 
-  const headerClasses = `${!show && "border-b-0! py-1!"} transition-all duration-300 ${
+  const headerClasses = `${!show && "border-b-0! py-0!"} transition-all duration-300 ${
     isRightPosition ? "flex flex-row items-center justify-between gap-4" : "flex flex-col gap-4"
   }`
 
