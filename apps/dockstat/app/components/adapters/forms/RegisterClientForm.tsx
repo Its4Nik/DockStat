@@ -1,8 +1,81 @@
-import { Button, Card, CardBody, CardHeader, Checkbox } from "@dockstat/ui"
+import {
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Checkbox,
+  Divider,
+  HoverBubble,
+  Input,
+  Toggle,
+} from "@dockstat/ui"
+import {
+  Activity,
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  Cog,
+  Info,
+  Monitor,
+  RefreshCw,
+  Server,
+  Terminal,
+} from "lucide-react"
 import { useEffect, useState } from "react"
 import { useFetcher } from "react-router"
 import { toast } from "sonner"
 import type { ActionResponse, RegisterClientFormProps } from "../types"
+
+interface SectionHeaderProps {
+  icon: React.ReactNode
+  title: string
+  isOpen: boolean
+  onToggle: () => void
+  description?: string
+}
+
+function SectionHeader({ icon, title, isOpen, onToggle, description }: SectionHeaderProps) {
+  return (
+    <Card hoverable onClick={onToggle} size="sm" variant="outlined">
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-md bg-badge-primary-bg/20 text-badge-primary-text">{icon}</div>
+        <div className="text-left">
+          <span className="font-medium text-primary-text">{title}</span>
+          {description && <p className="text-xs text-muted-text mt-0.5">{description}</p>}
+        </div>
+        <div className="text-secondary-text group-hover:text-primary-text transition-colors">
+          {isOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+interface FormFieldProps {
+  label: string
+  tooltip: string
+  children: React.ReactNode
+  htmlFor?: string
+}
+
+function FormField({ label, tooltip, children, htmlFor }: FormFieldProps) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2">
+        <label htmlFor={htmlFor} className="text-sm font-medium text-secondary-text">
+          {label}
+        </label>
+        <HoverBubble label={tooltip} position="right">
+          <Info
+            size={14}
+            className="text-muted-text hover:text-secondary-text cursor-help transition-colors"
+          />
+        </HoverBubble>
+      </div>
+      {children}
+    </div>
+  )
+}
 
 export function RegisterClientForm({ onSuccess, onCancel }: RegisterClientFormProps) {
   const fetcher = useFetcher<ActionResponse>()
@@ -77,10 +150,19 @@ export function RegisterClientForm({ onSuccess, onCancel }: RegisterClientFormPr
   }, [fetcher.state, fetcher.data, clientName, onSuccess])
 
   return (
-    <Card size="sm" className="w-full max-w-lg">
-      <CardHeader className="text-lg!">Register New Client</CardHeader>
-      <CardBody>
-        <fetcher.Form method="post" className="space-y-4">
+    <Card variant="default" size="md" className="w-full ">
+      <CardHeader className="flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-badge-primary-bg/20">
+          <Server size={20} className="text-badge-primary-text" />
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold text-primary-text">Register New Client</h2>
+          <p className="text-xs text-muted-text">Connect to a Docker daemon</p>
+        </div>
+      </CardHeader>
+
+      <CardBody className="pt-0">
+        <fetcher.Form method="post" className="space-y-5">
           <input type="hidden" name="intent" value="client:register" />
           <input type="hidden" name="clientName" value={clientName} />
           <input type="hidden" name="defaultTimeout" value={defaultTimeout} />
@@ -118,315 +200,337 @@ export function RegisterClientForm({ onSuccess, onCancel }: RegisterClientFormPr
           <input type="hidden" name="execEnv" value={execEnv} />
           <input type="hidden" name="tty" value={tty.toString()} />
 
-          {/* Client Name */}
-          <div>
-            <label
-              htmlFor="clientNameInput"
-              className="block text-sm font-medium text-secondary-text mb-1"
-            >
-              Client Name
-            </label>
-            <input
-              id="clientNameInput"
+          {/* Client Name - Primary Input */}
+          <FormField
+            label="Client Name"
+            tooltip="A unique identifier for this Docker client connection. Use something descriptive like 'production-server' or 'local-dev'."
+            htmlFor="clientNameInput"
+          >
+            <Input
               type="text"
+              size="md"
               placeholder="my-docker-client"
               value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              required
-              className="w-full px-2 py-1 text-sm rounded-md border border-input-default-border bg-main-bg text-primary-text focus:outline-none focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
+              onChange={setClientName}
             />
+          </FormField>
+
+          {/* Quick Settings */}
+          <div className="flex items-center gap-6 py-2">
+            <div className="flex items-center gap-2">
+              <Toggle checked={enableMonitoring} onChange={setEnableMonitoring} size="sm" />
+              <HoverBubble
+                label="Enable real-time monitoring of containers and host metrics"
+                position="top"
+              >
+                <span className="text-sm text-secondary-text cursor-help flex items-center gap-1">
+                  <Monitor size={14} />
+                  Monitoring
+                </span>
+              </HoverBubble>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Toggle checked={enableEventEmitter} onChange={setEnableEventEmitter} size="sm" />
+              <HoverBubble
+                label="Enable event-driven notifications for container state changes"
+                position="top"
+              >
+                <span className="text-sm text-secondary-text cursor-help flex items-center gap-1">
+                  <Activity size={14} />
+                  Events
+                </span>
+              </HoverBubble>
+            </div>
           </div>
 
-          {/* Advanced Options Toggle */}
-          <button
-            type="button"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="text-sm text-secondary-text hover:text-primary-text transition-colors"
-          >
-            {showAdvanced ? "▼ Hide" : "▶ Show"} Advanced Options
-          </button>
+          <Divider label="Configuration" className="my-4" />
 
-          {showAdvanced && (
-            <div className="space-y-4 pl-2 border-l-2 border-divider-color">
-              {/* Client Options */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-secondary-text">Client Options</h4>
+          <div className="flex justify-between gap-2">
+            {/* Advanced Options Section */}
+            <div className="space-y-3">
+              <SectionHeader
+                icon={<Cog size={18} />}
+                title="Advanced Options"
+                description="Timeout and retry settings"
+                isOpen={showAdvanced}
+                onToggle={() => setShowAdvanced(!showAdvanced)}
+              />
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label
-                      htmlFor="defaultTimeoutInput"
-                      className="block text-sm font-medium text-secondary-text mb-1"
+              {showAdvanced && (
+                <div className="ml-4 pl-4 border-l-2 border-badge-primary-bg/30 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                  <Card variant="elevated">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        label="Timeout"
+                        tooltip="Default timeout in milliseconds for Docker API requests"
+                        htmlFor="defaultTimeoutInput"
+                      >
+                        <div className="relative">
+                          <Input
+                            type="number"
+                            size="sm"
+                            placeholder="30000"
+                            value={defaultTimeout}
+                            onChange={setDefaultTimeout}
+                          />
+                          <Clock
+                            size={14}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-text pointer-events-none"
+                          />
+                        </div>
+                      </FormField>
+
+                      <FormField
+                        label="Retry Attempts"
+                        tooltip="Number of retry attempts for failed requests"
+                        htmlFor="retryAttemptsInput"
+                      >
+                        <div className="relative">
+                          <Input
+                            type="number"
+                            size="sm"
+                            placeholder="3"
+                            value={retryAttempts}
+                            onChange={setRetryAttempts}
+                          />
+                          <RefreshCw
+                            size={14}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-text pointer-events-none"
+                          />
+                        </div>
+                      </FormField>
+                    </div>
+
+                    <FormField
+                      label="Retry Delay"
+                      tooltip="Delay in milliseconds between retry attempts"
+                      htmlFor="retryDelayInput"
                     >
-                      Default Timeout (ms)
-                    </label>
-                    <input
-                      id="defaultTimeoutInput"
-                      type="number"
-                      placeholder="30000"
-                      value={defaultTimeout}
-                      onChange={(e) => setDefaultTimeout(e.target.value)}
-                      className="w-full px-2 py-1 text-sm rounded-md border border-input-default-border bg-main-bg text-primary-text focus:outline-none focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="retryAttemptsInput"
-                      className="block text-sm font-medium text-secondary-text mb-1"
-                    >
-                      Retry Attempts
-                    </label>
-                    <input
-                      id="retryAttemptsInput"
-                      type="number"
-                      placeholder="3"
-                      value={retryAttempts}
-                      onChange={(e) => setRetryAttempts(e.target.value)}
-                      className="w-full px-2 py-1 text-sm rounded-md border border-input-default-border bg-main-bg text-primary-text focus:outline-none focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="retryDelayInput"
-                    className="block text-sm font-medium text-secondary-text mb-1"
-                  >
-                    Retry Delay (ms)
-                  </label>
-                  <input
-                    id="retryDelayInput"
-                    type="number"
-                    placeholder="1000"
-                    value={retryDelay}
-                    onChange={(e) => setRetryDelay(e.target.value)}
-                    className="w-full px-2 py-1 text-sm rounded-md border border-input-default-border bg-main-bg text-primary-text focus:outline-none focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
-                  />
-                </div>
-
-                <div className="flex gap-4">
-                  <Checkbox
-                    checked={enableMonitoring}
-                    onChange={setEnableMonitoring}
-                    label="Enable Monitoring"
-                    size="sm"
-                  />
-
-                  <Checkbox
-                    checked={enableEventEmitter}
-                    onChange={setEnableEventEmitter}
-                    label="Enable Events"
-                    size="sm"
-                  />
-                </div>
-              </div>
-
-              {/* Monitoring Options Toggle */}
-              <button
-                type="button"
-                onClick={() => setShowMonitoringOptions(!showMonitoringOptions)}
-                className="text-sm text-secondary-text hover:text-primary-text transition-colors"
-              >
-                {showMonitoringOptions ? "▼ Hide" : "▶ Show"} Monitoring Options
-              </button>
-
-              {showMonitoringOptions && (
-                <div className="space-y-3 pl-2 border-l-2 border-divider-color">
-                  <h4 className="text-sm font-semibold text-secondary-text">Monitoring Options</h4>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label
-                        htmlFor="healthCheckIntervalInput"
-                        className="block text-sm font-medium text-secondary-text mb-1"
-                      >
-                        Health Check Interval (ms)
-                      </label>
-                      <input
-                        id="healthCheckIntervalInput"
+                      <Input
                         type="number"
-                        placeholder="30000"
-                        value={healthCheckInterval}
-                        onChange={(e) => setHealthCheckInterval(e.target.value)}
-                        className="w-full px-2 py-1 text-sm rounded-md border border-input-default-border bg-main-bg text-primary-text focus:outline-none focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="containerEventPollingInput"
-                        className="block text-sm font-medium text-secondary-text mb-1"
-                      >
-                        Container Event Polling (ms)
-                      </label>
-                      <input
-                        id="containerEventPollingInput"
-                        type="number"
-                        placeholder="5000"
-                        value={containerEventPollingInterval}
-                        onChange={(e) => setContainerEventPollingInterval(e.target.value)}
-                        className="w-full px-2 py-1 text-sm rounded-md border border-input-default-border bg-main-bg text-primary-text focus:outline-none focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="hostMetricsIntervalInput"
-                        className="block text-sm font-medium text-secondary-text mb-1"
-                      >
-                        Host Metrics Interval (ms)
-                      </label>
-                      <input
-                        id="hostMetricsIntervalInput"
-                        type="number"
-                        placeholder="10000"
-                        value={hostMetricsInterval}
-                        onChange={(e) => setHostMetricsInterval(e.target.value)}
-                        className="w-full px-2 py-1 text-sm rounded-md border border-input-default-border bg-main-bg text-primary-text focus:outline-none focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="containerMetricsIntervalInput"
-                        className="block text-sm font-medium text-secondary-text mb-1"
-                      >
-                        Container Metrics Interval (ms)
-                      </label>
-                      <input
-                        id="containerMetricsIntervalInput"
-                        type="number"
-                        placeholder="5000"
-                        value={containerMetricsInterval}
-                        onChange={(e) => setContainerMetricsInterval(e.target.value)}
-                        className="w-full px-2 py-1 text-sm rounded-md border border-input-default-border bg-main-bg text-primary-text focus:outline-none focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="monitoringRetryAttemptsInput"
-                        className="block text-sm font-medium text-secondary-text mb-1"
-                      >
-                        Retry Attempts
-                      </label>
-                      <input
-                        id="monitoringRetryAttemptsInput"
-                        type="number"
-                        placeholder="3"
-                        value={monitoringRetryAttempts}
-                        onChange={(e) => setMonitoringRetryAttempts(e.target.value)}
-                        className="w-full px-2 py-1 text-sm rounded-md border border-input-default-border bg-main-bg text-primary-text focus:outline-none focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="monitoringRetryDelayInput"
-                        className="block text-sm font-medium text-secondary-text mb-1"
-                      >
-                        Retry Delay (ms)
-                      </label>
-                      <input
-                        id="monitoringRetryDelayInput"
-                        type="number"
+                        size="sm"
                         placeholder="1000"
-                        value={monitoringRetryDelay}
-                        onChange={(e) => setMonitoringRetryDelay(e.target.value)}
-                        className="w-full px-2 py-1 text-sm rounded-md border border-input-default-border bg-main-bg text-primary-text focus:outline-none focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
+                        value={retryDelay}
+                        onChange={setRetryDelay}
                       />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-4">
-                    <Checkbox
-                      checked={enableContainerEvents}
-                      onChange={setEnableContainerEvents}
-                      label="Container Events"
-                      size="sm"
-                    />
-                    <Checkbox
-                      checked={enableHostMetrics}
-                      onChange={setEnableHostMetrics}
-                      label="Host Metrics"
-                      size="sm"
-                    />
-                    <Checkbox
-                      checked={enableContainerMetrics}
-                      onChange={setEnableContainerMetrics}
-                      label="Container Metrics"
-                      size="sm"
-                    />
-                    <Checkbox
-                      checked={enableHealthChecks}
-                      onChange={setEnableHealthChecks}
-                      label="Health Checks"
-                      size="sm"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Exec Options Toggle */}
-              <button
-                type="button"
-                onClick={() => setShowExecOptions(!showExecOptions)}
-                className="text-sm text-secondary-text hover:text-primary-text transition-colors"
-              >
-                {showExecOptions ? "▼ Hide" : "▶ Show"} Exec Options
-              </button>
-
-              {showExecOptions && (
-                <div className="space-y-3 pl-2 border-l-2 border-divider-color">
-                  <h4 className="text-sm font-semibold text-secondary-text">Exec Options</h4>
-
-                  <div>
-                    <label
-                      htmlFor="workingDirInput"
-                      className="block text-sm font-medium text-secondary-text mb-1"
-                    >
-                      Working Directory
-                    </label>
-                    <input
-                      id="workingDirInput"
-                      type="text"
-                      placeholder="/app"
-                      value={workingDir}
-                      onChange={(e) => setWorkingDir(e.target.value)}
-                      className="w-full px-2 py-1 text-sm rounded-md border border-input-default-border bg-main-bg text-primary-text focus:outline-none focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="execEnvInput"
-                      className="block text-sm font-medium text-secondary-text mb-1"
-                    >
-                      Environment Variables (comma-separated)
-                    </label>
-                    <input
-                      id="execEnvInput"
-                      type="text"
-                      placeholder="NODE_ENV=production,DEBUG=true"
-                      value={execEnv}
-                      onChange={(e) => setExecEnv(e.target.value)}
-                      className="w-full px-2 py-1 text-sm rounded-md border border-input-default-border bg-main-bg text-primary-text focus:outline-none focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
-                    />
-                  </div>
-
-                  <Checkbox checked={tty} onChange={setTty} label="Allocate TTY" size="sm" />
+                    </FormField>
+                  </Card>
                 </div>
               )}
             </div>
-          )}
 
-          <div className="flex gap-2 pt-2">
-            <Button type="submit" variant="primary" size="sm" disabled={isSubmitting}>
-              {isSubmitting ? "Registering..." : "Register Client"}
+            {/* Monitoring Options Section */}
+            <div className="space-y-3">
+              <SectionHeader
+                icon={<Monitor size={18} />}
+                title="Monitoring Options"
+                description="Health checks and metrics intervals"
+                isOpen={showMonitoringOptions}
+                onToggle={() => setShowMonitoringOptions(!showMonitoringOptions)}
+              />
+
+              {showMonitoringOptions && (
+                <div className="ml-4 pl-4 border-l-2 border-badge-primary-bg/30 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                  <Card variant="elevated">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        label="Health Check"
+                        tooltip="Interval for health check pings (ms)"
+                        htmlFor="healthCheckIntervalInput"
+                      >
+                        <Input
+                          type="number"
+                          size="sm"
+                          placeholder="30000"
+                          value={healthCheckInterval}
+                          onChange={setHealthCheckInterval}
+                        />
+                      </FormField>
+
+                      <FormField
+                        label="Event Polling"
+                        tooltip="Interval for polling container events (ms)"
+                        htmlFor="containerEventPollingInput"
+                      >
+                        <Input
+                          type="number"
+                          size="sm"
+                          placeholder="5000"
+                          value={containerEventPollingInterval}
+                          onChange={setContainerEventPollingInterval}
+                        />
+                      </FormField>
+
+                      <FormField
+                        label="Host Metrics"
+                        tooltip="Interval for collecting host metrics (ms)"
+                        htmlFor="hostMetricsIntervalInput"
+                      >
+                        <Input
+                          type="number"
+                          size="sm"
+                          placeholder="10000"
+                          value={hostMetricsInterval}
+                          onChange={setHostMetricsInterval}
+                        />
+                      </FormField>
+
+                      <FormField
+                        label="Container Metrics"
+                        tooltip="Interval for collecting container metrics (ms)"
+                        htmlFor="containerMetricsIntervalInput"
+                      >
+                        <Input
+                          type="number"
+                          size="sm"
+                          placeholder="5000"
+                          value={containerMetricsInterval}
+                          onChange={setContainerMetricsInterval}
+                        />
+                      </FormField>
+
+                      <FormField
+                        label="Retry Attempts"
+                        tooltip="Retry attempts for monitoring operations"
+                        htmlFor="monitoringRetryAttemptsInput"
+                      >
+                        <Input
+                          type="number"
+                          size="sm"
+                          placeholder="3"
+                          value={monitoringRetryAttempts}
+                          onChange={setMonitoringRetryAttempts}
+                        />
+                      </FormField>
+
+                      <FormField
+                        label="Retry Delay"
+                        tooltip="Delay between monitoring retries (ms)"
+                        htmlFor="monitoringRetryDelayInput"
+                      >
+                        <Input
+                          type="number"
+                          size="sm"
+                          placeholder="1000"
+                          value={monitoringRetryDelay}
+                          onChange={setMonitoringRetryDelay}
+                        />
+                      </FormField>
+                    </div>
+
+                    <Card className="mx-auto mt-4">
+                      <p className="text-xs font-medium text-secondary-text mb-2">
+                        Enable Features
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <Checkbox
+                          checked={enableContainerEvents}
+                          onChange={setEnableContainerEvents}
+                          label="Container Events"
+                          size="sm"
+                        />
+                        <Checkbox
+                          checked={enableHostMetrics}
+                          onChange={setEnableHostMetrics}
+                          label="Host Metrics"
+                          size="sm"
+                        />
+                        <Checkbox
+                          checked={enableContainerMetrics}
+                          onChange={setEnableContainerMetrics}
+                          label="Container Metrics"
+                          size="sm"
+                        />
+                        <Checkbox
+                          checked={enableHealthChecks}
+                          onChange={setEnableHealthChecks}
+                          label="Health Checks"
+                          size="sm"
+                        />
+                      </div>
+                    </Card>
+                  </Card>
+                </div>
+              )}
+            </div>
+
+            {/* Exec Options Section */}
+            <div className="space-y-3">
+              <SectionHeader
+                icon={<Terminal size={18} />}
+                title="Exec Options"
+                description="Command execution defaults"
+                isOpen={showExecOptions}
+                onToggle={() => setShowExecOptions(!showExecOptions)}
+              />
+
+              {showExecOptions && (
+                <div className="ml-4 pl-4 border-l-2 border-badge-primary-bg/30 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                  <Card variant="elevated">
+                    <FormField
+                      label="Working Directory"
+                      tooltip="Default working directory for exec commands"
+                      htmlFor="workingDirInput"
+                    >
+                      <Input
+                        type="text"
+                        size="sm"
+                        placeholder="/app"
+                        value={workingDir}
+                        onChange={setWorkingDir}
+                      />
+                    </FormField>
+
+                    <FormField
+                      label="Environment Variables"
+                      tooltip="Comma-separated environment variables (e.g., NODE_ENV=production,DEBUG=true)"
+                      htmlFor="execEnvInput"
+                    >
+                      <Input
+                        type="text"
+                        size="sm"
+                        placeholder="NODE_ENV=production,DEBUG=true"
+                        value={execEnv}
+                        onChange={setExecEnv}
+                      />
+                    </FormField>
+
+                    <Card className="flex space-x-4 mt-4" size="sm">
+                      <Checkbox checked={tty} onChange={setTty} size="sm" />
+                      <div>
+                        <span className="text-sm text-primary-text">Allocate TTY</span>
+                        <p className="text-xs text-muted-text">
+                          Enable pseudo-terminal for interactive commands
+                        </p>
+                      </div>
+                    </Card>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              disabled={isSubmitting || !clientName.trim()}
+              className="flex-1"
+            >
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <RefreshCw size={16} className="animate-spin" />
+                  Registering...
+                </span>
+              ) : (
+                "Register Client"
+              )}
             </Button>
             {onCancel && (
-              <Button type="button" variant="secondary" size="sm" onClick={onCancel}>
+              <Button type="button" variant="secondary" size="md" onClick={onCancel}>
                 Cancel
               </Button>
             )}

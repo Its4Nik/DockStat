@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { CardHeader } from "../Card/CardHeader"
 import { Card, CardBody } from "../Card/Card"
 import { Button } from "../Button/Button"
@@ -18,7 +19,11 @@ export interface SlidesProps {
   /** Controlled selected slide key */
   selectedSlide?: string
   /** Callback when slide changes */
-  onSlideChange?: (slideKey: string) => void
+  onSlideChange?: (slideKey: string | null) => void
+  /** When true, clicking the active slide button will hide/collapse the content */
+  hideable?: boolean
+
+  className?: string
 }
 
 export function Slides({
@@ -30,76 +35,97 @@ export function Slides({
   defaultSlide,
   selectedSlide: controlledSlide,
   onSlideChange,
+  hideable = false,
+  className = "",
 }: SlidesProps) {
   const slideKeys = Object.keys(children)
-  const initialSlide = defaultSlide || slideKeys[0] || ""
+  const initialSlide = hideable ? null : defaultSlide || slideKeys[0] || ""
 
-  const [internalSlide, setInternalSlide] = useState(initialSlide)
-  const [isAnimating, setIsAnimating] = useState(false)
-  const [animationDirection, setAnimationDirection] = useState<"left" | "right">("right")
-  const [displayedSlide, setDisplayedSlide] = useState(initialSlide)
-  const previousSlideIndex = useRef(slideKeys.indexOf(initialSlide))
+  const [internalSlide, setInternalSlide] = useState<string | null>(initialSlide)
+  const [animationDirection, setAnimationDirection] = useState<1 | -1>(1)
+  const [isCollapsed, setIsCollapsed] = useState(hideable)
+  const previousSlideIndex = useRef(slideKeys.indexOf(initialSlide || ""))
 
   const isControlled = controlledSlide !== undefined
   const activeSlide = isControlled ? controlledSlide : internalSlide
 
   const handleSlideChange = (newSlide: string) => {
-    if (newSlide === activeSlide || isAnimating) return
+    // If hideable and clicking the same slide, collapse it
+    if (hideable && newSlide === activeSlide) {
+      setIsCollapsed(true)
+      if (!isControlled) {
+        setInternalSlide(null)
+      }
+      onSlideChange?.(null)
+      return
+    }
 
-    const newIndex = slideKeys.indexOf(newSlide)
-    const currentIndex = slideKeys.indexOf(activeSlide)
-
-    setAnimationDirection(newIndex > currentIndex ? "right" : "left")
-    previousSlideIndex.current = currentIndex
-
-    setIsAnimating(true)
-
-    setTimeout(() => {
-      setDisplayedSlide(newSlide)
+    // If currently collapsed, expand with the new slide
+    if (isCollapsed || activeSlide === null) {
+      setIsCollapsed(false)
+      setAnimationDirection(1)
       if (!isControlled) {
         setInternalSlide(newSlide)
       }
       onSlideChange?.(newSlide)
+      return
+    }
 
-      setTimeout(() => {
-        setIsAnimating(false)
-      }, 300)
-    }, 150)
+    // Normal slide change
+    if (newSlide === activeSlide) return
+
+    const newIndex = slideKeys.indexOf(newSlide)
+    const currentIndex = slideKeys.indexOf(activeSlide)
+
+    setAnimationDirection(newIndex > currentIndex ? 1 : -1)
+    previousSlideIndex.current = currentIndex
+
+    if (!isControlled) {
+      setInternalSlide(newSlide)
+    }
+    onSlideChange?.(newSlide)
   }
 
   // Sync displayed slide with controlled prop changes
   useEffect(() => {
-    if (isControlled && controlledSlide !== displayedSlide && !isAnimating) {
+    if (isControlled && controlledSlide !== activeSlide) {
+      if (controlledSlide === null || controlledSlide === undefined) {
+        setIsCollapsed(true)
+        return
+      }
+
       const newIndex = slideKeys.indexOf(controlledSlide)
-      const currentIndex = slideKeys.indexOf(displayedSlide)
-      setAnimationDirection(newIndex > currentIndex ? "right" : "left")
-      setIsAnimating(true)
-
-      setTimeout(() => {
-        setDisplayedSlide(controlledSlide)
-        setTimeout(() => {
-          setIsAnimating(false)
-        }, 300)
-      }, 150)
+      const currentIndex = slideKeys.indexOf(activeSlide || "")
+      setAnimationDirection(newIndex > currentIndex ? 1 : -1)
+      setIsCollapsed(false)
     }
-  }, [controlledSlide, isControlled, displayedSlide, isAnimating, slideKeys])
+  }, [controlledSlide, isControlled, activeSlide, slideKeys])
 
-  const getAnimationClass = () => {
-    if (!isAnimating) {
-      return "opacity-100 transform translate-x-0"
-    }
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 100 : -100,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      x: direction > 0 ? -100 : 100,
+      opacity: 0,
+    }),
+  }
 
-    // During the exit phase (before content switch)
-    if (displayedSlide === activeSlide) {
-      return animationDirection === "right"
-        ? "animate-[slide-out_0.15s_ease-in_forwards]"
-        : "animate-[slide-out-left_0.15s_ease-in_forwards]"
-    }
-
-    // During the enter phase (after content switch)
-    return animationDirection === "right"
-      ? "animate-[slide-in_0.3s_ease-out_forwards]"
-      : "animate-[slide-in-left_0.3s_ease-out_forwards]"
+  const collapseVariants = {
+    collapsed: {
+      height: 0,
+      opacity: 0,
+      padding: 0,
+    },
+    expanded: {
+      height: "auto",
+      opacity: 1,
+    },
   }
 
   const renderButtonRow = () => (
@@ -107,22 +133,26 @@ export function Slides({
       className={`flex ${connected ? "gap-0" : "gap-2"} ${connected ? "rounded-md overflow-hidden" : ""}`}
     >
       {slideKeys.map((key, index) => {
-        const isActive = key === activeSlide
+        const isActive = key === activeSlide && !isCollapsed
         const isFirst = index === 0
         const isLast = index === slideKeys.length - 1
 
-        // Connected style: remove rounding on touching edges
+        // Connected style: use explicit rounding classes to override the Button's default rounded-md
+        // We use !important-style explicit classes to ensure they win over the base rounded-md
         let connectedClasses = ""
         if (connected) {
-          if (isFirst && !isLast) {
-            connectedClasses = "rounded-r-none"
-          } else if (isLast && !isFirst) {
-            connectedClasses = "rounded-l-none"
-          } else if (!isFirst && !isLast) {
-            connectedClasses = "rounded-none"
-          }
-          if (!isFirst) {
-            connectedClasses += " border-l-0"
+          if (isFirst && isLast) {
+            // Single button - keep default rounding
+            connectedClasses = ""
+          } else if (isFirst) {
+            // First button - round left only
+            connectedClasses = "!rounded-r-none !rounded-l-md"
+          } else if (isLast) {
+            // Last button - round right only
+            connectedClasses = "!rounded-l-none !rounded-r-md border-l-0"
+          } else {
+            // Middle buttons - no rounding
+            connectedClasses = "!rounded-none border-l-0"
           }
         }
 
@@ -133,7 +163,6 @@ export function Slides({
             size="sm"
             onClick={() => handleSlideChange(key)}
             className={connectedClasses}
-            disabled={isAnimating}
           >
             {key}
           </Button>
@@ -145,15 +174,19 @@ export function Slides({
   // When buttons are on the right, render header and buttons in the same row
   const isRightPosition = buttonPosition === "right"
 
+  // Check if we should show the CardBody at all
+  const hasContent =
+    activeSlide && children[activeSlide] !== null && children[activeSlide] !== undefined
+
+  const show = hasContent || !isCollapsed
+
+  const headerClasses = `${!show && "border-b-0! py-1!"} transition-all duration-300 ${
+    isRightPosition ? "flex flex-row items-center justify-between gap-4" : "flex flex-col gap-4"
+  }`
+
   return (
-    <Card variant="flat">
-      <CardHeader
-        className={
-          isRightPosition
-            ? "flex flex-row items-center justify-between gap-4"
-            : "flex flex-col gap-4"
-        }
-      >
+    <Card variant="flat" className={className}>
+      <CardHeader className={headerClasses}>
         {isRightPosition ? (
           <>
             {/* Header text on the left */}
@@ -181,12 +214,40 @@ export function Slides({
         )}
       </CardHeader>
 
-      <CardBody>
-        {/* Slide Content with Animation */}
-        <div className={`transition-all duration-300 ${getAnimationClass()}`}>
-          {children[displayedSlide]}
-        </div>
-      </CardBody>
+      {/* Only render CardBody if there's content to show or we're animating */}
+      <AnimatePresence initial={false}>
+        {show && (
+          <motion.div
+            initial="collapsed"
+            animate="expanded"
+            exit="collapsed"
+            variants={collapseVariants}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <CardBody className="overflow-hidden">
+              {/* Slide Content with Animation */}
+              <AnimatePresence initial={false} custom={animationDirection} mode="wait">
+                {activeSlide && !isCollapsed && (
+                  <motion.div
+                    key={activeSlide}
+                    custom={animationDirection}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{
+                      x: { type: "spring", stiffness: 300, damping: 30 },
+                      opacity: { duration: 0.2 },
+                    }}
+                  >
+                    {children[activeSlide]}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </CardBody>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Card>
   )
 }
