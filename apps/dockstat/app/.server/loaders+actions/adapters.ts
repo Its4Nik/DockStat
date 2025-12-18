@@ -1,6 +1,6 @@
 import { ServerAPI } from ".."
 import type { DockerAdapterOptions } from "@dockstat/typings"
-import { extractErrorMessage, extractEdenError } from "@dockstat/utils"
+import { handleElysiaError } from "@dockstat/utils"
 
 // Action intent types
 type AdapterAction =
@@ -240,7 +240,7 @@ export const Adapter = {
 
           return {
             success: false,
-            error: JSON.stringify(res.error),
+            error: handleElysiaError(res.error, "Failed to register client"),
           }
         }
 
@@ -259,7 +259,7 @@ export const Adapter = {
 
           return {
             success: false,
-            error: JSON.stringify(res.error),
+            error: handleElysiaError(res.error, "Failed to delete client"),
           }
         }
 
@@ -276,16 +276,9 @@ export const Adapter = {
             }
           }
 
-          if (res.error?.value.type === "validation") {
-            return {
-              success: false,
-              error: JSON.stringify(res.error?.value.error),
-            }
-          }
-
           return {
             success: false,
-            error: "",
+            error: handleElysiaError(res.error, "Failed to toggle monitoring"),
           }
         }
 
@@ -308,7 +301,7 @@ export const Adapter = {
 
           return {
             success: false,
-            error: JSON.stringify(res.error),
+            error: handleElysiaError(res.error, "Failed to add host"),
           }
         }
 
@@ -328,7 +321,7 @@ export const Adapter = {
 
           return {
             success: false,
-            error: JSON.stringify(res.error),
+            error: handleElysiaError(res.error, "Failed to update host"),
           }
         }
 
@@ -336,7 +329,7 @@ export const Adapter = {
           return { success: false, error: "Unknown action" }
       }
     } catch (error) {
-      return { success: false, error: JSON.stringify(error) }
+      return { success: false, error: handleElysiaError(error, "An unexpected error occurred") }
     }
   },
 }

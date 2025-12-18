@@ -292,3 +292,113 @@ export function extractEdenError(
 
   return fallback
 }
+
+/**
+ * Eden error value structure from Elysia
+ * When Eden receives an error response, it wraps it in a value object
+ */
+export interface ElysiaErrorValue {
+  type: "validation" | "error" | string
+  error?: unknown
+  message?: string
+  on?: string
+  summary?: string
+  property?: string
+  expected?: unknown
+  found?: unknown
+  errors?: Array<{
+    summary?: string
+    type?: number
+    schema?: unknown
+    path?: string
+    value?: unknown
+    message?: string
+  }>
+}
+
+/**
+ * Eden error structure with value wrapper
+ */
+export interface EdenElysiaError {
+  status: number
+  value: ElysiaErrorValue
+}
+
+/**
+ * Handle Elysia errors from Eden treaty responses
+ *
+ * This function properly extracts error messages from:
+ * - Elysia validation errors (type: "validation")
+ * - Worker proxy errors (type: "error")
+ * - Standard API error responses
+ *
+ * @param error - The error object from Eden response (res.error)
+ * @param fallback - Fallback error message
+ * @returns Extracted error message string
+ *
+ * @example
+ * ```ts
+ * const res = await ServerAPI.docker.client.register.post({ ... })
+ * if (res.error) {
+ *   return { success: false, error: handleElysiaError(res.error) }
+ * }
+ * ```
+ */
+export function handleElysiaError(error: unknown, fallback = "Request failed"): string {
+  if (error === null || error === undefined) {
+    return fallback
+  }
+
+  // Handle Eden error structure with value wrapper
+  if (typeof error === "object" && "value" in error) {
+    const edenError = error as EdenElysiaError
+    const value = edenError.value
+
+    if (value && typeof value === "object") {
+      // Handle Elysia validation errors
+      if (value.type === "validation") {
+        // Try to get summary first (most descriptive)
+        if (typeof value.summary === "string" && value.summary.trim()) {
+          return value.summary.trim()
+        }
+
+        // Try message
+        if (typeof value.message === "string" && value.message.trim()) {
+          return value.message.trim()
+        }
+
+        // Try to extract from errors array
+        if (Array.isArray(value.errors) && value.errors.length > 0) {
+          const firstError = value.errors[0]
+          if (firstError?.summary) {
+            return firstError.summary
+          }
+          if (firstError?.message) {
+            return firstError.message
+          }
+        }
+
+        // Construct message from expected/found
+        if (value.expected !== undefined && value.found !== undefined) {
+          const property = value.property ? ` for ${value.property}` : ""
+          return `Validation failed${property}: expected ${JSON.stringify(value.expected)}, got ${JSON.stringify(value.found)}`
+        }
+
+        return "Validation failed"
+      }
+
+      // Handle worker proxy errors or other typed errors
+      if (value.error !== undefined) {
+        return extractErrorMessage(value.error, fallback)
+      }
+
+      // Try message field
+      if (typeof value.message === "string" && value.message.trim()) {
+        return value.message.trim()
+      }
+    }
+  }
+
+  // Fall back to standard error extraction
+  return extractErrorMessage(error, fallback)
+}

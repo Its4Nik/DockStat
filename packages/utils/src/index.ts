@@ -80,5 +80,13 @@ export {
   isApiSuccessResponse,
   isEdenError,
   withErrorHandling,
+  handleElysiaError,
 } from "./error"
-export type { ApiErrorResponse, ApiSuccessResponse, ApiResponse, EdenErrorResponse } from "./error"
+export type {
+  ApiErrorResponse,
+  ApiSuccessResponse,
+  ApiResponse,
+  EdenErrorResponse,
+  ElysiaErrorValue,
+  EdenElysiaError,
+} from "./error"
