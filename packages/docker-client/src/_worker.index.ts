@@ -257,9 +257,9 @@ self.onmessage = async (event: MessageEvent) => {
         break
 
       case "createMonitoringManager":
-      client.createMonitoringManager()
-      result = "Created Monitoring manager"
-      break
+        client.createMonitoringManager()
+        result = "Created Monitoring manager"
+        break
 
       default:
         throw new Error(`Unknown request type: ${JSON.stringify(request)}`)

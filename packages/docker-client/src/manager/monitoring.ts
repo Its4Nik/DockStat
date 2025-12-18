@@ -48,9 +48,9 @@ export class Monitoring extends DockerClientManagerCore {
     })
   }
 
-  public async createMonitoringManager(clientId: number){
+  public async createMonitoringManager(clientId: number) {
     return this.sendRequest(clientId, {
-      type: "createMonitoringManager"
+      type: "createMonitoringManager",
     })
   }
 }

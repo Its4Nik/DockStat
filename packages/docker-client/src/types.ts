@@ -86,7 +86,7 @@ export type WorkerRequest =
   | { type: "isMonitoring" }
   | { type: "cleanup" }
   | { type: "deleteTable" }
-  | { type: "createMonitoringManager"}
+  | { type: "createMonitoringManager" }
 
 export type WorkerResponse<T = unknown> =
   | { success: true; data: T }
