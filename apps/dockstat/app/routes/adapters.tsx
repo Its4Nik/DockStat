@@ -34,6 +34,7 @@ export default function Adapters() {
 
   const workers = status.workers ?? []
   const hosts = status.hosts ?? []
+  const containers = data.containers ?? { total: 0, perHost: [] }
 
   const clients = status.workers
 
@@ -45,7 +46,6 @@ export default function Adapters() {
   // For now, totalContainers is not available from the status endpoint
   // This would need backend support to aggregate container counts
   // Setting to 0 as a placeholder - you may want to add an API endpoint for this
-  const totalContainers = 0
 
   return (
     <div className="w-[95vw] mx-auto py-6 space-y-6">
@@ -96,7 +96,7 @@ export default function Adapters() {
         activeWorkers={status.activeWorkers}
         totalWorkers={status.totalWorkers}
         monitoringHosts={monitoringHosts}
-        totalContainers={totalContainers}
+        totalContainers={containers.total}
       />
 
       <Divider />
@@ -107,7 +107,12 @@ export default function Adapters() {
         <ClientsList clients={clients} workers={workers} hosts={hosts} />
 
         {/* Hosts List */}
-        <HostsList hosts={hosts} clients={clients} workers={workers} />
+        <HostsList
+          hosts={hosts}
+          clients={clients}
+          workers={workers}
+          containerCounts={containers.perHost}
+        />
       </div>
 
       <Divider label="Worker Pool" />

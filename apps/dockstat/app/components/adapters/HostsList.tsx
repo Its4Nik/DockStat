@@ -1,10 +1,19 @@
 import { Badge, Card, CardBody, CardHeader } from "@dockstat/ui"
-import { Server } from "lucide-react"
+import { Container, Server } from "lucide-react"
 import { useState } from "react"
 import { HostDetailModal } from "./HostDetailModal"
 import type { Host, HostsListProps } from "./types"
 
-export function HostsList({ hosts, clients = [], workers = [] }: HostsListProps) {
+export function HostsList({
+  hosts,
+  clients = [],
+  workers = [],
+  containerCounts = [],
+}: HostsListProps) {
+  // Create a map for quick container count lookup by hostId
+  const containerCountMap = new Map<number, number>(
+    containerCounts.map((c) => [c.hostId, c.containerCount])
+  )
   const clientMap = new Map(clients.map((c) => [c.clientId, c]))
   const [selectedHost, setSelectedHost] = useState<Host | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
@@ -18,6 +27,7 @@ export function HostsList({ hosts, clients = [], workers = [] }: HostsListProps)
   const selectedWorker = selectedHost
     ? workers.find((w) => w.clientId === selectedHost.clientId)
     : null
+  const selectedContainerCount = selectedHost ? (containerCountMap.get(selectedHost.id) ?? 0) : 0
 
   if (hosts.length === 0) {
     return (
@@ -100,9 +110,15 @@ export function HostsList({ hosts, clients = [], workers = [] }: HostsListProps)
                           )}
                         </div>
                       </div>
-                      <Badge variant="secondary" size="sm" outlined>
-                        ID: {host.id}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="primary" size="sm" className="flex items-center gap-1">
+                          <Container size={12} />
+                          {containerCountMap.get(host.id) ?? 0}
+                        </Badge>
+                        <Badge variant="secondary" size="sm" outlined>
+                          ID: {host.id}
+                        </Badge>
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -118,6 +134,7 @@ export function HostsList({ hosts, clients = [], workers = [] }: HostsListProps)
         host={selectedHost}
         client={selectedClient}
         worker={selectedWorker}
+        containerCount={selectedContainerCount}
       />
     </Card>
   )

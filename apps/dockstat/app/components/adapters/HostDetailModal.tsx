@@ -1,4 +1,5 @@
 import { Badge, Modal } from "@dockstat/ui"
+import { Container } from "lucide-react"
 import type { HostDetailModalProps } from "./types"
 
 function ConfigValue({
@@ -45,7 +46,14 @@ function OptionsSection({ title, children }: { title: string; children: React.Re
   )
 }
 
-export function HostDetailModal({ open, onClose, host, client, worker }: HostDetailModalProps) {
+export function HostDetailModal({
+  open,
+  onClose,
+  host,
+  client,
+  worker,
+  containerCount = 0,
+}: HostDetailModalProps) {
   if (!host) return null
 
   const fullUrl = host.host
@@ -64,6 +72,13 @@ export function HostDetailModal({ open, onClose, host, client, worker }: HostDet
                 <ConfigValue label="Host ID" value={host.id} />
                 <ConfigValue label="Name" value={host.name} />
                 <ConfigValue label="Client ID" value={host.clientId} />
+                <div className="flex justify-between py-1.5 border-b border-divider-color last:border-b-0">
+                  <span className="text-muted-text">Containers</span>
+                  <Badge variant="primary" size="sm" className="flex items-center gap-1">
+                    <Container size={12} />
+                    {containerCount}
+                  </Badge>
+                </div>
               </div>
             </OptionsSection>
           </div>
@@ -134,6 +149,10 @@ export function HostDetailModal({ open, onClose, host, client, worker }: HostDet
             <div className="flex flex-wrap gap-2">
               <Badge variant="primary" size="sm" outlined>
                 Host #{host.id}
+              </Badge>
+              <Badge variant="primary" size="sm" className="flex items-center gap-1">
+                <Container size={12} />
+                {containerCount} container{containerCount !== 1 ? "s" : ""}
               </Badge>
               {host.secure && (
                 <Badge variant="success" size="sm">

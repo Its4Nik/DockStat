@@ -1,10 +1,10 @@
 import type { StreamMessage } from "./docker-client"
 
-interface BaseConnectionCtx {
+export interface BaseConnectionCtx {
   connectionId: string
 }
 
-interface MessageConnectionCtx extends BaseConnectionCtx {
+export interface MessageConnectionCtx extends BaseConnectionCtx {
   message: StreamMessage
 }
 

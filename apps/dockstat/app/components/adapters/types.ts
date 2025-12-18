@@ -158,12 +158,22 @@ export interface ClientsListProps {
 }
 
 /**
+ * Container count per host
+ */
+export interface HostContainerCount {
+  hostId: number
+  clientId: number
+  containerCount: number
+}
+
+/**
  * Props for HostsList component
  */
 export interface HostsListProps {
   hosts: Host[]
   clients?: Client[]
   workers?: Worker[]
+  containerCounts?: HostContainerCount[]
 }
 
 /**
@@ -186,6 +196,7 @@ export interface HostDetailModalProps {
   host: Host | null
   client?: Client | null
   worker?: Worker | null
+  containerCount?: number
 }
 
 /**

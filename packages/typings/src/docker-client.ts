@@ -196,41 +196,41 @@ export interface DockerStreamData {
 
 export type StreamCallback = (data: DockerStreamData) => void
 
-interface BaseHostCtx {
+export interface BaseHostCtx {
   hostId: number
   hostName: string
 }
 
-interface HostHealthContext extends BaseHostCtx {
+export interface HostHealthContext extends BaseHostCtx {
   healthy: boolean
 }
-interface HostMetricsContext extends BaseHostCtx {
+export interface HostMetricsContext extends BaseHostCtx {
   metrics: HostMetrics
 }
 
-interface ContainerBaseCtx {
+export interface ContainerBaseCtx {
   hostId: number
   containerId: string
 }
 
-interface ContainerMetricCtx extends ContainerBaseCtx {
+export interface ContainerMetricCtx extends ContainerBaseCtx {
   stats: ContainerStatsInfo
 }
 
-interface ContainerInfoCtx extends ContainerBaseCtx {
+export interface ContainerInfoCtx extends ContainerBaseCtx {
   containerInfo: ContainerInfo
 }
 
-interface BaseStreamCtx {
+export interface BaseStreamCtx {
   streamKey: string
   streamType: string
 }
 
-interface StreamDataCtx extends BaseStreamCtx {
+export interface StreamDataCtx extends BaseStreamCtx {
   data: DockerStreamData
 }
 
-interface StreamErrorCtx extends BaseStreamCtx {
+export interface StreamErrorCtx extends BaseStreamCtx {
   error: Error
 }
 

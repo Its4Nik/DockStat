@@ -206,7 +206,8 @@ function parseFormData(formData: FormData): AdapterAction | null {
 
 export const Adapter = {
   loader: async () => {
-    const [statusRes] = await Promise.all([ServerAPI.docker.status.get()])
+    const statusRes = await ServerAPI.docker.status.get()
+    const containersRes = await ServerAPI.docker.containers["all-containers"].get()
 
     // Default empty status
     const emptyStatus = {
@@ -219,9 +220,15 @@ export const Adapter = {
       hosts: [],
     }
 
-    const status = statusRes.status === 200 ? statusRes.data : emptyStatus
+    const defaultContainers = {
+      total: 0,
+      perHost: [] as Array<{ hostId: number; clientId: number; containerCount: number }>,
+    }
 
-    return { status }
+    const status = statusRes.status === 200 ? statusRes.data : emptyStatus
+    const containers =
+      containersRes.status === 200 && containersRes.data ? containersRes.data : defaultContainers
+    return { status, containers }
   },
 
   action: async ({ request }: { request: Request }): Promise<ActionResponse> => {

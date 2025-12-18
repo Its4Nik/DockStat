@@ -6,14 +6,40 @@ export class Containers extends DockerClientManagerCore {
     return this.sendRequest(clientId, { type: "getAllContainers" })
   }
 
-  public async getContainersForHost(
-    clientId: number,
-    hostId: number
-  ): Promise<DOCKER.ContainerInfo[]> {
-    return this.sendRequest(clientId, {
-      type: "getContainersForHost",
-      hostId,
-    })
+  public async getContainerCount(): Promise<{
+    total: number
+    perHost: Array<{ hostId: number; clientId: number; containerCount: number }>
+  }> {
+    const clients = this.getAllClients()
+    const perHost: Array<{ hostId: number; clientId: number; containerCount: number }> = []
+
+    await Promise.all(
+      clients.map(async ({ id: clientId }) => {
+        try {
+          const containers = await this.getAllContainers(clientId)
+          // Group containers by hostId
+          const hostCounts = new Map<number, number>()
+          for (const container of containers) {
+            const hostId = container.hostId
+            hostCounts.set(hostId, (hostCounts.get(hostId) ?? 0) + 1)
+          }
+          // Add results for each host
+          for (const [hostId, count] of hostCounts) {
+            perHost.push({ hostId, clientId, containerCount: count })
+          }
+        } catch (error) {
+          this.logger.error(`Failed to get containers for client ${clientId}: ${error}`)
+        }
+      })
+    )
+
+    const total = perHost.reduce((sum, h) => sum + h.containerCount, 0)
+
+    this.logger.debug(
+      `Returning container count across ${clients.length} clients: ${total} total, per-host: ${JSON.stringify(perHost)}`
+    )
+
+    return { total, perHost }
   }
 
   public async getContainer(
