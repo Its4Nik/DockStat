@@ -82,9 +82,14 @@ class DockerClient {
       name: this.name,
       hostsManaged: this.dockerInstances.size,
       activeStreams: this.activeStreams.size,
-      isMonitoring: this.isMonitoring(),
+      hasMonitoringManager: this.hasMonitoringManager(),
+      isMonitoring: this.hasMonitoringManager() ? this.isMonitoring() : false,
       uptime: Date.now() - this.startTime,
     }
+  }
+
+  public hasMonitoringManager(): boolean {
+    return this.monitoringManager !== undefined
   }
 
   public async ping(): Promise<{

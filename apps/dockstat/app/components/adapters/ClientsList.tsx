@@ -2,6 +2,7 @@ import { Badge, Card, CardBody, CardHeader } from "@dockstat/ui"
 import { Database } from "lucide-react"
 import { useState } from "react"
 import { ClientDetailModal } from "./ClientDetailModal"
+import { CreateMonitoringManagerButton } from "./forms/CreateMonitoringManagerButton"
 import { DeleteClientButton } from "./forms/DeleteClientButton"
 import { MonitoringToggle } from "./forms/MonitoringToggle"
 import type { ClientsListProps } from "./types"
@@ -13,6 +14,7 @@ export function ClientsList({ clients, workers, hosts = [] }: ClientsListProps) 
     clientName: string
     hostsManaged: number
     activeStreams: number
+    hasMonitoringManager: boolean
     isMonitoring: boolean
     initialized: boolean
     memoryUsage?: { rss: number; heapTotal: number; heapUsed: number; external: number } | undefined
@@ -92,7 +94,11 @@ export function ClientsList({ clients, workers, hosts = [] }: ClientsListProps) 
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
               >
-                <MonitoringToggle clientId={client.clientId} isMonitoring={client.isMonitoring} />
+                {client.hasMonitoringManager ? (
+                  <MonitoringToggle clientId={client.clientId} isMonitoring={client.isMonitoring} />
+                ) : (
+                  <CreateMonitoringManagerButton clientId={client.clientId} size="sm" />
+                )}
                 <DeleteClientButton
                   clientId={client.clientId}
                   clientName={client.clientName}

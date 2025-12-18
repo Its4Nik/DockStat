@@ -84,6 +84,7 @@ export type WorkerRequest =
   | { type: "startMonitoring" }
   | { type: "stopMonitoring" }
   | { type: "isMonitoring" }
+  | { type: "hasMonitoringManager" }
   | { type: "cleanup" }
   | { type: "deleteTable" }
   | { type: "createMonitoringManager" }
@@ -98,6 +99,7 @@ export interface WorkerMetrics {
   clientName: string
   hostsManaged: number
   activeStreams: number
+  hasMonitoringManager: boolean
   isMonitoring: boolean
   initialized: boolean
   memoryUsage?: {

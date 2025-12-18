@@ -26,6 +26,10 @@ type AdapterAction =
         port: number
       }
     }
+  | {
+      intent: "client:monitoring:create-manager"
+      clientId: number
+    }
 
 // Response types
 interface ActionSuccess<T = unknown> {
@@ -145,6 +149,12 @@ function parseFormData(formData: FormData): AdapterAction | null {
       const clientId = formData.get("clientId")
       if (!clientId) return null
       return { intent: "client:monitoring:toggle", clientId: Number(clientId) }
+    }
+
+    case "client:monitoring:create-manager": {
+      const clientId = formData.get("clientId")
+      if (!clientId) return null
+      return { intent: "client:monitoring:create-manager", clientId: Number(clientId) }
     }
 
     case "host:add": {
@@ -279,6 +289,25 @@ export const Adapter = {
           return {
             success: false,
             error: handleElysiaError(res.error, "Failed to toggle monitoring"),
+          }
+        }
+
+        case "client:monitoring:create-manager": {
+          const res = await ServerAPI.docker.client["create-monitoring-manager"]({
+            clientId: action.clientId,
+          }).post()
+
+          if (res.status === 200 && res.data) {
+            return {
+              success: true,
+              data: res.data,
+              message: res.data.message || `Monitoring manager created on ${action.clientId}`,
+            }
+          }
+
+          return {
+            success: false,
+            error: handleElysiaError(res.error, "Failed to create monitoring manager"),
           }
         }
 

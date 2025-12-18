@@ -25,6 +25,7 @@ export interface Worker {
   clientName: string
   hostsManaged: number
   activeStreams: number
+  hasMonitoringManager: boolean
   isMonitoring: boolean
   initialized: boolean
   memoryUsage?: { rss: number; heapTotal: number; heapUsed: number; external: number } | undefined
@@ -53,6 +54,7 @@ export interface Client {
   clientName: string
   hostsManaged: number
   activeStreams: number
+  hasMonitoringManager: boolean
   isMonitoring: boolean
   initialized: boolean
   memoryUsage?: { rss: number; heapTotal: number; heapUsed: number; external: number } | undefined

@@ -246,6 +246,10 @@ self.onmessage = async (event: MessageEvent) => {
         result = client.isMonitoring()
         break
 
+      case "hasMonitoringManager":
+        result = client.hasMonitoringManager()
+        break
+
       case "cleanup":
         await client.cleanup()
         result = undefined

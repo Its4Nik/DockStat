@@ -2,13 +2,14 @@ import { Badge, Modal } from "@dockstat/ui"
 import type { DockerAdapterOptions } from "@dockstat/typings"
 import { formatDuration, formatBytes } from "@dockstat/utils"
 import type { ClientDetailModalProps } from "./types"
+import type { JSX } from "react"
 
 function ConfigValue({
   label,
   value,
 }: {
   label: string
-  value: string | number | boolean | undefined | null
+  value: string | number | boolean | JSX.Element | undefined | null
 }) {
   if (value === undefined || value === null) {
     return (
@@ -195,6 +196,20 @@ export function ClientDetailModal({
                 <ConfigValue
                   label="Retry Delay"
                   value={options.retryDelay ? `${options.retryDelay}ms` : undefined}
+                />
+                <ConfigValue
+                  label="Monitoring Manager"
+                  value={
+                    client.hasMonitoringManager ? (
+                      <Badge variant="success" size="sm">
+                        Created
+                      </Badge>
+                    ) : (
+                      <Badge variant="error" size="sm">
+                        Not found
+                      </Badge>
+                    )
+                  }
                 />
                 <ConfigValue label="Monitoring Enabled" value={options.enableMonitoring} />
                 <ConfigValue label="Event Emitter" value={options.enableEventEmitter} />

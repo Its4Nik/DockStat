@@ -612,6 +612,12 @@ export class DockerClientManagerCore {
     return false
   }
 
+  public async hasMonitoringManager(clientId: number): Promise<boolean> {
+    const _ = clientId
+    // Default behavior: assume no monitoring manager. MonitoringMixin overrides this.
+    return false
+  }
+
   public async getAllHosts(): Promise<Array<{ name: string; id: number; clientId: number }>> {
     // Default behavior: no hosts known at core level. HostsMixin overrides this.
     return []
@@ -627,9 +633,13 @@ export class DockerClientManagerCore {
       totalHosts += wrapper.hostIds.size
 
       let isMonitoring = false
+      let hasMonitoringManager = false
       try {
         // Implemented in MonitoringMixin
-        isMonitoring = await this.isMonitoring(clientId)
+        hasMonitoringManager = await this.hasMonitoringManager(clientId)
+        if (hasMonitoringManager) {
+          isMonitoring = await this.isMonitoring(clientId)
+        }
       } catch {
         // Ignore errors
       }
@@ -641,6 +651,7 @@ export class DockerClientManagerCore {
         hostsManaged: wrapper.hostIds.size,
         initialized: wrapper.initialized,
         activeStreams: 0,
+        hasMonitoringManager,
         isMonitoring,
         options: this.table.select(["options"]).where({ id: wrapper.clientId }).first()?.options,
         memoryUsage: process.memoryUsage(),
@@ -676,8 +687,12 @@ export class DockerClientManagerCore {
     if (!wrapper) return null
 
     let isMonitoring = false
+    let hasMonitoringManager = false
     try {
-      isMonitoring = await this.isMonitoring(clientId)
+      hasMonitoringManager = await this.hasMonitoringManager(clientId)
+      if (hasMonitoringManager) {
+        isMonitoring = await this.isMonitoring(clientId)
+      }
     } catch {
       // Ignore
     }
@@ -689,6 +704,7 @@ export class DockerClientManagerCore {
       hostsManaged: wrapper.hostIds.size,
       initialized: wrapper.initialized,
       activeStreams: 0,
+      hasMonitoringManager,
       isMonitoring,
       memoryUsage: process.memoryUsage(),
       uptime: Date.now() - wrapper.createdAt,

@@ -53,4 +53,9 @@ export class Monitoring extends DockerClientManagerCore {
       type: "createMonitoringManager",
     })
   }
+
+  public async hasMonitoringManager(clientId: number): Promise<boolean> {
+    const res = await this.sendRequest(clientId, { type: "hasMonitoringManager" })
+    return res === true
+  }
 }
