@@ -1,7 +1,7 @@
 import { Badge, Card, CardBody, CardHeader } from "@dockstat/ui"
 import { formatBytes, formatDuration } from "@dockstat/utils"
-import type { WorkerCardProps } from "./types"
 import { Check } from "lucide-react"
+import type { WorkerCardProps } from "./types"
 
 export function WorkerCard({ worker, hosts = [] }: WorkerCardProps) {
   const workerHosts = hosts.filter((h) => h.clientId === worker.clientId)

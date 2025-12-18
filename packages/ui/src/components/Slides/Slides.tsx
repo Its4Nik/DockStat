@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { CardHeader } from "../Card/CardHeader"
-import { Card, CardBody } from "../Card/Card"
+import { AnimatePresence, motion } from "framer-motion"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "../Button/Button"
+import { Card, CardBody } from "../Card/Card"
+import { CardHeader } from "../Card/CardHeader"
 
 export type ButtonRowPosition = "left" | "center" | "right"
 

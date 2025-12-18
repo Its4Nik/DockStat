@@ -58,9 +58,9 @@ export { Modal, type ModalProps, type ModalSize } from "./Modal/Modal"
 export { Navbar } from "./Navbar/Navbar"
 export { PluginsPage } from "./Plugins/Plugins"
 export { Slider, type SliderProps } from "./Slider/Slider"
-export { type Column, Table, type TableProps } from "./Table/Table"
 export {
+  type ButtonRowPosition,
   Slides,
   type SlidesProps,
-  type ButtonRowPosition,
 } from "./Slides/Slides"
+export { type Column, Table, type TableProps } from "./Table/Table"
