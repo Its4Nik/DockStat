@@ -3,7 +3,7 @@ id: 7dddd764-6483-4f84-96a3-988304e772d3
 title: DockStat
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: null
-updatedAt: 2025-12-17T09:43:38.464Z
+updatedAt: 2025-12-17T21:02:58.642Z
 urlId: zqa4IyZtl0
 ---
 
@@ -14,14 +14,19 @@ urlId: zqa4IyZtl0
 
 
 :::warning
-***DockStat is currently under active alpha-development, expect breaking changes***
+***DockStat is currently under active pre-alpha-development, expect:***
+
+* ***Breaking changes***
+* ***new features***
+* ***API changes***
+* ***Base architecture changes***
 
 :::
 
 
 ---
 
-> ***DockStat is a Docker container monitoring and management platform built as a monorepo. The system consists of a Bun/Elysia backend API, a React Router frontend, companion services (DockNode, DockStore), and shared packages.***
+> *DockStat is a Docker container monitoring and management platform built as a monorepo. The system consists of a Bun/Elysia backend API, a React Router frontend, companion services (DockNode, DockStore), and shared packages.*
 
 ## Documentation Index
 
