@@ -1,13 +1,5 @@
 import { Badge, Modal } from "@dockstat/ui"
-import type { Client, Host, Worker } from "./types"
-
-interface HostDetailModalProps {
-  open: boolean
-  onClose: () => void
-  host: Host | null
-  client?: Client | null
-  worker?: Worker | null
-}
+import type { HostDetailModalProps } from "./types"
 
 function ConfigValue({
   label,
@@ -103,8 +95,8 @@ export function HostDetailModal({ open, onClose, host, client, worker }: HostDet
             <div className="flex-1 min-w-56">
               <OptionsSection title="Associated Client">
                 <div className="text-sm">
-                  <ConfigValue label="Client Name" value={client.name} />
-                  <ConfigValue label="Client ID" value={client.id} />
+                  <ConfigValue label="Client Name" value={client.clientName} />
+                  <ConfigValue label="Client ID" value={client.clientId} />
                   <div className="flex justify-between py-1.5 border-b border-divider-color last:border-b-0">
                     <span className="text-muted-text">Client Status</span>
                     <Badge variant={client.initialized ? "success" : "warning"} size="sm">
@@ -160,7 +152,7 @@ export function HostDetailModal({ open, onClose, host, client, worker }: HostDet
               )}
               {client && (
                 <Badge variant="primary" size="sm">
-                  {client.name}
+                  {client.clientName}
                 </Badge>
               )}
             </div>

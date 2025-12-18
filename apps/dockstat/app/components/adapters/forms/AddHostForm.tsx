@@ -1,23 +1,41 @@
 import { Button, Card, CardBody, CardHeader, Toggle } from "@dockstat/ui"
 import { Plus } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useFetcher } from "react-router"
-import type { Client } from "../types"
-
-interface AddHostFormProps {
-  clients: Client[]
-  onClose?: () => void
-}
+import { toast } from "sonner"
+import type { AddHostFormProps, ActionResponse } from "../types"
 
 export function AddHostForm({ clients, onClose }: AddHostFormProps) {
-  const fetcher = useFetcher()
+  const fetcher = useFetcher<ActionResponse>()
   const isSubmitting = fetcher.state === "submitting"
 
-  const [clientId, setClientId] = useState<string>(clients[0]?.id.toString() ?? "")
+  const [clientId, setClientId] = useState<string>(clients[0]?.clientId.toString() ?? "")
   const [hostname, setHostname] = useState("")
   const [name, setName] = useState("")
   const [port, setPort] = useState("2375")
   const [secure, setSecure] = useState(false)
+
+  // Handle fetcher response for toast notifications
+  useEffect(() => {
+    if (fetcher.state === "idle" && fetcher.data) {
+      if (fetcher.data.success) {
+        toast.success("Host added", {
+          description: fetcher.data.message || `Host "${name}" has been added successfully.`,
+          duration: 5000,
+        })
+        // Reset form
+        setHostname("")
+        setName("")
+        setPort(secure ? "2376" : "2375")
+        onClose?.()
+      } else {
+        toast.error("Failed to add host", {
+          description: fetcher.data.error || "An unexpected error occurred.",
+          duration: 5000,
+        })
+      }
+    }
+  }, [fetcher.state, fetcher.data, name, secure, onClose])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,12 +53,6 @@ export function AddHostForm({ clients, onClose }: AddHostFormProps) {
       },
       { method: "post" }
     )
-
-    // Reset form
-    setHostname("")
-    setName("")
-    setPort(secure ? "2376" : "2375")
-    onClose?.()
   }
 
   if (clients.length === 0) {
@@ -79,8 +91,8 @@ export function AddHostForm({ clients, onClose }: AddHostFormProps) {
               required
             >
               {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name} (ID: {client.id})
+                <option key={client.clientId} value={client.clientId}>
+                  {client.clientName} (ID: {client.clientId})
                 </option>
               ))}
             </select>

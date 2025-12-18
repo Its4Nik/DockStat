@@ -1,12 +1,7 @@
 import { Card, CardBody, CardHeader } from "@dockstat/ui"
-import type { Host, Worker } from "./types"
-import { WorkerCard } from "./WorkerCard"
 import { Hammer } from "lucide-react"
-
-interface WorkersListProps {
-  workers: Worker[]
-  hosts?: Host[]
-}
+import { WorkerCard } from "./WorkerCard"
+import type { WorkersListProps } from "./types"
 
 export function WorkersList({ workers, hosts = [] }: WorkersListProps) {
   if (workers.length === 0) {
@@ -24,7 +19,7 @@ export function WorkersList({ workers, hosts = [] }: WorkersListProps) {
   return (
     <Card variant="flat" size="sm" className="w-full">
       <CardHeader className="text-lg">Workers</CardHeader>
-      <CardBody className="">
+      <CardBody>
         <div className="flex flex-wrap gap-3">
           {workers.map((worker) => (
             <WorkerCard key={worker.workerId} worker={worker} hosts={hosts} />

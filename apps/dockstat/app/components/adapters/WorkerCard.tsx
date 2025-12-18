@@ -1,11 +1,6 @@
 import { Badge, Card, CardBody, CardHeader } from "@dockstat/ui"
 import { formatBytes, formatDuration } from "@dockstat/utils"
-import type { Host, Worker } from "./types"
-
-interface WorkerCardProps {
-  worker: Worker
-  hosts?: Host[]
-}
+import type { WorkerCardProps } from "./types"
 
 export function WorkerCard({ worker, hosts = [] }: WorkerCardProps) {
   const workerHosts = hosts.filter((h) => h.clientId === worker.clientId)
@@ -18,31 +13,31 @@ export function WorkerCard({ worker, hosts = [] }: WorkerCardProps) {
           {worker.isMonitoring ? "Monitoring" : "Idle"}
         </Badge>
       </CardHeader>
-      <CardBody className="py-2! space-y-2 text-sm">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+      <CardBody className="py-2! space-y-3 text-sm">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-2">
           <div className="flex justify-between">
             <span className="text-muted-text">Worker</span>
-            <span>#{worker.workerId}</span>
+            <span className="font-medium">#{worker.workerId}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-text">Client</span>
-            <span>#{worker.clientId}</span>
+            <span className="font-medium">#{worker.clientId}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-text">Streams</span>
-            <span>{worker.activeStreams}</span>
+            <span className="font-medium">{worker.activeStreams}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-text">Hosts</span>
-            <span>{worker.hostsManaged}</span>
+            <span className="font-medium">{worker.hostsManaged}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-text">Memory</span>
-            <span>{formatBytes(worker.memoryUsage.heapUsed)}</span>
+            <span className="font-medium">{formatBytes(worker.memoryUsage?.rss || 0)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-text">Uptime</span>
-            <span>{formatDuration(worker.uptime)}</span>
+            <span className="font-medium">{formatDuration(worker.uptime)}</span>
           </div>
         </div>
 
@@ -54,12 +49,12 @@ export function WorkerCard({ worker, hosts = [] }: WorkerCardProps) {
 
         {workerHosts.length > 0 && (
           <div className="pt-2 border-t border-divider-color">
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-muted-text uppercase tracking-wide">
                 Hosts ({workerHosts.length})
               </span>
             </div>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1.5">
               {workerHosts.map((host) => (
                 <Badge key={host.id} variant="primary" size="sm" outlined>
                   {host.name}

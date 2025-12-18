@@ -50,17 +50,82 @@ function parseFormData(formData: FormData): AdapterAction | null {
       if (!clientName) return null
 
       const options: DockerAdapterOptions = {}
+
+      // Basic client options
       const defaultTimeout = formData.get("defaultTimeout")
       const retryAttempts = formData.get("retryAttempts")
       const retryDelay = formData.get("retryDelay")
       const enableMonitoring = formData.get("enableMonitoring")
       const enableEventEmitter = formData.get("enableEventEmitter")
 
-      if (defaultTimeout) options.defaultTimeout = Number(defaultTimeout)
-      if (retryAttempts) options.retryAttempts = Number(retryAttempts)
-      if (retryDelay) options.retryDelay = Number(retryDelay)
+      if (defaultTimeout && defaultTimeout !== "") options.defaultTimeout = Number(defaultTimeout)
+      if (retryAttempts && retryAttempts !== "") options.retryAttempts = Number(retryAttempts)
+      if (retryDelay && retryDelay !== "") options.retryDelay = Number(retryDelay)
       if (enableMonitoring) options.enableMonitoring = enableMonitoring === "true"
       if (enableEventEmitter) options.enableEventEmitter = enableEventEmitter === "true"
+
+      // Monitoring options
+      const healthCheckInterval = formData.get("healthCheckInterval")
+      const containerEventPollingInterval = formData.get("containerEventPollingInterval")
+      const hostMetricsInterval = formData.get("hostMetricsInterval")
+      const containerMetricsInterval = formData.get("containerMetricsInterval")
+      const enableContainerEvents = formData.get("enableContainerEvents")
+      const enableHostMetrics = formData.get("enableHostMetrics")
+      const enableContainerMetrics = formData.get("enableContainerMetrics")
+      const enableHealthChecks = formData.get("enableHealthChecks")
+      const monitoringRetryAttempts = formData.get("monitoringRetryAttempts")
+      const monitoringRetryDelay = formData.get("monitoringRetryDelay")
+
+      const hasMonitoringOptions =
+        (healthCheckInterval && healthCheckInterval !== "") ||
+        (containerEventPollingInterval && containerEventPollingInterval !== "") ||
+        (hostMetricsInterval && hostMetricsInterval !== "") ||
+        (containerMetricsInterval && containerMetricsInterval !== "") ||
+        enableContainerEvents === "true" ||
+        enableHostMetrics === "true" ||
+        enableContainerMetrics === "true" ||
+        enableHealthChecks === "true" ||
+        (monitoringRetryAttempts && monitoringRetryAttempts !== "") ||
+        (monitoringRetryDelay && monitoringRetryDelay !== "")
+
+      if (hasMonitoringOptions) {
+        options.monitoringOptions = {}
+        if (healthCheckInterval && healthCheckInterval !== "")
+          options.monitoringOptions.healthCheckInterval = Number(healthCheckInterval)
+        if (containerEventPollingInterval && containerEventPollingInterval !== "")
+          options.monitoringOptions.containerEventPollingInterval = Number(
+            containerEventPollingInterval
+          )
+        if (hostMetricsInterval && hostMetricsInterval !== "")
+          options.monitoringOptions.hostMetricsInterval = Number(hostMetricsInterval)
+        if (containerMetricsInterval && containerMetricsInterval !== "")
+          options.monitoringOptions.containerMetricsInterval = Number(containerMetricsInterval)
+        if (enableContainerEvents === "true") options.monitoringOptions.enableContainerEvents = true
+        if (enableHostMetrics === "true") options.monitoringOptions.enableHostMetrics = true
+        if (enableContainerMetrics === "true")
+          options.monitoringOptions.enableContainerMetrics = true
+        if (enableHealthChecks === "true") options.monitoringOptions.enableHealthChecks = true
+        if (monitoringRetryAttempts && monitoringRetryAttempts !== "")
+          options.monitoringOptions.retryAttempts = Number(monitoringRetryAttempts)
+        if (monitoringRetryDelay && monitoringRetryDelay !== "")
+          options.monitoringOptions.retryDelay = Number(monitoringRetryDelay)
+      }
+
+      // Exec options
+      const workingDir = formData.get("workingDir")?.toString()
+      const execEnv = formData.get("execEnv")?.toString()
+      const tty = formData.get("tty")
+
+      const hasExecOptions =
+        (workingDir && workingDir !== "") || (execEnv && execEnv !== "") || tty === "true"
+
+      if (hasExecOptions) {
+        options.execOptions = {}
+        if (workingDir && workingDir !== "") options.execOptions.workingDir = workingDir
+        if (execEnv && execEnv !== "")
+          options.execOptions.env = execEnv.split(",").map((e) => e.trim())
+        if (tty === "true") options.execOptions.tty = true
+      }
 
       return {
         intent: "client:register",
@@ -130,12 +195,10 @@ function parseFormData(formData: FormData): AdapterAction | null {
 
 export const Adapter = {
   loader: async () => {
-    const [statusRes, clientsRes, clientsWithConfigRes, hostsRes] = await Promise.all([
-      ServerAPI.docker.status.get(),
-      ServerAPI.docker.client.all({ stored: "true" }).get(),
-      ServerAPI.docker.client["all-with-config"].get(),
-      ServerAPI.docker.hosts.get(),
-    ])
+    // Simplified: only 2 API calls instead of 4
+    // - status endpoint includes hosts and workers data
+    // - all-with-config includes all client data we need
+    const [statusRes] = await Promise.all([ServerAPI.docker.status.get()])
 
     // Default empty status
     const emptyStatus = {
@@ -149,10 +212,8 @@ export const Adapter = {
     }
 
     const status = statusRes.status === 200 ? statusRes.data : emptyStatus
-    const clients = clientsRes.status === 200 ? clientsRes.data : []
-    const clientsWithConfig = clientsWithConfigRes.status === 200 ? clientsWithConfigRes.data : []
-    const hosts = hostsRes.status === 200 ? hostsRes.data : []
-    return { status, clients, clientsWithConfig, hosts }
+
+    return { status }
   },
 
   action: async ({ request }: { request: Request }): Promise<ActionResponse> => {

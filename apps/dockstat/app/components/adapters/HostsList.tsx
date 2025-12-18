@@ -2,16 +2,10 @@ import { Badge, Card, CardBody, CardHeader } from "@dockstat/ui"
 import { Server } from "lucide-react"
 import { useState } from "react"
 import { HostDetailModal } from "./HostDetailModal"
-import type { Client, Host, Worker } from "./types"
-
-interface HostsListProps {
-  hosts: Host[]
-  clients?: Client[]
-  workers?: Worker[]
-}
+import type { Host, HostsListProps } from "./types"
 
 export function HostsList({ hosts, clients = [], workers = [] }: HostsListProps) {
-  const clientMap = new Map(clients.map((c) => [c.id, c]))
+  const clientMap = new Map(clients.map((c) => [c.clientId, c]))
   const [selectedHost, setSelectedHost] = useState<Host | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -49,6 +43,12 @@ export function HostsList({ hosts, clients = [], workers = [] }: HostsListProps)
     {} as Record<number, Host[]>
   )
 
+  // Get monitoring status for each client
+  const getClientMonitoringStatus = (clientId: number): boolean => {
+    const worker = workers.find((w) => w.clientId === clientId)
+    return worker?.isMonitoring ?? false
+  }
+
   return (
     <Card variant="default" size="sm" className="w-full">
       <CardHeader className="text-lg flex items-center justify-between">
@@ -62,7 +62,8 @@ export function HostsList({ hosts, clients = [], workers = [] }: HostsListProps)
           {Object.entries(hostsByClient).map(([clientIdStr, clientHosts]) => {
             const clientId = Number(clientIdStr)
             const client = clientMap.get(clientId)
-            const clientName = client?.name ?? `Client ${clientId}`
+            const clientName = client?.clientName ?? `Client ${clientId}`
+            const isMonitoring = getClientMonitoringStatus(clientId)
 
             return (
               <div key={clientId} className="px-4 py-3">
@@ -84,7 +85,11 @@ export function HostsList({ hosts, clients = [], workers = [] }: HostsListProps)
                       onClick={() => handleHostClick(host)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-badge-success-bg" />
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            isMonitoring ? "bg-badge-success-bg" : "bg-badge-secondary-bg"
+                          }`}
+                        />
                         <div>
                           <span className="font-medium text-sm">{host.name}</span>
                           {host.host && (

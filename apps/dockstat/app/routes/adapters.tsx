@@ -1,34 +1,22 @@
 import { Adapter } from "!L+A/adapters"
 import { Button, Card, CardHeader, Divider } from "@dockstat/ui"
-import { Activity, Database, Layers, Plus, Server } from "lucide-react"
+import { Plus } from "lucide-react"
 import { useState } from "react"
-import { useActionData, useLoaderData } from "react-router"
+import { useLoaderData } from "react-router"
 import {
+  AddHostForm,
   ClientsList,
   HostsList,
-  StatCard,
+  RegisterClientForm,
+  StatusBar,
   WorkersList,
-  type AdapterStatus,
-  type Client,
-  type ClientWithConfig,
-  type Host,
-} from "./adapters/index"
-import { AddHostForm, RegisterClientForm } from "./adapters/forms"
-import type { ActionResponse } from "!L+A/adapters"
+} from "~/components/adapters"
 
 export const loader = Adapter.loader
 export const action = Adapter.action
 
-interface LoaderData {
-  status: AdapterStatus
-  clients: Client[]
-  clientsWithConfig: ClientWithConfig[]
-  hosts: Host[]
-}
-
 export default function Adapters() {
-  const data = useLoaderData<LoaderData>()
-  const actionData = useActionData<ActionResponse>()
+  const data = useLoaderData<typeof loader>()
 
   const [showClientForm, setShowClientForm] = useState(false)
   const [showHostForm, setShowHostForm] = useState(false)
@@ -43,10 +31,21 @@ export default function Adapters() {
     workers: [],
     hosts: [],
   }
-  const clients = data?.clients ?? []
-  const clientsWithConfig = data?.clientsWithConfig ?? []
-  const hosts = data?.hosts ?? []
+
   const workers = status.workers ?? []
+  const hosts = status.hosts ?? []
+
+  const clients = status.workers
+
+  // Compute monitoring hosts count (hosts belonging to clients that are actively monitoring)
+  const monitoringHosts = workers
+    .filter((w) => w.isMonitoring)
+    .reduce((sum, w) => sum + w.hostsManaged, 0)
+
+  // For now, totalContainers is not available from the status endpoint
+  // This would need backend support to aggregate container counts
+  // Setting to 0 as a placeholder - you may want to add an API endpoint for this
+  const totalContainers = 0
 
   return (
     <div className="w-[95vw] mx-auto py-6 space-y-6">
@@ -77,26 +76,6 @@ export default function Adapters() {
         </CardHeader>
       </Card>
 
-      {/* Action Feedback */}
-      {actionData && (
-        <Card
-          variant="outlined"
-          size="sm"
-          className={actionData.success ? "border-badge-success-bg" : "border-badge-error-bg"}
-        >
-          <div className="flex items-center gap-2 p-3">
-            <span
-              className={actionData.success ? "text-badge-success-text" : "text-badge-error-text"}
-            >
-              {actionData.success ? "✓" : "✗"}
-            </span>
-            <span className="text-sm">
-              {actionData.success ? actionData.message : actionData.error}
-            </span>
-          </div>
-        </Card>
-      )}
-
       {/* Forms Row */}
       {(showClientForm || showHostForm) && (
         <div className="flex flex-wrap gap-4">
@@ -110,48 +89,22 @@ export default function Adapters() {
         </div>
       )}
 
-      {/* Stats Row */}
-      <div className="flex w-full justify-between flex-wrap gap-4">
-        <StatCard
-          label="Total Clients"
-          value={status.totalClients}
-          icon={<Database size={20} />}
-          variant="default"
-        />
-        <Divider className="w-10! my-auto" variant="dotted" />
-        <StatCard
-          label="Total Hosts"
-          value={status.totalHosts}
-          icon={<Server size={20} />}
-          variant="default"
-        />
-        <Divider className="w-10! my-auto" variant="dotted" />
-        <StatCard
-          label="Active Workers"
-          value={`${status.activeWorkers}/${status.totalWorkers}`}
-          icon={<Activity size={20} />}
-          variant={status.activeWorkers > 0 ? "success" : "warning"}
-        />
-        <Divider className="w-10! my-auto" variant="dotted" />
-        <StatCard
-          label="Avg Hosts/Worker"
-          value={status.averageHostsPerWorker.toFixed(1)}
-          icon={<Layers size={20} />}
-          variant="default"
-        />
-      </div>
+      {/* Stats Row - Now using StatusBar component with correct values */}
+      <StatusBar
+        totalClients={status.totalClients}
+        totalHosts={status.totalHosts}
+        activeWorkers={status.activeWorkers}
+        totalWorkers={status.totalWorkers}
+        monitoringHosts={monitoringHosts}
+        totalContainers={totalContainers}
+      />
 
       <Divider />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Clients List - pass workers so it can merge status */}
-        <ClientsList
-          clients={clients}
-          clientsWithConfig={clientsWithConfig}
-          workers={workers}
-          hosts={hosts}
-        />
+        <ClientsList clients={clients} workers={workers} hosts={hosts} />
 
         {/* Hosts List */}
         <HostsList hosts={hosts} clients={clients} workers={workers} />

@@ -1,15 +1,7 @@
 import { Badge, Modal } from "@dockstat/ui"
 import type { DockerAdapterOptions } from "@dockstat/typings"
-import type { ClientWithConfig, Host, Worker } from "./types"
 import { formatDuration, formatBytes } from "@dockstat/utils"
-
-interface ClientDetailModalProps {
-  open: boolean
-  onClose: () => void
-  client: ClientWithConfig | null
-  worker?: Worker | null
-  hosts?: Host[]
-}
+import type { ClientDetailModalProps } from "./types"
 
 function ConfigValue({
   label,
@@ -135,11 +127,11 @@ export function ClientDetailModal({
 }: ClientDetailModalProps) {
   if (!client) return null
 
-  const clientHosts = hosts.filter((h) => h.clientId === client.id)
+  const clientHosts = hosts.filter((h) => h.clientId === client.clientId)
   const options = client.options || {}
 
   return (
-    <Modal open={open} onClose={onClose} title={`Client: ${client.name}`} size="xl">
+    <Modal open={open} onClose={onClose} title={`Client: ${client.clientName}`} size="xl">
       <div className="max-h-[70vh] overflow-y-auto">
         {/* Top Row - Basic Info & Worker Status */}
         <div className="flex flex-wrap gap-4 mb-4">
@@ -147,8 +139,8 @@ export function ClientDetailModal({
           <div className="flex-1 min-w-64">
             <OptionsSection title="Basic Information">
               <div className="text-sm">
-                <ConfigValue label="Client ID" value={client.id} />
-                <ConfigValue label="Name" value={client.name} />
+                <ConfigValue label="Client ID" value={client.clientId} />
+                <ConfigValue label="Name" value={client.clientName} />
                 <div className="flex justify-between py-1.5 border-b border-divider-color last:border-b-0">
                   <span className="text-muted-text">Status</span>
                   <Badge variant={client.initialized ? "success" : "warning"} size="sm">
@@ -174,12 +166,15 @@ export function ClientDetailModal({
                   <ConfigValue label="Active Streams" value={worker.activeStreams} />
                   <ConfigValue label="Hosts Managed" value={worker.hostsManaged} />
                   <ConfigValue label="Uptime" value={formatDuration(worker.uptime)} />
-                  <ConfigValue label="Heap Used" value={formatBytes(worker.memoryUsage.heapUsed)} />
+                  <ConfigValue
+                    label="Heap Used"
+                    value={formatBytes(worker.memoryUsage?.heapUsed || 0)}
+                  />
                   <ConfigValue
                     label="Heap Total"
-                    value={formatBytes(worker.memoryUsage.heapTotal)}
+                    value={formatBytes(worker.memoryUsage?.heapTotal || 0)}
                   />
-                  <ConfigValue label="RSS" value={formatBytes(worker.memoryUsage.rss)} />
+                  <ConfigValue label="RSS" value={formatBytes(worker.memoryUsage?.rss || 0)} />
                 </div>
               </OptionsSection>
             </div>

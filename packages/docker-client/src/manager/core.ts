@@ -376,11 +376,17 @@ export class DockerClientManagerCore {
   }
 
   public getAllClients(all = false): Array<{ id: number; name: string; initialized: boolean }> {
-    const liveMap = new Map<number, { id: number; name: string; initialized: true }>()
+    const liveMap = new Map<
+      number,
+      { id: number; name: string; initialized: true; options: DOCKER.DockerAdapterOptions }
+    >()
     for (const w of this.workers.values()) {
       liveMap.set(Number(w.clientId), {
         id: Number(w.clientId),
         name: w.clientName ?? String(w.clientId),
+        options:
+          this.table.select(["options"]).where({ id: w.clientId }).first()?.options ??
+          ({} as DOCKER.DockerAdapterOptions),
         initialized: true,
       })
     }
@@ -389,19 +395,20 @@ export class DockerClientManagerCore {
       return Array.from(liveMap.values())
     }
 
-    const storedClients = this.table.select(["id", "name"]).all() as Array<{
-      id: number | string
-      name: string
-    }>
+    const storedClients = this.table.select(["*"]).all()
 
-    const resultMap = new Map<number, { id: number; name: string; initialized: boolean }>()
+    const resultMap = new Map<
+      number,
+      { id: number; name: string; initialized: boolean; options: DOCKER.DockerAdapterOptions }
+    >()
 
-    for (const { id, name } of storedClients) {
+    for (const { id, name, options } of storedClients) {
       const numId = Number(id)
       const live = liveMap.get(numId)
       resultMap.set(numId, {
         id: numId,
         name: live?.name ?? name,
+        options: options,
         initialized: Boolean(live),
       })
     }
@@ -413,34 +420,6 @@ export class DockerClientManagerCore {
     }
 
     return Array.from(resultMap.values())
-  }
-
-  public getAllClientsWithConfig(): Array<{
-    id: number
-    name: string
-    initialized: boolean
-    options: DOCKER.DockerAdapterOptions
-  }> {
-    const liveMap = new Map<number, boolean>()
-    for (const w of this.workers.values()) {
-      liveMap.set(Number(w.clientId), true)
-    }
-
-    const storedClients = this.table.select(["*"]).all() as Array<{
-      id: number | string
-      name: string
-      options: DOCKER.DockerAdapterOptions
-    }>
-
-    return storedClients.map(({ id, name, options }) => {
-      const numId = Number(id)
-      return {
-        id: numId,
-        name,
-        initialized: liveMap.has(numId),
-        options: options || {},
-      }
-    })
   }
 
   public async removeClient(clientId: number): Promise<void> {
@@ -541,7 +520,8 @@ export class DockerClientManagerCore {
 
   readonly triggerHooks = <K extends keyof EVENTS>(message: buildMessageFromProxyRes<K>) => {
     if (!message.type) {
-      this.logger.error(`No message type! ${JSON.stringify(message)}`)
+      this.logger.warn(`No message type! ${JSON.stringify(message)}`)
+      this.logger.debug("Assuming status response")
     }
 
     this.logger.debug(
@@ -629,6 +609,7 @@ export class DockerClientManagerCore {
         initialized: wrapper.initialized,
         activeStreams: 0,
         isMonitoring,
+        options: this.table.select(["options"]).where({ id: wrapper.clientId }).first()?.options,
         memoryUsage: process.memoryUsage(),
         uptime: Date.now() - wrapper.createdAt,
       }

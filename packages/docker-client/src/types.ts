@@ -1,4 +1,4 @@
-import type { DATABASE } from "@dockstat/typings"
+import type { DATABASE, DOCKER } from "@dockstat/typings"
 
 export type WorkerRequest =
   | { type: "init"; hosts: DATABASE.DB_target_host[] }
@@ -106,6 +106,7 @@ export interface WorkerMetrics {
     heapUsed: number
     external: number
   }
+  options?: DOCKER.DockerAdapterOptions
   uptime: number
 }
 
