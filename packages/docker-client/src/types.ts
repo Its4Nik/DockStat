@@ -49,14 +49,27 @@ export type WorkerRequest =
       type: "getContainerLogs"
       hostId: number
       containerId: string
-      options?: unknown
+      options?: {
+        stdout?: boolean
+        stderr?: boolean
+        timestamps?: boolean
+        tail?: number
+        since?: string
+        until?: string
+      }
     }
   | {
       type: "execInContainer"
       hostId: number
       containerId: string
       command: string[]
-      options?: unknown
+      options?: {
+        attachStdout?: boolean
+        attachStderr?: boolean
+        tty?: boolean
+        env?: string[]
+        workingDir?: string
+      }
     }
   | { type: "getImages"; hostId: number }
   | { type: "pullImage"; hostId: number; imageName: string }
@@ -72,6 +85,8 @@ export type WorkerRequest =
   | { type: "stopMonitoring" }
   | { type: "isMonitoring" }
   | { type: "cleanup" }
+  | { type: "deleteTable" }
+  | { type: "createMonitoringManager"}
 
 export type WorkerResponse<T = unknown> =
   | { success: true; data: T }

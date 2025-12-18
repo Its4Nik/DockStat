@@ -49,3 +49,16 @@ export const DockerClientElysia = new Elysia({
       clientId: t.Number(),
     }),
   })
+
+  .post(
+    "/monitoring/:clientId/toggle",
+    async ({ params }) => {
+      const isMonitoring = await DCM.isMonitoring(params.clientId)
+      if (isMonitoring) {
+        return DCM.stopMonitoring(params.clientId)
+      }
+      return DCM.startMonitoring(params.clientId)
+    },
+    { params: t.Object({ clientId: t.Number() }) }
+  )
+  .post("/create-monitoring-manager/:clientId", async ({params}) => await DCM.createMonitoringManager(params.clientId), {params: t.Object({clientId: t.Number()})})

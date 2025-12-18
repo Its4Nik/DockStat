@@ -22,6 +22,7 @@ export interface WorkerWrapper {
   clientName: string
   hostIds: Set<number>
   busy: boolean
+  createdAt: number
   lastUsed: number
   initialized: boolean
   lastError: string | null

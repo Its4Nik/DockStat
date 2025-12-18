@@ -12,12 +12,12 @@
     "format": "biome format --write"
   },
   "dependencies": {
-    "@dockstat/db": "workspace:*",
-    "@dockstat/logger": "workspace:*",
     "@dockstat/api": "workspace:*",
+    "@dockstat/db": "workspace:*",
+    "@dockstat/docker-client": "workspace:*",
+    "@dockstat/logger": "workspace:*",
     "@dockstat/plugin-handler": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*",
-    "@dockstat/docker-client": "workspace:*",
     "@dockstat/typings": "workspace:*",
     "@dockstat/ui": "workspace:*",
     "@dockstat/utils": "workspace:*",
@@ -31,6 +31,7 @@
     "elysia": "1.4.12",
     "isbot": "^5.1.31",
     "logixlysia": "^5.3.0",
+    "lucide-react": "^0.561.0",
     "memoirist": "^0.4.0",
     "react": "^19.2.0",
     "react-collapsible": "^2.10.0",

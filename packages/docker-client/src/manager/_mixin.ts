@@ -1,4 +1,4 @@
-type Constructor<T = unknown> = new (...args: unknown[]) => T
+type Constructor<T, A extends unknown[] = unknown[]> = new (...args: A) => T
 
 type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (
   k: infer I
@@ -6,10 +6,19 @@ type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) exten
   ? I
   : never
 
-export function applyMixins<Base extends Constructor, Mixins extends readonly Constructor[]>(
+export function applyMixins<
+  // biome-ignore lint/suspicious/noExplicitAny: unknown breaks it
+  Base extends Constructor<any, any[]>,
+  // biome-ignore lint/suspicious/noExplicitAny: unknown breaks it
+  Mixins extends readonly Constructor<any, any[]>[],
+>(
   BaseClass: Base,
   ...mixins: Mixins
-): Constructor<InstanceType<Base> & UnionToIntersection<InstanceType<Mixins[number]>>> & Base {
+): Constructor<
+  InstanceType<Base> & UnionToIntersection<InstanceType<Mixins[number]>>,
+  ConstructorParameters<Base>
+> &
+  Base {
   mixins.forEach((mixin) => {
     Object.getOwnPropertyNames(mixin.prototype).forEach((name) => {
       if (name !== "constructor") {
@@ -20,7 +29,6 @@ export function applyMixins<Base extends Constructor, Mixins extends readonly Co
       }
     })
 
-    // Copy static properties
     Object.getOwnPropertyNames(mixin).forEach((name) => {
       if (name !== "prototype" && name !== "length" && name !== "name") {
         const descriptor = Object.getOwnPropertyDescriptor(mixin, name)
@@ -32,7 +40,8 @@ export function applyMixins<Base extends Constructor, Mixins extends readonly Co
   })
 
   return BaseClass as Constructor<
-    InstanceType<Base> & UnionToIntersection<InstanceType<Mixins[number]>>
+    InstanceType<Base> & UnionToIntersection<InstanceType<Mixins[number]>>,
+    ConstructorParameters<Base>
   > &
     Base
 }

@@ -53,10 +53,26 @@ class DockerClient {
     this.streamManager = new StreamManager(this, this.logger.getParentsForLoggerChaining())
   }
 
+  public createMonitoringManager() {
+    if (!this.monitoringManager) {
+      this.monitoringManager = new MonitoringManager(
+        this.logger.getParentsForLoggerChaining(),
+        this.dockerInstances,
+        this.hostHandler.getHosts()
+      )
+    } else {
+      proxyEvent("error", `Monitoring already initialized on ${this.name}`)
+    }
+  }
+
   private checkDisposed(): void {
     if (this.disposed) {
       throw new Error("DockerClient has been disposed")
     }
+  }
+
+  public deleteHostTable() {
+    return this.hostHandler.deleteTable()
   }
 
   public getMetrics() {
@@ -911,11 +927,21 @@ class DockerClient {
   public stopMonitoring(): void {
     if (this.monitoringManager) {
       this.monitoringManager.stopMonitoring()
+    } else {
+      proxyEvent("error", `Monitoring manager not initialized on ${this.name}`)
     }
   }
 
   public isMonitoring(): boolean {
-    return this.monitoringManager?.getMonitoringState().isMonitoring ?? false
+    if (this.monitoringManager) {
+      this.logger.debug("Getting monitoring states")
+      const res = this.monitoringManager?.getMonitoringState().isMonitoring ?? false
+      this.logger.debug(res ? `${this.name} is monitoring` : `${this.name} is not monitoring`)
+      return res
+    } else {
+      proxyEvent("error", `Monitoring manager not initialized on ${this.name}`)
+    }
+    return false
   }
 
   public getStreamManager(): StreamManager | undefined {

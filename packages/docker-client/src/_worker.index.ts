@@ -251,6 +251,16 @@ self.onmessage = async (event: MessageEvent) => {
         result = undefined
         break
 
+      case "deleteTable":
+        client.deleteHostTable()
+        result = "Deleted host table"
+        break
+
+      case "createMonitoringManager":
+      client.createMonitoringManager()
+      result = "Created Monitoring manager"
+      break
+
       default:
         throw new Error(`Unknown request type: ${JSON.stringify(request)}`)
     }

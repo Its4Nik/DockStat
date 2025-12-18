@@ -1,0 +1,94 @@
+import { Badge, Card, CardBody, CardHeader } from "@dockstat/ui"
+import { Server } from "lucide-react"
+import type { Client, Host } from "./types"
+
+interface HostsListProps {
+  hosts: Host[]
+  clients?: Client[]
+}
+
+export function HostsList({ hosts, clients = [] }: HostsListProps) {
+  const clientMap = new Map(clients.map((c) => [c.id, c]))
+
+  if (hosts.length === 0) {
+    return (
+      <Card variant="outlined" size="sm" className="w-full">
+        <CardBody className="text-center text-muted-text py-8">
+          <Server className="mx-auto mb-2 opacity-50" size={32} />
+          <p>No hosts registered</p>
+          <p className="text-xs mt-1">Add a host to start monitoring</p>
+        </CardBody>
+      </Card>
+    )
+  }
+
+  const hostsByClient = hosts.reduce(
+    (acc, host) => {
+      const clientId = host.clientId
+      if (!acc[clientId]) {
+        acc[clientId] = []
+      }
+      acc[clientId].push(host)
+      return acc
+    },
+    {} as Record<number, Host[]>
+  )
+
+  return (
+    <Card variant="default" size="sm" className="w-full">
+      <CardHeader className="text-lg flex items-center justify-between">
+        <span>Hosts</span>
+        <Badge variant="secondary" size="sm" rounded>
+          {hosts.length}
+        </Badge>
+      </CardHeader>
+      <CardBody className="p-0">
+        <div className="divide-y divide-divider-color">
+          {Object.entries(hostsByClient).map(([clientIdStr, clientHosts]) => {
+            const clientId = Number(clientIdStr)
+            const client = clientMap.get(clientId)
+            const clientName = client?.name ?? `Client ${clientId}`
+
+            return (
+              <div key={clientId} className="px-4 py-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="primary" size="sm" outlined>
+                    {clientName}
+                  </Badge>
+                  <span className="text-xs text-muted-text">
+                    {clientHosts.length} host{clientHosts.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+
+                <div className="space-y-2 pl-2">
+                  {clientHosts.map((host) => (
+                    <div
+                      key={host.id}
+                      className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-card-flat-bg transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-badge-success-bg" />
+                        <div>
+                          <span className="font-medium text-sm">{host.name}</span>
+                          {host.host && (
+                            <div className="text-xs text-muted-text">
+                              {host.secure ? "https" : "http"}://{host.host}
+                              {host.port ? `:${host.port}` : ""}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <Badge variant="secondary" size="sm" outlined>
+                        ID: {host.id}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </CardBody>
+    </Card>
+  )
+}

@@ -151,13 +151,15 @@ export class DockerClientManagerCore {
 
       this.logger.debug("Created Worker")
 
+      const now = Date.now()
       const wrapper: WorkerWrapper = {
         worker,
         clientId,
         clientName,
         hostIds: new Set(),
         busy: false,
-        lastUsed: Date.now(),
+        createdAt: now,
+        lastUsed: now,
         initialized: false,
         lastError: null,
         errorCount: 0,
@@ -295,7 +297,7 @@ export class DockerClientManagerCore {
     this.logger.error(`Worker ${clientId} terminated due to error: ${error.message}`)
   }
 
-  readonly sendRequest = async <T>(clientId: number, request: WorkerRequest): Promise<T> => {
+  readonly sendRequest =    async <T>(clientId: number, request: WorkerRequest): Promise<T> => {
     const wrapper = this.workers.get(clientId)
     if (!wrapper) {
       throw new Error(`No worker found for client ID: ${clientId}`)
@@ -369,8 +371,8 @@ export class DockerClientManagerCore {
 
   // ---------- Client management ----------
 
-  public getClient(clientId: number): boolean {
-    return this.workers.has(clientId)
+  public getClient(clientId: number) {
+    return this.workers.get(clientId)
   }
 
   public getAllClients(all = false): Array<{ id: number; name: string; initialized: boolean }> {
@@ -421,6 +423,7 @@ export class DockerClientManagerCore {
 
     try {
       await this.sendRequest(clientId, { type: "cleanup" })
+      await this.sendRequest(clientId, { type: "deleteTable" })
     } catch (error) {
       this.logger.warn(`Error cleaning up worker ${clientId}: ${String(error)}`)
     }
@@ -549,10 +552,10 @@ export class DockerClientManagerCore {
       try {
         if (message.additionalCtx) {
           // biome-ignore lint/suspicious/noExplicitAny: Custom plugin typings and contexts typings as any
-          hook(message.ctx as any, message.additionalCtx as any, serverHooks)
+          hook(message.ctx as any, message.additionalCtx as any, serverHooks as any)
         } else {
           // biome-ignore lint/suspicious/noExplicitAny: Custom plugin typings and contexts typings as any
-          hook(message.ctx as any, serverHooks)
+          hook(message.ctx as any, serverHooks as any)
         }
       } catch (err: unknown) {
         this.logger.error(
@@ -599,7 +602,7 @@ export class DockerClientManagerCore {
         activeStreams: 0,
         isMonitoring,
         memoryUsage: process.memoryUsage(),
-        uptime: Date.now() - wrapper.lastUsed,
+        uptime: Date.now() - wrapper.createdAt,
       }
 
       workers.push(workerMetrics)
@@ -618,12 +621,12 @@ export class DockerClientManagerCore {
   public async getStatus() {
     // getAllHosts is implemented in HostsMixin
     const hosts = await this.getAllHosts()
-    this.logger.debug("Getting status")
-    this.logger.debug(`Hosts: ${JSON.stringify(hosts)}`)
-    return {
+    const dat = {
       ...(await this.getPoolMetrics()),
       hosts,
     }
+    this.logger.info(`gathered status: ${JSON.stringify(dat)}`)
+    return dat
   }
 
   public async getWorkerMetrics(clientId: number): Promise<WorkerMetrics | null> {
@@ -646,7 +649,7 @@ export class DockerClientManagerCore {
       activeStreams: 0,
       isMonitoring,
       memoryUsage: process.memoryUsage(),
-      uptime: Date.now() - wrapper.lastUsed,
+      uptime: Date.now() - wrapper.createdAt,
     }
   }
 

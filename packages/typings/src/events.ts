@@ -23,5 +23,5 @@ type ServerEvents<T extends Record<string, unknown> = Record<string, unknown>> =
   logger: logger
 }
 
-export type EVENTS<T extends Record<string, unknown> = Record<string, unknown>> =
-  ExtentWithExtraObject<BaseEvents, ServerEvents<T>>
+export type EVENTS<Table extends Record<string, unknown> = Record<string, unknown>> =
+  ExtentWithExtraObject<BaseEvents, ServerEvents<Table>>

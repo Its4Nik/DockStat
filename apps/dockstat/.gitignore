@@ -6,4 +6,4 @@
 /build/
 ./dockstat.sqlite-wal
 ./dockstat.sqlite-shm
-./.bundle
+.bundle

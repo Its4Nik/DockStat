@@ -1,0 +1,177 @@
+import { Button, Card, CardBody, CardHeader, Toggle } from "@dockstat/ui"
+import { Plus } from "lucide-react"
+import { useState } from "react"
+import { useFetcher } from "react-router"
+import type { Client } from "../types"
+
+interface AddHostFormProps {
+  clients: Client[]
+  onClose?: () => void
+}
+
+export function AddHostForm({ clients, onClose }: AddHostFormProps) {
+  const fetcher = useFetcher()
+  const isSubmitting = fetcher.state === "submitting"
+
+  const [clientId, setClientId] = useState<string>(clients[0]?.id.toString() ?? "")
+  const [hostname, setHostname] = useState("")
+  const [name, setName] = useState("")
+  const [port, setPort] = useState("2375")
+  const [secure, setSecure] = useState(false)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!clientId || !hostname || !name) return
+
+    fetcher.submit(
+      {
+        intent: "host:add",
+        clientId,
+        hostname,
+        name,
+        port,
+        secure: secure.toString(),
+      },
+      { method: "post" }
+    )
+
+    // Reset form
+    setHostname("")
+    setName("")
+    setPort(secure ? "2376" : "2375")
+    onClose?.()
+  }
+
+  if (clients.length === 0) {
+    return (
+      <Card variant="outlined" size="sm">
+        <CardBody className="text-center text-muted-text">
+          Register a client first before adding hosts
+        </CardBody>
+      </Card>
+    )
+  }
+
+  return (
+    <Card variant="default" size="sm" className="w-full max-w-md">
+      <CardHeader className="text-lg flex items-center gap-2">
+        <Plus size={20} />
+        <span>Add Host</span>
+      </CardHeader>
+      <CardBody>
+        <fetcher.Form method="post" onSubmit={handleSubmit} className="space-y-4">
+          <input type="hidden" name="intent" value="host:add" />
+
+          <div>
+            <label
+              htmlFor="host-client-select"
+              className="block text-sm font-medium text-secondary-text mb-1"
+            >
+              Docker Client
+            </label>
+            <select
+              id="host-client-select"
+              name="clientId"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              className="w-full px-3 py-2 rounded-md border border-card-default-border bg-main-bg text-primary-text focus:outline-none focus:ring-2 focus:ring-badge-primary-bg"
+              required
+            >
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name} (ID: {client.id})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="host-name-input"
+              className="block text-sm font-medium text-secondary-text mb-1"
+            >
+              Display Name
+            </label>
+            <input
+              id="host-name-input"
+              name="name"
+              type="text"
+              placeholder="e.g., Production Server"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="w-full px-3 py-2 rounded-md border border-input-default-border bg-main-bg text-primary-text focus:outline-none focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="host-hostname-input"
+              className="block text-sm font-medium text-secondary-text mb-1"
+            >
+              Hostname / IP Address
+            </label>
+            <input
+              id="host-hostname-input"
+              name="hostname"
+              type="text"
+              placeholder="e.g., 192.168.1.100 or docker.example.com"
+              value={hostname}
+              onChange={(e) => setHostname(e.target.value)}
+              required
+              className="w-full px-3 py-2 rounded-md border border-input-default-border bg-main-bg text-primary-text focus:outline-none focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="host-port-input"
+                className="block text-sm font-medium text-secondary-text mb-1"
+              >
+                Port
+              </label>
+              <input
+                id="host-port-input"
+                name="port"
+                type="number"
+                placeholder="2375"
+                value={port}
+                onChange={(e) => setPort(e.target.value)}
+                required
+                className="w-full px-3 py-2 rounded-md border border-input-default-border bg-main-bg text-primary-text focus:outline-none focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
+              />
+            </div>
+
+            <div>
+              <span className="block text-sm font-medium text-secondary-text mb-1">TLS/SSL</span>
+              <div className="flex items-center gap-2 h-10">
+                <Toggle
+                  checked={secure}
+                  onChange={(checked) => {
+                    setSecure(checked)
+                    setPort(checked ? "2376" : "2375")
+                  }}
+                  label={secure ? "Enabled" : "Disabled"}
+                />
+                <span className="text-sm text-muted-text">{secure ? "Enabled" : "Disabled"}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <Button type="submit" disabled={isSubmitting} className="flex-1">
+              {isSubmitting ? "Adding..." : "Add Host"}
+            </Button>
+            {onClose && (
+              <Button type="button" variant="secondary" onClick={onClose}>
+                Cancel
+              </Button>
+            )}
+          </div>
+        </fetcher.Form>
+      </CardBody>
+    </Card>
+  )
+}
