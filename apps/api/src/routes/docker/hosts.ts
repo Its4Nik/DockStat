@@ -1,7 +1,7 @@
+import { extractErrorMessage } from "@dockstat/utils"
 import Elysia, { t } from "elysia"
 import DCM from "../../docker"
 import { DockerModel } from "../../models/docker"
-import { extractErrorMessage } from "@dockstat/utils"
 
 export const DockerHostElysia = new Elysia({
   prefix: "/hosts",

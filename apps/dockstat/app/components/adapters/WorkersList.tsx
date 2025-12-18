@@ -1,7 +1,7 @@
 import { Card, CardBody, CardHeader } from "@dockstat/ui"
 import { Hammer } from "lucide-react"
-import { WorkerCard } from "./WorkerCard"
 import type { WorkersListProps } from "./types"
+import { WorkerCard } from "./WorkerCard"
 
 export function WorkersList({ workers, hosts = [] }: WorkersListProps) {
   if (workers.length === 0) {

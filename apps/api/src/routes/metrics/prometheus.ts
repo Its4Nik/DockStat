@@ -1,8 +1,8 @@
+import { extractErrorMessage } from "@dockstat/utils"
 import Elysia from "elysia"
 import { DockStatDB } from "../../database"
 import { formatPrometheusMetrics } from "../../middleware/metrics"
 import { MetricsModel } from "../../models/metrics"
-import { extractErrorMessage } from "@dockstat/utils"
 
 const PrometheusMetricsRoute = new Elysia({ prefix: "/metrics" }).get(
   "/",

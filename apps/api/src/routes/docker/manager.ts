@@ -1,6 +1,6 @@
+import { extractErrorMessage } from "@dockstat/utils"
 import Elysia from "elysia"
 import DCM from "../../docker"
-import { extractErrorMessage } from "@dockstat/utils"
 
 export const DockerManager = new Elysia({
   prefix: "/manager",

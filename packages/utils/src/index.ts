@@ -3,10 +3,10 @@
  * @module @dockstat/utils
  */
 
+import * as errorUtils from "./error"
 // Preserve existing exports
 import * as HTTP_RequestID from "./http/RequestId"
 import * as buildMessage from "./worker/buildMessage"
-import * as errorUtils from "./error"
 
 export const worker = {
   buildMessage: buildMessage,
@@ -43,6 +43,26 @@ export {
   sortBy,
   uniqueBy,
 } from "./data"
+export type {
+  ApiErrorResponse,
+  ApiResponse,
+  ApiSuccessResponse,
+  EdenElysiaError,
+  EdenErrorResponse,
+  ElysiaErrorValue,
+} from "./error"
+// Error utilities
+export {
+  createApiErrorResponse,
+  createApiSuccessResponse,
+  extractEdenError,
+  extractErrorMessage,
+  handleElysiaError,
+  isApiErrorResponse,
+  isApiSuccessResponse,
+  isEdenError,
+  withErrorHandling,
+} from "./error"
 // Formatting utilities
 export {
   formatBytes,
@@ -70,23 +90,3 @@ export {
   isObject,
   isString,
 } from "./type"
-// Error utilities
-export {
-  extractErrorMessage,
-  extractEdenError,
-  createApiErrorResponse,
-  createApiSuccessResponse,
-  isApiErrorResponse,
-  isApiSuccessResponse,
-  isEdenError,
-  withErrorHandling,
-  handleElysiaError,
-} from "./error"
-export type {
-  ApiErrorResponse,
-  ApiSuccessResponse,
-  ApiResponse,
-  EdenErrorResponse,
-  ElysiaErrorValue,
-  EdenElysiaError,
-} from "./error"

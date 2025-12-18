@@ -2,7 +2,7 @@ import { Button, Card, CardBody, CardHeader, Checkbox } from "@dockstat/ui"
 import { useEffect, useState } from "react"
 import { useFetcher } from "react-router"
 import { toast } from "sonner"
-import type { RegisterClientFormProps, ActionResponse } from "../types"
+import type { ActionResponse, RegisterClientFormProps } from "../types"
 
 export function RegisterClientForm({ onSuccess, onCancel }: RegisterClientFormProps) {
   const fetcher = useFetcher<ActionResponse>()

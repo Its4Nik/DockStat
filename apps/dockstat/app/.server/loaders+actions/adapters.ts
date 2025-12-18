@@ -1,6 +1,6 @@
-import { ServerAPI } from ".."
 import type { DockerAdapterOptions } from "@dockstat/typings"
 import { handleElysiaError } from "@dockstat/utils"
+import { ServerAPI } from ".."
 
 // Action intent types
 type AdapterAction =

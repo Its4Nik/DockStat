@@ -1,5 +1,5 @@
-export { RegisterClientForm } from "./RegisterClientForm"
 export { AddHostForm } from "./AddHostForm"
+export { CreateMonitoringManagerButton } from "./CreateMonitoringManagerButton"
 export { DeleteClientButton } from "./DeleteClientButton"
 export { MonitoringToggle } from "./MonitoringToggle"
-export { CreateMonitoringManagerButton } from "./CreateMonitoringManagerButton"
+export { RegisterClientForm } from "./RegisterClientForm"

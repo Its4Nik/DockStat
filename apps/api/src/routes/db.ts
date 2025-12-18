@@ -1,8 +1,8 @@
+import { extractErrorMessage } from "@dockstat/utils"
 import Elysia from "elysia"
 import { DockStatDB } from "../database"
 import { updateConfig } from "../database/utils"
 import { DatabaseModel } from "../models/database"
-import { extractErrorMessage } from "@dockstat/utils"
 
 const DBRoutes = new Elysia({
   name: "DatabaseElysiaInstance",

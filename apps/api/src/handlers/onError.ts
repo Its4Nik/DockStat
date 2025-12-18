@@ -1,5 +1,5 @@
-import Elysia, { type ValidationError } from "elysia"
 import { extractErrorMessage } from "@dockstat/utils"
+import Elysia, { type ValidationError } from "elysia"
 
 export const errorHandler = new Elysia().onError(({ code, error, set, request }) => {
   const path = new URL(request.url).pathname

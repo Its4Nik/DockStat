@@ -1,8 +1,8 @@
-import { Badge, Modal } from "@dockstat/ui"
 import type { DockerAdapterOptions } from "@dockstat/typings"
-import { formatDuration, formatBytes } from "@dockstat/utils"
-import type { ClientDetailModalProps } from "./types"
+import { Badge, Modal } from "@dockstat/ui"
+import { formatBytes, formatDuration } from "@dockstat/utils"
 import type { JSX } from "react"
+import type { ClientDetailModalProps } from "./types"
 
 function ConfigValue({
   label,

@@ -3,7 +3,7 @@ import { Plus } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useFetcher } from "react-router"
 import { toast } from "sonner"
-import type { AddHostFormProps, ActionResponse } from "../types"
+import type { ActionResponse, AddHostFormProps } from "../types"
 
 export function AddHostForm({ clients, onClose }: AddHostFormProps) {
   const fetcher = useFetcher<ActionResponse>()

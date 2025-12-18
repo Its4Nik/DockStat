@@ -1,11 +1,11 @@
 import Elysia from "elysia"
 import DockStatElysiaPlugins from "./elysia-plugins"
 import { errorHandler } from "./handlers/onError"
+import MetricsMiddleware from "./middleware/metrics"
 import DBRoutes from "./routes/db"
 import DockerRoutes from "./routes/docker"
-import PluginRoutes from "./routes/plugins"
-import MetricsMiddleware from "./middleware/metrics"
 import DockStatMiscRoutes from "./routes/misc"
+import PluginRoutes from "./routes/plugins"
 
 export const DockStatAPI = new Elysia({ prefix: "/api/v2" })
   .use(MetricsMiddleware)

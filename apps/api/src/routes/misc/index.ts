@@ -1,7 +1,7 @@
+import os from "node:os"
+import { formatBytes } from "@dockstat/utils"
 import Elysia from "elysia"
 import PrometheusMetricsRoute from "../metrics/prometheus"
-import { formatBytes } from "@dockstat/utils"
-import os from "node:os"
 
 let lastCpu = process.cpuUsage()
 let lastTime = performance.now()
