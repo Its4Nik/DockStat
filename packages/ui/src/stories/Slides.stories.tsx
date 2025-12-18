@@ -177,4 +177,3 @@ export const NoHeaderOrDescription: Story = {
     </Slides>
   ),
 }
-
