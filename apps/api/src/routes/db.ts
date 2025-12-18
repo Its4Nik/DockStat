@@ -2,8 +2,7 @@ import Elysia from "elysia"
 import { DockStatDB } from "../database"
 import { updateConfig } from "../database/utils"
 import { DatabaseModel } from "../models/database"
-
-//const logger = BaseLogger.spawn("Test")
+import { extractErrorMessage } from "@dockstat/utils"
 
 const DBRoutes = new Elysia({
   name: "DatabaseElysiaInstance",
@@ -19,9 +18,11 @@ const DBRoutes = new Elysia({
         const res = updateConfig(body)
         return status(200, res)
       } catch (error) {
+        const errorMessage = extractErrorMessage(error, "Error while updating Database")
         return status(400, {
-          message: "Error while updating Database",
-          error: error,
+          success: false as const,
+          message: errorMessage,
+          error: errorMessage,
         })
       }
     },
@@ -37,8 +38,13 @@ const DBRoutes = new Elysia({
     try {
       const res = DockStatDB.configTable.select(["*"]).all()[0]
       return status(200, res)
-    } catch (_error) {
-      return status(400, "Error while opening Database")
+    } catch (error) {
+      const errorMessage = extractErrorMessage(error, "Error while opening Database")
+      return status(400, {
+        success: false as const,
+        error: errorMessage,
+        message: errorMessage,
+      })
     }
   })
 

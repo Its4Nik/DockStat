@@ -1,5 +1,6 @@
 import { ServerAPI } from ".."
 import type { DockerAdapterOptions } from "@dockstat/typings"
+import { extractErrorMessage, extractEdenError } from "@dockstat/utils"
 
 // Action intent types
 type AdapterAction =
@@ -195,9 +196,6 @@ function parseFormData(formData: FormData): AdapterAction | null {
 
 export const Adapter = {
   loader: async () => {
-    // Simplified: only 2 API calls instead of 4
-    // - status endpoint includes hosts and workers data
-    // - all-with-config includes all client data we need
     const [statusRes] = await Promise.all([ServerAPI.docker.status.get()])
 
     // Default empty status
@@ -232,17 +230,18 @@ export const Adapter = {
             options: action.options ?? null,
           })
 
-          if (res.status === 200) {
+          if (res.status === 200 && res.data) {
             return {
               success: true,
               data: res.data,
-              message: `Client "${action.clientName}" registered`,
+              message: res.data.message || `Client "${action.clientName}" registered`,
             }
           }
 
-          const errorMsg =
-            res.status === 400 && res.data ? res.data.message : "Failed to register client"
-          return { success: false, error: errorMsg }
+          return {
+            success: false,
+            error: JSON.stringify(res.error),
+          }
         }
 
         case "client:delete": {
@@ -250,15 +249,18 @@ export const Adapter = {
             clientId: action.clientId,
           })
 
-          if (res.status === 200) {
+          if (res.status === 200 && res.data) {
             return {
               success: true,
               data: res.data,
-              message: `Client ${action.clientId} deleted`,
+              message: res.data.message || `Client ${action.clientId} deleted`,
             }
           }
 
-          return { success: false, error: "Failed to delete client" }
+          return {
+            success: false,
+            error: JSON.stringify(res.error),
+          }
         }
 
         case "client:monitoring:toggle": {
@@ -266,15 +268,25 @@ export const Adapter = {
             .monitoring({ clientId: action.clientId })
             .toggle.post()
 
-          if (res.status === 200) {
+          if (res.status === 200 && res.data) {
             return {
               success: true,
               data: res.data,
-              message: `Monitoring toggled for client ${action.clientId}`,
+              message: res.data.message || `Monitoring toggled for client ${action.clientId}`,
             }
           }
 
-          return { success: false, error: JSON.stringify(res.error) }
+          if (res.error?.value.type === "validation") {
+            return {
+              success: false,
+              error: JSON.stringify(res.error?.value.error),
+            }
+          }
+
+          return {
+            success: false,
+            error: "",
+          }
         }
 
         case "host:add": {
@@ -286,15 +298,18 @@ export const Adapter = {
             port: action.port,
           })
 
-          if (res.status === 200) {
+          if (res.status === 200 && res.data) {
             return {
               success: true,
-              data: res.data,
-              message: `Host "${action.name}" added`,
+              data: res.data.data,
+              message: res.data.message || `Host "${action.name}" added`,
             }
           }
 
-          return { success: false, error: "Failed to add host" }
+          return {
+            success: false,
+            error: JSON.stringify(res.error),
+          }
         }
 
         case "host:update": {
@@ -303,23 +318,25 @@ export const Adapter = {
             host: action.host,
           })
 
-          if (res.status === 200) {
+          if (res.status === 200 && res.data) {
             return {
               success: true,
-              data: res.data,
-              message: `Host "${action.host.name}" updated`,
+              data: res.data.data,
+              message: res.data.message || `Host "${action.host.name}" updated`,
             }
           }
 
-          return { success: false, error: "Failed to update host" }
+          return {
+            success: false,
+            error: JSON.stringify(res.error),
+          }
         }
 
         default:
           return { success: false, error: "Unknown action" }
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "An unexpected error occurred"
-      return { success: false, error: message }
+      return { success: false, error: JSON.stringify(error) }
     }
   },
 }

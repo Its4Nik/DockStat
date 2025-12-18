@@ -107,7 +107,14 @@ export const isProxyEventEnvelope = (payload: unknown): payload is ProxyEventEnv
 
 export const looksLikeEventMessage = (payload: unknown): payload is EventMessage<keyof EVENTS> => {
   const p = payload as Record<string, unknown>
-  return typeof payload === "object" && typeof p.success === "boolean"
+  // Must have a 'type' property to be an event message
+  // Worker responses have {success, data/error} but no 'type'
+  return (
+    typeof payload === "object" &&
+    payload !== null &&
+    typeof p.type === "string" &&
+    typeof p.ctx === "object"
+  )
 }
 
 // For convenience in mixins

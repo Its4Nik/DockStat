@@ -321,7 +321,13 @@ export class DockerClientManagerCore {
       const messageHandler = (event: MessageEvent) => {
         const raw = event.data
 
+        // Skip internal worker messages (init, metrics)
         if (isInternalWorkerMessage(raw)) {
+          return
+        }
+
+        // Skip proxy event messages - these are handled by attachEventListener
+        if (isProxyEventEnvelope(raw)) {
           return
         }
 
@@ -336,9 +342,35 @@ export class DockerClientManagerCore {
         if (response.success) {
           resolve(response.data)
         } else {
-          wrapper.lastError = response.error ?? "Unknown worker error"
+          // Extract error message - handle various error formats
+          let errorMessage = "Unknown worker error"
+          const err = response.error ?? response.message
+          if (typeof err === "string") {
+            errorMessage = err
+          } else if (err instanceof Error) {
+            errorMessage = err.message
+          } else if (err && typeof err === "object") {
+            // Handle nested error objects
+            const errObj = err as Record<string, unknown>
+            if (typeof errObj.message === "string") {
+              errorMessage = errObj.message
+            } else if (typeof errObj.error === "string") {
+              errorMessage = errObj.error
+            } else {
+              // Last resort - try to stringify but avoid [object Object]
+              try {
+                const str = JSON.stringify(err)
+                if (str && str !== "{}") {
+                  errorMessage = str
+                }
+              } catch {
+                // Keep default error message
+              }
+            }
+          }
+          wrapper.lastError = errorMessage
           wrapper.errorCount += 1
-          reject(new Error(response.error ?? "Unknown worker error"))
+          reject(new Error(errorMessage))
         }
       }
 
@@ -522,6 +554,7 @@ export class DockerClientManagerCore {
     if (!message.type) {
       this.logger.warn(`No message type! ${JSON.stringify(message)}`)
       this.logger.debug("Assuming status response")
+      return
     }
 
     this.logger.debug(

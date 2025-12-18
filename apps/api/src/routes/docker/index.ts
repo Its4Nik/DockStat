@@ -1,5 +1,6 @@
 import Elysia from "elysia"
 import DCM from "../../docker"
+import { extractErrorMessage } from "@dockstat/utils"
 import { DockerClientElysia } from "./client"
 import { DockerContainerElysia } from "./container"
 import { DockerHostElysia } from "./hosts"
@@ -16,9 +17,11 @@ const DockerRoutes = new Elysia({
       const res = await DCM.getStatus()
       return status(200, res)
     } catch (error) {
+      const errorMessage = extractErrorMessage(error, "Could not get Docker Status")
       return status(400, {
-        error: error,
-        message: "Could not get Docker Status",
+        success: false as const,
+        error: errorMessage,
+        message: errorMessage,
       })
     }
   })
@@ -28,3 +31,4 @@ const DockerRoutes = new Elysia({
   .use(DockerContainerElysia)
 
 export default DockerRoutes
+

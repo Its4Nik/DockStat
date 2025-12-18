@@ -1,5 +1,6 @@
 import Elysia from "elysia"
 import DCM from "../../docker"
+import { extractErrorMessage } from "@dockstat/utils"
 
 export const DockerManager = new Elysia({
   prefix: "/manager",
@@ -12,16 +13,27 @@ export const DockerManager = new Elysia({
       const res = await DCM.getPoolMetrics()
       return status(200, res)
     } catch (error) {
+      const errorMessage = extractErrorMessage(error, "Could not get Pool Stats")
       return status(400, {
-        error: error,
-        message: "Could not get Pool Stats",
+        success: false as const,
+        error: errorMessage,
+        message: errorMessage,
       })
     }
   })
   .post("/init-all-clients", ({ status }) => {
-    const allClients = DCM.getAllClients()
-    for (const c of allClients) {
-      DCM.init(c.id)
+    try {
+      const allClients = DCM.getAllClients()
+      for (const c of allClients) {
+        DCM.init(c.id)
+      }
+      return status(200, DCM.getAllClients(true))
+    } catch (error) {
+      const errorMessage = extractErrorMessage(error, "Could not initialize clients")
+      return status(400, {
+        success: false as const,
+        error: errorMessage,
+        message: errorMessage,
+      })
     }
-    return status(200, DCM.getAllClients(true))
   })

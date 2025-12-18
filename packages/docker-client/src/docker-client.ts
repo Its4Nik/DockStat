@@ -61,7 +61,9 @@ class DockerClient {
         this.hostHandler.getHosts()
       )
     } else {
-      proxyEvent("error", `Monitoring already initialized on ${this.name}`)
+      const error = new Error(`Monitoring already initialized on ${this.name}`)
+      proxyEvent("error", error)
+      throw error
     }
   }
 
@@ -920,7 +922,9 @@ class DockerClient {
     if (this.monitoringManager) {
       this.monitoringManager.startMonitoring()
     } else {
-      proxyEvent("error", `Monitoring manager not initialized on ${this.name}`)
+      const error = new Error(`Monitoring manager not initialized on ${this.name}`)
+      proxyEvent("error", error)
+      throw error
     }
   }
 
@@ -928,7 +932,9 @@ class DockerClient {
     if (this.monitoringManager) {
       this.monitoringManager.stopMonitoring()
     } else {
-      proxyEvent("error", `Monitoring manager not initialized on ${this.name}`)
+      const error = new Error(`Monitoring manager not initialized on ${this.name}`)
+      proxyEvent("error", error)
+      throw error
     }
   }
 
@@ -939,9 +945,10 @@ class DockerClient {
       this.logger.debug(res ? `${this.name} is monitoring` : `${this.name} is not monitoring`)
       return res
     } else {
-      proxyEvent("error", `Monitoring manager not initialized on ${this.name}`)
+      const error = new Error(`Monitoring manager not initialized on ${this.name}`)
+      proxyEvent("error", error)
+      throw error
     }
-    return false
   }
 
   public getStreamManager(): StreamManager | undefined {

@@ -5,7 +5,9 @@ export namespace MetricsModel {
   export type prometheusRes = string
 
   export const prometheusError = t.Object({
-    error: t.Unknown(),
-    message: t.Literal("Could not get Prometheus metrics!"),
+    success: t.Literal(false),
+    error: t.String(),
+    message: t.String(),
   })
 }
+

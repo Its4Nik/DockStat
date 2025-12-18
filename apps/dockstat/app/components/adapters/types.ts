@@ -1,4 +1,8 @@
 import type { DOCKER, DockerAdapterOptions } from "@dockstat/typings"
+import type { ApiErrorResponse, ApiSuccessResponse, ApiResponse } from "@dockstat/utils"
+
+// Re-export the centralized error types for convenience
+export type { ApiErrorResponse, ApiSuccessResponse, ApiResponse }
 
 /**
  * Memory usage stats from a worker process
@@ -86,6 +90,7 @@ export interface AdapterLoaderData {
 
 /**
  * Action response types
+ * These are compatible with the centralized ApiResponse types from @dockstat/utils
  */
 export interface ActionSuccess<T = unknown> {
   success: true
@@ -96,9 +101,24 @@ export interface ActionSuccess<T = unknown> {
 export interface ActionError {
   success: false
   error: string
+  message?: string
 }
 
 export type ActionResponse<T = unknown> = ActionSuccess<T> | ActionError
+
+/**
+ * Helper type guard to check if an action response is an error
+ */
+export function isActionError(response: ActionResponse): response is ActionError {
+  return response.success === false
+}
+
+/**
+ * Helper type guard to check if an action response is successful
+ */
+export function isActionSuccess<T>(response: ActionResponse<T>): response is ActionSuccess<T> {
+  return response.success === true
+}
 
 /**
  * Props for StatCard component

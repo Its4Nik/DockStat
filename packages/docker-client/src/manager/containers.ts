@@ -162,13 +162,20 @@ export class Containers extends DockerClientManagerCore {
     clientId: number,
     hostId: number,
     containerId: string,
-    options?: unknown
+    options?: {
+      stdout?: boolean
+      stderr?: boolean
+      timestamps?: boolean
+      tail?: number
+      since?: string
+      until?: string
+    }
   ): Promise<string> {
     return this.sendRequest(clientId, {
       type: "getContainerLogs",
       hostId,
       containerId,
-      options,
+      options: options,
     })
   }
 
@@ -177,7 +184,7 @@ export class Containers extends DockerClientManagerCore {
     hostId: number,
     containerId: string,
     command: string[],
-    options?: unknown
+    options?: DOCKER.ExecOptions
   ): Promise<{
     stdout: string
     stderr: string

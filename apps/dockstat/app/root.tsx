@@ -51,7 +51,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Toaster position="bottom-right" dir="auto" />
         <Navbar isNavigating={isNavigating} location={location} />
         {children}
-        <Toaster />
         <ScrollRestoration />
         <Scripts />
       </body>
