@@ -1,3 +1,5 @@
+import type { DockerAdapterOptions } from "@dockstat/typings"
+
 /**
  * Memory usage stats from a worker process
  */
@@ -47,6 +49,13 @@ export interface Client {
 }
 
 /**
+ * Client with full configuration options
+ */
+export interface ClientWithConfig extends Client {
+  options: DockerAdapterOptions
+}
+
+/**
  * Combined client data with worker status
  * This is the enriched view used by the UI
  */
@@ -77,6 +86,7 @@ export interface AdapterStatus {
 export interface AdapterLoaderData {
   status: AdapterStatus
   clients: Client[]
+  clientsWithConfig: ClientWithConfig[]
   hosts: Host[]
 }
 

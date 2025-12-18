@@ -5,6 +5,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useFetchers,
   useLocation,
   useNavigation,
 } from "react-router"
@@ -33,8 +34,11 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const navigation = useNavigation()
+  const fetchers = useFetchers()
   const location = useLocation().pathname
-  const isNavigating = navigation.state !== "idle"
+
+  const isNavigating = navigation.state !== "idle" || fetchers.some((f) => f.state !== "idle") // "loading" | "submitting"
+
   return (
     <html lang="en">
       <head>

@@ -20,7 +20,7 @@ export function RegisterClientForm({ onCancel }: RegisterClientFormProps) {
   const [enableEventEmitter, setEnableEventEmitter] = useState(false)
 
   return (
-    <Card variant="outlined" size="sm" className="w-full max-w-md">
+    <Card size="sm" className="w-full max-w-md">
       <CardHeader className="text-lg!">Register New Client</CardHeader>
       <CardBody>
         <fetcher.Form method="post" className="space-y-4">

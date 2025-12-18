@@ -130,9 +130,10 @@ function parseFormData(formData: FormData): AdapterAction | null {
 
 export const Adapter = {
   loader: async () => {
-    const [statusRes, clientsRes, hostsRes] = await Promise.all([
+    const [statusRes, clientsRes, clientsWithConfigRes, hostsRes] = await Promise.all([
       ServerAPI.docker.status.get(),
       ServerAPI.docker.client.all({ stored: "true" }).get(),
+      ServerAPI.docker.client["all-with-config"].get(),
       ServerAPI.docker.hosts.get(),
     ])
 
@@ -149,8 +150,9 @@ export const Adapter = {
 
     const status = statusRes.status === 200 ? statusRes.data : emptyStatus
     const clients = clientsRes.status === 200 ? clientsRes.data : []
+    const clientsWithConfig = clientsWithConfigRes.status === 200 ? clientsWithConfigRes.data : []
     const hosts = hostsRes.status === 200 ? hostsRes.data : []
-    return { status, clients, hosts }
+    return { status, clients, clientsWithConfig, hosts }
   },
 
   action: async ({ request }: { request: Request }): Promise<ActionResponse> => {
@@ -211,7 +213,7 @@ export const Adapter = {
             }
           }
 
-          return { success: false,error: JSON.stringify(res.error) }
+          return { success: false, error: JSON.stringify(res.error) }
         }
 
         case "host:add": {

@@ -1,14 +1,29 @@
 import { Badge, Card, CardBody, CardHeader } from "@dockstat/ui"
 import { Server } from "lucide-react"
-import type { Client, Host } from "./types"
+import { useState } from "react"
+import { HostDetailModal } from "./HostDetailModal"
+import type { Client, Host, Worker } from "./types"
 
 interface HostsListProps {
   hosts: Host[]
   clients?: Client[]
+  workers?: Worker[]
 }
 
-export function HostsList({ hosts, clients = [] }: HostsListProps) {
+export function HostsList({ hosts, clients = [], workers = [] }: HostsListProps) {
   const clientMap = new Map(clients.map((c) => [c.id, c]))
+  const [selectedHost, setSelectedHost] = useState<Host | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+
+  const handleHostClick = (host: Host) => {
+    setSelectedHost(host)
+    setModalOpen(true)
+  }
+
+  const selectedClient = selectedHost ? clientMap.get(selectedHost.clientId) : null
+  const selectedWorker = selectedHost
+    ? workers.find((w) => w.clientId === selectedHost.clientId)
+    : null
 
   if (hosts.length === 0) {
     return (
@@ -62,9 +77,11 @@ export function HostsList({ hosts, clients = [] }: HostsListProps) {
 
                 <div className="space-y-2 pl-2">
                   {clientHosts.map((host) => (
-                    <div
+                    <button
+                      type="button"
                       key={host.id}
-                      className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-card-flat-bg transition-colors"
+                      className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-card-flat-bg transition-colors cursor-pointer w-full text-left"
+                      onClick={() => handleHostClick(host)}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-badge-success-bg" />
@@ -81,7 +98,7 @@ export function HostsList({ hosts, clients = [] }: HostsListProps) {
                       <Badge variant="secondary" size="sm" outlined>
                         ID: {host.id}
                       </Badge>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -89,6 +106,14 @@ export function HostsList({ hosts, clients = [] }: HostsListProps) {
           })}
         </div>
       </CardBody>
+
+      <HostDetailModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        host={selectedHost}
+        client={selectedClient}
+        worker={selectedWorker}
+      />
     </Card>
   )
 }

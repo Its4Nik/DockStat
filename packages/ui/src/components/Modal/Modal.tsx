@@ -3,15 +3,34 @@ import { createPortal } from "react-dom"
 import { Button } from "../Button/Button"
 import { Card, CardBody, CardFooter, CardHeader } from "../Card/Card"
 
+export type ModalSize = "sm" | "md" | "lg" | "xl" | "full"
+
 export interface ModalProps {
   open: boolean
   onClose: () => void
   title?: string
   footer?: string | React.ReactNode
   children?: React.ReactNode
+  bodyClasses?: string
+  size?: ModalSize
 }
 
-export const Modal: React.FC<ModalProps> = ({ open, onClose, title, children, footer }) => {
+const sizeClasses: Record<ModalSize, string> = {
+  sm: "max-w-sm",
+  md: "max-w-lg",
+  lg: "max-w-3xl",
+  xl: "max-w-5xl",
+  full: "max-w-[90vw]",
+}
+
+export const Modal: React.FC<ModalProps> = ({
+  open,
+  onClose,
+  title,
+  children,
+  footer,
+  size = "md",
+}) => {
   // client-only portal container
   const elRef = useRef<HTMLDivElement | null>(null)
   const [mounted, setMounted] = useState(false)
@@ -65,7 +84,7 @@ export const Modal: React.FC<ModalProps> = ({ open, onClose, title, children, fo
       <button
         type="button"
         onClick={(e) => e.stopPropagation()}
-        className="max-w-lg w-full px-4"
+        className={`${sizeClasses[size]} w-full px-4`}
         // optional: tabIndex to allow focus on the dialog container
         tabIndex={-1}
       >

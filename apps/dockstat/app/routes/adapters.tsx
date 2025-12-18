@@ -10,6 +10,7 @@ import {
   WorkersList,
   type AdapterStatus,
   type Client,
+  type ClientWithConfig,
   type Host,
 } from "./adapters/index"
 import { AddHostForm, RegisterClientForm } from "./adapters/forms"
@@ -21,6 +22,7 @@ export const action = Adapter.action
 interface LoaderData {
   status: AdapterStatus
   clients: Client[]
+  clientsWithConfig: ClientWithConfig[]
   hosts: Host[]
 }
 
@@ -42,14 +44,15 @@ export default function Adapters() {
     hosts: [],
   }
   const clients = data?.clients ?? []
+  const clientsWithConfig = data?.clientsWithConfig ?? []
   const hosts = data?.hosts ?? []
   const workers = status.workers ?? []
 
   return (
     <div className="w-[95vw] mx-auto py-6 space-y-6">
       {/* Header */}
-      <Card variant="flat" size="sm">
-        <CardHeader className="border-b-0! pb-0! flex items-center justify-between">
+      <Card variant="flat" size="sm" className="w-full">
+        <CardHeader className="border-b-0 flex justify-between pb-0">
           <span>Docker Adapters Overview</span>
           <div className="flex gap-2">
             <Button
@@ -108,25 +111,28 @@ export default function Adapters() {
       )}
 
       {/* Stats Row */}
-      <div className="flex flex-wrap gap-4">
+      <div className="flex w-full justify-between flex-wrap gap-4">
         <StatCard
           label="Total Clients"
           value={status.totalClients}
           icon={<Database size={20} />}
           variant="default"
         />
+        <Divider className="w-10! my-auto" variant="dotted" />
         <StatCard
           label="Total Hosts"
           value={status.totalHosts}
           icon={<Server size={20} />}
           variant="default"
         />
+        <Divider className="w-10! my-auto" variant="dotted" />
         <StatCard
           label="Active Workers"
           value={`${status.activeWorkers}/${status.totalWorkers}`}
           icon={<Activity size={20} />}
           variant={status.activeWorkers > 0 ? "success" : "warning"}
         />
+        <Divider className="w-10! my-auto" variant="dotted" />
         <StatCard
           label="Avg Hosts/Worker"
           value={status.averageHostsPerWorker.toFixed(1)}
@@ -140,10 +146,15 @@ export default function Adapters() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Clients List - pass workers so it can merge status */}
-        <ClientsList clients={clients} workers={workers} />
+        <ClientsList
+          clients={clients}
+          clientsWithConfig={clientsWithConfig}
+          workers={workers}
+          hosts={hosts}
+        />
 
         {/* Hosts List */}
-        <HostsList hosts={hosts} clients={clients} />
+        <HostsList hosts={hosts} clients={clients} workers={workers} />
       </div>
 
       <Divider label="Worker Pool" />

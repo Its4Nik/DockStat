@@ -297,7 +297,7 @@ export class DockerClientManagerCore {
     this.logger.error(`Worker ${clientId} terminated due to error: ${error.message}`)
   }
 
-  readonly sendRequest =    async <T>(clientId: number, request: WorkerRequest): Promise<T> => {
+  readonly sendRequest = async <T>(clientId: number, request: WorkerRequest): Promise<T> => {
     const wrapper = this.workers.get(clientId)
     if (!wrapper) {
       throw new Error(`No worker found for client ID: ${clientId}`)
@@ -413,6 +413,34 @@ export class DockerClientManagerCore {
     }
 
     return Array.from(resultMap.values())
+  }
+
+  public getAllClientsWithConfig(): Array<{
+    id: number
+    name: string
+    initialized: boolean
+    options: DOCKER.DockerAdapterOptions
+  }> {
+    const liveMap = new Map<number, boolean>()
+    for (const w of this.workers.values()) {
+      liveMap.set(Number(w.clientId), true)
+    }
+
+    const storedClients = this.table.select(["*"]).all() as Array<{
+      id: number | string
+      name: string
+      options: DOCKER.DockerAdapterOptions
+    }>
+
+    return storedClients.map(({ id, name, options }) => {
+      const numId = Number(id)
+      return {
+        id: numId,
+        name,
+        initialized: liveMap.has(numId),
+        options: options || {},
+      }
+    })
   }
 
   public async removeClient(clientId: number): Promise<void> {

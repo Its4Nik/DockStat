@@ -54,7 +54,7 @@ export {
   type HoverBubbleProps,
 } from "./HoverBubble/HoverBubble"
 export { LinkWithIcon, type LinkWithIconProps } from "./Link/Link"
-export { Modal, type ModalProps } from "./Modal/Modal"
+export { Modal, type ModalProps, type ModalSize } from "./Modal/Modal"
 export { Navbar } from "./Navbar/Navbar"
 export { PluginsPage } from "./Plugins/Plugins"
 export { Slider, type SliderProps } from "./Slider/Slider"
