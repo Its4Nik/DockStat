@@ -59,3 +59,8 @@ export { Navbar } from "./Navbar/Navbar"
 export { PluginsPage } from "./Plugins/Plugins"
 export { Slider, type SliderProps } from "./Slider/Slider"
 export { type Column, Table, type TableProps } from "./Table/Table"
+export {
+  Slides,
+  type SlidesProps,
+  type ButtonRowPosition,
+} from "./Slides/Slides"
