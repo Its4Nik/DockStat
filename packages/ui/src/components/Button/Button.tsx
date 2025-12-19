@@ -13,6 +13,12 @@ export interface ButtonProps {
   type?: "button" | "submit" | "reset"
   className?: string
   fullWidth?: boolean
+  /**
+   * When true, removes all focus/ring styles from the button.
+   * Useful for cases where the surrounding UI provides its own focus handling
+   * or when you want to disable focus rings for visual reasons.
+   */
+  noFocusRing?: boolean
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -25,21 +31,29 @@ export const Button: React.FC<ButtonProps> = ({
   type = "button",
   className = "",
   fullWidth = false,
+  noFocusRing = false,
 }) => {
   const baseClasses =
-    "inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
+    "inline-flex items-center justify-center font-medium rounded-md transition-colors"
+  const focusCommonClasses = "focus:outline-none focus:ring-2 focus:ring-offset-2"
 
-  const variantClasses = {
-    primary:
-      "bg-button-primary-bg text-button-primary-text hover:bg-button-primary-hover-bg focus:ring-button-primary-text-hover-ring",
+  const variantClasses: Record<ButtonVariant, string> = {
+    primary: "bg-button-primary-bg text-button-primary-text hover:bg-button-primary-hover-bg",
     secondary:
-      "bg-button-secondary-bg text-button-secondary-text hover:bg-button-secondary-hover-bg focus:ring-button-secondary-text-hover-ring",
+      "bg-button-secondary-bg text-button-secondary-text hover:bg-button-secondary-hover-bg",
     outline:
-      "border border-button-outline-border bg-transparent text-button-outline-text hover:bg-button-outline-hover-bg focus:ring-button-outline-border-hover-ring",
-    ghost:
-      "bg-transparent text-button-ghost-text hover:bg-button-ghost-hover-bg focus:ring-button-ghost-hover-ring",
-    danger:
-      "bg-button-danger-bg text-button-danger-text hover:bg-button-danger-hover-bg focus:ring-button-danger-hover-ring",
+      "border border-button-outline-border bg-transparent text-button-outline-text hover:bg-button-outline-hover-bg",
+    ghost: "bg-transparent text-button-ghost-text hover:bg-button-ghost-hover-bg",
+    danger: "bg-button-danger-bg text-button-danger-text hover:bg-button-danger-hover-bg",
+  }
+
+  // Separate ring color classes so we can toggle rings on/off cleanly
+  const variantRingClasses: Record<ButtonVariant, string> = {
+    primary: "focus:ring-button-primary-text-hover-ring",
+    secondary: "focus:ring-button-secondary-text-hover-ring",
+    outline: "focus:ring-button-outline-border-hover-ring",
+    ghost: "focus:ring-button-ghost-hover-ring",
+    danger: "focus:ring-button-danger-hover-ring",
   }
 
   const sizeClasses = {
@@ -55,7 +69,7 @@ export const Button: React.FC<ButtonProps> = ({
   return (
     <button
       type={type}
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${disabledClasses} ${widthClass} ${className}`}
+      className={`${baseClasses} ${!noFocusRing ? focusCommonClasses : ""} ${variantClasses[variant]} ${!noFocusRing ? variantRingClasses[variant] : ""} ${sizeClasses[size]} ${disabledClasses} ${widthClass} ${className}`}
       onClick={onClick}
       disabled={disabled || loading}
     >

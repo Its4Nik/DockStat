@@ -161,6 +161,7 @@ export function Slides({
             key={key}
             variant={isActive ? "primary" : "secondary"}
             size="sm"
+            noFocusRing
             onClick={() => handleSlideChange(key)}
             className={connectedClasses}
           >
