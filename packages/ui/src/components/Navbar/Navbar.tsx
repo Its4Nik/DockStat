@@ -15,8 +15,8 @@ const paths: Array<{ slug: string; path: string }> = [
     path: "/",
   },
   {
-    slug: "Adapters",
-    path: "/adapters",
+    slug: "Clients",
+    path: "/clients",
   },
 ]
 

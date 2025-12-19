@@ -13,10 +13,9 @@ import {
 export const loader = Adapter.loader
 export const action = Adapter.action
 
-export default function Adapters() {
+export default function Clients() {
   const data = useLoaderData<typeof loader>()
 
-  // Extract data with safe defaults
   const status = data?.status ?? {
     totalWorkers: 0,
     activeWorkers: 0,
@@ -33,14 +32,9 @@ export default function Adapters() {
 
   const clients = status.workers
 
-  // Compute monitoring hosts count (hosts belonging to clients that are actively monitoring)
   const monitoringHosts = workers
     .filter((w) => w.isMonitoring)
     .reduce((sum, w) => sum + w.hostsManaged, 0)
-
-  // For now, totalContainers is not available from the status endpoint
-  // This would need backend support to aggregate container counts
-  // Setting to 0 as a placeholder - you may want to add an API endpoint for this
 
   return (
     <div className="w-[95vw] mx-auto py-6 space-y-6">

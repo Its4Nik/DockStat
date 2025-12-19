@@ -1,21 +1,10 @@
-import {
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
-  Divider,
-  HoverBubble,
-  Input,
-  Toggle,
-} from "@dockstat/ui"
-import { AnimatePresence, motion, type Variants } from "framer-motion"
+import { Button, Card, CardBody, CardHeader, Input, Toggle } from "@dockstat/ui"
+import { AnimatePresence, motion } from "framer-motion"
 import {
   AlertTriangle,
   Check,
-  ChevronDown,
   Globe,
   HardDrive,
-  Info,
   Lock,
   Network,
   Plus,
@@ -28,170 +17,9 @@ import { useEffect, useState } from "react"
 import { useFetcher } from "react-router"
 import { toast } from "sonner"
 import type { ActionResponse, AddHostFormProps } from "../types"
-
-// ============================================================================
-// Animation Variants
-// ============================================================================
-
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.1,
-    },
-  },
-}
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 400,
-      damping: 25,
-    },
-  },
-}
-
-const expandVariants: Variants = {
-  collapsed: {
-    opacity: 0,
-    height: 0,
-    marginTop: 0,
-    transition: {
-      duration: 0.25,
-      ease: [0.4, 0, 0.2, 1],
-    },
-  },
-  expanded: {
-    opacity: 1,
-    height: "auto",
-    marginTop: 16,
-    transition: {
-      duration: 0.3,
-      ease: [0, 0, 0.2, 1],
-    },
-  },
-}
-
-const fadeInVariants: Variants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      duration: 0.2,
-      ease: "easeOut",
-    },
-  },
-  exit: {
-    opacity: 0,
-    scale: 0.95,
-    transition: {
-      duration: 0.15,
-    },
-  },
-}
-
-// ============================================================================
-// Shared Components
-// ============================================================================
-
-interface FormFieldProps {
-  label: string
-  tooltip: string
-  children: React.ReactNode
-  htmlFor?: string
-  required?: boolean
-}
-
-function FormField({ label, tooltip, children, htmlFor, required }: FormFieldProps) {
-  return (
-    <motion.div variants={itemVariants} className="space-y-2">
-      <div className="flex items-center gap-2">
-        <label htmlFor={htmlFor} className="text-sm font-medium text-secondary-text">
-          {label}
-          {required && <span className="text-error ml-0.5">*</span>}
-        </label>
-        <HoverBubble label={tooltip} position="right">
-          <Info
-            size={14}
-            className="text-muted-text hover:text-secondary-text cursor-help transition-colors"
-          />
-        </HoverBubble>
-      </div>
-      {children}
-    </motion.div>
-  )
-}
-
-interface SectionProps {
-  icon: React.ReactNode
-  title: string
-  description?: string
-  isOpen: boolean
-  onToggle: () => void
-  children: React.ReactNode
-  badge?: React.ReactNode
-}
-
-function Section({ icon, title, description, isOpen, onToggle, children, badge }: SectionProps) {
-  return (
-    <motion.div variants={itemVariants}>
-      <button type="button" onClick={onToggle} className="w-full group">
-        <Card
-          variant="outlined"
-          size="sm"
-          className="w-full transition-all duration-200 hover:border-badge-primary-bg/50"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-badge-primary-bg/15 text-badge-primary-text transition-colors group-hover:bg-badge-primary-bg/25">
-              {icon}
-            </div>
-            <div className="text-left flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-primary-text">{title}</span>
-                {badge}
-              </div>
-              {description && (
-                <p className="text-xs text-muted-text mt-0.5 truncate">{description}</p>
-              )}
-            </div>
-            <motion.div
-              animate={{ rotate: isOpen ? 180 : 0 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="text-muted-text group-hover:text-secondary-text transition-colors"
-            >
-              <ChevronDown size={18} />
-            </motion.div>
-          </div>
-        </Card>
-      </button>
-
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            variants={expandVariants}
-            initial="collapsed"
-            animate="expanded"
-            exit="collapsed"
-            className="overflow-hidden"
-          >
-            <div className="pl-4 border-l-2 border-badge-primary-bg/30 ml-5">{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  )
-}
-
-// ============================================================================
-// Main Component
-// ============================================================================
+import { containerVariants, fadeInVariants, itemVariants } from "./consts"
+import { FormField } from "./FormField"
+import { Section } from "./Section"
 
 export function AddHostForm({ clients, onClose }: AddHostFormProps) {
   const fetcher = useFetcher<ActionResponse>()
@@ -542,7 +370,7 @@ export function AddHostForm({ clients, onClose }: AddHostFormProps) {
                   variant="primary"
                   size="md"
                   disabled={isSubmitting || !isFormValid}
-                  className="sm:flex-[2]"
+                  className="sm:flex-2"
                 >
                   <motion.span
                     className="flex items-center justify-center gap-2"

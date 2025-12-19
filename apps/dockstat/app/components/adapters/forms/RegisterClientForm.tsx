@@ -1,25 +1,13 @@
-import {
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
-  Checkbox,
-  Divider,
-  HoverBubble,
-  Input,
-  Toggle,
-} from "@dockstat/ui"
-import { AnimatePresence, motion, type Variants } from "framer-motion"
+import { Button, Card, CardBody, CardHeader, Checkbox, Divider, Input } from "@dockstat/ui"
+import { AnimatePresence, motion } from "framer-motion"
 import {
   Activity,
   Check,
-  ChevronDown,
   Clock,
   Cpu,
   FolderOpen,
   Gauge,
   HeartPulse,
-  Info,
   Monitor,
   RefreshCw,
   Server,
@@ -32,216 +20,10 @@ import { useEffect, useState } from "react"
 import { useFetcher } from "react-router"
 import { toast } from "sonner"
 import type { ActionResponse, RegisterClientFormProps } from "../types"
-
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.1,
-    },
-  },
-}
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 400,
-      damping: 25,
-    },
-  },
-}
-
-const expandVariants: Variants = {
-  collapsed: {
-    opacity: 0,
-    height: 0,
-    marginTop: 0,
-    transition: {
-      duration: 0.25,
-      ease: [0.4, 0, 0.2, 1],
-    },
-  },
-  expanded: {
-    opacity: 1,
-    height: "auto",
-    marginTop: 16,
-    transition: {
-      duration: 0.3,
-      ease: [0, 0, 0.2, 1],
-    },
-  },
-}
-
-const fadeInVariants: Variants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      duration: 0.2,
-      ease: "easeOut",
-    },
-  },
-  exit: {
-    opacity: 0,
-    scale: 0.95,
-    transition: {
-      duration: 0.15,
-    },
-  },
-}
-
-// ============================================================================
-// Shared Components
-// ============================================================================
-
-interface FormFieldProps {
-  label: string
-  tooltip: string
-  children: React.ReactNode
-  htmlFor?: string
-  required?: boolean
-}
-
-function FormField({ label, tooltip, children, htmlFor, required }: FormFieldProps) {
-  return (
-    <motion.div variants={itemVariants} className="space-y-2">
-      <div className="flex items-center gap-2">
-        <label htmlFor={htmlFor} className="text-sm font-medium text-secondary-text">
-          {label}
-          {required && <span className="text-error ml-0.5">*</span>}
-        </label>
-        <HoverBubble label={tooltip} position="right">
-          <Info
-            size={14}
-            className="text-muted-text hover:text-secondary-text cursor-help transition-colors"
-          />
-        </HoverBubble>
-      </div>
-      {children}
-    </motion.div>
-  )
-}
-
-interface SectionProps {
-  icon: React.ReactNode
-  title: string
-  description?: string
-  isOpen: boolean
-  onToggle: () => void
-  children: React.ReactNode
-  badge?: React.ReactNode
-  accentColor?: string
-}
-
-function Section({
-  icon,
-  title,
-  description,
-  isOpen,
-  onToggle,
-  children,
-  badge,
-  accentColor = "badge-primary-bg",
-}: SectionProps) {
-  return (
-    <motion.div variants={itemVariants}>
-      <button type="button" onClick={onToggle} className="w-full group">
-        <Card
-          variant="outlined"
-          size="sm"
-          className="w-full transition-all duration-200 hover:border-badge-primary-bg/50"
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className={`p-2 rounded-lg bg-${accentColor}/15 text-${accentColor.replace("-bg", "-text")} transition-colors group-hover:bg-${accentColor}/25`}
-            >
-              {icon}
-            </div>
-            <div className="text-left flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-primary-text">{title}</span>
-                {badge}
-              </div>
-              {description && (
-                <p className="text-xs text-muted-text mt-0.5 truncate">{description}</p>
-              )}
-            </div>
-            <motion.div
-              animate={{ rotate: isOpen ? 180 : 0 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="text-muted-text group-hover:text-secondary-text transition-colors"
-            >
-              <ChevronDown size={18} />
-            </motion.div>
-          </div>
-        </Card>
-      </button>
-
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            variants={expandVariants}
-            initial="collapsed"
-            animate="expanded"
-            exit="collapsed"
-            className="overflow-hidden"
-          >
-            <div className="pl-4 border-l-2 border-badge-primary-bg/30 ml-5">{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  )
-}
-
-interface FeatureToggleProps {
-  icon: React.ReactNode
-  label: string
-  description: string
-  checked: boolean
-  onChange: (checked: boolean) => void
-}
-
-function FeatureToggle({ icon, label, description, checked, onChange }: FeatureToggleProps) {
-  return (
-    <motion.div
-      variants={itemVariants}
-      className={`flex items-center justify-between gap-4 p-3 rounded-lg border transition-all duration-200 ${
-        checked
-          ? "bg-badge-primary-bg/10 border-badge-primary-bg/30"
-          : "bg-card-flat-bg border-transparent hover:border-card-default-border"
-      }`}
-    >
-      <div className="flex items-center gap-3">
-        <div
-          className={`p-1.5 rounded-md transition-colors ${
-            checked
-              ? "bg-badge-primary-bg/20 text-badge-primary-text"
-              : "bg-card-flat-bg text-muted-text"
-          }`}
-        >
-          {icon}
-        </div>
-        <div>
-          <span className="text-sm font-medium text-primary-text">{label}</span>
-          <p className="text-xs text-muted-text">{description}</p>
-        </div>
-      </div>
-      <Toggle checked={checked} onChange={onChange} size="sm" />
-    </motion.div>
-  )
-}
-
-// ============================================================================
-// Main Component
-// ============================================================================
+import { FeatureToggle } from "./FeatureToggle"
+import { containerVariants, fadeInVariants, itemVariants } from "./consts"
+import { Section } from "./Section"
+import { FormField } from "./FormField"
 
 export function RegisterClientForm({ onSuccess, onCancel }: RegisterClientFormProps) {
   const fetcher = useFetcher<ActionResponse>()
@@ -335,7 +117,7 @@ export function RegisterClientForm({ onSuccess, onCancel }: RegisterClientFormPr
       <Card variant="default" size="md" className="w-full  mx-auto">
         <CardHeader className="pb-4">
           <motion.div variants={itemVariants} className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-badge-primary-bg/15">
+            <div className="p-2.5 rounded-xl bg-badge-primary-bg">
               <Server size={22} className="text-badge-primary-text" />
             </div>
             <div>
@@ -347,7 +129,7 @@ export function RegisterClientForm({ onSuccess, onCancel }: RegisterClientFormPr
           </motion.div>
         </CardHeader>
 
-        <CardBody className="pt-0">
+        <CardBody>
           <fetcher.Form method="post">
             {/* Hidden inputs */}
             <input type="hidden" name="intent" value="client:register" />
@@ -384,82 +166,86 @@ export function RegisterClientForm({ onSuccess, onCancel }: RegisterClientFormPr
             <input type="hidden" name="tty" value={tty.toString()} />
 
             <motion.div variants={containerVariants} className="space-y-5">
-              {/* Client Name - Primary Input */}
-              <FormField
-                label="Client Name"
-                tooltip="A unique identifier for this Docker client connection. Use something descriptive like 'production-server' or 'local-dev'."
-                htmlFor="clientNameInput"
-                required
-              >
-                <div className="relative">
-                  <Input
-                    type="text"
-                    size="md"
-                    placeholder="e.g., production-docker"
-                    value={clientName}
-                    onChange={setClientName}
-                    className="pr-10"
-                  />
-                  <Server
-                    size={16}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-text pointer-events-none"
-                  />
-                </div>
-              </FormField>
+              <div className="flex flex-row justify-between">
+                {/* Client Name - Primary Input */}
+                <FormField
+                  label="Client Name"
+                  tooltip="A unique identifier for this Docker client connection. Use something descriptive like 'production-server' or 'local-dev'."
+                  htmlFor="clientNameInput"
+                  required
+                >
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      variant="underline"
+                      size="md"
+                      placeholder="e.g., production-docker"
+                      value={clientName}
+                      onChange={setClientName}
+                      className="pr-10"
+                    />
+                    <Server
+                      size={16}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-text pointer-events-none"
+                    />
+                  </div>
+                </FormField>
 
-              {/* Quick Feature Toggles */}
-              <motion.div variants={itemVariants}>
-                <Card variant="flat" className="p-4 mx-auto">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <Zap size={16} className="text-badge-primary-text" />
-                      <span className="text-sm font-medium text-primary-text">Quick Setup</span>
+                {/* Quick Feature Toggles */}
+                <motion.div variants={itemVariants}>
+                  <Card variant="flat" className="p-4 mx-auto">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Zap size={16} className="text-accent" />
+                        <span className="text-sm font-medium text-primary-text">Quick Setup</span>
+                      </div>
+                      <AnimatePresence mode="wait">
+                        {activeFeatureCount > 0 && (
+                          <motion.span
+                            variants={fadeInVariants}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            className="px-2 py-0.5 text-xs font-medium rounded-full bg-success/15 text-success"
+                          >
+                            {activeFeatureCount} enabled
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                     </div>
-                    <AnimatePresence mode="wait">
-                      {activeFeatureCount > 0 && (
-                        <motion.span
-                          variants={fadeInVariants}
-                          initial="hidden"
-                          animate="visible"
-                          exit="exit"
-                          className="px-2 py-0.5 text-xs font-medium rounded-full bg-success/15 text-success"
-                        >
-                          {activeFeatureCount} enabled
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <FeatureToggle
-                      icon={<Monitor size={16} />}
-                      label="Monitoring"
-                      description="Real-time container & host metrics"
-                      checked={enableMonitoring}
-                      onChange={setEnableMonitoring}
-                    />
-                    <FeatureToggle
-                      icon={<Activity size={16} />}
-                      label="Event Emitter"
-                      description="Container state change notifications"
-                      checked={enableEventEmitter}
-                      onChange={setEnableEventEmitter}
-                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <FeatureToggle
+                        icon={<Monitor size={16} />}
+                        label="Monitoring"
+                        description="Real-time container & host metrics"
+                        checked={enableMonitoring}
+                        onChange={setEnableMonitoring}
+                      />
+                      <FeatureToggle
+                        icon={<Activity size={16} />}
+                        label="Event Emitter"
+                        description="Container state change notifications"
+                        checked={enableEventEmitter}
+                        onChange={setEnableEventEmitter}
+                      />
+                    </div>
+                  </Card>
+                </motion.div>
+              </div>
+              <Divider
+                label={
+                  <div className="flex items-center gap-2">
+                    <Settings size={14} className="text-muted-text" />
+                    <span className="text-xs font-medium text-muted-text uppercase tracking-wide">
+                      Advanced Configuration
+                    </span>
                   </div>
-                </Card>
-              </motion.div>
-
-              <Divider className="my-1" />
+                }
+              />
 
               {/* Advanced Settings Sections */}
               <motion.div variants={itemVariants} className="space-y-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Settings size={14} className="text-muted-text" />
-                  <span className="text-xs font-medium text-muted-text uppercase tracking-wide">
-                    Advanced Configuration
-                  </span>
-                </div>
-
                 {/* API Options Section */}
                 <Section
                   icon={<Gauge size={18} />}
@@ -558,7 +344,7 @@ export function RegisterClientForm({ onSuccess, onCancel }: RegisterClientFormPr
                     ) : null
                   }
                 >
-                  <Card variant="elevated" className="p-5 mt-3 space-y-5">
+                  <Card variant="elevated" className="p-5 mt-3 gap-4 flex flex-wrap">
                     {/* Intervals Grid */}
                     <div>
                       <div className="flex items-center gap-2 mb-3">
@@ -880,7 +666,7 @@ export function RegisterClientForm({ onSuccess, onCancel }: RegisterClientFormPr
                   variant="primary"
                   size="md"
                   disabled={isSubmitting || !isFormValid}
-                  className="sm:flex-[2]"
+                  className="sm:flex-2"
                 >
                   <motion.span
                     className="flex items-center justify-center gap-2"

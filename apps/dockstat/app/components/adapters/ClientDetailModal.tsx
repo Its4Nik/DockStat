@@ -1,52 +1,9 @@
 import type { DockerAdapterOptions } from "@dockstat/typings"
 import { Badge, Modal } from "@dockstat/ui"
 import { formatBytes, formatDuration } from "@dockstat/utils"
-import type { JSX } from "react"
 import type { ClientDetailModalProps } from "./types"
-
-function ConfigValue({
-  label,
-  value,
-}: {
-  label: string
-  value: string | number | boolean | JSX.Element | undefined | null
-}) {
-  if (value === undefined || value === null) {
-    return (
-      <div className="flex justify-between py-1.5 border-b border-divider-color last:border-b-0">
-        <span className="text-muted-text">{label}</span>
-        <span className="text-secondary-text italic">Not set</span>
-      </div>
-    )
-  }
-
-  if (typeof value === "boolean") {
-    return (
-      <div className="flex justify-between py-1.5 border-b border-divider-color last:border-b-0">
-        <span className="text-muted-text">{label}</span>
-        <Badge variant={value ? "success" : "secondary"} size="sm">
-          {value ? "Enabled" : "Disabled"}
-        </Badge>
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex justify-between py-1.5 border-b border-divider-color last:border-b-0">
-      <span className="text-muted-text">{label}</span>
-      <span className="text-primary-text font-medium">{value}</span>
-    </div>
-  )
-}
-
-function OptionsSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1">
-      <h4 className="text-sm font-semibold text-secondary-text uppercase tracking-wide">{title}</h4>
-      <div className="bg-card-flat-bg rounded-md px-3 py-1">{children}</div>
-    </div>
-  )
-}
+import { ConfigValue } from "./misc/ConfigValue"
+import { OptionsSection } from "./misc/OptionsSection"
 
 function MonitoringOptionsDisplay({
   options,
