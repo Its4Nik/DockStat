@@ -90,7 +90,7 @@ export function ClientDetailModal({
 
   return (
     <Modal open={open} onClose={onClose} title={`Client: ${client.clientName}`} size="xl">
-      <div className="max-h-[70vh] overflow-y-auto">
+      <div>
         {/* Top Row - Basic Info & Worker Status */}
         <div className="flex flex-wrap gap-4 mb-4">
           {/* Basic Info */}

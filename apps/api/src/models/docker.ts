@@ -71,13 +71,20 @@ export namespace DockerModel {
     clientName: t.String(),
     options: t.Nullable(DockerAdapterOptionsSchema),
   })
-  export const registerClientError = t.Object({
-    success: t.Boolean(),
-    error: t.Unknown(),
-    message: t.String(),
-  })
   export const registerClientSuccess = t.Object({
     success: t.Boolean(),
+    message: t.String(),
+    clientId: t.Number(),
+  })
+
+  export const updateClientBody = t.Object({
+    clientId: t.Number(),
+    clientName: t.String(),
+    options: t.Nullable(DockerAdapterOptionsSchema),
+  })
+
+  export const updateClientSuccess = t.Object({
+    success: t.Literal(true),
     message: t.String(),
     clientId: t.Number(),
   })

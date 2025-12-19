@@ -1,7 +1,8 @@
-import { Badge, Card, CardBody, CardHeader } from "@dockstat/ui"
-import { Container, Server } from "lucide-react"
+import { Badge, Card, CardBody, CardHeader, Modal } from "@dockstat/ui"
+import { Container, Edit3, Server } from "lucide-react"
 import { useState } from "react"
 import { HostDetailModal } from "./HostDetailModal"
+import { EditHostForm } from "./forms/EditHostForm"
 import type { Host, HostsListProps } from "./types"
 
 export function HostsList({
@@ -17,10 +18,18 @@ export function HostsList({
   const clientMap = new Map(clients.map((c) => [c.clientId, c]))
   const [selectedHost, setSelectedHost] = useState<Host | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editHost, setEditHost] = useState<Host | null>(null)
 
   const handleHostClick = (host: Host) => {
     setSelectedHost(host)
     setModalOpen(true)
+  }
+
+  const handleEditClick = (e: React.MouseEvent, host: Host) => {
+    e.stopPropagation()
+    setEditHost(host)
+    setEditModalOpen(true)
   }
 
   const selectedClient = selectedHost ? clientMap.get(selectedHost.clientId) : null
@@ -28,6 +37,8 @@ export function HostsList({
     ? workers.find((w) => w.clientId === selectedHost.clientId)
     : null
   const selectedContainerCount = selectedHost ? (containerCountMap.get(selectedHost.id) ?? 0) : 0
+
+  const editClientName = editHost ? clientMap.get(editHost.clientId)?.clientName : undefined
 
   if (hosts.length === 0) {
     return (
@@ -111,6 +122,14 @@ export function HostsList({
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => handleEditClick(e, host)}
+                          className="p-1.5 rounded-md hover:bg-card-elevated-bg text-muted-text hover:text-accent transition-colors"
+                          title="Edit host"
+                        >
+                          <Edit3 size={14} />
+                        </button>
                         <Badge variant="primary" size="sm" className="flex items-center gap-1">
                           <Container size={12} />
                           {containerCountMap.get(host.id) ?? 0}
@@ -136,6 +155,16 @@ export function HostsList({
         worker={selectedWorker}
         containerCount={selectedContainerCount}
       />
+
+      {editHost && (
+        <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)} size="full">
+          <EditHostForm
+            host={editHost}
+            clientName={editClientName}
+            onClose={() => setEditModalOpen(false)}
+          />
+        </Modal>
+      )}
     </Card>
   )
 }

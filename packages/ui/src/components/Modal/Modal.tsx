@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "../Button/Button"
@@ -23,12 +24,46 @@ const sizeClasses: Record<ModalSize, string> = {
   full: "max-w-[90vw]",
 }
 
+const backdropVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+  exit: { opacity: 0 },
+} as const
+
+const modalVariants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.95,
+    y: 10,
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 300,
+      damping: 25,
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    y: 10,
+    transition: {
+      duration: 0.15,
+      ease: "easeOut" as const,
+    },
+  },
+}
+
 export const Modal: React.FC<ModalProps> = ({
   open,
   onClose,
   title,
   children,
   footer,
+  bodyClasses,
   size = "md",
 }) => {
   // client-only portal container
@@ -73,46 +108,72 @@ export const Modal: React.FC<ModalProps> = ({
 
   // don't render anything server-side or before portal is mounted
   if (!mounted || !elRef.current) return null
-  if (!open) return null
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>): void => {
+    if (e.target === e.currentTarget) {
+      onClose()
+    }
+  }
+
+  const handleBackdropKeyDown = (e: React.KeyboardEvent<HTMLDivElement>): void => {
+    if (e.key === "Escape") {
+      onClose()
+    }
+  }
 
   return createPortal(
-    <button
-      type="button"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-modal-bg/50"
-      onClick={onClose}
-    >
-      <button
-        type="button"
-        onClick={(e) => e.stopPropagation()}
-        className={`${sizeClasses[size]} w-full px-4`}
-        // optional: tabIndex to allow focus on the dialog container
-        tabIndex={-1}
-      >
-        <Card className="shadow-lg" onClick={(e) => e.stopPropagation()}>
-          {title && <CardHeader>{title}</CardHeader>}
+    <AnimatePresence mode="wait">
+      {open && (
+        <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={title ? "modal-title" : undefined}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-modal-bg/50 cursor-default"
+          onClick={handleBackdropClick}
+          onKeyDown={handleBackdropKeyDown}
+          variants={backdropVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          transition={{ duration: 0.2 }}
+        >
+          <motion.div
+            className={`${sizeClasses[size]} w-full max-h-[90vh] px-4`}
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <Card className="w-full shadow-lg cursor-default flex flex-col max-h-[90vh] overflow-hidden">
+              {title && <CardHeader className="shrink-0">{title}</CardHeader>}
 
-          <CardBody>{children}</CardBody>
+              {/* Make the body scrollable and flexible. Consumers can pass extra body classes via `bodyClasses`. */}
+              <CardBody className={`flex-1 overflow-y-auto min-h-0 ${bodyClasses ?? ""}`}>
+                {children}
+              </CardBody>
 
-          <CardFooter className="flex justify-between items-center">
-            {typeof footer === "string" ? (
-              <>
-                <div>{footer}</div>
-                <Button onClick={onClose}>Close</Button>
-              </>
-            ) : footer ? (
-              <>
-                {footer}
-                <Button onClick={onClose}>Close</Button>
-              </>
-            ) : (
-              <div className="flex justify-end w-full">
-                <Button onClick={onClose}>Close</Button>
-              </div>
-            )}
-          </CardFooter>
-        </Card>
-      </button>
-    </button>,
+              <CardFooter className="flex justify-between items-center shrink-0">
+                {typeof footer === "string" ? (
+                  <>
+                    <div>{footer}</div>
+                    <Button onClick={onClose}>Close</Button>
+                  </>
+                ) : footer ? (
+                  <>
+                    {footer}
+                    <Button onClick={onClose}>Close</Button>
+                  </>
+                ) : (
+                  <div className="flex justify-end w-full">
+                    <Button onClick={onClose}>Close</Button>
+                  </div>
+                )}
+              </CardFooter>
+            </Card>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
     elRef.current
   )
 }

@@ -55,7 +55,7 @@ export const Card: React.FC<CardProps> = ({
     )
   }
 
-  return <div className={`${classes} w-fit`}>{children}</div>
+  return <div className={classes}>{children}</div>
 }
 
 // Export subcomponents

@@ -1,26 +1,18 @@
-import { Badge, Card, CardBody, CardHeader } from "@dockstat/ui"
-import { Database } from "lucide-react"
+import { Badge, Card, CardBody, CardHeader, Modal } from "@dockstat/ui"
+import { Database, Edit3 } from "lucide-react"
 import { useState } from "react"
 import { ClientDetailModal } from "./ClientDetailModal"
 import { CreateMonitoringManagerButton } from "./forms/CreateMonitoringManagerButton"
 import { DeleteClientButton } from "./forms/DeleteClientButton"
+import { EditClientForm } from "./forms/EditClientForm"
 import { MonitoringToggle } from "./forms/MonitoringToggle"
-import type { ClientsListProps } from "./types"
+import type { Client, ClientsListProps } from "./types"
 
 export function ClientsList({ clients, workers, hosts = [] }: ClientsListProps) {
-  const [selectedClient, setSelectedClient] = useState<{
-    workerId: number
-    clientId: number
-    clientName: string
-    hostsManaged: number
-    activeStreams: number
-    hasMonitoringManager: boolean
-    isMonitoring: boolean
-    initialized: boolean
-    memoryUsage?: { rss: number; heapTotal: number; heapUsed: number; external: number } | undefined
-    uptime: number
-  } | null>(null)
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editClient, setEditClient] = useState<Client | null>(null)
 
   const handleClientClick = (clientId: number) => {
     const clientConfig = clients.find((c) => c.clientId === clientId)
@@ -30,9 +22,17 @@ export function ClientsList({ clients, workers, hosts = [] }: ClientsListProps) 
     }
   }
 
+  const handleEditClick = (e: React.MouseEvent, client: Client) => {
+    e.stopPropagation()
+    setEditClient(client)
+    setEditModalOpen(true)
+  }
+
   const selectedWorker = selectedClient
     ? workers.find((w) => w.clientId === selectedClient.clientId)
     : null
+
+  const editWorker = editClient ? workers.find((w) => w.clientId === editClient.clientId) : null
 
   if (clients.length === 0) {
     return (
@@ -94,6 +94,14 @@ export function ClientsList({ clients, workers, hosts = [] }: ClientsListProps) 
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
               >
+                <button
+                  type="button"
+                  onClick={(e) => handleEditClick(e, client)}
+                  className="p-1.5 rounded-md hover:bg-card-elevated-bg text-muted-text hover:text-accent transition-colors"
+                  title="Edit client"
+                >
+                  <Edit3 size={16} />
+                </button>
                 {client.hasMonitoringManager ? (
                   <MonitoringToggle clientId={client.clientId} isMonitoring={client.isMonitoring} />
                 ) : (
@@ -118,6 +126,16 @@ export function ClientsList({ clients, workers, hosts = [] }: ClientsListProps) 
           worker={selectedWorker}
           hosts={hosts}
         />
+      )}
+
+      {editClient && (
+        <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)} size="xl">
+          <EditClientForm
+            client={editClient}
+            worker={editWorker}
+            onClose={() => setEditModalOpen(false)}
+          />
+        </Modal>
       )}
     </Card>
   )

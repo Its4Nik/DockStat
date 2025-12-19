@@ -227,7 +227,7 @@ export function AddHostForm({ clients, onClose }: AddHostFormProps) {
                     exit={{ opacity: 0, height: 0, marginTop: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <div className="flex items-start gap-3 p-3 rounded-lg bg-warning/10 border border-badge-warning-outlined-border bg-card-elevated-bg">
+                    <div className="flex items-start gap-3 flex-wrap p-3 rounded-lg bg-warning/10 border border-badge-warning-outlined-border bg-card-elevated-bg">
                       <AlertTriangle
                         size={18}
                         className="text-badge-warning-outlined-border mt-0.5 shrink-0"

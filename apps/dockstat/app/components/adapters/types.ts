@@ -250,6 +250,24 @@ export interface MonitoringToggleProps {
 }
 
 /**
+ * Props for EditHostForm component
+ */
+export interface EditHostFormProps {
+  host: Host
+  clientName?: string
+  onClose?: () => void
+}
+
+/**
+ * Props for EditClientForm component
+ */
+export interface EditClientFormProps {
+  client: Client
+  worker?: Worker | null
+  onClose?: () => void
+}
+
+/**
  * Props for StatusBar component
  */
 export interface StatusBarProps {

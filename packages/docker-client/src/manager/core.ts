@@ -133,6 +133,65 @@ export class DockerClientManagerCore {
     }
   }
 
+  public async updateClient(id: number, name: string, options: DOCKER.DockerAdapterOptions) {
+    const wrapper = this.workers.get(id)
+    if (!wrapper) {
+      throw new Error(`No worker found for client ID: ${id}`)
+    }
+
+    try {
+      this.logger.info(`Updating client ${id} (${name})`)
+
+      // Clean up the existing worker
+      try {
+        await this.sendRequest(id, { type: "cleanup" })
+      } catch (error) {
+        this.logger.warn(`Error cleaning up worker ${id} during update: ${String(error)}`)
+      }
+
+      // Remove event listener if attached
+      try {
+        if (wrapper.messageListener) {
+          wrapper.worker.removeEventListener("message", wrapper.messageListener)
+          wrapper.messageListener = undefined
+        }
+      } catch {
+        // ignore
+      }
+
+      try {
+        wrapper.worker.terminate()
+      } catch {
+        // ignore
+      }
+      this.workers.delete(id)
+
+      // Update the database entry
+      this.table.where({ id }).update({ name, options })
+      this.logger.debug(`Updated client ${id} in DB`)
+
+      await this.createWorker(id, name, options)
+
+      const msg = `Client ${id} (${name}) successfully updated and worker rebuilt`
+      this.logger.info(msg)
+
+      return {
+        success: true,
+        message: msg,
+        clientId: id,
+      }
+    } catch (error: unknown) {
+      const msg = `Error while updating Client ${id} (${name}) - error: ${JSON.stringify(error)}`
+      this.logger.error(msg)
+
+      return {
+        success: false,
+        error,
+        message: msg,
+      }
+    }
+  }
+
   // ---------- Worker lifecycle ----------
 
   public async createWorker(

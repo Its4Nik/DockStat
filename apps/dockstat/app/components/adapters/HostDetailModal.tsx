@@ -20,7 +20,7 @@ export function HostDetailModal({
 
   return (
     <Modal open={open} onClose={onClose} title={`Host: ${host.name}`} size="lg">
-      <div className="max-h-[70vh] overflow-y-auto">
+      <div>
         {/* Top Row - Host Info & Connection Details */}
         <div className="flex flex-wrap gap-4 mb-4">
           {/* Basic Info */}

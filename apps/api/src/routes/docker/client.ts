@@ -3,8 +3,7 @@ import Elysia, { t } from "elysia"
 import DCM from "../../docker"
 import { DockerModel } from "../../models/docker"
 
-// Type for registerClient response
-type RegisterClientResult =
+type ClientOperationResult =
   | { success: true; message: string; clientId: number }
   | { success: false; error: unknown; message: string }
 
@@ -21,7 +20,7 @@ export const DockerClientElysia = new Elysia({
         const res = (await DCM.registerClient(
           body.clientName,
           body.options || undefined
-        )) as RegisterClientResult
+        )) as ClientOperationResult
         if (!res.success) {
           // res.error is the raw error object, extract a string message from it
           const errorStr = extractErrorMessage(res.error, "Registration failed")
@@ -48,21 +47,49 @@ export const DockerClientElysia = new Elysia({
     {
       body: DockerModel.registerClientBody,
       response: {
-        200: t.Object({
-          success: t.Literal(true),
-          clientId: t.Number(),
-          message: t.String(),
-        }),
-        400: t.Object({
-          success: t.Literal(false),
-          error: t.String(),
-          message: t.String(),
-        }),
-        500: t.Object({
-          success: t.Literal(false),
-          error: t.String(),
-          message: t.String(),
-        }),
+        200: DockerModel.registerClientSuccess,
+        400: DockerModel.error,
+        500: DockerModel.error,
+      },
+    }
+  )
+  .post(
+    "/update",
+    async ({ status, body }) => {
+      try {
+        const res = (await DCM.updateClient(
+          body.clientId,
+          body.clientName,
+          body.options || {}
+        )) as ClientOperationResult
+        if (!res.success) {
+          const errorStr = extractErrorMessage(res.error, "Update failed")
+          return status(400, {
+            success: false as const,
+            error: errorStr,
+            message: res.message || "Failed to update client",
+          })
+        }
+        return status(200, {
+          success: true as const,
+          clientId: Number(res.clientId),
+          message: res.message || "Client updated successfully",
+        })
+      } catch (err) {
+        const errorMessage = extractErrorMessage(err, "Failed to update client")
+        return status(500, {
+          success: false as const,
+          error: errorMessage,
+          message: errorMessage,
+        })
+      }
+    },
+    {
+      body: DockerModel.updateClientBody,
+      response: {
+        200: DockerModel.updateClientSuccess,
+        400: DockerModel.error,
+        500: DockerModel.error,
       },
     }
   )

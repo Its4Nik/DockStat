@@ -5,6 +5,12 @@ import { ServerAPI } from ".."
 // Action intent types
 type AdapterAction =
   | { intent: "client:register"; clientName: string; options?: DockerAdapterOptions }
+  | {
+      intent: "client:update"
+      clientId: number
+      clientName: string
+      options?: DockerAdapterOptions
+    }
   | { intent: "client:delete"; clientId: number }
   | { intent: "client:monitoring:toggle"; clientId: number }
   | {
@@ -139,6 +145,97 @@ function parseFormData(formData: FormData): AdapterAction | null {
       }
     }
 
+    case "client:update": {
+      const clientId = formData.get("clientId")
+      const clientName = formData.get("clientName")?.toString()
+      if (!clientId || !clientName) return null
+
+      const options: DockerAdapterOptions = {}
+
+      // Basic client options
+      const defaultTimeout = formData.get("defaultTimeout")
+      const retryAttempts = formData.get("retryAttempts")
+      const retryDelay = formData.get("retryDelay")
+      const enableMonitoring = formData.get("enableMonitoring")
+      const enableEventEmitter = formData.get("enableEventEmitter")
+
+      if (defaultTimeout && defaultTimeout !== "") options.defaultTimeout = Number(defaultTimeout)
+      if (retryAttempts && retryAttempts !== "") options.retryAttempts = Number(retryAttempts)
+      if (retryDelay && retryDelay !== "") options.retryDelay = Number(retryDelay)
+      if (enableMonitoring) options.enableMonitoring = enableMonitoring === "true"
+      if (enableEventEmitter) options.enableEventEmitter = enableEventEmitter === "true"
+
+      // Monitoring options
+      const healthCheckInterval = formData.get("healthCheckInterval")
+      const containerEventPollingInterval = formData.get("containerEventPollingInterval")
+      const hostMetricsInterval = formData.get("hostMetricsInterval")
+      const containerMetricsInterval = formData.get("containerMetricsInterval")
+      const enableContainerEvents = formData.get("enableContainerEvents")
+      const enableHostMetrics = formData.get("enableHostMetrics")
+      const enableContainerMetrics = formData.get("enableContainerMetrics")
+      const enableHealthChecks = formData.get("enableHealthChecks")
+      const monitoringRetryAttempts = formData.get("monitoringRetryAttempts")
+      const monitoringRetryDelay = formData.get("monitoringRetryDelay")
+
+      const hasMonitoringOptions =
+        (healthCheckInterval && healthCheckInterval !== "") ||
+        (containerEventPollingInterval && containerEventPollingInterval !== "") ||
+        (hostMetricsInterval && hostMetricsInterval !== "") ||
+        (containerMetricsInterval && containerMetricsInterval !== "") ||
+        enableContainerEvents === "true" ||
+        enableHostMetrics === "true" ||
+        enableContainerMetrics === "true" ||
+        enableHealthChecks === "true" ||
+        (monitoringRetryAttempts && monitoringRetryAttempts !== "") ||
+        (monitoringRetryDelay && monitoringRetryDelay !== "")
+
+      if (hasMonitoringOptions) {
+        options.monitoringOptions = {}
+        if (healthCheckInterval && healthCheckInterval !== "")
+          options.monitoringOptions.healthCheckInterval = Number(healthCheckInterval)
+        if (containerEventPollingInterval && containerEventPollingInterval !== "")
+          options.monitoringOptions.containerEventPollingInterval = Number(
+            containerEventPollingInterval
+          )
+        if (hostMetricsInterval && hostMetricsInterval !== "")
+          options.monitoringOptions.hostMetricsInterval = Number(hostMetricsInterval)
+        if (containerMetricsInterval && containerMetricsInterval !== "")
+          options.monitoringOptions.containerMetricsInterval = Number(containerMetricsInterval)
+        if (enableContainerEvents === "true") options.monitoringOptions.enableContainerEvents = true
+        if (enableHostMetrics === "true") options.monitoringOptions.enableHostMetrics = true
+        if (enableContainerMetrics === "true")
+          options.monitoringOptions.enableContainerMetrics = true
+        if (enableHealthChecks === "true") options.monitoringOptions.enableHealthChecks = true
+        if (monitoringRetryAttempts && monitoringRetryAttempts !== "")
+          options.monitoringOptions.retryAttempts = Number(monitoringRetryAttempts)
+        if (monitoringRetryDelay && monitoringRetryDelay !== "")
+          options.monitoringOptions.retryDelay = Number(monitoringRetryDelay)
+      }
+
+      // Exec options
+      const workingDir = formData.get("workingDir")?.toString()
+      const execEnv = formData.get("execEnv")?.toString()
+      const tty = formData.get("tty")
+
+      const hasExecOptions =
+        (workingDir && workingDir !== "") || (execEnv && execEnv !== "") || tty === "true"
+
+      if (hasExecOptions) {
+        options.execOptions = {}
+        if (workingDir && workingDir !== "") options.execOptions.workingDir = workingDir
+        if (execEnv && execEnv !== "")
+          options.execOptions.env = execEnv.split(",").map((e) => e.trim())
+        if (tty === "true") options.execOptions.tty = true
+      }
+
+      return {
+        intent: "client:update",
+        clientId: Number(clientId),
+        clientName,
+        options: Object.keys(options).length > 0 ? options : undefined,
+      }
+    }
+
     case "client:delete": {
       const clientId = formData.get("clientId")
       if (!clientId) return null
@@ -258,6 +355,27 @@ export const Adapter = {
           return {
             success: false,
             error: handleElysiaError(res.error, "Failed to register client"),
+          }
+        }
+
+        case "client:update": {
+          const res = await ServerAPI.docker.client.update.post({
+            clientId: action.clientId,
+            clientName: action.clientName,
+            options: action.options ?? null,
+          })
+
+          if (res.status === 200 && res.data) {
+            return {
+              success: true,
+              data: res.data,
+              message: res.data.message || `Client "${action.clientName}" updated`,
+            }
+          }
+
+          return {
+            success: false,
+            error: handleElysiaError(res.error, "Failed to update client"),
           }
         }
 
