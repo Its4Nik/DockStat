@@ -46,7 +46,7 @@ const DockStatMiscRoutes = new Elysia({ prefix: "/misc", detail: { tags: ["Misc"
           systemMs: cpuNow.system / 1000,
           percentSinceLastCall: Number(cpuPercent.toFixed(2)),
         },
-        memoryLimit: formatBytes(process.constrainedMemory()),
+        memoryLimit: formatBytes(process.constrainedMemory() || 0),
       },
       system: {
         uptimeSec: os.uptime(),

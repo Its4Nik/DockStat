@@ -6,11 +6,13 @@ import DBRoutes from "./routes/db"
 import DockerRoutes from "./routes/docker"
 import DockStatMiscRoutes from "./routes/misc"
 import PluginRoutes from "./routes/plugins"
+import StatusRoutes from "./routes/status"
 
 export const DockStatAPI = new Elysia({ prefix: "/api/v2" })
   .use(MetricsMiddleware)
   .use(DockStatElysiaPlugins)
   .use(errorHandler)
+  .use(StatusRoutes)
   .use(DBRoutes)
   .use(DockerRoutes)
   .use(PluginRoutes)
