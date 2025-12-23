@@ -38,29 +38,48 @@ export interface RepositoryFetchResult {
  * Supports GitHub, GitLab, and HTTP URLs
  */
 function getManifestUrl(repoUrl: string): string {
-  // GitHub format: owner/repo:branch/path or owner/repo/path
-  if (repoUrl.includes("github.com") || !repoUrl.includes("://")) {
-    const match = repoUrl.match(/^([^/:]+\/[^/:]+)(?::([^/]+))?(?:\/(.*))?$/)
-    if (match) {
-      const [, repo, branch = "main", path = ""] = match
-      const manifestPath = path ? `${path}/manifest.yaml` : "manifest.yaml"
-      return `https://raw.githubusercontent.com/${repo}/${branch}/${manifestPath}`
-    }
-  }
-
-  // GitLab format
-  if (repoUrl.includes("gitlab.com")) {
-    const match = repoUrl.match(/gitlab\.com\/([^/:]+\/[^/:]+)(?::([^/]+))?(?:\/(.*))?/)
-    if (match) {
-      const [, repo, branch = "main", path = ""] = match
-      const manifestPath = path ? `${path}/manifest.yaml` : "manifest.yaml"
-      return `https://gitlab.com/${repo}/-/raw/${branch}/${manifestPath}`
-    }
-  }
-
-  // HTTP(S) URL - assume it's a direct link to manifest
+  // If this looks like a full URL, use URL parsing to safely inspect the host
   if (repoUrl.startsWith("http://") || repoUrl.startsWith("https://")) {
-    return repoUrl.endsWith("/manifest.yaml") ? repoUrl : `${repoUrl}/manifest.yaml`
+    let parsed: URL
+    try {
+      parsed = new URL(repoUrl)
+    } catch {
+      throw new Error(`Unsupported repository URL format: ${repoUrl}`)
+    }
+
+    const hostname = parsed.hostname
+
+    // GitHub full URL format: https://github.com/owner/repo[:branch]/path
+    if (hostname === "github.com") {
+      const pathMatch = parsed.pathname.match(/^\/([^/]+\/[^/]+)(?::([^/]+))?(?:\/(.*))?$/)
+      if (pathMatch) {
+        const [, repo, branch = "main", path = ""] = pathMatch
+        const manifestPath = path ? `${path}/manifest.yaml` : "manifest.yaml"
+        return `https://raw.githubusercontent.com/${repo}/${branch}/${manifestPath}`
+      }
+    }
+
+    // GitLab full URL format: https://gitlab.com/owner/repo[:branch]/path
+    if (hostname === "gitlab.com") {
+      const pathMatch = parsed.pathname.match(/^\/([^/]+\/[^/]+)(?::([^/]+))?(?:\/(.*))?$/)
+      if (pathMatch) {
+        const [, repo, branch = "main", path = ""] = pathMatch
+        const manifestPath = path ? `${path}/manifest.yaml` : "manifest.yaml"
+        return `https://gitlab.com/${repo}/-/raw/${branch}/${manifestPath}`
+      }
+    }
+
+    // Other HTTP(S) URL - assume it's a direct link to manifest
+    const baseUrl = repoUrl
+    return baseUrl.endsWith("/manifest.yaml") ? baseUrl : `${baseUrl}/manifest.yaml`
+  }
+
+  // GitHub short format: owner/repo:branch/path or owner/repo/path
+  const shortGithubMatch = repoUrl.match(/^([^/:]+\/[^/:]+)(?::([^/]+))?(?:\/(.*))?$/)
+  if (shortGithubMatch) {
+    const [, repo, branch = "main", path = ""] = shortGithubMatch
+    const manifestPath = path ? `${path}/manifest.yaml` : "manifest.yaml"
+    return `https://raw.githubusercontent.com/${repo}/${branch}/${manifestPath}`
   }
 
   throw new Error(`Unsupported repository URL format: ${repoUrl}`)
