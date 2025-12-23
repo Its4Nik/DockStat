@@ -1,6 +1,7 @@
 import Logger from "@dockstat/logger"
 import type { PluginMetaType } from "@dockstat/typings/types"
 import { hashString } from "./hash"
+import { YAML } from "bun"
 
 const logger = new Logger("Repository-Service")
 
@@ -73,7 +74,7 @@ export async function fetchRepositoryManifest(repoUrl: string): Promise<RepoMani
   logger.info(`Fetching manifest from: ${manifestUrl}`)
 
   try {
-    const response = await fetch(manifestUrl)
+    const response = await fetch(manifestUrl, { method: "GET" })
 
     if (!response.ok) {
       throw new Error(`Failed to fetch manifest: ${response.status} ${response.statusText}`)
@@ -81,8 +82,9 @@ export async function fetchRepositoryManifest(repoUrl: string): Promise<RepoMani
 
     const content = await response.text()
 
-    // Parse the YAML manifest using Bun's native YAML parser
-    const manifest = Bun.YAML.parse(content) as RepoManifest
+    logger.debug(JSON.stringify(content))
+
+    const manifest = YAML.parse(content) as RepoManifest
 
     if (!manifest || !Array.isArray(manifest.plugins)) {
       throw new Error("Invalid manifest format: missing plugins array")
