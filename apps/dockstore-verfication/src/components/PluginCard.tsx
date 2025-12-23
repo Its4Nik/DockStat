@@ -1,5 +1,5 @@
-import type { PluginVerificationView } from "../db/types"
 import { Html } from "@elysiajs/html"
+import type { PluginVerificationView } from "../db/types"
 import { shortHash } from "../services/hash"
 
 const _ = Html

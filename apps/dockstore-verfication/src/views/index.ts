@@ -1,11 +1,11 @@
 // View exports for the verification frontend
 export { Dashboard, type DashboardProps, type DashboardStats } from "./Dashboard"
-export { PluginsView, PluginsContent, PluginDetail, type PluginsViewProps } from "./Plugins"
+export { PluginDetail, PluginsContent, PluginsView, type PluginsViewProps } from "./Plugins"
 export {
+  AddRepositoryView,
   RepositoriesView,
+  type RepositoriesViewProps,
   RepositoryCard,
   RepositoryDetail,
-  AddRepositoryView,
-  type RepositoriesViewProps,
 } from "./Repositories"
-export { VerifyView, VerificationCard, VerifiedCard, type VerifyViewProps } from "./Verify"
+export { VerificationCard, VerifiedCard, VerifyView, type VerifyViewProps } from "./Verify"

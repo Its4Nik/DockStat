@@ -1,5 +1,5 @@
-import { DB, column } from "@dockstat/sqlite-wrapper"
 import Logger from "@dockstat/logger"
+import { column, DB } from "@dockstat/sqlite-wrapper"
 import type { Plugin, PluginVersion, Repository, Verification } from "./types"
 
 const logger = new Logger("Verification-DB")
