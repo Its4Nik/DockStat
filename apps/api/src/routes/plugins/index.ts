@@ -1,4 +1,4 @@
-import Elysia from "elysia"
+import Elysia, { t } from "elysia"
 import { PluginModel } from "../../models/plugins"
 import PluginHandler from "../../plugins"
 
@@ -28,6 +28,78 @@ const PluginRoutes = new Elysia({
     body: PluginModel.deletePluginBody,
   })
   .get("/routes", () => PluginHandler.getAllPluginRoutes())
+  // Frontend route endpoints
+  .get("/frontend/routes", () => PluginHandler.getAllFrontendRoutes(), {
+    detail: {
+      description: "Get all frontend routes from loaded plugins",
+    },
+  })
+  .get("/frontend/routes/by-plugin", () => PluginHandler.getFrontendRoutesByPlugin(), {
+    detail: {
+      description: "Get frontend routes grouped by plugin",
+    },
+  })
+  .get("/frontend/navigation", () => PluginHandler.getFrontendNavigationItems(), {
+    detail: {
+      description: "Get navigation items for plugins with frontend routes",
+    },
+  })
+  .get("/frontend/summary", () => PluginHandler.getFrontendSummary(), {
+    detail: {
+      description: "Get summary of all frontend configurations",
+    },
+  })
+  .put(
+    "/frontend/:pluginId/template",
+    ({ params, body }) => {
+      const pluginId = Number(params.pluginId)
+      const routePath = `/${body.path || ""}`
+
+      const route = PluginHandler.getFrontendRoute(pluginId, routePath)
+      if (!route) {
+        return {
+          error: "Route not found",
+          pluginId,
+          routePath,
+        }
+      }
+
+      const template = PluginHandler.getFrontendTemplate(pluginId, routePath)
+      const fragments = PluginHandler.getSharedFragments(pluginId)
+
+      return {
+        route,
+        template,
+        fragments,
+      }
+    },
+    {
+      params: t.Object({
+        pluginId: t.String(),
+      }),
+      body: t.Object({
+        path: t.String(),
+      }),
+      detail: {
+        description: "Get the template for a specific plugin frontend route",
+      },
+    }
+  )
+  .get(
+    "/frontend/:pluginId/has-routes",
+    ({ params }) => ({
+      pluginId: Number(params.pluginId),
+      hasFrontendRoutes: PluginHandler.hasFrontendRoutes(Number(params.pluginId)),
+    }),
+    {
+      params: t.Object({
+        pluginId: t.String(),
+      }),
+      detail: {
+        description: "Check if a plugin has any frontend routes",
+      },
+    }
+  )
   .all(
     "/:id/routes/*",
     async ({ request, params }) =>

@@ -6,6 +6,11 @@ import type DB from "@dockstat/sqlite-wrapper"
 import { column, QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { EVENTS, PluginRoute } from "@dockstat/typings"
 import type { DBPluginShemaT, Plugin } from "@dockstat/typings/types"
+import {
+  PluginFrontendHandler,
+  type ResolvedFrontendRoute,
+  type PluginFrontendRoutes,
+} from "./frontend"
 
 class PluginHandler {
   private loadedPluginsMap = new Map<number, Plugin>()
@@ -13,6 +18,7 @@ class PluginHandler {
   private DB: DB
   private table: QueryBuilder<DBPluginShemaT>
   private logger: Logger
+  private frontendHandler: PluginFrontendHandler
 
   constructor(db: DB, loggerParents: string[] = []) {
     this.logger = new Logger("PluginHandler", loggerParents)
@@ -43,6 +49,12 @@ class PluginHandler {
         },
       }
     )
+
+    // Initialize frontend handler
+    this.frontendHandler = new PluginFrontendHandler({
+      basePathPrefix: "/plugins",
+      logger: this.logger.spawn("Frontend"),
+    })
   }
 
   public getAll() {
@@ -168,7 +180,7 @@ class PluginHandler {
               mod.config.table.name,
               mod.config?.table.columns,
               {
-                parser: { JSON: mod.config.table.jsonColumns },
+                parser: mod.config.table.parser,
                 ifNotExists: true,
               }
             )
@@ -341,7 +353,7 @@ class PluginHandler {
 
     const loadedPlugins = Array.from(this.loadedPluginsMap.values())
 
-    this.logger.debug(`Loaded ${loadedPlugins.length} Plugins (${JSON.stringify(loadedPlugins)})`)
+    this.logger.debug(`Loaded ${loadedPlugins.length} Plugins`)
 
     const loadedPluginsHooksMap = new Map<number, Partial<EVENTS>>()
 
@@ -398,6 +410,82 @@ class PluginHandler {
     }
     return res
   }
+
+  // ==================== Frontend Route Methods ====================
+
+  /**
+   * Get all frontend routes from loaded plugins
+   */
+  public getAllFrontendRoutes(): ResolvedFrontendRoute[] {
+    return this.frontendHandler.getAllFrontendRoutes(this.loadedPluginsMap)
+  }
+
+  /**
+   * Get frontend routes grouped by plugin
+   */
+  public getFrontendRoutesByPlugin(): PluginFrontendRoutes[] {
+    return this.frontendHandler.getFrontendRoutesByPlugin(this.loadedPluginsMap)
+  }
+
+  /**
+   * Get a specific frontend route by plugin ID and path
+   */
+  public getFrontendRoute(pluginId: number, routePath: string): ResolvedFrontendRoute | null {
+    return this.frontendHandler.getRoute(pluginId, routePath, this.loadedPluginsMap)
+  }
+
+  /**
+   * Get the template for a specific frontend route
+   */
+  public getFrontendTemplate(pluginId: number, routePath: string): unknown | null {
+    return this.frontendHandler.getTemplate(pluginId, routePath, this.loadedPluginsMap)
+  }
+
+  /**
+   * Get navigation items for plugins with frontend routes
+   */
+  public getFrontendNavigationItems(): Array<{
+    pluginId: number
+    pluginName: string
+    path: string
+    title: string
+    icon?: string
+    order: number
+  }> {
+    return this.frontendHandler.getNavigationItems(this.loadedPluginsMap)
+  }
+
+  /**
+   * Check if a plugin has any frontend routes
+   */
+  public hasFrontendRoutes(pluginId: number): boolean {
+    return this.frontendHandler.hasFrontendRoutes(pluginId, this.loadedPluginsMap)
+  }
+
+  /**
+   * Get summary of all frontend configurations
+   */
+  public getFrontendSummary(): {
+    totalRoutes: number
+    pluginsWithFrontend: number
+    routesByPlugin: Record<number, number>
+  } {
+    return this.frontendHandler.getSummary(this.loadedPluginsMap)
+  }
+
+  /**
+   * Get shared fragments for a plugin
+   */
+  public getSharedFragments(pluginId: number): unknown[] {
+    return this.frontendHandler.getSharedFragments(pluginId, this.loadedPluginsMap)
+  }
 }
 
 export default PluginHandler
+
+// Re-export frontend types for convenience
+export {
+  PluginFrontendHandler,
+  type ResolvedFrontendRoute,
+  type PluginFrontendRoutes,
+} from "./frontend"

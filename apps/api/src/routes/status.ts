@@ -4,7 +4,7 @@ import DCM from "../docker"
 import BaseLogger from "../logger"
 import PluginHandler from "../plugins"
 
-interface ServiceStatus {
+export interface ServiceStatus {
   name: string
   initialized: boolean
   details?: Record<string, unknown>
