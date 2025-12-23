@@ -5,6 +5,7 @@ export interface OutlineConfig {
   customPaths?: Record<string, string>
   includeCollections?: string[]
   excludeCollections?: string[]
+  verbose?: boolean
 }
 
 export interface Document {

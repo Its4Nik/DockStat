@@ -36,6 +36,7 @@ async function getConfig(
     outputDir: string
     output: string
     config: string
+    verbose?: boolean
   },
   loadConfigFile = true
 ): Promise<OutlineConfig> {
@@ -53,6 +54,7 @@ async function getConfig(
     excludeCollections: options.exclude
       ? parseArrayOption(options.exclude)
       : fileConfig.excludeCollections,
+    verbose: Boolean(options.verbose),
   }
 
   if (!config.url || !config.token) {
@@ -78,9 +80,10 @@ program
   .option("-c, --config <path>", "Config file path")
   .option("-i, --include <collections>", "Comma-separated list of collections to include")
   .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
+  .option("-v, --verbose", "Enable debug logging")
   .action(async (options) => {
     const config = await getConfig(options)
-    const sync = new OutlineSync(config)
+    const sync = new OutlineSync(config, { verbose: config.verbose })
     await sync.syncDown()
   })
 
@@ -93,9 +96,10 @@ program
   .option("-c, --config <path>", "Config file path")
   .option("-i, --include <collections>", "Comma-separated list of collections to include")
   .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
+  .option("-v, --verbose", "Enable debug logging")
   .action(async (options) => {
     const config = await getConfig(options)
-    const sync = new OutlineSync(config)
+    const sync = new OutlineSync(config, { verbose: config.verbose })
     await sync.watch()
   })
 
@@ -108,9 +112,10 @@ program
   .option("-c, --config <path>", "Config file path")
   .option("-i, --include <collections>", "Comma-separated list of collections to include")
   .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
+  .option("-v, --verbose", "Enable debug logging")
   .action(async (options) => {
     const config = await getConfig(options)
-    const sync = new OutlineSync(config)
+    const sync = new OutlineSync(config, { verbose: config.verbose })
     await sync.ciSync()
   })
 
@@ -123,9 +128,10 @@ program
   .option("-c, --config <path>", "Config file path")
   .option("-i, --include <collections>", "Comma-separated list of collections to include")
   .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
+  .option("-v, --verbose", "Enable debug logging")
   .action(async (options) => {
     const config = await getConfig(options)
-    const sync = new OutlineSync(config)
+    const sync = new OutlineSync(config, { verbose: config.verbose })
     await sync.push()
   })
 
@@ -155,6 +161,22 @@ program
     await writeFile(configPath, JSON.stringify(sampleConfig, null, 2), "utf-8")
     console.log("✅ Created outline-sync.config.json")
     console.log("\n📝 Edit the file and replace example values with your actual configuration")
+  })
+
+program
+  .command("verify")
+  .description("Verify configuration and show resolved custom paths")
+  .option("-u, --url <url>", "Outline URL")
+  .option("-t, --token <token>", "API token")
+  .option("-o, --output <dir>", "Output directory")
+  .option("-c, --config <path>", "Config file path")
+  .option("-i, --include <collections>", "Comma-separated list of collections to include")
+  .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
+  .option("-v, --verbose", "Enable debug logging")
+  .action(async (options) => {
+    const config = await getConfig(options)
+    const sync = new OutlineSync(config, { verbose: config.verbose })
+    await sync.verify()
   })
 
 program.parse()

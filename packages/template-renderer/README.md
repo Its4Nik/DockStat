@@ -1,17 +1,24 @@
-# @dockstat/template-renderer
+---
+id: 453740d4-b426-423d-98fc-b36f6dff7644
+title: "@dockstat/template-renderer"
+collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
+parentDocumentId: bbcefaa2-6bd4-46e8-ae4b-a6b823593e67
+updatedAt: 2025-12-23T12:50:44.974Z
+urlId: 5qbatLB5V0
+---
 
-A library for defining frontend pages using JSON/YAML templates composed of widgets from `@dockstat/ui`. Provides full type safety for template definitions and seamless integration with the DockStat plugin system.
+> A library for defining frontend pages using JSON/YAML templates composed of widgets from `@dockstat/ui`. Provides full type safety for template definitions and seamless integration with the DockStat plugin system.
 
 ## Features
 
-- **Full Type Safety**: Template definitions are fully typed with TypeScript
-- **JSON/YAML Support**: Parse templates from JSON or YAML formats
-- **Widget Registry**: Maps template widget types to `@dockstat/ui` components
-- **Data Binding**: Bind widget props to state and external data
-- **Action System**: Handle user interactions with declarative actions
-- **Template Fragments**: Create reusable template components
-- **Builder API**: Fluent, type-safe API for programmatic template creation
-- **Validation**: Comprehensive template validation with detailed error reporting
+* **Full Type Safety**: Template definitions are fully typed with TypeScript
+* **JSON/YAML Support**: Parse templates from JSON or YAML formats
+* **Widget Registry**: Maps template widget types to `@dockstat/ui` components
+* **Data Binding**: Bind widget props to state and external data
+* **Action System**: Handle user interactions with declarative actions
+* **Template Fragments**: Create reusable template components
+* **Builder API**: Fluent, type-safe API for programmatic template creation
+* **Validation**: Comprehensive template validation with detailed error reporting
 
 ## Quick Start
 
@@ -19,8 +26,11 @@ A library for defining frontend pages using JSON/YAML templates composed of widg
 
 ```yaml
 # my-page.yaml
+
 id: my-dashboard
+
 name: My Dashboard
+
 layout:
   type: flex
   direction: column
@@ -60,6 +70,7 @@ widgets:
 ### Rendering a Template
 
 ```tsx
+
 import { TemplateRenderer, parseTemplate } from "@dockstat/template-renderer"
 import { useState } from "react"
 
@@ -86,7 +97,8 @@ function MyPage() {
 
 ### Using the Builder API
 
-```tsx
+```typescript
+
 import {
   template,
   widgets,
@@ -96,6 +108,7 @@ import {
 } from "@dockstat/template-renderer"
 
 // Build a template programmatically with full type safety
+
 const myTemplate = template("my-page", "My Page")
   .description("A sample page")
   .layout(layouts.column({ gap: 16 }))
@@ -125,16 +138,12 @@ const myTemplate = template("my-page", "My Page")
       .build()
   )
   .build()
-
-// Render it
-function App() {
-  return <TemplateRenderer template={myTemplate} />
-}
 ```
 
 ### Using Hooks
 
 ```tsx
+
 import { useTemplate, TemplateRenderer } from "@dockstat/template-renderer"
 
 function MyPage({ template }) {
@@ -174,33 +183,34 @@ function MyPage({ template }) {
 
 All widgets from `@dockstat/ui` are available:
 
-| Widget Type     | Description                    | Supports Children |
-| --------------- | ------------------------------ | ----------------- |
-| `badge`         | Status badge                   | No                |
-| `button`        | Clickable button               | No                |
-| `card`          | Card container                 | Yes               |
-| `cardHeader`    | Card header section            | Yes               |
-| `cardBody`      | Card body section              | Yes               |
-| `cardFooter`    | Card footer section            | Yes               |
-| `divider`       | Visual separator               | No                |
-| `input`         | Text input field               | No                |
-| `checkbox`      | Checkbox input                 | No                |
-| `checkboxGroup` | Group of checkboxes            | No                |
-| `toggle`        | Toggle switch                  | No                |
-| `hoverBubble`   | Tooltip on hover               | Yes               |
-| `link`          | Hyperlink with optional icon   | No                |
-| `modal`         | Modal dialog                   | Yes               |
-| `slider`        | Range slider                   | No                |
-| `slides`        | Tabbed content                 | Yes               |
-| `table`         | Data table                     | No                |
-| `text`          | Text content                   | No                |
-| `container`     | Layout container               | Yes               |
+| Widget Type | Description | Supports Children |
+|----|----|----|
+| `badge` | Status badge | No |
+| `button` | Clickable button | No |
+| `card` | Card container | Yes |
+| `cardHeader` | Card header section | Yes |
+| `cardBody` | Card body section | Yes |
+| `cardFooter` | Card footer section | Yes |
+| `divider` | Visual separator | No |
+| `input` | Text input field | No |
+| `checkbox` | Checkbox input | No |
+| `checkboxGroup` | Group of checkboxes | No |
+| `toggle` | Toggle switch | No |
+| `hoverBubble` | Tooltip on hover | Yes |
+| `link` | Hyperlink with optional icon | No |
+| `modal` | Modal dialog | Yes |
+| `slider` | Range slider | No |
+| `slides` | Tabbed content | Yes |
+| `table` | Data table | No |
+| `text` | Text content | No |
+| `container` | Layout container | Yes |
 
 ## Data Binding
 
 Bind widget props to state or data using the `bindings` property:
 
 ```yaml
+
 widgets:
   - type: text
     props:
@@ -224,6 +234,7 @@ widgets:
 Use the `condition` property to conditionally render widgets:
 
 ```yaml
+
 widgets:
   - type: badge
     props:
@@ -242,6 +253,7 @@ widgets:
 Render widgets for each item in an array:
 
 ```yaml
+
 widgets:
   - type: card
     props:
@@ -264,6 +276,7 @@ widgets:
 Use templates in your DockStat plugins:
 
 ```typescript
+
 import type { PluginFrontendConfig } from "@dockstat/template-renderer"
 
 const frontendConfig: PluginFrontendConfig = {
@@ -285,32 +298,32 @@ const frontendConfig: PluginFrontendConfig = {
 
 ### Parser Functions
 
-- `parseTemplate(content, format?)` - Parse a template string
-- `parseFragment(content, format?)` - Parse a fragment string
-- `parseTemplateFile(path)` - Parse a template from file
-- `validateTemplate(template)` - Validate a template object
-- `serializeTemplateToJSON(template)` - Convert to JSON
-- `serializeTemplateToYAML(template)` - Convert to YAML
+* `parseTemplate(content, format?)` - Parse a template string
+* `parseFragment(content, format?)` - Parse a fragment string
+* `parseTemplateFile(path)` - Parse a template from file
+* `validateTemplate(template)` - Validate a template object
+* `serializeTemplateToJSON(template)` - Convert to JSON
+* `serializeTemplateToYAML(template)` - Convert to YAML
 
 ### Components
 
-- `TemplateRenderer` - Main rendering component
-- `useTemplateContext()` - Access render context in custom widgets
+* `TemplateRenderer` - Main rendering component
+* `useTemplateContext()` - Access render context in custom widgets
 
 ### Hooks
 
-- `useTemplate(template, options)` - Complete template management
-- `useTemplateState(template, initialOverrides)` - State management only
-- `useTemplateActions(template, setState, navigate)` - Action handling only
+* `useTemplate(template, options)` - Complete template management
+* `useTemplateState(template, initialOverrides)` - State management only
+* `useTemplateActions(template, setState, navigate)` - Action handling only
 
 ### Builder
 
-- `template(id, name)` - Create a TemplateBuilder
-- `fragment(id, name)` - Create a FragmentBuilder
-- `widget(type, props)` - Create a WidgetBuilder
-- `widgets.*` - Shorthand widget creators
-- `actions.*` - Action config helpers
-- `layouts.*` - Layout preset helpers
+* `template(id, name)` - Create a TemplateBuilder
+* `fragment(id, name)` - Create a FragmentBuilder
+* `widget(type, props)` - Create a WidgetBuilder
+* `widgets.*` - Shorthand widget creators
+* `actions.*` - Action config helpers
+* `layouts.*` - Layout preset helpers
 
 ## License
 
