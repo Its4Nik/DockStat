@@ -52,16 +52,6 @@ export function getViewableRepositoryUrl(
  * @returns The GitHub URL
  */
 function parseGitHubUrl(repoString: string): string {
-  // Check if the string already contains github.com
-  if (repoString.includes("github.com")) {
-    // Extract the path after github.com
-    const match = repoString.match(/github\.com\/(.+)/)
-    if (match) {
-      return `https://github.com/${match[1]}`
-    }
-    return repoString
-  }
-
   // Format: owner/repo:branch/path
   const branchMatch = repoString.match(/^([^/:]+\/[^/:]+):([^/]+)(?:\/(.*))?$/)
   if (branchMatch) {
