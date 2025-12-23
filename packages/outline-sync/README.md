@@ -39,19 +39,6 @@ Three main improvements were added:
 
 ## Configuration
 
-Create `outline-sync.config.json` (recommended):
-
-- ✅ Sync Outline → Local
-- ✅ Sync Local → Outline
-- ✅ Each doc in own folder with README.md
-- ✅ Custom path mapping for specific documents
-- ✅ Collection filtering (include/exclude)
-- ✅ Frontmatter metadata preservation
-- ✅ CI/CD integration
-- ✅ File watching
-
-## Configuration
-
 ### Option 1: Config File (Recommended)
 
 Create `outline-sync.config.json`:
