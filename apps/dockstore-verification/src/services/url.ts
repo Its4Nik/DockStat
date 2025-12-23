@@ -85,24 +85,39 @@ function parseGitHubUrl(repoString: string): string {
  * @returns The GitLab URL
  */
 function parseGitLabUrl(repoString: string): string {
-  // Check if it already has gitlab.com
-  if (repoString.includes("gitlab.com")) {
-    // Extract and parse the path
-    const match = repoString.match(/gitlab\.com\/([^/:]+\/[^/:]+)(?::([^/]+))?(?:\/(.*))?/)
-    if (match) {
-      const [, repo, branch, path] = match
-      if (branch && path) {
-        return `https://gitlab.com/${repo}/-/tree/${branch}/${path}`
-      }
-      if (branch) {
-        return `https://gitlab.com/${repo}/-/tree/${branch}`
-      }
-      if (path) {
-        return `https://gitlab.com/${repo}/-/tree/main/${path}`
-      }
-      return `https://gitlab.com/${repo}`
+  // Check if it already refers to gitlab.com by parsing the URL hostname
+  try {
+    let url: URL
+    try {
+      // Try parsing as an absolute URL first
+      url = new URL(repoString)
+    } catch {
+      // If there is no scheme, assume https and try again
+      url = new URL(`https://${repoString}`)
     }
-    return `https://${repoString.replace(/^https?:\/\//, "")}`
+
+    if (url.hostname === "gitlab.com") {
+      const normalized = url.toString()
+      // Extract and parse the path
+      const match = normalized.match(/gitlab\.com\/([^/:]+\/[^/:]+)(?::([^/]+))?(?:\/(.*))?/)
+      if (match) {
+        const [, repo, branch, path] = match
+        if (branch && path) {
+          return `https://gitlab.com/${repo}/-/tree/${branch}/${path}`
+        }
+        if (branch) {
+          return `https://gitlab.com/${repo}/-/tree/${branch}`
+        }
+        if (path) {
+          return `https://gitlab.com/${repo}/-/tree/main/${path}`
+        }
+        return `https://gitlab.com/${repo}`
+      }
+      // Fallback: return a canonical gitlab.com URL based on the parsed path
+      return `https://gitlab.com${url.pathname}`
+    }
+  } catch {
+    // If URL parsing fails, fall through to spec-based parsing below
   }
 
   // Format: owner/repo:branch/path
