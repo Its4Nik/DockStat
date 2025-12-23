@@ -1,8 +1,15 @@
 import { DockStatAPI, type TreatyType } from "@dockstat/api"
+import Logger from "@dockstat/logger"
 import { treaty } from "@elysiajs/eden"
 
-const API = DockStatAPI
+const RRSLogger = new Logger("RRS")
 
-export const ServerAPI = treaty<TreatyType>("http://localhost:3000").api.v2
+const PORT = Number(
+  Bun.env.DOCKSTAT_API_PORT || (Bun.env.NODE_ENV || "dev") === "production" ? 3000 : 5173
+)
 
-API.listen({ port: 3000, reusePort: true })
+DockStatAPI.listen(PORT)
+
+RRSLogger.info(`DockStatAPI listening on ${PORT}`)
+
+export const ServerAPI = treaty<TreatyType>(`http://localhost:${PORT}`).api.v2

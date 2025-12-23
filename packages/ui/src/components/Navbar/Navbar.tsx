@@ -11,19 +11,19 @@ type NavbarProps = {
 
 const paths: Array<{ slug: string; path: string }> = [
   {
-    slug: "Extensions",
-    path: "/extensions",
+    slug: "Home",
+    path: "/",
   },
   {
-    slug: "Plugins",
-    path: "/plugins",
+    slug: "Clients",
+    path: "/clients",
   },
 ]
 
 export function Navbar({ isNavigating, location }: NavbarProps) {
   return (
     <>
-      <Card size="sm" className="w-full p-0 mb-4 relative overflow-hidden">
+      <Card size="sm" className="w-full p-0.5 mb-4 relative overflow-hidden">
         {/* Animated gradient background */}
         <div
           className={`absolute inset-0 bg-linear-to-r from-blue-500 via-purple-500 to-pink-500 bg-size-[200%_200%] transition-opacity duration-500 ${

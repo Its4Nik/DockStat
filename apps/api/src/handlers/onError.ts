@@ -1,3 +1,4 @@
+import { extractErrorMessage } from "@dockstat/utils"
 import Elysia, { type ValidationError } from "elysia"
 
 export const errorHandler = new Elysia().onError(({ code, error, set, request }) => {
@@ -13,6 +14,7 @@ export const errorHandler = new Elysia().onError(({ code, error, set, request })
       set.status = 500
 
       return {
+        success: false,
         error: "Response validation failed",
         message: validationError.message,
         path,
@@ -29,6 +31,7 @@ export const errorHandler = new Elysia().onError(({ code, error, set, request })
     // In production, hide validation details for security
     if (process.env.NODE_ENV === "production") {
       return {
+        success: false,
         error: "Validation failed",
         message: validationError.message,
         path,
@@ -38,6 +41,7 @@ export const errorHandler = new Elysia().onError(({ code, error, set, request })
 
     // In development, show details
     return {
+      success: false,
       error: "Validation failed",
       message: validationError.message,
       path,
@@ -50,6 +54,7 @@ export const errorHandler = new Elysia().onError(({ code, error, set, request })
   if (code === "PARSE") {
     set.status = 400
     return {
+      success: false,
       error: "Parse error",
       message: "Invalid request format",
       path,
@@ -61,6 +66,7 @@ export const errorHandler = new Elysia().onError(({ code, error, set, request })
   if (code === "NOT_FOUND") {
     set.status = 404
     return {
+      success: false,
       error: "Not found",
       message: `Cannot ${request.method} ${path}`,
       path,
@@ -70,21 +76,26 @@ export const errorHandler = new Elysia().onError(({ code, error, set, request })
 
   // Handle internal server errors
   if (code === "INTERNAL_SERVER_ERROR") {
+    const errorMessage = extractErrorMessage(error, "An unexpected error occurred")
     set.status = 500
     return {
+      success: false,
       error: "Internal server error",
-      message: "An unexpected error occurred",
+      message: errorMessage,
       path,
       timestamp,
     }
   }
 
-  // Handle unknown errors
+  // Handle unknown errors - use the centralized error extraction
   set.status = 500
+  const errorMessage = extractErrorMessage(error, "An unexpected error occurred")
+
   console.error("Unhandled error:", { code, error, path, timestamp })
 
   return {
-    error: "Unknown error",
+    success: false,
+    error: errorMessage,
     message: "An unexpected error occurred",
     path,
     timestamp,

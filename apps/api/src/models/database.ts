@@ -11,10 +11,16 @@ export namespace DatabaseModel {
 
   export const configRes = DockStatConfigTable
 
-  export const error = t.Literal("Error while opening Database")
+  export const error = t.Object({
+    success: t.Literal(false),
+    error: t.String(),
+    message: t.String(),
+  })
+
   export const updateError = t.Object({
-    message: t.Literal("Error while updating Database"),
-    error: t.Unknown(),
+    success: t.Literal(false),
+    message: t.String(),
+    error: t.String(),
   })
 
   export const configResponses = t.Object({

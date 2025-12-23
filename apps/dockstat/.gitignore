@@ -4,6 +4,6 @@
 # React Router
 /.react-router/
 /build/
-./dockstat.sqlite-wal
-./dockstat.sqlite-shm
-./.bundle
+dockstat.sqlite-wal
+dockstat.sqlite-shm
+.bundle

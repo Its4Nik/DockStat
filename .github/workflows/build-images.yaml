@@ -1,0 +1,31 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  packages: write
+  contents: read
+
+jobs:
+  build-main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout repository
+
+      - name: Build js
+        run: |
+          cd apps/dockstore-verification
+          bun run build
+
+      - uses: pmorelli92/github-container-registry-build-push@2.2.1
+        name: Build and Publish latest service image
+        with:
+          github-push-secret: ${{secrets.GITHUB_TOKEN}}
+          docker-image-name: dockstore-verification-api
+          docker-image-tag: latest # optional
+          dockerfile-path: Dockerfile # optional
+          build-context: ./apps/dockstore-verification # optional
+          build-only: false # optional

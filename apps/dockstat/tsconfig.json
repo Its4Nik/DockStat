@@ -10,7 +10,8 @@
     "jsx": "react-jsx",
     "paths": {
       "~/*": ["./app/*"],
-      "@RR/routes/*": [".react-router/types/app/routes/+types/*"]
+      "@RR/routes/*": [".react-router/types/app/routes/+types/*"],
+      "!L+A/*": ["./app/.server/loaders+actions/*"]
     },
     "rootDirs": [".", "./.react-router/types"],
     "baseUrl": ".",

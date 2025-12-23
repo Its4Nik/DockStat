@@ -246,9 +246,23 @@ self.onmessage = async (event: MessageEvent) => {
         result = client.isMonitoring()
         break
 
+      case "hasMonitoringManager":
+        result = client.hasMonitoringManager()
+        break
+
       case "cleanup":
         await client.cleanup()
         result = undefined
+        break
+
+      case "deleteTable":
+        client.deleteHostTable()
+        result = "Deleted host table"
+        break
+
+      case "createMonitoringManager":
+        client.createMonitoringManager()
+        result = "Created Monitoring manager"
         break
 
       default:

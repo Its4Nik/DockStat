@@ -6,8 +6,13 @@ export const DockerContainerElysia = new Elysia({
   detail: {
     tags: ["Docker Containers"],
   },
-}).get("/all/:clientId", async ({ params: { clientId } }) => await DCM.getAllContainers(clientId), {
-  params: t.Object({
-    clientId: t.Number(),
-  }),
 })
+  .get("/all-containers", async ({ status }) => {
+    const CC = await DCM.getContainerCount()
+    return status(200, CC)
+  })
+  .get("/all/:clientId", async ({ params: { clientId } }) => await DCM.getAllContainers(clientId), {
+    params: t.Object({
+      clientId: t.Number(),
+    }),
+  })

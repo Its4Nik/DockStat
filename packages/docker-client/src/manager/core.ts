@@ -3,7 +3,7 @@ import type PluginHandler from "@dockstat/plugin-handler"
 import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DOCKER, EVENTS } from "@dockstat/typings"
 import type { buildMessageFromProxyRes } from "@dockstat/typings/types"
-import { worker as workerUtils } from "@dockstat/utils"
+import { truncate, worker as workerUtils } from "@dockstat/utils"
 import type { PoolMetrics, WorkerMetrics } from "../types"
 import type {
   DBType,
@@ -133,6 +133,65 @@ export class DockerClientManagerCore {
     }
   }
 
+  public async updateClient(id: number, name: string, options: DOCKER.DockerAdapterOptions) {
+    const wrapper = this.workers.get(id)
+    if (!wrapper) {
+      throw new Error(`No worker found for client ID: ${id}`)
+    }
+
+    try {
+      this.logger.info(`Updating client ${id} (${name})`)
+
+      // Clean up the existing worker
+      try {
+        await this.sendRequest(id, { type: "cleanup" })
+      } catch (error) {
+        this.logger.warn(`Error cleaning up worker ${id} during update: ${String(error)}`)
+      }
+
+      // Remove event listener if attached
+      try {
+        if (wrapper.messageListener) {
+          wrapper.worker.removeEventListener("message", wrapper.messageListener)
+          wrapper.messageListener = undefined
+        }
+      } catch {
+        // ignore
+      }
+
+      try {
+        wrapper.worker.terminate()
+      } catch {
+        // ignore
+      }
+      this.workers.delete(id)
+
+      // Update the database entry
+      this.table.where({ id }).update({ name, options })
+      this.logger.debug(`Updated client ${id} in DB`)
+
+      await this.createWorker(id, name, options)
+
+      const msg = `Client ${id} (${name}) successfully updated and worker rebuilt`
+      this.logger.info(msg)
+
+      return {
+        success: true,
+        message: msg,
+        clientId: id,
+      }
+    } catch (error: unknown) {
+      const msg = `Error while updating Client ${id} (${name}) - error: ${JSON.stringify(error)}`
+      this.logger.error(msg)
+
+      return {
+        success: false,
+        error,
+        message: msg,
+      }
+    }
+  }
+
   // ---------- Worker lifecycle ----------
 
   public async createWorker(
@@ -151,13 +210,15 @@ export class DockerClientManagerCore {
 
       this.logger.debug("Created Worker")
 
+      const now = Date.now()
       const wrapper: WorkerWrapper = {
         worker,
         clientId,
         clientName,
         hostIds: new Set(),
         busy: false,
-        lastUsed: Date.now(),
+        createdAt: now,
+        lastUsed: now,
         initialized: false,
         lastError: null,
         errorCount: 0,
@@ -319,7 +380,13 @@ export class DockerClientManagerCore {
       const messageHandler = (event: MessageEvent) => {
         const raw = event.data
 
+        // Skip internal worker messages (init, metrics)
         if (isInternalWorkerMessage(raw)) {
+          return
+        }
+
+        // Skip proxy event messages - these are handled by attachEventListener
+        if (isProxyEventEnvelope(raw)) {
           return
         }
 
@@ -334,9 +401,35 @@ export class DockerClientManagerCore {
         if (response.success) {
           resolve(response.data)
         } else {
-          wrapper.lastError = response.error ?? "Unknown worker error"
+          // Extract error message - handle various error formats
+          let errorMessage = "Unknown worker error"
+          const err = response.error ?? response.message
+          if (typeof err === "string") {
+            errorMessage = err
+          } else if (err instanceof Error) {
+            errorMessage = err.message
+          } else if (err && typeof err === "object") {
+            // Handle nested error objects
+            const errObj = err as Record<string, unknown>
+            if (typeof errObj.message === "string") {
+              errorMessage = errObj.message
+            } else if (typeof errObj.error === "string") {
+              errorMessage = errObj.error
+            } else {
+              // Last resort - try to stringify but avoid [object Object]
+              try {
+                const str = JSON.stringify(err)
+                if (str && str !== "{}") {
+                  errorMessage = str
+                }
+              } catch {
+                // Keep default error message
+              }
+            }
+          }
+          wrapper.lastError = errorMessage
           wrapper.errorCount += 1
-          reject(new Error(response.error ?? "Unknown worker error"))
+          reject(new Error(errorMessage))
         }
       }
 
@@ -369,16 +462,22 @@ export class DockerClientManagerCore {
 
   // ---------- Client management ----------
 
-  public getClient(clientId: number): boolean {
-    return this.workers.has(clientId)
+  public getClient(clientId: number) {
+    return this.workers.get(clientId)
   }
 
   public getAllClients(all = false): Array<{ id: number; name: string; initialized: boolean }> {
-    const liveMap = new Map<number, { id: number; name: string; initialized: true }>()
+    const liveMap = new Map<
+      number,
+      { id: number; name: string; initialized: true; options: DOCKER.DockerAdapterOptions }
+    >()
     for (const w of this.workers.values()) {
       liveMap.set(Number(w.clientId), {
         id: Number(w.clientId),
         name: w.clientName ?? String(w.clientId),
+        options:
+          this.table.select(["options"]).where({ id: w.clientId }).first()?.options ??
+          ({} as DOCKER.DockerAdapterOptions),
         initialized: true,
       })
     }
@@ -387,19 +486,20 @@ export class DockerClientManagerCore {
       return Array.from(liveMap.values())
     }
 
-    const storedClients = this.table.select(["id", "name"]).all() as Array<{
-      id: number | string
-      name: string
-    }>
+    const storedClients = this.table.select(["*"]).all()
 
-    const resultMap = new Map<number, { id: number; name: string; initialized: boolean }>()
+    const resultMap = new Map<
+      number,
+      { id: number; name: string; initialized: boolean; options: DOCKER.DockerAdapterOptions }
+    >()
 
-    for (const { id, name } of storedClients) {
+    for (const { id, name, options } of storedClients) {
       const numId = Number(id)
       const live = liveMap.get(numId)
       resultMap.set(numId, {
         id: numId,
         name: live?.name ?? name,
+        options: options,
         initialized: Boolean(live),
       })
     }
@@ -421,6 +521,7 @@ export class DockerClientManagerCore {
 
     try {
       await this.sendRequest(clientId, { type: "cleanup" })
+      await this.sendRequest(clientId, { type: "deleteTable" })
     } catch (error) {
       this.logger.warn(`Error cleaning up worker ${clientId}: ${String(error)}`)
     }
@@ -510,11 +611,13 @@ export class DockerClientManagerCore {
 
   readonly triggerHooks = <K extends keyof EVENTS>(message: buildMessageFromProxyRes<K>) => {
     if (!message.type) {
-      this.logger.error(`No message type! ${JSON.stringify(message)}`)
+      this.logger.warn(`No message type! ${JSON.stringify(message)}`)
+      this.logger.debug("Assuming status response")
+      return
     }
 
     this.logger.debug(
-      `Triggering hooks for event "${String(message.type)} - ctx: ${JSON.stringify(message.ctx)}"`
+      `Triggering hooks for event "${String(message.type)} - ctx: ${truncate(JSON.stringify(message.ctx), 100)}"`
     )
 
     this.logger.debug(`${this.events.size} Events registered`)
@@ -549,10 +652,10 @@ export class DockerClientManagerCore {
       try {
         if (message.additionalCtx) {
           // biome-ignore lint/suspicious/noExplicitAny: Custom plugin typings and contexts typings as any
-          hook(message.ctx as any, message.additionalCtx as any, serverHooks)
+          hook(message.ctx as any, message.additionalCtx as any, serverHooks as any)
         } else {
           // biome-ignore lint/suspicious/noExplicitAny: Custom plugin typings and contexts typings as any
-          hook(message.ctx as any, serverHooks)
+          hook(message.ctx as any, serverHooks as any)
         }
       } catch (err: unknown) {
         this.logger.error(
@@ -565,6 +668,12 @@ export class DockerClientManagerCore {
   public async isMonitoring(clientId: number): Promise<boolean> {
     const _ = clientId
     // Default behavior: assume not monitoring. MonitoringMixin overrides this.
+    return false
+  }
+
+  public async hasMonitoringManager(clientId: number): Promise<boolean> {
+    const _ = clientId
+    // Default behavior: assume no monitoring manager. MonitoringMixin overrides this.
     return false
   }
 
@@ -583,9 +692,13 @@ export class DockerClientManagerCore {
       totalHosts += wrapper.hostIds.size
 
       let isMonitoring = false
+      let hasMonitoringManager = false
       try {
         // Implemented in MonitoringMixin
-        isMonitoring = await this.isMonitoring(clientId)
+        hasMonitoringManager = await this.hasMonitoringManager(clientId)
+        if (hasMonitoringManager) {
+          isMonitoring = await this.isMonitoring(clientId)
+        }
       } catch {
         // Ignore errors
       }
@@ -597,9 +710,11 @@ export class DockerClientManagerCore {
         hostsManaged: wrapper.hostIds.size,
         initialized: wrapper.initialized,
         activeStreams: 0,
+        hasMonitoringManager,
         isMonitoring,
+        options: this.table.select(["options"]).where({ id: wrapper.clientId }).first()?.options,
         memoryUsage: process.memoryUsage(),
-        uptime: Date.now() - wrapper.lastUsed,
+        uptime: Date.now() - wrapper.createdAt,
       }
 
       workers.push(workerMetrics)
@@ -618,12 +733,12 @@ export class DockerClientManagerCore {
   public async getStatus() {
     // getAllHosts is implemented in HostsMixin
     const hosts = await this.getAllHosts()
-    this.logger.debug("Getting status")
-    this.logger.debug(`Hosts: ${JSON.stringify(hosts)}`)
-    return {
+    const dat = {
       ...(await this.getPoolMetrics()),
       hosts,
     }
+    this.logger.info(`gathered status: ${JSON.stringify(dat)}`)
+    return dat
   }
 
   public async getWorkerMetrics(clientId: number): Promise<WorkerMetrics | null> {
@@ -631,8 +746,12 @@ export class DockerClientManagerCore {
     if (!wrapper) return null
 
     let isMonitoring = false
+    let hasMonitoringManager = false
     try {
-      isMonitoring = await this.isMonitoring(clientId)
+      hasMonitoringManager = await this.hasMonitoringManager(clientId)
+      if (hasMonitoringManager) {
+        isMonitoring = await this.isMonitoring(clientId)
+      }
     } catch {
       // Ignore
     }
@@ -644,9 +763,10 @@ export class DockerClientManagerCore {
       hostsManaged: wrapper.hostIds.size,
       initialized: wrapper.initialized,
       activeStreams: 0,
+      hasMonitoringManager,
       isMonitoring,
       memoryUsage: process.memoryUsage(),
-      uptime: Date.now() - wrapper.lastUsed,
+      uptime: Date.now() - wrapper.createdAt,
     }
   }
 

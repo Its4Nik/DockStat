@@ -53,10 +53,28 @@ class DockerClient {
     this.streamManager = new StreamManager(this, this.logger.getParentsForLoggerChaining())
   }
 
+  public createMonitoringManager() {
+    if (!this.monitoringManager) {
+      this.monitoringManager = new MonitoringManager(
+        this.logger.getParentsForLoggerChaining(),
+        this.dockerInstances,
+        this.hostHandler.getHosts()
+      )
+    } else {
+      const error = new Error(`Monitoring already initialized on ${this.name}`)
+      proxyEvent("error", error)
+      throw error
+    }
+  }
+
   private checkDisposed(): void {
     if (this.disposed) {
       throw new Error("DockerClient has been disposed")
     }
+  }
+
+  public deleteHostTable() {
+    return this.hostHandler.deleteTable()
   }
 
   public getMetrics() {
@@ -64,9 +82,14 @@ class DockerClient {
       name: this.name,
       hostsManaged: this.dockerInstances.size,
       activeStreams: this.activeStreams.size,
-      isMonitoring: this.isMonitoring(),
+      hasMonitoringManager: this.hasMonitoringManager(),
+      isMonitoring: this.hasMonitoringManager() ? this.isMonitoring() : false,
       uptime: Date.now() - this.startTime,
     }
+  }
+
+  public hasMonitoringManager(): boolean {
+    return this.monitoringManager !== undefined
   }
 
   public async ping(): Promise<{
@@ -904,18 +927,33 @@ class DockerClient {
     if (this.monitoringManager) {
       this.monitoringManager.startMonitoring()
     } else {
-      proxyEvent("error", `Monitoring manager not initialized on ${this.name}`)
+      const error = new Error(`Monitoring manager not initialized on ${this.name}`)
+      proxyEvent("error", error)
+      throw error
     }
   }
 
   public stopMonitoring(): void {
     if (this.monitoringManager) {
       this.monitoringManager.stopMonitoring()
+    } else {
+      const error = new Error(`Monitoring manager not initialized on ${this.name}`)
+      proxyEvent("error", error)
+      throw error
     }
   }
 
   public isMonitoring(): boolean {
-    return this.monitoringManager?.getMonitoringState().isMonitoring ?? false
+    if (this.monitoringManager) {
+      this.logger.debug("Getting monitoring states")
+      const res = this.monitoringManager?.getMonitoringState().isMonitoring ?? false
+      this.logger.debug(res ? `${this.name} is monitoring` : `${this.name} is not monitoring`)
+      return res
+    } else {
+      const error = new Error(`Monitoring manager not initialized on ${this.name}`)
+      proxyEvent("error", error)
+      throw error
+    }
   }
 
   public getStreamManager(): StreamManager | undefined {

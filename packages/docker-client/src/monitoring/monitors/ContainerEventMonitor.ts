@@ -53,7 +53,7 @@ export class ContainerEventMonitor {
   private async captureInitialStates(): Promise<void> {
     const promises = this.hosts.map(async (host) => {
       try {
-        const containers = await this.getContainersForHost(host.id)
+        const containers = await this.getContainersForHost(host.docker_client_id)
         this.lastContainerStates.set(`host-${host.id}`, containers)
       } catch (error) {
         proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
@@ -68,9 +68,9 @@ export class ContainerEventMonitor {
     this.logger.debug(`Checking for changes`)
     const promises = this.hosts.map(async (host) => {
       try {
-        const current = await this.getContainersForHost(host.id)
+        const current = await this.getContainersForHost(host.docker_client_id)
         const last = this.lastContainerStates.get(`host-${host.id}`) || []
-        this.detectChanges(host.id, last, current)
+        this.detectChanges(host.docker_client_id, last, current)
         this.lastContainerStates.set(`host-${host.id}`, current)
       } catch (error) {
         proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {

@@ -1,6 +1,7 @@
 import Elysia from "elysia"
 import { PluginModel } from "../../models/plugins"
 import PluginHandler from "../../plugins"
+import DockStatAPIFrontendPluginRoutes from "./frontend"
 
 const PluginRoutes = new Elysia({
   prefix: "/plugins",
@@ -8,6 +9,7 @@ const PluginRoutes = new Elysia({
     tags: ["Plugins"],
   },
 })
+  .use(DockStatAPIFrontendPluginRoutes)
   .get("/all", () => PluginHandler.getAll())
   .get("/hooks", () => {
     return Array.from(PluginHandler.getHookHandlers())
@@ -28,16 +30,5 @@ const PluginRoutes = new Elysia({
     body: PluginModel.deletePluginBody,
   })
   .get("/routes", () => PluginHandler.getAllPluginRoutes())
-  .all(
-    "/:id/routes/*",
-    async ({ request, params }) =>
-      PluginHandler.handleRoute(Number(params.id), params["*"], request),
-    {
-      detail: {
-        tags: ["Plugin Routes"],
-        description:
-          "This route proxies all Plugin-API requests to the specified Plugin's Elysia Instance",
-      },
-    }
-  )
+
 export default PluginRoutes

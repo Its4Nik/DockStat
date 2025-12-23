@@ -1,4 +1,4 @@
-import type { DATABASE } from "@dockstat/typings"
+import type { DATABASE, DOCKER } from "@dockstat/typings"
 
 export type WorkerRequest =
   | { type: "init"; hosts: DATABASE.DB_target_host[] }
@@ -49,14 +49,27 @@ export type WorkerRequest =
       type: "getContainerLogs"
       hostId: number
       containerId: string
-      options?: unknown
+      options?: {
+        stdout?: boolean
+        stderr?: boolean
+        timestamps?: boolean
+        tail?: number
+        since?: string
+        until?: string
+      }
     }
   | {
       type: "execInContainer"
       hostId: number
       containerId: string
       command: string[]
-      options?: unknown
+      options?: {
+        attachStdout?: boolean
+        attachStderr?: boolean
+        tty?: boolean
+        env?: string[]
+        workingDir?: string
+      }
     }
   | { type: "getImages"; hostId: number }
   | { type: "pullImage"; hostId: number; imageName: string }
@@ -71,7 +84,10 @@ export type WorkerRequest =
   | { type: "startMonitoring" }
   | { type: "stopMonitoring" }
   | { type: "isMonitoring" }
+  | { type: "hasMonitoringManager" }
   | { type: "cleanup" }
+  | { type: "deleteTable" }
+  | { type: "createMonitoringManager" }
 
 export type WorkerResponse<T = unknown> =
   | { success: true; data: T }
@@ -83,6 +99,7 @@ export interface WorkerMetrics {
   clientName: string
   hostsManaged: number
   activeStreams: number
+  hasMonitoringManager: boolean
   isMonitoring: boolean
   initialized: boolean
   memoryUsage?: {
@@ -91,6 +108,7 @@ export interface WorkerMetrics {
     heapUsed: number
     external: number
   }
+  options?: DOCKER.DockerAdapterOptions
   uptime: number
 }
 

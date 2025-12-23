@@ -8,7 +8,7 @@ export interface DividerProps {
   orientation?: DividerOrientation
   className?: string
   shadow?: boolean
-  label?: string
+  label?: string | React.ReactNode
 }
 
 export const Divider: React.FC<DividerProps> = ({

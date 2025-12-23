@@ -38,7 +38,7 @@ export const Card: React.FC<CardProps> = ({
   }
 
   const hoverClasses = hoverable
-    ? `hover:shadow-lg hover:-translate-y-1 ${variant === "outlined" ? "hover:border-2" : ""}`
+    ? `hover:shadow-lg ${variant === "outlined" ? "hover:border-2" : ""}`
     : ""
 
   const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${hoverClasses} ${className}`
@@ -55,7 +55,7 @@ export const Card: React.FC<CardProps> = ({
     )
   }
 
-  return <div className={`${classes} w-fit`}>{children}</div>
+  return <div className={classes}>{children}</div>
 }
 
 // Export subcomponents

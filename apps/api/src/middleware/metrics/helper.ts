@@ -151,7 +151,7 @@ function trackDuration(durations: number[], duration: number, max = 1000) {
   if (durations.length > max) durations.shift()
 }
 
-export const metricsMiddleware = (app: Elysia) => {
+const MetricsMiddleware = (app: Elysia) => {
   // Ensure persisted metrics row is ready
   initPersistedMetrics()
 
@@ -707,3 +707,5 @@ export function formatPrometheusMetrics(db: Database) {
 
   return renderPrometheusMetrics(families, timestamp)
 }
+
+export default MetricsMiddleware

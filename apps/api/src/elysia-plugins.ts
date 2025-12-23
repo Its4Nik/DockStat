@@ -1,8 +1,10 @@
+import { cors } from "@elysiajs/cors"
 import { openapi } from "@elysiajs/openapi"
 import { serverTiming } from "@elysiajs/server-timing"
 import Elysia from "elysia"
 
 const DockStatElysiaPlugins = new Elysia()
+  .use(cors())
   .use(
     openapi({
       path: "/docs",

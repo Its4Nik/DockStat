@@ -2,6 +2,7 @@ import Logger from "@dockstat/logger"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
 import type Dockerode from "dockerode"
 import { ContainerEventMonitor } from "./monitors/ContainerEventMonitor"
+import { ContainerMetricsMonitor } from "./monitors/ContainerMetricsMonitor"
 import { DockerEventStreamManager } from "./monitors/DockerEventStreamManager"
 import { HealthCheckMonitor } from "./monitors/HealthCheckMonitor"
 import { HostMetricsMonitor } from "./monitors/HostMetricsMonitor"
@@ -14,6 +15,7 @@ export default class MonitoringManager {
   private healthCheckMonitor: HealthCheckMonitor
   private containerEventMonitor: ContainerEventMonitor
   private hostMetricsMonitor: HostMetricsMonitor
+  private containerMetricsMonitor: ContainerMetricsMonitor
   private dockerEventStreamManager: DockerEventStreamManager
   private dockerInstances: Map<number, Dockerode>
   private hosts: DATABASE.DB_target_host[]
@@ -68,6 +70,16 @@ export default class MonitoringManager {
       ...retryOpts,
     })
 
+    this.containerMetricsMonitor = new ContainerMetricsMonitor(
+      parents,
+      this.dockerInstances,
+      this.hosts,
+      {
+        interval: this.options.containerMetricsInterval,
+        ...retryOpts,
+      }
+    )
+
     this.dockerEventStreamManager = new DockerEventStreamManager(
       parents,
       this.dockerInstances,
@@ -99,6 +111,10 @@ export default class MonitoringManager {
       this.logger.debug("Starting Host Metrics Monitor")
       this.hostMetricsMonitor.start()
     }
+    if (this.options.enableContainerMetrics) {
+      this.logger.debug("Starting Container Metrics Monitor")
+      this.containerMetricsMonitor.start()
+    }
 
     this.dockerEventStreamManager.start()
   }
@@ -115,6 +131,7 @@ export default class MonitoringManager {
     this.healthCheckMonitor.stop()
     this.containerEventMonitor.stop()
     this.hostMetricsMonitor.stop()
+    this.containerMetricsMonitor.stop()
     this.dockerEventStreamManager.stop()
   }
 
@@ -123,6 +140,7 @@ export default class MonitoringManager {
     this.healthCheckMonitor.updateHosts(hosts)
     this.containerEventMonitor.updateHosts(hosts)
     this.hostMetricsMonitor.updateHosts(hosts)
+    this.containerMetricsMonitor.updateHosts(hosts)
     this.dockerEventStreamManager.updateHosts(hosts)
 
     if (this.isMonitoring) {
@@ -135,6 +153,7 @@ export default class MonitoringManager {
     this.healthCheckMonitor.updateDockerInstances(instances)
     this.containerEventMonitor.updateDockerInstances(instances)
     this.hostMetricsMonitor.updateDockerInstances(instances)
+    this.containerMetricsMonitor.updateDockerInstances(instances)
     this.dockerEventStreamManager.updateDockerInstances(instances)
 
     if (this.isMonitoring) {

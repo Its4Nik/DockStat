@@ -24,28 +24,40 @@ export const OnboardingFooter = ({
 }) => (
   <>
     <Divider />
-    <CardFooter className="flex flex-col md:flex-row items-center justify-between gap-3 px-4 py-3">
-      <div className="flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
-        <Button onClick={onPrev} disabled={currentIndex === 0} aria-label="Previous" size="sm">
-          <ArrowLeft className="w-4 h-4 mr-1" /> Prev
+    <CardFooter className="flex items-center justify-between gap-4 px-8 py-6">
+      <div className="flex items-center gap-4">
+        <Button
+          onClick={onPrev}
+          disabled={currentIndex === 0}
+          aria-label="Previous slide"
+          variant="outline"
+          size="md"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Previous
         </Button>
+      </div>
 
+      <div className="flex-1 flex items-center justify-center">
         <ProgressDots slides={slides} currentIndex={currentIndex} onDotClick={goToSlide} />
       </div>
 
-      <div className="flex items-center gap-2 w-full md:w-auto justify-center md:justify-end">
+      <div className="flex items-center gap-4">
         {currentIndex < totalSlides - 1 ? (
-          <Button onClick={onNext} aria-label="Next" size="sm">
-            Next <ArrowRight className="w-4 h-4 ml-2" />
+          <Button onClick={onNext} aria-label="Next slide" variant="primary" size="md">
+            Next
+            <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         ) : (
           <Button
             onClick={onFinish}
             className="flex items-center gap-2"
             aria-label="Finish onboarding"
-            size="sm"
+            variant="primary"
+            size="md"
           >
-            Get started <Check className="w-4 h-4" />
+            Get Started
+            <Check className="w-4 h-4 ml-2" />
           </Button>
         )}
       </div>

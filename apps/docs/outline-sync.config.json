@@ -2,5 +2,7 @@
   "url": "https://outline.itsnik.de",
   "outputDir": "./",
   "includeCollections": ["DockStat"],
-  "customPaths": {}
+  "customPaths": {
+    "453740d4-b426-423d-98fc-b36f6dff7644": "../../packages/template-renderer/README.md"
+  }
 }

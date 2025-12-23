@@ -1,6 +1,6 @@
 {
   "name": "@dockstat/outline-sync",
-  "version": "1.2.4",
+  "version": "1.2.9",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -11,11 +11,11 @@
     "./README.md"
   ],
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target bun",
+    "build": "bun build src/index.ts --outdir dist --target bun --banner '#!/usr/bin/env bun'",
     "dev": "bun run src/index.ts",
     "sync": "bun run src/index.ts sync",
     "watch": "bun run src/index.ts watch",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "bun build src/index.ts --outdir dist --target bun --banner '#!/usr/bin/env bun'"
   },
   "dependencies": {
     "commander": "^12.0.0",

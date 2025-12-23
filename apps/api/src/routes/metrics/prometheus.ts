@@ -1,3 +1,4 @@
+import { extractErrorMessage } from "@dockstat/utils"
 import Elysia from "elysia"
 import { DockStatDB } from "../../database"
 import { formatPrometheusMetrics } from "../../middleware/metrics"
@@ -10,9 +11,11 @@ const PrometheusMetricsRoute = new Elysia({ prefix: "/metrics" }).get(
       const res = formatPrometheusMetrics(DockStatDB._sqliteWrapper.getDb())
       return status(200, res)
     } catch (error) {
+      const errorMessage = extractErrorMessage(error, "Could not get Prometheus metrics!")
       return status(400, {
-        error: error,
-        message: "Could not get Prometheus metrics!",
+        success: false as const,
+        error: errorMessage,
+        message: errorMessage,
       })
     }
   },

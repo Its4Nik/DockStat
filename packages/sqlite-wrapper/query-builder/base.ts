@@ -143,7 +143,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * Transform row data after fetching from database (deserialize JSON columns).
    */
   protected transformRowFromDb(row: unknown): T {
-    this.logger.debug(`Transforming row: ${JSON.stringify(row)}`)
+    this.logger.debug(`Transforming row`)
     if (!row) {
       this.logger.warn("Empty row received")
       return row as T
@@ -235,7 +235,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    */
   protected transformRowToDb(row: Partial<T>): DatabaseRowData {
     this.logger.debug(
-      `Transforming row (${JSON.stringify(row)}) to row Data = JSON=${!!this.state.parser?.JSON} MODULE=${!!this.state.parser?.MODULE}`
+      `Transforming row to row Data = JSON=${!!this.state.parser?.JSON} MODULE=${!!this.state.parser?.MODULE}`
     )
 
     if (!row) {

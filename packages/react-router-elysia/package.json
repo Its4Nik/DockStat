@@ -42,7 +42,7 @@
     "@elysiajs/openapi": "^1.4.11",
     "@react-router/node": "^7.9.2",
     "@react-router/serve": "^7.9.2",
-    "elysia": "^1.4.12",
+    "elysia": "1.4.12",
     "isbot": "^5.1.31",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

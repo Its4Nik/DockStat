@@ -5,11 +5,13 @@ import type { DATABASE } from "@dockstat/typings"
 export default class HostHandler {
   private logger
   protected hostTable
+  protected db: { tableName: string; db: DB }
 
   constructor(id: number, hostDB: DB) {
     this.logger = new Logger(`HostHandler-${id}`)
     this.logger.info("Initializing HostHandler")
     this.logger.debug("Creating hosts table")
+    this.db = { tableName: `host_handler_${id}`, db: hostDB }
     this.hostTable = hostDB.createTable<DATABASE.DB_target_host>(
       `host_handler_${id}`,
       {
@@ -45,5 +47,9 @@ export default class HostHandler {
   public updateHost(host: DATABASE.DB_target_host) {
     this.logger.info(`Updating host: ${host.name} (ID: ${host.id})`)
     this.hostTable.where({ id: host.id }).update(host)
+  }
+
+  public deleteTable() {
+    return this.db.db.dropTable(this.db.tableName)
   }
 }
