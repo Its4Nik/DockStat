@@ -2,7 +2,7 @@ import Elysia, { t } from "elysia"
 import PluginHandler from "../../plugins"
 
 const DockStatAPIFrontendPluginRoutes = new Elysia({
-  detail: { tags: ["Plugin", "Frontend"] },
+  detail: { tags: ["Frontend"] },
   prefix: "/frontend",
 })
   .get("/routes", () => PluginHandler.getAllFrontendRoutes(), {

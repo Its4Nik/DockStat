@@ -30,18 +30,5 @@ const PluginRoutes = new Elysia({
     body: PluginModel.deletePluginBody,
   })
   .get("/routes", () => PluginHandler.getAllPluginRoutes())
-  // Plugin API route proxy (must be last due to wildcard)
-  .all(
-    "/:id/routes/*",
-    async ({ request, params }) =>
-      PluginHandler.handleRoute(Number(params.id), params["*"], request),
-    {
-      detail: {
-        tags: ["Plugin Routes"],
-        description:
-          "This route proxies all Plugin-API requests to the specified Plugin's Elysia Instance",
-      },
-    }
-  )
 
 export default PluginRoutes
