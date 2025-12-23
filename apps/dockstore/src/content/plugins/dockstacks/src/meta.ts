@@ -13,6 +13,6 @@ export const PluginMeta: PluginMetaType = {
     name: "Its4Nik",
     website: "https://github.com/Its4Nik",
   },
-  manifest: "src/content/plugins/dockstacks/manifest.yml",
+  manifest: "src/content/plugins/dockstacks/manifest.ts",
   repoType: "github",
 }

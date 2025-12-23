@@ -3,7 +3,6 @@ import type { PluginMetaType } from "@dockstat/typings/types"
 import Ajv from "ajv"
 import { Glob } from "bun"
 import chalk from "chalk"
-import YAML from "js-yaml"
 
 /* --- Color helpers --- */
 const clr = {
@@ -44,7 +43,7 @@ async function createSchemas() {
 /* --- Helpers --- */
 const getPluginBuildDir = (path: string) => `${path.replaceAll("/index.ts", "")}/bundle`
 
-const getPluginManifestPath = (path: string) => `${path.replaceAll("/index.ts", "")}/manifest.yml`
+const getPluginManifestPath = (path: string) => `${path.replaceAll("/index.ts", "")}/manifest.ts`
 
 const getPluginName = (path: string) =>
   path.replaceAll("/index.ts", "").replaceAll(`${pluginPath}/`, "")
@@ -146,6 +145,36 @@ function renderProgress() {
   spinnerIndex++
 }
 
+/**
+ * Generate TypeScript manifest file content for a plugin
+ */
+function generatePluginManifestTS(meta: PluginMetaType): string {
+  return `// Auto-generated manifest file - DO NOT EDIT
+import type { PluginMetaType } from "@dockstat/typings/types"
+
+export const manifest: PluginMetaType = ${JSON.stringify(meta, null, 2)} as const
+`
+}
+
+/**
+ * Generate TypeScript repository manifest file content
+ */
+function generateRepoManifestTS(plugins: PluginMetaType[]): string {
+  return `// Auto-generated repository manifest - DO NOT EDIT
+import type { PluginMetaType } from "@dockstat/typings/types"
+
+export interface RepoManifest {
+  plugins: PluginMetaType[]
+}
+
+export const manifest: RepoManifest = {
+  plugins: ${JSON.stringify(plugins, null, 2)}
+} as const
+
+export default manifest
+`
+}
+
 /* --- Build all --- */
 async function buildAll() {
   if (records.length === 0) {
@@ -173,7 +202,8 @@ async function buildAll() {
       const { meta } = imported as { meta: PluginMetaType }
       validatePluginMeta(meta)
 
-      await Bun.write(getPluginManifestPath(rec.path), YAML.dump(meta))
+      // Write TypeScript manifest instead of YAML
+      await Bun.write(getPluginManifestPath(rec.path), generatePluginManifestTS(meta))
       rec.status = "done"
       rec.finishedAt = Date.now()
       rec.message = `${getPluginBuildDir(rec.path)}/index.js`
@@ -242,19 +272,19 @@ async function buildAll() {
     }
   }
 
-  /* Step 2: Write Manifest */
+  /* Step 2: Write TypeScript Manifest instead of YAML */
   {
     const rec = records.find((r) => r.path === "__TASK__WRITE_REPO_MANIFEST")
     if (rec) {
       rec.status = "building"
       rec.startedAt = Date.now()
       try {
-        const RepoManifestData = { plugins: BUNDLED_PLUGINS }
-        await Bun.write("./manifest.yml", YAML.dump(RepoManifestData))
+        // Write TypeScript manifest instead of YAML
+        await Bun.write("./manifest.ts", generateRepoManifestTS(BUNDLED_PLUGINS))
         rec.status = "done"
         rec.finishedAt = Date.now()
-        rec.message = "./manifest.yml"
-        console.log(clr.ok("Wrote Repo Manifest"))
+        rec.message = "./manifest.ts"
+        console.log(clr.ok("Wrote Repo Manifest (TypeScript)"))
       } catch (err) {
         const e = err as Error
         rec.status = "failed"
