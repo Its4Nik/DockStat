@@ -3,6 +3,7 @@ import type { PluginMetaType } from "@dockstat/typings/types"
 import Ajv from "ajv"
 import { Glob } from "bun"
 import chalk from "chalk"
+import yaml from "js-yaml"
 
 /* --- Color helpers --- */
 const clr = {
@@ -157,22 +158,17 @@ export const manifest: PluginMetaType = ${JSON.stringify(meta, null, 2)} as cons
 }
 
 /**
- * Generate TypeScript repository manifest file content
+ * Generate YAML repository manifest file content
  */
-function generateRepoManifestTS(plugins: PluginMetaType[]): string {
-  return `// Auto-generated repository manifest - DO NOT EDIT
-import type { PluginMetaType } from "@dockstat/typings/types"
-
-export interface RepoManifest {
-  plugins: PluginMetaType[]
-}
-
-export const manifest: RepoManifest = {
-  plugins: ${JSON.stringify(plugins, null, 2)}
-} as const
-
-export default manifest
-`
+function generateRepoManifestYAML(plugins: PluginMetaType[]): string {
+  const manifest = { plugins }
+  const yamlContent = yaml.dump(manifest, {
+    indent: 2,
+    lineWidth: -1,
+    noRefs: true,
+    sortKeys: false,
+  })
+  return `# Auto-generated repository manifest - DO NOT EDIT\n${yamlContent}`
 }
 
 /* --- Build all --- */
@@ -272,19 +268,19 @@ async function buildAll() {
     }
   }
 
-  /* Step 2: Write TypeScript Manifest instead of YAML */
+  /* Step 2: Write YAML Manifest */
   {
     const rec = records.find((r) => r.path === "__TASK__WRITE_REPO_MANIFEST")
     if (rec) {
       rec.status = "building"
       rec.startedAt = Date.now()
       try {
-        // Write TypeScript manifest instead of YAML
-        await Bun.write("./manifest.ts", generateRepoManifestTS(BUNDLED_PLUGINS))
+        // Write YAML manifest
+        await Bun.write("./manifest.yaml", generateRepoManifestYAML(BUNDLED_PLUGINS))
         rec.status = "done"
         rec.finishedAt = Date.now()
-        rec.message = "./manifest.ts"
-        console.log(clr.ok("Wrote Repo Manifest (TypeScript)"))
+        rec.message = "./manifest.yaml"
+        console.log(clr.ok("Wrote Repo Manifest (YAML)"))
       } catch (err) {
         const e = err as Error
         rec.status = "failed"

@@ -42,7 +42,7 @@ function getManifestUrl(repoUrl: string): string {
     const match = repoUrl.match(/^([^/:]+\/[^/:]+)(?::([^/]+))?(?:\/(.*))?$/)
     if (match) {
       const [, repo, branch = "main", path = ""] = match
-      const manifestPath = path ? `${path}/manifest.ts` : "manifest.ts"
+      const manifestPath = path ? `${path}/manifest.yaml` : "manifest.yaml"
       return `https://raw.githubusercontent.com/${repo}/${branch}/${manifestPath}`
     }
   }
@@ -52,14 +52,14 @@ function getManifestUrl(repoUrl: string): string {
     const match = repoUrl.match(/gitlab\.com\/([^/:]+\/[^/:]+)(?::([^/]+))?(?:\/(.*))?/)
     if (match) {
       const [, repo, branch = "main", path = ""] = match
-      const manifestPath = path ? `${path}/manifest.ts` : "manifest.ts"
+      const manifestPath = path ? `${path}/manifest.yaml` : "manifest.yaml"
       return `https://gitlab.com/${repo}/-/raw/${branch}/${manifestPath}`
     }
   }
 
   // HTTP(S) URL - assume it's a direct link to manifest
   if (repoUrl.startsWith("http://") || repoUrl.startsWith("https://")) {
-    return repoUrl.endsWith("/manifest.ts") ? repoUrl : `${repoUrl}/manifest.ts`
+    return repoUrl.endsWith("/manifest.yaml") ? repoUrl : `${repoUrl}/manifest.yaml`
   }
 
   throw new Error(`Unsupported repository URL format: ${repoUrl}`)
@@ -81,23 +81,14 @@ export async function fetchRepositoryManifest(repoUrl: string): Promise<RepoMani
 
     const content = await response.text()
 
-    // Parse the TypeScript manifest
-    // Extract the plugins array from the manifest content
-    const pluginsMatch = content.match(/plugins:\s*(\[[\s\S]*?\])\s*(?:}|as const)/)
-    if (!pluginsMatch || !pluginsMatch[1]) {
-      throw new Error("Could not parse plugins from manifest")
+    // Parse the YAML manifest using Bun's native YAML parser
+    const manifest = Bun.YAML.parse(content) as RepoManifest
+
+    if (!manifest || !Array.isArray(manifest.plugins)) {
+      throw new Error("Invalid manifest format: missing plugins array")
     }
 
-    // Use eval-like approach with Function constructor for safe parsing
-    // This handles the JSON-like structure in the TypeScript file
-    const pluginsJson = pluginsMatch[1]
-      .replace(/\/\/.*$/gm, "") // Remove comments
-      .replace(/,(\s*[}\]])/g, "$1") // Remove trailing commas
-
-    // Parse as JSON (the manifest should export valid JSON-compatible data)
-    const plugins = JSON.parse(pluginsJson) as PluginMetaType[]
-
-    return { plugins }
+    return manifest
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     logger.error(`Failed to fetch repository manifest: ${repoUrl}`, errorMessage)

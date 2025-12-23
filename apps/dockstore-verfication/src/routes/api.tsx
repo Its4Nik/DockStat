@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia"
-import { DB } from "@dockstat/sqlite-wrapper"
+import type { DB } from "@dockstat/sqlite-wrapper"
 import Logger from "@dockstat/logger"
 import { Html } from "@elysiajs/html"
 import {
@@ -12,6 +12,8 @@ import { fetchRepository } from "../services/repository"
 import type { PluginVerificationView, RepositoryWithStats } from "../db/types"
 import { VerifiedCard } from "../views/Verify"
 import { RepositoryCard } from "../views/Repositories"
+
+const _ = Html
 
 const logger = new Logger("API-Routes")
 
