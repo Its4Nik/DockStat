@@ -14,84 +14,79 @@
  * - Type-safe template builder API
  */
 
-// Types
-export * from "./types"
-
-// Widget Registry
+// Builder
 export {
-  getWidgetEntry,
-  getWidgetComponent,
-  hasWidget,
-  getRegisteredWidgetTypes,
-  widgetHasChildren,
-  WIDGET_REGISTRY,
-  type WidgetComponent,
-  type RegistryEntry,
-  type PropsTransformContext,
-} from "./registry"
-
-// Validation
+  actions,
+  FragmentBuilder,
+  fragment,
+  layouts,
+  loaders,
+  TemplateBuilder,
+  template,
+  WidgetBuilder,
+  widget,
+  widgets,
+} from "./builder"
+// Hooks
 export {
-  validateTemplate,
-  validateFragment,
-  isValidTemplate,
-  isValidFragment,
-  assertValidTemplate,
-  assertValidFragment,
-} from "./validation"
-
+  type ApiActionExecutor,
+  type ApiActionResult,
+  type ExecuteApiActionOptions,
+  type LoaderExecutor,
+  type UseTemplateActionsResult,
+  type UseTemplateLoadersResult,
+  type UseTemplateResult,
+  type UseTemplateStateResult,
+  useTemplate,
+  useTemplateActions,
+  useTemplateLoaders,
+  useTemplateState,
+} from "./hooks/useTemplate"
 // Parser
 export {
-  parseTemplate,
+  detectFormat,
+  mergeFragmentsIntoTemplate,
+  type ParseResult,
   parseFragment,
-  parseTemplateFile,
   parseFragmentFile,
-  serializeTemplateToJSON,
-  serializeTemplateToYAML,
+  parseTemplate,
+  parseTemplateFile,
+  parseTemplates,
   serializeFragmentToJSON,
   serializeFragmentToYAML,
-  tryParseTemplate,
-  tryParseFragment,
-  parseTemplates,
-  mergeFragmentsIntoTemplate,
-  detectFormat,
+  serializeTemplateToJSON,
+  serializeTemplateToYAML,
   type TemplateFormat,
-  type ParseResult,
+  tryParseFragment,
+  tryParseTemplate,
 } from "./parser"
+// Widget Registry
+export {
+  getRegisteredWidgetTypes,
+  getWidgetComponent,
+  getWidgetEntry,
+  hasWidget,
+  type PropsTransformContext,
+  type RegistryEntry,
+  WIDGET_REGISTRY,
+  type WidgetComponent,
+  widgetHasChildren,
+} from "./registry"
 
 // Renderer
 export {
   TemplateRenderer,
-  useTemplateContext,
   type TemplateRendererProps,
+  useTemplateContext,
 } from "./renderer"
-
-// Hooks
+// Types
+export * from "./types"
+// Validation
 export {
-  useTemplateState,
-  useTemplateActions,
-  useTemplateLoaders,
-  useTemplate,
-  type UseTemplateStateResult,
-  type UseTemplateActionsResult,
-  type UseTemplateLoadersResult,
-  type UseTemplateResult,
-  type ExecuteApiActionOptions,
-  type ApiActionResult,
-  type ApiActionExecutor,
-  type LoaderExecutor,
-} from "./hooks/useTemplate"
-
-// Builder
-export {
-  WidgetBuilder,
-  TemplateBuilder,
-  FragmentBuilder,
-  widget,
-  widgets,
-  template,
-  fragment,
-  actions,
-  loaders,
-  layouts,
-} from "./builder"
+  assertValidFragment,
+  assertValidTemplate,
+  isValidFragment,
+  isValidTemplate,
+  validateFragment,
+  validateTemplate,
+} from "./validation"

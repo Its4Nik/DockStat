@@ -1,8 +1,8 @@
 import { Badge, Modal } from "@dockstat/ui"
 import { Container } from "lucide-react"
-import type { HostDetailModalProps } from "./types"
 import { ConfigValue } from "./misc/ConfigValue"
 import { OptionsSection } from "./misc/OptionsSection"
+import type { HostDetailModalProps } from "./types"
 
 export function HostDetailModal({
   open,

@@ -1,7 +1,7 @@
 import type { Plugin, PluginMetaType } from "@dockstat/typings/types"
 import { config } from "./src/config"
 import type { DockMonTable } from "./src/types"
-import { mapFromHostMetricHookToDb, mapFromContainerMetricHookToDb } from "./src/utils/mapTo"
+import { mapFromContainerMetricHookToDb, mapFromHostMetricHookToDb } from "./src/utils/mapTo"
 
 export const meta: PluginMetaType = {
   name: "DockMon",

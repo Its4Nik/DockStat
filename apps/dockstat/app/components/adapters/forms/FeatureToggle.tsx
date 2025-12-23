@@ -1,6 +1,6 @@
+import { Card, CardBody, Toggle } from "@dockstat/ui"
 import { motion } from "framer-motion"
 import { itemVariants } from "./consts"
-import { Card, CardBody, Toggle } from "@dockstat/ui"
 
 interface FeatureToggleProps {
   icon: React.ReactNode

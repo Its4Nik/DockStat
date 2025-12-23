@@ -20,10 +20,10 @@ import { useEffect, useRef, useState } from "react"
 import { useFetcher } from "react-router"
 import { toast } from "sonner"
 import type { ActionResponse, RegisterClientFormProps } from "../types"
-import { FeatureToggle } from "./FeatureToggle"
 import { containerVariants, fadeInVariants, itemVariants } from "./consts"
-import { Section } from "./Section"
+import { FeatureToggle } from "./FeatureToggle"
 import { FormField } from "./FormField"
+import { Section } from "./Section"
 
 export function RegisterClientForm({ onSuccess, onCancel }: RegisterClientFormProps) {
   const fetcher = useFetcher<ActionResponse>()

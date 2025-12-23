@@ -1,9 +1,9 @@
 import type { DockerAdapterOptions } from "@dockstat/typings"
 import { Badge, Modal } from "@dockstat/ui"
 import { formatBytes, formatDuration } from "@dockstat/utils"
-import type { ClientDetailModalProps } from "./types"
 import { ConfigValue } from "./misc/ConfigValue"
 import { OptionsSection } from "./misc/OptionsSection"
+import type { ClientDetailModalProps } from "./types"
 
 function MonitoringOptionsDisplay({
   options,

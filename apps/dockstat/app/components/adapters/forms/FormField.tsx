@@ -1,5 +1,5 @@
-import { motion } from "framer-motion"
 import { HoverBubble } from "@dockstat/ui"
+import { motion } from "framer-motion"
 import { Info } from "lucide-react"
 import { itemVariants } from "./consts"
 

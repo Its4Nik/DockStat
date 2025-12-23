@@ -1,10 +1,10 @@
 import { Badge, Card, CardBody, CardHeader, Modal } from "@dockstat/ui"
 import { Container, Edit3, Server } from "lucide-react"
 import { useState } from "react"
-import { HostDetailModal } from "./HostDetailModal"
-import { EditHostForm } from "./forms/EditHostForm"
-import type { Host, HostsListProps } from "./types"
 import { DeleteHostButton } from "./forms/DeleteHostButton"
+import { EditHostForm } from "./forms/EditHostForm"
+import { HostDetailModal } from "./HostDetailModal"
+import type { Host, HostsListProps } from "./types"
 
 export function HostsList({
   hosts,

@@ -7,10 +7,10 @@
 
 import type Logger from "@dockstat/logger"
 import type {
-  FrontendLoader,
   FrontendAction,
-  FrontendLoaderResult,
   FrontendActionResult,
+  FrontendLoader,
+  FrontendLoaderResult,
 } from "@dockstat/typings"
 import type { Plugin } from "@dockstat/typings/types"
 

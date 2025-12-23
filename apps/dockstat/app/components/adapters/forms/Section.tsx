@@ -1,7 +1,7 @@
 import { Card } from "@dockstat/ui"
-import { expandVariants, itemVariants } from "./consts"
 import { AnimatePresence, motion } from "framer-motion"
 import { ChevronDown } from "lucide-react"
+import { expandVariants, itemVariants } from "./consts"
 
 interface SectionProps {
   icon: React.ReactNode

@@ -5,7 +5,7 @@
  * composed of widgets from @dockstat/ui
  */
 
-import type { WidgetType, WidgetRegistry, WidgetBindings, WidgetActions } from "./widgets"
+import type { WidgetActions, WidgetBindings, WidgetRegistry, WidgetType } from "./widgets"
 
 /**
  * Base widget node definition

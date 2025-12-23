@@ -6,8 +6,7 @@
 
 export {
   TemplateRenderer,
-  useTemplateContext,
+  TemplateRenderer as default,
   type TemplateRendererProps,
+  useTemplateContext,
 } from "./TemplateRenderer"
-
-export { TemplateRenderer as default } from "./TemplateRenderer"

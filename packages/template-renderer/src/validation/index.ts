@@ -5,19 +5,19 @@
  * with detailed error reporting and type safety.
  */
 
+import { getRegisteredWidgetTypes, hasWidget, widgetHasChildren } from "../registry"
 import type {
-  PageTemplate,
-  WidgetNode,
-  TemplateFragment,
-  TemplateValidationResult,
-  TemplateValidationError,
-  TemplateValidationWarning,
-  LayoutConfig,
   ActionConfig,
+  LayoutConfig,
+  PageTemplate,
   StateConfig,
+  TemplateFragment,
+  TemplateValidationError,
+  TemplateValidationResult,
+  TemplateValidationWarning,
+  WidgetNode,
+  WidgetType,
 } from "../types"
-import { hasWidget, widgetHasChildren, getRegisteredWidgetTypes } from "../registry"
-import type { WidgetType } from "../types"
 
 /**
  * Validation context for tracking state during validation

@@ -6,7 +6,7 @@
  */
 
 import type { PageTemplate, TemplateFragment, TemplateValidationResult } from "../types"
-import { validateTemplate, validateFragment } from "../validation"
+import { validateFragment, validateTemplate } from "../validation"
 
 /**
  * Supported template formats

@@ -6,20 +6,20 @@
  * Route: /p/:pluginId/*
  */
 
-import { useLoaderData, useNavigate, useParams } from "react-router"
 import {
-  TemplateRenderer,
-  parseTemplate,
-  type PageTemplate,
-  type TemplateFragment,
   type ActionConfig,
   type LoaderConfig,
+  type PageTemplate,
+  parseTemplate,
+  type TemplateFragment,
+  TemplateRenderer,
 } from "@dockstat/template-renderer"
-import { useState, useCallback, useMemo, useEffect, useRef } from "react"
 import { Card } from "@dockstat/ui"
-import type { Route } from "./+types/plugin-page"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useLoaderData, useNavigate, useParams } from "react-router"
 import { ServerAPI } from "../.server"
 import { ClientAPI } from "../api"
+import type { Route } from "./+types/plugin-page"
 
 /**
  * Loader result from the API

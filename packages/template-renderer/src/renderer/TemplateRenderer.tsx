@@ -5,16 +5,17 @@
  * Handles widget resolution, data binding, action dispatch, and recursive rendering.
  */
 
-import React, { useMemo, useCallback, createContext, useContext, type ReactNode } from "react"
+import React, { createContext, type ReactNode, useCallback, useContext, useMemo } from "react"
+import { getWidgetEntry, type PropsTransformContext } from "../registry"
 import type {
+  LayoutConfig,
   PageTemplate,
-  WidgetNode,
   TemplateFragment,
   TemplateRenderContext,
-  LayoutConfig,
+  WidgetBindings,
+  WidgetNode,
+  WidgetType,
 } from "../types"
-import { getWidgetEntry, type PropsTransformContext } from "../registry"
-import type { WidgetType, WidgetBindings } from "../types"
 import { isFragmentReference } from "../types/template"
 
 /**

@@ -1,9 +1,9 @@
-import { useFetcher } from "react-router"
-import type { ActionResponse } from "../types"
-import { toast } from "sonner"
-import { useEffect, useRef } from "react"
 import { Button } from "@dockstat/ui"
 import { Trash2 } from "lucide-react"
+import { useEffect, useRef } from "react"
+import { useFetcher } from "react-router"
+import { toast } from "sonner"
+import type { ActionResponse } from "../types"
 
 export function DeleteHostButton({ clientId, hostId }: { clientId: number; hostId: number }) {
   const fetcher = useFetcher<ActionResponse>()

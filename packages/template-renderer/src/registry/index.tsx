@@ -5,27 +5,27 @@
  * and provides utilities for widget resolution and rendering.
  */
 
-import type { ComponentType, ReactNode } from "react"
 import {
   Badge,
   Button,
   Card,
-  CardHeader,
   CardBody,
   CardFooter,
-  Divider,
-  Input,
+  CardHeader,
   Checkbox,
   CheckboxGroup,
-  Toggle,
+  Divider,
   HoverBubble,
+  Input,
   LinkWithIcon,
   Modal,
   Slider,
   Slides,
   Table,
+  Toggle,
 } from "@dockstat/ui"
-import type { WidgetType, WidgetRegistry as WidgetRegistryType } from "../types"
+import type { ComponentType, ReactNode } from "react"
+import type { WidgetRegistry as WidgetRegistryType, WidgetType } from "../types"
 
 /**
  * Component wrapper type that accepts serializable props and children

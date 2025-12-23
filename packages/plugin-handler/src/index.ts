@@ -6,22 +6,22 @@ import type DB from "@dockstat/sqlite-wrapper"
 import { column, QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type {
   EVENTS,
-  PluginRoute,
-  FrontendLoaderResult,
   FrontendActionResult,
+  FrontendLoaderResult,
+  PluginRoute,
 } from "@dockstat/typings"
 import type { DBPluginShemaT, Plugin } from "@dockstat/typings/types"
 import {
-  PluginFrontendHandler,
-  type ResolvedFrontendRoute,
-  type PluginFrontendRoutes,
-} from "./frontend"
-import {
-  FrontendActionsHandler,
-  type ResolvedLoader,
-  type ResolvedAction,
   type ExecutionContext,
+  FrontendActionsHandler,
+  type ResolvedAction,
+  type ResolvedLoader,
 } from "./actions"
+import {
+  PluginFrontendHandler,
+  type PluginFrontendRoutes,
+  type ResolvedFrontendRoute,
+} from "./frontend"
 
 class PluginHandler {
   private loadedPluginsMap = new Map<number, Plugin>()
@@ -616,17 +616,16 @@ class PluginHandler {
 
 export default PluginHandler
 
+// Re-export actions types for convenience
+export {
+  type ExecutionContext,
+  FrontendActionsHandler,
+  type ResolvedAction,
+  type ResolvedLoader,
+} from "./actions"
 // Re-export frontend types for convenience
 export {
   PluginFrontendHandler,
-  type ResolvedFrontendRoute,
   type PluginFrontendRoutes,
+  type ResolvedFrontendRoute,
 } from "./frontend"
-
-// Re-export actions types for convenience
-export {
-  FrontendActionsHandler,
-  type ResolvedLoader,
-  type ResolvedAction,
-  type ExecutionContext,
-} from "./actions"

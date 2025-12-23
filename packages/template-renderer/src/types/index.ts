@@ -4,21 +4,72 @@
  * Central export point for all type definitions used in the template rendering system.
  */
 
+// Template types
+export {
+  type ActionConfig,
+  type ActionErrorHandler,
+  type ActionResult,
+  // Action types
+  type ActionSuccessHandler,
+  type FragmentReference,
+  isFragmentReference,
+  // Layout and configuration
+  type LayoutConfig,
+  // Loader types
+  type LoaderConfig,
+  type LoaderResult,
+  // Page template
+  type PageTemplate,
+  type PluginFrontendConfig,
+  // Plugin integration
+  type PluginFrontendRoute,
+  type StateConfig,
+  // Fragments
+  type TemplateFragment,
+  type TemplateNode,
+  // Rendering context
+  type TemplateRenderContext,
+  type TemplateValidationError,
+  // Validation
+  type TemplateValidationResult,
+  type TemplateValidationWarning,
+  type TypedWidgetNode,
+  type WidgetNode,
+  // Widget node types
+  type WidgetNodeBase,
+} from "./template"
 // Widget types and registry
 export {
+  // Re-exported UI types
+  type BadgeSize,
+  type BadgeVariant,
+  type ButtonRowPosition,
+  type ButtonSize,
+  type ButtonVariant,
+  type CardSize,
+  type CardVariant,
+  type CheckboxGroupOption,
+  type CheckboxSize,
+  // Constants and utilities
+  CONTAINER_WIDGETS,
+  type DividerVariant,
+  type InputSize,
+  type InputVariant,
+  isContainerWidget,
+  type ModalSize,
   // Serializable props types
   type SerializableBadgeProps,
   type SerializableButtonProps,
-  type SerializableCardProps,
-  type SerializableCardHeaderProps,
   type SerializableCardBodyProps,
   type SerializableCardFooterProps,
-  type SerializableDividerProps,
-  type SerializableInputProps,
-  type SerializableCheckboxProps,
+  type SerializableCardHeaderProps,
+  type SerializableCardProps,
   type SerializableCheckboxGroupProps,
-  type SerializableToggleProps,
+  type SerializableCheckboxProps,
+  type SerializableContainerProps,
+  type SerializableDividerProps,
   type SerializableHoverBubbleProps,
+  type SerializableInputProps,
   type SerializableLinkProps,
   type SerializableModalProps,
   type SerializableSliderProps,
@@ -26,64 +77,12 @@ export {
   type SerializableTableColumn,
   type SerializableTableProps,
   type SerializableTextProps,
-  type SerializableContainerProps,
+  type SerializableToggleProps,
+  type ToggleSize,
+  type WidgetActions,
+  type WidgetBindings,
+  type WidgetPropsFor,
   // Registry and utility types
   type WidgetRegistry,
   type WidgetType,
-  type WidgetPropsFor,
-  type WidgetActions,
-  type WidgetBindings,
-  // Re-exported UI types
-  type BadgeSize,
-  type BadgeVariant,
-  type ButtonSize,
-  type ButtonVariant,
-  type CardSize,
-  type CardVariant,
-  type CheckboxSize,
-  type CheckboxGroupOption,
-  type DividerVariant,
-  type InputSize,
-  type InputVariant,
-  type ModalSize,
-  type ButtonRowPosition,
-  type ToggleSize,
-  // Constants and utilities
-  CONTAINER_WIDGETS,
-  isContainerWidget,
 } from "./widgets"
-
-// Template types
-export {
-  // Widget node types
-  type WidgetNodeBase,
-  type WidgetNode,
-  type TypedWidgetNode,
-  // Layout and configuration
-  type LayoutConfig,
-  type StateConfig,
-  // Action types
-  type ActionSuccessHandler,
-  type ActionErrorHandler,
-  type ActionConfig,
-  type ActionResult,
-  // Loader types
-  type LoaderConfig,
-  type LoaderResult,
-  // Page template
-  type PageTemplate,
-  // Fragments
-  type TemplateFragment,
-  type FragmentReference,
-  type TemplateNode,
-  isFragmentReference,
-  // Plugin integration
-  type PluginFrontendRoute,
-  type PluginFrontendConfig,
-  // Rendering context
-  type TemplateRenderContext,
-  // Validation
-  type TemplateValidationResult,
-  type TemplateValidationError,
-  type TemplateValidationWarning,
-} from "./template"

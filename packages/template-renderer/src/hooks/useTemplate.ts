@@ -5,8 +5,8 @@
  * Supports local actions (setState, navigate) and remote actions (api, reload, custom).
  */
 
-import { useState, useCallback, useMemo, useEffect } from "react"
-import type { PageTemplate, TemplateFragment, ActionConfig, LoaderConfig } from "../types"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import type { ActionConfig, LoaderConfig, PageTemplate, TemplateFragment } from "../types"
 
 /**
  * State returned by useTemplateState hook

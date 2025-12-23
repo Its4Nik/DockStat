@@ -6,19 +6,19 @@
  */
 
 import type {
-  PageTemplate,
-  TemplateFragment,
-  WidgetNode,
-  WidgetType,
-  WidgetRegistry,
-  LayoutConfig,
-  StateConfig,
   ActionConfig,
-  ActionSuccessHandler,
   ActionErrorHandler,
+  ActionSuccessHandler,
+  LayoutConfig,
   LoaderConfig,
-  WidgetBindings,
+  PageTemplate,
+  StateConfig,
+  TemplateFragment,
   WidgetActions,
+  WidgetBindings,
+  WidgetNode,
+  WidgetRegistry,
+  WidgetType,
 } from "../types"
 
 /**
