@@ -29,6 +29,6 @@ jobs:
           github-push-secret: ${{secrets.GITHUB_TOKEN}}
           docker-image-name: dockstore-verification-api
           docker-image-tag: latest # optional
-          dockerfile-path: Dockerfile # optional
+          dockerfile-path: ./apps/dockstore-verification/Dockerfile # optional
           build-context: ./apps/dockstore-verification # optional
           build-only: false # optional
