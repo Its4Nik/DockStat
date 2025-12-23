@@ -1,17 +1,17 @@
-import { Elysia, t } from "elysia"
-import type { DB } from "@dockstat/sqlite-wrapper"
 import Logger from "@dockstat/logger"
+import type { DB } from "@dockstat/sqlite-wrapper"
 import { Html } from "@elysiajs/html"
+import { Elysia, t } from "elysia"
 import {
-  getRepositoryTable,
   getPluginsTable,
   getPluginVersionsTable,
+  getRepositoryTable,
   getVerificationsTable,
 } from "../db"
-import { fetchRepository } from "../services/repository"
 import type { PluginVerificationView, RepositoryWithStats } from "../db/types"
-import { VerifiedCard } from "../views/Verify"
+import { fetchRepository } from "../services/repository"
 import { RepositoryCard } from "../views/Repositories"
+import { VerifiedCard } from "../views/Verify"
 
 const _ = Html
 

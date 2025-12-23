@@ -1,16 +1,16 @@
 // Component exports for the verification frontend
 export { Layout, type LayoutProps } from "./Layout"
-export { PluginCard, PluginCardSkeleton, type PluginCardProps } from "./PluginCard"
-export {
-  StatsCard,
-  StatsGrid,
-  StatsIcons,
-  type StatsCardProps,
-  type StatsGridProps,
-} from "./StatsCard"
+export { PluginCard, type PluginCardProps, PluginCardSkeleton } from "./PluginCard"
 export {
   PluginsTable,
-  PluginTableRow,
-  PluginsTableSkeleton,
   type PluginsTableProps,
+  PluginsTableSkeleton,
+  PluginTableRow,
 } from "./PluginsTable"
+export {
+  StatsCard,
+  type StatsCardProps,
+  StatsGrid,
+  type StatsGridProps,
+  StatsIcons,
+} from "./StatsCard"

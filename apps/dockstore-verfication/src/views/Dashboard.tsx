@@ -1,7 +1,7 @@
 import { Html } from "@elysiajs/html"
 import { Layout } from "../components/Layout"
-import { StatsCard, StatsGrid, StatsIcons } from "../components/StatsCard"
 import { PluginsTable } from "../components/PluginsTable"
+import { StatsCard, StatsGrid, StatsIcons } from "../components/StatsCard"
 import type { PluginVerificationView, RepositoryWithStats } from "../db/types"
 
 const _ = Html

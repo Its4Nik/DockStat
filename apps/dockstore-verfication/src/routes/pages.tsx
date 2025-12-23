@@ -1,16 +1,16 @@
-import { Elysia } from "elysia"
-import { Html } from "@elysiajs/html"
 import type { DB } from "@dockstat/sqlite-wrapper"
+import { Html } from "@elysiajs/html"
+import { Elysia } from "elysia"
 import {
-  getRepositoryTable,
   getPluginsTable,
   getPluginVersionsTable,
+  getRepositoryTable,
   getVerificationsTable,
 } from "../db"
 import type { PluginVerificationView, RepositoryWithStats } from "../db/types"
 import { Dashboard, type DashboardStats } from "../views/Dashboard"
-import { PluginsView, PluginsContent, PluginDetail } from "../views/Plugins"
-import { RepositoriesView, RepositoryDetail, AddRepositoryView } from "../views/Repositories"
+import { PluginDetail, PluginsContent, PluginsView } from "../views/Plugins"
+import { AddRepositoryView, RepositoriesView, RepositoryDetail } from "../views/Repositories"
 import { VerifyView } from "../views/Verify"
 
 const _ = Html
