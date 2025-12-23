@@ -90,6 +90,7 @@ function getPublicPlugins(db: DB, filter?: string, search?: string): PluginVerif
   `
 
   const conditions: string[] = []
+  const params: string[] = []
 
   if (filter === "verified") {
     conditions.push("v.verified = 1")
@@ -102,11 +103,12 @@ function getPublicPlugins(db: DB, filter?: string, search?: string): PluginVerif
   }
 
   if (search) {
-    // Escape single quotes in search term for SQL safety
-    const escapedSearch = search.replace(/'/g, "''").toLowerCase()
+    // Use parameterized query with LIKE pattern for SQL safety
+    const searchPattern = `%${search.toLowerCase()}%`
     conditions.push(
-      `(LOWER(p.name) LIKE '%${escapedSearch}%' OR LOWER(p.description) LIKE '%${escapedSearch}%' OR LOWER(p.author_name) LIKE '%${escapedSearch}%')`
+      "(LOWER(p.name) LIKE ? OR LOWER(p.description) LIKE ? OR LOWER(p.author_name) LIKE ?)"
     )
+    params.push(searchPattern, searchPattern, searchPattern)
   }
 
   if (conditions.length > 0) {
@@ -115,7 +117,7 @@ function getPublicPlugins(db: DB, filter?: string, search?: string): PluginVerif
 
   query += " ORDER BY p.name ASC, pv.created_at DESC"
 
-  const results = db.getDb().query(query).all() as PluginVerificationView[]
+  const results = db.getDb().prepare(query).all(...params) as PluginVerificationView[]
 
   // Parse JSON tags
   return results.map((r) => ({
