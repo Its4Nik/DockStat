@@ -17,6 +17,7 @@ jobs:
 
       - name: Build js
         run: |
+          bun i
           cd apps/dockstore-verification
           bun run build
 
