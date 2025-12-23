@@ -247,10 +247,21 @@ export function createPageRoutes(db: DB) {
       })
 
       // Verify page
-      .get("/verify", () => {
+      .get("/verify", ({ query }) => {
         // Get all unverified plugin versions
         const pendingPlugins = getPluginsWithVerification(db, "unverified")
-        return <VerifyView pendingPlugins={pendingPlugins} />
+
+        // Check for query parameters to highlight a specific plugin
+        const highlightPluginId = query.plugin ? Number(query.plugin) : undefined
+        const highlightVersion = query.version as string | undefined
+
+        return (
+          <VerifyView
+            pendingPlugins={pendingPlugins}
+            highlightPluginId={highlightPluginId}
+            highlightVersion={highlightVersion}
+          />
+        )
       })
   )
 }

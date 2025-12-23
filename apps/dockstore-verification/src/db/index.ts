@@ -79,7 +79,7 @@ export function initDatabase(dbPath: string = "verification.db") {
     {
       ifNotExists: true,
       constraints: {
-        unique: [["plugin_id", "version"]],
+        unique: ["plugin_id", "version"],
       },
     }
   )

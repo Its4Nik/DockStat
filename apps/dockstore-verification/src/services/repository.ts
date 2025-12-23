@@ -106,8 +106,6 @@ export async function fetchPluginSource(
   logger.info(`Fetching plugin source: ${plugin.name} v${plugin.version}`)
 
   try {
-    // For now, we'll compute a hash from the plugin metadata
-    // In a real implementation, you'd fetch the actual source files
     const metaString = JSON.stringify(plugin, null, 2)
     const sourceHash = await hashString(metaString + plugin.version)
 

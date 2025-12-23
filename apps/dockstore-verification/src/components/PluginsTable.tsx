@@ -1,6 +1,7 @@
 import { Html } from "@elysiajs/html"
 import type { PluginVerificationView } from "../db/types"
 import { shortHash } from "../services/hash"
+import { getViewableRepositoryUrl } from "../services/url"
 
 const _ = Html
 
@@ -116,15 +117,12 @@ export function PluginsTable({ plugins, showActions = true }: PluginsTableProps)
                 <td class="text-right">
                   <div class="flex items-center justify-end gap-2">
                     {!plugin.verified && (
-                      <button
-                        type="button"
+                      <a
+                        href={`/verify?plugin=${plugin.plugin_id}&version=${encodeURIComponent(plugin.version)}`}
                         class="btn btn-primary text-xs py-1 px-2"
-                        hx-post={`/api/plugins/${plugin.plugin_id}/versions/${plugin.version}/verify`}
-                        hx-target="closest tr"
-                        hx-swap="outerHTML"
                       >
                         Verify
-                      </button>
+                      </a>
                     )}
                     <a
                       href={`/plugins/${plugin.plugin_id}`}
@@ -133,8 +131,9 @@ export function PluginsTable({ plugins, showActions = true }: PluginsTableProps)
                       View
                     </a>
                     <a
-                      href={plugin.repository_url}
+                      href={getViewableRepositoryUrl(plugin.repository_url, plugin.repo_type)}
                       target="_blank"
+                      rel="noopener noreferrer"
                       class="btn btn-secondary text-xs py-1 px-2"
                       title="View Source"
                     >
@@ -196,15 +195,12 @@ export function PluginTableRow({
         <td class="text-right">
           <div class="flex items-center justify-end gap-2">
             {!plugin.verified && (
-              <button
-                type="button"
+              <a
+                href={`/verify?plugin=${plugin.plugin_id}&version=${encodeURIComponent(plugin.version)}`}
                 class="btn btn-primary text-xs py-1 px-2"
-                hx-post={`/api/plugins/${plugin.plugin_id}/versions/${plugin.version}/verify`}
-                hx-target="closest tr"
-                hx-swap="outerHTML"
               >
                 Verify
-              </button>
+              </a>
             )}
             <a href={`/plugins/${plugin.plugin_id}`} class="btn btn-secondary text-xs py-1 px-2">
               View

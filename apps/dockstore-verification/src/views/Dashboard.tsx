@@ -70,9 +70,9 @@ export function Dashboard({ stats, recentPlugins, repositories }: DashboardProps
       </StatsGrid>
 
       {/* Main Content Grid */}
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+      <div class="mt-4">
         {/* Recent Plugins Section */}
-        <div class="lg:col-span-2">
+        <div>
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-semibold text-white">Recent Plugins</h2>
             <a href="/plugins" class="text-sm text-blue-400 hover:text-blue-300">
@@ -82,8 +82,8 @@ export function Dashboard({ stats, recentPlugins, repositories }: DashboardProps
           <PluginsTable plugins={recentPlugins} showActions={true} />
         </div>
 
-        {/* Repositories Sidebar */}
-        <div>
+        {/* Repositories */}
+        <div class="mt-4">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-semibold text-white">Repositories</h2>
             <a href="/repositories" class="text-sm text-blue-400 hover:text-blue-300">

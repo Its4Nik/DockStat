@@ -1,14 +1,33 @@
 import { Html } from "@elysiajs/html"
 import { Layout } from "../components/Layout"
 import type { PluginVerificationView } from "../db/types"
+import { getViewableRepositoryUrl } from "../services/url"
 
 const _ = Html
 
 export interface VerifyViewProps {
   pendingPlugins: PluginVerificationView[]
+  highlightPluginId?: number
+  highlightVersion?: string
 }
 
-export function VerifyView({ pendingPlugins }: VerifyViewProps) {
+export function VerifyView({
+  pendingPlugins,
+  highlightPluginId,
+  highlightVersion,
+}: VerifyViewProps) {
+  // Sort plugins so the highlighted one appears first
+  const sortedPlugins = [...pendingPlugins]
+  if (highlightPluginId && highlightVersion) {
+    sortedPlugins.sort((a, b) => {
+      const aMatch = a.plugin_id === highlightPluginId && a.version === highlightVersion
+      const bMatch = b.plugin_id === highlightPluginId && b.version === highlightVersion
+      if (aMatch && !bMatch) return -1
+      if (!aMatch && bMatch) return 1
+      return 0
+    })
+  }
+
   return (
     <Layout title="Verify Plugins" currentPath="/verify">
       {/* Page Header */}
@@ -114,8 +133,13 @@ export function VerifyView({ pendingPlugins }: VerifyViewProps) {
           </div>
         ) : (
           <div class="space-y-4">
-            {pendingPlugins.map((plugin) => (
-              <VerificationCard plugin={plugin} />
+            {sortedPlugins.map((plugin) => (
+              <VerificationCard
+                plugin={plugin}
+                isHighlighted={
+                  highlightPluginId === plugin.plugin_id && highlightVersion === plugin.version
+                }
+              />
             ))}
           </div>
         )}
@@ -124,9 +148,19 @@ export function VerifyView({ pendingPlugins }: VerifyViewProps) {
   )
 }
 
-export function VerificationCard({ plugin }: { plugin: PluginVerificationView }) {
+export function VerificationCard({
+  plugin,
+  isHighlighted = false,
+}: {
+  plugin: PluginVerificationView
+  isHighlighted?: boolean
+}) {
+  const cardClasses = isHighlighted
+    ? "card ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900"
+    : "card"
+
   return (
-    <div class="card" id={`verify-card-${plugin.plugin_id}-${plugin.version}`}>
+    <div class={cardClasses} id={`verify-card-${plugin.plugin_id}-${plugin.version}`}>
       <div class="flex flex-col lg:flex-row lg:items-start gap-6">
         {/* Plugin Info */}
         <div class="flex-1">
@@ -144,6 +178,7 @@ export function VerificationCard({ plugin }: { plugin: PluginVerificationView })
             >
               {plugin.repo_type.charAt(0).toUpperCase() + plugin.repo_type.slice(1)}
             </span>
+            {isHighlighted && <span class="badge bg-blue-600 text-white">Selected</span>}
           </div>
           <p class="text-sm text-gray-400 mb-4">{plugin.description}</p>
 
@@ -180,8 +215,7 @@ export function VerificationCard({ plugin }: { plugin: PluginVerificationView })
           <h4 class="text-sm font-medium text-gray-300 mb-4">Verification</h4>
 
           <form
-            hx-post={`/api/plugins/${plugin.plugin_id}/versions/${plugin.version}/verify`}
-            hx-target={`#verify-card-${plugin.plugin_id}-${plugin.version}`}
+            hx-post={`/api/plugins/${plugin.plugin_id}/versions/${encodeURIComponent(plugin.version)}/verify`}
             hx-swap="outerHTML"
             class="space-y-4"
           >
@@ -290,8 +324,9 @@ export function VerificationCard({ plugin }: { plugin: PluginVerificationView })
                 Verify
               </button>
               <a
-                href={plugin.repository_url}
+                href={getViewableRepositoryUrl(plugin.repository_url, plugin.repo_type)}
                 target="_blank"
+                rel="noopener noreferrer"
                 class="btn btn-secondary"
                 title="View Source"
               >

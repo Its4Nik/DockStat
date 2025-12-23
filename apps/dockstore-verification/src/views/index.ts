@@ -9,3 +9,9 @@ export {
   RepositoryDetail,
 } from "./Repositories"
 export { VerificationCard, VerifiedCard, VerifyView, type VerifyViewProps } from "./Verify"
+export {
+  PublicDashboard,
+  PublicPluginList,
+  type PublicDashboardProps,
+  type PublicDashboardStats,
+} from "./PublicDashboard"

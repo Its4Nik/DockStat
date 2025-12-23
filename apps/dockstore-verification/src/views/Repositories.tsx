@@ -113,8 +113,12 @@ export function RepositoryCard({ repository }: { repository: RepositoryWithStats
       {/* Header */}
       <div class="flex items-start justify-between mb-4">
         <div class="flex-1">
-          <h3 class="text-lg font-semibold text-white truncate">{repository.name}</h3>
-          <p class="text-xs text-gray-500 truncate">{repository.url}</p>
+          <h3 safe class="text-lg font-semibold text-white truncate">
+            {repository.name}
+          </h3>
+          <p safe class="text-xs text-gray-500 truncate">
+            {repository.url}
+          </p>
         </div>
         <span class={`badge ${repository.enabled ? "badge-success" : "badge-neutral"}`}>
           {repository.enabled ? "Active" : "Disabled"}
@@ -230,7 +234,9 @@ export function RepositoryDetail({ repository }: { repository: RepositoryWithSta
             </a>
           </li>
           <li class="text-gray-600">/</li>
-          <li class="text-white">{repository.name}</li>
+          <li safe class="text-white">
+            {repository.name}
+          </li>
         </ol>
       </nav>
 
@@ -239,12 +245,16 @@ export function RepositoryDetail({ repository }: { repository: RepositoryWithSta
         <div class="flex items-start justify-between mb-6">
           <div>
             <div class="flex items-center gap-3 mb-2">
-              <h1 class="text-3xl font-bold text-white">{repository.name}</h1>
+              <h1 safe class="text-3xl font-bold text-white">
+                {repository.name}
+              </h1>
               <span class={`badge ${repository.enabled ? "badge-success" : "badge-neutral"}`}>
                 {repository.enabled ? "Active" : "Disabled"}
               </span>
             </div>
-            <p class="text-gray-400">{repository.url}</p>
+            <p safe class="text-gray-400">
+              {repository.url}
+            </p>
           </div>
           <div class="flex items-center gap-2">
             <button
@@ -333,7 +343,12 @@ export function RepositoryDetail({ repository }: { repository: RepositoryWithSta
           <div class="md:col-span-2">
             <dt class="text-sm text-gray-400">URL</dt>
             <dd>
-              <a href={repository.url} target="_blank" class="text-blue-400 hover:text-blue-300">
+              <a
+                safe
+                href={repository.url}
+                target="_blank"
+                class="text-blue-400 hover:text-blue-300"
+              >
                 {repository.url}
               </a>
             </dd>

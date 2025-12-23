@@ -52,6 +52,17 @@ services:
     environment:
       - SQLITE_DATABASE=dockstat.sqlite
 
+  sqlite-web2:
+    container_name: sqlite-web-dockstore-verification-dev
+    image: coleifer/sqlite-web:latest
+    restart: on-failure
+    ports:
+      - 8181:8080
+    volumes:
+      - ./apps/dockstore-verification:/data
+    environment:
+      - SQLITE_DATABASE=verification.db
+
   prometheus:
     container_name: prometheus-dockstat-dev
     restart: on-failure

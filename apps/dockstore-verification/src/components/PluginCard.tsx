@@ -1,6 +1,7 @@
 import { Html } from "@elysiajs/html"
 import type { PluginVerificationView } from "../db/types"
 import { shortHash } from "../services/hash"
+import { getViewableRepositoryUrl } from "../services/url"
 
 const _ = Html
 
@@ -127,12 +128,9 @@ export function PluginCard({ plugin, showActions = true }: PluginCardProps) {
       {showActions && (
         <div class="flex items-center gap-2 pt-4 border-t border-gray-700">
           {!plugin.verified && (
-            <button
-              type="button"
+            <a
+              href={`/verify?plugin=${plugin.plugin_id}&version=${encodeURIComponent(plugin.version)}`}
               class="btn btn-primary text-sm"
-              hx-post={`/api/plugins/${plugin.plugin_id}/versions/${plugin.version}/verify`}
-              hx-target="closest .card"
-              hx-swap="outerHTML"
             >
               <svg
                 class="w-4 h-4 mr-1"
@@ -150,7 +148,7 @@ export function PluginCard({ plugin, showActions = true }: PluginCardProps) {
                 />
               </svg>
               Verify
-            </button>
+            </a>
           )}
           <a href={`/plugins/${plugin.plugin_id}`} class="btn btn-secondary text-sm">
             <svg
@@ -178,7 +176,7 @@ export function PluginCard({ plugin, showActions = true }: PluginCardProps) {
             Details
           </a>
           <a
-            href={plugin.repository_url}
+            href={getViewableRepositoryUrl(plugin.repository_url, plugin.repo_type)}
             target="_blank"
             rel="noopener noreferrer"
             class="btn btn-secondary text-sm"
