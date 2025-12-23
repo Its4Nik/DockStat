@@ -16,7 +16,7 @@ import {
   Timer,
   Zap,
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useFetcher } from "react-router"
 import { toast } from "sonner"
 import type { ActionResponse, RegisterClientFormProps } from "../types"
@@ -28,6 +28,7 @@ import { FormField } from "./FormField"
 export function RegisterClientForm({ onSuccess, onCancel }: RegisterClientFormProps) {
   const fetcher = useFetcher<ActionResponse>()
   const isSubmitting = fetcher.state === "submitting"
+  const previousState = useRef(fetcher.state)
 
   // Basic options
   const [clientName, setClientName] = useState("")
@@ -66,7 +67,8 @@ export function RegisterClientForm({ onSuccess, onCancel }: RegisterClientFormPr
 
   // Handle fetcher response
   useEffect(() => {
-    if (fetcher.state === "idle" && fetcher.data) {
+    // Only trigger when transitioning from submitting/loading to idle
+    if (previousState.current !== "idle" && fetcher.state === "idle" && fetcher.data) {
       if (fetcher.data.success) {
         toast.success("Client registered", {
           description:
@@ -101,6 +103,7 @@ export function RegisterClientForm({ onSuccess, onCancel }: RegisterClientFormPr
         })
       }
     }
+    previousState.current = fetcher.state
   }, [fetcher.state, fetcher.data, clientName, onSuccess])
 
   // Count active features

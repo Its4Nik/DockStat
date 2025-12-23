@@ -62,7 +62,14 @@ export {
   // Layout and configuration
   type LayoutConfig,
   type StateConfig,
+  // Action types
+  type ActionSuccessHandler,
+  type ActionErrorHandler,
   type ActionConfig,
+  type ActionResult,
+  // Loader types
+  type LoaderConfig,
+  type LoaderResult,
   // Page template
   type PageTemplate,
   // Fragments

@@ -14,7 +14,7 @@ import {
   Shield,
   ShieldCheck,
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useFetcher } from "react-router"
 import { toast } from "sonner"
 import type { ActionResponse, AddHostFormProps } from "../types"
@@ -25,6 +25,7 @@ import { Section } from "./Section"
 export function AddHostForm({ clients, onClose }: AddHostFormProps) {
   const fetcher = useFetcher<ActionResponse>()
   const isSubmitting = fetcher.state === "submitting"
+  const previousState = useRef(fetcher.state)
 
   // Form state
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -39,7 +40,8 @@ export function AddHostForm({ clients, onClose }: AddHostFormProps) {
 
   // Handle fetcher response
   useEffect(() => {
-    if (fetcher.state === "idle" && fetcher.data) {
+    // Only trigger when transitioning from submitting/loading to idle
+    if (previousState.current !== "idle" && fetcher.state === "idle" && fetcher.data) {
       if (fetcher.data.success) {
         toast.success("Host added", {
           description: fetcher.data.message || `Host "${name}" has been added successfully.`,
@@ -56,6 +58,7 @@ export function AddHostForm({ clients, onClose }: AddHostFormProps) {
         })
       }
     }
+    previousState.current = fetcher.state
   }, [fetcher.state, fetcher.data, name, secure, onClose])
 
   const handleSubmit = (e: React.FormEvent) => {

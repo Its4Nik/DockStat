@@ -24,7 +24,7 @@ export function mapFromContainerMetricHookToDb(
 ): Omit<Omit<DockMonTable, "id">, "stored_on"> {
   return {
     container_id: containerMetricEvent.containerId,
-    docker_client_id: 0,
+    docker_client_id: containerMetricEvent.docker_client_id,
     host_id: containerMetricEvent.hostId,
     type: "CONTAINER",
     data: { container_metrics: containerMetricEvent.stats },

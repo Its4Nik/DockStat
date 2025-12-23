@@ -4,6 +4,7 @@ import { useState } from "react"
 import { HostDetailModal } from "./HostDetailModal"
 import { EditHostForm } from "./forms/EditHostForm"
 import type { Host, HostsListProps } from "./types"
+import { DeleteHostButton } from "./forms/DeleteHostButton"
 
 export function HostsList({
   hosts,
@@ -137,6 +138,7 @@ export function HostsList({
                         <Badge variant="secondary" size="sm" outlined>
                           ID: {host.id}
                         </Badge>
+                        <DeleteHostButton clientId={host.clientId} hostId={host.id} />
                       </div>
                     </button>
                   ))}

@@ -12,7 +12,7 @@ import {
   Shield,
   ShieldCheck,
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useFetcher } from "react-router"
 import { toast } from "sonner"
 import type { ActionResponse, EditHostFormProps } from "../types"
@@ -23,6 +23,7 @@ import { Section } from "./Section"
 export function EditHostForm({ host, clientName, onClose }: EditHostFormProps) {
   const fetcher = useFetcher<ActionResponse>()
   const isSubmitting = fetcher.state === "submitting"
+  const previousState = useRef(fetcher.state)
 
   // Form state - initialized from host data
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -43,7 +44,8 @@ export function EditHostForm({ host, clientName, onClose }: EditHostFormProps) {
 
   // Handle fetcher response
   useEffect(() => {
-    if (fetcher.state === "idle" && fetcher.data) {
+    // Only trigger when transitioning from submitting/loading to idle
+    if (previousState.current !== "idle" && fetcher.state === "idle" && fetcher.data) {
       if (fetcher.data.success) {
         toast.success("Host updated", {
           description: fetcher.data.message || `Host "${name}" has been updated successfully.`,
@@ -57,6 +59,7 @@ export function EditHostForm({ host, clientName, onClose }: EditHostFormProps) {
         })
       }
     }
+    previousState.current = fetcher.state
   }, [fetcher.state, fetcher.data, name, onClose])
 
   const handleSubmit = (e: React.FormEvent) => {

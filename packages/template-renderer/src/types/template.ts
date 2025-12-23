@@ -86,19 +86,121 @@ export interface StateConfig {
 }
 
 /**
+ * Success handler configuration for actions
+ */
+export interface ActionSuccessHandler {
+  /** State updates to apply on success - maps result paths to state keys */
+  setState?: Record<string, string | unknown>
+  /** Notification to show on success */
+  notify?: {
+    message: string
+    type?: "success" | "info"
+  }
+  /** Action to trigger on success */
+  triggerAction?: string
+  /** Navigate to a path on success */
+  navigate?: string
+}
+
+/**
+ * Error handler configuration for actions
+ */
+export interface ActionErrorHandler {
+  /** State updates to apply on error */
+  setState?: Record<string, unknown>
+  /** Notification to show on error */
+  notify?: {
+    message: string
+    type?: "error" | "warning"
+  }
+  /** Action to trigger on error */
+  triggerAction?: string
+}
+
+/**
  * Action definition that can be triggered by widgets
  */
 export interface ActionConfig {
   /** Unique identifier for this action */
   id: string
   /** Type of action */
-  type: "navigate" | "setState" | "custom"
-  /** Navigation path for navigate type */
-  path?: string
+  type: "navigate" | "setState" | "api" | "reload" | "custom"
+
+  // ---- setState type ----
   /** State updates for setState type */
   stateUpdates?: Record<string, unknown>
-  /** Custom handler identifier */
+
+  // ---- navigate type ----
+  /** Navigation path for navigate type */
+  path?: string
+
+  // ---- api type ----
+  /** Plugin API route to call for api type */
+  apiRoute?: string
+  /** HTTP method for API call (defaults to POST) */
+  method?: "GET" | "POST"
+  /** Request body for API call - can be static data or use {{state.key}} bindings */
+  body?: unknown
+  /** Handler for successful API response */
+  onSuccess?: ActionSuccessHandler
+  /** Handler for API error */
+  onError?: ActionErrorHandler
+
+  // ---- reload type ----
+  /** Loader IDs to reload for reload type (reloads all if not specified) */
+  loaderIds?: string[]
+
+  // ---- custom type ----
+  /** Custom handler identifier for custom type */
   handler?: string
+
+  // ---- Common options ----
+  /** Whether to show a loading indicator while executing */
+  showLoading?: boolean
+  /** Confirmation dialog before executing */
+  confirm?: {
+    title?: string
+    message: string
+    confirmText?: string
+    cancelText?: string
+  }
+  /** Debounce delay in milliseconds */
+  debounce?: number
+}
+
+/**
+ * Data loader configuration for templates
+ * Defines data that should be loaded when a template is rendered
+ */
+export interface LoaderConfig {
+  /** Unique identifier for this loader */
+  id: string
+  /** Plugin API route to call for loading data */
+  apiRoute: string
+  /** HTTP method to use (defaults to GET) */
+  method?: "GET" | "POST"
+  /** Request body for POST requests - can be static data or binding expressions */
+  body?: unknown
+  /** State key where the loaded data will be stored */
+  stateKey?: string
+  /** Data key where the loaded data will be stored (passed to template as data) */
+  dataKey?: string
+  /** Cache configuration for the loader */
+  cache?: {
+    /** Time to live in milliseconds */
+    ttl?: number
+    /** Custom cache key expression */
+    key?: string
+  }
+  /** Whether this loader should run on every navigation (default: true) */
+  runOnNavigate?: boolean
+  /** Whether this loader should run periodically */
+  polling?: {
+    /** Polling interval in milliseconds */
+    interval: number
+    /** Whether polling is enabled (can be bound to state) */
+    enabled?: boolean | string
+  }
 }
 
 /**
@@ -117,6 +219,8 @@ export interface PageTemplate {
   layout?: LayoutConfig
   /** Initial state and computed values */
   state?: StateConfig
+  /** Data loaders for this template */
+  loaders?: LoaderConfig[]
   /** Actions that can be triggered */
   actions?: ActionConfig[]
   /** Root widgets to render */
@@ -195,6 +299,10 @@ export interface PluginFrontendRoute {
     navOrder?: number
     [key: string]: unknown
   }
+  /** Data loaders for this route (merged with template loaders) */
+  loaders?: LoaderConfig[]
+  /** Actions available for this route (merged with template actions) */
+  actions?: ActionConfig[]
 }
 
 /**
@@ -208,6 +316,46 @@ export interface PluginFrontendConfig {
   sharedFragments?: TemplateFragment[]
   /** Global state shared across routes */
   globalState?: StateConfig
+  /** Global actions available to all routes */
+  globalActions?: ActionConfig[]
+  /** Global loaders that run for all routes */
+  globalLoaders?: LoaderConfig[]
+}
+
+/**
+ * Result of executing a loader
+ */
+export interface LoaderResult {
+  /** Loader ID */
+  loaderId: string
+  /** Whether the loader succeeded */
+  success: boolean
+  /** Loaded data (on success) */
+  data?: unknown
+  /** Error message (on failure) */
+  error?: string
+  /** State key where data should be stored */
+  stateKey?: string
+  /** Data key where data should be stored */
+  dataKey?: string
+  /** Timestamp when the data was loaded */
+  loadedAt: number
+}
+
+/**
+ * Result of executing an action
+ */
+export interface ActionResult {
+  /** Action ID */
+  actionId: string
+  /** Whether the action succeeded */
+  success: boolean
+  /** Result data (on success) */
+  data?: unknown
+  /** Error message (on failure) */
+  error?: string
+  /** Timestamp when the action was executed */
+  executedAt: number
 }
 
 /**
@@ -225,6 +373,12 @@ export interface TemplateRenderContext {
   triggerAction: (actionId: string, payload?: unknown) => void
   /** Function to navigate to a route */
   navigate: (path: string) => void
+  /** Function to reload loaders */
+  reloadLoaders?: (loaderIds?: string[]) => void
+  /** Loading state for loaders */
+  loadingLoaders?: Set<string>
+  /** Loading state for actions */
+  loadingActions?: Set<string>
   /** Available fragments for reference resolution */
   fragments?: Record<string, TemplateFragment>
   /** Plugin context for plugin-specific data */

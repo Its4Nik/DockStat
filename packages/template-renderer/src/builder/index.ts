@@ -14,6 +14,9 @@ import type {
   LayoutConfig,
   StateConfig,
   ActionConfig,
+  ActionSuccessHandler,
+  ActionErrorHandler,
+  LoaderConfig,
   WidgetBindings,
   WidgetActions,
 } from "../types"
@@ -302,6 +305,154 @@ export const actions = {
       id,
       type: "custom",
       handler,
+    }
+  },
+
+  /**
+   * Create an API action that calls a plugin backend route
+   */
+  api(
+    id: string,
+    apiRoute: string,
+    options?: {
+      method?: "GET" | "POST"
+      body?: unknown
+      onSuccess?: ActionSuccessHandler
+      onError?: ActionErrorHandler
+      showLoading?: boolean
+      confirm?: { title?: string; message: string; confirmText?: string; cancelText?: string }
+      debounce?: number
+    }
+  ): ActionConfig {
+    return {
+      id,
+      type: "api",
+      apiRoute,
+      method: options?.method ?? "POST",
+      body: options?.body,
+      onSuccess: options?.onSuccess,
+      onError: options?.onError,
+      showLoading: options?.showLoading,
+      confirm: options?.confirm,
+      debounce: options?.debounce,
+    }
+  },
+
+  /**
+   * Create a reload action that re-executes loaders
+   */
+  reload(id: string, loaderIds?: string[]): ActionConfig {
+    return {
+      id,
+      type: "reload",
+      loaderIds,
+    }
+  },
+} as const
+
+/**
+ * Loader builder helpers
+ */
+export const loaders = {
+  /**
+   * Create a basic data loader
+   */
+  data(
+    id: string,
+    apiRoute: string,
+    options?: {
+      method?: "GET" | "POST"
+      body?: unknown
+      stateKey?: string
+      dataKey?: string
+    }
+  ): LoaderConfig {
+    return {
+      id,
+      apiRoute,
+      method: options?.method ?? "GET",
+      body: options?.body,
+      stateKey: options?.stateKey,
+      dataKey: options?.dataKey ?? id,
+    }
+  },
+
+  /**
+   * Create a loader that stores data in state
+   */
+  toState(
+    id: string,
+    apiRoute: string,
+    stateKey: string,
+    options?: {
+      method?: "GET" | "POST"
+      body?: unknown
+    }
+  ): LoaderConfig {
+    return {
+      id,
+      apiRoute,
+      method: options?.method ?? "GET",
+      body: options?.body,
+      stateKey,
+    }
+  },
+
+  /**
+   * Create a polling loader that refreshes periodically
+   */
+  polling(
+    id: string,
+    apiRoute: string,
+    interval: number,
+    options?: {
+      method?: "GET" | "POST"
+      body?: unknown
+      stateKey?: string
+      dataKey?: string
+      enabled?: boolean | string
+    }
+  ): LoaderConfig {
+    return {
+      id,
+      apiRoute,
+      method: options?.method ?? "GET",
+      body: options?.body,
+      stateKey: options?.stateKey,
+      dataKey: options?.dataKey ?? id,
+      polling: {
+        interval,
+        enabled: options?.enabled ?? true,
+      },
+    }
+  },
+
+  /**
+   * Create a cached loader
+   */
+  cached(
+    id: string,
+    apiRoute: string,
+    ttl: number,
+    options?: {
+      method?: "GET" | "POST"
+      body?: unknown
+      stateKey?: string
+      dataKey?: string
+      cacheKey?: string
+    }
+  ): LoaderConfig {
+    return {
+      id,
+      apiRoute,
+      method: options?.method ?? "GET",
+      body: options?.body,
+      stateKey: options?.stateKey,
+      dataKey: options?.dataKey ?? id,
+      cache: {
+        ttl,
+        key: options?.cacheKey,
+      },
     }
   },
 } as const

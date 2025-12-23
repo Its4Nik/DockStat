@@ -4,13 +4,24 @@ import { join } from "node:path"
 import Logger from "@dockstat/logger"
 import type DB from "@dockstat/sqlite-wrapper"
 import { column, QueryBuilder } from "@dockstat/sqlite-wrapper"
-import type { EVENTS, PluginRoute } from "@dockstat/typings"
+import type {
+  EVENTS,
+  PluginRoute,
+  FrontendLoaderResult,
+  FrontendActionResult,
+} from "@dockstat/typings"
 import type { DBPluginShemaT, Plugin } from "@dockstat/typings/types"
 import {
   PluginFrontendHandler,
   type ResolvedFrontendRoute,
   type PluginFrontendRoutes,
 } from "./frontend"
+import {
+  FrontendActionsHandler,
+  type ResolvedLoader,
+  type ResolvedAction,
+  type ExecutionContext,
+} from "./actions"
 
 class PluginHandler {
   private loadedPluginsMap = new Map<number, Plugin>()
@@ -19,6 +30,7 @@ class PluginHandler {
   private table: QueryBuilder<DBPluginShemaT>
   private logger: Logger
   private frontendHandler: PluginFrontendHandler
+  private actionsHandler: FrontendActionsHandler
 
   constructor(db: DB, loggerParents: string[] = []) {
     this.logger = new Logger("PluginHandler", loggerParents)
@@ -54,6 +66,11 @@ class PluginHandler {
     this.frontendHandler = new PluginFrontendHandler({
       basePathPrefix: "/plugins",
       logger: this.logger.spawn("Frontend"),
+    })
+
+    // Initialize actions handler
+    this.actionsHandler = new FrontendActionsHandler({
+      logger: this.logger.spawn("Actions"),
     })
   }
 
@@ -170,7 +187,7 @@ class PluginHandler {
           mod.id = plugin.id as number
 
           this.logger.debug(
-            `Creating table for plugin ${plugin.id} if needed - ${JSON.stringify(mod.config)}`
+            `Creating table for plugin ${plugin.id} if needed - ${JSON.stringify(mod.config.table)}`
           )
 
           let table = null
@@ -479,6 +496,122 @@ class PluginHandler {
   public getSharedFragments(pluginId: number): unknown[] {
     return this.frontendHandler.getSharedFragments(pluginId, this.loadedPluginsMap)
   }
+
+  // ==================== Frontend Actions & Loaders Methods ====================
+
+  /**
+   * Get all loaders for a plugin route
+   */
+  public getRouteLoaders(pluginId: number, routePath: string): ResolvedLoader[] {
+    return this.actionsHandler.getRouteLoaders(pluginId, routePath, this.loadedPluginsMap)
+  }
+
+  /**
+   * Get all actions for a plugin route
+   */
+  public getRouteActions(pluginId: number, routePath: string): ResolvedAction[] {
+    return this.actionsHandler.getRouteActions(pluginId, routePath, this.loadedPluginsMap)
+  }
+
+  /**
+   * Execute loaders for a plugin route and return loaded data
+   */
+  public async executeRouteLoaders(
+    pluginId: number,
+    routePath: string,
+    context?: Partial<ExecutionContext>
+  ): Promise<{
+    results: FrontendLoaderResult[]
+    state: Record<string, unknown>
+    data: Record<string, unknown>
+  }> {
+    const loaders = this.getRouteLoaders(pluginId, routePath)
+
+    if (loaders.length === 0) {
+      return { results: [], state: {}, data: {} }
+    }
+
+    // Create a bound route handler
+    const handleRoute = (pId: number, path: string, request: Request) =>
+      this.handleRoute(pId, path, request)
+
+    const results = await this.actionsHandler.executeLoaders(loaders, handleRoute, {
+      pluginId,
+      ...context,
+    })
+
+    const { state, data } = this.actionsHandler.buildInitialDataFromLoaderResults(results)
+
+    return { results, state, data }
+  }
+
+  /**
+   * Execute a specific loader by ID
+   */
+  public async executeLoader(
+    pluginId: number,
+    routePath: string,
+    loaderId: string,
+    context?: Partial<ExecutionContext>
+  ): Promise<FrontendLoaderResult | null> {
+    const loaders = this.getRouteLoaders(pluginId, routePath)
+    const loader = loaders.find((l) => l.id === loaderId)
+
+    if (!loader) {
+      this.logger.warn(`Loader ${loaderId} not found for plugin ${pluginId} route ${routePath}`)
+      return null
+    }
+
+    const handleRoute = (pId: number, path: string, request: Request) =>
+      this.handleRoute(pId, path, request)
+
+    return this.actionsHandler.executeLoader(loader, handleRoute, {
+      pluginId,
+      ...context,
+    })
+  }
+
+  /**
+   * Execute a frontend action by ID
+   */
+  public async executeAction(
+    pluginId: number,
+    routePath: string,
+    actionId: string,
+    context?: Partial<ExecutionContext>
+  ): Promise<FrontendActionResult | null> {
+    const actions = this.getRouteActions(pluginId, routePath)
+    const action = actions.find((a) => a.id === actionId)
+
+    if (!action) {
+      this.logger.warn(`Action ${actionId} not found for plugin ${pluginId} route ${routePath}`)
+      return null
+    }
+
+    const handleRoute = (pId: number, path: string, request: Request) =>
+      this.handleRoute(pId, path, request)
+
+    return this.actionsHandler.executeAction(action, handleRoute, {
+      pluginId,
+      ...context,
+    })
+  }
+
+  /**
+   * Get action definition by ID
+   */
+  public getAction(pluginId: number, routePath: string, actionId: string): ResolvedAction | null {
+    const actions = this.getRouteActions(pluginId, routePath)
+    return actions.find((a) => a.id === actionId) ?? null
+  }
+
+  /**
+   * Get loader definition by ID
+   */
+  public getLoader(pluginId: number, routePath: string, loaderId: string): ResolvedLoader | null {
+    const loaders = this.getRouteLoaders(pluginId, routePath)
+    return loaders.find((l) => l.id === loaderId) ?? null
+  }
 }
 
 export default PluginHandler
@@ -489,3 +622,11 @@ export {
   type ResolvedFrontendRoute,
   type PluginFrontendRoutes,
 } from "./frontend"
+
+// Re-export actions types for convenience
+export {
+  FrontendActionsHandler,
+  type ResolvedLoader,
+  type ResolvedAction,
+  type ExecutionContext,
+} from "./actions"

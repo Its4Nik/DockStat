@@ -27,7 +27,9 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
       `Transformed row: ${truncate(JSON.stringify(transformedRows), 100)}`
     )
 
-    this.getLogger("INSERT").debug(`Transformed row: ${JSON.stringify(transformedRows)}`)
+    this.getLogger("INSERT").debug(
+      `Transformed row:  ${truncate(JSON.stringify(transformedRows), 100)}`
+    )
 
     if (transformedRows.length === 0) {
       throw new Error("insert: data cannot be empty")

@@ -70,10 +70,16 @@ export {
 export {
   useTemplateState,
   useTemplateActions,
+  useTemplateLoaders,
   useTemplate,
   type UseTemplateStateResult,
   type UseTemplateActionsResult,
+  type UseTemplateLoadersResult,
   type UseTemplateResult,
+  type ExecuteApiActionOptions,
+  type ApiActionResult,
+  type ApiActionExecutor,
+  type LoaderExecutor,
 } from "./hooks/useTemplate"
 
 // Builder
@@ -86,5 +92,6 @@ export {
   template,
   fragment,
   actions,
+  loaders,
   layouts,
 } from "./builder"

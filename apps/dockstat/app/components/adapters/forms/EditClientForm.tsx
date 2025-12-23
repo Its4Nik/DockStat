@@ -17,7 +17,7 @@ import {
   Timer,
   Zap,
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useFetcher } from "react-router"
 import { toast } from "sonner"
 import type { ActionResponse, EditClientFormProps } from "../types"
@@ -29,6 +29,7 @@ import { Section } from "./Section"
 export function EditClientForm({ client, worker, onClose }: EditClientFormProps) {
   const fetcher = useFetcher<ActionResponse>()
   const isSubmitting = fetcher.state === "submitting"
+  const previousState = useRef(fetcher.state)
 
   // Get options from worker if available
   const options = worker?.options
@@ -90,7 +91,8 @@ export function EditClientForm({ client, worker, onClose }: EditClientFormProps)
 
   // Handle fetcher response
   useEffect(() => {
-    if (fetcher.state === "idle" && fetcher.data) {
+    // Only trigger when transitioning from submitting/loading to idle
+    if (previousState.current !== "idle" && fetcher.state === "idle" && fetcher.data) {
       if (fetcher.data.success) {
         toast.success("Client updated", {
           description: fetcher.data.message || `Client "${clientName}" has been updated.`,
@@ -104,6 +106,7 @@ export function EditClientForm({ client, worker, onClose }: EditClientFormProps)
         })
       }
     }
+    previousState.current = fetcher.state
   }, [fetcher.state, fetcher.data, clientName, onClose])
 
   // Count active features

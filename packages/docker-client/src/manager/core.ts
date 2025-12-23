@@ -3,7 +3,7 @@ import type PluginHandler from "@dockstat/plugin-handler"
 import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DOCKER, EVENTS } from "@dockstat/typings"
 import type { buildMessageFromProxyRes } from "@dockstat/typings/types"
-import { worker as workerUtils } from "@dockstat/utils"
+import { truncate, worker as workerUtils } from "@dockstat/utils"
 import type { PoolMetrics, WorkerMetrics } from "../types"
 import type {
   DBType,
@@ -617,7 +617,7 @@ export class DockerClientManagerCore {
     }
 
     this.logger.debug(
-      `Triggering hooks for event "${String(message.type)} - ctx: ${JSON.stringify(message.ctx)}"`
+      `Triggering hooks for event "${String(message.type)} - ctx: ${truncate(JSON.stringify(message.ctx), 100)}"`
     )
 
     this.logger.debug(`${this.events.size} Events registered`)

@@ -87,6 +87,7 @@ export interface DockerAdapterOptions {
   retryDelay?: number
   enableMonitoring?: boolean
   enableEventEmitter?: boolean
+  enableContainerMetrics?: boolean
   monitoringOptions?: MonitoringOptions
   execOptions?: ExecOptions
 }
@@ -98,6 +99,7 @@ export const DockerAdapterOptionsSchema = t.Partial(
     retryDelay: t.Number(),
     enableMonitoring: t.Boolean(),
     enableEventEmitter: t.Boolean(),
+    enableContainerMetrics: t.Boolean(),
     monitoringOptions: t.Partial(
       t.Object({
         healthCheckInterval: t.Number(),
@@ -246,7 +248,7 @@ export interface DockerClientEvents {
   "host:health:changed": (ctx: HostHealthContext) => void
 
   "host:metrics": (ctx: HostMetricsContext & BaseCtx) => void
-  "container:metrics": (ctx: ContainerMetricCtx) => void
+  "container:metrics": (ctx: ContainerMetricCtx & BaseCtx) => void
 
   "container:started": (ctx: ContainerInfoCtx) => void
   "container:stopped": (ctx: ContainerInfoCtx) => void

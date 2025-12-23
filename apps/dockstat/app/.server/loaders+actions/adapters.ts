@@ -33,6 +33,11 @@ type AdapterAction =
       }
     }
   | {
+      intent: "host:delete"
+      clientId: number
+      hostId: number
+    }
+  | {
       intent: "client:monitoring:create-manager"
       clientId: number
     }
@@ -75,6 +80,10 @@ function parseFormData(formData: FormData): AdapterAction | null {
       if (enableMonitoring) options.enableMonitoring = enableMonitoring === "true"
       if (enableEventEmitter) options.enableEventEmitter = enableEventEmitter === "true"
 
+      // Monitoring options (read early to set top-level enableContainerMetrics)
+      const enableContainerMetrics = formData.get("enableContainerMetrics")
+      if (enableContainerMetrics === "true") options.enableContainerMetrics = true
+
       // Monitoring options
       const healthCheckInterval = formData.get("healthCheckInterval")
       const containerEventPollingInterval = formData.get("containerEventPollingInterval")
@@ -82,7 +91,6 @@ function parseFormData(formData: FormData): AdapterAction | null {
       const containerMetricsInterval = formData.get("containerMetricsInterval")
       const enableContainerEvents = formData.get("enableContainerEvents")
       const enableHostMetrics = formData.get("enableHostMetrics")
-      const enableContainerMetrics = formData.get("enableContainerMetrics")
       const enableHealthChecks = formData.get("enableHealthChecks")
       const monitoringRetryAttempts = formData.get("monitoringRetryAttempts")
       const monitoringRetryDelay = formData.get("monitoringRetryDelay")
@@ -165,6 +173,10 @@ function parseFormData(formData: FormData): AdapterAction | null {
       if (enableMonitoring) options.enableMonitoring = enableMonitoring === "true"
       if (enableEventEmitter) options.enableEventEmitter = enableEventEmitter === "true"
 
+      // Monitoring options (read early to set top-level enableContainerMetrics)
+      const enableContainerMetrics = formData.get("enableContainerMetrics")
+      if (enableContainerMetrics === "true") options.enableContainerMetrics = true
+
       // Monitoring options
       const healthCheckInterval = formData.get("healthCheckInterval")
       const containerEventPollingInterval = formData.get("containerEventPollingInterval")
@@ -172,7 +184,6 @@ function parseFormData(formData: FormData): AdapterAction | null {
       const containerMetricsInterval = formData.get("containerMetricsInterval")
       const enableContainerEvents = formData.get("enableContainerEvents")
       const enableHostMetrics = formData.get("enableHostMetrics")
-      const enableContainerMetrics = formData.get("enableContainerMetrics")
       const enableHealthChecks = formData.get("enableHealthChecks")
       const monitoringRetryAttempts = formData.get("monitoringRetryAttempts")
       const monitoringRetryDelay = formData.get("monitoringRetryDelay")
@@ -270,6 +281,17 @@ function parseFormData(formData: FormData): AdapterAction | null {
         name,
         secure: secure === "true",
         port: Number(port),
+      }
+    }
+
+    case "host:delete": {
+      const hostId = formData.get("hostId")
+      const clientId = formData.get("clientId")
+
+      return {
+        intent: "host:delete",
+        clientId: Number(clientId),
+        hostId: Number(hostId),
       }
     }
 
@@ -456,6 +478,25 @@ export const Adapter = {
           return {
             success: false,
             error: handleElysiaError(res.error, "Failed to add host"),
+          }
+        }
+
+        case "host:delete": {
+          const res = await ServerAPI.docker.hosts.delete.post({
+            clientId: action.clientId,
+            hostId: action.hostId,
+          })
+
+          if (res.status === 200 && res.data) {
+            return {
+              success: true,
+              message: res.data.message,
+            }
+          }
+
+          return {
+            success: false,
+            error: handleElysiaError(res.error, "Failed to delete host"),
           }
         }
 

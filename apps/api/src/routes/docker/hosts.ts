@@ -92,3 +92,37 @@ export const DockerHostElysia = new Elysia({
       },
     }
   )
+  .post(
+    "/delete",
+    async ({ body: { clientId, hostId }, status }) => {
+      try {
+        await DCM.removeHost(clientId, hostId)
+        return status(200, {
+          success: true as const,
+          message: `Host with id "${hostId}" on Client "${clientId}" deleted successfully`,
+        })
+      } catch (err) {
+        const errorMessage = extractErrorMessage(err, "Failed to delete host")
+        return status(500, {
+          success: false as const,
+          error: errorMessage,
+        })
+      }
+    },
+    {
+      body: t.Object({
+        clientId: t.Number(),
+        hostId: t.Number(),
+      }),
+      response: {
+        200: t.Object({
+          success: t.Literal(true),
+          message: t.String(),
+        }),
+        500: t.Object({
+          success: t.Literal(false),
+          error: t.String(),
+        }),
+      },
+    }
+  )
