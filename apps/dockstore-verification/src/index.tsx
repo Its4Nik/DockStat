@@ -1,14 +1,14 @@
-import Logger from "@dockstat/logger"
 import { Html, html } from "@elysiajs/html"
 import { staticPlugin } from "@elysiajs/static"
 import { Elysia } from "elysia"
 import { db } from "./db"
 import { createAuthMiddleware, type AuthConfig } from "./middleware/auth"
 import { apiRoutes, compareRoutes, pageRoutes, publicRoutes } from "./routes"
+import BaseLogger from "./base-logger"
+
+const logger = BaseLogger.spawn("Verification-Server")
 
 const _ = Html
-
-const logger = new Logger("Verification-Server")
 
 // Configuration
 export const PORT = process.env.VERIFICATION_PORT ? Number(process.env.VERIFICATION_PORT) : 3200

@@ -4,9 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run --watch src/index.tsx",
+    "dev": "bun run --watch src/_start.ts",
     "start": "bun run src/index.tsx",
-    "build": "rm -r ./dist || true && bun build --target bun --sourcemap=inline --outdir=./dist --minify src/index.tsx",
+    "build": "rm -r ./dist || true && bun build --target bun --sourcemap=inline --outdir=./dist --minify src/_start.ts",
     "build:docker": "bun run build && docker build -t dockstore-verification:latest .",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",

@@ -1,9 +1,9 @@
-import Logger from "@dockstat/logger"
 import type { PluginMetaType } from "@dockstat/typings/types"
 import { hashString } from "./hash"
 import { YAML } from "bun"
+import BaseLogger from "../base-logger"
 
-const logger = new Logger("Repository-Service")
+const logger = BaseLogger.spawn("Repository-Service")
 
 /**
  * Repository manifest structure

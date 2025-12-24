@@ -1,7 +1,7 @@
-import Logger from "@dockstat/logger"
+import BaseLogger from "../base-logger"
 import { Elysia } from "elysia"
 
-const logger = new Logger("Auth-Middleware")
+const logger = BaseLogger.spawn("Auth-Middleware")
 
 /**
  * Authentication context type

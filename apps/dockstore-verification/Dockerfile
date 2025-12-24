@@ -5,7 +5,7 @@ WORKDIR /opt/dockstore-verification
 RUN mkdir -p data public
 
 # Copy built application
-COPY ./dist/index.js ./index.js
+COPY ./dist/_start.js ./DVAPI.js
 COPY ./public ./public
 
 # Set environment variables
@@ -16,6 +16,7 @@ ENV DOCKSTAT_LOGGER_DISABLED_LOGGERS="QueryBuilder,Sqlite-Wrapper"
 ENV DOCKSTAT_LOGGER_ONLY_SHOW=""
 ENV DOCKSTAT_LOGGER_IGNORE_MESSAGES="Logger Status: active"
 ENV DOCKSTAT_LOGGER_FULL_FILE_PATH=false
+ENV DOCKSTAT_LOGGER_LEVEL=info
 ENV VERIFICATION_PORT=3200
 
 # Expose port
@@ -26,4 +27,4 @@ VOLUME ["/opt/dockstore-verification/data"]
 VOLUME ["/opt/dockstore-verification/public"]
 
 # Run the application
-ENTRYPOINT ["bun", "run", "--bun", "index.js"]
+ENTRYPOINT ["bun", "run", "--bun", "DVAPI.js"]

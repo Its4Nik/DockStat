@@ -1,4 +1,4 @@
-import Logger from "@dockstat/logger"
+import BaseLogger from "../base-logger"
 import { Html } from "@elysiajs/html"
 import { Elysia, t } from "elysia"
 import { db, pluginsTable, pluginVersionsTable, repositoriesTable, verificationsTable } from "../db"
@@ -9,7 +9,7 @@ import { VerifiedCard } from "../views/Verify"
 
 const _ = Html
 
-const logger = new Logger("API-Routes")
+const logger = BaseLogger.spawn("API-Routes")
 
 /**
  * Get dashboard statistics
@@ -562,8 +562,8 @@ const apiRoutes = new Elysia({ prefix: "/api" })
               <div>
                 <h4 class="text-sm font-semibold text-green-400 mb-1">Plugin Added Successfully</h4>
                 <p class="text-sm text-gray-300 mb-2">
-                  The plugin "<strong>{body.name}</strong>" version <strong>{body.version}</strong>{" "}
-                  has been added to the verification database.
+                  The plugin "<strong safe>{body.name}</strong>" version{" "}
+                  <strong safe>{body.version}</strong> has been added to the verification database.
                 </p>
                 <a href="/plugins" class="text-blue-400 hover:text-blue-300 underline text-sm">
                   View in plugins list →
@@ -573,7 +573,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
           </div>
         )
       } catch (error) {
-        logger.error("Failed to add manual plugin:", error)
+        logger.error(`Failed to add manual plugin: ${error}`)
         set.status = 500
         return (
           <div class="bg-red-900/20 border border-red-800 rounded-lg p-4">
@@ -614,7 +614,9 @@ const apiRoutes = new Elysia({ prefix: "/api" })
         author_email: t.Optional(t.String()),
         author_website: t.Optional(t.String()),
         license: t.Optional(t.String()),
-        repo_type: t.Optional(t.Union([t.Literal("github"), t.Literal("gitlab"), t.Literal("http")])),
+        repo_type: t.Optional(
+          t.Union([t.Literal("github"), t.Literal("gitlab"), t.Literal("http")])
+        ),
         manifest_path: t.Optional(t.String()),
         bundle_hash: t.Optional(t.String()),
         tags: t.Optional(t.Union([t.String(), t.Array(t.String())])),

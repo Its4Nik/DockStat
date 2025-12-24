@@ -66,6 +66,24 @@ function getCallerInfo(): string {
 
 type LogLevel = "error" | "warn" | "info" | "debug"
 
+const DEFAULT_LOG_LEVEL: LogLevel = "debug"
+const envLevel = (Bun.env.DOCKSTAT_LOGGER_LEVEL || "").toLowerCase()
+const LOG_LEVEL: LogLevel = ["error", "warn", "info", "debug"].includes(envLevel)
+  ? (envLevel as LogLevel)
+  : DEFAULT_LOG_LEVEL
+
+const LEVEL_PRIORITY: Record<LogLevel, number> = {
+  error: 0,
+  warn: 1,
+  info: 2,
+  debug: 3,
+}
+
+const shouldLog = (level: LogLevel) => {
+  // Only log messages that are at or above the configured level priority.
+  return LEVEL_PRIORITY[level] <= LEVEL_PRIORITY[LOG_LEVEL]
+}
+
 const levelColors: Record<LogLevel, (msg: string) => string> = {
   error: chalk.red.bold,
   warn: chalk.yellow.bold,
@@ -103,22 +121,22 @@ class Logger {
   }
 
   error(msg: string, requestid?: string) {
-    if (!this.disabled && !shouldIgnore(msg, ignoreMessages))
+    if (!this.disabled && !shouldIgnore(msg, ignoreMessages) && shouldLog("error"))
       console.error(this.formatMessage("error", msg, requestid))
   }
 
   warn(msg: string, requestid?: string) {
-    if (!this.disabled && !shouldIgnore(msg, ignoreMessages))
+    if (!this.disabled && !shouldIgnore(msg, ignoreMessages) && shouldLog("warn"))
       console.warn(this.formatMessage("warn", msg, requestid))
   }
 
   info(msg: string, requestid?: string) {
-    if (!this.disabled && !shouldIgnore(msg, ignoreMessages))
+    if (!this.disabled && !shouldIgnore(msg, ignoreMessages) && shouldLog("info"))
       console.info(this.formatMessage("info", msg, requestid))
   }
 
   debug(msg: string, requestid?: string) {
-    if (!this.disabled && !shouldIgnore(msg, ignoreMessages))
+    if (!this.disabled && !shouldIgnore(msg, ignoreMessages) && shouldLog("debug"))
       console.debug(this.formatMessage("debug", msg, requestid))
   }
 
