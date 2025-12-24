@@ -93,9 +93,6 @@ docker run -d \
 | `/api/plugins` | GET | List all plugins |
 | `/api/plugins/manual` | POST | Manually add a plugin to the database |
 | `/api/plugins/:id` | GET | Get plugin details |
-| `/api/repositories/:id/toggle` | PATCH | Enable/disable repository |
-| `/api/plugins` | GET | List all plugins |
-| `/api/plugins/:id` | GET | Get plugin details |
 | `/api/plugins/:id/versions/:version/verify` | POST | Verify a plugin version |
 | `/api/sync-all` | POST | Sync all enabled repositories |
 | `/health` | GET | Health check endpoint |

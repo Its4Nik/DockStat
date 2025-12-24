@@ -265,7 +265,7 @@ export function AddPluginManuallyView() {
                   stroke-width="2"
                   d="M12 4v16m8-8H4"
                 />
-                <title>Add</title>
+                <title>Add Plugin Icon</title>
               </svg>
               Add Plugin
             </button>
