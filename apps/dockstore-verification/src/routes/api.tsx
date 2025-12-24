@@ -445,7 +445,6 @@ const apiRoutes = new Elysia({ prefix: "/api" })
             url: "manual://local",
             enabled: true,
           })
-          
           // Verify repository was created successfully
           manualRepo = repositoriesTable.where({ id: repoResult.insertId }).first()
           if (!manualRepo) {
@@ -488,6 +487,9 @@ const apiRoutes = new Elysia({ prefix: "/api" })
             repo_type: body.repo_type || "http",
             manifest_path: body.manifest_path || "manual",
           })
+          if (!insertResult.insertId) {
+            throw new Error("Failed to insert plugin into database")
+          }
           pluginId = insertResult.insertId
         }
 
@@ -515,6 +517,9 @@ const apiRoutes = new Elysia({ prefix: "/api" })
             bundle_hash: body.bundle_hash,
             tags: tags,
           })
+          if (!versionResult.insertId) {
+            throw new Error("Failed to insert plugin version into database")
+          }
           versionId = versionResult.insertId
         }
 
