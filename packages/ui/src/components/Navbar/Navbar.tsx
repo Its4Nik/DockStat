@@ -18,6 +18,10 @@ const paths: Array<{ slug: string; path: string }> = [
     slug: "Clients",
     path: "/clients",
   },
+  {
+    slug: "Plugins",
+    path: "/plugins",
+  },
 ]
 
 export function Navbar({ isNavigating, location }: NavbarProps) {

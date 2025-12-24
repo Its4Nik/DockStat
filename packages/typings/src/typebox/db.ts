@@ -1,6 +1,17 @@
 import { t } from "elysia"
 
+// Hash entry for plugin verification
+const PluginHashEntry = t.Object({
+  version: t.String(),
+  hash: t.String(),
+})
+
+// Hashes are only for plugins (themes and stacks don't need verification)
+const PluginHashes = t.Nullable(t.Record(t.String(), PluginHashEntry))
+
+// Repository schema for the separate repositories table
 const Repo = t.Object({
+  id: t.Number(),
   name: t.String(),
   type: t.UnionEnum(["local", "http", "github", "gitlab", "gitea", "default"]),
 
@@ -17,31 +28,37 @@ const Repo = t.Object({
   policy: t.UnionEnum(["strict", "relaxed"]),
   verification_api: t.Nullable(t.String({ format: "uri" })),
   isVerified: t.Boolean(),
-  hashes: t.Nullable(
-    t.Object({
-      plugins: t.Record(
-        t.String(),
-        t.Object({
-          version: t.String(),
-          hash: t.String(),
-        })
-      ),
-      stacks: t.Record(
-        t.String(),
-        t.Object({
-          version: t.String(),
-          hash: t.String(),
-        })
-      ),
-      themes: t.Record(
-        t.String(),
-        t.Object({
-          version: t.String(),
-          hash: t.String(),
-        })
-      ),
-    })
-  ),
+  hashes: PluginHashes,
+})
+
+// Schema for creating a new repository (id is auto-generated)
+const CreateRepo = t.Object({
+  name: t.String(),
+  type: t.UnionEnum(["local", "http", "github", "gitlab", "gitea", "default"]),
+  source: t.String(),
+  policy: t.UnionEnum(["strict", "relaxed"]),
+  verification_api: t.Nullable(t.String({ format: "uri" })),
+  isVerified: t.Boolean(),
+  hashes: PluginHashes,
+})
+
+// Schema for updating an existing repository (all fields optional except id)
+const UpdateRepo = t.Object({
+  id: t.Number(),
+  name: t.Optional(t.String()),
+  type: t.Optional(t.UnionEnum(["local", "http", "github", "gitlab", "gitea", "default"])),
+  source: t.Optional(t.String()),
+  policy: t.Optional(t.UnionEnum(["strict", "relaxed"])),
+  verification_api: t.Optional(t.Nullable(t.String({ format: "uri" }))),
+  isVerified: t.Optional(t.Boolean()),
+  hashes: t.Optional(PluginHashes),
+})
+
+// Response schema for repository operations
+const RepoResponse = t.Object({
+  success: t.Boolean(),
+  message: t.String(),
+  data: t.Optional(t.Union([Repo, t.Array(Repo)])),
 })
 
 const TableMetaData = t.Object({
@@ -71,9 +88,6 @@ const DockStatConfigTable = t.Object({
 
   /* Trusted repos will be added later on */
   allow_untrusted_repo: t.Boolean({ default: false }),
-
-  /* Where the plugins/themes/stacks will be downloadable from */
-  registered_repos: t.Array(Repo),
 
   /* Tables that are used by dockstat will have to be registered here */
   tables: t.Array(TableMetaData),
@@ -130,4 +144,14 @@ const UpdateDockStatConfigTableResponse = t.Object({
   new_config: t.Nullable(DockStatConfigTable),
 })
 
-export { Repo, TableMetaData, DockStatConfigTable, UpdateDockStatConfigTableResponse }
+export {
+  PluginHashEntry,
+  PluginHashes,
+  Repo,
+  CreateRepo,
+  UpdateRepo,
+  RepoResponse,
+  TableMetaData,
+  DockStatConfigTable,
+  UpdateDockStatConfigTableResponse,
+}

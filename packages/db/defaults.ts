@@ -1,4 +1,4 @@
-import type { DockStatConfigTableType } from "@dockstat/typings/types"
+import type { DockStatConfigTableType, CreateRepoType } from "@dockstat/typings/types"
 
 export const defaultConfig: DockStatConfigTableType = {
   id: 0,
@@ -12,20 +12,20 @@ export const defaultConfig: DockStatConfigTableType = {
   },
   hotkeys: {},
   nav_links: [],
-  registered_repos: [
-    {
-      name: "DockStore",
-      source: "its4nik/dockstat:dev/apps/dockstore",
-      type: "github",
-      // verification is not implemented yet :(
-      isVerified: true,
-      policy: "strict",
-      verification_api: "https://api.itsnik.de/dockstacks/_verify",
-      hashes: null,
-    },
-  ],
   autostart_handlers_monitoring: true,
-  config_database_rev: "v1.0.0",
+  config_database_rev: "v1.0.1",
   tables: [],
   tls_certs_and_keys: { web: null, docker: null },
 }
+
+export const defaultRepositories: CreateRepoType[] = [
+  {
+    name: "DockStore",
+    source: "its4nik/dockstat:dev/apps/dockstore",
+    type: "github",
+    isVerified: true,
+    policy: "strict",
+    verification_api: "http://localhost:4444",
+    hashes: null,
+  },
+]

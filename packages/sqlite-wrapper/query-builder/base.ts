@@ -185,16 +185,50 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
         }
       }
 
+      // BOOLEAN parsing: coerce common DB representations ("1"/"0", 1/0, "true"/"false") to real booleans
       if (this.state.parser?.BOOLEAN) {
         for (const column of this.state.parser.BOOLEAN) {
           const columnKey = String(column)
-          if (
-            (transformed[columnKey] !== null &&
-              transformed[columnKey] !== undefined &&
-              typeof transformed[columnKey] === "string") ||
-            typeof transformed[columnKey] === "number"
-          ) {
-            transformed[columnKey] = ["true", "True", 1, true].includes(transformed[columnKey])
+          const val = transformed[columnKey]
+
+          if (val === null || val === undefined) continue
+
+          // If it's already a boolean, nothing to do
+          if (typeof val === "boolean") continue
+
+          // Handle numbers (1/0)
+          if (typeof val === "number") {
+            transformed[columnKey] = val === 1
+            continue
+          }
+
+          // Handle strings: "1", "0", "true", "false" (case-insensitive)
+          if (typeof val === "string") {
+            const normalized = val.trim().toLowerCase()
+            if (
+              normalized === "1" ||
+              normalized === "true" ||
+              normalized === "t" ||
+              normalized === "yes"
+            ) {
+              transformed[columnKey] = true
+            } else if (
+              normalized === "0" ||
+              normalized === "false" ||
+              normalized === "f" ||
+              normalized === "no"
+            ) {
+              transformed[columnKey] = false
+            } else {
+              // If it's a numeric string other than 0/1, try coercing to number then boolean
+              const num = Number(normalized)
+              if (!Number.isNaN(num)) {
+                transformed[columnKey] = num === 1
+              } else {
+                // Fallback: use truthiness of string (non-empty => true)
+                transformed[columnKey] = normalized.length > 0
+              }
+            }
           }
         }
       }
