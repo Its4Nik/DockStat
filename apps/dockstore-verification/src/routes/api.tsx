@@ -445,7 +445,12 @@ const apiRoutes = new Elysia({ prefix: "/api" })
             url: "manual://local",
             enabled: true,
           })
-          manualRepo = repositoriesTable.where({ id: repoResult.insertId }).first()!
+          
+          // Verify repository was created successfully
+          manualRepo = repositoriesTable.where({ id: repoResult.insertId }).first()
+          if (!manualRepo) {
+            throw new Error("Failed to create Manual Entries repository")
+          }
         }
 
         // Check if plugin already exists

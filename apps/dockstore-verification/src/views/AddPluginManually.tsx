@@ -1,8 +1,6 @@
 import { Html } from "@elysiajs/html"
 import { Layout } from "../components/Layout"
 
-const _ = Html
-
 export function AddPluginManuallyView() {
   return (
     <Layout title="Add Plugin Manually" currentPath="/plugins/add">
