@@ -12,7 +12,18 @@ const PluginRoutes = new Elysia({
   .use(DockStatAPIFrontendPluginRoutes)
   .get("/all", () => PluginHandler.getAll())
   .get("/hooks", () => {
-    return Array.from(PluginHandler.getHookHandlers())
+    const handlers = PluginHandler.getHookHandlers()
+    const hooksArray: { pluginId: number; hooks: string[] }[] = []
+
+    for (const [pluginId, hooks] of handlers.entries()) {
+      const hookList = Object.keys(hooks)
+      hooksArray.push({
+        pluginId: Number(pluginId),
+        hooks: hookList,
+      })
+    }
+
+    return hooksArray
   })
   .get("/status", () => PluginHandler.getStatus())
   .post("/install", ({ body }) => PluginHandler.savePlugin(body), {

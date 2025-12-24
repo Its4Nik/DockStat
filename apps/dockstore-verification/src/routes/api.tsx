@@ -1,13 +1,7 @@
 import Logger from "@dockstat/logger"
-import type { DB } from "@dockstat/sqlite-wrapper"
 import { Html } from "@elysiajs/html"
 import { Elysia, t } from "elysia"
-import {
-  getPluginsTable,
-  getPluginVersionsTable,
-  getRepositoryTable,
-  getVerificationsTable,
-} from "../db"
+import { db, pluginsTable, pluginVersionsTable, repositoriesTable, verificationsTable } from "../db"
 import type { PluginVerificationView, RepositoryWithStats } from "../db/types"
 import { fetchRepository } from "../services/repository"
 import { RepositoryCard } from "../views/Repositories"
@@ -20,13 +14,9 @@ const logger = new Logger("API-Routes")
 /**
  * Get dashboard statistics
  */
-function getDashboardStats(db: DB) {
-  const pluginsTable = getPluginsTable(db)
-  const versionsTable = getPluginVersionsTable(db)
-  const verificationsTable = getVerificationsTable(db)
-
+function getDashboardStats() {
   const totalPlugins = pluginsTable.all().length
-  const totalVersions = versionsTable.all().length
+  const totalVersions = pluginVersionsTable.all().length
 
   // Get verified versions count
   const verifiedVersions = verificationsTable.where({ verified: true }).all().length
@@ -52,7 +42,7 @@ function getDashboardStats(db: DB) {
 
   const pendingReview = totalVersions - verifiedVersions
 
-  const totalRepositories = getRepositoryTable(db).all().length
+  const totalRepositories = repositoriesTable.all().length
 
   return {
     totalPlugins,
@@ -69,7 +59,7 @@ function getDashboardStats(db: DB) {
 /**
  * Get all plugins with verification status
  */
-function getPluginsWithVerification(db: DB, filter?: string): PluginVerificationView[] {
+function getPluginsWithVerification(filter?: string): PluginVerificationView[] {
   let query = `
     SELECT
       p.id as plugin_id,
@@ -120,7 +110,7 @@ function getPluginsWithVerification(db: DB, filter?: string): PluginVerification
 /**
  * Get repositories with stats
  */
-function getRepositoriesWithStats(db: DB): RepositoryWithStats[] {
+function getRepositoriesWithStats(): RepositoryWithStats[] {
   const query = `
     SELECT
       r.*,
@@ -142,12 +132,8 @@ function getRepositoriesWithStats(db: DB): RepositoryWithStats[] {
 /**
  * Sync a repository - fetch plugins and update database
  */
-async function syncRepository(db: DB, repositoryId: number) {
-  const repoTable = getRepositoryTable(db)
-  const pluginsTable = getPluginsTable(db)
-  const versionsTable = getPluginVersionsTable(db)
-
-  const repo = repoTable.where({ id: repositoryId }).first()
+async function syncRepository(repositoryId: number) {
+  const repo = repositoriesTable.where({ id: repositoryId }).first()
   if (!repo) {
     throw new Error("Repository not found")
   }
@@ -200,13 +186,13 @@ async function syncRepository(db: DB, repositoryId: number) {
     }
 
     // Check if version exists
-    const existingVersion = versionsTable
+    const existingVersion = pluginVersionsTable
       .where({ plugin_id: pluginId, version: fetchedPlugin.meta.version })
       .first()
 
     if (!existingVersion) {
       // Insert new version
-      versionsTable.insert({
+      pluginVersionsTable.insert({
         plugin_id: pluginId,
         version: fetchedPlugin.meta.version,
         hash: fetchedPlugin.sourceHash,
@@ -217,7 +203,9 @@ async function syncRepository(db: DB, repositoryId: number) {
   }
 
   // Update repository timestamp
-  repoTable.where({ id: repositoryId }).update({ updated_at: Math.floor(Date.now() / 1000) })
+  repositoriesTable
+    .where({ id: repositoryId })
+    .update({ updated_at: Math.floor(Date.now() / 1000) })
 
   logger.info(`Synced ${result.plugins.length} plugins from ${repo.name}`)
 
@@ -225,227 +213,213 @@ async function syncRepository(db: DB, repositoryId: number) {
 }
 
 /**
- * Create API routes
+ * API routes
  */
-export function createApiRoutes(db: DB) {
-  return (
-    new Elysia({ prefix: "/api" })
-      // Dashboard stats
-      .get("/stats", () => {
-        return getDashboardStats(db)
+const apiRoutes = new Elysia({ prefix: "/api" })
+  // Dashboard stats
+  .get("/stats", () => {
+    return getDashboardStats()
+  })
+
+  // Repositories
+  .get("/repositories", () => {
+    return getRepositoriesWithStats()
+  })
+
+  .post(
+    "/repositories",
+    async ({ body, set }) => {
+      // Check if repository already exists
+      const existing = repositoriesTable.where({ name: body.name }).first()
+      if (existing) {
+        set.status = 400
+        return { error: "Repository with this name already exists" }
+      }
+
+      // Insert new repository
+      const result = repositoriesTable.insert({
+        name: body.name,
+        url: body.url,
+        enabled: (body.enabled || "on") === "on",
       })
 
-      // Repositories
-      .get("/repositories", () => {
-        return getRepositoriesWithStats(db)
-      })
+      // Trigger initial sync
+      try {
+        await syncRepository(result.insertId)
+      } catch (_) {
+        logger.warn(`Initial sync failed for repository ${body.name}`)
+      }
 
-      .post(
-        "/repositories",
-        async ({ body, set }) => {
-          const repoTable = getRepositoryTable(db)
-
-          // Check if repository already exists
-          const existing = repoTable.where({ name: body.name }).first()
-          if (existing) {
-            set.status = 400
-            return { error: "Repository with this name already exists" }
-          }
-
-          // Insert new repository
-          const result = repoTable.insert({
-            name: body.name,
-            url: body.url,
-            enabled: (body.enabled || "on") === "on",
-          })
-
-          // Trigger initial sync
-          try {
-            await syncRepository(db, result.insertId)
-          } catch (_) {
-            logger.warn(`Initial sync failed for repository ${body.name}`)
-          }
-
-          // Redirect to repositories page
-          set.headers["HX-Redirect"] = "/repositories"
-          return { success: true, id: result.insertId }
-        },
-        {
-          body: t.Object({
-            name: t.String(),
-            url: t.String(),
-            enabled: t.Optional(t.String()),
-          }),
-        }
-      )
-
-      .get("/repositories/:id", ({ params, set }) => {
-        const repos = getRepositoriesWithStats(db)
-        const repo = repos.find((r) => r.id === Number(params.id))
-
-        if (!repo) {
-          set.status = 404
-          return { error: "Repository not found" }
-        }
-
-        return repo
-      })
-
-      .delete("/repositories/:id", ({ params, set }) => {
-        const repoTable = getRepositoryTable(db)
-        const result = repoTable.where({ id: Number(params.id) }).delete()
-
-        if (result.changes === 0) {
-          set.status = 404
-          return { error: "Repository not found" }
-        }
-
-        // Return empty for HTMX to remove the element
-        return ""
-      })
-
-      .post("/repositories/:id/sync", async ({ params, set }) => {
-        try {
-          await syncRepository(db, Number(params.id))
-
-          // Return updated repository card
-          const repos = getRepositoriesWithStats(db)
-          const repo = repos.find((r) => r.id === Number(params.id))
-
-          if (repo) {
-            return <RepositoryCard repository={repo} />
-          }
-
-          set.headers["HX-Refresh"] = "true"
-          return { success: true }
-        } catch (error) {
-          set.status = 500
-          return { error: error instanceof Error ? error.message : "Sync failed" }
-        }
-      })
-
-      .patch("/repositories/:id/toggle", ({ params, set }) => {
-        const repoTable = getRepositoryTable(db)
-        const repo = repoTable.where({ id: Number(params.id) }).first()
-
-        if (!repo) {
-          set.status = 404
-          return { error: "Repository not found" }
-        }
-
-        repoTable.where({ id: Number(params.id) }).update({ enabled: !repo.enabled })
-
-        set.headers["HX-Refresh"] = "true"
-        return { success: true }
-      })
-
-      // Plugins
-      .get(
-        "/plugins",
-        ({ query }) => {
-          const filter = query.filter as string | undefined
-          return getPluginsWithVerification(db, filter)
-        },
-        {
-          query: t.Object({
-            filter: t.Optional(t.String()),
-          }),
-        }
-      )
-
-      .get("/plugins/:id", ({ params, set }) => {
-        const plugins = getPluginsWithVerification(db)
-        const plugin = plugins.find((p) => p.plugin_id === Number(params.id))
-
-        if (!plugin) {
-          set.status = 404
-          return { error: "Plugin not found" }
-        }
-
-        return plugin
-      })
-
-      // Verification
-      .post(
-        "/plugins/:id/versions/:version/verify",
-        ({ params, body, set }) => {
-          const versionsTable = getPluginVersionsTable(db)
-          const verificationsTable = getVerificationsTable(db)
-
-          // Find the version
-          const version = versionsTable
-            .where({ plugin_id: Number(params.id), version: params.version })
-            .first()
-
-          if (!version) {
-            set.status = 404
-            return { error: "Plugin version not found" }
-          }
-
-          // Check if already verified
-          const existingVerification = verificationsTable
-            .where({ plugin_version_id: version.id })
-            .first()
-
-          if (existingVerification) {
-            // Update existing verification
-            verificationsTable.where({ id: existingVerification.id }).update({
-              verified: true,
-              verified_by: body.verified_by,
-              verified_at: Math.floor(Date.now() / 1000),
-              notes: body.notes,
-              security_status: body.security_status,
-            })
-          } else {
-            // Create new verification
-            verificationsTable.insert({
-              plugin_version_id: version.id!,
-              verified: true,
-              verified_by: body.verified_by,
-              verified_at: Math.floor(Date.now() / 1000),
-              notes: body.notes,
-              security_status: body.security_status,
-            })
-          }
-
-          // Get updated plugin data
-          const plugins = getPluginsWithVerification(db)
-          const plugin = plugins.find(
-            (p) => p.plugin_id === Number(params.id) && p.version === params.version
-          )
-
-          if (plugin) {
-            // Return verified card for HTMX swap
-            return <VerifiedCard plugin={plugin} />
-          }
-
-          return { success: true }
-        },
-        {
-          body: t.Object({
-            verified_by: t.String(),
-            notes: t.Optional(t.String()),
-            security_status: t.Union([
-              t.Literal("safe"),
-              t.Literal("unsafe"),
-              t.Literal("unknown"),
-            ]),
-          }),
-        }
-      )
-
-      // Sync all repositories
-      .post("/sync-all", async ({ set }) => {
-        const repoTable = getRepositoryTable(db)
-        const repos = repoTable.where({ enabled: true }).all()
-
-        const results = await Promise.allSettled(repos.map((repo) => syncRepository(db, repo.id!)))
-
-        const succeeded = results.filter((r) => r.status === "fulfilled").length
-        const failed = results.filter((r) => r.status === "rejected").length
-
-        set.headers["HX-Refresh"] = "true"
-        return { succeeded, failed, total: repos.length }
-      })
+      // Redirect to repositories page
+      set.headers["HX-Redirect"] = "/repositories"
+      return { success: true, id: result.insertId }
+    },
+    {
+      body: t.Object({
+        name: t.String(),
+        url: t.String(),
+        enabled: t.Optional(t.String()),
+      }),
+    }
   )
-}
+
+  .get("/repositories/:id", ({ params, set }) => {
+    const repos = getRepositoriesWithStats()
+    const repo = repos.find((r) => r.id === Number(params.id))
+
+    if (!repo) {
+      set.status = 404
+      return { error: "Repository not found" }
+    }
+
+    return repo
+  })
+
+  .delete("/repositories/:id", ({ params, set }) => {
+    const result = repositoriesTable.where({ id: Number(params.id) }).delete()
+
+    if (result.changes === 0) {
+      set.status = 404
+      return { error: "Repository not found" }
+    }
+
+    // Return empty for HTMX to remove the element
+    return ""
+  })
+
+  .post("/repositories/:id/sync", async ({ params, set }) => {
+    try {
+      await syncRepository(Number(params.id))
+
+      // Return updated repository card
+      const repos = getRepositoriesWithStats()
+      const repo = repos.find((r) => r.id === Number(params.id))
+
+      if (repo) {
+        return <RepositoryCard repository={repo} />
+      }
+
+      set.headers["HX-Refresh"] = "true"
+      return { success: true }
+    } catch (error) {
+      set.status = 500
+      return { error: error instanceof Error ? error.message : "Sync failed" }
+    }
+  })
+
+  .patch("/repositories/:id/toggle", ({ params, set }) => {
+    const repo = repositoriesTable.where({ id: Number(params.id) }).first()
+
+    if (!repo) {
+      set.status = 404
+      return { error: "Repository not found" }
+    }
+
+    repositoriesTable.where({ id: Number(params.id) }).update({ enabled: !repo.enabled })
+
+    set.headers["HX-Refresh"] = "true"
+    return { success: true }
+  })
+
+  // Plugins
+  .get(
+    "/plugins",
+    ({ query }) => {
+      const filter = query.filter as string | undefined
+      return getPluginsWithVerification(filter)
+    },
+    {
+      query: t.Object({
+        filter: t.Optional(t.String()),
+      }),
+    }
+  )
+
+  .get("/plugins/:id", ({ params, set }) => {
+    const plugins = getPluginsWithVerification()
+    const plugin = plugins.find((p) => p.plugin_id === Number(params.id))
+
+    if (!plugin) {
+      set.status = 404
+      return { error: "Plugin not found" }
+    }
+
+    return plugin
+  })
+
+  // Verification
+  .post(
+    "/plugins/:id/versions/:version/verify",
+    ({ params, body, set }) => {
+      // Find the version
+      const version = pluginVersionsTable
+        .where({ plugin_id: Number(params.id), version: params.version })
+        .first()
+
+      if (!version) {
+        set.status = 404
+        return { error: "Plugin version not found" }
+      }
+
+      // Check if already verified
+      const existingVerification = verificationsTable
+        .where({ plugin_version_id: version.id })
+        .first()
+
+      if (existingVerification) {
+        // Update existing verification
+        verificationsTable.where({ id: existingVerification.id }).update({
+          verified: true,
+          verified_by: body.verified_by,
+          verified_at: Math.floor(Date.now() / 1000),
+          notes: body.notes,
+          security_status: body.security_status,
+        })
+      } else {
+        // Create new verification
+        verificationsTable.insert({
+          plugin_version_id: version.id!,
+          verified: true,
+          verified_by: body.verified_by,
+          verified_at: Math.floor(Date.now() / 1000),
+          notes: body.notes,
+          security_status: body.security_status,
+        })
+      }
+
+      // Get updated plugin data
+      const plugins = getPluginsWithVerification()
+      const plugin = plugins.find(
+        (p) => p.plugin_id === Number(params.id) && p.version === params.version
+      )
+
+      if (plugin) {
+        // Return verified card for HTMX swap
+        return <VerifiedCard plugin={plugin} />
+      }
+
+      return { success: true }
+    },
+    {
+      body: t.Object({
+        verified_by: t.String(),
+        notes: t.Optional(t.String()),
+        security_status: t.Union([t.Literal("safe"), t.Literal("unsafe"), t.Literal("unknown")]),
+      }),
+    }
+  )
+
+  // Sync all repositories
+  .post("/sync-all", async ({ set }) => {
+    const repos = repositoriesTable.where({ enabled: true }).all()
+
+    const results = await Promise.allSettled(repos.map((repo) => syncRepository(repo.id!)))
+
+    const succeeded = results.filter((r) => r.status === "fulfilled").length
+    const failed = results.filter((r) => r.status === "rejected").length
+
+    set.headers["HX-Refresh"] = "true"
+    return { succeeded, failed, total: repos.length }
+  })
+
+export default apiRoutes

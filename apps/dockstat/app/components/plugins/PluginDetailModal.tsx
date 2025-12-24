@@ -376,18 +376,11 @@ async function fetchPluginDetails(
     // Fetch hooks
     const hooksRes = await ClientAPI.plugins.hooks.get()
     if (hooksRes.status === 200 && hooksRes.data) {
-      const hookEntries = hooksRes.data as Array<[number, Map<string, unknown>]>
-      const pluginHooks = hookEntries.find(([id]) => id === plugin.id)
-      if (pluginHooks?.[1]) {
-        const hookMap = pluginHooks[1]
-        if (hookMap instanceof Map) {
-          for (const [event] of hookMap) {
-            details.hooks.push({ event, pluginName: plugin.name })
-          }
-        } else if (typeof hookMap === "object") {
-          for (const event of Object.keys(hookMap)) {
-            details.hooks.push({ event, pluginName: plugin.name })
-          }
+      const hookEntries = hooksRes.data
+
+      for (const hookEntry of hookEntries) {
+        for (const hook of hookEntry.hooks) {
+          details.hooks.push({ event: hook, pluginName: plugin.name })
         }
       }
     }

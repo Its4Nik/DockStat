@@ -158,7 +158,7 @@ async function verifyPluginsBatch(
     }
 
     return (await response.json()) as BatchVerificationResult
-  } catch (error) {
+  } catch (_) {
     // Fallback to individual verification if batch fails
     const results: VerificationApiResult[] = await Promise.all(
       plugins.map((plugin) => verifyPluginWithApi(plugin, verificationApiUrl))

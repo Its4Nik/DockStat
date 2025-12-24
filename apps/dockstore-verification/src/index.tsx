@@ -2,26 +2,19 @@ import Logger from "@dockstat/logger"
 import { Html, html } from "@elysiajs/html"
 import { staticPlugin } from "@elysiajs/static"
 import { Elysia } from "elysia"
-import { initDatabase } from "./db"
+import { db } from "./db"
 import { createAuthMiddleware, type AuthConfig } from "./middleware/auth"
-import { createApiRoutes } from "./routes/api"
-import { createCompareRoute } from "./routes/compare"
-import { createPageRoutes } from "./routes/pages"
-import { createPublicRoutes } from "./routes/public"
+import { apiRoutes, compareRoutes, pageRoutes, publicRoutes } from "./routes"
 
 const _ = Html
 
 const logger = new Logger("Verification-Server")
 
 // Configuration
-const PORT = process.env.VERIFICATION_PORT ? Number(process.env.VERIFICATION_PORT) : 3100
-const DB_PATH = process.env.VERIFICATION_DB_PATH || "verification.db"
+export const PORT = 3000 //process.env.VERIFICATION_PORT ? Number(process.env.VERIFICATION_PORT) : 3000
 const AUTH_ENABLED = process.env.AUTH_ENABLED === "true"
 
 logger.info("Starting DockStore Verification Server...")
-
-// Initialize database
-const db = initDatabase(DB_PATH)
 
 // Authentication configuration
 const authConfig: Partial<AuthConfig> = {
@@ -56,16 +49,16 @@ const app = new Elysia()
   .use(createAuthMiddleware(authConfig))
 
   // Public routes (no authentication required)
-  .use(createPublicRoutes(db))
+  .use(publicRoutes)
 
   // Compare API routes (public, for plugin validation)
-  .group("/api", (app) => app.use(createCompareRoute(db)))
+  .group("/api", (app) => app.use(compareRoutes))
 
   // Protected API routes (authentication required when enabled)
-  .use(createApiRoutes(db))
+  .use(apiRoutes)
 
   // Protected page routes (authentication required when enabled)
-  .use(createPageRoutes(db))
+  .use(pageRoutes)
 
   // Health check endpoint (always public)
   .get("/health", () => ({
@@ -166,7 +159,6 @@ logger.info(`📊 Dashboard: http://localhost:${PORT}/`)
 logger.info(`🌐 Public Status: http://localhost:${PORT}/public`)
 logger.info(`🔌 API: http://localhost:${PORT}/api`)
 logger.info(`🔍 Compare API: http://localhost:${PORT}/api/compare`)
-logger.info(`💾 Database: ${DB_PATH}`)
 logger.info(`🔐 Authentication: ${AUTH_ENABLED ? "ENABLED" : "DISABLED"}`)
 
 // Graceful shutdown
