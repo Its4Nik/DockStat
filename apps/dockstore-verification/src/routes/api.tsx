@@ -427,6 +427,16 @@ const apiRoutes = new Elysia({ prefix: "/api" })
     "/plugins/manual",
     ({ body, set }) => {
       try {
+        // Parse tags if provided as a string
+        const tags = body.tags
+          ? typeof body.tags === "string"
+            ? body.tags
+                .split(",")
+                .map((t) => t.trim())
+                .filter((t) => t)
+            : body.tags
+          : undefined
+
         // Get or create a "Manual" repository
         let manualRepo = repositoriesTable.where({ name: "Manual Entries" }).first()
         if (!manualRepo) {
@@ -488,7 +498,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
           pluginVersionsTable.where({ id: existingVersion.id }).update({
             hash: body.hash,
             bundle_hash: body.bundle_hash,
-            tags: body.tags,
+            tags: tags,
           })
           versionId = existingVersion.id!
         } else {
@@ -498,7 +508,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
             version: body.version,
             hash: body.hash,
             bundle_hash: body.bundle_hash,
-            tags: body.tags,
+            tags: tags,
           })
           versionId = versionResult.insertId
         }
@@ -521,19 +531,66 @@ const apiRoutes = new Elysia({ prefix: "/api" })
         }
 
         set.status = 201
-        return {
-          success: true,
-          plugin_id: pluginId,
-          version_id: versionId,
-          message: "Plugin added successfully",
-        }
+        set.headers["HX-Trigger"] = "pluginAdded"
+        return (
+          <div class="bg-green-900/20 border border-green-800 rounded-lg p-4">
+            <div class="flex items-start">
+              <svg
+                class="w-5 h-5 text-green-400 mr-3 flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <title>Success</title>
+              </svg>
+              <div>
+                <h4 class="text-sm font-semibold text-green-400 mb-1">Plugin Added Successfully</h4>
+                <p class="text-sm text-gray-300 mb-2">
+                  The plugin "<strong>{body.name}</strong>" version <strong>{body.version}</strong>{" "}
+                  has been added to the verification database.
+                </p>
+                <a href="/plugins" class="text-blue-400 hover:text-blue-300 underline text-sm">
+                  View in plugins list →
+                </a>
+              </div>
+            </div>
+          </div>
+        )
       } catch (error) {
         logger.error("Failed to add manual plugin:", error)
         set.status = 500
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : "Failed to add plugin",
-        }
+        return (
+          <div class="bg-red-900/20 border border-red-800 rounded-lg p-4">
+            <div class="flex items-start">
+              <svg
+                class="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <title>Error</title>
+              </svg>
+              <div>
+                <h4 class="text-sm font-semibold text-red-400 mb-1">Failed to Add Plugin</h4>
+                <p class="text-sm text-gray-300">
+                  {error instanceof Error ? error.message : "An unexpected error occurred"}
+                </p>
+              </div>
+            </div>
+          </div>
+        )
       }
     },
     {
@@ -550,7 +607,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
         repo_type: t.Optional(t.Union([t.Literal("github"), t.Literal("gitlab"), t.Literal("http")])),
         manifest_path: t.Optional(t.String()),
         bundle_hash: t.Optional(t.String()),
-        tags: t.Optional(t.Array(t.String())),
+        tags: t.Optional(t.Union([t.String(), t.Array(t.String())])),
         security_status: t.Optional(
           t.Union([t.Literal("safe"), t.Literal("unsafe"), t.Literal("unknown")])
         ),

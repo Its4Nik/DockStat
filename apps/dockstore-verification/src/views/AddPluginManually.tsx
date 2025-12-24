@@ -253,7 +253,7 @@ export function AddPluginManuallyView() {
           </div>
 
           {/* Result area */}
-          <div id="result" class="hidden" />
+          <div id="result" />
 
           {/* Submit Button */}
           <div class="flex gap-4">
