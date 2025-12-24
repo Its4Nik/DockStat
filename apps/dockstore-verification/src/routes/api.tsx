@@ -487,7 +487,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
             repo_type: body.repo_type || "http",
             manifest_path: body.manifest_path || "manual",
           })
-          if (!insertResult.insertId) {
+          if (insertResult.insertId === undefined || insertResult.insertId === null) {
             throw new Error("Failed to insert plugin into database")
           }
           pluginId = insertResult.insertId
@@ -517,7 +517,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
             bundle_hash: body.bundle_hash,
             tags: tags,
           })
-          if (!versionResult.insertId) {
+          if (versionResult.insertId === undefined || versionResult.insertId === null) {
             throw new Error("Failed to insert plugin version into database")
           }
           versionId = versionResult.insertId

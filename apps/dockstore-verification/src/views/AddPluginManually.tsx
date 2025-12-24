@@ -75,7 +75,7 @@ export function AddPluginManuallyView() {
                   id="description"
                   name="description"
                   required
-                  rows={3}
+                  rows="3"
                   class="input w-full"
                   placeholder="Brief description of the plugin"
                 />
@@ -242,7 +242,7 @@ export function AddPluginManuallyView() {
                 <textarea
                   id="notes"
                   name="notes"
-                  rows={3}
+                  rows="3"
                   class="input w-full"
                   placeholder="Any additional notes about this plugin"
                 />
