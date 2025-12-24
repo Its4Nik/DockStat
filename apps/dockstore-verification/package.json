@@ -7,7 +7,7 @@
     "dev": "bun run --watch src/index.tsx",
     "start": "bun run src/index.tsx",
     "build": "rm -r ./dist || true && bun build --target bun --sourcemap=inline --outdir=./dist --minify src/index.tsx",
-    "build:docker": "bun run build && docker build -t 'dockstore-verification-api:latest' .",
+    "build:docker": "cd ../.. && docker build -f apps/dockstore-verification/Dockerfile -t dockstore-verification:latest .",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "check-types": "tsc --noEmit"

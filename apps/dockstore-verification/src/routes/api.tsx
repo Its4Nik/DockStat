@@ -422,4 +422,148 @@ const apiRoutes = new Elysia({ prefix: "/api" })
     return { succeeded, failed, total: repos.length }
   })
 
+  // Manual plugin addition
+  .post(
+    "/plugins/manual",
+    ({ body, set }) => {
+      try {
+        // Get or create a "Manual" repository
+        let manualRepo = repositoriesTable.where({ name: "Manual Entries" }).first()
+        if (!manualRepo) {
+          const repoResult = repositoriesTable.insert({
+            name: "Manual Entries",
+            url: "manual://local",
+            enabled: true,
+          })
+          manualRepo = repositoriesTable.where({ id: repoResult.insertId }).first()!
+        }
+
+        // Check if plugin already exists
+        const existingPlugin = pluginsTable
+          .where({ repository_id: manualRepo.id, name: body.name })
+          .first()
+
+        let pluginId: number
+
+        if (existingPlugin) {
+          // Update existing plugin
+          pluginsTable.where({ id: existingPlugin.id }).update({
+            description: body.description,
+            author_name: body.author_name,
+            author_email: body.author_email,
+            author_website: body.author_website,
+            license: body.license || "MIT",
+            repository_url: body.repository_url,
+            repo_type: body.repo_type || "http",
+            manifest_path: body.manifest_path || "manual",
+            updated_at: Math.floor(Date.now() / 1000),
+          })
+          pluginId = existingPlugin.id!
+        } else {
+          // Insert new plugin
+          const insertResult = pluginsTable.insert({
+            repository_id: manualRepo.id!,
+            name: body.name,
+            description: body.description,
+            author_name: body.author_name,
+            author_email: body.author_email,
+            author_website: body.author_website,
+            license: body.license || "MIT",
+            repository_url: body.repository_url,
+            repo_type: body.repo_type || "http",
+            manifest_path: body.manifest_path || "manual",
+          })
+          pluginId = insertResult.insertId
+        }
+
+        // Check if version already exists
+        const existingVersion = pluginVersionsTable
+          .where({ plugin_id: pluginId, version: body.version })
+          .first()
+
+        let versionId: number
+
+        if (existingVersion) {
+          // Update existing version
+          pluginVersionsTable.where({ id: existingVersion.id }).update({
+            hash: body.hash,
+            bundle_hash: body.bundle_hash,
+            tags: body.tags,
+          })
+          versionId = existingVersion.id!
+        } else {
+          // Insert new version
+          const versionResult = pluginVersionsTable.insert({
+            plugin_id: pluginId,
+            version: body.version,
+            hash: body.hash,
+            bundle_hash: body.bundle_hash,
+            tags: body.tags,
+          })
+          versionId = versionResult.insertId
+        }
+
+        // Create initial verification record if security status provided
+        if (body.security_status || body.verified_by) {
+          const existingVerification = verificationsTable
+            .where({ plugin_version_id: versionId })
+            .first()
+
+          if (!existingVerification) {
+            verificationsTable.insert({
+              plugin_version_id: versionId,
+              verified: false,
+              verified_by: body.verified_by || "manual",
+              security_status: body.security_status || "unknown",
+              notes: body.notes,
+            })
+          }
+        }
+
+        set.status = 201
+        return {
+          success: true,
+          plugin_id: pluginId,
+          version_id: versionId,
+          message: "Plugin added successfully",
+        }
+      } catch (error) {
+        logger.error("Failed to add manual plugin:", error)
+        set.status = 500
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Failed to add plugin",
+        }
+      }
+    },
+    {
+      body: t.Object({
+        name: t.String({ minLength: 1 }),
+        version: t.String({ minLength: 1 }),
+        hash: t.String({ minLength: 1 }),
+        description: t.String({ minLength: 1 }),
+        author_name: t.String({ minLength: 1 }),
+        repository_url: t.String({ minLength: 1 }),
+        author_email: t.Optional(t.String()),
+        author_website: t.Optional(t.String()),
+        license: t.Optional(t.String()),
+        repo_type: t.Optional(t.Union([t.Literal("github"), t.Literal("gitlab"), t.Literal("http")])),
+        manifest_path: t.Optional(t.String()),
+        bundle_hash: t.Optional(t.String()),
+        tags: t.Optional(t.Array(t.String())),
+        security_status: t.Optional(
+          t.Union([t.Literal("safe"), t.Literal("unsafe"), t.Literal("unknown")])
+        ),
+        verified_by: t.Optional(t.String()),
+        notes: t.Optional(t.String()),
+      }),
+      detail: {
+        summary: "Manually Add Plugin",
+        description:
+          "Manually add a plugin to the verification database without syncing from a repository. Creates or updates the plugin, version, and optionally initial verification status.",
+        tags: ["Plugins"],
+      },
+    }
+  )
+
 export default apiRoutes

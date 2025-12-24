@@ -61,9 +61,23 @@ export function PluginsView({
   return (
     <Layout title="Plugins" currentPath="/plugins">
       {/* Page Header */}
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold text-white mb-2">Plugins</h1>
-        <p class="text-gray-400">Browse and manage all tracked plugins across repositories.</p>
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-white mb-2">Plugins</h1>
+          <p class="text-gray-400">Browse and manage all tracked plugins across repositories.</p>
+        </div>
+        <a href="/plugins/add" class="btn btn-primary">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
+            <title>Add</title>
+          </svg>
+          Add Plugin
+        </a>
       </div>
 
       {/* Filters and Search */}

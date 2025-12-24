@@ -15,3 +15,4 @@ export {
   type PublicDashboardProps,
   type PublicDashboardStats,
 } from "./PublicDashboard"
+export { AddPluginManuallyView } from "./AddPluginManually"

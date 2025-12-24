@@ -6,6 +6,7 @@ import { Dashboard, type DashboardStats } from "../views/Dashboard"
 import { PluginDetail, PluginsContent, PluginsView } from "../views/Plugins"
 import { AddRepositoryView, RepositoriesView, RepositoryDetail } from "../views/Repositories"
 import { VerifyView } from "../views/Verify"
+import { AddPluginManuallyView } from "../views/AddPluginManually"
 
 const _ = Html
 
@@ -250,6 +251,11 @@ const pageRoutes = new Elysia()
         highlightVersion={highlightVersion}
       />
     )
+  })
+
+  // Add plugin manually page
+  .get("/plugins/add", () => {
+    return <AddPluginManuallyView />
   })
 
 export default pageRoutes

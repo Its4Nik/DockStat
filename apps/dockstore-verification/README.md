@@ -38,6 +38,25 @@ bun run start
 
 The server will start at `http://localhost:3100` by default.
 
+### Docker Deployment
+
+```bash
+# Build the Docker image (must be run from monorepo root)
+cd ../..  # Navigate to monorepo root
+docker build -f apps/dockstore-verification/Dockerfile -t dockstore-verification:latest .
+
+# Or use the build script from the app directory
+cd apps/dockstore-verification
+bun run build:docker
+
+# Run the container
+docker run -d \
+  -p 3000:3000 \
+  -v $(pwd)/data:/opt/dockstore-verification/data \
+  -v $(pwd)/public:/opt/dockstore-verification/public \
+  dockstore-verification:latest
+```
+
 ### Environment Variables
 
 | Variable | Default | Description |
@@ -53,6 +72,7 @@ The server will start at `http://localhost:3100` by default.
 |-------|-------------|
 | `GET /` | Dashboard with stats and recent plugins |
 | `GET /plugins` | List all plugins with filtering |
+| `GET /plugins/add` | Add plugin manually (without repository sync) |
 | `GET /plugins/:id` | Plugin detail view |
 | `GET /repositories` | List all repositories |
 | `GET /repositories/:id` | Repository detail view |
@@ -71,6 +91,10 @@ The server will start at `http://localhost:3100` by default.
 | `/api/repositories/:id/sync` | POST | Sync repository plugins |
 | `/api/repositories/:id/toggle` | PATCH | Enable/disable repository |
 | `/api/plugins` | GET | List all plugins |
+| `/api/plugins/manual` | POST | Manually add a plugin to the database |
+| `/api/plugins/:id` | GET | Get plugin details |
+| `/api/repositories/:id/toggle` | PATCH | Enable/disable repository |
+| `/api/plugins` | GET | List all plugins |
 | `/api/plugins/:id` | GET | Get plugin details |
 | `/api/plugins/:id/versions/:version/verify` | POST | Verify a plugin version |
 | `/api/sync-all` | POST | Sync all enabled repositories |
@@ -78,11 +102,22 @@ The server will start at `http://localhost:3100` by default.
 
 ## Verification Process
 
+### Option 1: Repository-Based (Recommended)
+
 1. **Add Repository**: Register a plugin repository to track
 2. **Sync Plugins**: Automatically fetch and hash plugin versions
 3. **Review Code**: Manually review the plugin source code for security
 4. **Verify**: Mark the version as verified with security status (safe/unsafe)
 5. **Track Changes**: Each new version requires separate verification
+
+### Option 2: Manual Entry
+
+1. **Add Plugin Manually**: Use the "Add Plugin" button on the Plugins page
+2. **Enter Details**: Provide plugin metadata, hashes, and author information
+3. **Review**: Manually review the plugin source code for security
+4. **Verify**: Mark the version as verified with security status (safe/unsafe)
+
+Manual entries are stored in a special "Manual Entries" repository and can be verified just like repository-synced plugins.
 
 ## Database Schema
 
