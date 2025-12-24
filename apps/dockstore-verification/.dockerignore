@@ -1,6 +1,6 @@
 # Ignore build artifacts and caches
 node_modules
-dist
+
 *.tsbuildinfo
 .cache
 

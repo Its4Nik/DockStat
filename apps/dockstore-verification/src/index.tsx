@@ -11,7 +11,7 @@ const _ = Html
 const logger = new Logger("Verification-Server")
 
 // Configuration
-export const PORT = 3000 //process.env.VERIFICATION_PORT ? Number(process.env.VERIFICATION_PORT) : 3000
+export const PORT = process.env.VERIFICATION_PORT ? Number(process.env.VERIFICATION_PORT) : 3200
 const AUTH_ENABLED = process.env.AUTH_ENABLED === "true"
 
 logger.info("Starting DockStore Verification Server...")
