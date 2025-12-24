@@ -1,4 +1,4 @@
-import type { ApiErrorResponse, ApiSuccessResponse, ApiResponse } from "@dockstat/utils"
+import type { ApiErrorResponse, ApiResponse, ApiSuccessResponse } from "@dockstat/utils"
 
 // Re-export the centralized error types for convenience
 export type { ApiErrorResponse, ApiSuccessResponse, ApiResponse }

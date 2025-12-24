@@ -1,6 +1,6 @@
-import BaseLogger from "../base-logger"
 import { Html } from "@elysiajs/html"
 import { Elysia, t } from "elysia"
+import BaseLogger from "../base-logger"
 import { db, pluginsTable, pluginVersionsTable, repositoriesTable, verificationsTable } from "../db"
 import type { PluginVerificationView, RepositoryWithStats } from "../db/types"
 import { fetchRepository } from "../services/repository"

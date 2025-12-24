@@ -1,5 +1,5 @@
-import BaseLogger from "../base-logger"
 import { Elysia } from "elysia"
+import BaseLogger from "../base-logger"
 
 const logger = BaseLogger.spawn("Auth-Middleware")
 

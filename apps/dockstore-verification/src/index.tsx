@@ -1,10 +1,10 @@
 import { Html, html } from "@elysiajs/html"
 import { staticPlugin } from "@elysiajs/static"
 import { Elysia } from "elysia"
-import { db } from "./db"
-import { createAuthMiddleware, type AuthConfig } from "./middleware/auth"
-import { apiRoutes, compareRoutes, pageRoutes, publicRoutes } from "./routes"
 import BaseLogger from "./base-logger"
+import { db } from "./db"
+import { type AuthConfig, createAuthMiddleware } from "./middleware/auth"
+import { apiRoutes, compareRoutes, pageRoutes, publicRoutes } from "./routes"
 
 const logger = BaseLogger.spawn("Verification-Server")
 
