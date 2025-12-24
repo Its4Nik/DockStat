@@ -3,7 +3,7 @@ import { Html, html } from "@elysiajs/html"
 import { staticPlugin } from "@elysiajs/static"
 import { Elysia } from "elysia"
 import { db } from "./db"
-import { createAuthMiddleware, type AuthConfig } from "./middleware/auth"
+import { type AuthConfig, createAuthMiddleware } from "./middleware/auth"
 import { apiRoutes, compareRoutes, pageRoutes, publicRoutes } from "./routes"
 
 const _ = Html

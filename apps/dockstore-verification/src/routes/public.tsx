@@ -4,8 +4,8 @@ import { db, pluginsTable, pluginVersionsTable, verificationsTable } from "../db
 import type { PluginVerificationView } from "../db/types"
 import {
   PublicDashboard,
-  PublicPluginList,
   type PublicDashboardStats,
+  PublicPluginList,
 } from "../views/PublicDashboard"
 
 const _ = Html

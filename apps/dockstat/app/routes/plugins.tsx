@@ -1,13 +1,13 @@
+import { Plugins } from "!L+A/plugins"
 import { Divider, Slides } from "@dockstat/ui"
 import { useLoaderData } from "react-router"
 import {
   AddRepositoryForm,
-  PluginsList,
   PluginStatusBar,
+  PluginsList,
   RepositoriesList,
 } from "~/components/plugins"
 import type { LocalVerificationStatus, PluginsLoaderData } from "~/components/plugins/types"
-import { Plugins } from "!L+A/plugins"
 
 export const loader = Plugins.loader
 export const action = Plugins.action

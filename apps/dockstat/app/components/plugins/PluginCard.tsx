@@ -14,8 +14,8 @@ import {
   Trash2,
   User,
 } from "lucide-react"
-import { useFetcher } from "react-router"
 import { useEffect, useRef } from "react"
+import { useFetcher } from "react-router"
 import { toast } from "sonner"
 import type { ActionResponse, PluginCardProps, SecurityStatus } from "./types"
 
