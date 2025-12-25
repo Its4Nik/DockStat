@@ -15,9 +15,8 @@ jobs:
           bun ci
           bun run lint:fix:all
       - name: Commit changes
-        if: always()
         run: |
           git config --global user.name 'actions-user'
           git config --global user.email 'its4nik@users.noreply.github.com'
-          git commit --allow-empty -am "chore(ci): Lint [skip ci]"
+          git commit -m "chore(ci): Lint [skip ci]"
           git push
