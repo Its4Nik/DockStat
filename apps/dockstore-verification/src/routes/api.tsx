@@ -1,6 +1,6 @@
-import BaseLogger from "../base-logger"
 import { Html } from "@elysiajs/html"
 import { Elysia, t } from "elysia"
+import BaseLogger from "../base-logger"
 import { db, pluginsTable, pluginVersionsTable, repositoriesTable, verificationsTable } from "../db"
 import type { PluginVerificationView, RepositoryWithStats } from "../db/types"
 import { fetchRepository } from "../services/repository"
@@ -487,7 +487,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
             repo_type: body.repo_type || "http",
             manifest_path: body.manifest_path || "manual",
           })
-          if (insertResult.insertId === undefined || insertResult.insertId === null) {
+          if (!insertResult.insertId) {
             throw new Error("Failed to insert plugin into database")
           }
           pluginId = insertResult.insertId
@@ -610,9 +610,9 @@ const apiRoutes = new Elysia({ prefix: "/api" })
         hash: t.String({ minLength: 1 }),
         description: t.String({ minLength: 1 }),
         author_name: t.String({ minLength: 1 }),
-        repository_url: t.String({ minLength: 1 }),
-        author_email: t.Optional(t.String()),
-        author_website: t.Optional(t.String()),
+        repository_url: t.String({ minLength: 1, format: "uri" }),
+        author_email: t.Optional(t.String({ format: "email" })),
+        author_website: t.Optional(t.String({ format: "uri" })),
         license: t.Optional(t.String()),
         repo_type: t.Optional(
           t.Union([t.Literal("github"), t.Literal("gitlab"), t.Literal("http")])

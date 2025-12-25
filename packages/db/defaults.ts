@@ -1,4 +1,4 @@
-import type { DockStatConfigTableType, CreateRepoType } from "@dockstat/typings/types"
+import type { CreateRepoType, DockStatConfigTableType } from "@dockstat/typings/types"
 
 export const defaultConfig: DockStatConfigTableType = {
   id: 0,

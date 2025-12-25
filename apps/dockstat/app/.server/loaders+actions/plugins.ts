@@ -1,5 +1,4 @@
 import { handleElysiaError } from "@dockstat/utils"
-import { ServerAPI } from ".."
 import type {
   ActionResponse,
   BatchVerificationResult,
@@ -9,6 +8,7 @@ import type {
   PluginsLoaderData,
   VerificationApiResult,
 } from "../../components/plugins/types"
+import { ServerAPI } from ".."
 
 // Action intent types
 type PluginsAction =

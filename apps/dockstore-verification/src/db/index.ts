@@ -1,6 +1,6 @@
 import { column, DB } from "@dockstat/sqlite-wrapper"
-import type { Plugin, PluginVersion, Repository, Verification } from "./types"
 import BaseLogger from "../base-logger"
+import type { Plugin, PluginVersion, Repository, Verification } from "./types"
 
 const logger = BaseLogger.spawn("Verification-DB")
 

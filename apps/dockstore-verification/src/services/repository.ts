@@ -1,7 +1,7 @@
 import type { PluginMetaType } from "@dockstat/typings/types"
-import { hashString } from "./hash"
 import { YAML } from "bun"
 import BaseLogger from "../base-logger"
+import { hashString } from "./hash"
 
 const logger = BaseLogger.spawn("Repository-Service")
 
