@@ -1,0 +1,34 @@
+# Ignore build artifacts and caches
+node_modules
+
+*.tsbuildinfo
+.cache
+
+# Ignore local database files
+*.db
+*.db-shm
+*.db-wal
+data/
+
+# Ignore logs
+logs
+*.log
+
+# Ignore env files (use environment variables instead)
+.env
+.env.local
+.env.*.local
+
+# Ignore IDE files
+.idea
+.vscode
+.DS_Store
+
+# Ignore git
+.git
+.gitignore
+
+# Ignore documentation and tests
+README.md
+*.test.*
+*.spec.*

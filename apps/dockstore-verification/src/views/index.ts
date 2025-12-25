@@ -1,4 +1,6 @@
 // View exports for the verification frontend
+
+export { AddPluginManuallyView } from "./AddPluginManually"
 export { Dashboard, type DashboardProps, type DashboardStats } from "./Dashboard"
 export { PluginDetail, PluginsContent, PluginsView, type PluginsViewProps } from "./Plugins"
 export {

@@ -11,6 +11,7 @@
     "jsx": "react",
     "jsxFactory": "Html.createElement",
     "jsxFragmentFactory": "Html.Fragment",
+    "types": ["@kitajs/html"],
 
     // Bundler mode
     "moduleResolution": "bundler",

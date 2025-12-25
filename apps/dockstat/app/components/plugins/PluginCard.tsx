@@ -271,7 +271,7 @@ export function PluginCard({
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+            <div className="flex flex-col gap-2 shrink-0">
               {!isLoaded ? (
                 <Button
                   variant="primary"

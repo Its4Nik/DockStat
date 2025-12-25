@@ -1,8 +1,8 @@
-import Logger from "@dockstat/logger"
 import { column, DB } from "@dockstat/sqlite-wrapper"
+import BaseLogger from "../base-logger"
 import type { Plugin, PluginVersion, Repository, Verification } from "./types"
 
-const logger = new Logger("Verification-DB")
+const logger = BaseLogger.spawn("Verification-DB")
 
 // Configuration
 const DB_PATH = process.env.VERIFICATION_DB_PATH || "verification.db"

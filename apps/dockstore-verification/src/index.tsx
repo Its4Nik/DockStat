@@ -1,17 +1,17 @@
-import Logger from "@dockstat/logger"
 import { Html, html } from "@elysiajs/html"
 import { staticPlugin } from "@elysiajs/static"
 import { Elysia } from "elysia"
+import BaseLogger from "./base-logger"
 import { db } from "./db"
 import { type AuthConfig, createAuthMiddleware } from "./middleware/auth"
 import { apiRoutes, compareRoutes, pageRoutes, publicRoutes } from "./routes"
 
+const logger = BaseLogger.spawn("Verification-Server")
+
 const _ = Html
 
-const logger = new Logger("Verification-Server")
-
 // Configuration
-export const PORT = 3000 //process.env.VERIFICATION_PORT ? Number(process.env.VERIFICATION_PORT) : 3000
+export const PORT = process.env.VERIFICATION_PORT ? Number(process.env.VERIFICATION_PORT) : 3200
 const AUTH_ENABLED = process.env.AUTH_ENABLED === "true"
 
 logger.info("Starting DockStore Verification Server...")

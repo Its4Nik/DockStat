@@ -1,7 +1,7 @@
-import Logger from "@dockstat/logger"
 import { Elysia } from "elysia"
+import BaseLogger from "../base-logger"
 
-const logger = new Logger("Auth-Middleware")
+const logger = BaseLogger.spawn("Auth-Middleware")
 
 /**
  * Authentication context type
@@ -276,7 +276,7 @@ export function requireRoles(requiredRoles: string[]) {
       }
     }
 
-    const hasRequiredRole = requiredRoles.some((role) => auth.user!.roles.includes(role))
+    const hasRequiredRole = requiredRoles.some((role) => auth.user?.roles.includes(role))
 
     if (!hasRequiredRole) {
       set.status = 403

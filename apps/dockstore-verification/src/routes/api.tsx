@@ -1,6 +1,6 @@
-import Logger from "@dockstat/logger"
 import { Html } from "@elysiajs/html"
 import { Elysia, t } from "elysia"
+import BaseLogger from "../base-logger"
 import { db, pluginsTable, pluginVersionsTable, repositoriesTable, verificationsTable } from "../db"
 import type { PluginVerificationView, RepositoryWithStats } from "../db/types"
 import { fetchRepository } from "../services/repository"
@@ -9,7 +9,7 @@ import { VerifiedCard } from "../views/Verify"
 
 const _ = Html
 
-const logger = new Logger("API-Routes")
+const logger = BaseLogger.spawn("API-Routes")
 
 /**
  * Get dashboard statistics
@@ -154,7 +154,7 @@ async function syncRepository(repositoryId: number) {
 
     let pluginId: number
 
-    if (existingPlugin) {
+    if (existingPlugin?.id) {
       // Update existing plugin
       pluginsTable.where({ id: existingPlugin.id }).update({
         description: fetchedPlugin.meta.description,
@@ -167,7 +167,7 @@ async function syncRepository(repositoryId: number) {
         manifest_path: fetchedPlugin.meta.manifest,
         updated_at: Math.floor(Date.now() / 1000),
       })
-      pluginId = existingPlugin.id!
+      pluginId = existingPlugin.id
     } else {
       // Insert new plugin
       const insertResult = pluginsTable.insert({
@@ -378,7 +378,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
       } else {
         // Create new verification
         verificationsTable.insert({
-          plugin_version_id: version.id!,
+          plugin_version_id: version.id,
           verified: true,
           verified_by: body.verified_by,
           verified_at: Math.floor(Date.now() / 1000),
@@ -413,7 +413,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
   .post("/sync-all", async ({ set }) => {
     const repos = repositoriesTable.where({ enabled: true }).all()
 
-    const results = await Promise.allSettled(repos.map((repo) => syncRepository(repo.id!)))
+    const results = await Promise.allSettled(repos.map((repo) => syncRepository(Number(repo.id))))
 
     const succeeded = results.filter((r) => r.status === "fulfilled").length
     const failed = results.filter((r) => r.status === "rejected").length
@@ -421,5 +421,218 @@ const apiRoutes = new Elysia({ prefix: "/api" })
     set.headers["HX-Refresh"] = "true"
     return { succeeded, failed, total: repos.length }
   })
+
+  // Manual plugin addition
+  .post(
+    "/plugins/manual",
+    ({ body, set }) => {
+      try {
+        // Parse tags if provided as a string
+        const tags = body.tags
+          ? typeof body.tags === "string"
+            ? body.tags
+                .split(",")
+                .map((t) => t.trim())
+                .filter((t) => t)
+            : body.tags
+          : undefined
+
+        // Get or create a "Manual" repository
+        let manualRepo = repositoriesTable.where({ name: "Manual Entries" }).first()
+        if (!manualRepo) {
+          const repoResult = repositoriesTable.insertOrIgnore({
+            name: "Manual Entries",
+            url: "manual://local",
+            enabled: true,
+          })
+          // Verify repository was created successfully
+          manualRepo = repositoriesTable.where({ id: repoResult.insertId }).first()
+          if (!manualRepo) {
+            throw new Error("Failed to create Manual Entries repository")
+          }
+        }
+
+        // Check if plugin already exists
+        const existingPlugin = pluginsTable
+          .where({ repository_id: manualRepo.id, name: body.name })
+          .first()
+
+        let pluginId: number
+
+        if (existingPlugin?.id) {
+          // Update existing plugin
+          pluginsTable.where({ id: existingPlugin.id }).update({
+            description: body.description,
+            author_name: body.author_name,
+            author_email: body.author_email,
+            author_website: body.author_website,
+            license: body.license || "MIT",
+            repository_url: body.repository_url,
+            repo_type: body.repo_type || "http",
+            manifest_path: body.manifest_path || "manual",
+            updated_at: Math.floor(Date.now() / 1000),
+          })
+          pluginId = existingPlugin.id
+        } else {
+          // Insert new plugin
+          const insertResult = pluginsTable.insert({
+            repository_id: manualRepo.id,
+            name: body.name,
+            description: body.description,
+            author_name: body.author_name,
+            author_email: body.author_email,
+            author_website: body.author_website,
+            license: body.license || "MIT",
+            repository_url: body.repository_url,
+            repo_type: body.repo_type || "http",
+            manifest_path: body.manifest_path || "manual",
+          })
+          if (!insertResult.insertId) {
+            throw new Error("Failed to insert plugin into database")
+          }
+          pluginId = insertResult.insertId
+        }
+
+        // Check if version already exists
+        const existingVersion = pluginVersionsTable
+          .where({ plugin_id: pluginId, version: body.version })
+          .first()
+
+        let versionId: number
+
+        if (existingVersion?.id) {
+          // Update existing version
+          pluginVersionsTable.where({ id: existingVersion.id }).update({
+            hash: body.hash,
+            bundle_hash: body.bundle_hash,
+            tags: tags,
+          })
+          versionId = existingVersion.id
+        } else {
+          // Insert new version
+          const versionResult = pluginVersionsTable.insert({
+            plugin_id: pluginId,
+            version: body.version,
+            hash: body.hash,
+            bundle_hash: body.bundle_hash,
+            tags: tags,
+          })
+          if (!versionResult.insertId) {
+            throw new Error("Failed to insert plugin version into database")
+          }
+          versionId = versionResult.insertId
+        }
+
+        // Create initial verification record if security status provided
+        if (body.security_status || body.verified_by) {
+          const existingVerification = verificationsTable
+            .where({ plugin_version_id: versionId })
+            .first()
+
+          if (!existingVerification) {
+            verificationsTable.insert({
+              plugin_version_id: versionId,
+              verified: false,
+              verified_by: body.verified_by || "manual",
+              security_status: body.security_status || "unknown",
+              notes: body.notes,
+            })
+          }
+        }
+
+        set.status = 201
+        set.headers["HX-Trigger"] = "pluginAdded"
+        return (
+          <div class="bg-green-900/20 border border-green-800 rounded-lg p-4">
+            <div class="flex items-start">
+              <svg
+                class="w-5 h-5 text-green-400 mr-3 flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <title>Success</title>
+              </svg>
+              <div>
+                <h4 class="text-sm font-semibold text-green-400 mb-1">Plugin Added Successfully</h4>
+                <p class="text-sm text-gray-300 mb-2">
+                  The plugin "<strong safe>{body.name}</strong>" version{" "}
+                  <strong safe>{body.version}</strong> has been added to the verification database.
+                </p>
+                <a href="/plugins" class="text-blue-400 hover:text-blue-300 underline text-sm">
+                  View in plugins list →
+                </a>
+              </div>
+            </div>
+          </div>
+        )
+      } catch (error) {
+        logger.error(`Failed to add manual plugin: ${error}`)
+        set.status = 500
+        return (
+          <div class="bg-red-900/20 border border-red-800 rounded-lg p-4">
+            <div class="flex items-start">
+              <svg
+                class="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+                <title>Error</title>
+              </svg>
+              <div>
+                <h4 class="text-sm font-semibold text-red-400 mb-1">Failed to Add Plugin</h4>
+                <p class="text-sm text-gray-300">
+                  {error instanceof Error ? error.message : "An unexpected error occurred"}
+                </p>
+              </div>
+            </div>
+          </div>
+        )
+      }
+    },
+    {
+      body: t.Object({
+        name: t.String({ minLength: 1 }),
+        version: t.String({ minLength: 1 }),
+        hash: t.String({ pattern: "^[a-fA-F0-9]{64}$" }),
+        description: t.String({ minLength: 1 }),
+        author_name: t.String({ minLength: 1 }),
+        repository_url: t.String({ minLength: 1, format: "uri" }),
+        author_email: t.Optional(t.String({ format: "email" })),
+        author_website: t.Optional(t.String({ format: "uri" })),
+        license: t.Optional(t.String()),
+        repo_type: t.Optional(
+          t.Union([t.Literal("github"), t.Literal("gitlab"), t.Literal("http")])
+        ),
+        manifest_path: t.Optional(t.String()),
+        bundle_hash: t.Optional(t.String({ pattern: "^[a-fA-F0-9]{64}$" })),
+        tags: t.Optional(t.Union([t.String(), t.Array(t.String())])),
+        security_status: t.Optional(
+          t.Union([t.Literal("safe"), t.Literal("unsafe"), t.Literal("unknown")])
+        ),
+        verified_by: t.Optional(t.String()),
+        notes: t.Optional(t.String()),
+      }),
+      detail: {
+        summary: "Manually Add Plugin",
+        description:
+          "Manually add a plugin to the verification database without syncing from a repository. Creates or updates the plugin, version, and optionally initial verification status.",
+        tags: ["Plugins"],
+      },
+    }
+  )
 
 export default apiRoutes

@@ -2,6 +2,7 @@ import { Html } from "@elysiajs/html"
 import { Elysia } from "elysia"
 import { db, pluginsTable, pluginVersionsTable, repositoriesTable, verificationsTable } from "../db"
 import type { PluginVerificationView, RepositoryWithStats } from "../db/types"
+import { AddPluginManuallyView } from "../views/AddPluginManually"
 import { Dashboard, type DashboardStats } from "../views/Dashboard"
 import { PluginDetail, PluginsContent, PluginsView } from "../views/Plugins"
 import { AddRepositoryView, RepositoriesView, RepositoryDetail } from "../views/Repositories"
@@ -250,6 +251,11 @@ const pageRoutes = new Elysia()
         highlightVersion={highlightVersion}
       />
     )
+  })
+
+  // Add plugin manually page
+  .get("/plugins/add", () => {
+    return <AddPluginManuallyView />
   })
 
 export default pageRoutes
