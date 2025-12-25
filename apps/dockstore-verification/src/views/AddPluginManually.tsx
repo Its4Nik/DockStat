@@ -1,6 +1,8 @@
 import { Html } from "@elysiajs/html"
 import { Layout } from "../components/Layout"
 
+const _ = Html
+
 export function AddPluginManuallyView() {
   return (
     <Layout title="Add Plugin Manually" currentPath="/plugins/add">
@@ -93,9 +95,7 @@ export function AddPluginManuallyView() {
                   class="input w-full font-mono text-sm"
                   placeholder="e.g., a1b2c3d4e5f6..."
                 />
-                <p class="text-xs text-gray-500 mt-1">
-                  SHA-256 hash of the plugin source code
-                </p>
+                <p class="text-xs text-gray-500 mt-1">SHA-256 hash of the plugin source code</p>
               </div>
 
               <div>
@@ -219,9 +219,7 @@ export function AddPluginManuallyView() {
                   class="input w-full"
                   placeholder="e.g., utility, dashboard, monitoring"
                 />
-                <p class="text-xs text-gray-500 mt-1">
-                  Enter tags separated by commas
-                </p>
+                <p class="text-xs text-gray-500 mt-1">Enter tags separated by commas</p>
               </div>
 
               <div>
