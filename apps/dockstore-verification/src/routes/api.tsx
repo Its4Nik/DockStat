@@ -610,9 +610,9 @@ const apiRoutes = new Elysia({ prefix: "/api" })
         hash: t.String({ minLength: 1 }),
         description: t.String({ minLength: 1 }),
         author_name: t.String({ minLength: 1 }),
-        repository_url: t.String({ minLength: 1 }),
-        author_email: t.Optional(t.String()),
-        author_website: t.Optional(t.String()),
+        repository_url: t.String({ minLength: 1, format: "uri" }),
+        author_email: t.Optional(t.String({ format: "email" })),
+        author_website: t.Optional(t.String({ format: "uri" })),
         license: t.Optional(t.String()),
         repo_type: t.Optional(
           t.Union([t.Literal("github"), t.Literal("gitlab"), t.Literal("http")])
