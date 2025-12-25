@@ -487,7 +487,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
             repo_type: body.repo_type || "http",
             manifest_path: body.manifest_path || "manual",
           })
-          if (insertResult.insertId === undefined || insertResult.insertId === null) {
+          if (!insertResult.insertId) {
             throw new Error("Failed to insert plugin into database")
           }
           pluginId = insertResult.insertId
