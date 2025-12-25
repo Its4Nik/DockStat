@@ -18,5 +18,5 @@ jobs:
         run: |
           git config --global user.name 'actions-user'
           git config --global user.email 'its4nik@users.noreply.github.com'
-          git commit -m "chore(ci): Lint [skip ci]"
+          git commit -m "chore(ci): Lint [skip ci]" || exit 0
           git push
