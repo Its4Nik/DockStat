@@ -13,7 +13,7 @@ export class OutlineClient {
     this.trace("OutlineClient initialized", {
       baseUrl: this.baseUrl,
       tokenLength: this.token.length,
-      tokenPrefix: this.token.slice(0, 4) + "...",
+      tokenPrefix: `${this.token.slice(0, 4)}...`,
     })
   }
 

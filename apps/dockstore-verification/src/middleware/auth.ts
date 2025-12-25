@@ -276,7 +276,7 @@ export function requireRoles(requiredRoles: string[]) {
       }
     }
 
-    const hasRequiredRole = requiredRoles.some((role) => auth.user!.roles.includes(role))
+    const hasRequiredRole = requiredRoles.some((role) => auth.user?.roles.includes(role))
 
     if (!hasRequiredRole) {
       set.status = 403
