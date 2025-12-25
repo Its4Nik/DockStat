@@ -1,5 +1,5 @@
-FROM oven/bun:latest AS runtime
-WORKDIR /opt/dockstore-verification
+FROM oven/bun:canary AS base
+WORKDIR /app/usr/dockstore-verification
 
 # Create directories
 RUN mkdir -p data public
@@ -8,12 +8,18 @@ RUN mkdir -p data public
 COPY ./dist/_start.js ./DVAPI.js
 COPY ./public ./public
 
+FROM oven/bun:canary-distroless AS runtime
+WORKDIR /opt/dockstore-verification
+
+COPY --from=base /app/usr/dockstore-verification/data ./data
+COPY --from=base /app/usr/dockstore-verification/public ./public
+COPY --from=base /app/usr/dockstore-verification/DVAPI.js ./DVAPI.js
+
 # Set environment variables
 ENV VERIFICATION_DB_PATH=data/verification.db
 ENV NODE_ENV=production
 
 ENV DOCKSTAT_LOGGER_DISABLED_LOGGERS="QueryBuilder,Sqlite-Wrapper"
-ENV DOCKSTAT_LOGGER_ONLY_SHOW=""
 ENV DOCKSTAT_LOGGER_IGNORE_MESSAGES="Logger Status: active"
 ENV DOCKSTAT_LOGGER_FULL_FILE_PATH=false
 ENV DOCKSTAT_LOGGER_LEVEL=info

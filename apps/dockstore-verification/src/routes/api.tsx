@@ -154,7 +154,7 @@ async function syncRepository(repositoryId: number) {
 
     let pluginId: number
 
-    if (existingPlugin) {
+    if (existingPlugin?.id) {
       // Update existing plugin
       pluginsTable.where({ id: existingPlugin.id }).update({
         description: fetchedPlugin.meta.description,
@@ -167,7 +167,7 @@ async function syncRepository(repositoryId: number) {
         manifest_path: fetchedPlugin.meta.manifest,
         updated_at: Math.floor(Date.now() / 1000),
       })
-      pluginId = existingPlugin.id!
+      pluginId = existingPlugin.id
     } else {
       // Insert new plugin
       const insertResult = pluginsTable.insert({
@@ -378,7 +378,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
       } else {
         // Create new verification
         verificationsTable.insert({
-          plugin_version_id: version.id!,
+          plugin_version_id: version.id,
           verified: true,
           verified_by: body.verified_by,
           verified_at: Math.floor(Date.now() / 1000),
@@ -413,7 +413,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
   .post("/sync-all", async ({ set }) => {
     const repos = repositoriesTable.where({ enabled: true }).all()
 
-    const results = await Promise.allSettled(repos.map((repo) => syncRepository(repo.id!)))
+    const results = await Promise.allSettled(repos.map((repo) => syncRepository(Number(repo.id))))
 
     const succeeded = results.filter((r) => r.status === "fulfilled").length
     const failed = results.filter((r) => r.status === "rejected").length
@@ -440,7 +440,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
         // Get or create a "Manual" repository
         let manualRepo = repositoriesTable.where({ name: "Manual Entries" }).first()
         if (!manualRepo) {
-          const repoResult = repositoriesTable.insert({
+          const repoResult = repositoriesTable.insertOrIgnore({
             name: "Manual Entries",
             url: "manual://local",
             enabled: true,
@@ -459,7 +459,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
 
         let pluginId: number
 
-        if (existingPlugin) {
+        if (existingPlugin?.id) {
           // Update existing plugin
           pluginsTable.where({ id: existingPlugin.id }).update({
             description: body.description,
@@ -472,11 +472,11 @@ const apiRoutes = new Elysia({ prefix: "/api" })
             manifest_path: body.manifest_path || "manual",
             updated_at: Math.floor(Date.now() / 1000),
           })
-          pluginId = existingPlugin.id!
+          pluginId = existingPlugin.id
         } else {
           // Insert new plugin
           const insertResult = pluginsTable.insert({
-            repository_id: manualRepo.id!,
+            repository_id: manualRepo.id,
             name: body.name,
             description: body.description,
             author_name: body.author_name,
@@ -500,14 +500,14 @@ const apiRoutes = new Elysia({ prefix: "/api" })
 
         let versionId: number
 
-        if (existingVersion) {
+        if (existingVersion?.id) {
           // Update existing version
           pluginVersionsTable.where({ id: existingVersion.id }).update({
             hash: body.hash,
             bundle_hash: body.bundle_hash,
             tags: tags,
           })
-          versionId = existingVersion.id!
+          versionId = existingVersion.id
         } else {
           // Insert new version
           const versionResult = pluginVersionsTable.insert({
@@ -517,7 +517,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
             bundle_hash: body.bundle_hash,
             tags: tags,
           })
-          if (versionResult.insertId === undefined || versionResult.insertId === null) {
+          if (!versionResult.insertId) {
             throw new Error("Failed to insert plugin version into database")
           }
           versionId = versionResult.insertId
@@ -607,7 +607,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
       body: t.Object({
         name: t.String({ minLength: 1 }),
         version: t.String({ minLength: 1 }),
-        hash: t.String({ minLength: 1 }),
+        hash: t.String({ pattern: "^[a-fA-F0-9]{64}$" }),
         description: t.String({ minLength: 1 }),
         author_name: t.String({ minLength: 1 }),
         repository_url: t.String({ minLength: 1, format: "uri" }),
@@ -618,7 +618,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
           t.Union([t.Literal("github"), t.Literal("gitlab"), t.Literal("http")])
         ),
         manifest_path: t.Optional(t.String()),
-        bundle_hash: t.Optional(t.String()),
+        bundle_hash: t.Optional(t.String({ pattern: "^[a-fA-F0-9]{64}$" })),
         tags: t.Optional(t.Union([t.String(), t.Array(t.String())])),
         security_status: t.Optional(
           t.Union([t.Literal("safe"), t.Literal("unsafe"), t.Literal("unknown")])
