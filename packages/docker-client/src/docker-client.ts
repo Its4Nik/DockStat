@@ -35,6 +35,7 @@ class DockerClient {
       retryDelay: options.retryDelay ?? 1000,
       enableMonitoring: options.enableMonitoring ?? true,
       enableEventEmitter: options.enableEventEmitter ?? true,
+      enableContainerMetrics: options.enableContainerMetrics ?? true,
       monitoringOptions: options.monitoringOptions,
       execOptions: options.execOptions ?? {},
     }

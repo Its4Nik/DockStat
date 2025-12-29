@@ -677,7 +677,14 @@ export class DockerClientManagerCore {
     return false
   }
 
-  public async getAllHosts(): Promise<Array<{ name: string; id: number; clientId: number }>> {
+  public async getAllHosts(): Promise<
+    {
+      name: string
+      id: number
+      clientId: number
+      reachable: boolean
+    }[]
+  > {
     // Default behavior: no hosts known at core level. HostsMixin overrides this.
     return []
   }

@@ -347,6 +347,7 @@ export const Adapter = {
     const status = statusRes.status === 200 ? statusRes.data : emptyStatus
     const containers =
       containersRes.status === 200 && containersRes.data ? containersRes.data : defaultContainers
+
     return { status, containers }
   },
 

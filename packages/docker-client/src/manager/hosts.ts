@@ -67,13 +67,21 @@ export class Hosts extends DockerClientManagerCore {
     this.logger.debug("Getting all hosts")
     const clients = this.getAllClients()
     this.logger.debug(`Clients: ${JSON.stringify(clients)}`)
-    let hosts: Array<{ name: string; id: number; clientId: number }> = []
+    let hosts: Array<{
+      name: string
+      id: number
+      clientId: number
+      reachable: boolean
+    }> = []
 
     for (const client of clients) {
+      const pRes = await this.ping(client.id)
+
       const clientsHosts = (await this.getHosts(client.id)).map((c) => ({
         name: c.name,
         id: Number(c.id),
         clientId: Number(client.id),
+        reachable: pRes.reachableInstances.includes(Number(c.id)),
       }))
       this.logger.debug(`Clients Hosts: ${JSON.stringify(clientsHosts)}`)
       hosts = hosts.concat(clientsHosts)
@@ -84,6 +92,9 @@ export class Hosts extends DockerClientManagerCore {
   }
 
   public async ping(clientId: number) {
-    return this.sendRequest(clientId, { type: "ping" })
+    return this.sendRequest<{
+      reachableInstances: number[]
+      unreachableInstances: number[]
+    }>(clientId, { type: "ping" })
   }
 }

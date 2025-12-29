@@ -135,6 +135,16 @@ export function HostsList({
                           <Container size={12} />
                           {containerCountMap.get(host.id) ?? 0}
                         </Badge>
+
+                        {host.reachable ? (
+                          <Badge variant="success" size="sm">
+                            Reachable
+                          </Badge>
+                        ) : (
+                          <Badge variant="error" size="sm">
+                            Unreachable
+                          </Badge>
+                        )}
                         <Badge variant="secondary" size="sm" outlined>
                           ID: {host.id}
                         </Badge>

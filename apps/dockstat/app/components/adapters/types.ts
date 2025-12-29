@@ -40,6 +40,7 @@ export interface Host {
   id: number
   name: string
   clientId: number
+  reachable: boolean
   host?: string
   port?: number
   secure?: boolean
