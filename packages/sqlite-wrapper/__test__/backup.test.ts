@@ -1,7 +1,7 @@
-import { expect, describe, test, beforeAll, afterAll } from "bun:test"
+import { afterAll, beforeAll, describe, expect, test } from "bun:test"
+import { existsSync, mkdirSync, rmSync } from "node:fs"
+import { join } from "node:path"
 import { column, DB } from "../index"
-import { existsSync, mkdirSync, rmSync } from "fs"
-import { join } from "path"
 
 /**
  * Tests for backup functionality including:

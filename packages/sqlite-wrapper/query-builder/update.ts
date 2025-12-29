@@ -1,68 +1,91 @@
 import type { SQLQueryBindings } from "bun:sqlite"
 import type { UpdateResult } from "../types"
+import { buildSetClause, createLogger, quoteIdentifier, type RowData } from "../utils"
 import { SelectQueryBuilder } from "./select"
 
 /**
- * Mixin class that adds UPDATE functionality to the QueryBuilder.
- * Handles safe update operations with mandatory WHERE conditions.
+ * UpdateQueryBuilder - Handles UPDATE operations with safety checks
+ *
+ * Features:
+ * - Safe updates (WHERE required to prevent accidental full-table updates)
+ * - Upsert (INSERT OR REPLACE)
+ * - Increment/decrement numeric columns
+ * - Update and get (returns updated rows)
+ * - Batch updates with transaction support
+ * - Automatic JSON serialization
  */
 export class UpdateQueryBuilder<T extends Record<string, unknown>> extends SelectQueryBuilder<T> {
+  private updateLog = createLogger("update")
+
+  // ===== Public Update Methods =====
+
   /**
-   * Update rows matching the WHERE conditions with the provided data.
-   * Requires at least one WHERE condition to prevent accidental full table updates.
+   * Update rows matching the WHERE conditions
    *
-   * @param data - Object with columns to update and their new values
-   * @returns Update result with changes count
+   * Requires at least one WHERE condition to prevent accidental full-table updates.
+   *
+   * @example
+   * table.where({ id: 1 }).update({ name: "Updated Name" })
+   *
+   * @example
+   * table.where({ active: false }).update({ deleted_at: Date.now() })
    */
   update(data: Partial<T>): UpdateResult {
     this.requireWhereClause("UPDATE")
 
-    // Transform data to handle JSON serialization
+    // Transform data (serialize JSON, etc.)
     const transformedData = this.transformRowToDb(data)
-    const updateColumns = Object.keys(transformedData)
-    if (updateColumns.length === 0) {
+    const columns = Object.keys(transformedData)
+
+    if (columns.length === 0) {
       this.reset()
       throw new Error("update: no columns to update")
     }
 
-    // Handle regex conditions by first fetching matching rows
+    // Handle regex conditions by fetching matching rows first
     if (this.hasRegexConditions()) {
-      this.reset()
       return this.updateWithRegexConditions(transformedData)
     }
 
     // Build UPDATE statement
-    const setClause = updateColumns.map((col) => `${this.quoteIdentifier(col)} = ?`).join(", ")
-
+    const setClause = buildSetClause(columns)
     const [whereClause, whereParams] = this.buildWhereClause()
-    const query = `UPDATE ${this.quoteIdentifier(this.getTableName())} SET ${setClause}${whereClause}`
 
-    const updateValues = updateColumns.map((col) => transformedData[col])
-    const allParams = [...updateValues, ...whereParams]
+    const query = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${setClause}${whereClause}`
+    const updateValues = columns.map((col) => transformedData[col])
+    const allParams = [...updateValues, ...whereParams] as SQLQueryBindings[]
+
+    this.updateLog.query("UPDATE", query, allParams)
 
     const result = this.getDb()
       .prepare(query)
       .run(...allParams)
 
-    const out = {
-      changes: result.changes,
-    }
+    this.updateLog.result("UPDATE", result.changes)
     this.reset()
-    return out
+
+    return { changes: result.changes }
   }
 
   /**
-   * Handle UPDATE operations when regex conditions are present.
-   * This requires client-side filtering and individual row updates.
+   * Handle UPDATE when regex conditions are present
+   *
+   * Since regex conditions are applied client-side, we need to:
+   * 1. Fetch all rows matching SQL conditions
+   * 2. Filter with regex client-side
+   * 3. Update each matching row by rowid
    */
-  private updateWithRegexConditions(
-    transformedData: Record<string, SQLQueryBindings>
-  ): UpdateResult {
-    // First, get all rows matching SQL conditions (without regex)
-    const [selectQuery, selectParams] = this.buildWhereClause()
+  private updateWithRegexConditions(transformedData: RowData): UpdateResult {
+    const columns = Object.keys(transformedData)
+
+    // Get rows matching SQL conditions (without regex)
+    // Use alias for rowid to avoid collision with INTEGER PRIMARY KEY columns
+    const [whereClause, whereParams] = this.buildWhereClause()
+    const selectQuery = `SELECT rowid as _rowid_, * FROM ${quoteIdentifier(this.getTableName())}${whereClause}`
+
     const candidateRows = this.getDb()
-      .prepare(`SELECT rowid, * FROM ${this.quoteIdentifier(this.getTableName())}${selectQuery}`)
-      .all(...selectParams) as (T & { rowid: number })[]
+      .prepare(selectQuery)
+      .all(...whereParams) as (T & { _rowid_: number })[]
 
     // Apply regex filtering
     const matchingRows = this.applyRegexFiltering(candidateRows)
@@ -73,128 +96,151 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     }
 
     // Update each matching row by rowid
-    const updateColumns = Object.keys(transformedData)
-    const setClause = updateColumns.map((col) => `${this.quoteIdentifier(col)} = ?`).join(", ")
-
-    const updateQuery = `UPDATE ${this.quoteIdentifier(this.getTableName())} SET ${setClause} WHERE rowid = ?`
+    const setClause = buildSetClause(columns)
+    const updateQuery = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${setClause} WHERE rowid = ?`
     const stmt = this.getDb().prepare(updateQuery)
 
+    this.updateLog.query("UPDATE (regex)", updateQuery)
+
     let totalChanges = 0
-    const updateValues = updateColumns.map((col) => transformedData[col])
+    const updateValues = columns.map((col) => transformedData[col])
 
     for (const row of matchingRows) {
-      const result = stmt.run(...updateValues, row.rowid as SQLQueryBindings)
+      const result = stmt.run(...updateValues, row._rowid_ as SQLQueryBindings)
       totalChanges += result.changes
     }
+
+    this.updateLog.result("UPDATE (regex)", totalChanges)
     this.reset()
+
     return { changes: totalChanges }
   }
 
   /**
-   * Update or insert (upsert) functionality using INSERT OR REPLACE.
-   * This method attempts to update existing rows, and inserts new ones if they don't exist.
-   * Requires a unique constraint or primary key to work properly.
+   * Upsert (INSERT OR REPLACE) a row
    *
-   * @param data - Object with columns to upsert
-   * @returns Update result with changes count
+   * If a row with the same unique key exists, it will be replaced.
+   * Otherwise, a new row will be inserted.
+   *
+   * Requires a unique constraint or primary key on the table.
+   *
+   * @example
+   * table.upsert({ email: "alice@example.com", name: "Alice Updated" })
    */
   upsert(data: Partial<T>): UpdateResult {
-    // Transform data to handle JSON serialization
     const transformedData = this.transformRowToDb(data)
     const columns = Object.keys(transformedData)
+
     if (columns.length === 0) {
       this.reset()
       throw new Error("upsert: no columns to upsert")
     }
 
-    const quotedColumns = columns.map((col) => this.quoteIdentifier(col)).join(", ")
+    const columnList = columns.map((col) => quoteIdentifier(col)).join(", ")
     const placeholders = columns.map(() => "?").join(", ")
-
-    const query = `INSERT OR REPLACE INTO ${this.quoteIdentifier(this.getTableName())} (${quotedColumns}) VALUES (${placeholders})`
-
     const values = columns.map((col) => transformedData[col] ?? null)
+
+    const query = `INSERT OR REPLACE INTO ${quoteIdentifier(this.getTableName())} (${columnList}) VALUES (${placeholders})`
+
+    this.updateLog.query("UPSERT", query, values)
+
     const result = this.getDb()
       .prepare(query)
       .run(...values)
 
-    const out = {
-      changes: result.changes,
-    }
+    this.updateLog.result("UPSERT", result.changes)
     this.reset()
-    return out
+
+    return { changes: result.changes }
   }
 
   /**
-   * Increment a numeric column by a specified amount.
-   * This is more efficient than fetching, calculating, and updating.
+   * Increment a numeric column by a specified amount
    *
-   * @param column - Column name to increment
-   * @param amount - Amount to increment by (defaults to 1)
-   * @returns Update result with changes count
+   * More efficient than fetching, calculating, and updating.
+   *
+   * @example
+   * table.where({ id: 1 }).increment("login_count")
+   * table.where({ id: 1 }).increment("points", 10)
    */
   increment(column: keyof T, amount = 1): UpdateResult {
     this.requireWhereClause("INCREMENT")
 
     const [whereClause, whereParams] = this.buildWhereClause()
-    const query = `UPDATE ${this.quoteIdentifier(this.getTableName())} SET ${this.quoteIdentifier(String(column))} = ${this.quoteIdentifier(String(column))} + ?${whereClause}`
+    const quotedColumn = quoteIdentifier(String(column))
+
+    const query = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${quotedColumn} = ${quotedColumn} + ?${whereClause}`
+    const params = [amount, ...whereParams] as SQLQueryBindings[]
+
+    this.updateLog.query("INCREMENT", query, params)
 
     const result = this.getDb()
       .prepare(query)
-      .run(amount, ...whereParams)
+      .run(...params)
 
-    const out = {
-      changes: result.changes,
-    }
+    this.updateLog.result("INCREMENT", result.changes)
     this.reset()
-    return out
+
+    return { changes: result.changes }
   }
 
   /**
-   * Decrement a numeric column by a specified amount.
-   * This is more efficient than fetching, calculating, and updating.
+   * Decrement a numeric column by a specified amount
    *
-   * @param column - Column name to decrement
-   * @param amount - Amount to decrement by (defaults to 1)
-   * @returns Update result with changes count
+   * Equivalent to increment with a negative amount.
+   *
+   * @example
+   * table.where({ id: 1 }).decrement("credits")
+   * table.where({ id: 1 }).decrement("stock", 5)
    */
   decrement(column: keyof T, amount = 1): UpdateResult {
-    const out = this.increment(column, -amount)
-    this.reset()
-    return out
+    return this.increment(column, -amount)
   }
 
   /**
-   * Update and get the updated rows back.
-   * This is useful when you want to see the rows after the update.
+   * Update rows and return the updated rows
    *
-   * @param data - Object with columns to update and their new values
-   * @returns Array of updated rows
+   * Note: Returns the rows as they were BEFORE the update.
+   * For post-update values, query the rows again after updating.
+   *
+   * @example
+   * const updatedRows = table.where({ active: false }).updateAndGet({ deleted: true })
    */
   updateAndGet(data: Partial<T>): T[] {
-    // First, get the rows that will be updated
+    // Preserve WHERE state before all() resets it
+    const savedWhereConditions = [...this.state.whereConditions]
+    const savedWhereParams = [...this.state.whereParams]
+    const savedRegexConditions = [...this.state.regexConditions]
+
+    // Get rows before update
     const rowsToUpdate = this.all()
+
+    // Restore WHERE state for the update
+    this.state.whereConditions = savedWhereConditions
+    this.state.whereParams = savedWhereParams
+    this.state.regexConditions = savedRegexConditions
 
     // Perform the update
     const updateResult = this.update(data)
 
     if (updateResult.changes === 0) {
-      this.reset()
       return []
     }
 
-    // For simplicity, return the originally matched rows
-    // In a real implementation, you might want to re-fetch the updated rows
-    const out = rowsToUpdate
-    this.reset()
-    return out
+    return rowsToUpdate
   }
 
   /**
-   * Batch update multiple rows with different values.
-   * This is more efficient than individual updates when updating many rows.
+   * Batch update multiple rows with different values
    *
-   * @param updates - Array of objects, each containing update data and conditions
-   * @returns Update result with total changes count
+   * Each update item specifies its own WHERE conditions and data.
+   * All updates are wrapped in a transaction for atomicity.
+   *
+   * @example
+   * table.updateBatch([
+   *   { where: { id: 1 }, data: { name: "Alice" } },
+   *   { where: { id: 2 }, data: { name: "Bob" } },
+   * ])
    */
   updateBatch(updates: Array<{ where: Partial<T>; data: Partial<T> }>): UpdateResult {
     if (!Array.isArray(updates) || updates.length === 0) {
@@ -204,59 +250,59 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
 
     const db = this.getDb()
 
-    // Use a transaction for batch operations
     const transaction = db.transaction(
       (updatesToProcess: Array<{ where: Partial<T>; data: Partial<T> }>) => {
         let totalChanges = 0
 
         for (const { where: whereData, data } of updatesToProcess) {
-          // Transform data to handle JSON serialization
-          const transformedUpdateData = this.transformRowToDb(data)
-          const updateColumns = Object.keys(transformedUpdateData)
+          // Transform data
+          const transformedData = this.transformRowToDb(data)
+          const updateColumns = Object.keys(transformedData)
+
           if (updateColumns.length === 0) {
             continue // Skip empty updates
           }
 
-          // Build WHERE conditions for this update
+          // Build WHERE conditions
           const whereConditions: string[] = []
           const whereParams: SQLQueryBindings[] = []
 
           for (const [column, value] of Object.entries(whereData)) {
             if (value === null || value === undefined) {
-              whereConditions.push(`${this.quoteIdentifier(column)} IS NULL`)
+              whereConditions.push(`${quoteIdentifier(column)} IS NULL`)
             } else {
-              whereConditions.push(`${this.quoteIdentifier(column)} = ?`)
-              whereParams.push(value)
+              whereConditions.push(`${quoteIdentifier(column)} = ?`)
+              whereParams.push(value as SQLQueryBindings)
             }
           }
 
           if (whereConditions.length === 0) {
-            this.reset()
             throw new Error("updateBatch: each update must have WHERE conditions")
           }
 
           // Build UPDATE statement
-          const setClause = updateColumns
-            .map((col) => `${this.quoteIdentifier(col)} = ?`)
-            .join(", ")
-
+          const setClause = buildSetClause(updateColumns)
           const whereClause = ` WHERE ${whereConditions.join(" AND ")}`
-          const query = `UPDATE ${this.quoteIdentifier(this.getTableName())} SET ${setClause}${whereClause}`
+          const query = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${setClause}${whereClause}`
 
-          const updateValues = updateColumns.map((col) => transformedUpdateData[col] ?? null)
-          const allParams = [...updateValues, ...whereParams]
+          const updateValues = updateColumns.map((col) => transformedData[col] ?? null)
+          const allParams = [...updateValues, ...whereParams] as SQLQueryBindings[]
 
           const result = db.prepare(query).run(...allParams)
           totalChanges += result.changes
         }
 
-        this.reset()
         return { changes: totalChanges }
       }
     )
 
-    const out = transaction(updates)
+    this.updateLog.query("UPDATE BATCH", `${updates.length} updates`)
+
+    const result = transaction(updates)
+
+    this.updateLog.result("UPDATE BATCH", result.changes)
     this.reset()
-    return out
+
+    return result
   }
 }

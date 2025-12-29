@@ -1,13 +1,16 @@
 import { Database, type SQLQueryBindings } from "bun:sqlite"
-import Logger from "@dockstat/logger"
 import { QueryBuilder } from "./query-builder/index"
 import type { ColumnDefinition, Parser, TableConstraints, TableOptions, TableSchema } from "./types"
+import { addLoggerParents as addParents, createLogger, logger as sqliteLogger } from "./utils"
 
-export const logger = new Logger("Sqlite-Wrapper")
+// Re-export logger utilities for external use
+export const logger = sqliteLogger
+export const addLoggerParents = addParents
 
-export function addLoggerParents(parents: string[]) {
-  logger.addParents(parents)
-}
+// Internal loggers for different components
+const dbLog = createLogger("db")
+const backupLog = createLogger("backup")
+const tableLog = createLogger("table")
 
 /**
  * Re-export all types and utilities
@@ -97,7 +100,7 @@ class DB {
    * @param options - Optional database configuration
    */
   constructor(path: string, options?: DBOptions) {
-    logger.info(`Opening database: ${path}`)
+    dbLog.connection(path, "open")
     this.dbPath = path
     this.db = new Database(path)
 
@@ -126,7 +129,7 @@ class DB {
    */
   private setupAutoBackup(options: AutoBackupOptions): void {
     if (this.dbPath === ":memory:") {
-      logger.warn("Auto-backup is not available for in-memory databases")
+      backupLog.warn("Auto-backup is not available for in-memory databases")
       return
     }
 
@@ -140,10 +143,10 @@ class DB {
     }
 
     // Ensure backup directory exists
-    const fs = require("fs")
+    const fs = require("node:fs")
     if (!fs.existsSync(this.autoBackupOptions.directory)) {
       fs.mkdirSync(this.autoBackupOptions.directory, { recursive: true })
-      logger.info(`Created backup directory: ${this.autoBackupOptions.directory}`)
+      backupLog.info(`Created backup directory: ${this.autoBackupOptions.directory}`)
     }
 
     // Create initial backup
@@ -154,8 +157,8 @@ class DB {
       this.backup()
     }, this.autoBackupOptions.intervalMs)
 
-    logger.info(
-      `Auto-backup enabled: interval=${this.autoBackupOptions.intervalMs}ms, maxBackups=${this.autoBackupOptions.maxBackups}, directory=${this.autoBackupOptions.directory}`
+    backupLog.info(
+      `Auto-backup enabled: interval=${this.autoBackupOptions.intervalMs}ms, maxBackups=${this.autoBackupOptions.maxBackups}`
     )
   }
 
@@ -170,8 +173,7 @@ class DB {
       throw new Error("Cannot backup an in-memory database")
     }
 
-    const fs = require("fs")
-    const path = require("path")
+    const path = require("node:path")
 
     let backupPath: string
 
@@ -192,7 +194,7 @@ class DB {
     // Use SQLite's backup API via VACUUM INTO for a consistent backup
     try {
       this.db.run(`VACUUM INTO '${backupPath.replace(/'/g, "''")}'`)
-      logger.info(`Database backup created: ${backupPath}`)
+      backupLog.backup("create", backupPath)
 
       // Apply retention policy if auto-backup is enabled
       if (this.autoBackupOptions) {
@@ -201,7 +203,7 @@ class DB {
 
       return backupPath
     } catch (error) {
-      logger.error(`Failed to create backup: ${error}`)
+      backupLog.error(`Failed to create backup: ${error}`)
       throw error
     }
   }
@@ -212,12 +214,12 @@ class DB {
   private applyRetentionPolicy(): void {
     if (!this.autoBackupOptions) return
 
-    const fs = require("fs")
-    const path = require("path")
+    const fs = require("node:fs")
+    const path = require("node:path")
 
     const backupDir = this.autoBackupOptions.directory
-    const prefix = this.autoBackupOptions.filenamePrefix!
-    const maxBackups = this.autoBackupOptions.maxBackups!
+    const prefix = this.autoBackupOptions.filenamePrefix || "backup"
+    const maxBackups = this.autoBackupOptions.maxBackups || 10
 
     try {
       // Get all backup files matching the pattern
@@ -236,12 +238,12 @@ class DB {
         const toDelete = files.slice(maxBackups)
         for (const file of toDelete) {
           fs.unlinkSync(file.path)
-          logger.debug(`Removed old backup: ${file.name}`)
+          backupLog.debug(`Removed old backup: ${file.name}`)
         }
-        logger.info(`Retention policy applied: removed ${toDelete.length} old backup(s)`)
+        backupLog.info(`Retention policy applied: removed ${toDelete.length} old backup(s)`)
       }
     } catch (error) {
-      logger.error(`Failed to apply retention policy: ${error}`)
+      backupLog.error(`Failed to apply retention policy: ${error}`)
     }
   }
 
@@ -252,20 +254,20 @@ class DB {
    */
   listBackups(): Array<{ filename: string; path: string; size: number; created: Date }> {
     if (!this.autoBackupOptions) {
-      logger.warn("Auto-backup is not configured. Use backup() with a custom path instead.")
+      backupLog.warn("Auto-backup is not configured. Use backup() with a custom path instead.")
       return []
     }
 
-    const fs = require("fs")
-    const path = require("path")
+    const fs = require("node:fs")
+    const path = require("node:path")
 
     const backupDir = this.autoBackupOptions.directory
-    const prefix = this.autoBackupOptions.filenamePrefix
+    const prefix = this.autoBackupOptions.filenamePrefix || "backup"
 
     try {
       return fs
         .readdirSync(backupDir)
-        .filter((file: string) => file.startsWith(prefix!) && file.endsWith(".db"))
+        .filter((file: string) => file.startsWith(prefix) && file.endsWith(".db"))
         .map((file: string) => {
           const filePath = path.join(backupDir, file)
           const stats = fs.statSync(filePath)
@@ -280,7 +282,7 @@ class DB {
           (a: { created: Date }, b: { created: Date }) => b.created.getTime() - a.created.getTime()
         )
     } catch (error) {
-      logger.error(`Failed to list backups: ${error}`)
+      backupLog.error(`Failed to list backups: ${error}`)
       return []
     }
   }
@@ -292,7 +294,7 @@ class DB {
    * @param targetPath - Optional target path. If not provided, restores to the original database path.
    */
   restore(backupPath: string, targetPath?: string): void {
-    const fs = require("fs")
+    const fs = require("node:fs")
 
     if (!fs.existsSync(backupPath)) {
       throw new Error(`Backup file not found: ${backupPath}`)
@@ -311,15 +313,15 @@ class DB {
 
     try {
       fs.copyFileSync(backupPath, restorePath)
-      logger.info(`Database restored from backup: ${backupPath} -> ${restorePath}`)
+      backupLog.backup("restore", backupPath)
 
       // Reopen database if we closed it
       if (restorePath === this.dbPath) {
         this.db = new Database(this.dbPath)
-        logger.info("Database connection reopened after restore")
+        dbLog.info("Database connection reopened after restore")
       }
     } catch (error) {
-      logger.error(`Failed to restore backup: ${error}`)
+      backupLog.error(`Failed to restore backup: ${error}`)
       throw error
     }
   }
@@ -331,7 +333,7 @@ class DB {
     if (this.autoBackupTimer) {
       clearInterval(this.autoBackupTimer)
       this.autoBackupTimer = null
-      logger.info("Auto-backup stopped")
+      backupLog.info("Auto-backup stopped")
     }
   }
 
@@ -356,11 +358,7 @@ class DB {
       BOOLEAN: parser.BOOLEAN || [],
     }
 
-    logger.debug(
-      `Creating QueryBuilder for table: ${tableName} - JSON Columns: ${JSON.stringify(
-        parser.JSON
-      )} - Function columns: ${JSON.stringify(pObj.MODULE)}`
-    )
+    tableLog.debug(`Creating QueryBuilder for: ${tableName}`)
     return new QueryBuilder<T>(this.db, tableName, pObj)
   }
 
@@ -369,7 +367,7 @@ class DB {
    * Also stops auto-backup if it's running.
    */
   close(): void {
-    logger.info("Closing database connection")
+    dbLog.connection(this.dbPath, "close")
     this.stopAutoBackup()
     this.db.close()
   }
@@ -522,9 +520,8 @@ class DB {
 
     const allDefinitions = [columnDefs, ...tableConstraints].join(", ")
 
-    logger.debug(
-      `Creating table (${tableName}) inMem=${temp === "TEMPORARY "} ifNot=${ifNot === "IF NOT EXISTS "} withoutRowID=${withoutRowId === " WITHOUT ROWID"} - Definitions: ${JSON.stringify(allDefinitions)}`
-    )
+    const columnNames = Object.keys(columns)
+    tableLog.tableCreate(tableName, columnNames)
 
     const sql = `CREATE ${temp}TABLE ${ifNot}${quoteIdent(
       tableName
@@ -567,9 +564,7 @@ class DB {
       BOOLEAN: mergedBoolean,
     }
 
-    logger.debug(
-      `Parser configuration: JSON=${JSON.stringify(pObj.JSON)}, BOOLEAN=${JSON.stringify(pObj.BOOLEAN)}, MODULE=${JSON.stringify(Object.keys(pObj.MODULE))}`
-    )
+    tableLog.parserConfig(pObj.JSON.map(String), pObj.BOOLEAN.map(String), Object.keys(pObj.MODULE))
 
     return this.table<_T>(tableName, pObj)
   }
@@ -941,7 +936,7 @@ class DB {
    * Commit a transaction
    */
   commit(): void {
-    logger.debug("Committing transaction")
+    dbLog.transaction("commit")
     this.run("COMMIT")
   }
 
@@ -949,7 +944,7 @@ class DB {
    * Rollback a transaction
    */
   rollback(): void {
-    logger.warn("Rolling back transaction")
+    dbLog.transaction("rollback")
     this.run("ROLLBACK")
   }
 
@@ -982,7 +977,7 @@ class DB {
    */
   vacuum() {
     const result = this.db.run("VACUUM")
-    logger.debug("Vacuum completed")
+    dbLog.debug("Vacuum completed")
     return result
   }
 
