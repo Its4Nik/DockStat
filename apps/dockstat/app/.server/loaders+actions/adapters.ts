@@ -325,8 +325,10 @@ function parseFormData(formData: FormData): AdapterAction | null {
 
 export const Adapter = {
   loader: async () => {
-    const statusRes = await ServerAPI.docker.status.get()
-    const containersRes = await ServerAPI.docker.containers["all-containers"].get()
+    const [statusRes, containersRes] = await Promise.all([
+      ServerAPI.docker.status.get(),
+      ServerAPI.docker.containers["all-containers"].get(),
+    ])
 
     // Default empty status
     const emptyStatus = {

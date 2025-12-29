@@ -27,8 +27,6 @@ const Repo = t.Object({
   // - If the Policy is set to "relaxed", no verification is performed at all.
   policy: t.UnionEnum(["strict", "relaxed"]),
   verification_api: t.Nullable(t.String({ format: "uri" })),
-  isVerified: t.Boolean(),
-  hashes: PluginHashes,
 })
 
 // Schema for creating a new repository (id is auto-generated)
@@ -38,8 +36,6 @@ const CreateRepo = t.Object({
   source: t.String(),
   policy: t.UnionEnum(["strict", "relaxed"]),
   verification_api: t.Nullable(t.String({ format: "uri" })),
-  isVerified: t.Boolean(),
-  hashes: PluginHashes,
 })
 
 // Schema for updating an existing repository (all fields optional except id)

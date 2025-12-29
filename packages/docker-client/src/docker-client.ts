@@ -270,11 +270,16 @@ class DockerClient {
     return this.hostHandler.getHosts()
   }
 
-  public async getAllContainers(): Promise<DOCKER.ContainerInfo[]> {
+  public async getAllContainers() {
     this.checkDisposed()
-    this.logger.info("Fetching containers from all hosts")
     const allContainers: DOCKER.ContainerInfo[] = []
     const hosts = this.hostHandler.getHosts()
+    this.logger.info(`Fetching containers from all hosts (${hosts.length})`)
+
+    if (hosts.length === 0) {
+      this.logger.debug("No hosts found")
+      return allContainers
+    }
 
     await Promise.allSettled(
       hosts.map(async (host) => {

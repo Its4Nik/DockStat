@@ -23,9 +23,7 @@ export const defaultRepositories: CreateRepoType[] = [
     name: "DockStore",
     source: "its4nik/dockstat:dev/apps/dockstore",
     type: "github",
-    isVerified: true,
     policy: "strict",
     verification_api: "http://localhost:4444",
-    hashes: null,
   },
 ]

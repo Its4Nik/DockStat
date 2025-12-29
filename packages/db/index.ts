@@ -59,17 +59,11 @@ class DockStatDB {
           name: column.text({ notNull: true }),
           type: column.text({ notNull: true }),
           source: column.text({ notNull: true }),
-          policy: column.text({ notNull: true }),
+          policy: column.text({ notNull: true, default: "relaxed" }),
           verification_api: column.text({ notNull: false }),
-          isVerified: column.boolean({ default: false }),
-          hashes: column.json({ notNull: false }),
         },
         {
           ifNotExists: true,
-          parser: {
-            JSON: ["hashes"],
-            BOOLEAN: ["isVerified"],
-          },
         }
       )
       this.logger.debug("Repositories table successfully initialized")
@@ -116,7 +110,7 @@ class DockStatDB {
     this.logger.debug("Checking if database needs initialization with defaults")
 
     try {
-      this.config_table.where({ id: 0 }).insertOrFail(defaultConfig)
+      this.config_table.where({ id: 0 }).insertOrIgnore(defaultConfig)
       this.logger.debug("Default config inserted")
     } catch (error: unknown) {
       this.logger.error(`Failed to initialize defaults: ${error}`)

@@ -3,6 +3,12 @@ import type { DOCKER } from "@dockstat/typings"
 import DockerClient from "./docker-client"
 import type { WorkerRequest, WorkerResponse } from "./types"
 
+interface WorkerRequestWithId {
+  type: string
+  requestId?: string
+  [key: string]: unknown
+}
+
 declare var self: Worker
 
 let client: DockerClient | null = null
@@ -68,6 +74,7 @@ self.onmessage = async (event: MessageEvent) => {
 
   // Handle regular requests
   const request = message as WorkerRequest
+  const requestId = (message as WorkerRequestWithId).requestId || ""
 
   try {
     if (!client) {
@@ -272,12 +279,14 @@ self.onmessage = async (event: MessageEvent) => {
     const response: WorkerResponse = {
       success: true,
       data: result,
+      requestId,
     }
     self.postMessage(response)
   } catch (error) {
     const response: WorkerResponse = {
       success: false,
       error: error instanceof Error ? error.message : String(error),
+      requestId,
     }
     self.postMessage(response)
   }

@@ -4,7 +4,7 @@ import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DOCKER, EVENTS } from "@dockstat/typings"
 import type { buildMessageFromProxyRes } from "@dockstat/typings/types"
 import { truncate, worker as workerUtils } from "@dockstat/utils"
-import type { PoolMetrics, WorkerMetrics } from "../types"
+import { generateRequestId, type PoolMetrics, type WorkerMetrics } from "../types"
 import type {
   DBType,
   DockerClientTable,
@@ -366,6 +366,10 @@ export class DockerClientManagerCore {
       throw new Error(`Worker ${clientId} not initialized`)
     }
 
+    // Generate a unique request ID to correlate request with response
+    const requestId = generateRequestId()
+    const requestWithId = { ...request, requestId }
+
     return new Promise<T>((resolve, reject) => {
       wrapper.busy = true
       wrapper.lastUsed = Date.now()
@@ -387,6 +391,11 @@ export class DockerClientManagerCore {
 
         // Skip proxy event messages - these are handled by attachEventListener
         if (isProxyEventEnvelope(raw)) {
+          return
+        }
+
+        // Skip messages that don't match our requestId
+        if (raw.requestId !== requestId) {
           return
         }
 
@@ -446,7 +455,7 @@ export class DockerClientManagerCore {
       wrapper.worker.addEventListener("message", messageHandler)
 
       try {
-        wrapper.worker.postMessage(request)
+        wrapper.worker.postMessage(requestWithId)
       } catch (err) {
         clearTimeout(timeoutId)
         finalize()
@@ -611,8 +620,6 @@ export class DockerClientManagerCore {
 
   readonly triggerHooks = <K extends keyof EVENTS>(message: buildMessageFromProxyRes<K>) => {
     if (!message.type) {
-      this.logger.warn(`No message type! ${JSON.stringify(message)}`)
-      this.logger.debug("Assuming status response")
       return
     }
 
