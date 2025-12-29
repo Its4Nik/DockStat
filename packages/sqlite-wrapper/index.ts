@@ -54,8 +54,41 @@ export {
  * - JSON column support
  * - And much more...
  */
+/**
+ * Auto-backup configuration options
+ */
+export interface AutoBackupOptions {
+  /** Enable automatic backups */
+  enabled: boolean
+  /** Directory to store backup files */
+  directory: string
+  /** Backup interval in milliseconds (default: 1 hour) */
+  intervalMs?: number
+  /** Maximum number of backups to retain (default: 10) */
+  maxBackups?: number
+  /** Prefix for backup filenames (default: 'backup') */
+  filenamePrefix?: string
+  /** Whether to compress backups using gzip (default: false) */
+  compress?: boolean
+}
+
+/**
+ * Database configuration options
+ */
+export interface DBOptions {
+  /** PRAGMA settings to apply on database open */
+  pragmas?: Array<[string, SQLQueryBindings]>
+  /** Paths to SQLite extensions to load */
+  loadExtensions?: string[]
+  /** Auto-backup configuration */
+  autoBackup?: AutoBackupOptions
+}
+
 class DB {
   protected db: Database
+  protected dbPath: string
+  private autoBackupTimer: ReturnType<typeof setInterval> | null = null
+  private autoBackupOptions: AutoBackupOptions | null = null
 
   /**
    * Open or create a SQLite database at `path`.
@@ -63,14 +96,9 @@ class DB {
    * @param path - Path to the SQLite file (e.g. "app.db"). Use ":memory:" for in-memory DB.
    * @param options - Optional database configuration
    */
-  constructor(
-    path: string,
-    options?: {
-      pragmas?: Array<[string, SQLQueryBindings]>
-      loadExtensions?: string[]
-    }
-  ) {
+  constructor(path: string, options?: DBOptions) {
     logger.info(`Opening database: ${path}`)
+    this.dbPath = path
     this.db = new Database(path)
 
     // Apply PRAGMA settings if provided
@@ -86,6 +114,232 @@ class DB {
         this.loadExtension(extensionPath)
       }
     }
+
+    // Setup auto-backup if configured
+    if (options?.autoBackup?.enabled) {
+      this.setupAutoBackup(options.autoBackup)
+    }
+  }
+
+  /**
+   * Setup automatic backup with retention policy
+   */
+  private setupAutoBackup(options: AutoBackupOptions): void {
+    if (this.dbPath === ":memory:") {
+      logger.warn("Auto-backup is not available for in-memory databases")
+      return
+    }
+
+    this.autoBackupOptions = {
+      enabled: options.enabled,
+      directory: options.directory,
+      intervalMs: options.intervalMs ?? 60 * 60 * 1000, // Default: 1 hour
+      maxBackups: options.maxBackups ?? 10,
+      filenamePrefix: options.filenamePrefix ?? "backup",
+      compress: options.compress ?? false,
+    }
+
+    // Ensure backup directory exists
+    const fs = require("fs")
+    if (!fs.existsSync(this.autoBackupOptions.directory)) {
+      fs.mkdirSync(this.autoBackupOptions.directory, { recursive: true })
+      logger.info(`Created backup directory: ${this.autoBackupOptions.directory}`)
+    }
+
+    // Create initial backup
+    this.backup()
+
+    // Setup interval for periodic backups
+    this.autoBackupTimer = setInterval(() => {
+      this.backup()
+    }, this.autoBackupOptions.intervalMs)
+
+    logger.info(
+      `Auto-backup enabled: interval=${this.autoBackupOptions.intervalMs}ms, maxBackups=${this.autoBackupOptions.maxBackups}, directory=${this.autoBackupOptions.directory}`
+    )
+  }
+
+  /**
+   * Create a backup of the database
+   *
+   * @param customPath - Optional custom path for the backup file. If not provided, uses auto-backup settings or generates a timestamped filename.
+   * @returns The path to the created backup file
+   */
+  backup(customPath?: string): string {
+    if (this.dbPath === ":memory:") {
+      throw new Error("Cannot backup an in-memory database")
+    }
+
+    const fs = require("fs")
+    const path = require("path")
+
+    let backupPath: string
+
+    if (customPath) {
+      backupPath = customPath
+    } else if (this.autoBackupOptions) {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
+      const filename = `${this.autoBackupOptions.filenamePrefix}_${timestamp}.db`
+      backupPath = path.join(this.autoBackupOptions.directory, filename)
+    } else {
+      // Generate a default backup path next to the database file
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
+      const dir = path.dirname(this.dbPath)
+      const basename = path.basename(this.dbPath, path.extname(this.dbPath))
+      backupPath = path.join(dir, `${basename}_backup_${timestamp}.db`)
+    }
+
+    // Use SQLite's backup API via VACUUM INTO for a consistent backup
+    try {
+      this.db.run(`VACUUM INTO '${backupPath.replace(/'/g, "''")}'`)
+      logger.info(`Database backup created: ${backupPath}`)
+
+      // Apply retention policy if auto-backup is enabled
+      if (this.autoBackupOptions) {
+        this.applyRetentionPolicy()
+      }
+
+      return backupPath
+    } catch (error) {
+      logger.error(`Failed to create backup: ${error}`)
+      throw error
+    }
+  }
+
+  /**
+   * Apply retention policy to remove old backups
+   */
+  private applyRetentionPolicy(): void {
+    if (!this.autoBackupOptions) return
+
+    const fs = require("fs")
+    const path = require("path")
+
+    const backupDir = this.autoBackupOptions.directory
+    const prefix = this.autoBackupOptions.filenamePrefix!
+    const maxBackups = this.autoBackupOptions.maxBackups!
+
+    try {
+      // Get all backup files matching the pattern
+      const files = fs
+        .readdirSync(backupDir)
+        .filter((file: string) => file.startsWith(prefix) && file.endsWith(".db"))
+        .map((file: string) => ({
+          name: file,
+          path: path.join(backupDir, file),
+          mtime: fs.statSync(path.join(backupDir, file)).mtime.getTime(),
+        }))
+        .sort((a: { mtime: number }, b: { mtime: number }) => b.mtime - a.mtime) // Sort by newest first
+
+      // Remove excess backups
+      if (files.length > maxBackups) {
+        const toDelete = files.slice(maxBackups)
+        for (const file of toDelete) {
+          fs.unlinkSync(file.path)
+          logger.debug(`Removed old backup: ${file.name}`)
+        }
+        logger.info(`Retention policy applied: removed ${toDelete.length} old backup(s)`)
+      }
+    } catch (error) {
+      logger.error(`Failed to apply retention policy: ${error}`)
+    }
+  }
+
+  /**
+   * List all available backups
+   *
+   * @returns Array of backup file information
+   */
+  listBackups(): Array<{ filename: string; path: string; size: number; created: Date }> {
+    if (!this.autoBackupOptions) {
+      logger.warn("Auto-backup is not configured. Use backup() with a custom path instead.")
+      return []
+    }
+
+    const fs = require("fs")
+    const path = require("path")
+
+    const backupDir = this.autoBackupOptions.directory
+    const prefix = this.autoBackupOptions.filenamePrefix
+
+    try {
+      return fs
+        .readdirSync(backupDir)
+        .filter((file: string) => file.startsWith(prefix!) && file.endsWith(".db"))
+        .map((file: string) => {
+          const filePath = path.join(backupDir, file)
+          const stats = fs.statSync(filePath)
+          return {
+            filename: file,
+            path: filePath,
+            size: stats.size,
+            created: stats.mtime,
+          }
+        })
+        .sort(
+          (a: { created: Date }, b: { created: Date }) => b.created.getTime() - a.created.getTime()
+        )
+    } catch (error) {
+      logger.error(`Failed to list backups: ${error}`)
+      return []
+    }
+  }
+
+  /**
+   * Restore database from a backup file
+   *
+   * @param backupPath - Path to the backup file to restore from
+   * @param targetPath - Optional target path. If not provided, restores to the original database path.
+   */
+  restore(backupPath: string, targetPath?: string): void {
+    const fs = require("fs")
+
+    if (!fs.existsSync(backupPath)) {
+      throw new Error(`Backup file not found: ${backupPath}`)
+    }
+
+    const restorePath = targetPath || this.dbPath
+
+    if (restorePath === ":memory:") {
+      throw new Error("Cannot restore to an in-memory database path")
+    }
+
+    // Close current connection if restoring to the same path
+    if (restorePath === this.dbPath) {
+      this.db.close()
+    }
+
+    try {
+      fs.copyFileSync(backupPath, restorePath)
+      logger.info(`Database restored from backup: ${backupPath} -> ${restorePath}`)
+
+      // Reopen database if we closed it
+      if (restorePath === this.dbPath) {
+        this.db = new Database(this.dbPath)
+        logger.info("Database connection reopened after restore")
+      }
+    } catch (error) {
+      logger.error(`Failed to restore backup: ${error}`)
+      throw error
+    }
+  }
+
+  /**
+   * Stop auto-backup if it's running
+   */
+  stopAutoBackup(): void {
+    if (this.autoBackupTimer) {
+      clearInterval(this.autoBackupTimer)
+      this.autoBackupTimer = null
+      logger.info("Auto-backup stopped")
+    }
+  }
+
+  /**
+   * Get the database file path
+   */
+  getPath(): string {
+    return this.dbPath
   }
 
   /**
@@ -112,9 +366,11 @@ class DB {
 
   /**
    * Close the underlying SQLite database handle.
+   * Also stops auto-backup if it's running.
    */
   close(): void {
     logger.info("Closing database connection")
+    this.stopAutoBackup()
     this.db.close()
   }
 
@@ -216,7 +472,7 @@ class DB {
     columns: Record<keyof _T, ColumnDefinition>,
     options?: TableOptions<_T>
   ): QueryBuilder<_T> {
-    const temp = options?.temporary ? "TEMPORARY " : ""
+    const temp = options?.temporary ? "TEMPORARY " : tableName === ":memory" ? "TEMPORARY " : ""
     const ifNot = options?.ifNotExists ? "IF NOT EXISTS " : ""
     const withoutRowId = options?.withoutRowId ? " WITHOUT ROWID" : ""
 
@@ -281,10 +537,39 @@ class DB {
       this.setTableComment(tableName, options.comment)
     }
 
-    const pObj = {
-      JSON: (options?.parser ?? { JSON: [] }).JSON,
-      MODULE: (options?.parser ?? { MODULE: {} }).MODULE,
+    // Auto-detect JSON and BOOLEAN columns from schema
+    const autoDetectedJson: Array<keyof _T> = []
+    const autoDetectedBoolean: Array<keyof _T> = []
+
+    if (this.isTableSchema(columns)) {
+      for (const [colName, colDef] of Object.entries(columns)) {
+        if (colDef.type === "JSON") {
+          autoDetectedJson.push(colName as keyof _T)
+        }
+        if (colDef.type === "BOOLEAN") {
+          autoDetectedBoolean.push(colName as keyof _T)
+        }
+      }
     }
+
+    // Merge auto-detected columns with user-provided parser options
+    const userJson = options?.parser?.JSON || []
+    const userBoolean = options?.parser?.BOOLEAN || []
+    const userModule = options?.parser?.MODULE || {}
+
+    // Combine and deduplicate
+    const mergedJson = [...new Set([...autoDetectedJson, ...userJson])] as Array<keyof _T>
+    const mergedBoolean = [...new Set([...autoDetectedBoolean, ...userBoolean])] as Array<keyof _T>
+
+    const pObj = {
+      JSON: mergedJson,
+      MODULE: userModule,
+      BOOLEAN: mergedBoolean,
+    }
+
+    logger.debug(
+      `Parser configuration: JSON=${JSON.stringify(pObj.JSON)}, BOOLEAN=${JSON.stringify(pObj.BOOLEAN)}, MODULE=${JSON.stringify(Object.keys(pObj.MODULE))}`
+    )
 
     return this.table<_T>(tableName, pObj)
   }

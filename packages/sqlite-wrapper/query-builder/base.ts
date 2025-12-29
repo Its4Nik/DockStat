@@ -35,6 +35,9 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
   }
 
   constructor(db: Database, tableName: string, parser?: Parser<T>) {
+    this.logger.debug(
+      `Initializing QueryBuilder: tableName=${tableName}; parser=${JSON.stringify(parser)}`
+    )
     this.state = {
       db,
       tableName,
@@ -152,8 +155,11 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
     try {
       const transformed = { ...row } as DatabaseRowData
 
+      this.logger.debug(JSON.stringify(this.state.parser))
+
       if (this.state.parser?.JSON) {
         for (const column of this.state.parser.JSON) {
+          this.logger.debug(`Transforming JSON column ${String(column)}`)
           const columnKey = String(column)
           if (
             transformed[columnKey] !== null &&
@@ -172,6 +178,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
 
       if (this.state.parser?.MODULE) {
         for (const [func, options] of Object.entries(this.state.parser.MODULE)) {
+          this.logger.debug(`Transforming MODULE column ${String(func)}`)
           const transpiler = new Bun.Transpiler(options)
           const funcKey = String(func)
 
@@ -185,9 +192,9 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
         }
       }
 
-      // BOOLEAN parsing: coerce common DB representations ("1"/"0", 1/0, "true"/"false") to real booleans
       if (this.state.parser?.BOOLEAN) {
         for (const column of this.state.parser.BOOLEAN) {
+          this.logger.debug(`Transforming BOOLEAN column ${String(column)}`)
           const columnKey = String(column)
           const val = transformed[columnKey]
 
@@ -268,9 +275,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * Transform row data before inserting/updating to database (serialize JSON columns).
    */
   protected transformRowToDb(row: Partial<T>): DatabaseRowData {
-    this.logger.debug(
-      `Transforming row to row Data = JSON=${!!this.state.parser?.JSON} MODULE=${!!this.state.parser?.MODULE}`
-    )
+    this.logger.debug(`Transforming row to row Data`)
 
     if (!row) {
       this.logger.debug("No row data received!")
