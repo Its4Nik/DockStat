@@ -1000,7 +1000,9 @@ class DockerClient {
   private getDockerInstance(hostId: number): Dockerode {
     const docker = this.dockerInstances.get(hostId)
     if (!docker) {
-      throw new Error(`No Docker instance found for host ID: ${hostId}`)
+      throw new Error(
+        `No Docker instance found for host ${hostId} - ${JSON.stringify(this.dockerInstances.keys)}`
+      )
     }
     return docker
   }

@@ -15,7 +15,24 @@ export function proxyEvent<K extends keyof EVENTS>(
   logger.info(`Proxying Event (${eventType}) to DCM`)
 
   if (eventType === "error") {
-    logger.error(JSON.stringify(ctx))
+    const errorCtx = ctx as Error | string
+    if (errorCtx instanceof Error) {
+      logger.error(
+        `${errorCtx.name}: ${errorCtx.message}${errorCtx.stack ? `\n${errorCtx.stack}` : ""}${
+          additionalDockerClientCtx
+            ? ` - context: ${JSON.stringify(additionalDockerClientCtx)}`
+            : ""
+        }`
+      )
+    } else {
+      logger.error(
+        `${String(errorCtx)}${
+          additionalDockerClientCtx
+            ? ` - context: ${JSON.stringify(additionalDockerClientCtx)}`
+            : ""
+        }`
+      )
+    }
   }
 
   self.postMessage({

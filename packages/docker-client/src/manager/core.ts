@@ -736,7 +736,7 @@ export class DockerClientManagerCore {
       ...(await this.getPoolMetrics()),
       hosts,
     }
-    this.logger.info(`gathered status: ${JSON.stringify(dat)}`)
+    this.logger.info(`gathered status: ${truncate(JSON.stringify(dat), 100)}`)
     return dat
   }
 

@@ -61,7 +61,7 @@ export class DockerEventStreamManager {
   private startStreamForHost(host: DATABASE.DB_target_host): void {
     this.logger.debug(`Starting Docker Event Stream for host ${host.id}`)
     try {
-      const docker = this.dockerInstances.get(host.id)
+      const docker = this.dockerInstances.get(Number(host.id))
       if (!docker) {
         throw new Error(`No Docker instance found for host ${host.id}`)
       }
@@ -80,7 +80,7 @@ export class DockerEventStreamManager {
                 Action: string
                 Actor?: { ID: string }
               }
-              this.handleEvent(host.id, info)
+              this.handleEvent(Number(host.id), info)
             } catch (error) {
               proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
                 hostId: host.id,
@@ -96,7 +96,7 @@ export class DockerEventStreamManager {
             })
           })
 
-          this.streams.set(host.id, stream)
+          this.streams.set(Number(host.id), stream)
         })
         .catch((error) => {
           proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
@@ -184,8 +184,11 @@ export class DockerEventStreamManager {
     containerId: string
   ): Promise<DOCKER.ContainerInfo> {
     const docker = this.dockerInstances.get(hostId)
+
     if (!docker) {
-      throw new Error(`No Docker instance found for host ${hostId}`)
+      throw new Error(
+        `No Docker instance found for host ${hostId} - ${JSON.stringify(this.dockerInstances.keys)}`
+      )
     }
 
     const container = docker.getContainer(containerId)

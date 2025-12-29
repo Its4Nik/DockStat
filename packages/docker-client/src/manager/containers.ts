@@ -1,4 +1,5 @@
 import type { DOCKER } from "@dockstat/typings"
+import { truncate } from "@dockstat/utils"
 import { DockerClientManagerCore } from "./core"
 
 export class Containers extends DockerClientManagerCore {
@@ -8,7 +9,7 @@ export class Containers extends DockerClientManagerCore {
         type: "getAllContainers",
       })) || []
 
-    this.logger.info(`Received ${JSON.stringify(allContainers)} containers`)
+    this.logger.info(`Received ${truncate(JSON.stringify(allContainers), 100)} containers`)
     return allContainers
   }
 

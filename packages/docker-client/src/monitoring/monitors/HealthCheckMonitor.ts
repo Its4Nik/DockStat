@@ -61,16 +61,16 @@ export class HealthCheckMonitor {
 
   private async checkHost(host: DATABASE.DB_target_host): Promise<void> {
     try {
-      const docker = this.dockerInstances.get(host.id!)
+      const docker = this.dockerInstances.get(Number(host.id))
       if (!docker) {
         throw new Error(`No Docker instance found for host ${host.id}`)
       }
 
       await withRetry(() => docker.ping(), this.options.retryAttempts, this.options.retryDelay)
 
-      const wasHealthy = this.lastHealthStatus.get(host.id!)
+      const wasHealthy = this.lastHealthStatus.get(Number(host.id))
       if (wasHealthy !== true) {
-        this.lastHealthStatus.set(host.id!, true)
+        this.lastHealthStatus.set(Number(host.id), true)
         proxyEvent("host:health:changed", {
           healthy: true,
           hostId: host.id,
