@@ -6,6 +6,7 @@ export interface OutlineConfig {
   includeCollections?: string[]
   excludeCollections?: string[]
   verbose?: boolean
+  force?: boolean
 }
 
 export interface Document {

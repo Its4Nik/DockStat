@@ -28,6 +28,7 @@ export class OutlineSync {
   private documentMap: Map<string, DocumentMetadata> = new Map()
   private verbose: boolean
   private syncTableData: SyncTableRow[] = []
+  private forcePush: boolean = false
 
   constructor(config: OutlineConfig, options?: { verbose?: boolean }) {
     this.client = new OutlineClient(config, options?.verbose ?? config.verbose)
@@ -36,6 +37,7 @@ export class OutlineSync {
     this.includeCollections = config.includeCollections
     this.excludeCollections = config.excludeCollections
     this.verbose = Boolean(options?.verbose ?? config.verbose)
+    this.forcePush = config.force || false
 
     this.trace("OutlineSync initialized", {
       outputDir: this.outputDir,
@@ -748,13 +750,15 @@ export class OutlineSync {
           fileMtime: fileMtime.toISOString(),
           remoteUpdatedAt: remoteTime.toISOString(),
           usingFrontmatter: !!fileFrontUpdated,
+          forcePush: this.forcePush,
         })
 
         const isNewer =
           (fileFrontUpdated && fileFrontUpdated > remoteTime) ||
           (!fileFrontUpdated && fileMtime > remoteTime)
 
-        const status = isNewer ? "⬆️  Push" : "✓ Synced"
+        const shouldPush = this.forcePush || isNewer
+        const status = this.forcePush ? "⬆️  Force push" : isNewer ? "⬆️  Push" : "✓ Synced"
 
         tableData.push({
           Document: this.truncate(title, 30),
@@ -764,15 +768,16 @@ export class OutlineSync {
           Status: status,
         })
 
-        if (isNewer) {
-          this.trace(
-            "findChangedFilesAgainstRemote: file is newer than remote, marking as changed",
-            {
-              file,
-              documentId: id,
-              reason: fileFrontUpdated ? "frontmatter updatedAt is newer" : "file mtime is newer",
-            }
-          )
+        if (shouldPush) {
+          this.trace("findChangedFilesAgainstRemote: marking file as changed", {
+            file,
+            documentId: id,
+            reason: this.forcePush
+              ? "force push enabled"
+              : fileFrontUpdated
+                ? "frontmatter updatedAt is newer"
+                : "file mtime is newer",
+          })
           changed.push(file)
         } else {
           this.trace("findChangedFilesAgainstRemote: file is not newer than remote, skipping", {

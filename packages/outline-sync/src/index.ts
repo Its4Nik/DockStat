@@ -37,6 +37,7 @@ async function getConfig(
     output: string
     config: string
     verbose?: boolean
+    force?: boolean
   },
   loadConfigFile = true
 ): Promise<OutlineConfig> {
@@ -55,6 +56,7 @@ async function getConfig(
       ? parseArrayOption(options.exclude)
       : fileConfig.excludeCollections,
     verbose: Boolean(options.verbose),
+    force: options.force || false,
   }
 
   if (!config.url || !config.token) {
@@ -126,6 +128,7 @@ program
   .option("-t, --token <token>", "API token")
   .option("-o, --output <dir>", "Output directory")
   .option("-c, --config <path>", "Config file path")
+  .option("-f, --force", "Force push")
   .option("-i, --include <collections>", "Comma-separated list of collections to include")
   .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
   .option("-v, --verbose", "Enable debug logging")
