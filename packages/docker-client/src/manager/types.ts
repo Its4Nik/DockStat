@@ -96,13 +96,12 @@ export const isWorkerResponse = <T = unknown>(msg: unknown): msg is WorkerRespon
 
 export const isProxyEventEnvelope = (payload: unknown): payload is ProxyEventEnvelope => {
   const p = payload as Record<string, unknown>
-  return (
-    typeof payload === "object" &&
-    payload !== null &&
-    (p.type === "__event__" || p.type === "__init_complete__" || p.type === "__metrics__") &&
-    typeof p.data === "object" &&
-    (payload as Record<string, unknown>).data !== null
-  )
+
+  if (p.type === "__event__" || p.type === "__metrics__") {
+    return true
+  }
+
+  return false
 }
 
 export const looksLikeEventMessage = (payload: unknown): payload is EventMessage<keyof EVENTS> => {

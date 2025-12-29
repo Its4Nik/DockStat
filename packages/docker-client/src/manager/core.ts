@@ -561,38 +561,23 @@ export class DockerClientManagerCore {
   public attachEventListener(wrapper: WorkerWrapper): void {
     if (wrapper.messageListener) return
 
-    const { worker, clientId, clientName } = wrapper
+    const { worker } = wrapper
+
+    const tryBuildFromProxy = (payload: unknown): EventMessage<keyof EVENTS> | null => {
+      const message = workerUtils.buildMessage.tryBuildMessageFromProxy(payload)
+      if (!message) return null
+
+      return message
+    }
 
     const listener = (event: MessageEvent) => {
       const payload = event.data
 
-      let message: EventMessage<keyof EVENTS>
+      const message: EventMessage<keyof EVENTS> | null = looksLikeEventMessage(payload)
+        ? payload
+        : tryBuildFromProxy(payload)
 
-      if (isProxyEventEnvelope(payload)) {
-        try {
-          message = workerUtils.buildMessage.buildMessageFromProxy(payload) as EventMessage
-        } catch (err) {
-          this.logger.debug(
-            `Failed to build message from proxy for worker ${clientId} (${clientName}): ${String(
-              err
-            )}`
-          )
-          return
-        }
-      } else if (looksLikeEventMessage(payload)) {
-        message = payload
-      } else {
-        try {
-          message = workerUtils.buildMessage.buildMessageFromProxy(payload) as EventMessage
-        } catch {
-          this.logger.debug(
-            `Received unknown message format from worker ${clientId} (${clientName}): ${JSON.stringify(
-              payload
-            )}`
-          )
-          return
-        }
-      }
+      if (!message) return
 
       this.triggerHooks(message)
     }

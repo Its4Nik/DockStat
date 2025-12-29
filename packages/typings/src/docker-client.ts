@@ -63,13 +63,15 @@ export interface DockerAPIResponse {
 }
 
 export type MonitoringOptions = {
-  healthCheckInterval?: number
-  containerEventPollingInterval?: number
-  hostMetricsInterval?: number
-  containerMetricsInterval?: number
-  enableContainerEvents?: boolean
   enableHostMetrics?: boolean
   enableContainerMetrics?: boolean
+
+  hostMetricsInterval?: number
+  containerMetricsInterval?: number
+
+  healthCheckInterval?: number
+  containerEventPollingInterval?: number
+  enableContainerEvents?: boolean
   enableHealthChecks?: boolean
   retryAttempts?: number
   retryDelay?: number
@@ -87,7 +89,6 @@ export interface DockerAdapterOptions {
   retryDelay?: number
   enableMonitoring?: boolean
   enableEventEmitter?: boolean
-  enableContainerMetrics?: boolean
   monitoringOptions?: MonitoringOptions
   execOptions?: ExecOptions
 }
@@ -99,14 +100,15 @@ export const DockerAdapterOptionsSchema = t.Partial(
     retryDelay: t.Number(),
     enableMonitoring: t.Boolean(),
     enableEventEmitter: t.Boolean(),
-    enableContainerMetrics: t.Boolean(),
     monitoringOptions: t.Partial(
       t.Object({
         healthCheckInterval: t.Number(),
         containerEventPollingInterval: t.Number(),
         hostMetricsInterval: t.Number(),
+        containerMetricsInterval: t.Number(),
         enableContainerEvents: t.Boolean(),
         enableHostMetrics: t.Boolean(),
+        enableContainerMetrics: t.Boolean(),
         enableHealthChecks: t.Boolean(),
         retryAttempts: t.Number(),
         retryDelay: t.Number(),

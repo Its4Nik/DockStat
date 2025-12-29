@@ -14,6 +14,10 @@ export function proxyEvent<K extends keyof EVENTS>(
 ) {
   logger.info(`Proxying Event (${eventType}) to DCM`)
 
+  if (eventType === "error") {
+    logger.error(JSON.stringify(ctx))
+  }
+
   self.postMessage({
     type: "__event__",
     data: worker.buildMessage.buildMessageData(

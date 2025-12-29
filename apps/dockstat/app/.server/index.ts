@@ -1,7 +1,6 @@
 import { DockStatAPI, type TreatyType } from "@dockstat/api"
-import Logger from "@dockstat/logger"
 import { treaty } from "@elysiajs/eden"
-
+import Logger from "@dockstat/logger"
 const RRSLogger = new Logger("RRS")
 
 const PORT = Number(

@@ -80,10 +80,6 @@ function parseFormData(formData: FormData): AdapterAction | null {
       if (enableMonitoring) options.enableMonitoring = enableMonitoring === "true"
       if (enableEventEmitter) options.enableEventEmitter = enableEventEmitter === "true"
 
-      // Monitoring options (read early to set top-level enableContainerMetrics)
-      const enableContainerMetrics = formData.get("enableContainerMetrics")
-      if (enableContainerMetrics === "true") options.enableContainerMetrics = true
-
       // Monitoring options
       const healthCheckInterval = formData.get("healthCheckInterval")
       const containerEventPollingInterval = formData.get("containerEventPollingInterval")
@@ -91,6 +87,7 @@ function parseFormData(formData: FormData): AdapterAction | null {
       const containerMetricsInterval = formData.get("containerMetricsInterval")
       const enableContainerEvents = formData.get("enableContainerEvents")
       const enableHostMetrics = formData.get("enableHostMetrics")
+      const enableContainerMetrics = formData.get("enableContainerMetrics")
       const enableHealthChecks = formData.get("enableHealthChecks")
       const monitoringRetryAttempts = formData.get("monitoringRetryAttempts")
       const monitoringRetryDelay = formData.get("monitoringRetryDelay")
@@ -121,8 +118,9 @@ function parseFormData(formData: FormData): AdapterAction | null {
           options.monitoringOptions.containerMetricsInterval = Number(containerMetricsInterval)
         if (enableContainerEvents === "true") options.monitoringOptions.enableContainerEvents = true
         if (enableHostMetrics === "true") options.monitoringOptions.enableHostMetrics = true
-        if (enableContainerMetrics === "true")
+        if (enableContainerMetrics === "true") {
           options.monitoringOptions.enableContainerMetrics = true
+        }
         if (enableHealthChecks === "true") options.monitoringOptions.enableHealthChecks = true
         if (monitoringRetryAttempts && monitoringRetryAttempts !== "")
           options.monitoringOptions.retryAttempts = Number(monitoringRetryAttempts)
@@ -174,8 +172,6 @@ function parseFormData(formData: FormData): AdapterAction | null {
       if (enableEventEmitter) options.enableEventEmitter = enableEventEmitter === "true"
 
       // Monitoring options (read early to set top-level enableContainerMetrics)
-      const enableContainerMetrics = formData.get("enableContainerMetrics")
-      if (enableContainerMetrics === "true") options.enableContainerMetrics = true
 
       // Monitoring options
       const healthCheckInterval = formData.get("healthCheckInterval")
@@ -184,6 +180,7 @@ function parseFormData(formData: FormData): AdapterAction | null {
       const containerMetricsInterval = formData.get("containerMetricsInterval")
       const enableContainerEvents = formData.get("enableContainerEvents")
       const enableHostMetrics = formData.get("enableHostMetrics")
+      const enableContainerMetrics = formData.get("enableContainerMetrics")
       const enableHealthChecks = formData.get("enableHealthChecks")
       const monitoringRetryAttempts = formData.get("monitoringRetryAttempts")
       const monitoringRetryDelay = formData.get("monitoringRetryDelay")
@@ -202,23 +199,34 @@ function parseFormData(formData: FormData): AdapterAction | null {
 
       if (hasMonitoringOptions) {
         options.monitoringOptions = {}
+
         if (healthCheckInterval && healthCheckInterval !== "")
           options.monitoringOptions.healthCheckInterval = Number(healthCheckInterval)
+
         if (containerEventPollingInterval && containerEventPollingInterval !== "")
           options.monitoringOptions.containerEventPollingInterval = Number(
             containerEventPollingInterval
           )
+
         if (hostMetricsInterval && hostMetricsInterval !== "")
           options.monitoringOptions.hostMetricsInterval = Number(hostMetricsInterval)
+
         if (containerMetricsInterval && containerMetricsInterval !== "")
           options.monitoringOptions.containerMetricsInterval = Number(containerMetricsInterval)
+
         if (enableContainerEvents === "true") options.monitoringOptions.enableContainerEvents = true
+
         if (enableHostMetrics === "true") options.monitoringOptions.enableHostMetrics = true
-        if (enableContainerMetrics === "true")
+
+        if (enableContainerMetrics === "true") {
           options.monitoringOptions.enableContainerMetrics = true
+        }
+
         if (enableHealthChecks === "true") options.monitoringOptions.enableHealthChecks = true
+
         if (monitoringRetryAttempts && monitoringRetryAttempts !== "")
           options.monitoringOptions.retryAttempts = Number(monitoringRetryAttempts)
+
         if (monitoringRetryDelay && monitoringRetryDelay !== "")
           options.monitoringOptions.retryDelay = Number(monitoringRetryDelay)
       }
