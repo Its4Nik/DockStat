@@ -1,14 +1,14 @@
 import Elysia from "elysia"
 import DockStatElysiaPlugins from "./elysia-plugins"
 import { errorHandler } from "./handlers/onError"
+import BaseLogger from "./logger"
 import MetricsMiddleware from "./middleware/metrics"
 import DBRoutes from "./routes/db"
 import DockerRoutes from "./routes/docker"
 import DockStatMiscRoutes from "./routes/misc"
 import PluginRoutes from "./routes/plugins"
-import StatusRoutes from "./routes/status"
-import BaseLogger from "./logger"
 import RepositoryRoutes from "./routes/repositories"
+import StatusRoutes from "./routes/status"
 
 const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 

@@ -1,7 +1,7 @@
 import { createFrontendRoutes } from "@dockstat/plugin-builder"
+import { ContainersRoute } from "./containers"
 import { DashboardRoute } from "./dashboard"
 import { HostsRoute } from "./hosts"
-import { ContainersRoute } from "./containers"
 
 const DockMonFrontend = createFrontendRoutes([DashboardRoute, HostsRoute, ContainersRoute])
 

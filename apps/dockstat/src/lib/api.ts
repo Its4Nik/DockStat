@@ -1,5 +1,5 @@
-import { treaty, type Treaty } from "@elysiajs/eden"
 import type { TreatyType } from "@dockstat/api"
+import { type Treaty, treaty } from "@elysiajs/eden"
 
 /**
  * Type-safe API client using Eden Treaty.
