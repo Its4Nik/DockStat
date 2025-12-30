@@ -3,7 +3,7 @@ id: 560ed81b-f22c-4a72-ba1d-650d377e885b
 title: Frontend Plugin API (plugins/frontend)
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: b174143d-f906-4f8d-8cb5-9fc96512e575
-updatedAt: 2025-12-23T10:10:53.062Z
+updatedAt: 2025-12-29T20:53:27.992Z
 urlId: mok9JVXj9w
 ---
 

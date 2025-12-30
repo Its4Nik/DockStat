@@ -3,7 +3,7 @@ id: ef12194c-404e-4bcd-a5b0-31aaf7b1b798
 title: "@dockstat/docker-client"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: bbcefaa2-6bd4-46e8-ae4b-a6b823593e67
-updatedAt: 2025-12-17T09:16:08.678Z
+updatedAt: 2025-12-29T20:53:29.086Z
 urlId: X0z5b9Ra01
 ---
 
