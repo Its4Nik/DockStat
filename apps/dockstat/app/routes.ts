@@ -6,6 +6,7 @@ export default [
   route("/onboarding", "./routes/onboarding.tsx"),
   route("/clients", "./routes/clients.tsx"),
   route("/plugins", "./routes/plugins.tsx"),
+  route("/extensions/browser", "./routes/extensions.browser.tsx"),
   // Plugin frontend pages - catch-all route for plugin templates
   route("/p/:pluginId/*", "./routes/plugin-page.tsx"),
 ] satisfies RouteConfig

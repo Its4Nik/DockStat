@@ -7,6 +7,7 @@ import DockerRoutes from "./routes/docker"
 import DockStatMiscRoutes from "./routes/misc"
 import PluginRoutes from "./routes/plugins"
 import StatusRoutes from "./routes/status"
+import RepositoryRoutes from "./routes/repositories"
 
 export const DockStatAPI = new Elysia({ prefix: "/api/v2" })
   .use(MetricsMiddleware)
@@ -17,5 +18,6 @@ export const DockStatAPI = new Elysia({ prefix: "/api/v2" })
   .use(DockerRoutes)
   .use(PluginRoutes)
   .use(DockStatMiscRoutes)
+  .use(RepositoryRoutes)
 
 export type TreatyType = typeof DockStatAPI
