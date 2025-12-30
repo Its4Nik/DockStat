@@ -6,7 +6,6 @@ import DockStatLogo from "./DockStat2-06.png"
 
 type NavbarProps = {
   isBusy: boolean
-  location: string
   paths?: Array<{ slug: string; path: string }>
 }
 
@@ -25,7 +24,7 @@ const defaultPaths: Array<{ slug: string; path: string }> = [
   },
 ]
 
-export function Navbar({ isBusy, location, paths = defaultPaths }: NavbarProps) {
+export function Navbar({ isBusy, paths = defaultPaths }: NavbarProps) {
   return (
     <>
       <Card size="sm" className="w-full p-0.5 mb-4 relative overflow-hidden">
@@ -43,17 +42,11 @@ export function Navbar({ isBusy, location, paths = defaultPaths }: NavbarProps) 
           <img src={DockStatLogo} alt="DockStat Logo" className="w-7 shrink-0" />
 
           <div className="flex items-center gap-2">
-            {paths.map((p) => {
-              const isCurrently = p.path === location
-
-              return (
-                <NavLink to={p.path} key={`${p.slug}-${isCurrently}-link`}>
-                  <Badge key={`${p.slug}-${isCurrently}-badge`} outlined={isCurrently}>
-                    {p.slug}
-                  </Badge>
-                </NavLink>
-              )
-            })}
+            {paths?.map((p) => (
+              <NavLink to={p.path} key={p.slug}>
+                {({ isActive }) => <Badge outlined={isActive}>{p.slug}</Badge>}
+              </NavLink>
+            ))}
           </div>
         </nav>
 

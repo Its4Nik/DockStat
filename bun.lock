@@ -42,6 +42,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@dockstat/ui": "workspace:*",
+        "@dockstat/utils": "workspace:*",
         "@elysiajs/eden": "^1.4.6",
         "@tailwindcss/vite": "^4.1.18",
         "@tanstack/react-query": "^5.90.12",
