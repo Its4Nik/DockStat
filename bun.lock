@@ -100,12 +100,14 @@
       "name": "dockstore",
       "dependencies": {
         "ajv": "^8.17.1",
+        "ajv-formats": "^3.0.1",
         "chalk": "^5.6.2",
         "elysia": "1.4.12",
         "js-yaml": "^4.1.1",
       },
       "devDependencies": {
         "@dockstat/logger": "workspace:*",
+        "@dockstat/plugin-builder": "workspace:*",
         "@dockstat/plugin-handler": "workspace:*",
         "@dockstat/sqlite-wrapper": "workspace:*",
         "@dockstat/typings": "workspace:*",
@@ -203,16 +205,16 @@
     },
     "packages/plugin-builder": {
       "name": "@dockstat/plugin-builder",
-      "version": "1.0.0",
+      "version": "1.0.3",
+      "dependencies": {
+        "@dockstat/sqlite-wrapper": "latest",
+        "@dockstat/typings": "latest",
+      },
       "devDependencies": {
-        "@dockstat/sqlite-wrapper": "workspace:*",
-        "@dockstat/typings": "workspace:*",
         "@types/bun": "latest",
-        "bun-plugin-dts": "^0.3.0",
         "typescript": "^5.9.3",
       },
       "peerDependencies": {
-        "@dockstat/sqlite-wrapper": "^1.0.0",
         "typescript": "^5.0.0",
       },
       "optionalPeers": [
@@ -221,7 +223,6 @@
     },
     "packages/plugin-handler": {
       "name": "@dockstat/plugin-handler",
-      "version": "1.0.0",
       "dependencies": {
         "@dockstat/logger": "workspace:*",
         "@dockstat/sqlite-wrapper": "workspace:*",
@@ -347,6 +348,7 @@
     },
     "packages/utils": {
       "name": "@dockstat/utils",
+      "version": "1.0.0",
       "devDependencies": {
         "@dockstat/logger": "workspace:*",
         "@dockstat/typings": "workspace:*",
@@ -851,6 +853,8 @@
     "acorn-jsx": ["acorn-jsx@5.3.2", "", { "peerDependencies": { "acorn": "^6.0.0 || ^7.0.0 || ^8.0.0" } }, "sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ=="],
 
     "ajv": ["ajv@8.17.1", "", { "dependencies": { "fast-deep-equal": "^3.1.3", "fast-uri": "^3.0.1", "json-schema-traverse": "^1.0.0", "require-from-string": "^2.0.2" } }, "sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g=="],
+
+    "ajv-formats": ["ajv-formats@3.0.1", "", { "dependencies": { "ajv": "^8.0.0" } }, "sha512-8iUql50EUR+uUcdRQ3HDqa6EVyo3docL8g5WJ3FNcWmu62IbkGUue/pEyLBW8VGKKucTPgqeks4fIU1DA4yowQ=="],
 
     "ansi-regex": ["ansi-regex@5.0.1", "", {}, "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="],
 
@@ -1653,6 +1657,10 @@
     "@dockstat/create-rr-elysia/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "@dockstat/outline-sync/@types/node": ["@types/node@20.19.27", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-N2clP5pJhB2YnZJ3PIHFk5RkygRX5WO/5f0WC08tp0wd+sv0rsJk3MqWn3CbNmT2J505a5336jaQj4ph1AdMug=="],
+
+    "@dockstat/plugin-builder/@dockstat/sqlite-wrapper": ["@dockstat/sqlite-wrapper@1.3.0", "", { "dependencies": { "@dockstat/logger": "1.0.1" }, "peerDependencies": { "typescript": "^5.9.3" } }, "sha512-05gD63PjB8GvLci93Bw+57PyDGHdylNFNILd9Ig+Oi7J1IqmpbiorBETVp+fKaU0BeE96eI+iCnuudMMF/K9yw=="],
+
+    "@dockstat/plugin-builder/@dockstat/typings": ["@dockstat/typings@1.1.0", "", { "dependencies": { "elysia": "1.4.12", "js-yaml": "^4.1.0" }, "peerDependencies": { "typescript": "^5.9.3" } }, "sha512-X2zxBM3OUo/e135vOzJQZhCYlVRGFaF6ARfvrHiceWmX8BG5fLRW/d/INvQ4h19Qbrj+bPJjMsXZ/GpjAZF4cA=="],
 
     "@dockstat/plugin-builder/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 

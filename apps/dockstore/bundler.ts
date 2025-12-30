@@ -1,339 +1,261 @@
 import { PluginMeta, WrappedPluginMeta } from "@dockstat/typings/schemas"
 import type { PluginMetaType } from "@dockstat/typings/types"
 import Ajv from "ajv"
+import addFormats from "ajv-formats"
 import { Glob } from "bun"
-import chalk from "chalk"
 import yaml from "js-yaml"
 
-/* --- Color helpers --- */
-const clr = {
-  header: chalk.cyan.bold,
-  ok: chalk.green.bold,
-  fail: chalk.red.bold,
-  warn: chalk.yellow,
-  info: chalk.cyan,
-  dim: chalk.gray,
-  active: chalk.magenta,
-  strong: chalk.white.bold,
-  path: chalk.gray.italic,
-}
+// ============================================================================
+// Configuration
+// ============================================================================
 
-/* --- Constants and setup --- */
-const pluginPath = "src/content/plugins"
+const PLUGIN_PATH = "src/content/plugins"
+const SCHEMA_OUTPUT = "./.schemas/plugin-meta.schema.json"
+const MANIFEST_OUTPUT = "./manifest.yaml"
+
+// ============================================================================
+// Validation Setup
+// ============================================================================
+
 const ajv = new Ajv({ allErrors: true, strict: false })
+addFormats(ajv)
+const validateMeta = ajv.compile(WrappedPluginMeta)
 
-/* --- Validation --- */
-function validatePluginMeta(meta: unknown) {
-  const validate = ajv.compile(WrappedPluginMeta)
-  if (!validate(meta)) {
-    throw new Error(
-      `Invalid Plugin Meta:\n${ajv.errorsText(validate.errors, {
-        separator: "\n",
-      })}`
-    )
-  }
+// ============================================================================
+// Helpers
+// ============================================================================
+
+function log(icon: string, message: string, detail?: string) {
+  const detailStr = detail ? ` → ${detail}` : ""
+  console.log(`${icon} ${message}${detailStr}`)
 }
 
-/* --- Schema generation --- */
-async function createSchemas() {
-  const schemaRoot = "./.schemas"
-  console.log(clr.info("Creating plugin meta schema"))
-  await Bun.write(`${schemaRoot}/plugin-meta.schema.json`, JSON.stringify(PluginMeta, null, 2))
-}
+function logError(title: string, error: unknown) {
+  console.error(`\n${"=".repeat(70)}`)
+  console.error(`❌ ${title}`)
+  console.error("=".repeat(70))
 
-/* --- Helpers --- */
-const getPluginBuildDir = (path: string) => `${path.replaceAll("/index.ts", "")}/bundle`
-
-const getPluginManifestPath = (path: string) => `${path.replaceAll("/index.ts", "")}/manifest.ts`
-
-const getPluginName = (path: string) =>
-  path.replaceAll("/index.ts", "").replaceAll(`${pluginPath}/`, "")
-
-/* --- Discover plugins --- */
-const plugins = new Glob(`${pluginPath}/*/index.ts`)
-const pluginPaths = [...plugins.scanSync()]
-
-/* --- Build state --- */
-type Status = "pending" | "building" | "done" | "failed"
-type PluginRecord = {
-  name: string
-  path: string
-  status: Status
-  message?: string
-  startedAt?: number
-  finishedAt?: number
-}
-
-const records: PluginRecord[] = pluginPaths.map((p) => ({
-  name: getPluginName(p),
-  path: p,
-  status: "pending",
-}))
-
-records.push(
-  {
-    name: "Generate plugin schemas",
-    path: "__TASK__GENERATE_SCHEMAS",
-    status: "pending",
-  },
-  {
-    name: "Write repo manifest",
-    path: "__TASK__WRITE_REPO_MANIFEST",
-    status: "pending",
-  }
-)
-
-const BUNDLED_PLUGINS: PluginMetaType[] = []
-
-/* --- Error tracking --- */
-const errors: {
-  name: string
-  path: string
-  message: string
-  stack?: string
-  phase: "build" | "schema" | "manifest"
-}[] = []
-
-/* --- Progress UI --- */
-const spinnerFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
-let spinnerIndex = 0
-const barWidth = 40
-const CLEAR_UI = !process.env.NO_CLEAR
-
-function formatDuration(ms: number) {
-  if (ms < 1000) return clr.dim(`⌛ ${ms}ms`)
-  const sec = (ms / 1000).toFixed(1)
-  return clr.dim(`${sec}s`)
-}
-
-function renderProgress() {
-  const total = records.length
-  const done = records.filter((r) => r.status === "done").length
-  const failed = records.filter((r) => r.status === "failed").length
-  const building = records.filter((r) => r.status === "building").length
-  const completed = done + failed
-  const pct = Math.round((completed / total) * 100)
-
-  const filled = Math.round((completed / total) * barWidth)
-  const bar = `[${chalk.green("█".repeat(filled))}${chalk.gray(" ".repeat(barWidth - filled))}]`
-
-  if (CLEAR_UI) console.clear()
-  console.log(clr.header(`Building plugins — ${completed}/${total} (${pct}%) ${bar}`))
-  console.log(
-    `${clr.active(`Building: ${building}`)}  ${clr.ok(`Done: ${done}`)}  ${clr.fail(`Failed: ${failed}`)}\n`
-  )
-
-  for (const rec of records) {
-    const elapsed =
-      rec.finishedAt && rec.startedAt ? ` ${formatDuration(rec.finishedAt - rec.startedAt)}` : ""
-    let line = ""
-    switch (rec.status) {
-      case "pending":
-        line = `  [ ] ${clr.dim(rec.name)}`
-        break
-      case "building":
-        line = `  [${clr.active(spinnerFrames[spinnerIndex % spinnerFrames.length])}] ${clr.strong(rec.name)}`
-        break
-      case "done":
-        line = `  [${clr.ok("✓")}] ${clr.strong(rec.name)} ${clr.path(rec.message ?? "")}${elapsed}`
-        break
-      case "failed":
-        line = `  [${clr.fail("✗")}] ${clr.strong(rec.name)} ${clr.fail(rec.message ?? "")}${elapsed}`
-        break
+  if (error instanceof AggregateError) {
+    // Bun.build returns AggregateError on failure
+    console.error(`\nBuild errors (${error.errors.length}):`)
+    for (const err of error.errors) {
+      if (err && typeof err === "object") {
+        const buildErr = err as {
+          message?: string
+          position?: { file?: string; line?: number; column?: number }
+          level?: string
+        }
+        const pos = buildErr.position
+        const location = pos ? `${pos.file || "unknown"}:${pos.line || 0}:${pos.column || 0}` : ""
+        console.error(`  - [${buildErr.level || "error"}] ${buildErr.message || String(err)}`)
+        if (location) {
+          console.error(`    at ${location}`)
+        }
+      } else {
+        console.error(`  - ${String(err)}`)
+      }
     }
-    console.log(line)
+  } else if (error instanceof Error) {
+    console.error(`\nMessage: ${error.message}`)
+    if (error.cause) {
+      console.error(`Cause: ${JSON.stringify(error.cause, null, 2)}`)
+    }
+    if (error.stack) {
+      console.error(`\nStack:\n${error.stack}`)
+    }
+  } else {
+    console.error(String(error))
   }
-  spinnerIndex++
+
+  console.error(`\n${"=".repeat(70)}\n`)
 }
 
-/**
- * Generate TypeScript manifest file content for a plugin
- */
-function generatePluginManifestTS(meta: PluginMetaType): string {
-  return `// Auto-generated manifest file - DO NOT EDIT
-import type { PluginMetaType } from "@dockstat/typings/types"
-
-export const manifest: PluginMetaType = ${JSON.stringify(meta, null, 2)} as const
-`
+function extractMeta(plugin: Record<string, unknown>): PluginMetaType {
+  return {
+    name: plugin.name,
+    description: plugin.description,
+    version: plugin.version,
+    repository: plugin.repository,
+    repoType: plugin.repoType,
+    manifest: plugin.manifest,
+    author: plugin.author,
+    tags: plugin.tags,
+  } as PluginMetaType
 }
 
-/**
- * Generate YAML repository manifest file content
- */
-function generateRepoManifestYAML(plugins: PluginMetaType[]): string {
-  const manifest = { plugins }
-  const yamlContent = yaml.dump(manifest, {
-    indent: 2,
-    lineWidth: -1,
-    noRefs: true,
-    sortKeys: false,
-  })
-  return `# Auto-generated repository manifest - DO NOT EDIT\n${yamlContent}`
+// ============================================================================
+// Build Steps
+// ============================================================================
+
+interface BuildResult {
+  name: string
+  path: string
+  success: boolean
+  meta?: PluginMetaType
+  error?: string
 }
 
-/* --- Build all --- */
-async function buildAll() {
-  if (records.length === 0) {
-    console.log(clr.warn("No plugins found."))
+async function buildPlugin(pluginPath: string): Promise<BuildResult> {
+  const name = pluginPath.replace("/index.ts", "").replace(`${PLUGIN_PATH}/`, "")
+  const outdir = pluginPath.replace("/index.ts", "/bundle")
+
+  log("📦", `Building ${name}...`)
+
+  // Step 1: Bundle the plugin
+  try {
+    const build = await Bun.build({
+      entrypoints: [pluginPath],
+      outdir,
+      minify: true,
+      sourcemap: "external",
+      splitting: false,
+      env: `${name.toUpperCase()}_*`,
+      banner: "/* Bundled by DockStore */",
+      target: "bun",
+    })
+
+    // Check for warnings/logs even on success
+    if (build.logs && build.logs.length > 0) {
+      console.log(`  ⚠️  Build warnings for ${name}:`)
+      for (const logEntry of build.logs) {
+        console.log(`    - [${logEntry.level}] ${logEntry.message}`)
+      }
+    }
+  } catch (buildError) {
+    logError(`Bundle failed: ${name} (${pluginPath})`, buildError)
+    return {
+      name,
+      path: pluginPath,
+      success: false,
+      error: buildError instanceof Error ? buildError.message : String(buildError),
+    }
+  }
+
+  // Step 2: Import and extract metadata
+  try {
+    const imported = await import(`./${pluginPath}`)
+
+    if (!imported.default) {
+      throw new Error(
+        "No default export found. Ensure your plugin uses pluginBuilder and exports the result."
+      )
+    }
+
+    const plugin = imported.default
+
+    // Step 3: Check if plugin uses .build() method (pluginBuilder pattern)
+    let meta: PluginMetaType
+    if (typeof plugin.build === "function") {
+      // New pluginBuilder pattern - call build() to get the final plugin
+      const builtPlugin = plugin.build()
+      meta = extractMeta(builtPlugin)
+    } else {
+      // Fallback: Already built plugin object
+      meta = extractMeta(plugin)
+    }
+
+    // Step 4: Validate metadata
+    if (!validateMeta(meta)) {
+      const errors = ajv.errorsText(validateMeta.errors, { separator: "\n  - " })
+      throw new Error(`Invalid plugin metadata:\n  - ${errors}`)
+    }
+
+    log("✅", name, `${outdir}/index.js`)
+    return { name, path: pluginPath, success: true, meta }
+  } catch (importError) {
+    logError(`Import/validation failed: ${name}`, importError)
+    return {
+      name,
+      path: pluginPath,
+      success: false,
+      error: importError instanceof Error ? importError.message : String(importError),
+    }
+  }
+}
+
+async function writeSchemas(): Promise<boolean> {
+  try {
+    log("📋", "Writing plugin meta schema...")
+    await Bun.write(SCHEMA_OUTPUT, JSON.stringify(PluginMeta, null, 2))
+    log("✅", "Schema written", SCHEMA_OUTPUT)
+    return true
+  } catch (error) {
+    logError("Failed to write schemas", error)
+    return false
+  }
+}
+
+async function writeManifest(plugins: PluginMetaType[]): Promise<boolean> {
+  try {
+    log("📋", "Writing repository manifest...")
+    const content = yaml.dump(
+      { plugins },
+      { indent: 2, lineWidth: -1, noRefs: true, sortKeys: false }
+    )
+    await Bun.write(
+      MANIFEST_OUTPUT,
+      `# Auto-generated repository manifest - DO NOT EDIT\n${content}`
+    )
+    log("✅", "Manifest written", MANIFEST_OUTPUT)
+    return true
+  } catch (error) {
+    logError("Failed to write manifest", error)
+    return false
+  }
+}
+
+// ============================================================================
+// Main
+// ============================================================================
+
+async function main() {
+  console.log("\n🚀 DockStore Plugin Bundler\n")
+
+  // Discover plugins
+  const glob = new Glob(`${PLUGIN_PATH}/*/index.ts`)
+  const pluginPaths = [...glob.scanSync()]
+
+  if (pluginPaths.length === 0) {
+    log("⚠️", "No plugins found")
     return
   }
 
-  const tick = setInterval(renderProgress, 10)
+  log("🔍", `Found ${pluginPaths.length} plugin(s)\n`)
 
-  async function buildPlugin(rec: PluginRecord) {
-    rec.status = "building"
-    rec.startedAt = Date.now()
-    try {
-      const build = await Bun.build({
-        entrypoints: [rec.path],
-        outdir: getPluginBuildDir(rec.path),
-        minify: true,
-        sourcemap: "external",
-        splitting: false,
-        env: `${rec.name.toUpperCase()}_*`,
-        banner: `/*　Bundled by DockStore　*/`,
-      })
-
-      const imported = await import(`./${rec.path}`)
-      const { meta } = imported as { meta: PluginMetaType }
-      validatePluginMeta(meta)
-
-      // Write TypeScript manifest instead of YAML
-      await Bun.write(getPluginManifestPath(rec.path), generatePluginManifestTS(meta))
-      rec.status = "done"
-      rec.finishedAt = Date.now()
-      rec.message = `${getPluginBuildDir(rec.path)}/index.js`
-      BUNDLED_PLUGINS.push(meta)
-
-      console.log(`${clr.ok("✔")} ${clr.strong(rec.name)} → ${clr.path(rec.message)}`)
-      return { ok: true, rec, build }
-    } catch (err) {
-      const e = err as Error
-      rec.status = "failed"
-      rec.finishedAt = Date.now()
-      rec.message = e.message
-      errors.push({
-        name: rec.name,
-        path: rec.path,
-        message: e.message,
-        stack: e.stack,
-        phase: "build",
-      })
-      return { ok: false, rec, error: e }
-    }
+  // Build plugins sequentially for clearer logs
+  const results: BuildResult[] = []
+  for (const path of pluginPaths) {
+    results.push(await buildPlugin(path))
   }
 
-  const pluginBuildRecords = records.filter((r) => r.path.endsWith("/index.ts"))
-  const results = await Promise.allSettled(pluginBuildRecords.map((r) => buildPlugin(r)))
+  console.log("")
 
-  const succeeded = results.filter((r) => r.status === "fulfilled" && r.value.ok).length
-  const failedCount = results.filter((r) => r.status === "fulfilled" && !r.value.ok).length
+  // Generate schemas
+  await writeSchemas()
 
-  console.log(
-    "\n" +
-      clr.header("Plugin build phase complete —") +
-      " " +
-      clr.ok(`${succeeded} succeeded`) +
-      ", " +
-      clr.fail(`${failedCount} failed.`) +
-      "\n"
-  )
+  // Write manifest with successful plugins
+  // biome-ignore lint/style/noNonNullAssertion: Meta was checked before
+  const successfulPlugins = results.filter((r) => r.success && r.meta).map((r) => r.meta!)
+  await writeManifest(successfulPlugins)
 
-  /* Step 1: Generate Schemas */
-  {
-    const rec = records.find((r) => r.path === "__TASK__GENERATE_SCHEMAS")
-    if (rec) {
-      rec.status = "building"
-      rec.startedAt = Date.now()
-      try {
-        await createSchemas()
-        rec.status = "done"
-        rec.finishedAt = Date.now()
-        rec.message = "./.schemas/plugin-meta.schema.json"
-        console.log(clr.ok("Schemas generated."))
-      } catch (err) {
-        const e = err as Error
-        rec.status = "failed"
-        rec.finishedAt = Date.now()
-        rec.message = e.message
-        errors.push({
-          name: rec.name,
-          path: rec.path,
-          message: e.message,
-          stack: e.stack,
-          phase: "schema",
-        })
-        console.error(clr.fail("Schema generation failed: ") + e.message)
-      }
+  // Summary
+  const succeeded = results.filter((r) => r.success).length
+  const failed = results.filter((r) => !r.success).length
+
+  console.log(`\n${"=".repeat(50)}`)
+  console.log(`📊 Summary: ${succeeded} succeeded, ${failed} failed`)
+  console.log("=".repeat(50))
+
+  if (failed > 0) {
+    console.log("\n❌ Failed plugins:")
+    for (const r of results.filter((r) => !r.success)) {
+      console.log(`  - ${r.name}: ${r.error?.split("\n")[0]}`)
     }
+    console.log("")
+    process.exit(1)
   }
 
-  /* Step 2: Write YAML Manifest */
-  {
-    const rec = records.find((r) => r.path === "__TASK__WRITE_REPO_MANIFEST")
-    if (rec) {
-      rec.status = "building"
-      rec.startedAt = Date.now()
-      try {
-        // Write YAML manifest
-        await Bun.write("./manifest.yaml", generateRepoManifestYAML(BUNDLED_PLUGINS))
-        rec.status = "done"
-        rec.finishedAt = Date.now()
-        rec.message = "./manifest.yaml"
-        console.log(clr.ok("Wrote Repo Manifest (YAML)"))
-      } catch (err) {
-        const e = err as Error
-        rec.status = "failed"
-        rec.finishedAt = Date.now()
-        rec.message = e.message
-        errors.push({
-          name: rec.name,
-          path: rec.path,
-          message: e.message,
-          stack: e.stack,
-          phase: "manifest",
-        })
-        console.error(clr.fail("Writing repo manifest failed: ") + e.message)
-      }
-    }
-  }
-
-  renderProgress()
-  clearInterval(tick)
-
-  console.log(
-    `\n${clr.header("Total —")} ${clr.ok(
-      `${records.filter((r) => r.status === "done").length} done`
-    )}, ${clr.fail(`${records.filter((r) => r.status === "failed").length} failed.`)}`
-  )
-
-  /* Error summary */
-  if (errors.length > 0) {
-    console.log(`\n${clr.header("========== ERROR SUMMARY ==========")}`)
-
-    for (const e of errors) {
-      console.log(
-        `\n• ${clr.strong(e.name)} ${clr.dim(`(${e.phase})`)}\n  ${clr.dim("Path:")} ${clr.path(
-          e.path
-        )}\n  ${clr.dim("Message:")} ${clr.fail(e.message)}`
-      )
-      if (e.stack) {
-        console.log(
-          clr.dim("  Stack:\n") +
-            e.stack
-              .split("\n")
-              .map((l) => `    ${clr.dim(l)}`)
-              .join("\n")
-        )
-      }
-    }
-    console.log(clr.header("\n===================================\n"))
-  } else {
-    console.log(`\n${clr.ok("✅ No errors encountered.")}\n`)
-  }
-
-  return results
+  console.log("\n✨ All plugins built successfully!\n")
 }
 
-/* --- Run --- */
-await buildAll()
+await main()
