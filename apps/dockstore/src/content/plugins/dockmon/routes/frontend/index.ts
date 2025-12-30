@@ -1,12 +1,8 @@
-import { createFrontendRoutes } from "@dockstat/plugin-builder";
-import { DashboardRoute } from "./dashboard";
-import { HostsRoute } from "./hosts";
-import { ContainersRoute } from "./containers";
+import { createFrontendRoutes } from "@dockstat/plugin-builder"
+import { ContainersRoute } from "./containers"
+import { DashboardRoute } from "./dashboard"
+import { HostsRoute } from "./hosts"
 
-const DockMonFrontend = createFrontendRoutes([
-	DashboardRoute,
-	HostsRoute,
-	ContainersRoute,
-]);
+const DockMonFrontend = createFrontendRoutes([DashboardRoute, HostsRoute, ContainersRoute])
 
-export default DockMonFrontend;
+export default DockMonFrontend

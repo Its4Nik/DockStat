@@ -1,9 +1,9 @@
 import { column, pluginBuilder } from "@dockstat/plugin-builder"
-import type { DockMonTable } from "./types"
 import DockMonActions from "./actions"
 import DockMonEvents from "./events"
 import DockMonApiRoutes from "./routes/backend"
 import DockMonFrontend from "./routes/frontend"
+import type { DockMonTable } from "./types"
 
 const DockMon = pluginBuilder<DockMonTable, typeof DockMonActions>()
   .name("DockMon")
