@@ -1,8 +1,5 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+@import "tailwindcss";
+@import "@dockstat/ui/css";
 
 body {
   font-family:
@@ -10,3 +7,5 @@ body {
     sans-serif;
   line-height: 1.5;
 }
+
+@source "../../../packages/ui/src/**/*.{js,jsx,ts,tsx}";

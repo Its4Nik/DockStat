@@ -7,6 +7,9 @@ import DockerRoutes from "./routes/docker"
 import DockStatMiscRoutes from "./routes/misc"
 import PluginRoutes from "./routes/plugins"
 import StatusRoutes from "./routes/status"
+import BaseLogger from "./logger"
+
+const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 
 export const DockStatAPI = new Elysia({ prefix: "/api/v2" })
   .use(MetricsMiddleware)
@@ -17,5 +20,24 @@ export const DockStatAPI = new Elysia({ prefix: "/api/v2" })
   .use(DockerRoutes)
   .use(PluginRoutes)
   .use(DockStatMiscRoutes)
+  .listen(PORT)
+
+BaseLogger.info(
+  `
+
+    ██████████                     █████       █████████   █████               █████         █████████   ███████████  █████
+   ░░███░░░░███                   ░░███       ███░░░░░███ ░░███               ░░███         ███░░░░░███ ░░███░░░░░███░░███
+    ░███   ░░███  ██████   ██████  ░███ █████░███    ░░░  ███████    ██████   ███████      ░███    ░███  ░███    ░███ ░███
+    ░███    ░███ ███░░███ ███░░███ ░███░░███ ░░█████████ ░░░███░    ░░░░░███ ░░░███░       ░███████████  ░██████████  ░███
+    ░███    ░███░███ ░███░███ ░░░  ░██████░   ░░░░░░░░███  ░███      ███████   ░███        ░███░░░░░███  ░███░░░░░░   ░███
+    ░███    ███ ░███ ░███░███  ███ ░███░░███  ███    ░███  ░███ ███ ███░░███   ░███ ███    ░███    ░███  ░███         ░███
+    ██████████  ░░██████ ░░██████  ████ █████░░█████████   ░░█████ ░░████████  ░░█████     █████   █████ █████        █████
+   ░░░░░░░░░░    ░░░░░░   ░░░░░░  ░░░░ ░░░░░  ░░░░░░░░░     ░░░░░   ░░░░░░░░    ░░░░░     ░░░░░   ░░░░░ ░░░░░        ░░░░░
+
+  - API running at http://localhost:${PORT}/api/v2
+  - API-Docs at: http://localhost:${PORT}/api/v2/docs
+  - DockStat Docs at: https://dockstat.itsnik.de
+  `
+)
 
 export type TreatyType = typeof DockStatAPI

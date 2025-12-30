@@ -13,7 +13,8 @@
     "noUnusedParameters": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@Queries/*": ["./src/lib/queries/*"]
     }
   },
   "include": ["src"],

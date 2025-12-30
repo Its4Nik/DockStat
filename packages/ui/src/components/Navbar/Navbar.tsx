@@ -1,15 +1,16 @@
-import { Link } from "react-router"
+import { NavLink } from "react-router"
 import { Badge } from "../Badge/Badge"
 import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
 import DockStatLogo from "./DockStat2-06.png"
 
 type NavbarProps = {
-  isNavigating: boolean
-  location: unknown
+  isBusy: boolean
+  location: string
+  paths?: Array<{ slug: string; path: string }>
 }
 
-const paths: Array<{ slug: string; path: string }> = [
+const defaultPaths: Array<{ slug: string; path: string }> = [
   {
     slug: "Home",
     path: "/",
@@ -24,17 +25,17 @@ const paths: Array<{ slug: string; path: string }> = [
   },
 ]
 
-export function Navbar({ isNavigating, location }: NavbarProps) {
+export function Navbar({ isBusy, location, paths = defaultPaths }: NavbarProps) {
   return (
     <>
       <Card size="sm" className="w-full p-0.5 mb-4 relative overflow-hidden">
         {/* Animated gradient background */}
         <div
           className={`absolute inset-0 bg-linear-to-r from-blue-500 via-purple-500 to-pink-500 bg-size-[200%_200%] transition-opacity duration-500 ${
-            isNavigating ? "opacity-20 animate-[gradient_1s_ease_infinite]" : "opacity-0"
+            isBusy ? "opacity-20 animate-[gradient_1s_ease_infinite]" : "opacity-0"
           }`}
           style={{
-            animation: isNavigating ? "gradient 3s ease infinite" : "none",
+            animation: isBusy ? "gradient 3s ease infinite" : "none",
           }}
         />
 
@@ -46,11 +47,11 @@ export function Navbar({ isNavigating, location }: NavbarProps) {
               const isCurrently = p.path === location
 
               return (
-                <Link to={p.path} key={`${p.slug}-${isCurrently}-link`}>
+                <NavLink to={p.path} key={`${p.slug}-${isCurrently}-link`}>
                   <Badge key={`${p.slug}-${isCurrently}-badge`} outlined={isCurrently}>
                     {p.slug}
                   </Badge>
-                </Link>
+                </NavLink>
               )
             })}
           </div>

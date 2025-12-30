@@ -3,6 +3,7 @@ import { DockStatDB } from "../database"
 import DCM from "../docker"
 import BaseLogger from "../logger"
 import PluginHandler from "../plugins"
+import { sleep } from "@dockstat/utils"
 
 export interface ServiceStatus {
   name: string
@@ -16,6 +17,8 @@ const StatusRoutes = new Elysia({
   },
 }).get("/status", async () => {
   const services: ServiceStatus[] = []
+
+  await sleep(10000)
 
   services.push({
     name: "Database",
