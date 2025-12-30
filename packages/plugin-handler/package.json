@@ -8,8 +8,7 @@
     "format": "biome format --write"
   },
   "exports": {
-    ".": "./src/index.ts",
-    "./pluginBuilder": "./src/pluginBuilder/index.ts"
+    ".": "./src/index.ts"
   },
   "dependencies": {
     "@dockstat/typings": "workspace:*",

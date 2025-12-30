@@ -201,8 +201,27 @@
         "bun-types": "latest",
       },
     },
+    "packages/plugin-builder": {
+      "name": "@dockstat/plugin-builder",
+      "version": "1.0.0",
+      "devDependencies": {
+        "@dockstat/sqlite-wrapper": "workspace:*",
+        "@dockstat/typings": "workspace:*",
+        "@types/bun": "latest",
+        "bun-plugin-dts": "^0.3.0",
+        "typescript": "^5.9.3",
+      },
+      "peerDependencies": {
+        "@dockstat/sqlite-wrapper": "^1.0.0",
+        "typescript": "^5.0.0",
+      },
+      "optionalPeers": [
+        "typescript",
+      ],
+    },
     "packages/plugin-handler": {
       "name": "@dockstat/plugin-handler",
+      "version": "1.0.0",
       "dependencies": {
         "@dockstat/logger": "workspace:*",
         "@dockstat/sqlite-wrapper": "workspace:*",
@@ -440,6 +459,8 @@
     "@dockstat/logger": ["@dockstat/logger@workspace:packages/logger"],
 
     "@dockstat/outline-sync": ["@dockstat/outline-sync@workspace:packages/outline-sync"],
+
+    "@dockstat/plugin-builder": ["@dockstat/plugin-builder@workspace:packages/plugin-builder"],
 
     "@dockstat/plugin-handler": ["@dockstat/plugin-handler@workspace:packages/plugin-handler"],
 
@@ -1632,6 +1653,8 @@
     "@dockstat/create-rr-elysia/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "@dockstat/outline-sync/@types/node": ["@types/node@20.19.27", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-N2clP5pJhB2YnZJ3PIHFk5RkygRX5WO/5f0WC08tp0wd+sv0rsJk3MqWn3CbNmT2J505a5336jaQj4ph1AdMug=="],
+
+    "@dockstat/plugin-builder/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "@dockstat/ui/@types/node": ["@types/node@24.10.4", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-vnDVpYPMzs4wunl27jHrfmwojOGKya0xyM3sH+UE5iv5uPS6vX7UIoh6m+vQc5LGBq52HBKPIn/zcSZVzeDEZg=="],
 
