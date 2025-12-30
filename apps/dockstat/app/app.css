@@ -1,5 +1,0 @@
-@import "@dockstat/ui/css";
-@import "tailwindcss";
-
-/* DO NOT REMOVE THE FOLLOWING LINE */
-@source "../../../packages/ui/src/**/*.{js,jsx,ts,tsx}";
