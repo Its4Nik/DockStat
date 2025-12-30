@@ -8,6 +8,7 @@ import DockStatMiscRoutes from "./routes/misc"
 import PluginRoutes from "./routes/plugins"
 import StatusRoutes from "./routes/status"
 import BaseLogger from "./logger"
+import RepositoryRoutes from "./routes/repositories"
 
 const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 
@@ -20,6 +21,7 @@ export const DockStatAPI = new Elysia({ prefix: "/api/v2" })
   .use(DockerRoutes)
   .use(PluginRoutes)
   .use(DockStatMiscRoutes)
+  .use(RepositoryRoutes)
   .listen(PORT)
 
 BaseLogger.info(
