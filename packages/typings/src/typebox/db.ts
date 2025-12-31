@@ -125,7 +125,13 @@ const DockStatConfigTable = t.Object({
       )
     ),
   }),
-  nav_links: t.ArrayString(),
+  nav_links: t.Array(
+    t.Object({
+      slug: t.String(),
+      path: t.String(),
+    })
+  ),
+
   hotkeys: t.Record(t.String(), t.UnionEnum(["open:nav", "close:nav", "toggle:nav"])),
 
   autostart_handlers_monitoring: t.Boolean(),

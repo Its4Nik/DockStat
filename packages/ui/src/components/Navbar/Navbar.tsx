@@ -1,34 +1,26 @@
+import { useState } from "react"
+import { motion } from "framer-motion"
 import { NavLink } from "react-router"
+import { Menu } from "lucide-react"
+
 import { Badge } from "../Badge/Badge"
 import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
+
 import DockStatLogo from "./DockStat2-06.png"
+import { Sidebar } from "./Sidebar"
 
 type NavbarProps = {
   isBusy: boolean
   paths?: Array<{ slug: string; path: string }>
 }
 
-const defaultPaths: Array<{ slug: string; path: string }> = [
-  {
-    slug: "Home",
-    path: "/",
-  },
-  {
-    slug: "Clients",
-    path: "/clients",
-  },
-  {
-    slug: "Plugins",
-    path: "/plugins",
-  },
-]
+export function Navbar({ isBusy, paths }: NavbarProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-export function Navbar({ isBusy, paths = defaultPaths }: NavbarProps) {
   return (
     <>
-      <Card size="sm" className="w-full p-0.5 mb-4 relative overflow-hidden">
-        {/* Animated gradient background */}
+      <Card size="sm" className="w-full p-0.5 mb-4 relative overflow-visible">
         <div
           className={`absolute inset-0 bg-linear-to-r from-blue-500 via-purple-500 to-pink-500 bg-size-[200%_200%] transition-opacity duration-500 ${
             isBusy ? "opacity-20 animate-[gradient_1s_ease_infinite]" : "opacity-0"
@@ -39,7 +31,15 @@ export function Navbar({ isBusy, paths = defaultPaths }: NavbarProps) {
         />
 
         <nav className="flex items-center justify-between relative z-10">
-          <img src={DockStatLogo} alt="DockStat Logo" className="w-7 shrink-0" />
+          <div className="flex items-center gap-3">
+            <motion.button onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
+              <Badge className="p-2!" variant="secondary">
+                <Menu size={20} />
+              </Badge>
+            </motion.button>
+
+            <img src={DockStatLogo} alt="DockStat Logo" className="w-8 shrink-0" />
+          </div>
 
           <div className="flex items-center gap-2">
             {paths?.map((p) => (
@@ -50,13 +50,15 @@ export function Navbar({ isBusy, paths = defaultPaths }: NavbarProps) {
           </div>
         </nav>
 
+        <Sidebar isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} isBusy={isBusy} />
+
         <style>{`
-				@keyframes gradient {
-					0% { background-position: 0% 50%; }
-					50% { background-position: 100% 50%; }
-					100% { background-position: 0% 50%; }
-				}
-			`}</style>
+          @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+        `}</style>
       </Card>
       <Divider variant="dashed" className="my-4" />
     </>

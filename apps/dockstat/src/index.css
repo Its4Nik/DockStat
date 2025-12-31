@@ -8,4 +8,9 @@ body {
   line-height: 1.5;
 }
 
+/*
+    DO NOT REMOVE THIS COMMENT
+    This line is crucial for correct theme usage
+*/
+
 @source "../../../packages/ui/src/**/*.{js,jsx,ts,tsx}";

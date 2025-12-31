@@ -24,6 +24,8 @@ export const DockStatAPI = new Elysia({ prefix: "/api/v2" })
   .use(RepositoryRoutes)
   .listen(PORT)
 
+const hostnameAndPort = `${DockStatAPI.server?.hostname}:${DockStatAPI.server?.port}`
+
 BaseLogger.info(
   `
 
@@ -36,8 +38,8 @@ BaseLogger.info(
     ██████████  ░░██████ ░░██████  ████ █████░░█████████   ░░█████ ░░████████  ░░█████     █████   █████ █████        █████
    ░░░░░░░░░░    ░░░░░░   ░░░░░░  ░░░░ ░░░░░  ░░░░░░░░░     ░░░░░   ░░░░░░░░    ░░░░░     ░░░░░   ░░░░░ ░░░░░        ░░░░░
 
-  - API running at http://localhost:${PORT}/api/v2
-  - API-Docs at: http://localhost:${PORT}/api/v2/docs
+  - API running at ${hostnameAndPort}/api/v2
+  - API-Docs at: ${hostnameAndPort}/api/v2/docs
   - DockStat Docs at: https://dockstat.itsnik.de
   `
 )

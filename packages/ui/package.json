@@ -25,6 +25,7 @@
   "dependencies": {
     "@dockstat/typings": "workspace:*",
     "@dockstat/utils": "workspace:*",
+    "@icons-pack/react-simple-icons": "^13.8.0",
     "@storybook/client-api": "latest",
     "@storybook/react-vite": "^10.0.2",
     "@tailwindcss/vite": "^4.1.16",
