@@ -29,7 +29,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="bg-main-bg min-h-screen w-screen p-4">
       <Navbar isBusy={useGlobalBusy()} paths={data} />
-      {children}
+      <div className="px-4">{children}</div>
     </div>
   )
 }
