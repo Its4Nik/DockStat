@@ -1,11 +1,9 @@
-import { existsSync } from "node:fs"
+import fs, { existsSync } from "node:fs"
 import { readFile, writeFile } from "node:fs/promises"
-import { join, resolve } from "node:path"
+import path, { join, resolve } from "node:path"
 import { Command } from "commander"
 import { OutlineSync } from "./sync"
 import type { OutlineConfig } from "./types"
-import fs from "node:fs"
-import path from "node:path"
 
 const program = new Command()
 
