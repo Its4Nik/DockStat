@@ -15,19 +15,19 @@
       src="https://img.shields.io/badge/-Features-1864AB?style=for-the-badge&logo=sparkfun&logoColor=white"
     />
   </a>
-  <a href="#getting-started-developer-local" title="Getting started (developer)">
+  <a href="#getting-started-developer--local" title="Getting started (developer)">
     <img
       alt="Getting started (developer)"
       src="https://img.shields.io/badge/-Dev%20Setup-2F9E44?style=for-the-badge&logo=visualstudiocode&logoColor=white"
     />
   </a>
-  <a href="#stacks-dockstore" title="DockStore">
+  <a href="#plugins-themes--stacks---dockstore" title="DockStore">
     <img
       alt="DockStore"
       src="https://img.shields.io/badge/-DockStore-F08C00?style=for-the-badge&logo=docker&logoColor=white"
     />
   </a>
-  <a href="#development-workflow-guidelines" title="Development guide">
+  <a href="#development-workflow--guidelines" title="Development guide">
     <img
       alt="Development guide"
       src="https://img.shields.io/badge/-Development%20Guide-7048E8?style=for-the-badge&logo=gitbook&logoColor=white"
