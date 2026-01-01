@@ -1,13 +1,38 @@
 <p align="center">
-  <img src="./.github/DockStat-logo-with-text.png" alt="DockStat Logo" />
+  <img src="./.github/DockStat2-04.png" alt="DockStat Logo" />
 </p>
 
 <p align="center">
-    <a href="https://dockstat.itsnik.de">Wiki</a>
-    <a href="#key-features">Features</a>
-    <a href="#getting-started-developer-local">Getting started (developer)</a>
-    <a href="#stacks-dockstore">Plugins, Themes & Stacks - DockStore</a>
-    <a href="#development-workflow-guidelines">Development guide</a>
+  <a href="https://dockstat.itsnik.de">
+    <img
+      alt="Wiki"
+      src="https://img.shields.io/badge/Wiki-Docs-0B7285?style=for-the-badge"
+    />
+  </a>
+  <a href="#key-features">
+    <img
+      alt="Features"
+      src="https://img.shields.io/badge/Features-Key%20Features-1864AB?style=for-the-badge"
+    />
+  </a>
+  <a href="#getting-started-developer-local">
+    <img
+      alt="Getting started (developer)"
+      src="https://img.shields.io/badge/Getting%20started-Developer-2F9E44?style=for-the-badge"
+    />
+  </a>
+  <a href="#stacks-dockstore">
+    <img
+      alt="DockStore"
+      src="https://img.shields.io/badge/DockStore-Plugins%20%7C%20Themes%20%7C%20Stacks-F08C00?style=for-the-badge"
+    />
+  </a>
+  <a href="#development-workflow-guidelines">
+    <img
+      alt="Development guide"
+      src="https://img.shields.io/badge/Development-Guide-7048E8?style=for-the-badge"
+    />
+  </a>
 </p>
 
 ---
