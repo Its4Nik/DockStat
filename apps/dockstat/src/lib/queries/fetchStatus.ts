@@ -1,6 +1,6 @@
+import { extractEdenError } from "@dockstat/utils"
 import type { QueryFunctionContext } from "@tanstack/react-query"
 import { api } from "../api"
-import { extractEdenError } from "@dockstat/utils"
 
 export async function fetchBackendStatus({ signal }: QueryFunctionContext) {
   const { data, error } = await api.api.v2.status.get({ fetch: { signal } })

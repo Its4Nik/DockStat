@@ -1,7 +1,7 @@
-import { AnimatePresence, motion } from "framer-motion"
-import { NavLink } from "react-router"
 import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons"
+import { AnimatePresence, motion } from "framer-motion"
 import { BookMarkedIcon, LoaderPinwheel, X } from "lucide-react"
+import { NavLink } from "react-router"
 
 import { Button } from "../Button/Button"
 import { Card } from "../Card/Card"

@@ -1,5 +1,5 @@
-import { Badge, Card, Divider, type BadgeVariant } from "@dockstat/ui"
 import { fetchBackendStatus } from "@Queries/fetchStatus"
+import { Badge, type BadgeVariant, Card, Divider } from "@dockstat/ui"
 import { useQuery } from "@tanstack/react-query"
 
 export default function IndexPage() {

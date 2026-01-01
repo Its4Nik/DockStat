@@ -1,7 +1,7 @@
-import { useState } from "react"
 import { motion } from "framer-motion"
-import { NavLink } from "react-router"
 import { Menu } from "lucide-react"
+import { useState } from "react"
+import { NavLink } from "react-router"
 
 import { Badge } from "../Badge/Badge"
 import { Card } from "../Card/Card"

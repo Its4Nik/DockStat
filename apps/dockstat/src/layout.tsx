@@ -1,9 +1,9 @@
 import { Navbar } from "@dockstat/ui"
-import { useGlobalBusy } from "./hooks/isLoading"
 import { useQuery } from "@tanstack/react-query"
-import { fetchNavLinks } from "./lib/queries/fetchNavLinks"
 import { useContext, useEffect, useState } from "react"
 import { AdditionalSettingsContext } from "@/contexts/additionalSettings"
+import { useGlobalBusy } from "./hooks/isLoading"
+import { fetchNavLinks } from "./lib/queries/fetchNavLinks"
 import { rssFeedEffect } from "./lib/websocketEffects/rssFeed"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
