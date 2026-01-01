@@ -3,21 +3,9 @@ id: da3758e1-2d46-4dd5-85c5-eb9d19ee2054
 title: "Frontend: queries"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: a81b5d89-a300-47ac-8ffa-a3b851645978
-updatedAt: 2026-01-01T14:27:41.100Z
+updatedAt: 2026-01-01T15:02:36.975Z
 urlId: wadWIa69wa
 ---
-
----
-
-id: da3758e1-2d46-4dd5-85c5-eb9d19ee2054
-
-title: "Frontend: queries" collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
-
-parentDocumentId: a81b5d89-a300-47ac-8ffa-a3b851645978
-
-updatedAt: 2026-01-01T14:18:41.721Z
-
-## urlId: wadWIa69wa
 
 ## `lib/queries/` (TanStack Query)
 

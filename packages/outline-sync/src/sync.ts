@@ -335,7 +335,7 @@ export class OutlineSync {
       Collection: this.truncate(collectionName, 15),
       "Local Date": this.formatDate(new Date()),
       "Remote Date": this.formatDate(remoteDate),
-      Status: "⬇️  Pulled",
+      Status: "Pulled",
     })
 
     // Normalize key to absolute path to match later scans
@@ -774,7 +774,22 @@ export class OutlineSync {
     return { changed, tableData }
   }
 
-  async push(): Promise<void> {
+  async push(force = false): Promise<void> {
+    if (force) {
+      console.log("📤 Force pushing all local files to Outline (ignoring remote timestamps)...")
+      const files = await this.getAllMarkdownFiles(this.outputDir)
+      for (const file of files) {
+        try {
+          await this.syncUp(file)
+        } catch (err) {
+          console.error(`Error pushing ${file}:`, err)
+          this.trace("push(force): error pushing file", { file, error: String(err) })
+        }
+      }
+      console.log("\n✅ Force push complete!")
+      return
+    }
+
     console.log("📤 Pushing local changes to Outline...")
     this.trace("push: starting", { outputDir: this.outputDir })
 

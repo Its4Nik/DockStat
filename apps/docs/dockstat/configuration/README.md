@@ -3,7 +3,7 @@ id: dec1cb2c-9a13-4e67-a31c-d3a685391208
 title: Configuration
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: 7dddd764-6483-4f84-96a3-988304e772d3
-updatedAt: 2026-01-01T14:25:29.337Z
+updatedAt: 2026-01-01T15:02:03.529Z
 urlId: 3dLW6L8pzR
 ---
 

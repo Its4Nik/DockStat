@@ -248,10 +248,23 @@ program
   .option("-i, --include <collections>", "Comma-separated list of collections to include")
   .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
   .option("-v, --verbose", "Enable debug logging")
+  .option("-f, --force", "Force push (push all local files with IDs, ignoring remote timestamps)")
   .action(async (options) => {
     const config = await getConfig(options)
     const sync = new OutlineSync(config, { verbose: config.verbose })
-    await sync.push()
+    await sync.push(Boolean(options.force))
+  })
+
+program
+  .command("verify")
+  .description("Validate configuration and custom path resolution")
+  .option("-c, --config <path>", "Config file path")
+  .option("-t, --token <token>", "API token")
+  .option("-v, --verbose", "Enable debug logging")
+  .action(async (options) => {
+    const config = await getConfig(options)
+    const sync = new OutlineSync(config, { verbose: config.verbose })
+    await sync.verify()
   })
 
 program
