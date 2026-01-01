@@ -13,9 +13,10 @@ import { Sidebar } from "./Sidebar"
 type NavbarProps = {
   isBusy: boolean
   paths?: Array<{ slug: string; path: string }>
+  ramUsage?: string
 }
 
-export function Navbar({ isBusy, paths }: NavbarProps) {
+export function Navbar({ isBusy, paths, ramUsage }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
@@ -47,6 +48,11 @@ export function Navbar({ isBusy, paths }: NavbarProps) {
                 {({ isActive }) => <Badge outlined={isActive}>{p.slug}</Badge>}
               </NavLink>
             ))}
+            {ramUsage ? (
+              <Badge variant="secondary" className="font-mono">
+                {ramUsage}
+              </Badge>
+            ) : null}
           </div>
         </nav>
 

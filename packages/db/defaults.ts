@@ -16,6 +16,9 @@ export const defaultConfig: DockStatConfigTableType = {
   config_database_rev: "v1.0.1",
   tables: [],
   tls_certs_and_keys: { web: null, docker: null },
+  addtionalSettings: {
+    showBackendRamUsageInNavbar: true,
+  },
 }
 
 export const defaultRepositories: CreateRepoType[] = [

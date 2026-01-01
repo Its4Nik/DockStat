@@ -2,12 +2,21 @@ import { Navbar } from "@dockstat/ui"
 import { useGlobalBusy } from "./hooks/isLoading"
 import { useQuery } from "@tanstack/react-query"
 import { fetchNavLinks } from "./lib/queries/fetchNavLinks"
+import { useContext, useEffect, useState } from "react"
+import { AdditionalSettingsContext } from "@/contexts/additionalSettings"
+import { rssFeedEffect } from "./lib/websocketEffects/rssFeed"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const [ramUsage, setRamUsage] = useState<string>("Connecting...")
+  const showRamUsage = useContext(AdditionalSettingsContext).showBackendRamUsageInNavbar
+
   let { data } = useQuery({
     queryKey: ["fetchNavLinks"],
     queryFn: fetchNavLinks,
+    refetchInterval: false,
   })
+
+  useEffect(() => rssFeedEffect(setRamUsage))
 
   if (data?.length === 0) {
     data = [
@@ -28,7 +37,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="bg-main-bg min-h-screen w-screen p-4">
-      <Navbar isBusy={useGlobalBusy()} paths={data} />
+      <Navbar
+        isBusy={useGlobalBusy()}
+        paths={data}
+        ramUsage={showRamUsage ? ramUsage : undefined}
+      />
       <div className="px-4">{children}</div>
     </div>
   )

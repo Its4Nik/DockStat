@@ -1,34 +1,46 @@
-import { Badge, Card, CardHeader } from "@dockstat/ui"
-import { FetchBackendStatus } from "@Queries/fetchStatus"
+import { Badge, Card, Divider, type BadgeVariant } from "@dockstat/ui"
+import { fetchBackendStatus } from "@Queries/fetchStatus"
 import { useQuery } from "@tanstack/react-query"
 
 export default function IndexPage() {
   const { data, isLoading, error } = useQuery({
-    queryKey: ["FetchBackendStatus-indexpage"],
-    queryFn: FetchBackendStatus,
+    queryKey: ["fetchBackendStatus"],
+    queryFn: fetchBackendStatus,
   })
 
   if (isLoading) return <div>Loading...</div>
   if (error) return <div>Something went wrong</div>
 
-  const servicesCount = data?.services.length || 0
-  const initializedServicesCount = data?.services.map((s) => s.initialized === true).length || 0
+  const services = data?.services || []
+  const servicesCount = services.length || 0
+  const initializedServicesCount = services.map((s) => s.initialized === true).length || 0
 
-  const serviceBadgeVariant =
-    servicesCount === initializedServicesCount
-      ? "success"
-      : servicesCount > initializedServicesCount
-        ? "warning"
-        : "error"
+  let serviceBadgeVariant: BadgeVariant = "success"
+
+  if (servicesCount > initializedServicesCount) serviceBadgeVariant = "warning"
+  if (initializedServicesCount === 0) serviceBadgeVariant = "error"
 
   return (
-    <div className="flex justify-between">
-      <Badge variant={data?.status === "healthy" ? "success" : "error"}>
-        Backend State: {data?.status?.toUpperCase()}
-      </Badge>
-      <Badge variant={serviceBadgeVariant}>
-        {initializedServicesCount}/{servicesCount} Services initialized
-      </Badge>
+    <div>
+      <div className="flex justify-between">
+        <Badge variant={data?.status === "healthy" ? "success" : "error"}>
+          Backend State: {data?.status?.toUpperCase()}
+        </Badge>
+        <Badge variant={serviceBadgeVariant}>
+          {initializedServicesCount}/{servicesCount} Services initialized
+        </Badge>
+      </div>
+      <Divider className="my-2" label="Services" />
+      <div className="flex flex-row flex-wrap gap-4">
+        {services.map((s) => {
+          const serviceName = s.name
+          return (
+            <Card variant="elevated" key={serviceName} size="sm">
+              {serviceName}
+            </Card>
+          )
+        })}
+      </div>
     </div>
   )
 }

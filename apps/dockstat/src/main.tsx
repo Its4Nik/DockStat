@@ -1,23 +1,21 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { BrowserRouter } from "react-router"
-
-import "./index.css"
-import "@dockstat/ui/css"
-import Layout from "./layout"
 import DockStatRouter from "./router"
+import Layout from "./layout"
+import DockStatProviders from "./providers"
 
-const queryClient = new QueryClient()
+import "@dockstat/ui/css"
+import "./index.css"
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
     <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
+      <DockStatProviders>
         <Layout>
           <DockStatRouter />
         </Layout>
-      </QueryClientProvider>
+      </DockStatProviders>
     </BrowserRouter>
   </StrictMode>
 )

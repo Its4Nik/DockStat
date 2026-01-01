@@ -132,6 +132,10 @@ const DockStatConfigTable = t.Object({
     })
   ),
 
+  addtionalSettings: t.Object({
+    showBackendRamUsageInNavbar: t.Optional(t.Boolean()),
+  }),
+
   hotkeys: t.Record(t.String(), t.UnionEnum(["open:nav", "close:nav", "toggle:nav"])),
 
   autostart_handlers_monitoring: t.Boolean(),
