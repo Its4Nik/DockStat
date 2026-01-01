@@ -26,7 +26,7 @@ function parseToDate(value: unknown): Date | null {
   if (typeof value === "number") return new Date(value)
   if (typeof value === "string") {
     const t = Date.parse(value)
-    if (isNaN(t)) return null
+    if (Number.isNaN(t)) return null
     return new Date(t)
   }
   return null
@@ -82,7 +82,7 @@ export class OutlineSync {
 
   private truncate(str: string, maxLength: number): string {
     if (str.length <= maxLength) return str
-    return str.slice(0, maxLength - 3) + "..."
+    return `${str.slice(0, maxLength - 3)}...`
   }
 
   private sanitizePath(name: string): string {
