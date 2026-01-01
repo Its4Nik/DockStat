@@ -13,10 +13,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   let { data } = useQuery({
     queryKey: ["fetchNavLinks"],
     queryFn: fetchNavLinks,
-    refetchInterval: false,
   })
 
-  useEffect(() => rssFeedEffect(setRamUsage))
+  useEffect(() => {
+    const cleanup = rssFeedEffect(setRamUsage)
+    return cleanup
+  }, [])
 
   if (data?.length === 0) {
     data = [
