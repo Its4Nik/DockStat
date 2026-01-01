@@ -1,3 +1,12 @@
+---
+id: da3758e1-2d46-4dd5-85c5-eb9d19ee2054
+title: "Frontend: queries"
+collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
+parentDocumentId: a81b5d89-a300-47ac-8ffa-a3b851645978
+updatedAt: 2026-01-01T14:18:41.721Z
+urlId: wadWIa69wa
+---
+
 ## `lib/queries/` (TanStack Query)
 
 This folder contains all **client-side data fetching functions** (“query functions”) used by **TanStack React Query** hooks (`useQuery`, `useInfiniteQuery`, `useMutation`, etc.).  

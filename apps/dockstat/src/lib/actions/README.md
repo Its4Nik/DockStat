@@ -1,3 +1,12 @@
+---
+id: 57802308-6a42-4d47-82b6-bc553ae10e9c
+title: "Frontend: actions"
+collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
+parentDocumentId: a81b5d89-a300-47ac-8ffa-a3b851645978
+updatedAt: 2026-01-01T14:18:21.309Z
+urlId: 0tWEK43tNb
+---
+
 ## `lib/actions/` (Forms / Mutations)
 
 This folder contains all **client-side “write” operations** used by forms and UI interactions: creating, updating, deleting, and triggering server-side effects. These functions are typically consumed by **TanStack React Query mutations** (`useMutation`) or called by form submit handlers.
