@@ -27,17 +27,17 @@ html {
 }
 
 /* HTMX loading states */
-.htmx-request .htmx-indicator {
-  display: inline-flex !important;
-  align-items: center;
-}
-
 .htmx-indicator {
   display: none;
 }
 
-.htmx-request.htmx-indicator {
-  display: inline-flex !important;
+.htmx-request .htmx-indicator {
+  display: inline-flex;
+  align-items: center;
+}
+
+.htmx-request .htmx-indicator {
+  display: inline-flex;
 }
 
 /* Loading animation */
@@ -165,6 +165,7 @@ button:focus-visible {
   -webkit-box-orient: vertical;
   overflow: hidden;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .line-clamp-3 {
@@ -172,6 +173,7 @@ button:focus-visible {
   -webkit-box-orient: vertical;
   overflow: hidden;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 
 /* Truncate text */

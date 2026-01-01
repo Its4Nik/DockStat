@@ -217,7 +217,7 @@ export type PluginConfig<T extends Record<string, unknown>, A extends PluginActi
     columns: Record<string, ColumnDefinition>
   }
   apiRoutes?: Record<string, PluginRoute<T, A>>
-  actions?: PluginActions<T>
+  actions?: A
   /** Frontend configuration for plugin UI */
   frontend?: PluginFrontendConfig
 }

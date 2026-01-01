@@ -25,7 +25,7 @@ export const LinkWithIcon: React.FC<LinkWithIconProps> = ({
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className={`inline-flex items-center text-icon-link-text hover:icon-link-text-hover transition-colors ${className}`}
+      className={`inline-flex items-center text-icon-link-text hover:icon-link-text-hover transition-colors hover:underline ${className}`}
     >
       {isLeft && <span className="mr-1">{icon}</span>}
       {children}

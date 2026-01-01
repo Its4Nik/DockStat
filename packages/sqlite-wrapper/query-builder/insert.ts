@@ -1,182 +1,232 @@
 import type { SQLQueryBindings } from "bun:sqlite"
 import type { InsertOptions, InsertResult } from "../types"
+import {
+  buildPlaceholders,
+  createLogger,
+  quoteIdentifier,
+  quoteIdentifiers,
+  type RowData,
+} from "../utils"
 import { WhereQueryBuilder } from "./where"
 
 /**
- * Mixin class that adds INSERT functionality to the QueryBuilder.
- * Handles single and bulk insert operations with conflict resolution.
+ * InsertQueryBuilder - Handles INSERT operations with conflict resolution
+ *
+ * Features:
+ * - Single and bulk inserts
+ * - Conflict resolution (OR IGNORE, OR REPLACE, etc.)
+ * - Insert and get (returns inserted row)
+ * - Batch inserts with transaction support
+ * - Automatic JSON/Boolean serialization
  */
 export class InsertQueryBuilder<T extends Record<string, unknown>> extends WhereQueryBuilder<T> {
+  private insertLog = createLogger("insert")
+
+  // ===== Private Helpers =====
+
   /**
-   * Insert a single row or multiple rows into the table.
-   *
-   * @param data - Single object or array of objects to insert
-   * @param options - Insert options (OR IGNORE, OR REPLACE, etc.)
-   * @returns Insert result with insertId and changes count
+   * Get the conflict resolution clause for INSERT statements
    */
-  insert(data: Partial<T> | Partial<T>[], options?: InsertOptions): InsertResult {
-    const truncate = (str: string, max: number) =>
-      str.length > max ? `${str.slice(0, max)}...` : str
-    this.getLogger("INSERT").debug(`Building Data Array: ${truncate(JSON.stringify(data), 100)}`)
-    const rows = Array.isArray(data) ? data : [data]
+  private getConflictClause(options?: InsertOptions): string {
+    if (!options) return "INSERT"
+    if (options.orIgnore) return "INSERT OR IGNORE"
+    if (options.orReplace) return "INSERT OR REPLACE"
+    if (options.orAbort) return "INSERT OR ABORT"
+    if (options.orFail) return "INSERT OR FAIL"
+    if (options.orRollback) return "INSERT OR ROLLBACK"
+    return "INSERT"
+  }
 
-    // Transform rows to handle JSON serialization
-    const transformedRows = rows.map((row) => this.transformRowToDb(row))
+  /**
+   * Extract unique columns from a set of rows
+   */
+  private extractColumns(rows: RowData[]): string[] {
+    const columnSet = new Set<string>()
 
-    this.getLogger("INSERT").debug(
-      `Transformed row: ${truncate(JSON.stringify(transformedRows), 100)}`
-    )
-
-    this.getLogger("INSERT").debug(
-      `Transformed row:  ${truncate(JSON.stringify(transformedRows), 100)}`
-    )
-
-    if (transformedRows.length === 0) {
-      throw new Error("insert: data cannot be empty")
-    }
-
-    // Get all unique columns from all rows
-    const allColumns = new Set<string>()
-    for (const row of transformedRows) {
+    for (const row of rows) {
       for (const col of Object.keys(row)) {
-        allColumns.add(col)
+        columnSet.add(col)
       }
     }
 
-    const columns = Array.from(allColumns)
+    return Array.from(columnSet)
+  }
+
+  /**
+   * Build an INSERT query
+   */
+  private buildInsertQuery(columns: string[], options?: InsertOptions): string {
+    const conflictClause = this.getConflictClause(options)
+    const tableName = quoteIdentifier(this.getTableName())
+    const columnList = quoteIdentifiers(columns)
+    const placeholders = buildPlaceholders(columns)
+
+    return `${conflictClause} INTO ${tableName} (${columnList}) VALUES (${placeholders})`
+  }
+
+  /**
+   * Execute insert for a single row
+   */
+  private executeInsert(
+    query: string,
+    row: RowData,
+    columns: string[]
+  ): { insertId: number; changes: number } {
+    const values = columns.map((col) => row[col] ?? null) as SQLQueryBindings[]
+
+    const result = this.getDb()
+      .prepare(query)
+      .run(...values)
+
+    return {
+      insertId: result.lastInsertRowid ? Number(result.lastInsertRowid) : 0,
+      changes: result.changes,
+    }
+  }
+
+  // ===== Public Insert Methods =====
+
+  /**
+   * Insert a single row or multiple rows into the table
+   *
+   * @example
+   * // Single insert
+   * table.insert({ name: "Alice", email: "alice@example.com" })
+   *
+   * @example
+   * // Multiple inserts
+   * table.insert([
+   *   { name: "Alice", email: "alice@example.com" },
+   *   { name: "Bob", email: "bob@example.com" }
+   * ])
+   */
+  insert(data: Partial<T> | Partial<T>[], options?: InsertOptions): InsertResult {
+    const rows = Array.isArray(data) ? data : [data]
+
+    if (rows.length === 0) {
+      throw new Error("insert: data cannot be empty")
+    }
+
+    // Transform rows (serialize JSON, etc.)
+    const transformedRows = rows.map((row) => this.transformRowToDb(row))
+
+    // Extract columns from all rows
+    const columns = this.extractColumns(transformedRows)
+
     if (columns.length === 0) {
       throw new Error("insert: no columns to insert")
     }
 
-    // Build INSERT statement with conflict resolution
-    let insertType = "INSERT"
-    if (options?.orIgnore) insertType = "INSERT OR IGNORE"
-    else if (options?.orReplace) insertType = "INSERT OR REPLACE"
-    else if (options?.orAbort) insertType = "INSERT OR ABORT"
-    else if (options?.orFail) insertType = "INSERT OR FAIL"
-    else if (options?.orRollback) insertType = "INSERT OR ROLLBACK"
+    // Build and execute query
+    const query = this.buildInsertQuery(columns, options)
 
-    const quotedColumns = columns.map((col) => this.quoteIdentifier(col)).join(", ")
-    const placeholders = columns.map(() => "?").join(", ")
-
-    const query = `${insertType} INTO ${this.quoteIdentifier(this.getTableName())} (${quotedColumns}) VALUES (${placeholders})`
-    const stmt = this.getDb().prepare(query)
+    this.insertLog.query("INSERT", query)
 
     let totalChanges = 0
     let lastInsertId = 0
 
-    // Execute for each row
     for (const row of transformedRows) {
-      const values = columns.map(
-        (col) => row[col as keyof typeof row] ?? null
-      ) as SQLQueryBindings[]
-      const result = stmt.run(...values)
+      const result = this.executeInsert(query, row, columns)
       totalChanges += result.changes
-      if (result.lastInsertRowid) {
-        lastInsertId = Number(result.lastInsertRowid)
+      if (result.insertId > 0) {
+        lastInsertId = result.insertId
       }
     }
 
-    const result = {
+    this.insertLog.result("INSERT", totalChanges)
+    this.reset()
+
+    return {
       insertId: lastInsertId,
       changes: totalChanges,
     }
-    this.reset()
-    return result
   }
 
   /**
-   * Insert with OR IGNORE conflict resolution.
-   * Convenience method equivalent to insert(data, { orIgnore: true })
+   * Insert with OR IGNORE conflict resolution
    *
-   * @param data - Single object or array of objects to insert
-   * @returns Insert result with insertId and changes count
+   * Ignores the insert if it would violate a constraint
    */
   insertOrIgnore(data: Partial<T> | Partial<T>[]): InsertResult {
     return this.insert(data, { orIgnore: true })
   }
 
   /**
-   * Insert with OR REPLACE conflict resolution.
-   * Convenience method equivalent to insert(data, { orReplace: true })
+   * Insert with OR REPLACE conflict resolution
    *
-   * @param data - Single object or array of objects to insert
-   * @returns Insert result with insertId and changes count
+   * Replaces the existing row if a constraint is violated
    */
   insertOrReplace(data: Partial<T> | Partial<T>[]): InsertResult {
     return this.insert(data, { orReplace: true })
   }
 
   /**
-   * Insert with OR ABORT conflict resolution.
-   * This is the default behavior but provided for explicit usage.
+   * Insert with OR ABORT conflict resolution
    *
-   * @param data - Single object or array of objects to insert
-   * @returns Insert result with insertId and changes count
+   * Aborts the current SQL statement on constraint violation (default behavior)
    */
   insertOrAbort(data: Partial<T> | Partial<T>[]): InsertResult {
     return this.insert(data, { orAbort: true })
   }
 
   /**
-   * Insert with OR FAIL conflict resolution.
+   * Insert with OR FAIL conflict resolution
    *
-   * @param data - Single object or array of objects to insert
-   * @returns Insert result with insertId and changes count
+   * Fails the current SQL statement on constraint violation
    */
   insertOrFail(data: Partial<T> | Partial<T>[]): InsertResult {
     return this.insert(data, { orFail: true })
   }
 
   /**
-   * Insert with OR ROLLBACK conflict resolution.
+   * Insert with OR ROLLBACK conflict resolution
    *
-   * @param data - Single object or array of objects to insert
-   * @returns Insert result with insertId and changes count
+   * Rolls back the entire transaction on constraint violation
    */
   insertOrRollback(data: Partial<T> | Partial<T>[]): InsertResult {
     return this.insert(data, { orRollback: true })
   }
 
   /**
-   * Insert and get the inserted row back.
-   * This is useful when you want to see the row with auto-generated fields.
+   * Insert a row and return the inserted row with all fields
    *
-   * @param data - Single object to insert (bulk not supported for this method)
-   * @param options - Insert options
-   * @returns The inserted row with all fields, or null if insertion failed
+   * Useful when you want to see auto-generated values (ID, timestamps, etc.)
+   *
+   * @example
+   * const user = table.insertAndGet({ name: "Alice", email: "alice@example.com" })
+   * console.log(user.id) // Auto-generated ID
    */
   insertAndGet(data: Partial<T>, options?: InsertOptions): T | null {
     const result = this.insert(data, options)
 
-    if (result.changes === 0) {
+    if (result.changes === 0 || result.insertId <= 0) {
       return null
     }
 
-    // If we have an insertId, try to fetch the inserted row
-    if (result.insertId > 0) {
-      try {
-        const row = this.getDb()
-          .prepare(`SELECT * FROM ${this.quoteIdentifier(this.getTableName())} WHERE rowid = ?`)
-          .get(result.insertId) as T | null
-        return row ? this.transformRowFromDb(row) : null
-      } catch {
-        // If fetching by rowid fails, return null
-        return null
-      }
-    }
+    // Fetch the inserted row by rowid
+    try {
+      const query = `SELECT * FROM ${quoteIdentifier(this.getTableName())} WHERE rowid = ?`
+      const row = this.getDb().prepare(query).get(result.insertId) as T | null
 
-    return null
+      return row ? this.transformRowFromDb(row) : null
+    } catch {
+      // If fetching by rowid fails (e.g., WITHOUT ROWID table), return null
+      return null
+    }
   }
 
   /**
-   * Batch insert with transaction support.
-   * This method wraps multiple inserts in a transaction for better performance
+   * Batch insert with transaction support
+   *
+   * Wraps multiple inserts in a transaction for better performance
    * and atomicity when inserting large amounts of data.
    *
-   * @param rows - Array of objects to insert
-   * @param options - Insert options
-   * @returns Insert result with total changes
+   * @example
+   * table.insertBatch([
+   *   { name: "User 1", email: "user1@example.com" },
+   *   { name: "User 2", email: "user2@example.com" },
+   *   { name: "User 3", email: "user3@example.com" },
+   * ])
    */
   insertBatch(rows: Partial<T>[], options?: InsertOptions): InsertResult {
     if (!Array.isArray(rows) || rows.length === 0) {
@@ -187,44 +237,30 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
 
     // Use a transaction for batch operations
     const transaction = db.transaction((rowsToInsert: Partial<T>[]) => {
-      let totalChanges = 0
-      let lastInsertId = 0
-
-      // Transform rows to handle JSON serialization
+      // Transform all rows
       const transformedRows = rowsToInsert.map((row) => this.transformRowToDb(row))
 
-      // Get all unique columns from all rows
-      const allColumns = new Set<string>()
-      for (const row of transformedRows) {
-        for (const col of Object.keys(row)) {
-          allColumns.add(col)
-        }
-      }
+      // Extract columns from all rows
+      const columns = this.extractColumns(transformedRows)
 
-      const columns = Array.from(allColumns)
       if (columns.length === 0) {
         throw new Error("insertBatch: no columns to insert")
       }
 
-      // Build INSERT statement with conflict resolution
-      let insertType = "INSERT"
-      if (options?.orIgnore) insertType = "INSERT OR IGNORE"
-      else if (options?.orReplace) insertType = "INSERT OR REPLACE"
-      else if (options?.orAbort) insertType = "INSERT OR ABORT"
-      else if (options?.orFail) insertType = "INSERT OR FAIL"
-      else if (options?.orRollback) insertType = "INSERT OR ROLLBACK"
-
-      const quotedColumns = columns.map((col) => this.quoteIdentifier(col)).join(", ")
-      const placeholders = columns.map(() => "?").join(", ")
-
-      const query = `${insertType} INTO ${this.quoteIdentifier(this.getTableName())} (${quotedColumns}) VALUES (${placeholders})`
+      // Build query and prepare statement
+      const query = this.buildInsertQuery(columns, options)
       const stmt = db.prepare(query)
 
+      this.insertLog.query("INSERT BATCH", query)
+
+      let totalChanges = 0
+      let lastInsertId = 0
+
+      // Execute for each row
       for (const row of transformedRows) {
-        const values = columns.map(
-          (col) => row[col as keyof typeof row] ?? null
-        ) as SQLQueryBindings[]
+        const values = columns.map((col) => row[col] ?? null) as SQLQueryBindings[]
         const result = stmt.run(...values)
+
         totalChanges += result.changes
         if (result.lastInsertRowid) {
           lastInsertId = Number(result.lastInsertRowid)
@@ -235,7 +271,10 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
     })
 
     const result = transaction(rows)
+
+    this.insertLog.result("INSERT BATCH", result.changes)
     this.reset()
+
     return result
   }
 }

@@ -16,7 +16,6 @@ const StatusRoutes = new Elysia({
   },
 }).get("/status", async () => {
   const services: ServiceStatus[] = []
-
   services.push({
     name: "Database",
     initialized: !!DockStatDB._sqliteWrapper,

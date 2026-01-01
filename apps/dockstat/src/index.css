@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@import "@dockstat/ui/css";
+
+body {
+  font-family:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  line-height: 1.5;
+}
+
+/*
+    DO NOT REMOVE THIS COMMENT
+    This line is crucial for correct theme usage
+*/
+
+@source "../../../packages/ui/src/**/*.{js,jsx,ts,tsx}";

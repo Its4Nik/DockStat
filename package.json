@@ -3,9 +3,10 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "docker-up": "docker compose -f up 'docker-compose.dev.yaml' -d --remove-orphans",
+    "docker-up": "docker compose -f 'docker-compose.dev.yaml' up -d --remove-orphans",
     "docker-up:fg": "docker compose -f docker-compose.dev.yaml up --remove-orphans",
     "dev": "turbo run dev",
+    "dev:dockstat": "bun run docker-up && bun run dev --filter=@dockstat/frontend --filter=@dockstat/api ",
 
     "lint": "turbo run lint",
     "lint:gh": "turbo run lint -- --reporter=github",

@@ -375,13 +375,14 @@ class PluginHandler {
     const loadedPluginsHooksMap = new Map<number, Partial<EVENTS>>()
 
     for (const p of loadedPlugins) {
-      if (p.events) {
-        this.logger.info(`Caching Hooks for Plugin ${p.id}`)
+      const hookCount = Object.keys(p.events || {}).length
+      if (hookCount > 0 && p.events) {
+        this.logger.info(`Caching Hooks (${hookCount}) for Plugin ${p.id}`)
         loadedPluginsHooksMap.set(Number(p.id), p.events)
       }
     }
 
-    this.logger.info(`Cached ${loadedPluginsHooksMap.size} Hooks`)
+    this.logger.info(`Cached ${loadedPluginsHooksMap.size} Plugin's Hooks`)
     return loadedPluginsHooksMap
   }
 

@@ -1,17 +1,19 @@
 {
   "name": "@dockstat/sqlite-wrapper",
-  "version": "1.2.8",
+  "version": "1.3.0",
   "description": "A TypeScript wrapper around bun:sqlite with type-safe query building",
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
   "exports": {
     ".": "./index.ts",
-    "./types": "./types.ts"
+    "./types": "./types.ts",
+    "./utils": "./utils/index.ts"
   },
   "files": [
     "index.ts",
     "query-builder/**/*",
+    "utils/**/*",
     "README.md",
     "types.ts"
   ],
@@ -21,7 +23,7 @@
     "lint:fix": "biome lint --write .",
     "lint:gh": "turbo run lint -- --reporter=github",
     "check-types": "bunx tsc --noEmit",
-    "test": "bun run test.ts"
+    "test": "DOCKSTAT_LOGGER_IGNORE_MESSAGES='Logger Status: active - ignoring messages:' bun test"
   },
   "keywords": [
     "sqlite",
@@ -46,7 +48,7 @@
     "bun": ">=1.0.0"
   },
   "dependencies": {
-    "@dockstat/logger": "1.0.1"
+    "@dockstat/logger": "workspace:*"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"

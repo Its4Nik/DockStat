@@ -4,7 +4,7 @@ import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DOCKER, EVENTS } from "@dockstat/typings"
 import type { buildMessageFromProxyRes } from "@dockstat/typings/types"
 import { truncate, worker as workerUtils } from "@dockstat/utils"
-import type { PoolMetrics, WorkerMetrics } from "../types"
+import { generateRequestId, type PoolMetrics, type WorkerMetrics } from "../types"
 import type {
   DBType,
   DockerClientTable,
@@ -366,6 +366,10 @@ export class DockerClientManagerCore {
       throw new Error(`Worker ${clientId} not initialized`)
     }
 
+    // Generate a unique request ID to correlate request with response
+    const requestId = generateRequestId()
+    const requestWithId = { ...request, requestId }
+
     return new Promise<T>((resolve, reject) => {
       wrapper.busy = true
       wrapper.lastUsed = Date.now()
@@ -387,6 +391,11 @@ export class DockerClientManagerCore {
 
         // Skip proxy event messages - these are handled by attachEventListener
         if (isProxyEventEnvelope(raw)) {
+          return
+        }
+
+        // Skip messages that don't match our requestId
+        if (raw.requestId !== requestId) {
           return
         }
 
@@ -446,7 +455,7 @@ export class DockerClientManagerCore {
       wrapper.worker.addEventListener("message", messageHandler)
 
       try {
-        wrapper.worker.postMessage(request)
+        wrapper.worker.postMessage(requestWithId)
       } catch (err) {
         clearTimeout(timeoutId)
         finalize()
@@ -552,38 +561,23 @@ export class DockerClientManagerCore {
   public attachEventListener(wrapper: WorkerWrapper): void {
     if (wrapper.messageListener) return
 
-    const { worker, clientId, clientName } = wrapper
+    const { worker } = wrapper
+
+    const tryBuildFromProxy = (payload: unknown): EventMessage<keyof EVENTS> | null => {
+      const message = workerUtils.buildMessage.tryBuildMessageFromProxy(payload)
+      if (!message) return null
+
+      return message
+    }
 
     const listener = (event: MessageEvent) => {
       const payload = event.data
 
-      let message: EventMessage<keyof EVENTS>
+      const message: EventMessage<keyof EVENTS> | null = looksLikeEventMessage(payload)
+        ? payload
+        : tryBuildFromProxy(payload)
 
-      if (isProxyEventEnvelope(payload)) {
-        try {
-          message = workerUtils.buildMessage.buildMessageFromProxy(payload) as EventMessage
-        } catch (err) {
-          this.logger.debug(
-            `Failed to build message from proxy for worker ${clientId} (${clientName}): ${String(
-              err
-            )}`
-          )
-          return
-        }
-      } else if (looksLikeEventMessage(payload)) {
-        message = payload
-      } else {
-        try {
-          message = workerUtils.buildMessage.buildMessageFromProxy(payload) as EventMessage
-        } catch {
-          this.logger.debug(
-            `Received unknown message format from worker ${clientId} (${clientName}): ${JSON.stringify(
-              payload
-            )}`
-          )
-          return
-        }
-      }
+      if (!message) return
 
       this.triggerHooks(message)
     }
@@ -611,8 +605,6 @@ export class DockerClientManagerCore {
 
   readonly triggerHooks = <K extends keyof EVENTS>(message: buildMessageFromProxyRes<K>) => {
     if (!message.type) {
-      this.logger.warn(`No message type! ${JSON.stringify(message)}`)
-      this.logger.debug("Assuming status response")
       return
     }
 
@@ -677,7 +669,14 @@ export class DockerClientManagerCore {
     return false
   }
 
-  public async getAllHosts(): Promise<Array<{ name: string; id: number; clientId: number }>> {
+  public async getAllHosts(): Promise<
+    {
+      name: string
+      id: number
+      clientId: number
+      reachable: boolean
+    }[]
+  > {
     // Default behavior: no hosts known at core level. HostsMixin overrides this.
     return []
   }
@@ -737,7 +736,7 @@ export class DockerClientManagerCore {
       ...(await this.getPoolMetrics()),
       hosts,
     }
-    this.logger.info(`gathered status: ${JSON.stringify(dat)}`)
+    this.logger.info(`gathered status: ${truncate(JSON.stringify(dat), 100)}`)
     return dat
   }
 

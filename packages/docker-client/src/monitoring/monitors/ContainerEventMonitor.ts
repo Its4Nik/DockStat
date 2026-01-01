@@ -53,11 +53,12 @@ export class ContainerEventMonitor {
   private async captureInitialStates(): Promise<void> {
     const promises = this.hosts.map(async (host) => {
       try {
-        const containers = await this.getContainersForHost(host.docker_client_id)
-        this.lastContainerStates.set(`host-${host.id}`, containers)
+        const hostId = host.id ?? 0
+        const containers = await this.getContainersForHost(hostId)
+        this.lastContainerStates.set(`host-${hostId}`, containers)
       } catch (error) {
         proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
-          hostId: host.id,
+          hostId: host.id ?? 0,
         })
       }
     })
@@ -68,13 +69,14 @@ export class ContainerEventMonitor {
     this.logger.debug(`Checking for changes`)
     const promises = this.hosts.map(async (host) => {
       try {
-        const current = await this.getContainersForHost(host.docker_client_id)
-        const last = this.lastContainerStates.get(`host-${host.id}`) || []
-        this.detectChanges(host.docker_client_id, last, current)
-        this.lastContainerStates.set(`host-${host.id}`, current)
+        const hostId = host.id ?? 0
+        const current = await this.getContainersForHost(hostId)
+        const last = this.lastContainerStates.get(`host-${hostId}`) || []
+        this.detectChanges(hostId, last, current)
+        this.lastContainerStates.set(`host-${hostId}`, current)
       } catch (error) {
         proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
-          hostId: host.id,
+          hostId: host.id ?? 0,
         })
       }
     })
@@ -129,7 +131,10 @@ export class ContainerEventMonitor {
   private async getContainersForHost(hostId: number): Promise<DOCKER.ContainerInfo[]> {
     const docker = this.dockerInstances.get(hostId)
     if (!docker) {
-      throw new Error(`No Docker instance found for host ${hostId}`)
+      const availableKeys = Array.from(this.dockerInstances.keys())
+      throw new Error(
+        `No Docker instance found for host ${hostId}. Available instances: ${availableKeys.join(", ")}`
+      )
     }
     const containers = await withRetry(
       () => docker.listContainers({ all: true }),

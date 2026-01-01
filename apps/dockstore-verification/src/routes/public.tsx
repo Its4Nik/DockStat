@@ -1,12 +1,11 @@
-import type { DB } from "@dockstat/sqlite-wrapper"
 import { Html } from "@elysiajs/html"
 import { Elysia, t } from "elysia"
-import { getPluginsTable, getPluginVersionsTable, getVerificationsTable } from "../db"
+import { db, pluginsTable, pluginVersionsTable, verificationsTable } from "../db"
 import type { PluginVerificationView } from "../db/types"
 import {
   PublicDashboard,
-  PublicPluginList,
   type PublicDashboardStats,
+  PublicPluginList,
 } from "../views/PublicDashboard"
 
 const _ = Html
@@ -14,13 +13,9 @@ const _ = Html
 /**
  * Get public dashboard statistics (no sensitive data)
  */
-function getPublicStats(db: DB): PublicDashboardStats {
-  const pluginsTable = getPluginsTable(db)
-  const versionsTable = getPluginVersionsTable(db)
-  const verificationsTable = getVerificationsTable(db)
-
+function getPublicStats(): PublicDashboardStats {
   const totalPlugins = pluginsTable.select(["id"]).all().length
-  const totalVersions = versionsTable.select(["id"]).all().length
+  const totalVersions = pluginVersionsTable.select(["id"]).all().length
 
   // Get verified versions count
   const verifiedVersions = verificationsTable.select(["id"]).where({ verified: true }).all().length
@@ -63,7 +58,7 @@ function getPublicStats(db: DB): PublicDashboardStats {
 /**
  * Get plugins with verification status for public view
  */
-function getPublicPlugins(db: DB, filter?: string, search?: string): PluginVerificationView[] {
+function getPublicPlugins(filter?: string, search?: string): PluginVerificationView[] {
   let query = `
     SELECT
       p.id as plugin_id,
@@ -117,7 +112,10 @@ function getPublicPlugins(db: DB, filter?: string, search?: string): PluginVerif
 
   query += " ORDER BY p.name ASC, pv.created_at DESC"
 
-  const results = db.getDb().prepare(query).all(...params) as PluginVerificationView[]
+  const results = db
+    .getDb()
+    .prepare(query)
+    .all(...params) as PluginVerificationView[]
 
   // Parse JSON tags
   return results.map((r) => ({
@@ -128,114 +126,112 @@ function getPublicPlugins(db: DB, filter?: string, search?: string): PluginVerif
 }
 
 /**
- * Create public routes (no authentication required)
+ * Public routes (no authentication required)
  */
-export function createPublicRoutes(db: DB) {
-  return (
-    new Elysia({ prefix: "/public" })
-      // Public dashboard page
-      .get("/", () => {
-        const stats = getPublicStats(db)
-        const plugins = getPublicPlugins(db)
+const publicRoutes = new Elysia({ prefix: "/public" })
+  // Public dashboard page
+  .get("/", () => {
+    const stats = getPublicStats()
+    const plugins = getPublicPlugins()
 
-        return <PublicDashboard stats={stats} plugins={plugins} />
-      })
+    return <PublicDashboard stats={stats} plugins={plugins} />
+  })
 
-      // Public plugin list (for HTMX partial updates)
-      .get(
-        "/plugins",
-        ({ query, headers }) => {
-          const filter = query.filter as string | undefined
-          const search = query.search as string | undefined
+  // Public plugin list (for HTMX partial updates)
+  .get(
+    "/plugins",
+    ({ query, headers }) => {
+      const filter = query.filter as string | undefined
+      const search = query.search as string | undefined
 
-          const plugins = getPublicPlugins(db, filter === "all" ? undefined : filter, search)
+      const plugins = getPublicPlugins(filter === "all" ? undefined : filter, search)
 
-          // Group plugins by name to show latest version of each
-          const latestPlugins = plugins.reduce(
-            (acc, plugin) => {
-              if (!acc[plugin.plugin_name]) {
-                acc[plugin.plugin_name] = plugin
-              }
-              return acc
-            },
-            {} as Record<string, PluginVerificationView>
-          )
-
-          const pluginList = Object.values(latestPlugins)
-
-          // Check if this is an HTMX request
-          const isHtmx = headers["hx-request"] === "true"
-
-          if (isHtmx) {
-            // Return just the plugin list for HTMX updates
-            return <PublicPluginList plugins={pluginList} />
+      // Group plugins by name to show latest version of each
+      const latestPlugins = plugins.reduce(
+        (acc, plugin) => {
+          if (!acc[plugin.plugin_name]) {
+            acc[plugin.plugin_name] = plugin
           }
-
-          // Full page response
-          const stats = getPublicStats(db)
-          return <PublicDashboard stats={stats} plugins={plugins} />
+          return acc
         },
-        {
-          query: t.Object({
-            filter: t.Optional(t.String()),
-            search: t.Optional(t.String()),
-          }),
-        }
+        {} as Record<string, PluginVerificationView>
       )
 
-      // Public API endpoint for plugin list
-      .get(
-        "/api/plugins",
-        ({ query }) => {
-          const filter = query.filter as string | undefined
-          const search = query.search as string | undefined
+      const pluginList = Object.values(latestPlugins)
 
-          const plugins = getPublicPlugins(db, filter === "all" ? undefined : filter, search)
+      // Check if this is an HTMX request
+      const isHtmx = headers["hx-request"] === "true"
 
-          // Group plugins by name to show latest version of each
-          const latestPlugins = plugins.reduce(
-            (acc, plugin) => {
-              if (!acc[plugin.plugin_name]) {
-                acc[plugin.plugin_name] = plugin
-              }
-              return acc
-            },
-            {} as Record<string, PluginVerificationView>
-          )
+      if (isHtmx) {
+        // Return just the plugin list for HTMX updates
+        return <PublicPluginList plugins={pluginList} />
+      }
 
-          return {
-            plugins: Object.values(latestPlugins).map((p) => ({
-              name: p.plugin_name,
-              version: p.version,
-              description: p.description,
-              author: p.author_name,
-              hash: p.version_hash,
-              verified: p.verified,
-              securityStatus: p.security_status,
-              verifiedBy: p.verified_by,
-              verifiedAt: p.verified_at,
-            })),
-            total: Object.keys(latestPlugins).length,
-          }
-        },
-        {
-          query: t.Object({
-            filter: t.Optional(t.String()),
-            search: t.Optional(t.String()),
-          }),
-          detail: {
-            summary: "List Plugins (Public)",
-            description:
-              "Get a list of all plugins with their verification status. This endpoint is public and does not require authentication.",
-            tags: ["Public"],
-          },
-        }
-      )
-
-      // Public API endpoint for stats
-      .get("/api/stats", () => {
-        const stats = getPublicStats(db)
-        return stats
-      })
+      // Full page response
+      const stats = getPublicStats()
+      return <PublicDashboard stats={stats} plugins={plugins} />
+    },
+    {
+      query: t.Object({
+        filter: t.Optional(t.String()),
+        search: t.Optional(t.String()),
+      }),
+    }
   )
-}
+
+  // Public API endpoint for plugin list
+  .get(
+    "/api/plugins",
+    ({ query }) => {
+      const filter = query.filter as string | undefined
+      const search = query.search as string | undefined
+
+      const plugins = getPublicPlugins(filter === "all" ? undefined : filter, search)
+
+      // Group plugins by name to show latest version of each
+      const latestPlugins = plugins.reduce(
+        (acc, plugin) => {
+          if (!acc[plugin.plugin_name]) {
+            acc[plugin.plugin_name] = plugin
+          }
+          return acc
+        },
+        {} as Record<string, PluginVerificationView>
+      )
+
+      return {
+        plugins: Object.values(latestPlugins).map((p) => ({
+          name: p.plugin_name,
+          version: p.version,
+          description: p.description,
+          author: p.author_name,
+          hash: p.version_hash,
+          verified: p.verified,
+          securityStatus: p.security_status,
+          verifiedBy: p.verified_by,
+          verifiedAt: p.verified_at,
+        })),
+        total: Object.keys(latestPlugins).length,
+      }
+    },
+    {
+      query: t.Object({
+        filter: t.Optional(t.String()),
+        search: t.Optional(t.String()),
+      }),
+      detail: {
+        summary: "List Plugins (Public)",
+        description:
+          "Get a list of all plugins with their verification status. This endpoint is public and does not require authentication.",
+        tags: ["Public"],
+      },
+    }
+  )
+
+  // Public API endpoint for stats
+  .get("/api/stats", () => {
+    const stats = getPublicStats()
+    return stats
+  })
+
+export default publicRoutes

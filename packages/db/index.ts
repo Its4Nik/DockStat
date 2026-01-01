@@ -1,11 +1,12 @@
 import Logger from "@dockstat/logger"
 import { addLoggerParents, column, DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
-import type { DockStatConfigTableType } from "@dockstat/typings/types"
-import { defaultConfig } from "./defaults"
+import type { DockStatConfigTableType, RepoType } from "@dockstat/typings/types"
+import { defaultConfig, defaultRepositories } from "./defaults"
 
 class DockStatDB {
   protected db: DB
   private config_table: QueryBuilder<DockStatConfigTableType>
+  private repositories_table: QueryBuilder<RepoType>
   private metrics_table
   private logger: Logger
 
@@ -33,11 +34,11 @@ class DockStatDB {
           default_themes: column.json({ notNull: true }),
           tables: column.json({ notNull: true }),
           tls_certs_and_keys: column.json({ notNull: true }),
-          registered_repos: column.json({ notNull: true }),
           version: column.text({ notNull: true }),
           hotkeys: column.json(),
           nav_links: column.json(),
           autostart_handlers_monitoring: column.boolean({ default: true }),
+          addtionalSettings: column.json(),
         },
         {
           constraints: {
@@ -46,18 +47,34 @@ class DockStatDB {
           ifNotExists: true,
           parser: {
             JSON: [
-              "registered_repos",
               "default_themes",
               "tables",
               "tls_certs_and_keys",
               "hotkeys",
               "nav_links",
+              "addtionalSettings",
             ],
             BOOLEAN: ["allow_untrusted_repo", "autostart_handlers_monitoring"],
           },
         }
       )
       this.logger.debug("Config table successfully initialized")
+
+      this.repositories_table = this.db.createTable<RepoType>(
+        "repositories",
+        {
+          id: column.id(),
+          name: column.text({ notNull: true }),
+          type: column.text({ notNull: true }),
+          source: column.text({ notNull: true }),
+          policy: column.text({ notNull: true, default: "relaxed" }),
+          verification_api: column.text({ notNull: false }),
+        },
+        {
+          ifNotExists: true,
+        }
+      )
+      this.logger.debug("Repositories table successfully initialized")
 
       this.metrics_table = this.db.createTable(
         "metrics",
@@ -101,7 +118,7 @@ class DockStatDB {
     this.logger.debug("Checking if database needs initialization with defaults")
 
     try {
-      this.config_table.where({ id: 0 }).insertOrFail(defaultConfig)
+      this.config_table.where({ id: 0 }).insertOrIgnore(defaultConfig)
       this.logger.debug("Default config inserted")
     } catch (error: unknown) {
       this.logger.error(`Failed to initialize defaults: ${error}`)
@@ -145,6 +162,28 @@ class DockStatDB {
         }
       }
     }
+
+    // Initialize default repositories if none exist
+    this.initializeDefaultRepositories()
+  }
+
+  private initializeDefaultRepositories(): void {
+    this.logger.debug("Checking if default repositories need to be initialized")
+
+    const existingRepos = this.repositories_table.select(["*"]).all()
+    if (existingRepos.length === 0) {
+      this.logger.info("No repositories found, inserting defaults")
+      for (const repo of defaultRepositories) {
+        try {
+          this.repositories_table.insert(repo)
+          this.logger.debug(`Inserted default repository: ${repo.name}`)
+        } catch (error) {
+          this.logger.error(`Failed to insert default repository ${repo.name}: ${error}`)
+        }
+      }
+    } else {
+      this.logger.debug(`Found ${existingRepos.length} existing repositories`)
+    }
   }
 
   /**
@@ -157,6 +196,10 @@ class DockStatDB {
 
   public getConfigTable() {
     return this.config_table
+  }
+
+  public getRepositoriesTable() {
+    return this.repositories_table
   }
 
   public getMetricsTable() {

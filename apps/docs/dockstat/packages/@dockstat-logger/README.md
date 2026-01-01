@@ -3,7 +3,7 @@ id: e913e6bd-3f7c-485f-812d-3e626b4f6b5b
 title: "@dockstat/logger"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: bbcefaa2-6bd4-46e8-ae4b-a6b823593e67
-updatedAt: 2025-12-29T20:53:29.526Z
+updatedAt: 2026-01-01T15:02:01.986Z
 urlId: zb1s366Lti
 ---
 

@@ -1,5 +1,5 @@
 import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises"
-import { join } from "node:path"
+import { join, resolve } from "node:path"
 import { watch } from "chokidar"
 import fm from "front-matter"
 import YAML from "yaml"
@@ -14,9 +14,22 @@ interface DocumentNode {
 interface SyncTableRow {
   Document: string
   Collection: string
-  "Local Date": string
+  "Local mtime": string
+  Frontmatter: string
   "Remote Date": string
   Status: string
+}
+
+function parseToDate(value: unknown): Date | null {
+  if (value === null || value === undefined) return null
+  if (value instanceof Date) return value
+  if (typeof value === "number") return new Date(value)
+  if (typeof value === "string") {
+    const t = Date.parse(value)
+    if (Number.isNaN(t)) return null
+    return new Date(t)
+  }
+  return null
 }
 
 export class OutlineSync {
@@ -56,9 +69,6 @@ export class OutlineSync {
     console.log(`[trace ${timestamp}] ${message}`, JSON.stringify(meta, null, 2))
   }
 
-  /**
-   * Format a date for display in the comparison table
-   */
   private formatDate(date: Date): string {
     return date.toLocaleString("en-US", {
       month: "short",
@@ -70,12 +80,9 @@ export class OutlineSync {
     })
   }
 
-  /**
-   * Truncate a string for table display
-   */
   private truncate(str: string, maxLength: number): string {
     if (str.length <= maxLength) return str
-    return str.slice(0, maxLength - 3) + "..."
+    return `${str.slice(0, maxLength - 3)}...`
   }
 
   private sanitizePath(name: string): string {
@@ -88,7 +95,6 @@ export class OutlineSync {
   }
 
   private shouldIncludeCollection(collectionId: string, collectionName: string): boolean {
-    // If include list is specified, only include those collections
     if (this.includeCollections && this.includeCollections.length > 0) {
       const included = this.includeCollections.some(
         (c) => c === collectionId || c.toLowerCase() === collectionName.toLowerCase()
@@ -102,7 +108,6 @@ export class OutlineSync {
       return included
     }
 
-    // If exclude list is specified, exclude those collections
     if (this.excludeCollections && this.excludeCollections.length > 0) {
       const excluded = this.excludeCollections.some(
         (c) => c === collectionId || c.toLowerCase() === collectionName.toLowerCase()
@@ -117,7 +122,6 @@ export class OutlineSync {
       return !excluded
     }
 
-    // By default, include all collections
     this.trace(`shouldIncludeCollection (no filter): "${collectionName}" (${collectionId}) -> true`)
     return true
   }
@@ -127,7 +131,6 @@ export class OutlineSync {
     const docMap = new Map<string, DocumentNode>()
     const roots: DocumentNode[] = []
 
-    // Create nodes for all documents
     for (const doc of documents) {
       docMap.set(doc.id, { document: doc, children: [] })
       this.trace(`buildDocumentTree: created node for "${doc.title}" (${doc.id})`, {
@@ -135,7 +138,6 @@ export class OutlineSync {
       })
     }
 
-    // Build tree structure
     for (const doc of documents) {
       const node = docMap.get(doc.id)
 
@@ -145,7 +147,6 @@ export class OutlineSync {
       }
 
       if (doc.parentDocumentId && docMap.has(doc.parentDocumentId)) {
-        // Add to parent's children
         const parent = docMap.get(doc.parentDocumentId)
         if (parent) {
           parent.children.push(node)
@@ -154,7 +155,6 @@ export class OutlineSync {
           )
         }
       } else {
-        // Root level document
         roots.push(node)
         this.trace(`buildDocumentTree: "${doc.title}" is a root document`)
       }
@@ -164,11 +164,6 @@ export class OutlineSync {
     return roots
   }
 
-  /**
-   * Returns { dirPath, filePath } for a document.
-   * - If customPath ends with .md, filePath is the custom path and dirPath is its directory.
-   * - Otherwise, filePath is dirPath + "/README.md".
-   */
   private getDocumentPath(
     doc: Document,
     collectionName: string,
@@ -180,7 +175,6 @@ export class OutlineSync {
       hasCustomPath: doc.id in this.customPaths,
     })
 
-    // Check for custom path first
     const customPath = this.customPaths[doc.id]
 
     if (customPath) {
@@ -192,7 +186,6 @@ export class OutlineSync {
       })
 
       let resolvedPath: string
-      // Handle relative paths that go outside outputDir
       if (customPath.startsWith("..")) {
         resolvedPath = join(process.cwd(), customPath)
         this.trace(`getDocumentPath: resolved relative custom path`, {
@@ -209,7 +202,6 @@ export class OutlineSync {
         })
       }
 
-      // If custom path ends with .md, treat it as the file path directly
       if (endsWithMd) {
         const dirPath = join(resolvedPath, "..")
         this.trace(`getDocumentPath: custom path is a file path`, {
@@ -219,7 +211,6 @@ export class OutlineSync {
         return { dirPath, filePath: resolvedPath, isCustomPath: true }
       }
 
-      // Otherwise, treat it as a directory and append README.md
       return {
         dirPath: resolvedPath,
         filePath: join(resolvedPath, "README.md"),
@@ -237,15 +228,7 @@ export class OutlineSync {
       isRootLevel: !parentPath,
     })
 
-    // Build path based on hierarchy
-    // Avoid creating a duplicate nested folder when the document title equals the collection name.
-    // Example: collection "DockStat" with a root doc titled "DockStat" should produce:
-    //   ./dockstat/README.md
-    // not:
-    //   ./dockstat/dockstat/README.md
     if (!parentPath) {
-      // If root-level and the sanitized document name equals the collection folder name,
-      // place the README directly inside the collection folder.
       if (docPath === collectionPath) {
         const resolvedPath = join(this.outputDir, collectionPath)
         this.trace(
@@ -262,7 +245,6 @@ export class OutlineSync {
           isCustomPath: false,
         }
       }
-      // Root level document with a different name -> subfolder under collection
       const resolvedPath = join(this.outputDir, collectionPath, docPath)
       this.trace(`getDocumentPath: root doc with different name -> subfolder`, {
         resolvedPath,
@@ -273,7 +255,6 @@ export class OutlineSync {
         isCustomPath: false,
       }
     } else {
-      // Nested document
       const resolvedPath = join(parentPath, docPath)
       this.trace(`getDocumentPath: nested doc -> child folder`, {
         parentPath,
@@ -294,7 +275,8 @@ export class OutlineSync {
       title: doc.title,
       collectionId: doc.collectionId,
       parentDocumentId: doc.parentDocumentId,
-      updatedAt: doc.updatedAt,
+      // Normalize to ISO string to avoid parser/timezone differences
+      updatedAt: new Date(doc.updatedAt).toISOString(),
       urlId: doc.urlId,
     }
     this.trace(`createFrontMatter: generated metadata for "${doc.title}"`, metadata)
@@ -317,7 +299,6 @@ export class OutlineSync {
       childrenCount: node.children.length,
     })
 
-    // Get full document content
     this.trace(`syncDocumentNode: fetching full document content for "${doc.title}"`)
     const fullDoc = await this.client.getDocument(doc.id)
     this.trace(`syncDocumentNode: received document content`, {
@@ -339,7 +320,6 @@ export class OutlineSync {
       isCustomPath,
     })
 
-    // Create directory and write document
     await mkdir(dirPath, { recursive: true })
     const content = this.createFrontMatter(fullDoc) + fullDoc.text
     await writeFile(filePath, content, "utf-8")
@@ -349,18 +329,29 @@ export class OutlineSync {
       contentLength: content.length,
     })
 
-    const remoteDate = new Date(fullDoc.updatedAt)
+    const remoteDate = parseToDate(fullDoc.updatedAt) || new Date()
 
-    // Add to sync table
+    let fileMtime: Date = new Date()
+    try {
+      const fsStat = await stat(filePath)
+      fileMtime = fsStat.mtime
+    } catch (err) {
+      this.trace("syncDocumentNode: failed to stat written file", { filePath, error: String(err) })
+    }
+
+    // Record both the filesystem mtime and the frontmatter (remote) timestamp so it's explicit
     this.syncTableData.push({
       Document: this.truncate(fullDoc.title, 30),
       Collection: this.truncate(collectionName, 15),
-      "Local Date": this.formatDate(new Date()),
+      "Local mtime": this.formatDate(fileMtime),
+      Frontmatter: this.formatDate(remoteDate),
       "Remote Date": this.formatDate(remoteDate),
-      Status: "⬇️  Pulled",
+      Status: "Pulled",
     })
 
-    this.documentMap.set(filePath, {
+    // Normalize key to absolute path to match later scans
+    const normalizedPath = resolve(filePath)
+    this.documentMap.set(normalizedPath, {
       id: fullDoc.id,
       title: fullDoc.title,
       collectionId: fullDoc.collectionId,
@@ -370,13 +361,12 @@ export class OutlineSync {
     })
 
     this.trace(`syncDocumentNode: added to documentMap`, {
-      filePath,
+      filePath: normalizedPath,
       documentMapSize: this.documentMap.size,
     })
 
     console.log(`${indent}✓ ${fullDoc.title}`)
 
-    // Recursively sync children
     if (node.children.length > 0) {
       this.trace(
         `syncDocumentNode: processing ${node.children.length} children of "${fullDoc.title}"`
@@ -394,7 +384,6 @@ export class OutlineSync {
       customPathsCount: Object.keys(this.customPaths).length,
     })
 
-    // Reset table data
     this.syncTableData = []
 
     this.trace("syncDown: fetching all collections from Outline API")
@@ -440,17 +429,14 @@ export class OutlineSync {
         })),
       })
 
-      // Build document tree
       const tree = this.buildDocumentTree(documents)
 
-      // Sync each root document and its children
       this.trace(`syncDown: syncing ${tree.length} root documents for "${collection.name}"`)
       for (const node of tree) {
         await this.syncDocumentNode(node, collection.name)
       }
     }
 
-    // Show summary table
     if (this.syncTableData.length > 0) {
       console.log("\n📋 Sync Summary:\n")
       console.table(this.syncTableData)
@@ -505,7 +491,6 @@ export class OutlineSync {
     console.log(`👀 Watching ${this.outputDir} for changes...`)
     this.trace("watch: starting", { outputDir: this.outputDir })
 
-    // Initial sync down
     await this.syncDown()
 
     const watchPattern = join(this.outputDir, "**/*.md")
@@ -542,10 +527,8 @@ export class OutlineSync {
     console.log("🔄 CI/CD Sync mode...")
     this.trace("ciSync: starting")
 
-    // First sync down to get latest
     await this.syncDown()
 
-    // Check for local changes
     this.trace("ciSync: finding changed files")
     const { changed: changedFiles, tableData } = await this.findChangedFilesWithTable()
 
@@ -589,19 +572,22 @@ export class OutlineSync {
     })
 
     for (const file of files) {
-      const content = await readFile(file, "utf-8")
+      const normalized = resolve(file)
+      const content = await readFile(normalized, "utf-8")
       const parsed = fm<DocumentMetadata>(content)
 
       if (!parsed.attributes?.id) {
-        this.trace("findChangedFilesWithTable: skipping file without id", { file })
+        this.trace("findChangedFilesWithTable: skipping file without id", { file: normalized })
         continue
       }
 
-      const title = parsed.attributes.title || file.split("/").pop() || file
-      const cached = this.documentMap.get(file)
+      const title = parsed.attributes.title || normalized.split("/").pop() || normalized
+      const cached = this.documentMap.get(normalized)
 
       if (!cached) {
-        this.trace("findChangedFilesWithTable: file not in cache, marking as changed", { file })
+        this.trace("findChangedFilesWithTable: file not in cache, marking as changed", {
+          file: normalized,
+        })
         tableData.push({
           Document: this.truncate(title, 30),
           "Local Date": "—",
@@ -609,33 +595,27 @@ export class OutlineSync {
           Source: "—",
           Status: "❓ New",
         })
-        changed.push(file)
+        changed.push(normalized)
         continue
       }
 
-      // Prefer frontmatter updatedAt if present, otherwise fall back to file mtime.
-      // Compare those timestamps against the cached remote updatedAt (from last syncDown).
-      const fileFrontUpdated = parsed.attributes.updatedAt
-        ? new Date(parsed.attributes.updatedAt)
-        : null
-      const fileStat = await stat(file)
+      const fileFrontUpdated = parseToDate(parsed.attributes.updatedAt) // may be null
+      const fileStat = await stat(normalized)
       const fileMtime = fileStat.mtime
-      const cachedTime = new Date(cached.updatedAt)
+      const cachedTime = parseToDate(cached.updatedAt) || new Date(0)
 
       const localTime = fileFrontUpdated || fileMtime
       const localSource = fileFrontUpdated ? "frontmatter" : "mtime"
 
       this.trace("findChangedFilesWithTable: comparing timestamps", {
-        file,
+        file: normalized,
         frontmatterUpdatedAt: fileFrontUpdated?.toISOString(),
         fileMtime: fileMtime.toISOString(),
         cachedUpdatedAt: cachedTime.toISOString(),
         usingFrontmatter: !!fileFrontUpdated,
       })
 
-      const isNewer =
-        (fileFrontUpdated && fileFrontUpdated > cachedTime) ||
-        (!fileFrontUpdated && fileMtime > cachedTime)
+      const isNewer = localTime.getTime() > cachedTime.getTime()
 
       const status = isNewer ? "⬆️  Push" : "✓ Synced"
 
@@ -649,12 +629,12 @@ export class OutlineSync {
 
       if (isNewer) {
         this.trace("findChangedFilesWithTable: file is newer, marking as changed", {
-          file,
+          file: normalized,
           reason: fileFrontUpdated ? "frontmatter updatedAt is newer" : "file mtime is newer",
         })
-        changed.push(file)
+        changed.push(normalized)
       } else {
-        this.trace("findChangedFilesWithTable: file is not newer, skipping", { file })
+        this.trace("findChangedFilesWithTable: file is not newer, skipping", { file: normalized })
       }
     }
 
@@ -675,7 +655,7 @@ export class OutlineSync {
       const entries = await readdir(dir, { withFileTypes: true })
 
       for (const entry of entries) {
-        const fullPath = join(dir, entry.name)
+        const fullPath = resolve(join(dir, entry.name))
 
         if (entry.isDirectory()) {
           files.push(...(await this.getAllMarkdownFiles(fullPath)))
@@ -684,18 +664,12 @@ export class OutlineSync {
         }
       }
     } catch (err) {
-      // Directory doesn't exist yet
       this.trace("getAllMarkdownFiles: directory not found or error", { dir, error: String(err) })
     }
 
     return files
   }
 
-  /**
-   * Compare local files against the remote Outline documents by fetching the remote
-   * document for each file ID and comparing timestamps. This method is used by the
-   * `push` flow where we want to push local changes up without first doing a syncDown.
-   */
   private async findChangedFilesAgainstRemote(
     showTable = false
   ): Promise<{ changed: string[]; tableData: Array<Record<string, string>> }> {
@@ -712,37 +686,36 @@ export class OutlineSync {
     }
 
     for (const file of files) {
-      const content = await readFile(file, "utf-8")
+      const normalized = resolve(file)
+      const content = await readFile(normalized, "utf-8")
       const parsed = fm<DocumentMetadata>(content)
 
       if (!parsed.attributes?.id) {
-        this.trace("findChangedFilesAgainstRemote: skipping file without id", { file })
+        this.trace("findChangedFilesAgainstRemote: skipping file without id", { file: normalized })
         continue
       }
 
       const id = parsed.attributes.id
-      const title = parsed.attributes.title || file.split("/").pop() || file
+      const title = parsed.attributes.title || normalized.split("/").pop() || normalized
 
       this.trace("findChangedFilesAgainstRemote: checking file against remote", {
-        file,
+        file: normalized,
         documentId: id,
       })
 
       try {
         const remote = await this.client.getDocument(id)
-        const remoteTime = new Date(remote.updatedAt)
+        const remoteTime = parseToDate(remote.updatedAt) || new Date(0)
 
-        const fileFrontUpdated = parsed.attributes.updatedAt
-          ? new Date(parsed.attributes.updatedAt)
-          : null
-        const fileStat = await stat(file)
+        const fileFrontUpdated = parseToDate(parsed.attributes.updatedAt)
+        const fileStat = await stat(normalized)
         const fileMtime = fileStat.mtime
 
         const localTime = fileFrontUpdated || fileMtime
         const localSource = fileFrontUpdated ? "frontmatter" : "mtime"
 
         this.trace("findChangedFilesAgainstRemote: comparing timestamps", {
-          file,
+          file: normalized,
           documentId: id,
           frontmatterUpdatedAt: fileFrontUpdated?.toISOString(),
           fileMtime: fileMtime.toISOString(),
@@ -750,10 +723,7 @@ export class OutlineSync {
           usingFrontmatter: !!fileFrontUpdated,
         })
 
-        const isNewer =
-          (fileFrontUpdated && fileFrontUpdated > remoteTime) ||
-          (!fileFrontUpdated && fileMtime > remoteTime)
-
+        const isNewer = localTime.getTime() > remoteTime.getTime()
         const status = isNewer ? "⬆️  Push" : "✓ Synced"
 
         tableData.push({
@@ -768,24 +738,23 @@ export class OutlineSync {
           this.trace(
             "findChangedFilesAgainstRemote: file is newer than remote, marking as changed",
             {
-              file,
+              file: normalized,
               documentId: id,
               reason: fileFrontUpdated ? "frontmatter updatedAt is newer" : "file mtime is newer",
             }
           )
-          changed.push(file)
+          changed.push(normalized)
         } else {
           this.trace("findChangedFilesAgainstRemote: file is not newer than remote, skipping", {
-            file,
+            file: normalized,
             documentId: id,
           })
         }
       } catch (err) {
-        // If we can't fetch the remote document (deleted/permission/etc.), mark for push so the user can inspect.
         this.trace(
           "findChangedFilesAgainstRemote: failed to fetch remote, marking for inspection",
           {
-            file,
+            file: normalized,
             documentId: id,
             error: String(err),
           }
@@ -799,7 +768,7 @@ export class OutlineSync {
           Status: "❓ Check",
         })
 
-        changed.push(file)
+        changed.push(normalized)
       }
     }
 
@@ -816,12 +785,22 @@ export class OutlineSync {
     return { changed, tableData }
   }
 
-  /**
-   * Push local changes to Outline by comparing each local file to the remote document.
-   * This does NOT perform a syncDown first; it queries the server for each document ID
-   * and pushes anything that appears newer locally.
-   */
-  async push(): Promise<void> {
+  async push(force = false): Promise<void> {
+    if (force) {
+      console.log("📤 Force pushing all local files to Outline (ignoring remote timestamps)...")
+      const files = await this.getAllMarkdownFiles(this.outputDir)
+      for (const file of files) {
+        try {
+          await this.syncUp(file)
+        } catch (err) {
+          console.error(`Error pushing ${file}:`, err)
+          this.trace("push(force): error pushing file", { file, error: String(err) })
+        }
+      }
+      console.log("\n✅ Force push complete!")
+      return
+    }
+
     console.log("📤 Pushing local changes to Outline...")
     this.trace("push: starting", { outputDir: this.outputDir })
 
@@ -853,14 +832,9 @@ export class OutlineSync {
     console.log("\n✅ Push complete!")
   }
 
-  /**
-   * Verify the configuration and show how custom paths will be resolved.
-   * This command helps debug path resolution issues without making any changes.
-   */
   async verify(): Promise<void> {
     console.log("🔍 Verifying outline-sync configuration...\n")
 
-    // Show basic config
     console.log("📁 Configuration:")
     console.log(`   Output Directory: ${this.outputDir}`)
     console.log(`   Include Collections: ${this.includeCollections?.join(", ") || "(all)"}`)
@@ -868,14 +842,12 @@ export class OutlineSync {
     console.log(`   Custom Paths: ${Object.keys(this.customPaths).length} defined`)
     console.log(`   Verbose: ${this.verbose}`)
 
-    // If no custom paths, show a note
     if (Object.keys(this.customPaths).length === 0) {
       console.log("\n📋 No custom paths configured.")
       console.log("\n✅ Configuration verified!")
       return
     }
 
-    // Show custom paths and their resolution
     console.log("\n📋 Custom Path Mappings:\n")
 
     const customPathsTable: Array<{
@@ -896,10 +868,8 @@ export class OutlineSync {
         resolvedPath = join(this.outputDir, configPath)
       }
 
-      // If it doesn't end with .md, we append README.md
       const finalPath = endsWithMd ? resolvedPath : join(resolvedPath, "README.md")
 
-      // Check if the file exists
       let exists = "❌ No"
       try {
         await stat(finalPath)
@@ -919,7 +889,6 @@ export class OutlineSync {
 
     console.table(customPathsTable)
 
-    // Try to fetch documents to show titles for IDs
     console.log("\n🔗 Resolving Document Titles from Outline...\n")
 
     try {
@@ -940,14 +909,13 @@ export class OutlineSync {
         for (const doc of documents) {
           const customPath = this.customPaths[doc.id]
           if (customPath) {
-            // Fetch full doc to get updatedAt
             try {
               const fullDoc = await this.client.getDocument(doc.id)
               docDetailsTable.push({
                 "Document ID": this.truncate(doc.id, 20),
                 Title: this.truncate(fullDoc.title, 30),
                 Collection: this.truncate(collection.name, 15),
-                "Remote Updated": this.formatDate(new Date(fullDoc.updatedAt)),
+                "Remote Updated": this.formatDate(parseToDate(fullDoc.updatedAt) || new Date()),
                 "Custom Path": this.truncate(customPath, 35),
               })
             } catch {
@@ -963,7 +931,6 @@ export class OutlineSync {
         }
       }
 
-      // Also check for custom paths that don't match any document
       const foundDocIds = new Set(docDetailsTable.map((d) => d["Document ID"]))
       for (const docId of Object.keys(this.customPaths)) {
         const truncatedId = this.truncate(docId, 20)

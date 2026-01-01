@@ -1,6 +1,6 @@
-import Logger from "@dockstat/logger"
+import BaseLogger from "../base-logger"
 
-const logger = new Logger("Hash-Service")
+const logger = BaseLogger.spawn("Hash-Service")
 
 /**
  * Hash a string using SHA-256

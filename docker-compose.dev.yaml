@@ -48,7 +48,7 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - ./apps/dockstat:/data
+      - ./apps/api:/data
     environment:
       - SQLITE_DATABASE=dockstat.sqlite
 

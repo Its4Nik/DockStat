@@ -3,7 +3,7 @@ id: d56ca448-563a-4206-9585-c45f8f6be5cf
 title: Architecture
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: 7dddd764-6483-4f84-96a3-988304e772d3
-updatedAt: 2025-12-29T20:53:27.304Z
+updatedAt: 2026-01-01T15:02:00.248Z
 urlId: g3eBa2Z8rL
 ---
 

@@ -3,7 +3,7 @@ id: d3039895-f53c-46ab-89ce-de0ad22ce03c
 title: "@dockstat/utils"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: bbcefaa2-6bd4-46e8-ae4b-a6b823593e67
-updatedAt: 2025-12-29T20:53:31.102Z
+updatedAt: 2026-01-01T15:02:03.034Z
 urlId: dHg9YfruFJ
 ---
 

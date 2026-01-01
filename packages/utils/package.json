@@ -2,7 +2,9 @@
   "name": "@dockstat/utils",
   "main": "src/index.ts",
   "type": "module",
-  "private": true,
+  "private": false,
+  "version": "1.0.0",
+  "description": "A tiny utils library used in DockStat",
   "devDependencies": {
     "@types/bun": "latest",
     "@dockstat/logger": "workspace:*",

@@ -260,7 +260,7 @@ export function serializeFragmentToYAML(fragment: TemplateFragment): string {
  */
 export function tryParseTemplate(content: string, format?: TemplateFormat): PageTemplate | null {
   const result = parseTemplate(content, format)
-  return result.success ? result.data! : null
+  return result.success ? (result.data as PageTemplate) : null
 }
 
 /**
@@ -271,7 +271,7 @@ export function tryParseFragment(
   format?: TemplateFormat
 ): TemplateFragment | null {
   const result = parseFragment(content, format)
-  return result.success ? result.data! : null
+  return result.success ? (result.data as TemplateFragment) : null
 }
 
 /**
@@ -284,7 +284,8 @@ export function parseTemplates(
 
   for (const { content, format, id } of contents) {
     const result = parseTemplate(content, format)
-    const templateId = result.success ? result.data!.id : (id ?? `unknown-${results.size}`)
+    const templateId = result.success ? result.data?.id : (id ?? `unknown-${results.size}`)
+    if (!templateId) continue
     results.set(templateId, result)
   }
 

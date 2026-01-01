@@ -1,29 +1,39 @@
-import type { Database, SQLQueryBindings } from "bun:sqlite"
-import type { ColumnNames, OrderDirection, Parser } from "../types"
+import type { SQLQueryBindings } from "bun:sqlite"
+import type { ColumnNames, OrderDirection } from "../types"
+import { createLogger, quoteIdentifier } from "../utils"
 import { WhereQueryBuilder } from "./where"
 
 /**
- * Mixin class that adds SELECT-specific functionality to the QueryBuilder.
- * Handles column selection, ordering, limiting, and result execution methods.
+ * SelectQueryBuilder - Handles SELECT queries with ordering, limiting, and pagination
+ *
+ * Features:
+ * - Column selection (specific columns or *)
+ * - ORDER BY with ASC/DESC
+ * - LIMIT and OFFSET
+ * - Result transformation (JSON/Boolean parsing)
+ * - Client-side regex filtering when needed
  */
 export class SelectQueryBuilder<T extends Record<string, unknown>> extends WhereQueryBuilder<T> {
-  private selectedColumns: ColumnNames<T>
+  private selectedColumns: ColumnNames<T> = ["*"]
   private orderColumn?: keyof T
-  private orderDirection: OrderDirection
+  private orderDirection: OrderDirection = "ASC"
   private limitValue?: number
   private offsetValue?: number
 
-  constructor(db: Database, tableName: string, parser: Parser<T>) {
+  private selectLog = createLogger("select")
+
+  /* constructor(db: Database, tableName: string, parser: Parser<T>) {
     super(db, tableName, parser)
-    this.selectedColumns = ["*"]
-    this.orderDirection = "ASC"
-  }
+  } */
+
+  // ===== Query Building Methods =====
 
   /**
-   * Specify which columns to select.
+   * Specify which columns to select
    *
-   * @param columns - Array of column names or ["*"] for all columns
-   * @returns this for method chaining
+   * @example
+   * .select(["id", "name", "email"])
+   * .select(["*"])
    */
   select(columns: ColumnNames<T>): this {
     this.selectedColumns = columns
@@ -31,10 +41,10 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
   }
 
   /**
-   * Add ORDER BY clause.
+   * Add ORDER BY clause
    *
-   * @param column - Column name to order by
-   * @returns this for method chaining
+   * @example
+   * .orderBy("created_at")
    */
   orderBy(column: keyof T): this {
     this.orderColumn = column
@@ -42,9 +52,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
   }
 
   /**
-   * Set order direction to descending.
-   *
-   * @returns this for method chaining
+   * Set order direction to descending
    */
   desc(): this {
     this.orderDirection = "DESC"
@@ -52,9 +60,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
   }
 
   /**
-   * Set order direction to ascending (default).
-   *
-   * @returns this for method chaining
+   * Set order direction to ascending (default)
    */
   asc(): this {
     this.orderDirection = "ASC"
@@ -62,10 +68,10 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
   }
 
   /**
-   * Add LIMIT clause.
+   * Add LIMIT clause
    *
-   * @param amount - Maximum number of rows to return
-   * @returns this for method chaining
+   * @example
+   * .limit(10)
    */
   limit(amount: number): this {
     if (amount < 0) {
@@ -76,10 +82,10 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
   }
 
   /**
-   * Add OFFSET clause.
+   * Add OFFSET clause
    *
-   * @param start - Number of rows to skip
-   * @returns this for method chaining
+   * @example
+   * .offset(20)
    */
   offset(start: number): this {
     if (start < 0) {
@@ -89,30 +95,35 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
     return this
   }
 
+  // ===== Private Helpers =====
+
   /**
-   * Build the complete SELECT query.
-   * If regex conditions exist, ORDER/LIMIT/OFFSET are not included in SQL
-   * as they will be applied client-side after regex filtering.
-   *
-   * @param includeOrderAndLimit - Whether to include ORDER/LIMIT/OFFSET in SQL
-   * @returns Tuple of [query, parameters]
+   * Build the SELECT query SQL
    */
   private buildSelectQuery(includeOrderAndLimit = true): [string, SQLQueryBindings[]] {
+    // Build column list
     const cols =
-      this.selectedColumns[0] === "*" ? "*" : (this.selectedColumns as string[]).join(", ")
+      this.selectedColumns[0] === "*"
+        ? "*"
+        : (this.selectedColumns as string[]).map((c) => quoteIdentifier(c)).join(", ")
 
-    let query = `SELECT ${cols} FROM ${this.quoteIdentifier(this.getTableName())}`
+    // Start with basic SELECT
+    let query = `SELECT ${cols} FROM ${quoteIdentifier(this.getTableName())}`
 
+    // Add WHERE clause
     const [whereClause, whereParams] = this.buildWhereClause()
     query += whereClause
 
+    // Add ORDER BY, LIMIT, OFFSET (unless regex conditions require client-side processing)
     if (includeOrderAndLimit && !this.hasRegexConditions()) {
       if (this.orderColumn) {
-        query += ` ORDER BY ${String(this.orderColumn)} ${this.orderDirection}`
+        query += ` ORDER BY ${quoteIdentifier(String(this.orderColumn))} ${this.orderDirection}`
       }
 
       if (this.limitValue !== undefined) {
         query += ` LIMIT ${this.limitValue}`
+      } else if (this.offsetValue !== undefined) {
+        query += ` LIMIT -1`
       }
 
       if (this.offsetValue !== undefined) {
@@ -124,213 +135,199 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
   }
 
   /**
-   * Apply JavaScript-based filtering, ordering, and pagination.
-   * Used when regex conditions require client-side processing.
-   *
-   * @param rows - Rows to process
-   * @returns Processed rows
+   * Apply client-side operations (sorting, pagination) when regex filtering is used
    */
   private applyClientSideOperations(rows: T[]): T[] {
-    if (!this.hasRegexConditions()) return rows
+    if (!this.hasRegexConditions()) {
+      return rows
+    }
 
-    // Apply regex filters
-    let filtered = this.applyRegexFiltering(rows)
+    // Apply regex filters first
+    let result = this.applyRegexFiltering(rows)
 
-    // Apply ordering in JavaScript
+    // Apply ordering
     if (this.orderColumn) {
       const col = String(this.orderColumn)
-      filtered.sort((a: T, b: T) => {
+      const direction = this.orderDirection === "ASC" ? 1 : -1
+
+      result.sort((a, b) => {
         const va = a[col]
         const vb = b[col]
+
         if (va === vb) return 0
-        if (va === null || va === undefined) return -1
-        if (vb === null || vb === undefined) return 1
-        if (va < vb) return this.orderDirection === "ASC" ? -1 : 1
-        return this.orderDirection === "ASC" ? 1 : -1
+        if (va === null || va === undefined) return -direction
+        if (vb === null || vb === undefined) return direction
+        if (va < vb) return -direction
+        return direction
       })
     }
 
-    // Apply offset & limit in JavaScript
+    // Apply offset and limit
     const start = this.offsetValue ?? 0
     if (this.limitValue !== undefined) {
-      filtered = filtered.slice(start, start + this.limitValue)
+      result = result.slice(start, start + this.limitValue)
     } else if (start > 0) {
-      filtered = filtered.slice(start)
+      result = result.slice(start)
     }
 
-    return filtered
+    return result
   }
 
+  // ===== Execution Methods =====
+
   /**
-   * Execute the query and return all matching rows.
+   * Execute the query and return all matching rows
    *
-   * @returns Array of rows matching the query
+   * @example
+   * const users = table.select(["*"]).where({ active: true }).all()
    */
   all(): T[] {
-    if (!this.hasRegexConditions()) {
-      const [query, params] = this.buildSelectQuery(true)
-      this.getLogger("SELECT").debug(
-        `Executing SELECT query - query: ${query}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.parser?.JSON}`
-      )
-      const rows = this.getDb().prepare(query, params).all() as T[]
-      this.getLogger("SELECT").debug(`Retrieved ${rows.length} rows from database`)
-      const transformed = this.transformRowsFromDb(rows)
-      this.getLogger("SELECT").debug(`Transformed ${transformed.length} rows`)
-      this.reset()
-      return transformed
-    }
+    const hasRegex = this.hasRegexConditions()
+    const [query, params] = this.buildSelectQuery(!hasRegex)
 
-    const [query, params] = this.buildSelectQuery(false)
-    this.getLogger("SELECT").debug(
-      `Executing SELECT query with regex conditions - query: ${query}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.parser?.JSON}`
-    )
+    this.selectLog.query("SELECT", query, params)
+
     const rows = this.getDb()
       .prepare(query)
       .all(...params) as T[]
-    this.getLogger("SELECT").debug(`Retrieved ${rows.length} rows for regex filtering`)
-    const transformedRows = this.transformRowsFromDb(rows)
-    this.getLogger("SELECT").debug(`Transformed ${transformedRows.length} rows for regex filtering`)
-    this.reset()
-    return this.applyClientSideOperations(transformedRows)
-  }
 
-  /**
-   * Execute the query and return the first matching row, or null if none found.
-   * If no explicit LIMIT is set, adds LIMIT 1 for efficiency.
-   *
-   * @returns First matching row or null
-   */
-  get(): T | null {
-    if (!this.hasRegexConditions() && this.limitValue === undefined) {
-      // No regex and no explicit limit, we can safely add LIMIT 1
-      const [query, params] = this.buildSelectQuery(true)
-      const q = query.includes("LIMIT") ? query : `${query} LIMIT 1`
-      this.getLogger("SELECT").debug(
-        `Executing single-row SELECT query - query: ${q}, params: ${JSON.stringify(params)}, hasJsonColumns: ${!!this.state.parser?.JSON}`
-      )
-      const row = this.getDb()
-        .prepare(q)
-        .get(...params) as T | null
-      this.getLogger("SELECT").debug(`Row found: ${row ? "yes" : "no"}`)
-      const transformed = row ? this.transformRowFromDb(row) : null
-      this.getLogger("SELECT").debug(`Transformed row available: ${transformed ? "yes" : "no"}`)
-      this.reset()
-      return transformed
-    }
+    this.selectLog.result("SELECT", rows.length)
 
-    if (!this.hasRegexConditions() && this.limitValue !== undefined) {
-      // Limit is present; just use the query as-is
-      const [query, params] = this.buildSelectQuery(true)
-      this.getLogger("SELECT").debug(
-        `get() - path 2: ${JSON.stringify({
-          query,
-          params,
-        })}`
-      )
-      const row = this.getDb()
-        .prepare(query)
-        .get(...params) as T | null
-      this.getLogger("SELECT").debug(`raw row (path 2): ${row ? "found" : "null"}`)
-      const transformed = row ? this.transformRowFromDb(row) : null
-      this.getLogger("SELECT").debug(`transformed row (path 2): ${transformed ? "found" : "null"}`)
-      this.reset()
-      return transformed
-    }
+    // Transform rows (JSON/Boolean parsing)
+    const transformed = this.transformRowsFromDb(rows)
 
-    // Has regex conditions, need to process client-side
-    this.getLogger("SELECT").debug("path 3 (regex fallback)")
-    const results = this.all()
-    this.reset()
-    return results[0] ?? null
-  }
+    // Apply client-side operations if needed
+    const result = hasRegex ? this.applyClientSideOperations(transformed) : transformed
 
-  /**
-   * Execute the query and return the first matching row, or null if none found.
-   * Always respects the semantics of returning the first row regardless of LIMIT.
-   *
-   * @returns First matching row or null
-   */
-  first(): T | null {
-    // Temporarily set limit to 1 but preserve previous value
-    const prevLimit = this.limitValue
-    this.limitValue = 1
-    const result = this.get()
-    this.limitValue = prevLimit
     this.reset()
     return result
   }
 
   /**
-   * Execute a COUNT query and return the number of matching rows.
-   * For regex conditions, this fetches all rows and counts client-side.
+   * Execute the query and return the first matching row, or null
    *
-   * @returns Number of matching rows
+   * Respects LIMIT if set, otherwise adds LIMIT 1 for efficiency
    */
-  count(): number {
-    if (!this.hasRegexConditions()) {
-      // Safe to do COUNT(*) in SQL
-      const [baseQuery, params] = this.buildSelectQuery(true)
-      const countQuery = baseQuery.replace(/SELECT (.+?) FROM/i, "SELECT COUNT(*) AS __count FROM")
-      const result = this.getDb()
-        .prepare(countQuery)
-        .get(...params) as {
-        __count: number
-      }
-      this.reset()
-      return result?.__count ?? 0
-    }
-    this.reset()
+  get(): T | null {
+    // If no regex and no explicit limit, optimize with LIMIT 1
+    if (!this.hasRegexConditions() && this.limitValue === undefined) {
+      const [query, params] = this.buildSelectQuery(true)
+      const optimizedQuery = `${query} LIMIT 1`
 
-    // Has regex conditions, count client-side
-    return this.all().length
+      this.selectLog.query("SELECT (get)", optimizedQuery, params)
+
+      const row = this.getDb()
+        .prepare(optimizedQuery)
+        .get(...params) as T | null
+
+      this.selectLog.result("SELECT (get)", row ? 1 : 0)
+
+      const result = row ? this.transformRowFromDb(row) : null
+      this.reset()
+      return result
+    }
+
+    // If limit is set or regex conditions exist, use standard flow
+    if (!this.hasRegexConditions()) {
+      const [query, params] = this.buildSelectQuery(true)
+
+      this.selectLog.query("SELECT (get)", query, params)
+
+      const row = this.getDb()
+        .prepare(query)
+        .get(...params) as T | null
+
+      this.selectLog.result("SELECT (get)", row ? 1 : 0)
+
+      const result = row ? this.transformRowFromDb(row) : null
+      this.reset()
+      return result
+    }
+
+    // Has regex conditions - fall back to all() and take first
+    const results = this.all()
+    return results[0] ?? null
   }
 
   /**
-   * Check if any rows match the current conditions.
-   *
-   * @returns true if at least one row matches, false otherwise
+   * Execute the query and return the first matching row, or null
+   * Always applies LIMIT 1 semantics
+   */
+  first(): T | null {
+    const prevLimit = this.limitValue
+    this.limitValue = 1
+    const result = this.get()
+    this.limitValue = prevLimit
+    return result
+  }
+
+  /**
+   * Execute a COUNT query and return the number of matching rows
+   */
+  count(): number {
+    if (!this.hasRegexConditions()) {
+      // Use SQL COUNT for efficiency
+      const [whereClause, whereParams] = this.buildWhereClause()
+      const query = `SELECT COUNT(*) AS __count FROM ${quoteIdentifier(this.getTableName())}${whereClause}`
+
+      this.selectLog.query("COUNT", query, whereParams)
+
+      const result = this.getDb()
+        .prepare(query)
+        .get(...whereParams) as { __count: number } | null
+
+      this.reset()
+      return result?.__count ?? 0
+    }
+
+    // Has regex conditions - count client-side
+    const results = this.all()
+    return results.length
+  }
+
+  /**
+   * Check if any rows match the current conditions
    */
   exists(): boolean {
     if (!this.hasRegexConditions()) {
       // Use EXISTS for efficiency
-      const [baseQuery, params] = this.buildSelectQuery(true)
-      const existsQuery = `SELECT EXISTS(${baseQuery}) AS __exists`
+      const [whereClause, whereParams] = this.buildWhereClause()
+      const subquery = `SELECT 1 FROM ${quoteIdentifier(this.getTableName())}${whereClause} LIMIT 1`
+      const query = `SELECT EXISTS(${subquery}) AS __exists`
+
+      this.selectLog.query("EXISTS", query, whereParams)
+
       const result = this.getDb()
-        .prepare(existsQuery)
-        .get(...params) as {
-        __exists: number
-      }
+        .prepare(query)
+        .get(...whereParams) as { __exists: number } | null
+
       this.reset()
       return Boolean(result?.__exists)
     }
-    this.reset()
 
-    // Has regex conditions, check client-side
+    // Has regex conditions - check client-side
     return this.count() > 0
   }
 
   /**
-   * Execute the query and return a single column value from the first row.
-   * Useful for getting a specific field value.
+   * Get a single column value from the first matching row
    *
-   * @param column - Column name to extract the value from
-   * @returns The value of the specified column from the first row, or null
+   * @example
+   * const name = table.where({ id: 1 }).value("name")
    */
   value<K extends keyof T>(column: K): T[K] | null {
     const row = this.first()
-    this.reset()
     return row ? row[column] : null
   }
 
   /**
-   * Execute the query and return an array of values from a single column.
+   * Get an array of values from a single column
    *
-   * @param column - Column name to extract values from
-   * @returns Array of values from the specified column
+   * @example
+   * const emails = table.where({ active: true }).pluck("email")
    */
   pluck<K extends keyof T>(column: K): T[K][] {
     const rows = this.all()
-    this.reset()
     return rows.map((row) => row[column])
   }
 }

@@ -6,7 +6,10 @@ import PrometheusMetricsRoute from "../metrics/prometheus"
 let lastCpu = process.cpuUsage()
 let lastTime = performance.now()
 
-const DockStatMiscRoutes = new Elysia({ prefix: "/misc", detail: { tags: ["Misc"] } })
+const DockStatMiscRoutes = new Elysia({
+  prefix: "/misc",
+  detail: { tags: ["Misc"] },
+})
   .use(PrometheusMetricsRoute)
   .get("/stats", () => {
     const mem = process.memoryUsage()

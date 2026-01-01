@@ -1,14 +1,14 @@
 {
   "name": "@dockstat/logger",
-  "description": "The (really basic) internal logging service used by DockStat and @dockstat/outline-sync",
-  "module": "index.ts",
-  "types": "./index.ts",
-  "main": "index.ts",
+  "description": "The (basic) internal logging service used by DockStat and @dockstat/outline-sync",
+  "module": "./src/Logger.ts",
+  "types": "./src/Logger.ts",
+  "main": "./src/Logger.ts",
   "files": [
-    "index.ts",
+    "src",
     "README.md"
   ],
-  "version": "1.0.1",
+  "version": "2.0.0",
   "private": false,
   "repository": {
     "type": "git",
@@ -22,7 +22,7 @@
     "bun": ">=1.0.0"
   },
   "exports": {
-    "default": "./index.ts"
+    "default": "./src/Logger.ts"
   },
   "scripts": {
     "lint": "biome lint .",

@@ -17,12 +17,13 @@ export const DockerClientElysia = new Elysia({
     "/register",
     async ({ status, body }) => {
       try {
+        console.log("Registering client:", body.clientName, body.options)
+
         const res = (await DCM.registerClient(
           body.clientName,
           body.options || undefined
         )) as ClientOperationResult
         if (!res.success) {
-          // res.error is the raw error object, extract a string message from it
           const errorStr = extractErrorMessage(res.error, "Registration failed")
           return status(400, {
             success: false as const,

@@ -118,12 +118,16 @@ export function Dashboard({ stats, recentPlugins, repositories }: DashboardProps
               {repositories.map((repo) => (
                 <div class="card p-4">
                   <div class="flex items-center justify-between mb-2">
-                    <h3 class="font-medium text-white truncate">{repo.name}</h3>
+                    <h3 safe class="font-medium text-white truncate">
+                      {repo.name}
+                    </h3>
                     <span class={`badge ${repo.enabled ? "badge-success" : "badge-neutral"}`}>
                       {repo.enabled ? "Active" : "Disabled"}
                     </span>
                   </div>
-                  <p class="text-xs text-gray-500 truncate mb-3">{repo.url}</p>
+                  <p safe class="text-xs text-gray-500 truncate mb-3">
+                    {repo.url}
+                  </p>
                   <div class="grid grid-cols-2 gap-2 text-xs">
                     <div class="bg-gray-800 rounded p-2">
                       <span class="text-gray-500">Plugins:</span>

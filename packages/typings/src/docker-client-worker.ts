@@ -1,6 +1,6 @@
 import type { EVENTS } from "."
 
-export interface ProxyEventMessage<K extends keyof EVENTS> {
+export interface ProxyEventMessage<K extends keyof EVENTS = keyof EVENTS> {
   type: "__event__"
   data: {
     type: K

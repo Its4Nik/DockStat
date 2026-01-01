@@ -1,13 +1,8 @@
-import type { DB } from "@dockstat/sqlite-wrapper"
 import { Html } from "@elysiajs/html"
 import { Elysia } from "elysia"
-import {
-  getPluginsTable,
-  getPluginVersionsTable,
-  getRepositoryTable,
-  getVerificationsTable,
-} from "../db"
+import { db, pluginsTable, pluginVersionsTable, repositoriesTable, verificationsTable } from "../db"
 import type { PluginVerificationView, RepositoryWithStats } from "../db/types"
+import { AddPluginManuallyView } from "../views/AddPluginManually"
 import { Dashboard, type DashboardStats } from "../views/Dashboard"
 import { PluginDetail, PluginsContent, PluginsView } from "../views/Plugins"
 import { AddRepositoryView, RepositoriesView, RepositoryDetail } from "../views/Repositories"
@@ -18,13 +13,9 @@ const _ = Html
 /**
  * Get dashboard statistics
  */
-function getDashboardStats(db: DB): DashboardStats {
-  const pluginsTable = getPluginsTable(db)
-  const versionsTable = getPluginVersionsTable(db)
-  const verificationsTable = getVerificationsTable(db)
-
+function getDashboardStats(): DashboardStats {
   const totalPlugins = pluginsTable.select(["id"]).all().length
-  const totalVersions = versionsTable.select(["id"]).all().length
+  const totalVersions = pluginVersionsTable.select(["id"]).all().length
 
   // Get verified versions count
   const verifiedVersions = verificationsTable.select(["id"]).where({ verified: true }).all().length
@@ -56,7 +47,7 @@ function getDashboardStats(db: DB): DashboardStats {
 
   const pendingReview = totalVersions - verifiedVersions
 
-  const totalRepositories = getRepositoryTable(db).select(["id"]).all().length
+  const totalRepositories = repositoriesTable.select(["id"]).all().length
 
   return {
     totalPlugins,
@@ -73,7 +64,7 @@ function getDashboardStats(db: DB): DashboardStats {
 /**
  * Get all plugins with verification status
  */
-function getPluginsWithVerification(db: DB, filter?: string): PluginVerificationView[] {
+function getPluginsWithVerification(filter?: string): PluginVerificationView[] {
   let query = `
     SELECT
       p.id as plugin_id,
@@ -124,7 +115,7 @@ function getPluginsWithVerification(db: DB, filter?: string): PluginVerification
 /**
  * Get repositories with stats
  */
-function getRepositoriesWithStats(db: DB): RepositoryWithStats[] {
+function getRepositoriesWithStats(): RepositoryWithStats[] {
   const query = `
     SELECT
       r.*,
@@ -144,124 +135,127 @@ function getRepositoriesWithStats(db: DB): RepositoryWithStats[] {
 }
 
 /**
- * Create page routes
+ * Page routes
  */
-export function createPageRoutes(db: DB) {
-  return (
-    new Elysia()
-      // Dashboard
-      .get("/", () => {
-        const stats = getDashboardStats(db)
-        const recentPlugins = getPluginsWithVerification(db).slice(0, 10)
-        const repositories = getRepositoriesWithStats(db)
+const pageRoutes = new Elysia()
+  // Dashboard
+  .get("/", () => {
+    const stats = getDashboardStats()
+    const recentPlugins = getPluginsWithVerification().slice(0, 10)
+    const repositories = getRepositoriesWithStats()
 
-        return <Dashboard stats={stats} recentPlugins={recentPlugins} repositories={repositories} />
-      })
+    return <Dashboard stats={stats} recentPlugins={recentPlugins} repositories={repositories} />
+  })
 
-      // Plugins list
-      .get("/plugins", ({ query, headers }) => {
-        const filter = (query.filter as string) || "all"
-        const search = (query.search as string) || ""
-        const view = ((query.view as string) || "table") as "table" | "grid"
+  // Plugins list
+  .get("/plugins", ({ query, headers }) => {
+    const filter = (query.filter as string) || "all"
+    const search = (query.search as string) || ""
+    const view = ((query.view as string) || "table") as "table" | "grid"
 
-        let plugins = getPluginsWithVerification(db, filter === "all" ? undefined : filter)
+    let plugins = getPluginsWithVerification(filter === "all" ? undefined : filter)
 
-        // Apply search filter
-        if (search) {
-          const searchLower = search.toLowerCase()
-          plugins = plugins.filter(
-            (p) =>
-              p.plugin_name.toLowerCase().includes(searchLower) ||
-              p.description.toLowerCase().includes(searchLower) ||
-              p.author_name.toLowerCase().includes(searchLower)
-          )
-        }
+    // Apply search filter
+    if (search) {
+      const searchLower = search.toLowerCase()
+      plugins = plugins.filter(
+        (p) =>
+          p.plugin_name.toLowerCase().includes(searchLower) ||
+          p.description.toLowerCase().includes(searchLower) ||
+          p.author_name.toLowerCase().includes(searchLower)
+      )
+    }
 
-        // Check if this is an HTMX request
-        const isHtmx = headers["hx-request"] === "true"
+    // Check if this is an HTMX request
+    const isHtmx = headers["hx-request"] === "true"
 
-        if (isHtmx) {
-          // Return just the content for HTMX updates
-          return <PluginsContent plugins={plugins} view={view} />
-        }
+    if (isHtmx) {
+      // Return just the content for HTMX updates
+      return <PluginsContent plugins={plugins} view={view} />
+    }
 
-        return (
-          <PluginsView
-            plugins={plugins}
-            filter={filter as "all" | "verified" | "unverified" | "safe" | "unsafe"}
-            search={search}
-            view={view}
-          />
-        )
-      })
+    return (
+      <PluginsView
+        plugins={plugins}
+        filter={filter as "all" | "verified" | "unverified" | "safe" | "unsafe"}
+        search={search}
+        view={view}
+      />
+    )
+  })
 
-      // Plugin detail
-      .get("/plugins/:id", ({ params, set }) => {
-        const plugins = getPluginsWithVerification(db)
-        const plugin = plugins.find((p) => p.plugin_id === Number(params.id))
+  // Plugin detail
+  .get("/plugins/:id", ({ params, set }) => {
+    const plugins = getPluginsWithVerification()
+    const plugin = plugins.find((p) => p.plugin_id === Number(params.id))
 
-        if (!plugin) {
-          set.status = 404
-          return (
-            <div class="text-center py-16">
-              <h1 class="text-2xl font-bold text-white">Plugin not found</h1>
-              <a href="/plugins" class="text-blue-400 hover:text-blue-300 mt-4 inline-block">
-                ← Back to plugins
-              </a>
-            </div>
-          )
-        }
+    if (!plugin) {
+      set.status = 404
+      return (
+        <div class="text-center py-16">
+          <h1 class="text-2xl font-bold text-white">Plugin not found</h1>
+          <a href="/plugins" class="text-blue-400 hover:text-blue-300 mt-4 inline-block">
+            ← Back to plugins
+          </a>
+        </div>
+      )
+    }
 
-        return <PluginDetail plugin={plugin} />
-      })
+    return <PluginDetail plugin={plugin} />
+  })
 
-      // Repositories list
-      .get("/repositories", () => {
-        const repositories = getRepositoriesWithStats(db)
-        return <RepositoriesView repositories={repositories} />
-      })
+  // Repositories list
+  .get("/repositories", () => {
+    const repositories = getRepositoriesWithStats()
+    return <RepositoriesView repositories={repositories} />
+  })
 
-      // Repository detail
-      .get("/repositories/:id", ({ params, set }) => {
-        const repositories = getRepositoriesWithStats(db)
-        const repository = repositories.find((r) => r.id === Number(params.id))
+  // Repository detail
+  .get("/repositories/:id", ({ params, set }) => {
+    const repositories = getRepositoriesWithStats()
+    const repository = repositories.find((r) => r.id === Number(params.id))
 
-        if (!repository) {
-          set.status = 404
-          return (
-            <div class="text-center py-16">
-              <h1 class="text-2xl font-bold text-white">Repository not found</h1>
-              <a href="/repositories" class="text-blue-400 hover:text-blue-300 mt-4 inline-block">
-                ← Back to repositories
-              </a>
-            </div>
-          )
-        }
+    if (!repository) {
+      set.status = 404
+      return (
+        <div class="text-center py-16">
+          <h1 class="text-2xl font-bold text-white">Repository not found</h1>
+          <a href="/repositories" class="text-blue-400 hover:text-blue-300 mt-4 inline-block">
+            ← Back to repositories
+          </a>
+        </div>
+      )
+    }
 
-        return <RepositoryDetail repository={repository} />
-      })
+    return <RepositoryDetail repository={repository} />
+  })
 
-      // Add repository form
-      .get("/repositories/add", () => {
-        return <AddRepositoryView />
-      })
+  // Add repository form
+  .get("/repositories/add", () => {
+    return <AddRepositoryView />
+  })
 
-      // Verify page
-      .get("/verify", ({ query }) => {
-        // Get all unverified plugin versions
-        const pendingPlugins = getPluginsWithVerification(db, "unverified")
+  // Verify page
+  .get("/verify", ({ query }) => {
+    // Get all unverified plugin versions
+    const pendingPlugins = getPluginsWithVerification("unverified")
 
-        // Check for query parameters to highlight a specific plugin
-        const highlightPluginId = query.plugin ? Number(query.plugin) : undefined
-        const highlightVersion = query.version as string | undefined
+    // Check for query parameters to highlight a specific plugin
+    const highlightPluginId = query.plugin ? Number(query.plugin) : undefined
+    const highlightVersion = query.version as string | undefined
 
-        return (
-          <VerifyView
-            pendingPlugins={pendingPlugins}
-            highlightPluginId={highlightPluginId}
-            highlightVersion={highlightVersion}
-          />
-        )
-      })
-  )
-}
+    return (
+      <VerifyView
+        pendingPlugins={pendingPlugins}
+        highlightPluginId={highlightPluginId}
+        highlightVersion={highlightVersion}
+      />
+    )
+  })
+
+  // Add plugin manually page
+  .get("/plugins/add", () => {
+    return <AddPluginManuallyView />
+  })
+
+export default pageRoutes

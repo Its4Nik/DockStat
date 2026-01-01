@@ -1,35 +1,36 @@
 import type { SQLQueryBindings } from "bun:sqlite"
 import type { RegexCondition, WhereCondition } from "../types"
+import { buildBetweenClause, buildInClause, normalizeOperator, quoteIdentifier } from "../utils"
 import { BaseQueryBuilder } from "./base"
 
 /**
- * Mixin class that adds WHERE-related functionality to the QueryBuilder.
- * This includes all conditional filtering methods.
+ * WhereQueryBuilder - Adds WHERE clause functionality to the QueryBuilder
+ *
+ * Provides methods for building SQL WHERE conditions:
+ * - Simple equality conditions
+ * - Comparison operators
+ * - IN/NOT IN clauses
+ * - BETWEEN clauses
+ * - NULL checks
+ * - Raw SQL expressions
+ * - Regex conditions (client-side filtering)
  */
 export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQueryBuilder<T> {
+  // ===== Private Helpers =====
+
   /**
-   * Remove existing condition for a column
-   * @param column - Column name to check
-   * @param operation - Optional operation type (e.g., '=', 'IN', 'BETWEEN')
+   * Remove an existing condition for a column to prevent duplicates
    */
   private removeExistingCondition(column: string, operation?: string): void {
-    let existingIndex = -1
+    const columnPattern = operation ? `${column} ${operation}` : `${column} `
 
-    if (operation) {
-      // Look for specific operation
-      existingIndex = this.state.whereConditions.findIndex((condition) =>
-        condition.startsWith(`${String(column)} ${operation}`)
-      )
-    } else {
-      // Look for any condition on this column
-      existingIndex = this.state.whereConditions.findIndex((condition) =>
-        condition.startsWith(`${String(column)} `)
-      )
-    }
+    const existingIndex = this.state.whereConditions.findIndex(
+      (condition) => condition.startsWith(columnPattern) || condition.startsWith(`"${column}"`)
+    )
 
     if (existingIndex !== -1) {
       this.state.whereConditions.splice(existingIndex, 1)
-      // Only remove params if they exist (some conditions might not have params)
+      // Remove corresponding params if they exist
       if (existingIndex < this.state.whereParams.length) {
         this.state.whereParams.splice(existingIndex, 1)
       }
@@ -42,49 +43,50 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
   }
 
   /**
-   * Add simple equality conditions to the WHERE clause.
-   * Handles null values appropriately with IS NULL / IS NOT NULL.
-   * Prevents duplicate conditions for the same column.
+   * Convert a JavaScript value to SQLite-compatible value
+   */
+  private toSqliteValue(value: unknown): SQLQueryBindings {
+    if (typeof value === "boolean") {
+      return value ? 1 : 0
+    }
+    return value as SQLQueryBindings
+  }
+
+  // ===== Public WHERE Methods =====
+
+  /**
+   * Add simple equality conditions to the WHERE clause
    *
-   * @param conditions - Object with column-value pairs for equality checks
-   * @returns this for method chaining
+   * @example
+   * .where({ name: "Alice", active: true })
+   * // WHERE "name" = ? AND "active" = ?
+   *
+   * @example
+   * .where({ deleted_at: null })
+   * // WHERE "deleted_at" IS NULL
    */
   where(conditions: WhereCondition<T>): this {
     for (const [column, value] of Object.entries(conditions)) {
-      // Remove any existing conditions for this column
       this.removeExistingCondition(column)
 
       if (value === null || value === undefined) {
-        this.state.whereConditions.push(`${String(column)} IS NULL`)
+        this.state.whereConditions.push(`${quoteIdentifier(column)} IS NULL`)
       } else {
-        this.state.whereConditions.push(`${String(column)} = ?`)
-
-        // Convert JavaScript boolean to SQLite integer (0/1)
-        let sqliteValue: SQLQueryBindings = value
-        if (typeof value === "boolean") {
-          sqliteValue = value ? 1 : 0
-          this.getLogger("WHERE").debug(
-            `Converting boolean value ${value} to ${sqliteValue} for column ${column}`
-          )
-        }
-
-        this.state.whereParams.push(sqliteValue)
+        this.state.whereConditions.push(`${quoteIdentifier(column)} = ?`)
+        this.state.whereParams.push(this.toSqliteValue(value))
       }
     }
     return this
   }
 
   /**
-   * Add regex conditions. Note: regex conditions are applied client-side
-   * after SQL execution due to Bun's SQLite limitations.
-   * Prevents duplicate regex conditions for the same column.
+   * Add regex conditions (applied client-side after SQL execution)
    *
-   * @param conditions - Object with column-regex pairs
-   * @returns this for method chaining
+   * @example
+   * .whereRgx({ email: /@gmail\.com$/ })
    */
   whereRgx(conditions: RegexCondition<T>): this {
     for (const [column, value] of Object.entries(conditions)) {
-      // Remove any existing conditions for this column
       this.removeExistingCondition(column)
 
       if (value instanceof RegExp) {
@@ -98,188 +100,173 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
           regex: new RegExp(value),
         })
       } else if (value !== null && value !== undefined) {
-        this.state.whereConditions.push(`${String(column)} = ?`)
-        this.state.whereParams.push(value)
+        // Fall back to equality check for non-regex values
+        this.state.whereConditions.push(`${quoteIdentifier(column)} = ?`)
+        this.state.whereParams.push(value as SQLQueryBindings)
       }
     }
     return this
   }
 
   /**
-   * Add a raw SQL WHERE fragment with parameter binding.
-   * Note: Raw expressions bypass duplicate checking as they may be complex conditions.
+   * Add a raw SQL WHERE expression with parameter binding
    *
-   * @param expr - SQL fragment (without leading WHERE/AND), can use ? placeholders
-   * @param params - Values for the placeholders in order
-   * @returns this for method chaining
+   * @example
+   * .whereExpr("LENGTH(name) > ?", [5])
+   * .whereExpr("created_at > datetime('now', '-1 day')")
    */
   whereExpr(expr: string, params: SQLQueryBindings[] = []): this {
     if (!expr || typeof expr !== "string") {
-      throw new Error("whereExpr: expr must be a non-empty string")
+      throw new Error("whereExpr: expression must be a non-empty string")
     }
-    // Wrap in parentheses to preserve grouping when combined with other clauses
+
+    // Wrap in parentheses to preserve grouping
     this.state.whereConditions.push(`(${expr})`)
-    if (params.length) {
+
+    if (params.length > 0) {
       this.state.whereParams.push(...params)
     }
+
     return this
   }
 
   /**
-   * Alias for whereExpr for compatibility
+   * Alias for whereExpr
    */
   whereRaw(expr: string, params: SQLQueryBindings[] = []): this {
     return this.whereExpr(expr, params)
   }
 
   /**
-   * Add an IN clause for the given column with proper parameter binding.
-   * Replaces any existing conditions for the same column.
+   * Add an IN clause
    *
-   * @param column - Column name to check
-   * @param values - Non-empty array of values for the IN clause
-   * @returns this for method chaining
+   * @example
+   * .whereIn("status", ["active", "pending"])
+   * // WHERE "status" IN (?, ?)
    */
   whereIn(column: keyof T, values: SQLQueryBindings[]): this {
     if (!Array.isArray(values) || values.length === 0) {
       throw new Error("whereIn: values must be a non-empty array")
     }
 
-    // Remove any existing conditions for this column
     this.removeExistingCondition(String(column), "IN")
 
-    const placeholders = values.map(() => "?").join(", ")
-    this.state.whereConditions.push(`${String(column)} IN (${placeholders})`)
-    this.state.whereParams.push(...values)
+    const { sql, params } = buildInClause(String(column), values, false)
+    this.state.whereConditions.push(sql)
+    this.state.whereParams.push(...params)
+
     return this
   }
 
   /**
-   * Add a NOT IN clause for the given column with proper parameter binding.
-   * Replaces any existing conditions for the same column.
+   * Add a NOT IN clause
    *
-   * @param column - Column name to check
-   * @param values - Non-empty array of values for the NOT IN clause
-   * @returns this for method chaining
+   * @example
+   * .whereNotIn("role", ["banned", "suspended"])
+   * // WHERE "role" NOT IN (?, ?)
    */
   whereNotIn(column: keyof T, values: SQLQueryBindings[]): this {
     if (!Array.isArray(values) || values.length === 0) {
       throw new Error("whereNotIn: values must be a non-empty array")
     }
 
-    // Remove any existing conditions for this column
     this.removeExistingCondition(String(column), "NOT IN")
 
-    const placeholders = values.map(() => "?").join(", ")
-    this.state.whereConditions.push(`${String(column)} NOT IN (${placeholders})`)
-    this.state.whereParams.push(...values)
+    const { sql, params } = buildInClause(String(column), values, true)
+    this.state.whereConditions.push(sql)
+    this.state.whereParams.push(...params)
+
     return this
   }
 
   /**
-   * Add a comparison operator condition with proper null handling.
-   * Replaces any existing conditions for the same column.
-   * Supports: =, !=, <>, <, <=, >, >=, LIKE, GLOB, IS
+   * Add a comparison operator condition
    *
-   * @param column - Column name
-   * @param op - Comparison operator
-   * @param value - Value to compare (handles null appropriately)
-   * @returns this for method chaining
+   * Supported operators: =, !=, <>, <, <=, >, >=, LIKE, GLOB, IS, IS NOT
+   *
+   * @example
+   * .whereOp("age", ">=", 18)
+   * .whereOp("name", "LIKE", "%smith%")
    */
   whereOp(column: keyof T, op: string, value: SQLQueryBindings): this {
-    const normalizedOp = (op ?? "").toUpperCase().trim()
-    const allowed = ["=", "!=", "<>", "<", "<=", ">", ">=", "LIKE", "GLOB", "IS", "IS NOT"]
+    const normalizedOp = normalizeOperator(op)
+    const columnStr = String(column)
 
-    if (!allowed.includes(normalizedOp)) {
-      throw new Error(`whereOp: operator "${op}" not supported`)
+    // Handle NULL special cases
+    if (value === null || value === undefined) {
+      if (normalizedOp === "=" || normalizedOp === "IS") {
+        this.state.whereConditions.push(`${quoteIdentifier(columnStr)} IS NULL`)
+        return this
+      }
+      if (normalizedOp === "!=" || normalizedOp === "<>" || normalizedOp === "IS NOT") {
+        this.state.whereConditions.push(`${quoteIdentifier(columnStr)} IS NOT NULL`)
+        return this
+      }
     }
 
-    // Handle null special-casing for IS / IS NOT and equality operators
-    if (
-      (value === null || value === undefined) &&
-      (normalizedOp === "=" || normalizedOp === "IS")
-    ) {
-      this.state.whereConditions.push(`${String(column)} IS NULL`)
-      return this
-    }
-
-    if (
-      (value === null || value === undefined) &&
-      (normalizedOp === "!=" || normalizedOp === "<>" || normalizedOp === "IS NOT")
-    ) {
-      this.state.whereConditions.push(`${String(column)} IS NOT NULL`)
-      return this
-    }
-
-    // Normal param-bound condition
-    this.state.whereConditions.push(`${String(column)} ${normalizedOp} ?`)
+    this.state.whereConditions.push(`${quoteIdentifier(columnStr)} ${normalizedOp} ?`)
     this.state.whereParams.push(value)
+
     return this
   }
 
   /**
-   * Add a BETWEEN condition for the given column.
-   * Replaces any existing conditions for the same column.
+   * Add a BETWEEN clause
    *
-   * @param column - Column name
-   * @param min - Minimum value (inclusive)
-   * @param max - Maximum value (inclusive)
-   * @returns this for method chaining
+   * @example
+   * .whereBetween("age", 18, 65)
+   * // WHERE "age" BETWEEN ? AND ?
    */
   whereBetween(column: keyof T, min: SQLQueryBindings, max: SQLQueryBindings): this {
-    // Remove any existing conditions for this column
     this.removeExistingCondition(String(column), "BETWEEN")
 
-    this.state.whereConditions.push(`${String(column)} BETWEEN ? AND ?`)
-    this.state.whereParams.push(min, max)
+    const { sql, params } = buildBetweenClause(String(column), min, max, false)
+    this.state.whereConditions.push(sql)
+    this.state.whereParams.push(...params)
+
     return this
   }
 
   /**
-   * Add a NOT BETWEEN condition for the given column.
-   * Replaces any existing conditions for the same column.
+   * Add a NOT BETWEEN clause
    *
-   * @param column - Column name
-   * @param min - Minimum value (exclusive)
-   * @param max - Maximum value (exclusive)
-   * @returns this for method chaining
+   * @example
+   * .whereNotBetween("score", 0, 50)
+   * // WHERE "score" NOT BETWEEN ? AND ?
    */
   whereNotBetween(column: keyof T, min: SQLQueryBindings, max: SQLQueryBindings): this {
-    // Remove any existing conditions for this column
     this.removeExistingCondition(String(column), "NOT BETWEEN")
 
-    this.state.whereConditions.push(`${String(column)} NOT BETWEEN ? AND ?`)
-    this.state.whereParams.push(min, max)
+    const { sql, params } = buildBetweenClause(String(column), min, max, true)
+    this.state.whereConditions.push(sql)
+    this.state.whereParams.push(...params)
+
     return this
   }
 
   /**
-   * Add an IS NULL condition for the given column.
-   * Replaces any existing conditions for the same column.
+   * Add an IS NULL condition
    *
-   * @param column - Column name
-   * @returns this for method chaining
+   * @example
+   * .whereNull("deleted_at")
+   * // WHERE "deleted_at" IS NULL
    */
   whereNull(column: keyof T): this {
-    // Remove any existing conditions for this column
     this.removeExistingCondition(String(column))
-
-    this.state.whereConditions.push(`${String(column)} IS NULL`)
+    this.state.whereConditions.push(`${quoteIdentifier(String(column))} IS NULL`)
     return this
   }
 
   /**
-   * Add an IS NOT NULL condition for the given column.
-   * Replaces any existing conditions for the same column.
+   * Add an IS NOT NULL condition
    *
-   * @param column - Column name
-   * @returns this for method chaining
+   * @example
+   * .whereNotNull("email")
+   * // WHERE "email" IS NOT NULL
    */
   whereNotNull(column: keyof T): this {
-    // Remove any existing conditions for this column
     this.removeExistingCondition(String(column))
-
-    this.state.whereConditions.push(`${String(column)} IS NOT NULL`)
+    this.state.whereConditions.push(`${quoteIdentifier(String(column))} IS NOT NULL`)
     return this
   }
 }

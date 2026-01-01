@@ -17,9 +17,7 @@ class DockerClient {
   private hostHandler: HostHandler
   private dockerInstances: Map<number, Dockerode> = new Map()
   private activeStreams: Map<string, NodeJS.Timeout> = new Map()
-  private options: Required<Omit<DOCKER.DockerAdapterOptions, "monitoringOptions">> & {
-    monitoringOptions?: DOCKER.DockerAdapterOptions["monitoringOptions"]
-  }
+  private options: Required<DOCKER.DockerAdapterOptions>
   private monitoringManager?: MonitoringManager
   private streamManager?: StreamManager
   private disposed = false
@@ -35,13 +33,29 @@ class DockerClient {
       retryDelay: options.retryDelay ?? 1000,
       enableMonitoring: options.enableMonitoring ?? true,
       enableEventEmitter: options.enableEventEmitter ?? true,
-      monitoringOptions: options.monitoringOptions,
+      monitoringOptions: options.monitoringOptions ?? {},
       execOptions: options.execOptions ?? {},
     }
 
     this.name = name
 
-    this.logger.debug(`Monitoring enabled: ${this.options.enableMonitoring}`)
+    this.options.monitoringOptions = {
+      containerEventPollingInterval:
+        this.options.monitoringOptions?.containerEventPollingInterval || 30000,
+      enableContainerMetrics: this.options.monitoringOptions?.enableContainerMetrics || false,
+      containerMetricsInterval: this.options.monitoringOptions?.containerMetricsInterval || 60000,
+      enableContainerEvents: this.options.monitoringOptions?.enableContainerEvents || false,
+      enableHealthChecks: this.options.monitoringOptions?.enableHealthChecks ?? true,
+      enableHostMetrics: this.options.monitoringOptions?.enableHostMetrics ?? false,
+      healthCheckInterval: this.options.monitoringOptions?.healthCheckInterval ?? 60000,
+      hostMetricsInterval: this.options.monitoringOptions?.hostMetricsInterval ?? 60000,
+      retryAttempts: this.options.monitoringOptions?.retryAttempts ?? 3,
+      retryDelay: this.options.monitoringOptions?.retryDelay ?? 1000,
+    }
+
+    this.logger.debug(
+      `enableMonitoring=${this.options.enableMonitoring} enableContainerMetrics=${this.options.monitoringOptions?.enableContainerMetrics} enableHostMetrics=${this.options.monitoringOptions.enableHostMetrics}`
+    )
     if (this.options.enableMonitoring) {
       this.monitoringManager = new MonitoringManager(
         this.logger.getParentsForLoggerChaining(),
@@ -269,11 +283,16 @@ class DockerClient {
     return this.hostHandler.getHosts()
   }
 
-  public async getAllContainers(): Promise<DOCKER.ContainerInfo[]> {
+  public async getAllContainers() {
     this.checkDisposed()
-    this.logger.info("Fetching containers from all hosts")
     const allContainers: DOCKER.ContainerInfo[] = []
     const hosts = this.hostHandler.getHosts()
+    this.logger.info(`Fetching containers from all hosts (${hosts.length})`)
+
+    if (hosts.length === 0) {
+      this.logger.debug("No hosts found")
+      return allContainers
+    }
 
     await Promise.allSettled(
       hosts.map(async (host) => {
@@ -295,7 +314,7 @@ class DockerClient {
     const docker = this.getDockerInstance(hostId)
     const containers = await withRetry(
       () => docker.listContainers({ all: true }),
-      this.options.retryAttempts,
+      this.options.monitoringOptions.retryAttempts || 3,
       this.options.retryDelay
     )
 
@@ -981,7 +1000,9 @@ class DockerClient {
   private getDockerInstance(hostId: number): Dockerode {
     const docker = this.dockerInstances.get(hostId)
     if (!docker) {
-      throw new Error(`No Docker instance found for host ID: ${hostId}`)
+      throw new Error(
+        `No Docker instance found for host ${hostId} - ${JSON.stringify(this.dockerInstances.keys)}`
+      )
     }
     return docker
   }

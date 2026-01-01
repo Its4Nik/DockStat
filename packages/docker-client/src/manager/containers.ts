@@ -1,16 +1,26 @@
 import type { DOCKER } from "@dockstat/typings"
+import { truncate } from "@dockstat/utils"
 import { DockerClientManagerCore } from "./core"
 
 export class Containers extends DockerClientManagerCore {
-  public async getAllContainers(clientId: number): Promise<DOCKER.ContainerInfo[]> {
-    return this.sendRequest(clientId, { type: "getAllContainers" })
+  public async getAllContainers(clientId: number) {
+    const allContainers =
+      (await this.sendRequest<DOCKER.ContainerInfo[]>(clientId, {
+        type: "getAllContainers",
+      })) || []
+
+    this.logger.info(`Received ${truncate(JSON.stringify(allContainers), 100)} containers`)
+    return allContainers
   }
 
   public async getContainerCount(): Promise<{
     total: number
     perHost: Array<{ hostId: number; clientId: number; containerCount: number }>
   }> {
+    this.logger.info("Getting container count")
+
     const clients = this.getAllClients()
+    this.logger.debug(`Found ${clients.length} clients`)
     const perHost: Array<{ hostId: number; clientId: number; containerCount: number }> = []
 
     await Promise.all(

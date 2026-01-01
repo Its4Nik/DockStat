@@ -21,6 +21,7 @@
   },
   "author": {
     "type": "object",
+    "required": ["name", "license"],
     "properties": {
       "name": {
         "type": "string"
@@ -37,8 +38,7 @@
         "format": "email",
         "type": "string"
       }
-    },
-    "required": ["name", "license"]
+    }
   },
   "tags": {
     "type": "array",

@@ -1,12 +1,17 @@
 import Elysia from "elysia"
 import DockStatElysiaPlugins from "./elysia-plugins"
 import { errorHandler } from "./handlers/onError"
+import BaseLogger from "./logger"
 import MetricsMiddleware from "./middleware/metrics"
 import DBRoutes from "./routes/db"
 import DockerRoutes from "./routes/docker"
 import DockStatMiscRoutes from "./routes/misc"
 import PluginRoutes from "./routes/plugins"
+import RepositoryRoutes from "./routes/repositories"
 import StatusRoutes from "./routes/status"
+import DockStatWebsockets from "./websockets"
+
+const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 
 export const DockStatAPI = new Elysia({ prefix: "/api/v2" })
   .use(MetricsMiddleware)
@@ -17,13 +22,28 @@ export const DockStatAPI = new Elysia({ prefix: "/api/v2" })
   .use(DockerRoutes)
   .use(PluginRoutes)
   .use(DockStatMiscRoutes)
+  .use(RepositoryRoutes)
+  .use(DockStatWebsockets)
+  .listen(PORT)
 
-if (require.main === module) {
-  const PORT =
-    Bun.env.DOCKSTAT_API_PORT || (Bun.env.NODE_ENV || "dev") === "production" ? 3000 : 5173
+const hostnameAndPort = `${DockStatAPI.server?.hostname}:${DockStatAPI.server?.port}`
 
-  DockStatAPI.listen(PORT)
-  console.log(`DockStatAPI listening on ${PORT}`)
-}
+BaseLogger.info(
+  `
+
+    ██████████                     █████       █████████   █████               █████         █████████   ███████████  █████
+   ░░███░░░░███                   ░░███       ███░░░░░███ ░░███               ░░███         ███░░░░░███ ░░███░░░░░███░░███
+    ░███   ░░███  ██████   ██████  ░███ █████░███    ░░░  ███████    ██████   ███████      ░███    ░███  ░███    ░███ ░███
+    ░███    ░███ ███░░███ ███░░███ ░███░░███ ░░█████████ ░░░███░    ░░░░░███ ░░░███░       ░███████████  ░██████████  ░███
+    ░███    ░███░███ ░███░███ ░░░  ░██████░   ░░░░░░░░███  ░███      ███████   ░███        ░███░░░░░███  ░███░░░░░░   ░███
+    ░███    ███ ░███ ░███░███  ███ ░███░░███  ███    ░███  ░███ ███ ███░░███   ░███ ███    ░███    ░███  ░███         ░███
+    ██████████  ░░██████ ░░██████  ████ █████░░█████████   ░░█████ ░░████████  ░░█████     █████   █████ █████        █████
+   ░░░░░░░░░░    ░░░░░░   ░░░░░░  ░░░░ ░░░░░  ░░░░░░░░░     ░░░░░   ░░░░░░░░    ░░░░░     ░░░░░   ░░░░░ ░░░░░        ░░░░░
+
+  - API running at ${hostnameAndPort}/api/v2
+  - API-Docs at: ${hostnameAndPort}/api/v2/docs
+  - DockStat Docs at: https://dockstat.itsnik.de
+  `
+)
 
 export type TreatyType = typeof DockStatAPI
