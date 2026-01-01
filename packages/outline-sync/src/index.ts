@@ -83,14 +83,11 @@ async function loadConfigFilePath(configPath?: string): Promise<Partial<OutlineC
 
   try {
     if (ext === ".js" || ext === ".cjs") {
-      // require JS/CJS file (allow export default)
       try {
-        // ensure fresh read if running in long-lived process
         delete require.cache[require.resolve(configPath)]
       } catch {}
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const mod = require(configPath)
-      const cfg = mod && mod.__esModule && mod.default ? mod.default : mod
+      const cfg = mod.__esModule && mod.default ? mod.default : mod
       return (cfg as Partial<OutlineConfig>) || {}
     }
 
@@ -185,7 +182,7 @@ async function getConfig(
     process.exit(1)
   }
 
-  return null;
+  return config
 }
 
 program.name("outline-sync").description("Sync Outline wiki to local folder").version("1.0.0")
@@ -267,25 +264,28 @@ program
     await sync.verify()
   })
 
-    const raw = await fsp.readFile(configPath, 'utf8');
+program
+  .command("init")
+  .description("Create a sample configuration file")
+  .action(async () => {
+    const configPath = join(process.cwd(), "outline-sync.config.json")
 
-    if (ext === '.json' || base === 'package.json') {
-      const parsed = JSON.parse(raw);
-      if (base === 'package.json') return parsed.outline || parsed;
-      return parsed;
+    if (existsSync(configPath)) {
+      console.error("❌ outline-sync.config.json already exists")
+      process.exit(1)
     }
 
-    // Fallback: try JSON parse, otherwise return raw text
-    try {
-      return JSON.parse(raw);
-    } catch (_) {
-      return raw;
+    const sampleConfig = {
+      url: "https://your-outline.com",
+      token: "your_api_token",
+      outputDir: "./outline-docs",
+      includeCollections: ["Engineering", "Product"],
+      excludeCollections: [],
+      customPaths: {
+        "example-doc-id": "../../README.md",
+        "another-doc-id": "custom/path/document.md",
+      },
     }
-  } catch (err) {
-    // Re-throw with some context
-    throw new Error(`Failed to load config at ${configPath}: ${err instanceof Error ? err.message : String(err)}`);
-  }
-}
 
     await writeFile(configPath, JSON.stringify(sampleConfig, null, 2), "utf-8")
     console.log("✅ Created outline-sync.config.json")
