@@ -3,43 +3,51 @@
 </p>
 
 <p align="center">
-  <a href="https://dockstat.itsnik.de">
+  <a href="https://dockstat.itsnik.de" title="Wiki">
     <img
       alt="Wiki"
-      src="https://img.shields.io/badge/Wiki-Docs-0B7285?style=for-the-badge"
+      src="https://img.shields.io/badge/-Wiki-0B7285?style=for-the-badge&logo=readthedocs&logoColor=white"
     />
   </a>
-  <a href="#key-features">
+  <a href="#key-features" title="Features">
     <img
       alt="Features"
-      src="https://img.shields.io/badge/Features-Key%20Features-1864AB?style=for-the-badge"
+      src="https://img.shields.io/badge/-Features-1864AB?style=for-the-badge&logo=sparkfun&logoColor=white"
     />
   </a>
-  <a href="#getting-started-developer-local">
+  <a href="#getting-started-developer-local" title="Getting started (developer)">
     <img
       alt="Getting started (developer)"
-      src="https://img.shields.io/badge/Getting%20started-Developer-2F9E44?style=for-the-badge"
+      src="https://img.shields.io/badge/-Dev%20Setup-2F9E44?style=for-the-badge&logo=visualstudiocode&logoColor=white"
     />
   </a>
-  <a href="#stacks-dockstore">
+  <a href="#stacks-dockstore" title="DockStore">
     <img
       alt="DockStore"
-      src="https://img.shields.io/badge/DockStore-Plugins%20%7C%20Themes%20%7C%20Stacks-F08C00?style=for-the-badge"
+      src="https://img.shields.io/badge/-DockStore-F08C00?style=for-the-badge&logo=docker&logoColor=white"
     />
   </a>
-  <a href="#development-workflow-guidelines">
+  <a href="#development-workflow-guidelines" title="Development guide">
     <img
       alt="Development guide"
-      src="https://img.shields.io/badge/Development-Guide-7048E8?style=for-the-badge"
+      src="https://img.shields.io/badge/-Development%20Guide-7048E8?style=for-the-badge&logo=gitbook&logoColor=white"
     />
   </a>
 </p>
 
 ---
 
-| ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) | ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)            | ![Biome](https://img.shields.io/badge/biome-%2360A5FA.svg?style=for-the-badge&logo=biome&logoColor=white)         | ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)          |
-| ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)     | ![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white) | ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=Prometheus&logoColor=white) | ![Turborepo](https://img.shields.io/badge/Turborepo-%230F0813.svg?style=for-the-badge&logo=Turborepo&logoColor=white) |
+<p align="center">
+  <img alt="TailwindCSS" src="https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
+  <img alt="Docker" src="https://img.shields.io/badge/Docker-0DB7ED?style=for-the-badge&logo=docker&logoColor=white" />
+  <img alt="Biome" src="https://img.shields.io/badge/Biome-60A5FA?style=for-the-badge&logo=biome&logoColor=white" />
+  <img alt="SQLite" src="https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white" />
+  <br />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
+  <img alt="React Router" src="https://img.shields.io/badge/React%20Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white" />
+  <img alt="Prometheus" src="https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white" />
+  <img alt="Turborepo" src="https://img.shields.io/badge/Turborepo-0F0813?style=for-the-badge&logo=turborepo&logoColor=white" />
+</p>
 
 DockStat is an extensible container administration and monitoring platform that aims to combine the best ideas from tools like Portainer, Grafana and Dockge into a single, modular solution. It focuses on real-world manageability, deep observability and a runtime plugin-first architecture so the platform can evolve with your stack.
 
