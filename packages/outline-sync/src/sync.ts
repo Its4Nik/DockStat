@@ -14,7 +14,8 @@ interface DocumentNode {
 interface SyncTableRow {
   Document: string
   Collection: string
-  "Local Date": string
+  "Local mtime": string
+  Frontmatter: string
   "Remote Date": string
   Status: string
 }
@@ -330,10 +331,20 @@ export class OutlineSync {
 
     const remoteDate = parseToDate(fullDoc.updatedAt) || new Date()
 
+    let fileMtime: Date = new Date()
+    try {
+      const fsStat = await stat(filePath)
+      fileMtime = fsStat.mtime
+    } catch (err) {
+      this.trace("syncDocumentNode: failed to stat written file", { filePath, error: String(err) })
+    }
+
+    // Record both the filesystem mtime and the frontmatter (remote) timestamp so it's explicit
     this.syncTableData.push({
       Document: this.truncate(fullDoc.title, 30),
       Collection: this.truncate(collectionName, 15),
-      "Local Date": this.formatDate(new Date()),
+      "Local mtime": this.formatDate(fileMtime),
+      Frontmatter: this.formatDate(remoteDate),
       "Remote Date": this.formatDate(remoteDate),
       Status: "Pulled",
     })
