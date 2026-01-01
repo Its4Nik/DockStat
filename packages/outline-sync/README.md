@@ -1,54 +1,56 @@
 # Outline Sync
 
-Bidirectional sync for Outline wiki to local folders with CI/CD support.
+Outline Sync is a small CLI for bidirectional synchronization between an Outline wiki and a local Markdown folder. It supports one‑time syncs, file watching, CI-friendly flows, and a targeted `push` command that compares timestamps before uploading changes.
 
-## Installation
+## Features
 
+- Sync Outline → Local (pull documents, write frontmatter)
+- Sync Local → Outline (push local changes)
+- `push` command that compares local vs remote `updatedAt` timestamps
+- Prefers frontmatter `updatedAt` over file system `mtime`
+- Collection filtering (include/exclude)
+- Custom path mapping per document
+- Preserves frontmatter metadata
+- CI/CD friendly workflows
+- File watching for real-time pushes
+- Safety checks for missing IDs or remote fetch errors
+
+## Quick install
+
+Using bun (preferred):
 ```bash
 bun install -g @dockstat/outline-sync
 ```
 
-## Features
+Or via npm:
+```bash
+npm install -g @dockstat/outline-sync
+```
 
-- ✅ Sync Outline → Local
-- ✅ Sync Local → Outline
-- ✅ Push local changes to Outline (new `push` command)
-- ✅ Compare modification dates (mtime) and frontmatter `updatedAt` to detect changes
-- ✅ Custom path mapping for specific documents
-- ✅ Collection filtering (include/exclude)
-- ✅ Frontmatter metadata preservation
-- ✅ CI/CD integration
-- ✅ File watching
+> [!CAUTION]
+> This package's target is set to `bun` and a "bun banner" (#!/usr/bin/env bun) is also added during bundling. Make sure you have [bun](https://bun.sh) installed! (It's better than node anyways)
 
-## What's new
+## Getting started
 
-Three main improvements were added:
-
-1. Push command
-   - `outline-sync push` lets you push local changes up to Outline without performing a full `sync`/`syncDown` first.
-   - It compares local file timestamps against the remote document `updatedAt` and only pushes files that appear newer locally.
-
-2. Modification-date comparison
-   - When detecting local changes, the tool now prefers a frontmatter `updatedAt` timestamp (if present) and falls back to the file system modification time (`mtime`).
-   - This allows more accurate determination of whether a local edit should be pushed.
-
-3. Duplicate-folder fix (collection/document name collision)
-   - Fixed an issue where a collection and a top-level document shared the same title (for example: collection "DockStat" and a root document titled "DockStat") and the sync created a nested duplicate folder like `./dockstat/dockstat/README.md`.
-   - Now, when a root document's sanitized title equals the collection folder name, the file is written as `./<collection>/README.md` (no extra nested folder). This produces a single `./dockstat/README.md` for the example above and avoids confusing directory nesting.
-   - This behavior preserves existing custom paths while preventing accidental duplicate folders when collection and document titles collide.
-
-## Configuration
-
-### Option 1: Config File (Recommended)
-
-Create `outline-sync.config.json`:
+1. Initialize a sample config in your repo:
 
 ```bash
 outline-sync init
 ```
 
-Then edit the generated file:
+2. Edit the generated `outline-sync.config.json` (see configuration below).
 
+3. Run a sync:
+
+```bash
+outline-sync sync
+```
+
+## Configuration
+
+Configuration can come from a file, environment variables, or CLI flags. Precedence: CLI args → env vars → config file.
+
+Example `outline-sync.config.json`:
 ```json
 {
   "url": "https://your-outline.com",
@@ -63,85 +65,53 @@ Then edit the generated file:
 }
 ```
 
-You can also use environment variables:
-
+Environment variables:
 ```bash
-export OUTLINE_URL=https://your-outline.com
-export OUTLINE_TOKEN=your_api_token
-export OUTLINE_OUTPUT_DIR=./outline-docs
+export OUTLINE_URL="https://your-outline.com"
+export OUTLINE_TOKEN="your_api_token"
+export OUTLINE_OUTPUT_DIR="./outline-docs"
 ```
 
-Or pass options via CLI (these take precedence over env/config file).
+CLI examples (flags take precedence):
 
-## Usage
+```bash
+outline-sync sync --url https://your-outline.com --token $TOKEN --output ./outline-docs
+```
 
-### Commands
+## Commands
 
 - `outline-sync init`  
   Create a sample `outline-sync.config.json` in the current directory.
 
 - `outline-sync sync`  
-  One-time sync from Outline → local. Pulls documents and writes frontmatter (including `updatedAt`) into each `README.md`.
+  One-time sync: pulls documents from Outline and writes Markdown files (each with frontmatter including `updatedAt`).
 
 - `outline-sync watch`  
-  Watches your `outputDir` for local changes and pushes them to Outline as they happen (bidirectional).
+  Watch the `outputDir` for local changes and push edits to Outline live.
 
 - `outline-sync ci`  
-  CI/CD friendly flow: performs a `syncDown` (pulls remote docs and caches their `updatedAt`), finds local files newer than the cached remote timestamps, and pushes those changes.
+  CI flow: perform a `syncDown` to cache remote `updatedAt` values then push local files that are newer.
 
-- `outline-sync push` (new)  
-  Push local changes to Outline by comparing each local file against the actual remote document `updatedAt`. This does NOT perform an initial `syncDown`. For each local markdown file:
-    - The tool reads frontmatter for an `id` (document ID). If missing, the file is skipped.
-    - It prefers frontmatter `updatedAt` (if present) when comparing timestamps.
-    - Otherwise it falls back to the file system `mtime`.
-    - It fetches the remote document's `updatedAt` (if not already cached) and compares.
-    - If the local timestamp is later than remote `updatedAt`, the file is pushed.
-    - If the remote document cannot be fetched (deleted/permission issues), the file is included in the push list so you can inspect it.
-
-### Examples
-
-Sync all collections (uses config/env or CLI args for credentials if required):
-```bash
-outline-sync sync
-```
-
-Watch and auto-push local edits:
-```bash
-outline-sync watch --include "Engineering"
-```
-
-CI job (pull then push any local changes that are newer than remote):
-```bash
-outline-sync ci --exclude "Private,Draft"
-```
-
-Push local changes (no initial sync; queries remote per-file):
-```bash
-outline-sync push
-```
-
-Push while specifying config/credentials inline:
-```bash
-outline-sync push --url https://my.outline.app --token <YOUR_TOKEN> --output ./outline-docs
-```
+- `outline-sync push`  
+  Targeted push that compares each local file's timestamp against the remote `updatedAt` and uploads only those that appear newer. Does not require a prior `syncDown`.
 
 ## How change detection works
 
-When deciding whether a local file should be pushed upward, the tool uses this priority:
+When determining if a local file should be pushed, the priority is:
 
-1. frontmatter `updatedAt` (if present in the markdown file's frontmatter)
-2. file system `mtime` (the file's modification time on disk)
+1. frontmatter `updatedAt` (if present)
+2. file system `mtime`
 
-That local timestamp is compared against the remote document's `updatedAt`. If the local timestamp is newer, the file is scheduled to be pushed.
+That local timestamp is compared against the remote document's `updatedAt`. If the local timestamp is later, the file is pushed.
 
 Notes:
-- `outline-sync ci` will populate an internal cache of remote `updatedAt` values during the initial `syncDown` and use that to avoid fetching each remote doc again.
-- `outline-sync push` will fetch remote `updatedAt` per-document as it evaluates each file (useful for CI runs where you didn't perform a `syncDown` first).
-- Frontmatter must contain a valid `id` (document ID) for a file to be considered for push. If `id` is missing the file will be skipped.
+- `push` fetches remote `updatedAt` per-document (useful for CI when no `syncDown` was done).
+- `ci` will `syncDown` first to build a cache and reduce API calls during comparison.
+- Files without a valid frontmatter `id` are skipped for push and surfaced to the user.
 
 ## Frontmatter format
 
-Each synced file includes frontmatter with metadata similar to:
+Synced files include frontmatter like:
 
 ```yaml
 ---
@@ -154,16 +124,37 @@ urlId: my-document-urlid
 ---
 ```
 
-The `updatedAt` field is written by `sync` when pulling from Outline. If you edit a file and update the frontmatter `updatedAt` manually to a newer timestamp, the tool will honor that value when deciding to push.
+If you manually update the frontmatter `updatedAt` to a newer timestamp, the tool will honor it during comparisons.
 
-## Safety notes & best practices
+## Example usage
 
-- Always ensure your frontmatter `id` is present if you expect a file to be pushed back to Outline.
-- When using `push` in CI, be aware it will fetch remote metadata for every document being considered; this will incur API calls.
-- If a file cannot be matched to a remote document (missing id or fetch error), it will be surfaced so you can investigate before pushing.
+Sync all collections (uses config/env or CLI args):
 
-## CI/CD example (GitHub Actions)
+```bash
+outline-sync sync
+```
 
+Watch and auto-push local edits (filter by collection):
+
+```bash
+outline-sync watch --include "Engineering"
+```
+
+CI job (pull then push local changes that are newer than remote):
+
+```bash
+outline-sync ci --exclude "Private,Draft"
+```
+
+Push local changes without an initial sync:
+
+```bash
+outline-sync push --url https://my.outline.app --token <YOUR_TOKEN> --output ./outline-docs
+```
+
+## CI/CD (GitHub Actions) example
+
+A minimal workflow:
 ```yaml
 name: Outline Sync
 
@@ -171,7 +162,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "0 */6 * * *" # Every 6 hours
+    - cron: "0 */6 * * *"
 
 jobs:
   sync:
@@ -189,8 +180,27 @@ jobs:
           commit_message: "docs: sync from Outline"
 ```
 
+## Safety notes & best practices
+
+- Ensure frontmatter `id` is present if you want files to be considered for push.
+- `push` will perform API calls per-file to fetch remote metadata; be mindful of rate limits in CI.
+- If a remote fetch fails (deleted doc, permissions), that file is surfaced for manual inspection.
+- Prefer scheduled `sync` runs and targeted `push` runs in CI to reduce unnecessary API calls.
+
 ## Troubleshooting
 
-- If you see files being pushed unexpectedly, inspect their frontmatter `updatedAt` values and file `mtime`.
-- If push fails due to permissions, confirm the API token has the required document update scope.
-- For large repos, consider running `sync` in a scheduled job and using `push` only when necessary to reduce API calls.
+- Unexpected pushes: inspect file frontmatter `updatedAt` and file `mtime`.
+- Permission errors: verify the API token has document update scopes.
+- Missing IDs: if you migrated files manually, ensure `id` is present in frontmatter for push support.
+
+## Notes on collisions (collection vs document name)
+
+If a collection and a top-level document share a sanitized title, files will be written so they do not create duplicate nested folders. For example, a root document named `DockStat` inside collection `DockStat` will be written as `./dockstat/README.md` (no extra nested folder). Custom paths configured in `customPaths` are preserved.
+
+## Contributing
+
+Contributions, bug reports and PRs are welcome. Please open issues in the main repo and target the `dev` branch for changes related to this package.
+
+## License
+
+This package follows the repository license. See the top-level LICENSE file for details.
