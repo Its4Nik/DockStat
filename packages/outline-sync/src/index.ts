@@ -1,182 +1,105 @@
-import { existsSync } from "node:fs"
-import { readFile, writeFile } from "node:fs/promises"
-import { join } from "node:path"
-import { Command } from "commander"
-import { OutlineSync } from "./sync"
-import type { OutlineConfig } from "./types"
+import fs from 'fs';
+import path from 'path';
 
-const program = new Command()
+const fsp = fs.promises;
 
-async function loadConfig(configPath?: string): Promise<Partial<OutlineConfig>> {
-  const defaultPath = join(process.cwd(), "outline-sync.config.json")
-  const path = configPath || defaultPath
+const CONFIG_FILENAMES = [
+  'outline.config.js',
+  'outline.config.cjs',
+  'outline.config.json',
+  'outline.config',
+  '.outlinerc',
+  'outline.config.yaml',
+  'outline.config.yml',
+  'package.json'
+];
 
-  if (existsSync(path)) {
-    console.log(`📝 Loading config from ${path}`)
-    const content = await readFile(path, "utf-8")
-    return JSON.parse(content)
+/**
+ * Search for a configuration file.
+ * - If process.env.OUTLINE_CONFIG is set, that path is used (resolved relative to cwd if not absolute).
+ * - Otherwise, walk up parent directories from startDir looking for any of CONFIG_FILENAMES.
+ * Returns the resolved path or null if not found.
+ */
+export async function findConfig(startDir?: string): Promise<string | null> {
+  const cwd = process.cwd();
+
+  // Respect explicit environment override first
+  const envPath = process.env.OUTLINE_CONFIG;
+  if (envPath) {
+    const resolved = path.isAbsolute(envPath) ? envPath : path.resolve(cwd, envPath);
+    try {
+      await fsp.access(resolved, fs.constants.R_OK);
+      return resolved;
+    } catch (err) {
+      // If the env-provided path doesn't exist, we continue to search as a fallback
+      // but also surface a helpful error downstream if needed.
+    }
   }
 
-  return {}
-}
-
-function parseArrayOption(value: string): string[] {
-  return value
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean)
-}
-
-async function getConfig(
-  options: {
-    url: string
-    include: string
-    exclude: string
-    token?: string
-    outputDir: string
-    output: string
-    config: string
-    verbose?: boolean
-  },
-  loadConfigFile = true
-): Promise<OutlineConfig> {
-  const fileConfig = loadConfigFile ? await loadConfig(options.config) : {}
-
-  const config: OutlineConfig = {
-    url: options.url || fileConfig.url || process.env.OUTLINE_URL || "",
-    token: options.token || fileConfig.token || process.env.OUTLINE_TOKEN || "",
-    outputDir:
-      options.output || fileConfig.outputDir || process.env.OUTLINE_OUTPUT_DIR || "./outline-docs",
-    customPaths: fileConfig.customPaths || {},
-    includeCollections: options.include
-      ? parseArrayOption(options.include)
-      : fileConfig.includeCollections,
-    excludeCollections: options.exclude
-      ? parseArrayOption(options.exclude)
-      : fileConfig.excludeCollections,
-    verbose: Boolean(options.verbose),
-  }
-
-  if (!config.url || !config.token) {
-    console.error("Error: OUTLINE_URL and OUTLINE_TOKEN must be provided")
-    console.error("Set via:")
-    console.error("  - Environment variables (OUTLINE_URL, OUTLINE_TOKEN)")
-    console.error("  - CLI arguments (--url, --token)")
-    console.error("  - Config file (outline-sync.config.json)")
-    process.exit(1)
-  }
-
-  return config
-}
-
-program.name("outline-sync").description("Sync Outline wiki to local folder").version("1.0.0")
-
-program
-  .command("sync")
-  .description("One-time sync from Outline to local")
-  .option("-u, --url <url>", "Outline URL")
-  .option("-t, --token <token>", "API token")
-  .option("-o, --output <dir>", "Output directory")
-  .option("-c, --config <path>", "Config file path")
-  .option("-i, --include <collections>", "Comma-separated list of collections to include")
-  .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
-  .option("-v, --verbose", "Enable debug logging")
-  .action(async (options) => {
-    const config = await getConfig(options)
-    const sync = new OutlineSync(config, { verbose: config.verbose })
-    await sync.syncDown()
-  })
-
-program
-  .command("watch")
-  .description("Watch for local changes and sync bidirectionally")
-  .option("-u, --url <url>", "Outline URL")
-  .option("-t, --token <token>", "API token")
-  .option("-o, --output <dir>", "Output directory")
-  .option("-c, --config <path>", "Config file path")
-  .option("-i, --include <collections>", "Comma-separated list of collections to include")
-  .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
-  .option("-v, --verbose", "Enable debug logging")
-  .action(async (options) => {
-    const config = await getConfig(options)
-    const sync = new OutlineSync(config, { verbose: config.verbose })
-    await sync.watch()
-  })
-
-program
-  .command("ci")
-  .description("CI/CD mode: sync both ways")
-  .option("-u, --url <url>", "Outline URL")
-  .option("-t, --token <token>", "API token")
-  .option("-o, --output <dir>", "Output directory")
-  .option("-c, --config <path>", "Config file path")
-  .option("-i, --include <collections>", "Comma-separated list of collections to include")
-  .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
-  .option("-v, --verbose", "Enable debug logging")
-  .action(async (options) => {
-    const config = await getConfig(options)
-    const sync = new OutlineSync(config, { verbose: config.verbose })
-    await sync.ciSync()
-  })
-
-program
-  .command("push")
-  .description("Push local changes to Outline")
-  .option("-u, --url <url>", "Outline URL")
-  .option("-t, --token <token>", "API token")
-  .option("-o, --output <dir>", "Output directory")
-  .option("-c, --config <path>", "Config file path")
-  .option("-i, --include <collections>", "Comma-separated list of collections to include")
-  .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
-  .option("-v, --verbose", "Enable debug logging")
-  .action(async (options) => {
-    const config = await getConfig(options)
-    const sync = new OutlineSync(config, { verbose: config.verbose })
-    await sync.push()
-  })
-
-program
-  .command("init")
-  .description("Create a sample configuration file")
-  .action(async () => {
-    const configPath = join(process.cwd(), "outline-sync.config.json")
-
-    if (existsSync(configPath)) {
-      console.error("❌ outline-sync.config.json already exists")
-      process.exit(1)
+  // Start searching from provided startDir or cwd and walk up to the filesystem root
+  let dir = path.resolve(startDir || cwd);
+  while (true) {
+    for (const name of CONFIG_FILENAMES) {
+      const candidate = path.join(dir, name);
+      try {
+        await fsp.access(candidate, fs.constants.R_OK);
+        return candidate;
+      } catch (_) {
+        // not found, continue
+      }
     }
 
-    const sampleConfig = {
-      url: "https://your-outline.com",
-      token: "your_api_token",
-      outputDir: "./outline-docs",
-      includeCollections: ["Engineering", "Product"],
-      excludeCollections: [],
-      customPaths: {
-        "example-doc-id": "../../README.md",
-        "another-doc-id": "custom/path/document.md",
-      },
+    const parent = path.dirname(dir);
+    if (parent === dir) break; // reached root
+    dir = parent;
+  }
+
+  return null;
+}
+
+/**
+ * Load configuration discovered by findConfig.
+ * - JS/CJS files are required() so they can export functions/objects.
+ * - JSON and package.json are parsed as JSON. If package.json contains an `outline` key, that is returned.
+ * - Other files are attempted to be JSON-parsed as a fallback; if parsing fails the raw text is returned.
+ */
+export async function loadConfig(startDir?: string): Promise<any> {
+  const configPath = await findConfig(startDir);
+  if (!configPath) return null;
+
+  const ext = path.extname(configPath).toLowerCase();
+  const base = path.basename(configPath).toLowerCase();
+
+  try {
+    if (ext === '.js' || ext === '.cjs') {
+      // Use require so JavaScript config files can export functions/objects.
+      // Delete from cache to pick up changes when repeatedly run in a long-lived process.
+      try {
+        delete require.cache[require.resolve(configPath)];
+      } catch (_) {}
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const mod = require(configPath);
+      return mod && mod.__esModule && mod.default ? mod.default : mod;
     }
 
-    await writeFile(configPath, JSON.stringify(sampleConfig, null, 2), "utf-8")
-    console.log("✅ Created outline-sync.config.json")
-    console.log("\n📝 Edit the file and replace example values with your actual configuration")
-  })
+    const raw = await fsp.readFile(configPath, 'utf8');
 
-program
-  .command("verify")
-  .description("Verify configuration and show resolved custom paths")
-  .option("-u, --url <url>", "Outline URL")
-  .option("-t, --token <token>", "API token")
-  .option("-o, --output <dir>", "Output directory")
-  .option("-c, --config <path>", "Config file path")
-  .option("-i, --include <collections>", "Comma-separated list of collections to include")
-  .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
-  .option("-v, --verbose", "Enable debug logging")
-  .action(async (options) => {
-    const config = await getConfig(options)
-    const sync = new OutlineSync(config, { verbose: config.verbose })
-    await sync.verify()
-  })
+    if (ext === '.json' || base === 'package.json') {
+      const parsed = JSON.parse(raw);
+      if (base === 'package.json') return parsed.outline || parsed;
+      return parsed;
+    }
 
-program.parse()
+    // Fallback: try JSON parse, otherwise return raw text
+    try {
+      return JSON.parse(raw);
+    } catch (_) {
+      return raw;
+    }
+  } catch (err) {
+    // Re-throw with some context
+    throw new Error(`Failed to load config at ${configPath}: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+export default loadConfig;
