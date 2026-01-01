@@ -1,7 +1,7 @@
 import chalk from "chalk"
-import type { LogLevel, LogHook, LogEntry } from "./types"
-import { DISABLED_LOGGERS, ONLY_SHOW, NAME_SEP, ignoreMessages } from "./config"
-import { getCallerInfo, shouldIgnore, levelColors, shouldLog, colorByReqID } from "./utils"
+import { DISABLED_LOGGERS, ignoreMessages, NAME_SEP, ONLY_SHOW } from "./config"
+import type { LogEntry, LogHook, LogLevel } from "./types"
+import { colorByReqID, getCallerInfo, levelColors, shouldIgnore, shouldLog } from "./utils"
 
 class Logger {
   protected name: string

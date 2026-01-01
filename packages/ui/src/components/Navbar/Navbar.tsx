@@ -1,8 +1,8 @@
+import type { LogEntry } from "@dockstat/logger"
 import { motion } from "framer-motion"
 import { Menu } from "lucide-react"
 import { useState } from "react"
 import { NavLink } from "react-router"
-import type { LogEntry } from "@dockstat/logger"
 
 import { Badge } from "../Badge/Badge"
 import { Card } from "../Card/Card"

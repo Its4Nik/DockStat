@@ -1,6 +1,7 @@
 import { formatBytes } from "@dockstat/utils"
 import Elysia, { t } from "elysia"
 import { LogWebsoket } from "./logSocket"
+
 const wsIntervals = new WeakMap<object, Timer>()
 
 const RSS_INTERVAL_SEC = 2 * 1000

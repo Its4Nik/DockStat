@@ -1,6 +1,6 @@
 import chalk from "chalk"
+import { callerMatchesDepth, LOG_LEVEL } from "./config"
 import type { LogLevel } from "./types"
-import { callerMatchesDepth, ignoreMessages, LOG_LEVEL } from "./config"
 
 export const LEVEL_PRIORITY: Record<LogLevel, number> = {
   error: 0,
@@ -48,7 +48,7 @@ export function getCallerInfo(): string {
       if (stackVal) {
         const line = stackVal.trim()
         const matches = line.match(/\(?(.+):(\d+):(\d+)\)?$/)
-        if (matches && matches[1]) {
+        if (matches?.[1]) {
           return `${matches[1].split("/").pop()}:${matches[callerMatchesDepth]}`
         }
       }
