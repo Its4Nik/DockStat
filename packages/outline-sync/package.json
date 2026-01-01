@@ -11,7 +11,7 @@
     "./README.md"
   ],
   "scripts": {
-    "build": "rm -r build && bun build src/index.ts --outdir dist --target bun --banner '#!/usr/bin/env bun'",
+    "build": "rm -r dist && bun build src/index.ts --outdir dist --target bun --banner '#!/usr/bin/env bun'",
     "dev": "bun run src/index.ts",
     "sync": "bun run src/index.ts sync",
     "watch": "bun run src/index.ts watch",
