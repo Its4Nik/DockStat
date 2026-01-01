@@ -3,7 +3,7 @@ id: a04555b5-b827-4441-ae20-9cad1a2be714
 title: "@dockstat/ui"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: bbcefaa2-6bd4-46e8-ae4b-a6b823593e67
-updatedAt: 2025-12-29T20:53:30.738Z
+updatedAt: 2026-01-01T14:25:50.032Z
 urlId: NXWduCaEB3
 ---
 

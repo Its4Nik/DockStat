@@ -3,25 +3,25 @@ id: 57802308-6a42-4d47-82b6-bc553ae10e9c
 title: "Frontend: actions"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: a81b5d89-a300-47ac-8ffa-a3b851645978
-updatedAt: 2026-01-01T14:18:21.309Z
+updatedAt: 2026-01-01T14:27:30.440Z
 urlId: 0tWEK43tNb
 ---
 
 ## `lib/actions/` (Forms / Mutations)
 
-This folder contains all **client-side “write” operations** used by forms and UI interactions: creating, updating, deleting, and triggering server-side effects. These functions are typically consumed by **TanStack React Query mutations** (`useMutation`) or called by form submit handlers.
+This folder contains all **client-side "write" operations** used by forms and UI interactions: creating, updating, deleting, and triggering server-side effects. These functions are typically consumed by **TanStack React Query mutations** (`useMutation`) or called by form submit handlers.
 
 ### Pattern
 
-- **One exported async function per action/use-case**
-- Accept a single `input` object (easy to validate + extend)
-- Call the API client (`api...`)
-- If the API returns an error, **throw**
-- Otherwise **return `data`** (or a minimal success payload)
+* **One exported async function per action/use-case**
+* Accept a single `input` object (easy to validate + extend)
+* Call the API client (`api...`)
+* If the API returns an error, **throw**
+* Otherwise **return** `**data**` (or a minimal success payload)
 
 ### Example
 
-```ts
+```tsx
 import { api } from "./api"
 
 type UpdateProfileInput = {
@@ -79,15 +79,15 @@ export function ProfileForm() {
 
 ### Naming + organization
 
-- Use verbs: `createX`, `updateX`, `deleteX`, `inviteX`, `uploadX`, `publishX`
-- Group by domain when it grows:
-  - `actions/auth/`
-  - `actions/profile/`
-  - `actions/projects/`
+* Use verbs: `createX`, `updateX`, `deleteX`, `inviteX`, `uploadX`, `publishX`
+* Group by domain when it grows:
+  * `actions/auth/`
+  * `actions/profile/`
+  * `actions/projects/`
 
 ### Rules
 
-- Always `throw` on API errors (React Query will surface it in `mutation.error`)
-- Keep **UI concerns out** of actions (no toasts, no routing, no cache invalidation here)
-- Keep input types close to the action
-- Return only what the caller needs (don’t over-return)
+* Always `throw` on API errors (React Query will surface it in `mutation.error`)
+* Keep **UI concerns out** of actions (no toasts, no routing, no cache invalidation here)
+* Keep input types close to the action
+* Return only what the caller needs (don't over-return)

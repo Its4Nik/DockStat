@@ -1,23 +1,143 @@
 import { existsSync } from "node:fs"
 import { readFile, writeFile } from "node:fs/promises"
-import { join } from "node:path"
+import { join, resolve } from "node:path"
 import { Command } from "commander"
 import { OutlineSync } from "./sync"
 import type { OutlineConfig } from "./types"
+import fs from "node:fs"
+import path from "node:path"
 
 const program = new Command()
 
-async function loadConfig(configPath?: string): Promise<Partial<OutlineConfig>> {
-  const defaultPath = join(process.cwd(), "outline-sync.config.json")
-  const path = configPath || defaultPath
+/**
+ * Config discovery + loading:
+ * - If OUTLINE_CONFIG env var is set and points at a readable file, use that.
+ * - If a CLI `--config` path is provided and readable, use that.
+ * - Walk up parent directories from startDir / cwd looking for common config filenames.
+ * - Support package.json -> `outline` key.
+ * - Support .js/.cjs config files (require) and JSON/YAML.
+ */
+const CONFIG_FILENAMES = [
+  "outline-sync.config.json",
+  "outline-sync.config.yaml",
+  "outline-sync.config.yml",
+  "outline-sync.config.js",
+  "outline-sync.config.cjs",
+  "outline-sync.config",
+  ".outlinerc",
+  "package.json",
+]
 
-  if (existsSync(path)) {
-    console.log(`📝 Loading config from ${path}`)
-    const content = await readFile(path, "utf-8")
-    return JSON.parse(content)
+async function findConfigPath(configPath?: string, startDir?: string): Promise<string | null> {
+  const cwd = process.cwd()
+
+  // 1) Env override
+  if (process.env.OUTLINE_CONFIG) {
+    const candidate = path.isAbsolute(process.env.OUTLINE_CONFIG)
+      ? process.env.OUTLINE_CONFIG
+      : path.resolve(cwd, process.env.OUTLINE_CONFIG)
+    try {
+      await fs.promises.access(candidate, fs.constants.R_OK)
+      return candidate
+    } catch {
+      // fallthrough to search
+    }
   }
 
-  return {}
+  // 2) If explicit configPath provided, try it first
+  if (configPath) {
+    const resolved = path.isAbsolute(configPath) ? configPath : path.resolve(cwd, configPath)
+    try {
+      await fs.promises.access(resolved, fs.constants.R_OK)
+      return resolved
+    } catch {
+      // fallthrough to search
+    }
+  }
+
+  // 3) Walk up from startDir (or cwd)
+  let dir = resolve(startDir || cwd)
+  while (true) {
+    for (const name of CONFIG_FILENAMES) {
+      const candidate = join(dir, name)
+      try {
+        await fs.promises.access(candidate, fs.constants.R_OK)
+        return candidate
+      } catch {
+        // not found, continue
+      }
+    }
+
+    const parent = path.dirname(dir)
+    if (parent === dir) break
+    dir = parent
+  }
+
+  return null
+}
+
+async function loadConfigFilePath(configPath?: string): Promise<Partial<OutlineConfig>> {
+  if (!configPath) return {}
+  const ext = path.extname(configPath).toLowerCase()
+  const base = path.basename(configPath).toLowerCase()
+
+  try {
+    if (ext === ".js" || ext === ".cjs") {
+      // require JS/CJS file (allow export default)
+      try {
+        // ensure fresh read if running in long-lived process
+        delete require.cache[require.resolve(configPath)]
+      } catch {}
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const mod = require(configPath)
+      const cfg = mod && mod.__esModule && mod.default ? mod.default : mod
+      return (cfg as Partial<OutlineConfig>) || {}
+    }
+
+    const raw = await readFile(configPath, "utf-8")
+
+    if (base === "package.json") {
+      const parsed = JSON.parse(raw)
+      return (parsed.outline || parsed) as Partial<OutlineConfig>
+    }
+
+    if (ext === ".json" || ext === ".config" || ext === ".outlinerc") {
+      try {
+        return JSON.parse(raw) as Partial<OutlineConfig>
+      } catch {
+        // fallthrough
+      }
+    }
+
+    // Last-resort: try JSON parse, otherwise return empty object
+    try {
+      return JSON.parse(raw) as Partial<OutlineConfig>
+    } catch {
+      return {}
+    }
+  } catch {
+    // If file is not readable or parse fails, return empty so we can fallback to env/CLI
+    return {}
+  }
+}
+
+async function loadConfig(configPath?: string, startDir?: string): Promise<Partial<OutlineConfig>> {
+  // If explicit path exists, use it
+  if (configPath) {
+    const resolved = path.isAbsolute(configPath)
+      ? configPath
+      : path.resolve(process.cwd(), configPath)
+    try {
+      await fs.promises.access(resolved, fs.constants.R_OK)
+      return loadConfigFilePath(resolved)
+    } catch {
+      // fall through to search
+    }
+  }
+
+  const discovered = await findConfigPath(configPath, startDir)
+  if (!discovered) return {}
+  return loadConfigFilePath(discovered)
 }
 
 function parseArrayOption(value: string): string[] {
@@ -29,15 +149,13 @@ function parseArrayOption(value: string): string[] {
 
 async function getConfig(
   options: {
-    url: string
-    include: string
-    exclude: string
+    url?: string
+    include?: string
+    exclude?: string
     token?: string
-    outputDir: string
-    output: string
-    config: string
+    output?: string
+    config?: string
     verbose?: boolean
-    force?: boolean
   },
   loadConfigFile = true
 ): Promise<OutlineConfig> {
@@ -48,15 +166,14 @@ async function getConfig(
     token: options.token || fileConfig.token || process.env.OUTLINE_TOKEN || "",
     outputDir:
       options.output || fileConfig.outputDir || process.env.OUTLINE_OUTPUT_DIR || "./outline-docs",
-    customPaths: fileConfig.customPaths || {},
+    customPaths: (fileConfig && (fileConfig.customPaths || {})) || {},
     includeCollections: options.include
       ? parseArrayOption(options.include)
-      : fileConfig.includeCollections,
+      : (fileConfig && (fileConfig.includeCollections as string[])) || undefined,
     excludeCollections: options.exclude
       ? parseArrayOption(options.exclude)
-      : fileConfig.excludeCollections,
-    verbose: Boolean(options.verbose),
-    force: options.force || false,
+      : (fileConfig && (fileConfig.excludeCollections as string[])) || undefined,
+    verbose: Boolean(options.verbose || fileConfig.verbose),
   }
 
   if (!config.url || !config.token) {
@@ -64,7 +181,7 @@ async function getConfig(
     console.error("Set via:")
     console.error("  - Environment variables (OUTLINE_URL, OUTLINE_TOKEN)")
     console.error("  - CLI arguments (--url, --token)")
-    console.error("  - Config file (outline-sync.config.json)")
+    console.error("  - Config file (outline-sync.config.json or other supported config)")
     process.exit(1)
   }
 
@@ -128,7 +245,6 @@ program
   .option("-t, --token <token>", "API token")
   .option("-o, --output <dir>", "Output directory")
   .option("-c, --config <path>", "Config file path")
-  .option("-f, --force", "Force push")
   .option("-i, --include <collections>", "Comma-separated list of collections to include")
   .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
   .option("-v, --verbose", "Enable debug logging")
@@ -163,23 +279,6 @@ program
 
     await writeFile(configPath, JSON.stringify(sampleConfig, null, 2), "utf-8")
     console.log("✅ Created outline-sync.config.json")
-    console.log("\n📝 Edit the file and replace example values with your actual configuration")
   })
 
-program
-  .command("verify")
-  .description("Verify configuration and show resolved custom paths")
-  .option("-u, --url <url>", "Outline URL")
-  .option("-t, --token <token>", "API token")
-  .option("-o, --output <dir>", "Output directory")
-  .option("-c, --config <path>", "Config file path")
-  .option("-i, --include <collections>", "Comma-separated list of collections to include")
-  .option("-e, --exclude <collections>", "Comma-separated list of collections to exclude")
-  .option("-v, --verbose", "Enable debug logging")
-  .action(async (options) => {
-    const config = await getConfig(options)
-    const sync = new OutlineSync(config, { verbose: config.verbose })
-    await sync.verify()
-  })
-
-program.parse()
+program.parseAsync(process.argv)

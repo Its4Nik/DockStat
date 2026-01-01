@@ -3,18 +3,19 @@ id: aab7cefb-b84b-4be9-8840-a873b69c6850
 title: "Frontend: Websockets"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: a81b5d89-a300-47ac-8ffa-a3b851645978
-updatedAt: 2026-01-01T14:18:32.196Z
+updatedAt: 2026-01-01T14:28:14.767Z
 urlId: vcQwuQaPn0
 ---
 
 # WebSocket "Effect" Pattern Guide
 
 ## Overview
-Utility that opens a WebSocket, keeps local React state in sync, and returns a cleanup function to drop the connection.  
-Useful for live dashboards, logs, or any stream that updates faster than polling.
+
+Utility that opens a WebSocket, keeps local React state in sync, and returns a cleanup function to drop the connection.\nUseful for live dashboards, logs, or any stream that updates faster than polling.
 
 ## Code
-```ts
+
+```tsx
 import { api } from "../api";
 
 export const rssFeedEffect = (
@@ -32,6 +33,7 @@ export const rssFeedEffect = (
 ```
 
 ## Usage in a component
+
 ```tsx
 import { useEffect, useState } from "react";
 import { rssFeedEffect } from "@/lib/effects/rssFeedEffect";
@@ -46,9 +48,10 @@ export function RamGauge() {
 ```
 
 ## Backend: per-socket periodic pushes
+
 When the server must send data on an interval **per connection**, store the timer in a `WeakMap` so it is automatically garbage-collected when the socket closes.
 
-```ts
+```typescript
 const wsIntervals = new WeakMap<WebSocket, Timer>();
 
 new Elysia()
@@ -72,6 +75,7 @@ new Elysia()
 ```
 
 ## Rules
-- One effect = one socket.  
-- Always return a cleanup function so the socket is closed on unmount.  
-- Keep the effect **pure**: no UI, no toasts, only state synchronization.
+
+* One effect = one socket.
+* Always return a cleanup function so the socket is closed on unmount.
+* Keep the effect **pure**: no UI, no toasts, only state synchronization.

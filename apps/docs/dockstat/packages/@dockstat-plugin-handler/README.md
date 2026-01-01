@@ -3,7 +3,7 @@ id: eadaaa93-6c65-4207-a4ac-9b19afc8f2a5
 title: "@dockstat/plugin-handler"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: bbcefaa2-6bd4-46e8-ae4b-a6b823593e67
-updatedAt: 2025-12-29T20:53:29.838Z
+updatedAt: 2026-01-01T14:25:49.501Z
 urlId: pXHTTOpluB
 ---
 

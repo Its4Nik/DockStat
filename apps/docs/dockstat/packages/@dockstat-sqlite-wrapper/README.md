@@ -3,7 +3,7 @@ id: f543683b-68be-431f-a6d5-7b4012b1345a
 title: "@dockstat/sqlite-wrapper"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: bbcefaa2-6bd4-46e8-ae4b-a6b823593e67
-updatedAt: 2025-12-29T20:53:28.395Z
+updatedAt: 2026-01-01T14:25:48.395Z
 urlId: vCSP0qqnqI
 ---
 

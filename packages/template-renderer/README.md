@@ -3,7 +3,7 @@ id: 453740d4-b426-423d-98fc-b36f6dff7644
 title: "@dockstat/template-renderer"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: bbcefaa2-6bd4-46e8-ae4b-a6b823593e67
-updatedAt: 2025-12-23T12:50:44.974Z
+updatedAt: 2025-12-24T00:36:09.100Z
 urlId: 5qbatLB5V0
 ---
 
@@ -75,7 +75,7 @@ import { TemplateRenderer, parseTemplate } from "@dockstat/template-renderer"
 import { useState } from "react"
 
 function MyPage() {
-  const templateYaml = `...` // Your YAML template
+  const templateYaml = `...`
   const result = parseTemplate(templateYaml, "yaml")
 
   if (!result.success) {
@@ -98,7 +98,6 @@ function MyPage() {
 ### Using the Builder API
 
 ```typescript
-
 import {
   template,
   widgets,
@@ -210,7 +209,6 @@ All widgets from `@dockstat/ui` are available:
 Bind widget props to state or data using the `bindings` property:
 
 ```yaml
-
 widgets:
   - type: text
     props:
@@ -234,7 +232,6 @@ widgets:
 Use the `condition` property to conditionally render widgets:
 
 ```yaml
-
 widgets:
   - type: badge
     props:
@@ -253,7 +250,6 @@ widgets:
 Render widgets for each item in an array:
 
 ```yaml
-
 widgets:
   - type: card
     props:
@@ -276,7 +272,6 @@ widgets:
 Use templates in your DockStat plugins:
 
 ```typescript
-
 import type { PluginFrontendConfig } from "@dockstat/template-renderer"
 
 const frontendConfig: PluginFrontendConfig = {
