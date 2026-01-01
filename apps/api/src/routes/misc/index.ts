@@ -1,6 +1,6 @@
 import os from "node:os"
 import { formatBytes } from "@dockstat/utils"
-import Elysia, { t } from "elysia"
+import Elysia from "elysia"
 import PrometheusMetricsRoute from "../metrics/prometheus"
 
 let lastCpu = process.cpuUsage()
@@ -65,24 +65,6 @@ const DockStatMiscRoutes = new Elysia({
         },
       },
     }
-  })
-  .ws("/stats/rss", {
-    response: t.String(),
-    open(ws) {
-      const mem = process.memoryUsage()
-      ws.send(formatBytes(mem.rss))
-
-      const interval = setInterval(() => {
-        const mem = process.memoryUsage()
-        ws.send(formatBytes(mem.rss))
-      }, 2000)
-
-      ;(ws as any)._interval = interval
-    },
-
-    close(ws) {
-      clearInterval((ws as any)._interval)
-    },
   })
 
 export default DockStatMiscRoutes

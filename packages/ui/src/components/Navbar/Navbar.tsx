@@ -2,6 +2,7 @@ import { motion } from "framer-motion"
 import { Menu } from "lucide-react"
 import { useState } from "react"
 import { NavLink } from "react-router"
+import type { LogEntry } from "@dockstat/logger"
 
 import { Badge } from "../Badge/Badge"
 import { Card } from "../Card/Card"
@@ -12,11 +13,12 @@ import { Sidebar } from "./Sidebar"
 
 type NavbarProps = {
   isBusy: boolean
-  paths?: Array<{ slug: string; path: string }>
+  logEntries: LogEntry[]
+  paths?: { slug: string; path: string }[]
   ramUsage?: string
 }
 
-export function Navbar({ isBusy, paths, ramUsage }: NavbarProps) {
+export function Navbar({ isBusy, paths, ramUsage, logEntries }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
@@ -56,7 +58,12 @@ export function Navbar({ isBusy, paths, ramUsage }: NavbarProps) {
           </div>
         </nav>
 
-        <Sidebar isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} isBusy={isBusy} />
+        <Sidebar
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+          isBusy={isBusy}
+          logEntries={logEntries}
+        />
 
         <style>{`
           @keyframes gradient {

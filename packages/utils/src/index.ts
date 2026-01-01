@@ -4,6 +4,8 @@
  */
 
 import * as errorUtils from "./error"
+export * as arrayUtils from "./array"
+
 // Preserve existing exports
 import * as HTTP_RequestID from "./http/RequestId"
 import * as buildMessage from "./worker/buildMessage"

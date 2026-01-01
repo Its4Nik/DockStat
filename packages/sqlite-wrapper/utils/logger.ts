@@ -1,4 +1,4 @@
-import Logger from "@dockstat/logger"
+import { Logger } from "@dockstat/logger"
 
 /**
  * Centralized logging for sqlite-wrapper
