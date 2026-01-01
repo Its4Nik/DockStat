@@ -185,7 +185,7 @@ async function getConfig(
     process.exit(1)
   }
 
-  return config
+  return null;
 }
 
 program.name("outline-sync").description("Sync Outline wiki to local folder").version("1.0.0")
@@ -267,28 +267,25 @@ program
     await sync.verify()
   })
 
-program
-  .command("init")
-  .description("Create a sample configuration file")
-  .action(async () => {
-    const configPath = join(process.cwd(), "outline-sync.config.json")
+    const raw = await fsp.readFile(configPath, 'utf8');
 
-    if (existsSync(configPath)) {
-      console.error("❌ outline-sync.config.json already exists")
-      process.exit(1)
+    if (ext === '.json' || base === 'package.json') {
+      const parsed = JSON.parse(raw);
+      if (base === 'package.json') return parsed.outline || parsed;
+      return parsed;
     }
 
-    const sampleConfig = {
-      url: "https://your-outline.com",
-      token: "your_api_token",
-      outputDir: "./outline-docs",
-      includeCollections: ["Engineering", "Product"],
-      excludeCollections: [],
-      customPaths: {
-        "example-doc-id": "../../README.md",
-        "another-doc-id": "custom/path/document.md",
-      },
+    // Fallback: try JSON parse, otherwise return raw text
+    try {
+      return JSON.parse(raw);
+    } catch (_) {
+      return raw;
     }
+  } catch (err) {
+    // Re-throw with some context
+    throw new Error(`Failed to load config at ${configPath}: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
 
     await writeFile(configPath, JSON.stringify(sampleConfig, null, 2), "utf-8")
     console.log("✅ Created outline-sync.config.json")
