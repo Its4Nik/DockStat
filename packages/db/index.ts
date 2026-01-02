@@ -1,5 +1,5 @@
-import Logger from "@dockstat/logger"
-import { addLoggerParents, column, DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
+import type Logger from "@dockstat/logger"
+import { column, DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DockStatConfigTableType, RepoType } from "@dockstat/typings/types"
 import { defaultConfig, defaultRepositories } from "./defaults"
 
@@ -10,13 +10,12 @@ class DockStatDB {
   private metrics_table
   private logger: Logger
 
-  constructor(prefix = "DockStatDB", parents: string[] = []) {
-    this.logger = new Logger(prefix, parents)
-    addLoggerParents([prefix, ...parents])
+  constructor(prefix = "DockStatDB", baseLogger: Logger) {
+    this.logger = baseLogger.spawn(prefix)
     this.logger.info("Initializing DockStatDB")
 
     try {
-      this.db = new DB("dockstat.sqlite", {
+      this.db = new DB("dockstat.sqlite", this.logger, {
         pragmas: [
           ["journal_mode", "WAL"],
           ["cache_size", -64000],

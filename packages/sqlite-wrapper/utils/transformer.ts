@@ -9,7 +9,7 @@ import { createLogger } from "./logger"
  * including JSON columns, Boolean columns, and Module columns.
  */
 
-const logger = createLogger("transformer")
+const logger = createLogger("Transformer")
 
 /**
  * Generic row data type

@@ -97,34 +97,6 @@ export function Sidebar({
               </nav>
 
               <div className="mt-auto flex flex-col gap-4 pt-4">
-                <Divider variant="dashed" />
-                <Button onClick={() => setLogModalOpen(!logModalOpen)}>View Backend Logs</Button>
-                <Modal
-                  size="full"
-                  title={`${logEntries.length} Logs available`}
-                  open={logModalOpen}
-                  onClose={() => setLogModalOpen(false)}
-                >
-                  <Table
-                    striped
-                    hoverable
-                    searchable
-                    columns={[
-                      { key: "name", title: "Logger Name" },
-                      { key: "level", title: "Level" },
-                      { key: "message", title: "Log Message" },
-                      { key: "requestId", title: "RequestID" },
-                      { key: "caller", title: "Caller" },
-                      { key: "parents", title: "Parents" },
-                      {
-                        key: "timestamp",
-                        title: "Timestamp",
-                        render: (date) => <span>{formatDate(date as Date, "datetime")}</span>,
-                      },
-                    ]}
-                    data={logEntries}
-                  />
-                </Modal>
                 <Divider label="More of DockStat" variant="dashed" />
 
                 <div className="flex flex-col gap-3">
@@ -173,6 +145,34 @@ export function Sidebar({
                     </motion.div>
                   )}
                 </AnimatePresence>
+                <Divider variant="dashed" />
+                <Button onClick={() => setLogModalOpen(!logModalOpen)}>View Backend Logs</Button>
+                <Modal
+                  size="full"
+                  title={`${logEntries.length} Logs available`}
+                  open={logModalOpen}
+                  onClose={() => setLogModalOpen(false)}
+                >
+                  <Table
+                    striped
+                    hoverable
+                    searchable
+                    columns={[
+                      { key: "name", title: "Logger Name" },
+                      { key: "level", title: "Level" },
+                      { key: "message", title: "Log Message" },
+                      { key: "requestId", title: "RequestID" },
+                      { key: "caller", title: "Caller" },
+                      { key: "parents", title: "Parents" },
+                      {
+                        key: "timestamp",
+                        title: "Timestamp",
+                        render: (date) => <span>{formatDate(date as Date, "datetime")}</span>,
+                      },
+                    ]}
+                    data={logEntries}
+                  />
+                </Modal>
               </div>
             </Card>
           </motion.div>

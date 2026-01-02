@@ -1,5 +1,6 @@
-import type { SQLQueryBindings } from "bun:sqlite"
-import type { InsertOptions, InsertResult } from "../types"
+import type { Database, SQLQueryBindings } from "bun:sqlite"
+import type { Logger } from "@dockstat/logger"
+import type { InsertOptions, InsertResult, Parser } from "../types"
 import {
   buildPlaceholders,
   createLogger,
@@ -20,7 +21,12 @@ import { WhereQueryBuilder } from "./where"
  * - Automatic JSON/Boolean serialization
  */
 export class InsertQueryBuilder<T extends Record<string, unknown>> extends WhereQueryBuilder<T> {
-  private insertLog = createLogger("insert")
+  private insertLog: ReturnType<typeof createLogger>
+
+  constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger?: Logger) {
+    super(db, tableName, parser, baseLogger)
+    this.insertLog = createLogger("Insert", baseLogger)
+  }
 
   // ===== Private Helpers =====
 

@@ -1,4 +1,5 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
+import type { Logger } from "@dockstat/logger"
 import type { Parser, QueryBuilderState } from "../types"
 import {
   createLogger,
@@ -20,9 +21,9 @@ import {
  */
 export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
   protected state: QueryBuilderState<T>
-  protected log = createLogger("query")
+  protected log: ReturnType<typeof createLogger>
 
-  constructor(db: Database, tableName: string, parser?: Parser<T>) {
+  constructor(db: Database, tableName: string, parser?: Parser<T>, baseLogger?: Logger) {
     this.state = {
       db,
       tableName,
@@ -31,6 +32,9 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
       regexConditions: [],
       parser,
     }
+
+    // If a base logger is provided, this will inherit the consumer's LogHook/parents.
+    this.log = createLogger("Query", baseLogger)
 
     this.log.debug(`QueryBuilder initialized for table: ${tableName}`)
   }

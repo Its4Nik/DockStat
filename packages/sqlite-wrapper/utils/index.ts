@@ -8,7 +8,9 @@
 export {
   addLoggerParents,
   createLogger,
+  createSqliteBaseLogger,
   logger,
+  setSqliteLogHook,
   SqliteLogger,
 } from "./logger"
 

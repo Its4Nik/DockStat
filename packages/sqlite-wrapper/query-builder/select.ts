@@ -1,5 +1,6 @@
-import type { SQLQueryBindings } from "bun:sqlite"
-import type { ColumnNames, OrderDirection } from "../types"
+import type { Database, SQLQueryBindings } from "bun:sqlite"
+import type { Logger } from "@dockstat/logger"
+import type { ColumnNames, OrderDirection, Parser } from "../types"
 import { createLogger, quoteIdentifier } from "../utils"
 import { WhereQueryBuilder } from "./where"
 
@@ -20,11 +21,12 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
   private limitValue?: number
   private offsetValue?: number
 
-  private selectLog = createLogger("select")
+  private selectLog: ReturnType<typeof createLogger>
 
-  /* constructor(db: Database, tableName: string, parser: Parser<T>) {
-    super(db, tableName, parser)
-  } */
+  constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger?: Logger) {
+    super(db, tableName, parser, baseLogger)
+    this.selectLog = createLogger("Select", baseLogger)
+  }
 
   // ===== Query Building Methods =====
 

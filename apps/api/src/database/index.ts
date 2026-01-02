@@ -4,7 +4,7 @@ import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DockStatConfigTableType, RepoType } from "@dockstat/typings/types"
 import BaseLogger from "../logger"
 
-const InitialDockStatDB = new DBFactory("DB", BaseLogger.getParentsForLoggerChaining())
+const InitialDockStatDB = new DBFactory("DB", BaseLogger)
 
 export const DockStatDB: {
   _sqliteWrapper: DB
