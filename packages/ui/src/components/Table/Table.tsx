@@ -55,12 +55,12 @@ export function Table<T extends Record<string, unknown>>({
 
       <div
         className={`
-          overflow-auto shadow-sm rounded-lg
-          ${bordered ? "border border-gray-200" : ""}
+          overflow-auto shadow-sm rounded-lg bg-table-body-bg text-table-body-text
+          ${bordered ? "border border-table-border" : ""}
         `}
         style={{ maxHeight: shouldVirtualize ? maxHeight : undefined }}
       >
-        <table className="min-w-full divide-y divide-gray-200 table-fixed">
+        <table className="min-w-full divide-y divide-table-head-divide table-fixed">
           <TableHeader columns={columns} size={size} />
           <TableBody
             data={processedData}
@@ -77,7 +77,7 @@ export function Table<T extends Record<string, unknown>>({
       </div>
 
       {processedData.length === 0 && (
-        <div className="text-center py-8 text-gray-500">No data available</div>
+        <div className="text-center py-8 text-muted-text">No data available</div>
       )}
     </div>
   )

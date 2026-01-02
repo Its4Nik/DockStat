@@ -60,7 +60,7 @@ function TableBodyInner<T extends Record<string, unknown>>({
   // Non-virtualized rendering
   if (!virtualize) {
     return (
-      <tbody ref={containerRef} className="divide-y divide-gray-200">
+      <tbody ref={containerRef} className="divide-y divide-table-body-divide">
         {data.map((record, index) => (
           <TableRow
             key={getRowKey(record, index)}
