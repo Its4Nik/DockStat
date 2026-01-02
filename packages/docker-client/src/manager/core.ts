@@ -770,7 +770,7 @@ export class DockerClientManagerCore {
       activeStreams: 0,
       hasMonitoringManager,
       isMonitoring,
-      memoryUsage: process.memoryUsage(),
+      memoryUsage: heapStats(),
       uptime: Date.now() - wrapper.createdAt,
     }
   }

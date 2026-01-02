@@ -5,6 +5,7 @@ interface Host {
   name: string
   id: number
   clientId: number
+  reachable: boolean
 }
 
 interface HostsListProps {
@@ -69,8 +70,10 @@ export function HostsList({ hosts }: HostsListProps) {
 
                 <div className="pt-2 mt-2 border-t border-card-outlined-border">
                   <div className="flex items-center justify-center gap-2 text-xs text-muted-text">
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    <span>Connected</span>
+                    <div
+                      className={`w-2 h-2 rounded-full ${host.reachable ? "bg-success" : "bg-error"} animate-pulse`}
+                    />
+                    <span>{host.reachable ? "Connected" : "Disconnected"}</span>
                   </div>
                 </div>
               </div>
