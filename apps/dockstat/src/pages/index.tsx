@@ -1,8 +1,12 @@
+import { PageHeadingContext } from "@/contexts/pageHeadingContext"
 import { fetchBackendStatus } from "@Queries/fetchStatus"
 import { Badge, type BadgeVariant, Card, Divider } from "@dockstat/ui"
 import { useQuery } from "@tanstack/react-query"
+import { useContext } from "react"
 
 export default function IndexPage() {
+  useContext(PageHeadingContext).setHeading("Home")
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["fetchBackendStatus"],
     queryFn: fetchBackendStatus,

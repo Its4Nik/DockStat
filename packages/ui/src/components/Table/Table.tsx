@@ -6,7 +6,7 @@ import type { TableProps } from "./types"
 import { ROW_HEIGHTS } from "./types"
 import { useTable } from "./useTable"
 
-export function Table<T extends Record<string, unknown>>({
+export function Table<T>({
   data,
   columns,
   className = "",

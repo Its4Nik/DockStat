@@ -7,7 +7,8 @@
   "types": "./index.ts",
   "exports": {
     ".": "./index.ts",
-    "./manager": "./src/manager/index.ts"
+    "./manager": "./src/manager/index.ts",
+    "./types": "./src/types.ts"
   },
   "files": [
     "index.ts",

@@ -2,7 +2,7 @@ import type React from "react"
 import type { MouseEventHandler, ReactNode } from "react"
 
 export type CardVariant = "default" | "outlined" | "elevated" | "flat" | "dark"
-export type CardSize = "sm" | "md" | "lg"
+export type CardSize = "xs" | "sm" | "md" | "lg"
 
 export interface CardProps {
   children: ReactNode
@@ -32,6 +32,7 @@ export const Card: React.FC<CardProps> = ({
   }
 
   const sizeClasses: Record<CardSize, string> = {
+    xs: "p-1",
     sm: "p-3",
     md: "p-6",
     lg: "p-8",

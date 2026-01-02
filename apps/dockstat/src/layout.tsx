@@ -8,6 +8,7 @@ import { useGlobalBusy } from "./hooks/isLoading"
 import { fetchNavLinks } from "./lib/queries/fetchNavLinks"
 import { logFeedEffect } from "./lib/websocketEffects/logFeed"
 import { rssFeedEffect } from "./lib/websocketEffects/rssFeed"
+import { PageHeadingContext } from "./contexts/pageHeadingContext"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [ramUsage, setRamUsage] = useState<string>("Connecting...")
@@ -15,6 +16,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [logMessagesArr, setlogMessagesArr] = useState<LogEntry[]>([])
 
   const showRamUsage = useContext(AdditionalSettingsContext).showBackendRamUsageInNavbar
+  const heading = useContext(PageHeadingContext).heading
 
   let { data } = useQuery({
     queryKey: ["fetchNavLinks"],
@@ -58,6 +60,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         paths={data}
         ramUsage={showRamUsage ? ramUsage : undefined}
         logEntries={logMessagesArr}
+        heading={heading}
       />
       <div className="px-4">{children}</div>
     </div>

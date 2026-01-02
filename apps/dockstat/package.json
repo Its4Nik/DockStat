@@ -10,12 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@elysiajs/eden": "^1.4.6",
-    "@dockstat/ui": "workspace:*",
+    "@dockstat/docker-client": "workspace:*",
     "@dockstat/typings": "workspace:*",
+    "@dockstat/ui": "workspace:*",
     "@dockstat/utils": "workspace:*",
+    "@elysiajs/eden": "^1.4.6",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.90.12",
+    "lucide-react": "^0.562.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-router": "^7.11.0",

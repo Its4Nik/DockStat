@@ -167,14 +167,14 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * (deserialize JSON, convert booleans, etc.)
    */
   protected transformRowFromDb(row: unknown): T {
-    return transformFromDb<T>(row, { parser: this.state.parser })
+    return transformFromDb<T>(row, { parser: this.state.parser, logger: this.log })
   }
 
   /**
    * Transform multiple rows FROM the database
    */
   protected transformRowsFromDb(rows: unknown[]): T[] {
-    return transformRowsFromDb<T>(rows, { parser: this.state.parser })
+    return transformRowsFromDb<T>(rows, { parser: this.state.parser, logger: this.log })
   }
 
   /**
@@ -182,6 +182,6 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * (serialize JSON, stringify functions, etc.)
    */
   protected transformRowToDb(row: Partial<T>): RowData {
-    return transformToDb<T>(row, { parser: this.state.parser })
+    return transformToDb<T>(row, { parser: this.state.parser, logger: this.log })
   }
 }

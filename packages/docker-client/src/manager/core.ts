@@ -1,4 +1,5 @@
 import type Logger from "@dockstat/logger"
+import { heapStats } from "bun:jsc"
 import type PluginHandler from "@dockstat/plugin-handler"
 import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DOCKER, EVENTS } from "@dockstat/typings"
@@ -475,7 +476,12 @@ export class DockerClientManagerCore {
     return this.workers.get(clientId)
   }
 
-  public getAllClients(all = false): Array<{ id: number; name: string; initialized: boolean }> {
+  public getAllClients(all = false): Array<{
+    id: number
+    name: string
+    options: DOCKER.DockerAdapterOptions
+    initialized: boolean
+  }> {
     const liveMap = new Map<
       number,
       { id: number; name: string; initialized: true; options: DOCKER.DockerAdapterOptions }
@@ -712,7 +718,7 @@ export class DockerClientManagerCore {
         hasMonitoringManager,
         isMonitoring,
         options: this.table.select(["options"]).where({ id: wrapper.clientId }).first()?.options,
-        memoryUsage: process.memoryUsage(),
+        memoryUsage: heapStats(),
         uptime: Date.now() - wrapper.createdAt,
       }
 

@@ -16,9 +16,10 @@ type NavbarProps = {
   logEntries: LogEntry[]
   paths?: { slug: string; path: string }[]
   ramUsage?: string
+  heading?: string
 }
 
-export function Navbar({ isBusy, paths, ramUsage, logEntries }: NavbarProps) {
+export function Navbar({ isBusy, paths, ramUsage, logEntries, heading }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
@@ -43,6 +44,10 @@ export function Navbar({ isBusy, paths, ramUsage, logEntries }: NavbarProps) {
 
             <img src={DockStatLogo} alt="DockStat Logo" className="w-8 shrink-0" />
           </div>
+
+          {(heading || "").length > 0 && (
+            <h1 className="absolute left-1/2 -translate-x-1/2 text-2xl font-bold">{heading}</h1>
+          )}
 
           <div className="flex items-center gap-2">
             {paths?.map((p) => (
