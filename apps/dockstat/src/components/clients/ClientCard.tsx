@@ -1,5 +1,5 @@
-import { Badge, Card, CardBody, CardHeader } from "@dockstat/ui"
 import type { DOCKER } from "@dockstat/typings"
+import { Badge, Card, CardBody, CardHeader } from "@dockstat/ui"
 import { formatDuration } from "@dockstat/utils"
 import { Activity, CheckCircle, Clock, XCircle } from "lucide-react"
 

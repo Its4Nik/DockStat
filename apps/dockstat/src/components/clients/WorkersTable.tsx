@@ -1,6 +1,6 @@
 import type { WorkerMetrics } from "@dockstat/docker-client/types"
-import { Badge, Table } from "@dockstat/ui"
 import type { Column } from "@dockstat/ui"
+import { Badge, Table } from "@dockstat/ui"
 import { formatBytes, formatDuration } from "@dockstat/utils"
 import { Activity, CheckCircle, XCircle } from "lucide-react"
 

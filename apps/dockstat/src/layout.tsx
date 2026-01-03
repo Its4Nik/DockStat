@@ -4,11 +4,11 @@ import { arrayUtils } from "@dockstat/utils"
 import { useQuery } from "@tanstack/react-query"
 import { useContext, useEffect, useState } from "react"
 import { AdditionalSettingsContext } from "@/contexts/additionalSettings"
+import { PageHeadingContext } from "./contexts/pageHeadingContext"
 import { useGlobalBusy } from "./hooks/isLoading"
 import { fetchNavLinks } from "./lib/queries/fetchNavLinks"
 import { logFeedEffect } from "./lib/websocketEffects/logFeed"
 import { rssFeedEffect } from "./lib/websocketEffects/rssFeed"
-import { PageHeadingContext } from "./contexts/pageHeadingContext"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [ramUsage, setRamUsage] = useState<string>("Connecting...")

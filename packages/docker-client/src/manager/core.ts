@@ -1,5 +1,5 @@
-import type Logger from "@dockstat/logger"
 import { heapStats } from "bun:jsc"
+import type Logger from "@dockstat/logger"
 import type PluginHandler from "@dockstat/plugin-handler"
 import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DOCKER, EVENTS } from "@dockstat/typings"

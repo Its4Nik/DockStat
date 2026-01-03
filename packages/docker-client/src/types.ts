@@ -1,5 +1,5 @@
+import type { HeapStats } from "bun:jsc"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
-import { HeapStats } from "bun:jsc"
 
 export type WorkerRequestBase = {
   requestId?: string
