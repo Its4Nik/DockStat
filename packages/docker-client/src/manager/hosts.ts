@@ -52,6 +52,33 @@ export class Hosts extends DockerClientManagerCore {
     }
   }
 
+  private async fetchClientHostsSafely(client: { id: number; name: string }) {
+    try {
+      const [pRes, clientHosts] = await Promise.all([
+        this.ping(client.id),
+        this.getHosts(client.id),
+      ])
+
+      const mappedHosts = clientHosts.map((c) => ({
+        name: c.name,
+        id: Number(c.id),
+        clientId: Number(client.id),
+        reachable: pRes.reachableInstances.includes(Number(c.id)),
+      }))
+
+      this.logger.debug(`Clients Hosts for ${client.name}: ${JSON.stringify(mappedHosts)}`)
+
+      return mappedHosts
+    } catch (error) {
+      this.logger.error(
+        `Failed to get hosts for client ${client.id} (${client.name}): ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      )
+      return []
+    }
+  }
+
   public async updateHost(clientId: number, host: DATABASE.DB_target_host): Promise<void> {
     return this.sendRequest(clientId, {
       type: "updateHost",
@@ -69,33 +96,9 @@ export class Hosts extends DockerClientManagerCore {
     this.logger.debug(`Clients: ${JSON.stringify(clients)}`)
 
     try {
-      // Process all clients in parallel for better performance
-      const clientHostsPromises = clients.map(async (client) => {
-        try {
-          const [pRes, clientHosts] = await Promise.all([
-            this.ping(client.id),
-            this.getHosts(client.id),
-          ])
-
-          const mappedHosts = clientHosts.map((c) => ({
-            name: c.name,
-            id: Number(c.id),
-            clientId: Number(client.id),
-            reachable: pRes.reachableInstances.includes(Number(c.id)),
-          }))
-
-          this.logger.debug(`Clients Hosts for ${client.name}: ${JSON.stringify(mappedHosts)}`)
-          return mappedHosts
-        } catch (error) {
-          this.logger.error(
-            `Failed to get hosts for client ${client.id} (${client.name}): ${error instanceof Error ? error.message : String(error)}`
-          )
-          // Return empty array for failed clients to not block other results
-          return []
-        }
-      })
-
-      const allClientHosts = await Promise.all(clientHostsPromises)
+      const allClientHosts = await Promise.all(
+        clients.map((client) => this.fetchClientHostsSafely(client))
+      )
       const hosts = allClientHosts.flat()
 
       this.logger.debug(`All Hosts: ${JSON.stringify(hosts)}`)

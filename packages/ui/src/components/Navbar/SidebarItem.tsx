@@ -34,10 +34,10 @@ export const SidebarItem = ({ item, depth = 0, handleTogglePin, isLoading }: Sid
         </NavLink>
 
         <button
-          type="submit"
+          type="button"
           disabled={isLoading}
           onClick={onToggle}
-          className={`${item.isPinned ? "opacity-100" : "opacity-0"} ml-2 shrink-0 rounded-md border border-accent/20 p-1.5 text-muted-foreground opacity-0 transition-all duration-200 hover:bg-main-bg/20 hover:text-accent focus:opacity-100 disabled:cursor-not-allowed group-hover:opacity-100 group-focus-within:opacity-100`}
+          className={`${item.isPinned ? "opacity-100" : ""} ml-2 shrink-0 rounded-md border border-accent/20 p-1.5 text-muted-foreground opacity-0 transition-all duration-200 hover:bg-main-bg/20 hover:text-accent focus:opacity-100 disabled:cursor-not-allowed group-hover:opacity-100 group-focus-within:opacity-100`}
           title={item.isPinned ? "Unpin" : "Pin"}
         >
           <Pin

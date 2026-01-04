@@ -170,21 +170,18 @@ const MetricsMiddleware = (app: Elysia) => {
       {
         as: "global",
       },
-      ({ request, responseValue, store }) => {
+      ({ request, responseValue, store, headers }) => {
         const duration = performance.now() - (store.startTime || 0)
         const method = request.method
         const path = new URL(request.url).pathname
 
         logger.debug(
           `[${method}] Took ${Math.round(duration)}ms on ${path}`,
-          request.headers.get("x-dockstatapi-reqid") ?? undefined
+          headers["x-dockstatapi-reqid"] ?? undefined
         )
 
         if (path === "/api/metrics") {
-          logger.debug(
-            `Skipped path: ${path}`,
-            request.headers.get("x-dockstatapi-reqid") ?? undefined
-          )
+          logger.debug(`Skipped path: ${path}`, headers["x-dockstatapi-reqid"] ?? undefined)
         } else {
           // ---- SESSION METRICS ----
           metrics.totalRequests++
@@ -215,15 +212,15 @@ const MetricsMiddleware = (app: Elysia) => {
           savePersistedMetrics()
         }
 
-        logger.debug("Tracked metrics", request.headers.get("x-dockstatapi-reqid") ?? undefined)
-        logger.info("Request finished", request.headers.get("x-dockstatapi-reqid") ?? undefined)
+        logger.debug("Tracked metrics", headers["x-dockstatapi-reqid"] ?? undefined)
+        logger.info("Request finished", headers["x-dockstatapi-reqid"] ?? undefined)
       }
     )
     .onError(
       {
         as: "global",
       },
-      ({ store, request, error }) => {
+      ({ store, headers, error, request }) => {
         const duration = performance.now() - (store.startTime || 0)
 
         // Session metrics
@@ -248,7 +245,7 @@ const MetricsMiddleware = (app: Elysia) => {
 
         logger.error(
           `Tracked Error: ${JSON.stringify(errorDetails, null, 2)}`,
-          request.headers.get("x-dockstatapi-reqid") ?? undefined
+          headers["x-dockstatapi-reqid"]
         )
       }
     )
