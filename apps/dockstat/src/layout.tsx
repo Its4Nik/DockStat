@@ -1,3 +1,4 @@
+import { pinNavLink, unPinNavLink } from "@Actions/index"
 import type { LogEntry } from "@dockstat/logger"
 import { Navbar } from "@dockstat/ui"
 import { arrayUtils } from "@dockstat/utils"
@@ -9,7 +10,6 @@ import { useGlobalBusy } from "./hooks/isLoading"
 import { fetchNavLinks } from "./lib/queries/fetchNavLinks"
 import { logFeedEffect } from "./lib/websocketEffects/logFeed"
 import { rssFeedEffect } from "./lib/websocketEffects/rssFeed"
-import { pinNavLink } from "./lib/actions/pinNavLink"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const qc = useQueryClient()
@@ -20,6 +20,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const showRamUsage = useContext(AdditionalSettingsContext).showBackendRamUsageInNavbar
   const heading = useContext(PageHeadingContext).heading
+  const isBusy = useGlobalBusy()
 
   let { data } = useQuery({
     queryKey: ["fetchNavLinks"],
@@ -35,7 +36,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   })
 
   const unPinMutation = useMutation({
-    mutationFn: pinNavLink,
+    mutationFn: unPinNavLink,
     mutationKey: ["unPinNavLink"],
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["fetchNavLinks"] })
@@ -75,7 +76,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="bg-main-bg min-h-screen w-screen p-4">
       <Navbar
-        isBusy={useGlobalBusy()}
+        isBusy={isBusy}
         navLinks={data}
         ramUsage={showRamUsage ? ramUsage : undefined}
         logEntries={logMessagesArr}

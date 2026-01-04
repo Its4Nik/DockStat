@@ -14,7 +14,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@Queries/*": ["./src/lib/queries/*"]
+      "@Queries/*": ["./src/lib/queries/*"],
+      "@Actions/*": ["./src/lib/actions/*"]
     }
   },
   "include": ["src"],

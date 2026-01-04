@@ -1,6 +1,6 @@
+import { http } from "@dockstat/utils"
 import Elysia from "elysia"
 import BaseLogger from "../logger"
-import { http } from "@dockstat/utils"
 
 const logger = BaseLogger.spawn("Elysia")
 

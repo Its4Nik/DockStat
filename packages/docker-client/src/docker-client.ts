@@ -2,6 +2,7 @@ import Logger from "@dockstat/logger"
 
 import type DB from "@dockstat/sqlite-wrapper"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
+import { extractErrorMessage } from "@dockstat/utils"
 import Dockerode, { type ContainerStats } from "dockerode"
 import { logger } from "../index"
 import { proxyEvent } from "./events/workerEventProxy"
@@ -10,7 +11,6 @@ import MonitoringManager from "./monitoring/MonitoringManager"
 import { StreamManager } from "./stream/stream-manager"
 import { mapContainerInfo, mapContainerInfoFromInspect, mapContainerStats } from "./utils/mapper"
 import { withRetry } from "./utils/retry"
-import { extractErrorMessage } from "@dockstat/utils"
 
 class DockerClient {
   private name: string
@@ -155,7 +155,7 @@ class DockerClient {
     } catch (error) {
       const errorMessage =
         error instanceof Error
-          ? `${error.name}: ${error.message}${error.stack ? "\n" + error.stack : ""}`
+          ? `${error.name}: ${error.message}${error.stack ? `\n${error.stack}` : ""}`
           : extractErrorMessage(error)
       this.logger.error(`Ping operation failed: ${errorMessage}`)
       throw new Error(`Ping operation failed: ${extractErrorMessage(error)}`)

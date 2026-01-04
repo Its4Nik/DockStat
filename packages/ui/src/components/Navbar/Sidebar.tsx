@@ -1,9 +1,11 @@
 import type { LogEntry } from "@dockstat/logger"
+import type { UpdateResult } from "@dockstat/sqlite-wrapper"
 import { formatDate } from "@dockstat/utils"
 import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons"
+import type { UseMutationResult } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import { BookMarkedIcon, LoaderPinwheel, Pin, X } from "lucide-react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { NavLink } from "react-router"
 import { Button } from "../Button/Button"
 import { Card } from "../Card/Card"
@@ -13,8 +15,6 @@ import { Modal } from "../Modal/Modal"
 import { Table } from "../Table/Table"
 import { backdropVariants, busyVariants, slideInVariants } from "./animations"
 import DockStatLogo from "./DockStat2-06.png"
-import type { UseMutationResult } from "@tanstack/react-query"
-import type { UpdateResult } from "@dockstat/sqlite-wrapper"
 
 type pinLinkMutation = UseMutationResult<
   UpdateResult,
@@ -46,10 +46,9 @@ type SidebarItemProps = {
   item: PathItem
   depth?: number
   mutationFn: { pin: pinLinkMutation; unpin: pinLinkMutation }
-  isPinned?: boolean
 }
 
-const SidebarItem = ({ item, depth = 0, mutationFn, isPinned }: SidebarItemProps) => {
+const SidebarItem = ({ item, depth = 0, mutationFn }: SidebarItemProps) => {
   const handleTogglePin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = new FormData(e.currentTarget)
@@ -59,8 +58,10 @@ const SidebarItem = ({ item, depth = 0, mutationFn, isPinned }: SidebarItemProps
     }
 
     if (item.isPinned) {
+      console.log("Unpinning item:", { pinned: item.isPinned, payload })
       mutationFn.unpin.mutate(payload)
     } else {
+      console.log("Pinning item:", { pinned: item.isPinned, payload })
       mutationFn.pin.mutate(payload)
     }
   }
@@ -99,12 +100,7 @@ const SidebarItem = ({ item, depth = 0, mutationFn, isPinned }: SidebarItemProps
       </div>
 
       {item.children?.map((child) => (
-        <SidebarItem
-          key={child.slug}
-          item={{ ...item, isPinned: isPinned }}
-          depth={depth + 1}
-          mutationFn={mutationFn}
-        />
+        <SidebarItem key={child.slug} item={child} depth={depth + 1} mutationFn={mutationFn} />
       ))}
     </div>
   )
@@ -117,7 +113,20 @@ export function Sidebar({ isOpen, onClose, isBusy, logEntries, pins, mutationFn 
     { path: "/", slug: "Home", children: [{ path: "/settings", slug: "Settings" }] },
   ]
 
-  console.log(pins, paths)
+  // Memoize the pin checking logic to avoid creating new objects on every render
+  const pathsWithPinStatus = useMemo(() => {
+    const checkIsPinned = (path: string, slug: string): boolean => {
+      return pins.some((pin) => pin.path === path && pin.slug === slug)
+    }
+
+    const addPinStatus = (item: PathItem): PathItem => ({
+      ...item,
+      isPinned: checkIsPinned(item.path, item.slug),
+      children: item.children?.map(addPinStatus),
+    })
+
+    return paths.map(addPinStatus)
+  }, [pins])
 
   return (
     <AnimatePresence>
@@ -155,13 +164,8 @@ export function Sidebar({ isOpen, onClose, isBusy, logEntries, pins, mutationFn 
               </div>
 
               <nav className="flex flex-1 flex-col gap-1">
-                {paths?.map((p) => (
-                  <SidebarItem
-                    key={p.slug}
-                    item={p}
-                    mutationFn={mutationFn}
-                    isPinned={pins.includes({ path: p.path, slug: p.slug })}
-                  />
+                {pathsWithPinStatus?.map((p) => (
+                  <SidebarItem key={p.slug} item={p} mutationFn={mutationFn} />
                 ))}
               </nav>
 
