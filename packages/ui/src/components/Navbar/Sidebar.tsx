@@ -6,7 +6,7 @@ import type { UseMutationResult } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import { BookMarkedIcon, LoaderPinwheel, X } from "lucide-react"
 import { useState } from "react"
-
+import { Badge } from "../Badge/Badge"
 import { Button } from "../Button/Button"
 import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
@@ -17,7 +17,6 @@ import { backdropVariants, busyVariants, slideInVariants } from "./animations"
 import DockStatLogo from "./DockStat2-06.png"
 import { SidebarItem } from "./SidebarItem"
 import { usePinnedPaths } from "./usePinnedPaths"
-import { Badge } from "../Badge/Badge"
 
 type PinLinkMutation = UseMutationResult<
   UpdateResult,

@@ -1,4 +1,3 @@
-
 import type { DockStatConfigTableType } from "@dockstat/typings/types"
 import { extractEdenError } from "@dockstat/utils"
 import { api } from "../api"

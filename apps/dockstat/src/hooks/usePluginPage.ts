@@ -3,9 +3,9 @@ import { parseTemplate } from "@dockstat/template-renderer"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router"
+import type { LoaderResult, PluginPageData, ResolvedAction } from "@/components/plugins/id/types"
 import { executePluginAction, executePluginLoader } from "@/lib/actions/plugins"
 import { fetchPluginTemplate } from "@/lib/queries/plugins"
-import type { LoaderResult, PluginPageData, ResolvedAction } from "@/components/plugins/id/types"
 
 function getValueByPath(obj: Record<string, unknown> | undefined, path: string): unknown {
   if (!obj) return undefined

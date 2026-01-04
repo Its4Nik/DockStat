@@ -1,3 +1,6 @@
+import { pinNavLink, unPinNavLink } from "@Actions"
+import { fetchNavLinks } from "@Queries"
+import { logFeedEffect, rssFeedEffect } from "@WSS"
 import type { LogEntry } from "@dockstat/logger"
 import { Navbar } from "@dockstat/ui"
 import { arrayUtils } from "@dockstat/utils"
@@ -6,9 +9,6 @@ import { useContext, useEffect, useState } from "react"
 import { AdditionalSettingsContext } from "@/contexts/additionalSettings"
 import { PageHeadingContext } from "./contexts/pageHeadingContext"
 import { useGlobalBusy } from "./hooks/useGlobalBusy"
-import { fetchNavLinks } from "@Queries"
-import { pinNavLink, unPinNavLink } from "@Actions"
-import { logFeedEffect, rssFeedEffect } from "@WSS"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const qc = useQueryClient()
