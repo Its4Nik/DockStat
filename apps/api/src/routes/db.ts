@@ -3,6 +3,7 @@ import Elysia, { t } from "elysia"
 import { DockStatDB } from "../database"
 import { updateConfig } from "../database/utils"
 import { DatabaseModel, RepositoryModel } from "../models/database"
+import { DockStatConfigTableType } from "@dockstat/typings/types"
 
 const DBRoutes = new Elysia({
   name: "DatabaseElysiaInstance",
@@ -48,6 +49,69 @@ const DBRoutes = new Elysia({
       })
     }
   })
+  .post(
+    "config/pinItem",
+    ({ body, status }) => {
+      try {
+        const { nav_links, id } = DockStatDB.configTable.select(["nav_links", "id"]).all()[0]
+
+        const newPinnedNavLinks: DockStatConfigTableType["nav_links"] = [
+          ...nav_links,
+          { path: body.path, slug: body.slug },
+        ]
+
+        const res = DockStatDB.configTable
+          .where({ id: id })
+          .update({ nav_links: newPinnedNavLinks })
+
+        return status(200, res)
+      } catch (error) {
+        const errorMessage = extractErrorMessage(error, "Error while updating Nav links")
+        return status(400, {
+          success: false as const,
+          error: errorMessage,
+          message: errorMessage,
+        })
+      }
+    },
+    {
+      body: t.Object({
+        path: t.String(),
+        slug: t.String(),
+      }),
+    }
+  )
+  .post(
+    "config/unpinItem",
+    ({ body, status }) => {
+      try {
+        const { nav_links, id } = DockStatDB.configTable.select(["nav_links", "id"]).all()[0]
+
+        const newPinnedNavLinks: DockStatConfigTableType["nav_links"] = nav_links.filter(
+          (link) => link.path !== body.path && link.slug !== body.slug
+        )
+
+        const res = DockStatDB.configTable
+          .where({ id: id })
+          .update({ nav_links: newPinnedNavLinks })
+
+        return status(200, res)
+      } catch (error) {
+        const errorMessage = extractErrorMessage(error, "Error while updating Nav links")
+        return status(400, {
+          success: false as const,
+          error: errorMessage,
+          message: errorMessage,
+        })
+      }
+    },
+    {
+      body: t.Object({
+        path: t.String(),
+        slug: t.String(),
+      }),
+    }
+  )
 
   // ==================== Repository Routes ====================
   .get(

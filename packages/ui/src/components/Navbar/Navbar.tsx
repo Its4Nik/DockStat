@@ -9,17 +9,25 @@ import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
 
 import DockStatLogo from "./DockStat2-06.png"
-import { Sidebar } from "./Sidebar"
+import { Sidebar, type SidebarProps } from "./Sidebar"
 
 type NavbarProps = {
   isBusy: boolean
   logEntries: LogEntry[]
-  paths?: { slug: string; path: string }[]
+  navLinks?: { slug: string; path: string }[]
   ramUsage?: string
   heading?: string
+  mutationFn: { pin: SidebarProps["mutationFn"]["pin"]; unpin: SidebarProps["mutationFn"]["unpin"] }
 }
 
-export function Navbar({ isBusy, paths, ramUsage, logEntries, heading }: NavbarProps) {
+export function Navbar({
+  isBusy,
+  navLinks,
+  ramUsage,
+  logEntries,
+  heading,
+  mutationFn,
+}: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
@@ -50,9 +58,9 @@ export function Navbar({ isBusy, paths, ramUsage, logEntries, heading }: NavbarP
           )}
 
           <div className="flex items-center gap-2">
-            {paths?.map((p) => (
-              <NavLink to={p.path} key={p.slug}>
-                {({ isActive }) => <Badge outlined={isActive}>{p.slug}</Badge>}
+            {navLinks?.map((nl) => (
+              <NavLink to={nl.path} key={nl.slug}>
+                {({ isActive }) => <Badge outlined={isActive}>{nl.slug}</Badge>}
               </NavLink>
             ))}
             {ramUsage ? (
@@ -68,6 +76,8 @@ export function Navbar({ isBusy, paths, ramUsage, logEntries, heading }: NavbarP
           onClose={() => setIsMenuOpen(false)}
           isBusy={isBusy}
           logEntries={logEntries}
+          mutationFn={mutationFn}
+          pins={navLinks || []}
         />
 
         <style>{`

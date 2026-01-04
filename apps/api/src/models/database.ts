@@ -10,7 +10,7 @@ import type { DockStatConfigTableType } from "@dockstat/typings/types"
 import { t } from "elysia"
 
 export namespace DatabaseModel {
-  export const updateBody = DockStatConfigTable
+  export const updateBody = t.Partial(t.Omit(DockStatConfigTable, t.Union([t.Literal("id")])))
   export type updateBody = DockStatConfigTableType
 
   export const updateRes = UpdateDockStatConfigTableResponse

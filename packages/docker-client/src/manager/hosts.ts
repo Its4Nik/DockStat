@@ -67,28 +67,47 @@ export class Hosts extends DockerClientManagerCore {
     this.logger.debug("Getting all hosts")
     const clients = this.getAllClients()
     this.logger.debug(`Clients: ${JSON.stringify(clients)}`)
-    let hosts: Array<{
-      name: string
-      id: number
-      clientId: number
-      reachable: boolean
-    }> = []
 
-    for (const client of clients) {
-      const pRes = await this.ping(client.id)
+    try {
+      // Process all clients in parallel for better performance
+      const clientHostsPromises = clients.map(async (client) => {
+        try {
+          const [pRes, clientHosts] = await Promise.all([
+            this.ping(client.id),
+            this.getHosts(client.id),
+          ])
 
-      const clientsHosts = (await this.getHosts(client.id)).map((c) => ({
-        name: c.name,
-        id: Number(c.id),
-        clientId: Number(client.id),
-        reachable: pRes.reachableInstances.includes(Number(c.id)),
-      }))
-      this.logger.debug(`Clients Hosts: ${JSON.stringify(clientsHosts)}`)
-      hosts = hosts.concat(clientsHosts)
+          const mappedHosts = clientHosts.map((c) => ({
+            name: c.name,
+            id: Number(c.id),
+            clientId: Number(client.id),
+            reachable: pRes.reachableInstances.includes(Number(c.id)),
+          }))
+
+          this.logger.debug(`Clients Hosts for ${client.name}: ${JSON.stringify(mappedHosts)}`)
+          return mappedHosts
+        } catch (error) {
+          this.logger.error(
+            `Failed to get hosts for client ${client.id} (${client.name}): ${error instanceof Error ? error.message : String(error)}`
+          )
+          // Return empty array for failed clients to not block other results
+          return []
+        }
+      })
+
+      const allClientHosts = await Promise.all(clientHostsPromises)
+      const hosts = allClientHosts.flat()
+
+      this.logger.debug(`All Hosts: ${JSON.stringify(hosts)}`)
+      return hosts
+    } catch (error) {
+      this.logger.error(
+        `Failed to get all hosts: ${error instanceof Error ? error.message : String(error)}`
+      )
+      throw new Error(
+        `Failed to get all hosts: ${error instanceof Error ? error.message : "Unknown error"}`
+      )
     }
-
-    this.logger.debug(`All Hosts: ${JSON.stringify(hosts)}`)
-    return hosts
   }
 
   public async ping(clientId: number) {

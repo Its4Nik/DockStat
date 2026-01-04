@@ -10,6 +10,7 @@ import MonitoringManager from "./monitoring/MonitoringManager"
 import { StreamManager } from "./stream/stream-manager"
 import { mapContainerInfo, mapContainerInfoFromInspect, mapContainerStats } from "./utils/mapper"
 import { withRetry } from "./utils/retry"
+import { extractErrorMessage } from "@dockstat/utils"
 
 class DockerClient {
   private name: string
@@ -110,36 +111,55 @@ class DockerClient {
     reachableInstances: number[]
     unreachableInstances: number[]
   }> {
-    this.checkDisposed()
-    this.logger.info("Testing ping to all instances")
+    try {
+      this.checkDisposed()
+      this.logger.info("Testing ping to all instances")
 
-    const clients = Array.from(this.dockerInstances.entries())
-    if (clients.length === 0) {
-      this.logger.info("No docker instances to ping")
-      return { reachableInstances: [], unreachableInstances: [] }
+      const clients = Array.from(this.dockerInstances.entries())
+      if (clients.length === 0) {
+        this.logger.info("No docker instances to ping")
+        return { reachableInstances: [], unreachableInstances: [] }
+      }
+
+      const pingPromises = clients.map(([id, docker]) =>
+        docker
+          .ping()
+          .then(() => ({ id, ok: true, error: null }))
+          .catch((err) => {
+            const errorMessage = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
+            this.logger.warn(`Ping failed for instance ${id}: ${errorMessage}`)
+            return { id, ok: false, error: errorMessage }
+          })
+      )
+
+      const settled = await Promise.all(pingPromises)
+      const good: number[] = []
+      const bad: number[] = []
+
+      for (const res of settled) {
+        if (res.ok) {
+          good.push(res.id)
+        } else {
+          bad.push(res.id)
+          if (res.error) {
+            this.logger.error(`Instance ${res.id} unreachable: ${res.error}`)
+          }
+        }
+      }
+
+      this.logger.info(`Ping complete: ${good.length} healthy, ${bad.length} unhealthy`)
+      if (bad.length > 0) {
+        this.logger.warn(`Unreachable instances: [${bad.join(", ")}]`)
+      }
+      return { reachableInstances: good, unreachableInstances: bad }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? `${error.name}: ${error.message}${error.stack ? "\n" + error.stack : ""}`
+          : extractErrorMessage(error)
+      this.logger.error(`Ping operation failed: ${errorMessage}`)
+      throw new Error(`Ping operation failed: ${extractErrorMessage(error)}`)
     }
-
-    const pingPromises = clients.map(([id, docker]) =>
-      docker
-        .ping()
-        .then(() => ({ id, ok: true }))
-        .catch((err) => {
-          this.logger.debug(`Ping failed for instance ${id}: ${err?.message ?? err}`)
-          return { id, ok: false }
-        })
-    )
-
-    const settled = await Promise.all(pingPromises)
-    const good: number[] = []
-    const bad: number[] = []
-
-    for (const res of settled) {
-      if (res.ok) good.push(res.id)
-      else bad.push(res.id)
-    }
-
-    this.logger.info(`Ping complete: ${good.length} healthy, ${bad.length} unhealthy`)
-    return { reachableInstances: good, unreachableInstances: bad }
   }
 
   public addHost(host: DATABASE.DB_target_host): DATABASE.DB_target_host {

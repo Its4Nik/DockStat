@@ -10,10 +10,12 @@ import PluginRoutes from "./routes/plugins"
 import RepositoryRoutes from "./routes/repositories"
 import StatusRoutes from "./routes/status"
 import DockStatWebsockets from "./websockets"
+import RequestLogger from "./handlers/requestLogger"
 
 const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 
 export const DockStatAPI = new Elysia({ prefix: "/api/v2" })
+  .use(RequestLogger)
   .use(MetricsMiddleware)
   .use(DockStatElysiaPlugins)
   .use(errorHandler)

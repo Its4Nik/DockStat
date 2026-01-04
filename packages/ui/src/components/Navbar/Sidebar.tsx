@@ -2,7 +2,7 @@ import type { LogEntry } from "@dockstat/logger"
 import { formatDate } from "@dockstat/utils"
 import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons"
 import { AnimatePresence, motion } from "framer-motion"
-import { BookMarkedIcon, LoaderPinwheel, X } from "lucide-react"
+import { BookMarkedIcon, LoaderPinwheel, Pin, X } from "lucide-react"
 import { useState } from "react"
 import { NavLink } from "react-router"
 import { Button } from "../Button/Button"
@@ -13,47 +13,111 @@ import { Modal } from "../Modal/Modal"
 import { Table } from "../Table/Table"
 import { backdropVariants, busyVariants, slideInVariants } from "./animations"
 import DockStatLogo from "./DockStat2-06.png"
+import type { UseMutationResult } from "@tanstack/react-query"
+import type { UpdateResult } from "@dockstat/sqlite-wrapper"
+
+type pinLinkMutation = UseMutationResult<
+  UpdateResult,
+  Error,
+  {
+    slug: string
+    path: string
+  },
+  unknown
+>
 
 type PathItem = {
   slug: string
   path: string
+  isPinned?: boolean
   children?: PathItem[]
 }
 
-type SidebarProps = {
+export type SidebarProps = {
   isOpen: boolean
   onClose: () => void
   isBusy: boolean
   logEntries: LogEntry[]
-  paths?: PathItem[]
+  mutationFn: { pin: pinLinkMutation; unpin: pinLinkMutation }
+  pins: { path: string; slug: string }[]
 }
 
-const SidebarItem = ({ item, depth = 0 }: { item: PathItem; depth?: number }) => (
-  <div className="flex flex-col gap-1">
-    <NavLink
-      to={item.path}
-      className={({ isActive }) =>
-        `flex w-full items-center rounded-md py-1 pr-3 text-sm font-medium transition-colors duration-200
-        ${isActive ? "bg-main-bg" : "hover:bg-main-bg/20"}`
-      }
-      style={{ paddingLeft: `${depth + 0.75}rem` }}
-    >
-      {item.slug}
-    </NavLink>
-    {item.children?.map((child) => (
-      <SidebarItem key={child.slug} item={child} depth={depth + 1} />
-    ))}
-  </div>
-)
+type SidebarItemProps = {
+  item: PathItem
+  depth?: number
+  mutationFn: { pin: pinLinkMutation; unpin: pinLinkMutation }
+  isPinned?: boolean
+}
 
-export function Sidebar({
-  isOpen,
-  onClose,
-  isBusy,
-  logEntries,
-  paths = [{ path: "/", slug: "Home", children: [{ path: "/settings", slug: "Settings" }] }],
-}: SidebarProps) {
+const SidebarItem = ({ item, depth = 0, mutationFn, isPinned }: SidebarItemProps) => {
+  const handleTogglePin = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const form = new FormData(e.currentTarget)
+    const payload = {
+      slug: String(form.get("slug")),
+      path: String(form.get("path")),
+    }
+
+    if (item.isPinned) {
+      mutationFn.unpin.mutate(payload)
+    } else {
+      mutationFn.pin.mutate(payload)
+    }
+  }
+
+  const isLoading = mutationFn.pin.isPending || mutationFn.unpin.isPending
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between group pr-2">
+        <NavLink
+          to={item.path}
+          className={({ isActive }) =>
+            `flex-1 rounded-md py-1.5 text-sm font-medium transition-colors duration-200
+            ${isActive ? "bg-main-bg text-foreground" : "text-muted-foreground hover:bg-main-bg/20"}`
+          }
+          style={{ paddingLeft: `${depth + 0.75}rem` }}
+        >
+          {item.slug}
+        </NavLink>
+
+        <form onSubmit={handleTogglePin} className="flex items-center">
+          <input type="hidden" name="slug" value={item.slug} />
+          <input type="hidden" name="path" value={item.path} />
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-accent hover:bg-main-bg/20 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 disabled:opacity-50"
+            title={item.isPinned ? "Unpin" : "Pin"}
+          >
+            <Pin
+              size={14}
+              className={`transition-all ${item.isPinned ? "fill-accent text-accent" : ""}`}
+            />
+          </button>
+        </form>
+      </div>
+
+      {item.children?.map((child) => (
+        <SidebarItem
+          key={child.slug}
+          item={{ ...item, isPinned: isPinned }}
+          depth={depth + 1}
+          mutationFn={mutationFn}
+        />
+      ))}
+    </div>
+  )
+}
+
+export function Sidebar({ isOpen, onClose, isBusy, logEntries, pins, mutationFn }: SidebarProps) {
   const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
+
+  const paths: PathItem[] = [
+    { path: "/", slug: "Home", children: [{ path: "/settings", slug: "Settings" }] },
+  ]
+
+  console.log(pins, paths)
 
   return (
     <AnimatePresence>
@@ -92,7 +156,12 @@ export function Sidebar({
 
               <nav className="flex flex-1 flex-col gap-1">
                 {paths?.map((p) => (
-                  <SidebarItem key={p.slug} item={p} />
+                  <SidebarItem
+                    key={p.slug}
+                    item={p}
+                    mutationFn={mutationFn}
+                    isPinned={pins.includes({ path: p.path, slug: p.slug })}
+                  />
                 ))}
               </nav>
 

@@ -385,17 +385,14 @@ export class DockerClientManagerCore {
       const messageHandler = (event: MessageEvent) => {
         const raw = event.data
 
-        // Skip internal worker messages (init, metrics)
         if (isInternalWorkerMessage(raw)) {
           return
         }
 
-        // Skip proxy event messages - these are handled by attachEventListener
         if (isProxyEventEnvelope(raw)) {
           return
         }
 
-        // Skip messages that don't match our requestId
         if (raw.requestId !== requestId) {
           return
         }
@@ -437,6 +434,11 @@ export class DockerClientManagerCore {
               }
             }
           }
+
+          this.logger.error(
+            `Worker ${clientId} returned error for request ${requestId} (${request.type}): ${errorMessage}`
+          )
+
           wrapper.lastError = errorMessage
           wrapper.errorCount += 1
           reject(new Error(errorMessage))
