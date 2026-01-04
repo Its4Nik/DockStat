@@ -34,7 +34,7 @@ export async function updateProfile(input: UpdateProfileInput) {
   })
 
   if (error) {
-    throw new Error(String(error.value))
+    throw new Error(extractEdenError({ data, error }))
   }
 
   return data
@@ -57,7 +57,7 @@ export function ProfileForm() {
       await qc.invalidateQueries({ queryKey: ["profile"] })
     },
   })
-
+  
   return (
     <form
       onSubmit={(e) => {

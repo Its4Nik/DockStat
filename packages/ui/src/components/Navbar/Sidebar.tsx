@@ -1,10 +1,12 @@
 import type { LogEntry } from "@dockstat/logger"
+import type { UpdateResult } from "@dockstat/sqlite-wrapper"
 import { formatDate } from "@dockstat/utils"
 import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons"
+import type { UseMutationResult } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import { BookMarkedIcon, LoaderPinwheel, X } from "lucide-react"
 import { useState } from "react"
-import { NavLink } from "react-router"
+
 import { Button } from "../Button/Button"
 import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
@@ -13,47 +15,56 @@ import { Modal } from "../Modal/Modal"
 import { Table } from "../Table/Table"
 import { backdropVariants, busyVariants, slideInVariants } from "./animations"
 import DockStatLogo from "./DockStat2-06.png"
+import { SidebarItem } from "./SidebarItem"
+import { usePinnedPaths } from "./usePinnedPaths"
+
+type PinLinkMutation = UseMutationResult<
+  UpdateResult,
+  Error,
+  {
+    slug: string
+    path: string
+  },
+  unknown
+>
 
 type PathItem = {
   slug: string
   path: string
+  isPinned?: boolean
   children?: PathItem[]
 }
 
-type SidebarProps = {
+export type SidebarProps = {
   isOpen: boolean
   onClose: () => void
   isBusy: boolean
   logEntries: LogEntry[]
-  paths?: PathItem[]
+  mutationFn: { pin: PinLinkMutation; unpin: PinLinkMutation }
+  pins: { path: string; slug: string }[]
 }
 
-const SidebarItem = ({ item, depth = 0 }: { item: PathItem; depth?: number }) => (
-  <div className="flex flex-col gap-1">
-    <NavLink
-      to={item.path}
-      className={({ isActive }) =>
-        `flex w-full items-center rounded-md py-1 pr-3 text-sm font-medium transition-colors duration-200
-        ${isActive ? "bg-main-bg" : "hover:bg-main-bg/20"}`
-      }
-      style={{ paddingLeft: `${depth + 0.75}rem` }}
-    >
-      {item.slug}
-    </NavLink>
-    {item.children?.map((child) => (
-      <SidebarItem key={child.slug} item={child} depth={depth + 1} />
-    ))}
-  </div>
-)
-
-export function Sidebar({
-  isOpen,
-  onClose,
-  isBusy,
-  logEntries,
-  paths = [{ path: "/", slug: "Home", children: [{ path: "/settings", slug: "Settings" }] }],
-}: SidebarProps) {
+export function Sidebar({ isOpen, onClose, isBusy, logEntries, pins, mutationFn }: SidebarProps) {
   const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
+
+  const handleTogglePin = (item: PathItem) => {
+    const payload = { slug: item.slug, path: item.path }
+    if (item.isPinned) {
+      mutationFn.unpin.mutate(payload)
+    } else {
+      mutationFn.pin.mutate(payload)
+    }
+  }
+
+  const paths: PathItem[] = [
+    {
+      path: "/",
+      slug: "Home",
+      children: [{ path: "/settings", slug: "Settings" }],
+    },
+  ]
+
+  const pathsWithPinStatus = usePinnedPaths(paths, pins)
 
   return (
     <AnimatePresence>
@@ -91,8 +102,13 @@ export function Sidebar({
               </div>
 
               <nav className="flex flex-1 flex-col gap-1">
-                {paths?.map((p) => (
-                  <SidebarItem key={p.slug} item={p} />
+                {pathsWithPinStatus?.map((p) => (
+                  <SidebarItem
+                    key={p.slug}
+                    item={p}
+                    handleTogglePin={handleTogglePin}
+                    isLoading={mutationFn.pin.isPending || mutationFn.unpin.isPending}
+                  />
                 ))}
               </nav>
 

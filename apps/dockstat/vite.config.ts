@@ -11,6 +11,7 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "@Queries": path.resolve(__dirname, "./src/lib/queries"),
+      "@Actions": path.resolve(__dirname, "./src/lib/actions"),
     },
   },
 })
