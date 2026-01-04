@@ -88,7 +88,7 @@ const DBRoutes = new Elysia({
         const { nav_links, id } = DockStatDB.configTable.select(["nav_links", "id"]).all()[0]
 
         const newPinnedNavLinks: DockStatConfigTableType["nav_links"] = nav_links.filter(
-          (link) => link.path !== body.path && link.slug !== body.slug
+          (link) => link.path !== body.path || link.slug !== body.slug
         )
 
         const res = DockStatDB.configTable

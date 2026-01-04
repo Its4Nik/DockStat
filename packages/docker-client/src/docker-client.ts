@@ -158,7 +158,7 @@ class DockerClient {
           ? `${error.name}: ${error.message}${error.stack ? `\n${error.stack}` : ""}`
           : extractErrorMessage(error)
       this.logger.error(`Ping operation failed: ${errorMessage}`)
-      throw new Error(`Ping operation failed: ${extractErrorMessage(error)}`)
+      throw new Error(`Ping operation failed: ${errorMessage}`, { cause: error })
     }
   }
 
