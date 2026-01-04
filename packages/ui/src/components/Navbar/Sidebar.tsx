@@ -17,6 +17,7 @@ import { backdropVariants, busyVariants, slideInVariants } from "./animations"
 import DockStatLogo from "./DockStat2-06.png"
 import { SidebarItem } from "./SidebarItem"
 import { usePinnedPaths } from "./usePinnedPaths"
+import { Badge } from "../Badge/Badge"
 
 type PinLinkMutation = UseMutationResult<
   UpdateResult,
@@ -61,6 +62,10 @@ export function Sidebar({ isOpen, onClose, isBusy, logEntries, pins, mutationFn 
       path: "/",
       slug: "Home",
       children: [{ path: "/settings", slug: "Settings" }],
+    },
+    {
+      path: "/clients",
+      slug: "Clients",
     },
   ]
 
@@ -177,7 +182,11 @@ export function Sidebar({ isOpen, onClose, isBusy, logEntries, pins, mutationFn 
                       { key: "name", title: "Logger Name" },
                       { key: "level", title: "Level" },
                       { key: "message", title: "Log Message" },
-                      { key: "requestId", title: "RequestID" },
+                      {
+                        key: "requestId",
+                        title: "RequestID",
+                        render: (reqId) => reqId && <Badge unique>{String(reqId)}</Badge>,
+                      },
                       { key: "caller", title: "Caller" },
                       { key: "parents", title: "Parents" },
                       {

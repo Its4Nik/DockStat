@@ -28,7 +28,7 @@ export const Card: React.FC<CardProps> = ({
     outlined: "border border-card-outlined-border bg-main-bg text-secondary-text",
     elevated: "bg-card-elevated-bg shadow-2xl text-primary-text",
     flat: "bg-card-flat-bg border-none text-muted-text",
-    dark: "bg-card-dark-bg border border-card-dark-border text-primary-text",
+    dark: "border border-card-outlined-border/20 bg-main-bg text-secondary-text",
   }
 
   const sizeClasses: Record<CardSize, string> = {

@@ -6,7 +6,7 @@ import type { TableProps } from "./types"
 import { ROW_HEIGHTS } from "./types"
 import { useTable } from "./useTable"
 
-export function Table<T>({
+export function Table<T extends Record<string, unknown>>({
   data,
   columns,
   className = "",
@@ -37,7 +37,7 @@ export function Table<T>({
   const effectiveRowHeight = rowHeight ?? ROW_HEIGHTS[size]
 
   return (
-    <div className={className}>
+    <div className={`${className} w-full max-w-full`}>
       {searchable && (
         <TableToolbar
           searchValue={searchValue}

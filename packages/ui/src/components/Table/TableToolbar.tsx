@@ -79,7 +79,7 @@ function TableToolbarInner<T>({
             <ChevronDown className="w-4 h-4" />
           </Button>
           {showSortMenu && (
-            <div className="absolute right-0 mt-1 w-48 bg-card-default-bg border border-card-default-border rounded-md shadow-lg z-10">
+            <div className="absolute z-20 right-0 mt-1 w-48 bg-card-default-bg border border-card-default-border rounded-md shadow-lg">
               {sortableColumns.map((col) => (
                 <button
                   type="button"
@@ -108,7 +108,7 @@ function TableToolbarInner<T>({
             <ChevronDown className="w-4 h-4" />
           </Button>
           {showFilterMenu && (
-            <div className="absolute right-0 mt-1 w-48 bg-card-default-bg border border-card-default-border rounded-md shadow-lg z-10">
+            <div className="absolute right-0 mt-1 w-48 bg-card-default-bg border border-card-default-border rounded-md shadow-lg z-20">
               {filterableColumns.map((col) => (
                 <button
                   type="button"

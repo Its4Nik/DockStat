@@ -22,7 +22,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const heading = useContext(PageHeadingContext).heading
   const isBusy = useGlobalBusy()
 
-  let { data } = useQuery({
+  const { data } = useQuery({
     queryKey: ["fetchNavLinks"],
     queryFn: fetchNavLinks,
   })
@@ -55,23 +55,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       return next
     })
   }, [logMessage])
-
-  if (data?.length === 0) {
-    data = [
-      {
-        slug: "Home",
-        path: "/",
-      },
-      {
-        slug: "Clients",
-        path: "/clients",
-      },
-      {
-        slug: "Plugins",
-        path: "/plugins",
-      },
-    ]
-  }
 
   return (
     <div className="bg-main-bg min-h-screen w-screen p-4">
