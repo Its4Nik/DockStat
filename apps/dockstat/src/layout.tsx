@@ -8,8 +8,7 @@ import { PageHeadingContext } from "./contexts/pageHeadingContext"
 import { useGlobalBusy } from "./hooks/useGlobalBusy"
 import { fetchNavLinks } from "@Queries"
 import { pinNavLink, unPinNavLink } from "@Actions"
-import { logFeedEffect } from "./lib/websocketEffects/logFeed"
-import { rssFeedEffect } from "./lib/websocketEffects/rssFeed"
+import { logFeedEffect, rssFeedEffect } from "@WSS"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const qc = useQueryClient()
