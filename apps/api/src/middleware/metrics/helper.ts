@@ -220,7 +220,7 @@ const MetricsMiddleware = (app: Elysia) => {
       {
         as: "global",
       },
-      ({ store, headers, error, request }) => {
+      ({ store, headers, error }) => {
         const duration = performance.now() - (store.startTime || 0)
 
         // Session metrics
