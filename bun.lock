@@ -42,6 +42,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@dockstat/docker-client": "workspace:*",
+        "@dockstat/template-renderer": "workspace:*",
         "@dockstat/typings": "workspace:*",
         "@dockstat/ui": "workspace:*",
         "@dockstat/utils": "workspace:*",

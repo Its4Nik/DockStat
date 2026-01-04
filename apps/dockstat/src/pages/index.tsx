@@ -1,4 +1,4 @@
-import { fetchBackendStatus } from "@Queries/fetchStatus"
+import { fetchBackendStatus } from "@Queries"
 import { Badge, type BadgeVariant, Card, Divider } from "@dockstat/ui"
 import { useQuery } from "@tanstack/react-query"
 import { useContext } from "react"

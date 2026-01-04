@@ -14,8 +14,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@Queries/*": ["./src/lib/queries/*"],
-      "@Actions/*": ["./src/lib/actions/*"]
+      "@Queries": ["./src/lib/queries/index.ts"],
+      "@Actions": ["./src/lib/actions/index.ts"],
+      "@WSS": ["./src/lib/websocketEffects/index.ts"]
     }
   },
   "include": ["src"],
