@@ -96,7 +96,10 @@ class PluginHandler {
     if (plugin.plugin.length <= 10) {
       this.logger.info(`Plugin ${plugin.name} has no bundle`)
 
-      plugin.plugin = await repo.getPluginBundle(plugin.repoType, plugin.repository)
+      plugin.plugin = await repo.getPluginBundle(
+        plugin.repoType,
+        `${plugin.repository}/${plugin.manifest}`
+      )
       this.savePlugin(plugin, update)
     }
 
