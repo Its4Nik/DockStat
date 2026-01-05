@@ -1,5 +1,8 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
+<<<<<<< HEAD
 import type { Logger } from "@dockstat/logger"
+=======
+>>>>>>> main
 import type { Parser, QueryBuilderState } from "../types"
 import {
   createLogger,
@@ -21,9 +24,15 @@ import {
  */
 export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
   protected state: QueryBuilderState<T>
+<<<<<<< HEAD
   protected log: ReturnType<typeof createLogger>
 
   constructor(db: Database, tableName: string, parser?: Parser<T>, baseLogger?: Logger) {
+=======
+  protected log = createLogger("query")
+
+  constructor(db: Database, tableName: string, parser?: Parser<T>) {
+>>>>>>> main
     this.state = {
       db,
       tableName,
@@ -33,9 +42,12 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
       parser,
     }
 
+<<<<<<< HEAD
     // If a base logger is provided, this will inherit the consumer's LogHook/parents.
     this.log = createLogger("Query", baseLogger)
 
+=======
+>>>>>>> main
     this.log.debug(`QueryBuilder initialized for table: ${tableName}`)
   }
 
@@ -167,14 +179,22 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * (deserialize JSON, convert booleans, etc.)
    */
   protected transformRowFromDb(row: unknown): T {
+<<<<<<< HEAD
     return transformFromDb<T>(row, { parser: this.state.parser, logger: this.log })
+=======
+    return transformFromDb<T>(row, { parser: this.state.parser })
+>>>>>>> main
   }
 
   /**
    * Transform multiple rows FROM the database
    */
   protected transformRowsFromDb(rows: unknown[]): T[] {
+<<<<<<< HEAD
     return transformRowsFromDb<T>(rows, { parser: this.state.parser, logger: this.log })
+=======
+    return transformRowsFromDb<T>(rows, { parser: this.state.parser })
+>>>>>>> main
   }
 
   /**
@@ -182,6 +202,10 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * (serialize JSON, stringify functions, etc.)
    */
   protected transformRowToDb(row: Partial<T>): RowData {
+<<<<<<< HEAD
     return transformToDb<T>(row, { parser: this.state.parser, logger: this.log })
+=======
+    return transformToDb<T>(row, { parser: this.state.parser })
+>>>>>>> main
   }
 }

@@ -1,7 +1,10 @@
 import Elysia from "elysia"
 import DockStatElysiaPlugins from "./elysia-plugins"
 import { errorHandler } from "./handlers/onError"
+<<<<<<< HEAD
 import RequestLogger from "./handlers/requestLogger"
+=======
+>>>>>>> main
 import BaseLogger from "./logger"
 import MetricsMiddleware from "./middleware/metrics"
 import DBRoutes from "./routes/db"
