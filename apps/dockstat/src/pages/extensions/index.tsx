@@ -1,21 +1,21 @@
-import { PageHeadingContext } from "@/contexts/pageHeadingContext"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useContext, useState, useMemo } from "react"
-import { fetchAllPlugins, fetchAllRepositories, fetchAllManifests } from "@Queries"
+import { installPlugin } from "@Actions"
+import { fetchAllManifests, fetchAllPlugins, fetchAllRepositories } from "@Queries"
+import { DBPluginShemaT } from "@dockstat/typings/types"
 import {
-  Card,
   Badge,
   Button,
+  Card,
   Checkbox,
   Divider,
-  Slides,
-  Modal,
-  LinkWithIcon,
   Input,
+  LinkWithIcon,
+  Modal,
+  Slides,
 } from "@dockstat/ui"
-import { installPlugin } from "@Actions"
 import { repo } from "@dockstat/utils"
-import { DBPluginShemaT } from "@dockstat/typings/types"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useContext, useMemo, useState } from "react"
+import { PageHeadingContext } from "@/contexts/pageHeadingContext"
 
 const parseRepoLink = repo.parseFromDBToRepoLink
 

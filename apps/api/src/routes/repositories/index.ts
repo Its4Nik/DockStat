@@ -1,7 +1,7 @@
+import type { RepoManifestType, RepoType } from "@dockstat/typings/types"
+import { parseFromDBToRepoLink } from "@dockstat/utils/src/repo"
 import Elysia from "elysia"
 import { DockStatDB } from "../../database"
-import { parseFromDBToRepoLink } from "@dockstat/utils/src/repo"
-import type { RepoManifestType, RepoType } from "@dockstat/typings/types"
 
 const RepositoryRoutes = new Elysia({
   prefix: "/repositories",
