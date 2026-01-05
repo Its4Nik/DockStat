@@ -1,11 +1,6 @@
-<<<<<<< HEAD
 import type { Database, SQLQueryBindings } from "bun:sqlite"
 import type { Logger } from "@dockstat/logger"
 import type { Parser, UpdateResult } from "../types"
-=======
-import type { SQLQueryBindings } from "bun:sqlite"
-import type { UpdateResult } from "../types"
->>>>>>> main
 import { buildSetClause, createLogger, quoteIdentifier, type RowData } from "../utils"
 import { SelectQueryBuilder } from "./select"
 
@@ -21,16 +16,12 @@ import { SelectQueryBuilder } from "./select"
  * - Automatic JSON serialization
  */
 export class UpdateQueryBuilder<T extends Record<string, unknown>> extends SelectQueryBuilder<T> {
-<<<<<<< HEAD
   private updateLog: ReturnType<typeof createLogger>
 
   constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger?: Logger) {
     super(db, tableName, parser, baseLogger)
     this.updateLog = createLogger("Update", baseLogger)
   }
-=======
-  private updateLog = createLogger("update")
->>>>>>> main
 
   // ===== Public Update Methods =====
 

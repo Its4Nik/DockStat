@@ -21,11 +21,7 @@ class Logger {
       this.disabled = !ONLY_SHOW.includes(prefix) ? true : this.disabled
     }
     this.debug(
-<<<<<<< HEAD
       `Logger Status: ${this.disabled ? "disabled" : "active"} - ignoring messages: ${ignoreMessages.join(", ")} - logHook: ${this.logHook?.toString}`
-=======
-      `Logger Status: ${this.disabled ? "disabled" : "active"} - ignoring messages: ${ignoreMessages.join(", ")}`
->>>>>>> main
     )
   }
 

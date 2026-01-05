@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { Logger, type LogHook } from "@dockstat/logger"
-=======
-import { Logger } from "@dockstat/logger"
->>>>>>> main
 
 /**
  * Centralized logging for sqlite-wrapper
@@ -35,13 +31,8 @@ export class SqliteLogger {
   private logger: Logger
   private tableName?: string
 
-<<<<<<< HEAD
   constructor(name: string, parent?: Logger, tableName?: string, logHook?: LogHook) {
     this.logger = parent ? parent.spawn(name) : new Logger(name, [], logHook)
-=======
-  constructor(name: string, parent?: Logger, tableName?: string) {
-    this.logger = parent ? parent.spawn(name) : new Logger(name)
->>>>>>> main
     this.tableName = tableName
   }
 
@@ -182,16 +173,12 @@ export const logger = new SqliteLogger("Sqlite")
 /**
  * Create a new logger for a specific module
  */
-<<<<<<< HEAD
 export function createLogger(name: string, baseLogger?: Logger): SqliteLogger {
   // If a base logger is provided (recommended for apps/packages that want shared LogHook/parents),
   // derive a sqlite-scoped child logger from it.
   if (baseLogger) return new SqliteLogger(name, baseLogger)
 
   // Fallback to the package-level logger (works, but won't automatically inherit app hooks)
-=======
-export function createLogger(name: string): SqliteLogger {
->>>>>>> main
   return logger.child(name)
 }
 
@@ -199,7 +186,6 @@ export function addLoggerParents(parents: string[]): void {
   logger.addParents(parents)
 }
 
-<<<<<<< HEAD
 /**
  * Configure a shared LogHook for sqlite-wrapper's root logger.
  *
@@ -220,6 +206,4 @@ export function createSqliteBaseLogger(logHook?: LogHook): Logger {
   return new Logger("Sqlite", [], logHook)
 }
 
-=======
->>>>>>> main
 export default logger

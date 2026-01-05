@@ -34,13 +34,9 @@ export async function updateProfile(input: UpdateProfileInput) {
   })
 
   if (error) {
-<<<<<<< HEAD
     throw new Error(extractEdenError({ data, error }))
-=======
-    throw new Error(String(error.value))
->>>>>>> main
   }
-
+  
   return data
 }
 ```
@@ -61,11 +57,7 @@ export function ProfileForm() {
       await qc.invalidateQueries({ queryKey: ["profile"] })
     },
   })
-<<<<<<< HEAD
-  
-=======
 
->>>>>>> main
   return (
     <form
       onSubmit={(e) => {
@@ -98,8 +90,4 @@ export function ProfileForm() {
 * Always `throw` on API errors (React Query will surface it in `mutation.error`)
 * Keep **UI concerns out** of actions (no toasts, no routing, no cache invalidation here)
 * Keep input types close to the action
-<<<<<<< HEAD
 * Return only what the caller needs (don't over-return)
-=======
-* Return only what the caller needs (don't over-return)
->>>>>>> main

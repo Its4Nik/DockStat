@@ -1,10 +1,6 @@
 import type { SQLQueryBindings } from "bun:sqlite"
 import type { Parser } from "../types"
-<<<<<<< HEAD
 import { createLogger, type SqliteLogger } from "./logger"
-=======
-import { createLogger } from "./logger"
->>>>>>> main
 
 /**
  * Row Transformer for sqlite-wrapper
@@ -13,11 +9,7 @@ import { createLogger } from "./logger"
  * including JSON columns, Boolean columns, and Module columns.
  */
 
-<<<<<<< HEAD
 const defaultLogger = createLogger("Transformer")
-=======
-const logger = createLogger("transformer")
->>>>>>> main
 
 /**
  * Generic row data type
@@ -29,10 +21,7 @@ export type RowData = Record<string, SQLQueryBindings>
  */
 export interface TransformOptions<T> {
   parser?: Parser<T>
-<<<<<<< HEAD
   logger?: SqliteLogger
-=======
->>>>>>> main
 }
 
 /**
@@ -55,10 +44,7 @@ export function transformFromDb<T extends Record<string, unknown>>(
     return row as T
   }
 
-<<<<<<< HEAD
   const logger = options?.logger || defaultLogger
-=======
->>>>>>> main
   const transformed = { ...row } as RowData
   const transformedColumns: string[] = []
 
@@ -182,10 +168,7 @@ export function transformToDb<T extends Record<string, unknown>>(
     return row as RowData
   }
 
-<<<<<<< HEAD
   const logger = options?.logger || defaultLogger
-=======
->>>>>>> main
   const transformed = { ...row } as RowData
   const transformedColumns: string[] = []
 
