@@ -1,11 +1,11 @@
 import { TemplateRenderer } from "@dockstat/template-renderer"
 import { Card } from "@dockstat/ui"
-import { useNavigate } from "react-router"
-import { usePluginPage } from "@/hooks/usePluginPage"
-import { useContext } from "react"
-import { PageHeadingContext } from "@/contexts/pageHeadingContext"
 import { motion } from "framer-motion"
-import { Loader2, AlertTriangle, Search, FileX, ArrowLeft, Home } from "lucide-react"
+import { AlertTriangle, ArrowLeft, FileX, Home, Loader2, Search } from "lucide-react"
+import { useContext } from "react"
+import { useNavigate } from "react-router"
+import { PageHeadingContext } from "@/contexts/pageHeadingContext"
+import { usePluginPage } from "@/hooks/usePluginPage"
 
 export default function PluginIdPage() {
   const navigate = useNavigate()
