@@ -17,7 +17,7 @@ type NavbarProps = {
   navLinks?: { slug: string; path: string }[]
   ramUsage?: string
   heading?: string
-  mutationFn: { pin: SidebarProps["mutationFn"]["pin"]; unpin: SidebarProps["mutationFn"]["unpin"] }
+  mutationFn: SidebarProps["mutationFn"]
 }
 
 export function Navbar({

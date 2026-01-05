@@ -3,6 +3,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import Logger from "@dockstat/logger"
 import type DB from "@dockstat/sqlite-wrapper"
+import { repo } from "@dockstat/utils"
 import { column, QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type {
   EVENTS,
@@ -52,7 +53,7 @@ class PluginHandler {
         repository: column.text({ notNull: true }),
         manifest: column.text({ notNull: true }),
         author: column.json({ notNull: true }),
-        plugin: column.text(),
+        plugin: column.text({ notNull: true }),
       },
       {
         ifNotExists: true,
@@ -91,7 +92,14 @@ class PluginHandler {
       .all()
   }
 
-  public savePlugin(plugin: DBPluginShemaT, update?: boolean) {
+  public async savePlugin(plugin: DBPluginShemaT, update?: boolean) {
+    if (plugin.plugin.length <= 10) {
+      this.logger.info(`Plugin ${plugin.name} has no bundle`)
+
+      plugin.plugin = await repo.getPluginBundle(plugin.repoType, plugin.repository)
+      this.savePlugin(plugin, update)
+    }
+
     try {
       if (update) {
         this.logger.info(`Updating Plugin ${plugin.name}`)

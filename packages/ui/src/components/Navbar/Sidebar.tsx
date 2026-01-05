@@ -17,6 +17,7 @@ import { backdropVariants, busyVariants, slideInVariants } from "./animations"
 import DockStatLogo from "./DockStat2-06.png"
 import { SidebarItem } from "./SidebarItem"
 import { usePinnedPaths } from "./usePinnedPaths"
+import { SidebarPaths } from "./consts"
 
 type PinLinkMutation = UseMutationResult<
   UpdateResult,
@@ -56,19 +57,7 @@ export function Sidebar({ isOpen, onClose, isBusy, logEntries, pins, mutationFn 
     }
   }
 
-  const paths: PathItem[] = [
-    {
-      path: "/",
-      slug: "Home",
-      children: [{ path: "/settings", slug: "Settings" }],
-    },
-    {
-      path: "/clients",
-      slug: "Clients",
-    },
-  ]
-
-  const pathsWithPinStatus = usePinnedPaths(paths, pins)
+  const pathsWithPinStatus = usePinnedPaths(SidebarPaths, pins)
 
   return (
     <AnimatePresence>

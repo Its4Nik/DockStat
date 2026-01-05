@@ -2,20 +2,10 @@ import { PageHeadingContext } from "@/contexts/pageHeadingContext"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useContext, useState, useMemo } from "react"
 import { fetchAllPlugins, fetchAllRepositories, fetchAllManifests } from "@Queries"
-import {
-  Card,
-  Badge,
-  Button,
-  Checkbox,
-  Divider,
-  Slides,
-  Modal,
-  LinkWithIcon,
-  Input,
-} from "@dockstat/ui"
-import { installPlugin } from "@Actions"
+import { Card, Badge, Button, Divider, Modal, LinkWithIcon, Input } from "@dockstat/ui"
+import { deletePlugin, installPlugin } from "@Actions"
 import { repo } from "@dockstat/utils"
-import { DBPluginShemaT } from "@dockstat/typings/types"
+import { Link } from "lucide-react"
 
 const parseRepoLink = repo.parseFromDBToRepoLink
 
@@ -67,6 +57,16 @@ export default function () {
     mutationKey: ["installPlugin"],
     onSuccess: async () => await qc.invalidateQueries({ queryKey: ["fetchAllPlugins"] }),
   })
+
+  const deletePluginMutation = useMutation({
+    mutationFn: deletePlugin,
+    mutationKey: ["deletePlugin"],
+    onSuccess: async () => await qc.invalidateQueries({ queryKey: ["fetchAllPlugins"] }),
+  })
+
+  const handleDelete = async (id: number) => {
+    await deletePluginMutation.mutateAsync(id)
+  }
 
   const handleInstall = async (plugin: AvailablePlugin) => {
     await installPluginMutation.mutateAsync({
@@ -136,22 +136,22 @@ export default function () {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {availablePlugins.map((plugin, idx) => (
-          <Card key={`${plugin.repository}-${plugin.manifest}-${idx}`}>
+          <Card variant="flat" key={`${plugin.repository}-${plugin.manifest}-${idx}`}>
             <div className="space-y-3">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold">{plugin.name}</h3>
-                  <p className="text-sm text-gray-600">{plugin.version}</p>
+                  <p className="text-sm text-muted-text">{plugin.version}</p>
                 </div>
                 {plugin.isInstalled && <Badge variant="success">Installed</Badge>}
               </div>
 
-              <p className="text-sm text-gray-700">{plugin.description}</p>
+              <p className="text-sm text-secondary-text">{plugin.description}</p>
 
               {plugin.tags && plugin.tags.length > 0 && (
                 <div className="flex gap-2 flex-wrap">
                   {plugin.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary">
+                    <Badge key={tag} unique>
                       {tag}
                     </Badge>
                   ))}
@@ -160,15 +160,20 @@ export default function () {
 
               <Divider />
 
-              <div className="text-xs text-gray-500 space-y-1">
-                <p>Author: {plugin.author.name}</p>
-                <p>License: {plugin.author.license}</p>
+              <div className="text-xs text-muted-text space-y-1">
+                <p>
+                  Author: <span className="text-accent">{plugin.author.name}</span>
+                </p>
+                <p>
+                  License: <span className="text-accent">{plugin.author.license}</span>
+                </p>
                 <p>
                   Repository:{" "}
                   <LinkWithIcon
                     external
+                    iconPosition="right"
+                    icon={<Link size={12} />}
                     href={parseRepoLink(plugin.repoType, plugin.repoSource)}
-                    className="text-blue-600 hover:underline"
                   >
                     {plugin.repository}
                   </LinkWithIcon>
@@ -190,6 +195,16 @@ export default function () {
                 >
                   {plugin.isInstalled ? "Installed" : "Install"}
                 </Button>
+                {plugin.isInstalled && plugin.installedId && (
+                  <Button
+                    className="flex-1"
+                    variant="danger"
+                    // biome-ignore lint/style/noNonNullAssertion: checked if an ID exists
+                    onClick={() => handleDelete(plugin.installedId!)}
+                  >
+                    Delete
+                  </Button>
+                )}
               </div>
             </div>
           </Card>
@@ -197,20 +212,21 @@ export default function () {
       </div>
 
       {availablePlugins.length === 0 && (
-        <div className="text-center py-12 text-gray-500">No plugins found</div>
+        <div className="text-center py-12 text-muted-text">No plugins found</div>
       )}
 
       <Modal
         open={!!selectedPlugin}
         onClose={() => setSelectedPlugin(null)}
         title={selectedPlugin?.name}
+        bodyClasses=""
       >
         {selectedPlugin && (
-          <div className="space-y-4">
-            <div>
+          <div className="space-y-4 w-60">
+            <Card size="sm" variant="outlined">
               <h4 className="font-semibold mb-1">Description</h4>
-              <p className="text-gray-700">{selectedPlugin.description}</p>
-            </div>
+              <p className="text-secondary-text">{selectedPlugin.description}</p>
+            </Card>
 
             <div>
               <h4 className="font-semibold mb-1">Version</h4>

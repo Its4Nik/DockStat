@@ -86,7 +86,7 @@ export function createAction<T extends Record<string, unknown>, TBody = unknown,
 /**
  * Create type-safe actions object
  */
-export function createActions<T extends Record<string, unknown>, A extends PluginActions<T>>(
+export function createActions<T extends Record<string, unknown>, A = PluginActions<T>>(
   actions: A
 ): A {
   return actions

@@ -15,23 +15,24 @@ function parseRepoParts(source: string) {
   return { ownerRepo, branch, path }
 }
 
-function toGitHub(source: string) {
-  const { ownerRepo, branch, path } = parseRepoParts(source)
-  return `https://raw.githubusercontent.com/${ownerRepo}/refs/heads/${branch}/${path}/manifest.yaml`
-}
-
-export function parseFromDBToRepoLink(type: RepoType["type"], source: string) {
+export function parseFromDBToRepoLink(
+  type: RepoType["type"],
+  source: string,
+  file = "manifest.yaml"
+) {
   switch (type) {
     case "http":
       return source
 
-    case "github":
-      return toGitHub(source)
+    case "github": {
+      const { ownerRepo, branch, path } = parseRepoParts(source)
+      return `https://raw.githubusercontent.com/${ownerRepo}/refs/heads/${branch}/${path}/${file}`
+    }
 
     case "gitlab": {
       const cleanSource = source.replace("gitlab://", "")
       const { ownerRepo, branch, path } = parseRepoParts(cleanSource)
-      return `https://gitlab.com/${ownerRepo}/-/raw/${branch}/${path}/manifest.yaml`
+      return `https://gitlab.com/${ownerRepo}/-/raw/${branch}/${path}/${file}`
     }
 
     case "gitea": {
@@ -39,7 +40,7 @@ export function parseFromDBToRepoLink(type: RepoType["type"], source: string) {
       const { ownerRepo, branch, path } = parseRepoParts(cleanSource)
       // Replace with your specific Gitea domain if needed
       const domain = "gitea.com"
-      return `https://${domain}/${ownerRepo}/raw/branch/${branch}/${path}/manifest.yaml`
+      return `https://${domain}/${ownerRepo}/raw/branch/${branch}/${path}/${file}`
     }
 
     default:
