@@ -3,7 +3,6 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import Logger from "@dockstat/logger"
 import type DB from "@dockstat/sqlite-wrapper"
-import { repo } from "@dockstat/utils"
 import { column, QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type {
   EVENTS,
@@ -12,6 +11,7 @@ import type {
   PluginRoute,
 } from "@dockstat/typings"
 import type { DBPluginShemaT, Plugin } from "@dockstat/typings/types"
+import { repo } from "@dockstat/utils"
 import {
   type ExecutionContext,
   FrontendActionsHandler,

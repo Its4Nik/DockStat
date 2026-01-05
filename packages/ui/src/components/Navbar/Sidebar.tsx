@@ -14,10 +14,10 @@ import { LinkWithIcon } from "../Link/Link"
 import { Modal } from "../Modal/Modal"
 import { Table } from "../Table/Table"
 import { backdropVariants, busyVariants, slideInVariants } from "./animations"
+import { SidebarPaths } from "./consts"
 import DockStatLogo from "./DockStat2-06.png"
 import { SidebarItem } from "./SidebarItem"
 import { usePinnedPaths } from "./usePinnedPaths"
-import { SidebarPaths } from "./consts"
 
 type PinLinkMutation = UseMutationResult<
   UpdateResult,

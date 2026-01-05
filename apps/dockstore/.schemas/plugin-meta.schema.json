@@ -14,24 +14,14 @@
   "repoType": {
     "default": "local",
     "type": "string",
-    "enum": [
-      "local",
-      "http",
-      "github",
-      "gitlab",
-      "gitea",
-      "default"
-    ]
+    "enum": ["local", "http", "github", "gitlab", "gitea", "default"]
   },
   "manifest": {
     "type": "string"
   },
   "author": {
     "type": "object",
-    "required": [
-      "name",
-      "license"
-    ],
+    "required": ["name", "license"],
     "properties": {
       "name": {
         "type": "string"
