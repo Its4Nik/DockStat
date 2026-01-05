@@ -41,4 +41,4 @@ DockMon is the default Metrics collector for DockStat. It works by listening on 
 
 ---
 
-> Generated on 30.12.2025 at 11:55:07
+> Generated on 05.01.2026 at 21:32:49

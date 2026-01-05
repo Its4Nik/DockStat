@@ -1,2 +1,16 @@
 # Auto-generated repository manifest - DO NOT EDIT
-plugins: []
+plugins:
+  - name: DockMon
+    description: "DockMon is the default Metrics collector for DockStat. It works by listening on 'container:metrics' and 'host:metrics' events emitted by the DockerClientManager.\n\n\t\tIt stores the metrics in a database and provides a REST API to query the metrics. These endpoints can also be used by other Plugins"
+    version: 1.0.0
+    repository: its4nik/dockstat:dev/apps/dockstore
+    repoType: github
+    manifest: src/content/plugins/dockmon
+    author:
+      name: Its4Nik
+      email: dockstat@itsnik.de
+      license: MIT
+      website: https://itsnik.de
+    tags:
+      - metrics
+      - default

@@ -38,8 +38,8 @@
     "directory": "packages/plugin-builder"
   },
   "dependencies": {
-    "@dockstat/sqlite-wrapper": "latest",
-    "@dockstat/typings": "latest"
+    "@dockstat/sqlite-wrapper": "workspace:*",
+    "@dockstat/typings": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",

@@ -33,8 +33,11 @@ export class SqliteLogger {
 
   constructor(name: string, parent?: Logger, tableName?: string, logHook?: LogHook) {
     try {
-      this.logger =
-        typeof parent?.spawn === "function" ? parent.spawn(name) : new Logger(name, [], logHook)
+      if (parent && typeof parent.spawn === "function") {
+        this.logger = parent.spawn(name)
+      } else {
+        this.logger = new Logger(name, [], logHook)
+      }
     } catch (error) {
       this.logger = new Logger(name, [], logHook)
       console.error(error)
