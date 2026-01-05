@@ -2,8 +2,8 @@ import { Route, Routes } from "react-router"
 
 import IndexPage from "./pages"
 import ClientsPage from "./pages/clients"
-import PluginIdPage from "./pages/pluginId"
 import ExtensionsIndex from "./pages/extensions"
+import PluginIdPage from "./pages/pluginId"
 
 export default function DockStatRouter() {
   return (

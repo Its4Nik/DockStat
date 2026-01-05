@@ -5,9 +5,8 @@
 
 import * as errorUtils from "./error"
 
-export * as repo from "./repo"
-
 export * as arrayUtils from "./array"
+export * as repo from "./repo"
 
 // Preserve existing exports
 import * as HTTP_RequestID from "./http/RequestId"

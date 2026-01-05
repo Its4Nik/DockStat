@@ -1,11 +1,11 @@
-import { PageHeadingContext } from "@/contexts/pageHeadingContext"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useContext, useState, useMemo } from "react"
-import { fetchAllPlugins, fetchAllRepositories, fetchAllManifests } from "@Queries"
-import { Card, Badge, Button, Divider, Modal, LinkWithIcon, Input } from "@dockstat/ui"
 import { deletePlugin, installPlugin } from "@Actions"
+import { fetchAllManifests, fetchAllPlugins, fetchAllRepositories } from "@Queries"
+import { Badge, Button, Card, Divider, Input, LinkWithIcon, Modal } from "@dockstat/ui"
 import { repo } from "@dockstat/utils"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "lucide-react"
+import { useContext, useMemo, useState } from "react"
+import { PageHeadingContext } from "@/contexts/pageHeadingContext"
 
 const parseRepoLink = repo.parseFromDBToRepoLink
 
