@@ -133,7 +133,7 @@ async function buildPlugin(pluginPath: string): Promise<BuildResult> {
 
   // Step 2: Import and extract metadata
   try {
-    const imported = await import(`./${outdir}/index.js`, import.meta)
+    const imported = await import(`./${outdir}/index.js`)
 
     if (!imported.default) {
       throw new Error(
