@@ -38,9 +38,7 @@ export default function PluginIdPage() {
         <Card variant="elevated" size="md" className="text-center">
           <div className="flex flex-col items-center gap-4 p-8">
             <div className="text-6xl">⚠️</div>
-            <h1 className="text-2xl font-bold text-primary-text">
-              Plugin Page Error
-            </h1>
+            <h1 className="text-2xl font-bold text-primary-text">Plugin Page Error</h1>
             <p className="text-secondary-text">{data.error}</p>
             <div className="text-sm text-secondary-text mt-4">
               <p>Plugin ID: {pluginId}</p>
@@ -65,12 +63,8 @@ export default function PluginIdPage() {
         <Card variant="elevated" size="md" className="text-center">
           <div className="flex flex-col items-center gap-4 p-8">
             <div className="text-6xl">🔍</div>
-            <h1 className="text-2xl font-bold text-primary-text">
-              Page Not Found
-            </h1>
-            <p className="text-secondary-text">
-              The requested plugin page could not be found.
-            </p>
+            <h1 className="text-2xl font-bold text-primary-text">Page Not Found</h1>
+            <p className="text-secondary-text">The requested plugin page could not be found.</p>
             <div className="text-sm text-secondary-text mt-4">
               <p>Plugin ID: {pluginId}</p>
               <p>Route: /{routePath}</p>
@@ -119,9 +113,7 @@ export default function PluginIdPage() {
     <div className="w-[95vw] mx-auto mt-4">
       {data.route.meta?.title && (
         <div className="mb-4">
-          <h1 className="text-2xl font-bold text-primary-text">
-            {data.route.meta.title}
-          </h1>
+          <h1 className="text-2xl font-bold text-primary-text">{data.route.meta.title}</h1>
           <p className="text-sm text-secondary-text">{data.route.pluginName}</p>
         </div>
       )}

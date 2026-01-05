@@ -5,6 +5,8 @@
 
 import * as errorUtils from "./error"
 
+export * as repo from "./repo"
+
 export * as arrayUtils from "./array"
 
 // Preserve existing exports

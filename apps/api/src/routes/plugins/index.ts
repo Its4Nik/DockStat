@@ -30,7 +30,7 @@ const PluginRoutes = new Elysia({
     body: PluginModel.installPluginBody,
   })
   .post(
-    "/activate",
+    "/loadPlugins",
     async ({ body, status }) => status(200, await PluginHandler.loadPlugins(body)),
     {
       body: PluginModel.activatePluginBody,
