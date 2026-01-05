@@ -5,6 +5,7 @@ import { Card, CardBody } from "../Card/Card"
 import { CardHeader } from "../Card/CardHeader"
 
 export type ButtonRowPosition = "left" | "center" | "right"
+export type SlideVariant = "default" | "minimal"
 
 export interface SlidesProps {
   children: Record<string, React.ReactNode>
@@ -22,6 +23,8 @@ export interface SlidesProps {
   onSlideChange?: (slideKey: string | null) => void
   /** When true, clicking the active slide button will hide/collapse the content */
   hideable?: boolean
+  /** Visual variant: 'default' (Card wrapper) or 'minimal' (barebones) */
+  variant?: SlideVariant
 
   className?: string
 }
@@ -36,6 +39,7 @@ export function Slides({
   selectedSlide: controlledSlide,
   onSlideChange,
   hideable = false,
+  variant = "default",
   className = "",
 }: SlidesProps) {
   const slideKeys = Object.keys(children)
@@ -50,7 +54,6 @@ export function Slides({
   const activeSlide = isControlled ? controlledSlide : internalSlide
 
   const handleSlideChange = (newSlide: string) => {
-    // If hideable and clicking the same slide, collapse it
     if (hideable && newSlide === activeSlide) {
       setIsCollapsed(true)
       if (!isControlled) {
@@ -60,7 +63,6 @@ export function Slides({
       return
     }
 
-    // If currently collapsed, expand with the new slide
     if (isCollapsed || activeSlide === null) {
       setIsCollapsed(false)
       setAnimationDirection(1)
@@ -71,7 +73,6 @@ export function Slides({
       return
     }
 
-    // Normal slide change
     if (newSlide === activeSlide) return
 
     const newIndex = slideKeys.indexOf(newSlide)
@@ -86,7 +87,6 @@ export function Slides({
     onSlideChange?.(newSlide)
   }
 
-  // Sync displayed slide with controlled prop changes
   useEffect(() => {
     if (isControlled && controlledSlide !== activeSlide) {
       if (controlledSlide === null || controlledSlide === undefined) {
@@ -116,42 +116,41 @@ export function Slides({
     }),
   }
 
+  // Variants for the container collapse
   const collapseVariants = {
     collapsed: {
       height: 0,
       opacity: 0,
-      padding: 0,
+      marginBottom: 0,
     },
     expanded: {
       height: "auto",
       opacity: 1,
+      // Only add margin if not minimal
+      marginBottom: variant === "minimal" ? 0 : undefined,
     },
   }
 
   const renderButtonRow = () => (
     <div
-      className={`flex ${connected ? "gap-0" : "gap-2"} ${connected ? "rounded-md overflow-hidden" : ""}`}
+      className={`flex ${
+        connected ? "gap-0" : "gap-2"
+      } ${connected ? "rounded-md overflow-hidden" : ""}`}
     >
       {slideKeys.map((key, index) => {
         const isActive = key === activeSlide && !isCollapsed
         const isFirst = index === 0
         const isLast = index === slideKeys.length - 1
 
-        // Connected style: use explicit rounding classes to override the Button's default rounded-md
-        // We use !important-style explicit classes to ensure they win over the base rounded-md
         let connectedClasses = ""
         if (connected) {
           if (isFirst && isLast) {
-            // Single button - keep default rounding
             connectedClasses = ""
           } else if (isFirst) {
-            // First button - round left only
             connectedClasses = "!rounded-r-none !rounded-l-md"
           } else if (isLast) {
-            // Last button - round right only
             connectedClasses = "!rounded-l-none !rounded-r-md border-l-0"
           } else {
-            // Middle buttons - no rounding
             connectedClasses = "!rounded-none border-l-0"
           }
         }
@@ -159,11 +158,11 @@ export function Slides({
         return (
           <Button
             key={key}
-            variant={isActive ? "primary" : "secondary"}
-            size="sm"
+            variant={isActive ? "outline" : "primary"}
+            size={variant === "minimal" ? "sm" : "sm"}
             noFocusRing
             onClick={() => handleSlideChange(key)}
-            className={connectedClasses}
+            className={`${connectedClasses} `}
           >
             {key}
           </Button>
@@ -172,16 +171,65 @@ export function Slides({
     </div>
   )
 
-  // When buttons are on the right, render header and buttons in the same row
-  const isRightPosition = buttonPosition === "right"
-
-  // Check if we should show the CardBody at all
   const hasContent =
     activeSlide && children[activeSlide] !== null && children[activeSlide] !== undefined
 
   const show = hasContent || !isCollapsed
 
-  const headerClasses = `${!show && "border-b-0! py-0!"} transition-all duration-300 ${
+  // --- MINIMAL VARIANT RENDER ---
+  if (variant === "minimal") {
+    return (
+      <div className={`flex flex-col ${className}`}>
+        {/* Minimal Header / Button Row */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            {header && <span className="text-sm font-semibold">{header}</span>}
+            {description && <span className="text-xs text-muted-text">{description}</span>}
+          </div>
+          {renderButtonRow()}
+        </div>
+
+        {/* Minimal Content Area - No Card styling */}
+        <AnimatePresence initial={false}>
+          {show && (
+            <motion.div
+              initial="collapsed"
+              animate="expanded"
+              exit="collapsed"
+              variants={collapseVariants}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <div className="overflow-hidden">
+                <AnimatePresence initial={false} custom={animationDirection} mode="wait">
+                  {activeSlide && !isCollapsed && (
+                    <motion.div
+                      key={activeSlide}
+                      custom={animationDirection}
+                      variants={slideVariants}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      transition={{
+                        x: { type: "spring", stiffness: 300, damping: 30 },
+                        opacity: { duration: 0.2 },
+                      }}
+                    >
+                      {children[activeSlide]}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    )
+  }
+
+  // --- DEFAULT VARIANT RENDER ---
+  const isRightPosition = buttonPosition === "right"
+
+  const headerClasses = `transition-all duration-300 ${
     isRightPosition ? "flex flex-row items-center justify-between gap-4" : "flex flex-col gap-4"
   }`
 
@@ -190,22 +238,18 @@ export function Slides({
       <CardHeader className={headerClasses}>
         {isRightPosition ? (
           <>
-            {/* Header text on the left */}
             <div className="flex flex-col gap-1">
               {header && <span className="text-lg font-semibold">{header}</span>}
               {description && <span className="text-sm text-muted-text">{description}</span>}
             </div>
-            {/* Buttons on the right */}
             {renderButtonRow()}
           </>
         ) : (
           <>
-            {/* Header text */}
             <div className="flex flex-col gap-1">
               {header && <span className="text-lg font-semibold">{header}</span>}
               {description && <span className="text-sm text-muted-text">{description}</span>}
             </div>
-            {/* Button Row - left or center */}
             <div
               className={`flex ${buttonPosition === "center" ? "justify-center" : "justify-start"} w-full`}
             >
@@ -215,7 +259,6 @@ export function Slides({
         )}
       </CardHeader>
 
-      {/* Only render CardBody if there's content to show or we're animating */}
       <AnimatePresence initial={false}>
         {show && (
           <motion.div
@@ -226,7 +269,6 @@ export function Slides({
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             <CardBody className="overflow-hidden">
-              {/* Slide Content with Animation */}
               <AnimatePresence initial={false} custom={animationDirection} mode="wait">
                 {activeSlide && !isCollapsed && (
                   <motion.div

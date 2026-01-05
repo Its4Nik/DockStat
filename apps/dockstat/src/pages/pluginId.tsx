@@ -68,8 +68,8 @@ export default function PluginIdPage() {
       >
         <Card variant="elevated" size="md">
           <div className="flex flex-col items-center gap-6 p-8">
-            <div className="p-4 rounded-full bg-red-500/10">
-              <AlertTriangle className="h-8 w-8 text-red-500" />
+            <div className="p-4 rounded-full bg-error/10">
+              <AlertTriangle className="h-8 w-8 text-error" />
             </div>
             <div className="text-center space-y-2">
               <h1 className="text-xl font-bold text-primary-text">Plugin Error</h1>

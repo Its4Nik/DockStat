@@ -15,6 +15,7 @@ type NavbarProps = {
   isBusy: boolean
   logEntries: LogEntry[]
   navLinks?: { slug: string; path: string }[]
+  pluginLinks: { pluginName: string; paths: { fullPath: string; metaTitle: string }[] }[]
   ramUsage?: string
   heading?: string
   mutationFn: SidebarProps["mutationFn"]
@@ -27,6 +28,7 @@ export function Navbar({
   logEntries,
   heading,
   mutationFn,
+  pluginLinks,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
@@ -78,6 +80,7 @@ export function Navbar({
           logEntries={logEntries}
           mutationFn={mutationFn}
           pins={navLinks || []}
+          pluginLinks={pluginLinks || []}
         />
 
         <style>{`

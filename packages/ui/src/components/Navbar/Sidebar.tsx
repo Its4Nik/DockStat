@@ -18,6 +18,7 @@ import { SidebarPaths } from "./consts"
 import DockStatLogo from "./DockStat2-06.png"
 import { SidebarItem } from "./SidebarItem"
 import { usePinnedPaths } from "./usePinnedPaths"
+import { Slides } from "../Slides/Slides"
 
 type PinLinkMutation = UseMutationResult<
   UpdateResult,
@@ -43,9 +44,18 @@ export type SidebarProps = {
   logEntries: LogEntry[]
   mutationFn: { pin: PinLinkMutation; unpin: PinLinkMutation }
   pins: { path: string; slug: string }[]
+  pluginLinks: { pluginName: string; paths: { fullPath: string; metaTitle: string }[] }[]
 }
 
-export function Sidebar({ isOpen, onClose, isBusy, logEntries, pins, mutationFn }: SidebarProps) {
+export function Sidebar({
+  isOpen,
+  onClose,
+  isBusy,
+  logEntries,
+  pins,
+  pluginLinks,
+  mutationFn,
+}: SidebarProps) {
   const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
 
   const handleTogglePin = (item: PathItem) => {
@@ -136,6 +146,17 @@ export function Sidebar({ isOpen, onClose, isBusy, logEntries, pins, mutationFn 
                     @dockstat packages
                   </LinkWithIcon>
                 </div>
+
+                {pluginLinks.map((plugin) => (
+                  <div key={plugin.pluginName}>
+                    <Divider label={plugin.pluginName} className="my-4" />
+                    {plugin.paths.map((path) => (
+                      <LinkWithIcon key={path.fullPath} href={path.fullPath}>
+                        {path.metaTitle}
+                      </LinkWithIcon>
+                    ))}
+                  </div>
+                ))}
 
                 <AnimatePresence initial={false}>
                   {isBusy && (

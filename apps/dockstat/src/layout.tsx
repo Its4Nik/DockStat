@@ -1,5 +1,5 @@
 import { pinNavLink, unPinNavLink } from "@Actions"
-import { fetchNavLinks } from "@Queries"
+import { fetchFrontendPluginRoutes, fetchNavLinks } from "@Queries"
 import { logFeedEffect, rssFeedEffect } from "@WSS"
 import type { LogEntry } from "@dockstat/logger"
 import { Navbar } from "@dockstat/ui"
@@ -21,9 +21,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const heading = useContext(PageHeadingContext).heading
   const isBusy = useGlobalBusy()
 
-  const { data } = useQuery({
+  const { data: navLinks } = useQuery({
     queryKey: ["fetchNavLinks"],
     queryFn: fetchNavLinks,
+  })
+
+  const { data: frontendPluginRoutes } = useQuery({
+    queryKey: ["fetchFrontendPluginRoutes"],
+    queryFn: fetchFrontendPluginRoutes,
   })
 
   const pinMutation = useMutation({
@@ -59,7 +64,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div className="bg-main-bg min-h-screen w-screen p-4">
       <Navbar
         isBusy={isBusy}
-        navLinks={data}
+        navLinks={navLinks}
+        pluginLinks={frontendPluginRoutes || []}
         ramUsage={showRamUsage ? ramUsage : undefined}
         logEntries={logMessagesArr}
         heading={heading}
