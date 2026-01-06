@@ -1,1 +1,1 @@
-// Managa repositories here
+// Manage repositories here
