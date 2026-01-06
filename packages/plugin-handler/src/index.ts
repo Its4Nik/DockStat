@@ -10,8 +10,8 @@ import type {
   FrontendLoaderResult,
   PluginRoute,
 } from "@dockstat/typings"
-import type { DBPluginShemaT, Plugin } from "@dockstat/typings/types"
-import { repo } from "@dockstat/utils"
+import type { DBPluginShemaT, Plugin, PluginMetaType, RepoType } from "@dockstat/typings/types"
+import { repo, retry } from "@dockstat/utils"
 import {
   type ExecutionContext,
   FrontendActionsHandler,
@@ -23,12 +23,15 @@ import {
   type PluginFrontendRoutes,
   type ResolvedFrontendRoute,
 } from "./frontend"
+import { hashString } from "@dockstat/utils/src/string"
+import type { CompareResult } from "./types"
 
 class PluginHandler {
   private loadedPluginsMap = new Map<number, Plugin>()
   private pluginServerHooks = new Map<number, { table: QueryBuilder; logger: Logger }>()
   private DB: DB
   private table: QueryBuilder<DBPluginShemaT>
+  private repositories: QueryBuilder<RepoType>
   private logger: Logger
   private frontendHandler: PluginFrontendHandler
   private actionsHandler: FrontendActionsHandler
@@ -54,6 +57,7 @@ class PluginHandler {
         manifest: column.text({ notNull: true }),
         author: column.json({ notNull: true }),
         plugin: column.text({ notNull: true }),
+        verificationApi: column.text({ notNull: false }),
       },
       {
         ifNotExists: true,
@@ -62,6 +66,9 @@ class PluginHandler {
         },
       }
     )
+
+    this.logger.debug("Loading repo Table")
+    this.repositories = this.DB.table<RepoType>("repositories")
 
     // Initialize frontend handler
     this.frontendHandler = new PluginFrontendHandler({
@@ -92,15 +99,99 @@ class PluginHandler {
       .all()
   }
 
+  private async verifyPlugin(plugin: PluginMetaType) {
+    this.logger.info(`Verifiying ${plugin.name}`)
+    const repo = this.repositories.select(["*"]).where({ source: plugin.repository }).get()
+
+    if (!repo || !repo.verification_api) {
+      return 0
+    }
+
+    const metaString = plugin.description + plugin.repository
+    this.logger.debug(`Hashing string: ${metaString} + ${plugin.version}`)
+    const sourceHash = await hashString(
+      (metaString + plugin.version).replaceAll("\n", ":::").replaceAll(" ", "/x/")
+    )
+
+    const res = await fetch(new URL(`${repo.verification_api}/api/compare`), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        pluginName: plugin.name,
+        pluginHash: sourceHash,
+        pluginVersion: plugin.version,
+      }),
+    })
+
+    const response = (await res.json()) as CompareResult
+
+    if (response.verified) {
+      this.logger.debug("Plugin has been verified, checking security status")
+
+      if (response.securityStatus === "safe") {
+        return true
+      } else if (response.securityStatus === "unsafe") {
+        return false
+      }
+
+      if (repo.policy === "relaxed") {
+        this.logger.debug("Repo is set to relaxed, unknown status is accepted")
+        return true
+      }
+
+      const msg = "Plugin status unknown"
+      this.logger.debug(msg)
+      return msg
+    } else {
+      const msg = "Plugin hasn't been verified yet"
+      this.logger.debug(msg)
+      if (repo.policy === "relaxed") {
+        this.logger.debug("Repo is set to relaxed, unverified status is accepted")
+        return true
+      }
+      return msg
+    }
+  }
+
   public async savePlugin(plugin: DBPluginShemaT, update?: boolean) {
     if (plugin.plugin.length <= 10) {
-      this.logger.info(`Plugin ${plugin.name} has no bundle`)
+      retry(
+        async () => {
+          this.logger.info(`Plugin ${plugin.name} has no bundle`)
 
-      plugin.plugin = await repo.getPluginBundle(
-        plugin.repoType,
-        `${plugin.repository}/${plugin.manifest}`
+          plugin.plugin = await repo.getPluginBundle(
+            plugin.repoType,
+            `${plugin.repository}/${plugin.manifest}`
+          )
+          this.savePlugin(plugin, update)
+        },
+        { attempts: 3, delay: 2000 }
       )
-      this.savePlugin(plugin, update)
+    }
+
+    const verificationRes = await this.verifyPlugin(plugin)
+
+    if (verificationRes === 0) {
+      this.logger.debug("No Verification endpoint found; continuing")
+    } else if (verificationRes === "Plugin hasn't been verified yet") {
+      return {
+        success: false,
+        message: verificationRes,
+      }
+    } else if (verificationRes === "Plugin status unknown") {
+      return {
+        success: false,
+        message: verificationRes,
+      }
+    } else if (verificationRes === false) {
+      return {
+        success: false,
+        message: "Plugin is not safe! Aborting installation",
+      }
+    } else if (verificationRes === true) {
+      this.logger.info(`Plugin ${plugin.name} is safe!`)
     }
 
     try {

@@ -5,6 +5,7 @@ import BaseLogger from "./base-logger"
 import { db } from "./db"
 import { type AuthConfig, createAuthMiddleware } from "./middleware/auth"
 import { apiRoutes, compareRoutes, pageRoutes, publicRoutes } from "./routes"
+import openapi from "@elysiajs/openapi"
 
 const logger = BaseLogger.spawn("Verification-Server")
 
@@ -36,6 +37,13 @@ const authConfig: Partial<AuthConfig> = {
 const app = new Elysia()
   // HTML plugin for JSX support
   .use(html())
+
+  .use(
+    openapi({
+      path: "/docs",
+      provider: "scalar",
+    })
+  )
 
   // Static file serving
   .use(

@@ -1,5 +1,5 @@
 import { Database, type SQLQueryBindings } from "bun:sqlite"
-import type { Logger } from "@dockstat/logger"
+import { Logger } from "@dockstat/logger"
 import { QueryBuilder } from "./query-builder/index"
 import type { ColumnDefinition, Parser, TableConstraints, TableOptions, TableSchema } from "./types"
 import { createLogger, type SqliteLogger } from "./utils"
@@ -95,8 +95,12 @@ class DB {
    * @param path - Path to the SQLite file (e.g. "app.db"). Use ":memory:" for in-memory DB.
    * @param options - Optional database configuration
    */
-  constructor(path: string, baseLogger: Logger, options?: DBOptions) {
-    this.baseLogger = baseLogger
+  constructor(path: string, options?: DBOptions, baseLogger?: Logger) {
+    if (!baseLogger) {
+      this.baseLogger = new Logger("Sqlite-Wrapper")
+    } else {
+      this.baseLogger = baseLogger
+    }
 
     // Wire base logger so sqlite-wrapper logs inherit the same LogHook/parents as the consumer.
     this.dbLog = createLogger("DB", this.baseLogger)
