@@ -15,5 +15,9 @@ export const SidebarPaths: PathItem[] = [
     path: "/clients",
     slug: "Clients",
   },
-  { path: "/extensions", slug: "Extensions" },
+  {
+    path: "/extensions",
+    slug: "Extensions",
+    children: [{ path: "/extensions/plugins", slug: "Browse Plugins" }],
+  },
 ]
