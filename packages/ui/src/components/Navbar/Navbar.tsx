@@ -15,7 +15,7 @@ type NavbarProps = {
   isBusy: boolean
   logEntries: LogEntry[]
   navLinks?: { slug: string; path: string }[]
-  pluginLinks: { pluginName: string; paths: { fullPath: string; metaTitle: string }[] }[]
+  pluginLinks: Array<{ pluginName: string; paths: Array<{ fullPath: string; metaTitle: string }> }>
   ramUsage?: string
   heading?: string
   mutationFn: SidebarProps["mutationFn"]

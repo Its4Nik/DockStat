@@ -4,7 +4,7 @@ import { formatDate } from "@dockstat/utils"
 import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons"
 import type { UseMutationResult } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
-import { BookMarkedIcon, LoaderPinwheel, X } from "lucide-react"
+import { BookMarkedIcon, X } from "lucide-react"
 import { useState } from "react"
 import { Badge } from "../Badge/Badge"
 import { Button } from "../Button/Button"
@@ -12,9 +12,8 @@ import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
 import { LinkWithIcon } from "../Link/Link"
 import { Modal } from "../Modal/Modal"
-import { Slides } from "../Slides/Slides"
 import { Table } from "../Table/Table"
-import { backdropVariants, busyVariants, slideInVariants } from "./animations"
+import { backdropVariants, slideInVariants } from "./animations"
 import { SidebarPaths } from "./consts"
 import DockStatLogo from "./DockStat2-06.png"
 import { SidebarItem } from "./SidebarItem"
@@ -50,7 +49,6 @@ export type SidebarProps = {
 export function Sidebar({
   isOpen,
   onClose,
-  isBusy,
   logEntries,
   pins,
   pluginLinks,
@@ -67,7 +65,7 @@ export function Sidebar({
     }
   }
 
-  const pathsWithPinStatus = usePinnedPaths(SidebarPaths, pins)
+  const pathsWithPinStatus = usePinnedPaths([...SidebarPaths], pins)
 
   return (
     <AnimatePresence>
@@ -114,6 +112,39 @@ export function Sidebar({
                   />
                 ))}
               </nav>
+              {pluginLinks.map((plugin) => (
+                <div key={plugin.pluginName}>
+                  <Divider label={plugin.pluginName} className="my-4" />
+                  <div className="flex flex-1 flex-col gap-1">
+                    {plugin.paths.map((path) => (
+                      <SidebarItem
+                        handleTogglePin={() =>
+                          handleTogglePin({
+                            path: path.fullPath,
+                            slug: path.metaTitle,
+                            isPinned: pins
+                              .map((p) => {
+                                return p.path
+                              })
+                              .includes(path.fullPath),
+                          })
+                        }
+                        isLoading={mutationFn.pin.isPending || mutationFn.unpin.isPending}
+                        key={path.fullPath}
+                        item={{
+                          path: path.fullPath,
+                          slug: path.metaTitle,
+                          isPinned: pins
+                            .map((p) => {
+                              return p.path
+                            })
+                            .includes(path.fullPath),
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
 
               <div className="mt-auto flex flex-col gap-4 pt-4">
                 <Divider label="More of DockStat" variant="dashed" />
@@ -147,34 +178,6 @@ export function Sidebar({
                   </LinkWithIcon>
                 </div>
 
-                {pluginLinks.map((plugin) => (
-                  <div key={plugin.pluginName}>
-                    <Divider label={plugin.pluginName} className="my-4" />
-                    {plugin.paths.map((path) => (
-                      <LinkWithIcon key={path.fullPath} href={path.fullPath}>
-                        {path.metaTitle}
-                      </LinkWithIcon>
-                    ))}
-                  </div>
-                ))}
-
-                <AnimatePresence initial={false}>
-                  {isBusy && (
-                    <motion.div
-                      variants={busyVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="hidden"
-                      className="overflow-hidden"
-                    >
-                      <Divider variant="dashed" />
-                      <span className="mt-4 flex items-center justify-center space-x-2 text-sm text-muted-foreground">
-                        <LoaderPinwheel className="animate-spin text-accent" size={18} />
-                        <p className="text-muted-text">API Request running...</p>
-                      </span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
                 <Divider variant="dashed" />
                 <Button onClick={() => setLogModalOpen(!logModalOpen)}>View Backend Logs</Button>
                 <Modal

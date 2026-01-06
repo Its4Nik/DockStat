@@ -1,5 +1,5 @@
 import { Pin } from "lucide-react"
-import { NavLink } from "react-router"
+import { LinkWithIcon } from "../Link/Link"
 
 type PathItem = {
   slug: string
@@ -21,9 +21,9 @@ export const SidebarItem = ({ item, depth = 0, handleTogglePin, isLoading }: Sid
   return (
     <div className="flex flex-col gap-1">
       <div className="group flex items-center justify-between pr-2">
-        <NavLink
-          to={item.path}
-          className={({ isActive }) =>
+        <LinkWithIcon
+          href={item.path}
+          navLinkActive={({ isActive }) =>
             `flex-1 rounded-md py-1.5 text-sm font-medium transition-all duration-300 ${
               isActive ? "bg-main-bg text-foreground" : "text-muted-foreground hover:bg-main-bg/20"
             }`
@@ -31,7 +31,7 @@ export const SidebarItem = ({ item, depth = 0, handleTogglePin, isLoading }: Sid
           style={{ paddingLeft: `${depth + 0.75}rem` }}
         >
           {item.slug}
-        </NavLink>
+        </LinkWithIcon>
 
         <button
           type="button"

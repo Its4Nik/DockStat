@@ -20,12 +20,12 @@ export const busyVariants: Variants = {
   hidden: {
     height: 0,
     opacity: 0,
-    transition: { duration: 0.2, ease: "easeInOut" },
+    transition: { duration: 0.05, ease: "easeInOut" },
   },
   visible: {
     height: "auto",
     opacity: 1,
-    transition: { duration: 0.2, ease: "easeInOut" },
+    transition: { duration: 0.05, ease: "easeInOut" },
   },
 }
 

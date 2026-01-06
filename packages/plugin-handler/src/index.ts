@@ -65,7 +65,7 @@ class PluginHandler {
 
     // Initialize frontend handler
     this.frontendHandler = new PluginFrontendHandler({
-      basePathPrefix: "/plugins",
+      basePathPrefix: "/p",
       logger: this.logger.spawn("Frontend"),
     })
 
@@ -252,6 +252,29 @@ class PluginHandler {
 
   public getServerHooks(id: number) {
     return this.pluginServerHooks.get(id)
+  }
+
+  public async unloadPlugins(ids: number[]) {
+    this.logger.debug(`Unloading plugins: ${ids}`)
+    const successes: number[] = []
+    const errors: { pluginId: number; error: string }[] = []
+    let step = 0
+
+    for (const id of ids) {
+      ++step
+      try {
+        this.unloadPlugin(id)
+        successes.push(id)
+      } catch (error: unknown) {
+        const msg = `Could not unload ${id} - ${error}`
+        this.logger.error(msg)
+        errors.push({ pluginId: id, error: msg })
+      }
+    }
+
+    this.logger.info(`Done with ${step}/${ids.length}`)
+
+    return { errors, successes }
   }
 
   public unloadAllPlugins() {

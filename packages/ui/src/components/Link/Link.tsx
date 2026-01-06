@@ -1,4 +1,5 @@
 import type React from "react"
+import { NavLink, type NavLinkRenderProps } from "react-router"
 
 export interface LinkWithIconProps {
   href: string
@@ -7,6 +8,8 @@ export interface LinkWithIconProps {
   iconPosition?: "left" | "right"
   className?: string
   external?: boolean
+  navLinkActive?: (props: NavLinkRenderProps) => string | undefined
+  style?: React.CSSProperties
 }
 
 export const LinkWithIcon: React.FC<LinkWithIconProps> = ({
@@ -16,9 +19,27 @@ export const LinkWithIcon: React.FC<LinkWithIconProps> = ({
   iconPosition = "left",
   className = "",
   external = false,
+  navLinkActive,
+  style,
 }) => {
   const isLeft = icon && iconPosition === "left"
   const isRight = icon && iconPosition === "right"
+
+  if (typeof navLinkActive === "function") {
+    return (
+      <NavLink
+        to={href}
+        target={external ? "_blank" : undefined}
+        rel={external ? "noopener noreferrer" : undefined}
+        className={navLinkActive}
+        style={style}
+      >
+        {isLeft && <span className="mr-1">{icon}</span>}
+        {children}
+        {isRight && <span className="ml-1">{icon}</span>}
+      </NavLink>
+    )
+  }
 
   return (
     <a

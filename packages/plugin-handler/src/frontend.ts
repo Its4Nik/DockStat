@@ -14,6 +14,7 @@ import type { Plugin } from "@dockstat/typings/types"
 /**
  * Resolved frontend route with plugin context
  */
+
 export interface ResolvedFrontendRoute extends PluginFrontendRoute {
   /** Plugin ID this route belongs to */
   pluginId: number
@@ -54,7 +55,7 @@ export class PluginFrontendHandler {
   private logger?: Logger
 
   constructor(options: PluginFrontendHandlerOptions = {}) {
-    this.basePathPrefix = options.basePathPrefix ?? "/plugins"
+    this.basePathPrefix = options.basePathPrefix ?? "/p"
     this.logger = options.logger
   }
 
