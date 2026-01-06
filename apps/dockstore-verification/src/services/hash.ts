@@ -1,6 +1,7 @@
 import BaseLogger from "../base-logger"
 
 const logger = BaseLogger.spawn("Hash-Service")
+
 import { hashString } from "@dockstat/utils"
 
 /**

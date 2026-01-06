@@ -88,7 +88,7 @@
       },
     },
     "apps/dockstore-verification": {
-      "name": "dockstore-verification",
+      "name": "@dockstat/store-verification",
       "dependencies": {
         "@dockstat/logger": "workspace:*",
         "@dockstat/sqlite-wrapper": "workspace:*",
@@ -395,6 +395,8 @@
     "@dockstat/plugin-handler": ["@dockstat/plugin-handler@workspace:packages/plugin-handler"],
 
     "@dockstat/sqlite-wrapper": ["@dockstat/sqlite-wrapper@workspace:packages/sqlite-wrapper"],
+
+    "@dockstat/store-verification": ["@dockstat/store-verification@workspace:apps/dockstore-verification"],
 
     "@dockstat/template-renderer": ["@dockstat/template-renderer@workspace:packages/template-renderer"],
 
@@ -937,8 +939,6 @@
     "dockerode": ["dockerode@4.0.9", "", { "dependencies": { "@balena/dockerignore": "^1.0.2", "@grpc/grpc-js": "^1.11.1", "@grpc/proto-loader": "^0.7.13", "docker-modem": "^5.0.6", "protobufjs": "^7.3.2", "tar-fs": "^2.1.4", "uuid": "^10.0.0" } }, "sha512-iND4mcOWhPaCNh54WmK/KoSb35AFqPAUWFMffTQcp52uQt36b5uNwEJTSXntJZBbeGad72Crbi/hvDIv6us/6Q=="],
 
     "dockstore": ["dockstore@workspace:apps/dockstore"],
-
-    "dockstore-verification": ["dockstore-verification@workspace:apps/dockstore-verification"],
 
     "doctrine": ["doctrine@3.0.0", "", { "dependencies": { "esutils": "^2.0.2" } }, "sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w=="],
 

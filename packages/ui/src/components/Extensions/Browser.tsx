@@ -42,19 +42,14 @@ export function ExtensionBrowser({
       </CardHeader>
       <CardBody>
         <div className="flex flex-wrap">
-          {repos.map(
-            (repo) => (
-              console.log(repo),
-              (
-                <Repo
-                  repo={repo}
-                  key={repo.name}
-                  plugins={manifests[repo.name].data.plugins}
-                  installedPlugins={installedPluginsRecord}
-                />
-              )
-            )
-          )}
+          {repos.map((repo) => (
+            <Repo
+              repo={repo}
+              key={repo.name}
+              plugins={manifests[repo.name].data.plugins}
+              installedPlugins={installedPluginsRecord}
+            />
+          ))}
         </div>
       </CardBody>
     </Card>

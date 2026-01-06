@@ -1,11 +1,11 @@
 import { Html, html } from "@elysiajs/html"
+import openapi from "@elysiajs/openapi"
 import { staticPlugin } from "@elysiajs/static"
 import { Elysia } from "elysia"
 import BaseLogger from "./base-logger"
 import { db } from "./db"
 import { type AuthConfig, createAuthMiddleware } from "./middleware/auth"
 import { apiRoutes, compareRoutes, pageRoutes, publicRoutes } from "./routes"
-import openapi from "@elysiajs/openapi"
 
 const logger = BaseLogger.spawn("Verification-Server")
 
