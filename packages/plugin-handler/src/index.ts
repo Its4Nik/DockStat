@@ -33,8 +33,8 @@ class PluginHandler {
   private frontendHandler: PluginFrontendHandler
   private actionsHandler: FrontendActionsHandler
 
-  constructor(db: DB, loggerParents: string[] = []) {
-    this.logger = new Logger("PluginHandler", loggerParents)
+  constructor(db: DB, logger: Logger) {
+    this.logger = logger
     this.logger.debug("Initializing...")
 
     this.DB = db
@@ -175,8 +175,13 @@ class PluginHandler {
   }
 
   public async loadAllPlugins() {
+    this.logger.info("Loading all plugins")
     const plugins = this.table.select(["*"]).all()
     const loadedPlugins = this.loadedPluginsMap
+
+    this.logger.debug(
+      `Found ${plugins.length} Plugins in DB & ${loadedPlugins.size} already loaded`
+    )
 
     const validPlugins = plugins.filter((p): p is DBPluginShemaT => {
       if (loadedPlugins.get(p.id as number)) {
@@ -189,11 +194,12 @@ class PluginHandler {
 
     const imports = await Promise.allSettled(
       validPlugins.map(async (plugin) => {
-        const tempPath = join(tmpdir(), `/dockstat-plugins/plugin-${plugin.id}-${Date.now()}.js`)
-        this.logger.debug(`Writing plugin ${plugin.id} to ${tempPath}`)
+        let blobUrl: string | null = null
         try {
-          await Bun.write(tempPath, plugin.plugin)
-          const { default: mod } = await import(/* @vite-ignore */ tempPath)
+          const blob = new Blob([plugin.plugin], { type: "text/javascript" })
+          blobUrl = URL.createObjectURL(blob)
+
+          const { default: mod } = await import(/* @vite-ignore */ blobUrl)
 
           mod.id = plugin.id as number
 
@@ -232,7 +238,9 @@ class PluginHandler {
           this.logger.error(`Failed to import plugin ${plugin.id}: ${err}`)
           return null
         } finally {
-          await unlink(tempPath).catch(() => {})
+          if (blobUrl) {
+            URL.revokeObjectURL(blobUrl)
+          }
         }
       })
     )
