@@ -4,7 +4,6 @@ import { parseFromDBToRepoLink } from "./parseRepoLink"
 export async function getPluginBundle(type: RepoType["type"], source: string) {
   const link = parseFromDBToRepoLink(type, source, "bundle/index.js")
 
-  console.log("Fetching", link)
   const data = await fetch(link, { method: "GET" })
   const bundle = await data.text()
 
