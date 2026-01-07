@@ -5,6 +5,7 @@ import { repo } from "@dockstat/utils"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "lucide-react"
 import { useContext, useMemo, useState } from "react"
+import { toast } from "@/components/toast"
 import { PageHeadingContext } from "@/contexts/pageHeadingContext"
 
 const parseRepoLink = repo.parseFromDBToRepoLink
@@ -65,11 +66,17 @@ export default function PluginBrowser() {
   })
 
   const handleDelete = async (id: number) => {
-    await deletePluginMutation.mutateAsync(id)
+    const res = await deletePluginMutation.mutateAsync(id)
+
+    toast({
+      description: res.message,
+      title: `Uninstalled PluginID: ${id}`,
+      variant: res.success ? "success" : "error",
+    })
   }
 
   const handleInstall = async (plugin: AvailablePlugin) => {
-    await installPluginMutation.mutateAsync({
+    const res = await installPluginMutation.mutateAsync({
       id: plugin.isInstalled ? null : null,
       plugin: "", // handled by backend
       name: plugin.name,
@@ -80,6 +87,12 @@ export default function PluginBrowser() {
       manifest: plugin.manifest,
       author: plugin.author,
       tags: plugin.tags,
+    })
+
+    toast({
+      title: `Installed ${plugin.name}`,
+      description: res.message,
+      variant: res.success ? "success" : "error",
     })
   }
 
