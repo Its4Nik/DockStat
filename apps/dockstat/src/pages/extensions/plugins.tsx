@@ -70,14 +70,16 @@ export default function PluginBrowser() {
 
     toast({
       description: res.message,
-      title: `Uninstalled PluginID: ${id}`,
+      title: res.success
+        ? `Uninstalled PluginID: ${id}`
+        : `Error while uninstalling PluginID: ${id}`,
       variant: res.success ? "success" : "error",
     })
   }
 
   const handleInstall = async (plugin: AvailablePlugin) => {
     const res = await installPluginMutation.mutateAsync({
-      id: plugin.isInstalled ? null : null,
+      id: plugin.isInstalled && plugin.installedId ? plugin.installedId : null,
       plugin: "", // handled by backend
       name: plugin.name,
       description: plugin.description,
@@ -90,10 +92,12 @@ export default function PluginBrowser() {
     })
 
     toast({
-      title: `Installed ${plugin.name}`,
+      title: res.success ? `Installed ${plugin.name}` : `Failed to install ${plugin.name}`,
       description: res.message,
       variant: res.success ? "success" : "error",
     })
+
+    return
   }
 
   const availablePlugins = useMemo(() => {

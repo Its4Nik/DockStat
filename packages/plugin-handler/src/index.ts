@@ -201,7 +201,7 @@ class PluginHandler {
     } catch (error) {
       return {
         success: false,
-        message: `Failed to fetch plugin bundle: ${JSON.stringify(error)}`,
+        message: `Failed to fetch plugin bundle: ${error instanceof Error ? error.message : String(error)}`,
       }
     }
   }
@@ -235,7 +235,12 @@ class PluginHandler {
   private updateExistingPlugin(plugin: DBPluginShemaT) {
     this.logger.info(`Updating Plugin ${plugin.name}`)
     this.unloadPlugin(Number(plugin.id))
-    this.deletePlugin(Number(plugin.id))
+    const delRes = this.deletePlugin(Number(plugin.id))
+
+    if (delRes.success === false) {
+      return delRes
+    }
+
     const res = this.insertNewPlugin(plugin)
     res.id && this.loadPlugin(res.id)
     return res
