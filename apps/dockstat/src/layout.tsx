@@ -6,11 +6,11 @@ import { Navbar } from "@dockstat/ui"
 import { arrayUtils } from "@dockstat/utils"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useContext, useEffect, useState } from "react"
+import { Toaster } from "sonner"
 import { AdditionalSettingsContext } from "@/contexts/additionalSettings"
+import { toast } from "./components/toast"
 import { PageHeadingContext } from "./contexts/pageHeadingContext"
 import { useGlobalBusy } from "./hooks/useGlobalBusy"
-import { toast } from "./components/toast"
-import { Toaster } from "sonner"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const qc = useQueryClient()
@@ -66,7 +66,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         variant: "error",
         title: (
           <p>
-            A server error occured! [<span className="text-accent">{logMessage.name}</span>]
+            A server error occurred! [<span className="text-accent">{logMessage.name}</span>]
           </p>
         ),
         description: logMessage.message,

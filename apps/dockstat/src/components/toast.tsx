@@ -1,9 +1,9 @@
 "use client"
 
 import { Button, Card } from "@dockstat/ui"
-import { toast as sonnerToast } from "sonner"
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { type ReactNode, useState } from "react"
+import { toast as sonnerToast } from "sonner"
 
 export function toast(toast: Omit<ToastProps, "id">) {
   return sonnerToast.custom((id) => (
@@ -19,8 +19,8 @@ export function toast(toast: Omit<ToastProps, "id">) {
 
 interface ToastProps {
   id: string | number
-  title: string | React.ReactNode
-  description: string
+  title: string | ReactNode
+  description: string | ReactNode
   variant?: "error" | "success"
   button?: {
     label: string
@@ -62,7 +62,10 @@ function Toast(props: ToastProps) {
               {title}
             </p>
 
-            <p className="mt-1 text-sm leading-5 text-muted-text" title={description}>
+            <p
+              className="mt-1 text-sm leading-5 text-muted-text"
+              title={typeof description === "string" ? description : undefined}
+            >
               {description}
             </p>
           </motion.div>
