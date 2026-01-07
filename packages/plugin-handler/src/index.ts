@@ -177,7 +177,22 @@ class PluginHandler {
       return this.updateExistingPlugin(plugin)
     }
 
-    return this.insertNewPlugin(plugin)
+    let loadedPlugin = false
+
+    const res = this.insertNewPlugin(plugin)
+    if (res.id) {
+      try {
+        await this.loadPlugin(res.id)
+        loadedPlugin = true
+      } catch (err) {
+        loadedPlugin = false
+        this.logger.error(
+          `Could not load plugin on save ${err instanceof Error ? err.message : String(err)}`
+        )
+      }
+    }
+
+    return { ...res, message: `${res.message} - loaded plugin: ${loadedPlugin}` }
   }
 
   private isDuplicatePlugin(name: string): boolean {
@@ -271,9 +286,12 @@ class PluginHandler {
     try {
       this.table.where({ id: id }).delete()
       this.logger.info(`Deleted Plugin: ${id}`)
+
+      const unloaded = this.unloadPlugin(id)
+
       return {
         success: true,
-        message: "Deleted Plugin",
+        message: unloaded ? "Deleted and unloaded Plugin" : "Delete plugin; couldn't unload",
       }
     } catch (error: unknown) {
       this.logger.error(`Could not delete Plugin: ${id} - ${error}`)

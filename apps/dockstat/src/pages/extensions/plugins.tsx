@@ -56,13 +56,23 @@ export default function PluginBrowser() {
   const installPluginMutation = useMutation({
     mutationFn: installPlugin,
     mutationKey: ["installPlugin"],
-    onSuccess: async () => await qc.invalidateQueries({ queryKey: ["fetchAllPlugins"] }),
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["fetchAllPlugins"] }),
+        qc.invalidateQueries({ queryKey: ["fetchFrontendPluginRoutes"] }),
+      ])
+    },
   })
 
   const deletePluginMutation = useMutation({
     mutationFn: deletePlugin,
     mutationKey: ["deletePlugin"],
-    onSuccess: async () => await qc.invalidateQueries({ queryKey: ["fetchAllPlugins"] }),
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["fetchAllPlugins"] }),
+        qc.invalidateQueries({ queryKey: ["fetchFrontendPluginRoutes"] }),
+      ])
+    },
   })
 
   const handleDelete = async (id: number) => {
