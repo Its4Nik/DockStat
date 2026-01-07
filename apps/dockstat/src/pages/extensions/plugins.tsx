@@ -5,6 +5,7 @@ import { repo } from "@dockstat/utils"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "lucide-react"
 import { useContext, useMemo, useState } from "react"
+import { toast } from "@/components/toast"
 import { PageHeadingContext } from "@/contexts/pageHeadingContext"
 
 const parseRepoLink = repo.parseFromDBToRepoLink
@@ -65,12 +66,20 @@ export default function PluginBrowser() {
   })
 
   const handleDelete = async (id: number) => {
-    await deletePluginMutation.mutateAsync(id)
+    const res = await deletePluginMutation.mutateAsync(id)
+
+    toast({
+      description: res.message,
+      title: res.success
+        ? `Uninstalled PluginID: ${id}`
+        : `Error while uninstalling PluginID: ${id}`,
+      variant: res.success ? "success" : "error",
+    })
   }
 
   const handleInstall = async (plugin: AvailablePlugin) => {
-    await installPluginMutation.mutateAsync({
-      id: plugin.isInstalled ? null : null,
+    const res = await installPluginMutation.mutateAsync({
+      id: plugin.isInstalled && plugin.installedId ? plugin.installedId : null,
       plugin: "", // handled by backend
       name: plugin.name,
       description: plugin.description,
@@ -81,6 +90,14 @@ export default function PluginBrowser() {
       author: plugin.author,
       tags: plugin.tags,
     })
+
+    toast({
+      title: res.success ? `Installed ${plugin.name}` : `Failed to install ${plugin.name}`,
+      description: res.message,
+      variant: res.success ? "success" : "error",
+    })
+
+    return
   }
 
   const availablePlugins = useMemo(() => {

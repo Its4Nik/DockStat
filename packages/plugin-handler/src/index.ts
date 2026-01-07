@@ -57,7 +57,6 @@ class PluginHandler {
         manifest: column.text({ notNull: true }),
         author: column.json({ notNull: true }),
         plugin: column.text({ notNull: true }),
-        verificationApi: column.text({ notNull: false }),
       },
       {
         ifNotExists: true,
@@ -156,55 +155,99 @@ class PluginHandler {
   }
 
   public async savePlugin(plugin: DBPluginShemaT, update?: boolean) {
-    if (plugin.plugin.length <= 10) {
-      retry(
-        async () => {
-          this.logger.info(`Plugin ${plugin.name} has no bundle`)
-
-          plugin.plugin = await repo.getPluginBundle(
-            plugin.repoType,
-            `${plugin.repository}/${plugin.manifest}`
-          )
-          this.savePlugin(plugin, update)
-        },
-        { attempts: 3, delay: 2000 }
-      )
+    // Check for duplicates (skip during updates)
+    if (!update && this.isDuplicatePlugin(plugin.name)) {
+      return { success: false, message: "Plugin is already installed!" }
     }
 
-    const verificationRes = await this.verifyPlugin(plugin)
+    // Ensure plugin bundle is available
+    const bundleResult = await this.ensurePluginBundle(plugin)
+    if (!bundleResult.success) {
+      return bundleResult
+    }
 
-    if (verificationRes === 0) {
-      this.logger.debug("No Verification endpoint found; continuing")
-    } else if (verificationRes === "Plugin hasn't been verified yet") {
-      return {
-        success: false,
-        message: verificationRes,
-      }
-    } else if (verificationRes === "Plugin status unknown") {
-      return {
-        success: false,
-        message: verificationRes,
-      }
-    } else if (verificationRes === false) {
-      return {
-        success: false,
-        message: "Plugin is not safe! Aborting installation",
-      }
-    } else if (verificationRes === true) {
-      this.logger.info(`Plugin ${plugin.name} is safe!`)
+    // Verify plugin safety
+    const verificationResult = await this.checkPluginSafety(plugin)
+    if (!verificationResult.success) {
+      return verificationResult
+    }
+
+    // Handle update vs new installation
+    if (update) {
+      return this.updateExistingPlugin(plugin)
+    }
+
+    return this.insertNewPlugin(plugin)
+  }
+
+  private isDuplicatePlugin(name: string): boolean {
+    return this.getAll()
+      .flatMap((i) => i.name)
+      .includes(name)
+  }
+
+  private async ensurePluginBundle(plugin: DBPluginShemaT) {
+    if (plugin.plugin.length > 10) {
+      return { success: true }
     }
 
     try {
-      if (update) {
-        this.logger.info(`Updating Plugin ${plugin.name}`)
-        this.unloadPlugin(Number(plugin.id))
-        this.deletePlugin(Number(plugin.id))
-        this.savePlugin(plugin, false)
-        return {
-          success: true,
-          message: "Plugin saved successfully",
-        }
+      this.logger.info(`Plugin ${plugin.name} has no bundle, fetching...`)
+      plugin.plugin = await retry(
+        () => repo.getPluginBundle(plugin.repoType, `${plugin.repository}/${plugin.manifest}`),
+        { attempts: 3, delay: 2000 }
+      )
+      return { success: true }
+    } catch (error) {
+      return {
+        success: false,
+        message: `Failed to fetch plugin bundle: ${error instanceof Error ? error.message : String(error)}`,
       }
+    }
+  }
+
+  private async checkPluginSafety(plugin: DBPluginShemaT) {
+    const verificationRes = await this.verifyPlugin(plugin)
+
+    if (verificationRes === 0) {
+      this.logger.debug("No verification endpoint found; continuing")
+      return { success: true }
+    }
+
+    if (verificationRes === true) {
+      this.logger.info(`Plugin ${plugin.name} is safe!`)
+      return { success: true }
+    }
+
+    // Handle failure cases
+    const errorMessages = {
+      "Plugin hasn't been verified yet": "Plugin hasn't been verified yet",
+      "Plugin status unknown": "Plugin status unknown",
+      false: "Plugin is not safe! Aborting installation",
+    }
+
+    const message =
+      errorMessages[verificationRes as keyof typeof errorMessages] || "Plugin verification failed"
+
+    return { success: false, message }
+  }
+
+  private updateExistingPlugin(plugin: DBPluginShemaT) {
+    this.logger.info(`Updating Plugin ${plugin.name}`)
+    this.unloadPlugin(Number(plugin.id))
+    const delRes = this.deletePlugin(Number(plugin.id))
+
+    if (delRes.success === false) {
+      return delRes
+    }
+
+    const res = this.insertNewPlugin(plugin)
+    res.id && this.loadPlugin(res.id)
+    return res
+  }
+
+  private insertNewPlugin(plugin: DBPluginShemaT) {
+    try {
       this.logger.debug(`Saving Plugin ${plugin.name} to DB`)
       const res = this.table.insert(plugin)
       this.logger.debug(`Plugin ${plugin.name} saved`)

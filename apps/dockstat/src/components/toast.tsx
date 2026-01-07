@@ -72,7 +72,7 @@ function Toast(props: ToastProps) {
 
           <div className="my-auto shrink-0">
             <Button
-              variant={cardVariant === "error" ? "danger" : "outline"}
+              variant={cardVariant === "error" ? "danger" : "secondary"}
               className="rounded-md px-3 py-1.5 text-sm font-semibold leading-5 shadow-sm transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
               onClick={() => {
                 button?.onClick()
