@@ -1,9 +1,9 @@
 "use client"
 
 import { Button, Card } from "@dockstat/ui"
-import { toast as sonnerToast } from "sonner"
 import { motion } from "framer-motion"
 import { useState } from "react"
+import { toast as sonnerToast } from "sonner"
 
 export function toast(toast: Omit<ToastProps, "id">) {
   return sonnerToast.custom((id) => (
