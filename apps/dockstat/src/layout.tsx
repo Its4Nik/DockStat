@@ -9,6 +9,8 @@ import { useContext, useEffect, useState } from "react"
 import { AdditionalSettingsContext } from "@/contexts/additionalSettings"
 import { PageHeadingContext } from "./contexts/pageHeadingContext"
 import { useGlobalBusy } from "./hooks/useGlobalBusy"
+import { toast } from "./components/toast"
+import { Toaster } from "sonner"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const qc = useQueryClient()
@@ -58,10 +60,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       arrayUtils.pushWithLimit<LogEntry>(next, logMessage)
       return next
     })
+
+    if (logMessage.level === "error") {
+      toast({
+        variant: "error",
+        title: (
+          <p>
+            A server error occured! [<span className="text-accent">{logMessage.name}</span>]
+          </p>
+        ),
+        description: logMessage.message,
+      })
+    }
   }, [logMessage])
 
   return (
     <div className="bg-main-bg min-h-screen w-screen p-4">
+      <Toaster expand position="bottom-right" />
       <Navbar
         isBusy={isBusy}
         navLinks={navLinks}

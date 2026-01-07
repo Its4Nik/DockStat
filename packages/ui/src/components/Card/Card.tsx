@@ -1,7 +1,15 @@
 import type React from "react"
 import type { MouseEventHandler, ReactNode } from "react"
 
-export type CardVariant = "default" | "outlined" | "elevated" | "flat" | "dark"
+export type CardVariant =
+  | "default"
+  | "outlined"
+  | "elevated"
+  | "flat"
+  | "dark"
+  | "error"
+  | "success"
+
 export type CardSize = "xs" | "sm" | "md" | "lg"
 
 export interface CardProps {
@@ -29,6 +37,8 @@ export const Card: React.FC<CardProps> = ({
     elevated: "bg-card-elevated-bg shadow-2xl text-primary-text",
     flat: "bg-card-flat-bg border-none text-muted-text",
     dark: "border border-card-outlined-border/20 bg-main-bg text-secondary-text",
+    error: "border border-error bg-main-bg text-secondary-text",
+    success: "border border-success bg-main-bg text-secondary-text",
   }
 
   const sizeClasses: Record<CardSize, string> = {
