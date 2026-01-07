@@ -19,6 +19,21 @@ import DockStatLogo from "./DockStat2-06.png"
 import { SidebarItem } from "./SidebarItem"
 import { usePinnedPaths } from "./usePinnedPaths"
 
+const listVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -10 },
+  visible: { opacity: 1, x: 0 },
+}
+
 type PinLinkMutation = UseMutationResult<
   UpdateResult,
   Error,
@@ -55,6 +70,7 @@ export function Sidebar({
   mutationFn,
 }: SidebarProps) {
   const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
+  const [showPluginRoutes, setShowPluginRoutes] = useState<boolean>(false)
 
   const handleTogglePin = (item: PathItem) => {
     const payload = { slug: item.slug, path: item.path }
@@ -98,53 +114,93 @@ export function Sidebar({
                 </Button>
               </div>
 
-              <div className="py-4">
-                <Divider />
-              </div>
-
-              <nav className="flex flex-1 flex-col gap-1">
-                {pathsWithPinStatus?.map((p) => (
-                  <SidebarItem
-                    key={p.slug}
-                    item={p}
-                    handleTogglePin={handleTogglePin}
-                    isLoading={mutationFn.pin.isPending || mutationFn.unpin.isPending}
-                  />
-                ))}
-              </nav>
-              {pluginLinks.map((plugin) => (
-                <div key={plugin.pluginName}>
-                  <Divider label={plugin.pluginName} className="my-4" />
-                  <div className="flex flex-1 flex-col gap-1">
-                    {plugin.paths.map((path) => (
-                      <SidebarItem
-                        handleTogglePin={() =>
-                          handleTogglePin({
-                            path: path.fullPath,
-                            slug: path.metaTitle,
-                            isPinned: pins
-                              .map((p) => {
-                                return p.path
-                              })
-                              .includes(path.fullPath),
-                          })
-                        }
-                        isLoading={mutationFn.pin.isPending || mutationFn.unpin.isPending}
-                        key={path.fullPath}
-                        item={{
-                          path: path.fullPath,
-                          slug: path.metaTitle,
-                          isPinned: pins
-                            .map((p) => {
-                              return p.path
-                            })
-                            .includes(path.fullPath),
-                        }}
-                      />
-                    ))}
-                  </div>
+              <div className="mt-2">
+                <div className="flex transition-all duration-300 space-x-2">
+                  <Button
+                    noFocusRing
+                    className="flex-1 relative"
+                    size="xs"
+                    variant={!showPluginRoutes ? "outline" : "primary"}
+                    onClick={() => setShowPluginRoutes(false)}
+                  >
+                    Main routes
+                  </Button>
+                  {pluginLinks.length >= 1 ? (
+                    <Button
+                      noFocusRing
+                      className="flex-1 relative"
+                      size="xs"
+                      variant={showPluginRoutes ? "outline" : "primary"}
+                      onClick={() => setShowPluginRoutes(true)}
+                    >
+                      Plugin routes
+                    </Button>
+                  ) : null}
                 </div>
-              ))}
+
+                <AnimatePresence mode="wait" initial={false}>
+                  {showPluginRoutes ? (
+                    <motion.nav
+                      key="plugins"
+                      variants={listVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="hidden"
+                      className="flex flex-1 flex-col gap-1 mt-4"
+                    >
+                      {pluginLinks.map((plugin) => (
+                        <div key={plugin.pluginName}>
+                          <Divider label={plugin.pluginName} className="mb-2" />
+                          <div className="flex flex-1 flex-col gap-1">
+                            {plugin.paths.map((path) => (
+                              <motion.div
+                                key={path.fullPath}
+                                variants={itemVariants}
+                                transition={{ duration: 0.2 }}
+                              >
+                                <SidebarItem
+                                  handleTogglePin={() =>
+                                    handleTogglePin({
+                                      path: path.fullPath,
+                                      slug: path.metaTitle,
+                                      isPinned: pins.some((p) => p.path === path.fullPath),
+                                    })
+                                  }
+                                  isLoading={mutationFn.pin.isPending || mutationFn.unpin.isPending}
+                                  item={{
+                                    path: path.fullPath,
+                                    slug: path.metaTitle,
+                                    isPinned: pins.some((p) => p.path === path.fullPath),
+                                  }}
+                                />
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </motion.nav>
+                  ) : (
+                    <motion.nav
+                      key="default"
+                      variants={listVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="hidden"
+                      className="flex flex-1 flex-col gap-1 mt-4"
+                    >
+                      {pathsWithPinStatus?.map((p) => (
+                        <motion.div key={p.slug} variants={itemVariants}>
+                          <SidebarItem
+                            item={p}
+                            handleTogglePin={handleTogglePin}
+                            isLoading={mutationFn.pin.isPending || mutationFn.unpin.isPending}
+                          />
+                        </motion.div>
+                      ))}
+                    </motion.nav>
+                  )}
+                </AnimatePresence>
+              </div>
 
               <div className="mt-auto flex flex-col gap-4 pt-4">
                 <Divider label="More of DockStat" variant="dashed" />

@@ -8,7 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useContext, useEffect, useState } from "react"
 import { Toaster } from "sonner"
 import { AdditionalSettingsContext } from "@/contexts/additionalSettings"
-import { toast } from "./components/toast"
+import { toast } from "./lib/toast"
 import { PageHeadingContext } from "./contexts/pageHeadingContext"
 import { useGlobalBusy } from "./hooks/useGlobalBusy"
 

@@ -2,22 +2,11 @@
 
 import { Button, Card } from "@dockstat/ui"
 import { motion } from "framer-motion"
+import { X } from "lucide-react"
 import { type ReactNode, useState } from "react"
 import { toast as sonnerToast } from "sonner"
 
-export function toast(toast: Omit<ToastProps, "id">) {
-  return sonnerToast.custom((id) => (
-    <Toast
-      id={id}
-      title={toast.title}
-      description={toast.description}
-      button={toast.button}
-      variant={toast.variant}
-    />
-  ))
-}
-
-interface ToastProps {
+export interface ToastProps {
   id: string | number
   title: string | ReactNode
   description: string | ReactNode
@@ -28,7 +17,7 @@ interface ToastProps {
   }
 }
 
-function Toast(props: ToastProps) {
+export function Toast(props: ToastProps) {
   const { title, description, button, id, variant } = props
   const [isHovered, setIsHovered] = useState(false)
 
@@ -72,14 +61,14 @@ function Toast(props: ToastProps) {
 
           <div className="my-auto shrink-0">
             <Button
+              size="sm"
               variant={cardVariant === "error" ? "danger" : "secondary"}
-              className="rounded-md px-3 py-1.5 text-sm font-semibold leading-5 shadow-sm transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
               onClick={() => {
                 button?.onClick()
                 sonnerToast.dismiss(id)
               }}
             >
-              {button?.label || "Dismiss"}
+              {button?.label || <X size={15} />}
             </Button>
           </div>
         </div>
