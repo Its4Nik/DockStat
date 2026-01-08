@@ -5,8 +5,8 @@ import { repo } from "@dockstat/utils"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "lucide-react"
 import { useContext, useMemo, useState } from "react"
-import { toast } from "@/components/toast"
 import { PageHeadingContext } from "@/contexts/pageHeadingContext"
+import { toast } from "@/lib/toast"
 
 const parseRepoLink = repo.parseFromDBToRepoLink
 

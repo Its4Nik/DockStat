@@ -29,6 +29,17 @@ export const busyVariants: Variants = {
   },
 }
 
+export const animatedBlur: Variants = {
+  opened: {
+    backdropFilter: "blur(16px)",
+    opacity: 1,
+  },
+  closed: {
+    backdropFilter: "blur(0px)",
+    opacity: 0,
+  },
+}
+
 export const slideInVariants: Variants = {
   closed: {
     x: "-100%",

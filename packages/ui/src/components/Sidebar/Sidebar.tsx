@@ -5,19 +5,20 @@ import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons"
 import type { UseMutationResult } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import { BookMarkedIcon, X } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Badge } from "../Badge/Badge"
 import { Button } from "../Button/Button"
 import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
 import { LinkWithIcon } from "../Link/Link"
 import { Modal } from "../Modal/Modal"
+import { backdropVariants, slideInVariants } from "../Navbar/animations"
+import { SidebarPaths } from "../Navbar/consts"
+import DockStatLogo from "../Navbar/DockStat2-06.png"
+import { usePinnedPaths } from "../Navbar/usePinnedPaths"
 import { Table } from "../Table/Table"
-import { backdropVariants, slideInVariants } from "./animations"
-import { SidebarPaths } from "./consts"
-import DockStatLogo from "./DockStat2-06.png"
+import { SidebarAnimatedItem, SidebarAnimatedNav } from "./SidebarAnimatedNav"
 import { SidebarItem } from "./SidebarItem"
-import { usePinnedPaths } from "./usePinnedPaths"
 
 type PinLinkMutation = UseMutationResult<
   UpdateResult,
@@ -55,6 +56,20 @@ export function Sidebar({
   mutationFn,
 }: SidebarProps) {
   const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
+  const [showPluginRoutes, setShowPluginRoutes] = useState<boolean>(false)
+
+  const pinnedPaths = useMemo(() => new Set(pins.map((p) => p.path)), [pins])
+
+  const isPinned = (path: string) => pinnedPaths.has(path)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [isOpen, onClose])
 
   const handleTogglePin = (item: PathItem) => {
     const payload = { slug: item.slug, path: item.path }
@@ -98,53 +113,75 @@ export function Sidebar({
                 </Button>
               </div>
 
-              <div className="py-4">
-                <Divider />
-              </div>
-
-              <nav className="flex flex-1 flex-col gap-1">
-                {pathsWithPinStatus?.map((p) => (
-                  <SidebarItem
-                    key={p.slug}
-                    item={p}
-                    handleTogglePin={handleTogglePin}
-                    isLoading={mutationFn.pin.isPending || mutationFn.unpin.isPending}
-                  />
-                ))}
-              </nav>
-              {pluginLinks.map((plugin) => (
-                <div key={plugin.pluginName}>
-                  <Divider label={plugin.pluginName} className="my-4" />
-                  <div className="flex flex-1 flex-col gap-1">
-                    {plugin.paths.map((path) => (
-                      <SidebarItem
-                        handleTogglePin={() =>
-                          handleTogglePin({
-                            path: path.fullPath,
-                            slug: path.metaTitle,
-                            isPinned: pins
-                              .map((p) => {
-                                return p.path
-                              })
-                              .includes(path.fullPath),
-                          })
-                        }
-                        isLoading={mutationFn.pin.isPending || mutationFn.unpin.isPending}
-                        key={path.fullPath}
-                        item={{
-                          path: path.fullPath,
-                          slug: path.metaTitle,
-                          isPinned: pins
-                            .map((p) => {
-                              return p.path
-                            })
-                            .includes(path.fullPath),
-                        }}
-                      />
-                    ))}
-                  </div>
+              <div className="mt-2">
+                <div className="flex transition-all duration-300 space-x-2">
+                  <Button
+                    noFocusRing
+                    className="flex-1 relative"
+                    size="xs"
+                    variant={!showPluginRoutes ? "outline" : "primary"}
+                    onClick={() => setShowPluginRoutes(false)}
+                  >
+                    Main routes
+                  </Button>
+                  {pluginLinks.length >= 1 ? (
+                    <Button
+                      noFocusRing
+                      className="flex-1 relative"
+                      size="xs"
+                      variant={showPluginRoutes ? "outline" : "primary"}
+                      onClick={() => setShowPluginRoutes(true)}
+                    >
+                      Plugin routes
+                    </Button>
+                  ) : null}
                 </div>
-              ))}
+
+                <AnimatePresence mode="wait" initial={false}>
+                  {showPluginRoutes ? (
+                    <SidebarAnimatedNav key="plugins">
+                      {pluginLinks.map((plugin) => (
+                        <div key={plugin.pluginName}>
+                          <Divider label={plugin.pluginName} className="mb-2" />
+                          <div className="flex flex-1 flex-col gap-1">
+                            {plugin.paths.map((path) => (
+                              <SidebarAnimatedItem key={path.fullPath}>
+                                <SidebarItem
+                                  handleTogglePin={() =>
+                                    handleTogglePin({
+                                      path: path.fullPath,
+                                      slug: path.metaTitle,
+                                      isPinned: isPinned(path.fullPath),
+                                    })
+                                  }
+                                  isLoading={mutationFn.pin.isPending || mutationFn.unpin.isPending}
+                                  item={{
+                                    path: path.fullPath,
+                                    slug: path.metaTitle,
+                                    isPinned: isPinned(path.fullPath),
+                                  }}
+                                />
+                              </SidebarAnimatedItem>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </SidebarAnimatedNav>
+                  ) : (
+                    <SidebarAnimatedNav key="default">
+                      {pathsWithPinStatus?.map((p) => (
+                        <SidebarAnimatedItem key={p.slug}>
+                          <SidebarItem
+                            item={p}
+                            handleTogglePin={handleTogglePin}
+                            isLoading={mutationFn.pin.isPending || mutationFn.unpin.isPending}
+                          />
+                        </SidebarAnimatedItem>
+                      ))}
+                    </SidebarAnimatedNav>
+                  )}
+                </AnimatePresence>
+              </div>
 
               <div className="mt-auto flex flex-col gap-4 pt-4">
                 <Divider label="More of DockStat" variant="dashed" />

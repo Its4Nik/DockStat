@@ -7,9 +7,10 @@ import { NavLink } from "react-router"
 import { Badge } from "../Badge/Badge"
 import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
-
+import { LinkLookup } from "../HotkeyMenus/LinkLookup"
+import { LinkWithIcon } from "../Link/Link"
+import { Sidebar, type SidebarProps } from "../Sidebar/Sidebar"
 import DockStatLogo from "./DockStat2-06.png"
-import { Sidebar, type SidebarProps } from "./Sidebar"
 
 type NavbarProps = {
   isBusy: boolean
@@ -34,6 +35,8 @@ export function Navbar({
 
   return (
     <>
+      <LinkLookup pins={navLinks || []} pluginLinks={pluginLinks} />
+
       <Card size="sm" className="w-full p-0.5 mb-4 relative overflow-visible">
         <div
           className={`absolute inset-0 bg-linear-to-r from-blue-500 via-purple-500 to-pink-500 bg-size-[200%_200%] transition-opacity duration-500 ${
@@ -52,7 +55,9 @@ export function Navbar({
               </Badge>
             </motion.button>
 
-            <img src={DockStatLogo} alt="DockStat Logo" className="w-8 shrink-0" />
+            <LinkWithIcon href="/">
+              <img src={DockStatLogo} alt="DockStat Logo" className="w-8 shrink-0" />
+            </LinkWithIcon>
           </div>
 
           {(heading || "").length > 0 && (

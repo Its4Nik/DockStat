@@ -8,9 +8,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useContext, useEffect, useState } from "react"
 import { Toaster } from "sonner"
 import { AdditionalSettingsContext } from "@/contexts/additionalSettings"
-import { toast } from "./components/toast"
 import { PageHeadingContext } from "./contexts/pageHeadingContext"
 import { useGlobalBusy } from "./hooks/useGlobalBusy"
+import { toast } from "./lib/toast"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const qc = useQueryClient()

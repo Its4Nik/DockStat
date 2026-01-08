@@ -35,7 +35,7 @@ export const HoverBubble: FC<HoverBubbleProps> = ({
       <div
         role="tooltip"
         className={`
-          absolute z-50
+          absolute z-100
           opacity-0 scale-95
           group-hover:opacity-100 group-hover:scale-100
           transition-all duration-200 ease-out

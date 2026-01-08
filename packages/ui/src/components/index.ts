@@ -63,4 +63,4 @@ export {
   Slides,
   type SlidesProps,
 } from "./Slides/Slides"
-export { type Column, Table, type TableProps } from "./Table/Table"
+export { Table } from "./Table/Table"
