@@ -15,7 +15,7 @@ export function WorkersTable({ workers }: WorkersTableProps) {
       title: "Worker ID",
       width: 100,
       sortable: true,
-      render: (value: number) => (
+      render: (value) => (
         <Badge variant="primary" size="sm">
           {value as number}
         </Badge>
@@ -26,7 +26,7 @@ export function WorkersTable({ workers }: WorkersTableProps) {
       title: "Client Name",
       sortable: true,
       filterable: true,
-      render: (value: string) => <span className="font-semibold">{value}</span>,
+      render: (value) => <span className="font-semibold">{value}</span>,
     },
     {
       key: "initialized",
@@ -34,8 +34,8 @@ export function WorkersTable({ workers }: WorkersTableProps) {
       width: 100,
       sortable: true,
       align: "center",
-      render: (value: boolean) => {
-        const isInitialized = value
+      render: (value) => {
+        const isInitialized = value as boolean
         return (
           <div className="flex items-center justify-center gap-2">
             {isInitialized ? (
@@ -59,7 +59,7 @@ export function WorkersTable({ workers }: WorkersTableProps) {
       width: 100,
       sortable: true,
       align: "center",
-      render: (value: number) => (
+      render: (value) => (
         <Badge variant="secondary" size="sm">
           {value}
         </Badge>
@@ -71,8 +71,8 @@ export function WorkersTable({ workers }: WorkersTableProps) {
       width: 120,
       sortable: true,
       align: "center",
-      render: (value: number) => {
-        const streams = value
+      render: (value) => {
+        const streams = value as number
         return (
           <Badge variant={streams > 0 ? "success" : "secondary"} size="sm">
             {streams}
@@ -86,8 +86,8 @@ export function WorkersTable({ workers }: WorkersTableProps) {
       width: 120,
       sortable: true,
       align: "center",
-      render: (value: boolean) => {
-        const isMonitoring = value
+      render: (value) => {
+        const isMonitoring = value as boolean
         return isMonitoring ? (
           <div className="flex items-center justify-center gap-2">
             <Activity size={14} className="text-green-500" />
@@ -103,8 +103,8 @@ export function WorkersTable({ workers }: WorkersTableProps) {
       title: "Uptime",
       width: 120,
       sortable: true,
-      render: (value: number) => (
-        <span className="text-sm font-medium">{formatDuration(value)}</span>
+      render: (value) => (
+        <span className="text-sm font-medium">{formatDuration(value as number)}</span>
       ),
     },
     {
@@ -113,8 +113,8 @@ export function WorkersTable({ workers }: WorkersTableProps) {
       width: 120,
       sortable: true,
       align: "right",
-      render: (value: WorkerMetrics["memoryUsage"]) => {
-        const memory = value
+      render: (value) => {
+        const memory = value as WorkerMetrics["memoryUsage"]
         if (!memory) return <span className="text-muted-text text-sm">N/A</span>
         const usedMB = formatBytes(memory.heapSize)
         const totalMB = formatBytes(memory.heapCapacity)
