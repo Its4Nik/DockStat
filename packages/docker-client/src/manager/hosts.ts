@@ -31,7 +31,9 @@ export class Hosts extends DockerClientManagerCore {
     })
 
     const wrapper = this.workers.get(clientId)
+
     if (wrapper && result.id) {
+      this.logger.info("Wrapper and result.id found - adding hostId to wrapper")
       wrapper.hostIds.add(result.id)
       this.workers.set(clientId, wrapper)
     }

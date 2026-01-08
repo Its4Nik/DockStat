@@ -587,11 +587,34 @@ export class DockerClientManagerCore {
 
       if (!message) return
 
+      this.internalListeners(wrapper, message)
       this.triggerHooks(message)
     }
 
     worker.addEventListener("message", listener)
     wrapper.messageListener = listener
+  }
+
+  public internalListeners(wrapper: WorkerWrapper, msg: EventMessage<keyof EVENTS>) {
+    switch (msg.type) {
+      case "host:added": {
+        const hostId = (msg.ctx as Parameters<EVENTS[typeof msg.type]>[0]).hostId
+        this.logger.debug(
+          `Received ${msg.type} - adding host to Set: wrapper.hostIds.add(${hostId})`
+        )
+        wrapper.hostIds.add(hostId)
+        break
+      }
+
+      case "host:removed": {
+        const hostId = (msg.ctx as Parameters<EVENTS[typeof msg.type]>[0]).hostId
+        this.logger.debug(
+          `Received ${msg.type} - deleting host from Set: wrapper.hostIds.delete(${hostId})`
+        )
+        wrapper.hostIds.delete(hostId)
+        break
+      }
+    }
   }
 
   public listenForEvents({ eventType, clientId }: { clientId?: string; eventType: keyof EVENTS }) {
@@ -619,8 +642,6 @@ export class DockerClientManagerCore {
     this.logger.debug(
       `Triggering hooks for event "${String(message.type)} - ctx: ${truncate(JSON.stringify(message.ctx), 100)}"`
     )
-
-    this.logger.debug(`${this.events.size} Events registered`)
 
     for (const [id, hooks] of this.events.entries()) {
       const serverHooks = this.pluginHandler.getServerHooks(id)
