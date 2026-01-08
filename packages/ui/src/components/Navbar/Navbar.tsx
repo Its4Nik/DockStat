@@ -7,10 +7,10 @@ import { NavLink } from "react-router"
 import { Badge } from "../Badge/Badge"
 import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
-import { LinkWithIcon } from "../Link/Link"
-import DockStatLogo from "./DockStat2-06.png"
 import { LinkLookup } from "../HotkeyMenus/LinkLookup"
+import { LinkWithIcon } from "../Link/Link"
 import { Sidebar, type SidebarProps } from "../Sidebar/Sidebar"
+import DockStatLogo from "./DockStat2-06.png"
 
 type NavbarProps = {
   isBusy: boolean
