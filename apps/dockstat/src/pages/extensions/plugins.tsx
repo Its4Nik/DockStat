@@ -4,7 +4,7 @@ import { Badge, Button, Card, Divider, Input, LinkWithIcon, Modal } from "@docks
 import { repo } from "@dockstat/utils"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "lucide-react"
-import { useContext, useMemo, useState } from "react"
+import { useContext, useEffect, useMemo, useState } from "react"
 import { PageHeadingContext } from "@/contexts/pageHeadingContext"
 import { toast } from "@/lib/toast"
 
@@ -31,7 +31,11 @@ type AvailablePlugin = {
 }
 
 export default function PluginBrowser() {
-  useContext(PageHeadingContext).setHeading("Plugin Browser")
+  const { setHeading } = useContext(PageHeadingContext)
+
+  useEffect(() => {
+    setHeading("Plugin Browser")
+  }, [setHeading])
 
   const qc = useQueryClient()
   const [selectedRepo, setSelectedRepo] = useState<string>("all")
