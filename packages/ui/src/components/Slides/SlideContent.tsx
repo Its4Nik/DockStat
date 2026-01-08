@@ -10,7 +10,9 @@ export const SlideContent = ({
   children: Record<string, React.ReactNode>
 }) => {
   const activeKey = state.activeSlide
-  const hasContent = activeKey in children && children[activeKey] != null
+  const hasContent =
+    activeKey != null && Object.hasOwn(children, activeKey) && children[activeKey] != null
+
   const show = hasContent || !state.isCollapsed
 
   return (
@@ -25,12 +27,12 @@ export const SlideContent = ({
           className="overflow-hidden"
         >
           <div className="relative">
-            <AnimatePresence initial={false} custom={state.animationDirection}>
+            <AnimatePresence initial={false} custom={state.animationDirection} mode="popLayout">
               {state.activeSlide && !state.isCollapsed && (
                 <motion.div
                   key={state.activeSlide}
                   custom={state.animationDirection}
-                  variants={slideVariants(state.contentHeight)}
+                  variants={slideVariants}
                   initial="enter"
                   animate="center"
                   exit="exit"
@@ -40,7 +42,9 @@ export const SlideContent = ({
                 >
                   <div
                     ref={(el) => {
-                      state.contentRefs.current[state.activeSlide!] = el
+                      if (state.activeSlide !== null) {
+                        state.contentRefs.current[state.activeSlide] = el
+                      }
                     }}
                   >
                     {children[state.activeSlide]}

@@ -18,7 +18,6 @@ export const useSlidesState = ({
   const [animationDirection, setAnimationDirection] = useState<1 | -1>(1)
   const [isCollapsed, setIsCollapsed] = useState(hideable)
   const [contentHeight, setContentHeight] = useState<number>(0)
-  const previousSlideIndex = useRef(slideKeys.indexOf(initialSlide || ""))
   const contentRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const isControlled = controlledSlide !== undefined
@@ -77,7 +76,6 @@ export const useSlidesState = ({
     const currentIndex = slideKeys.indexOf(activeSlide)
 
     setAnimationDirection(newIndex > currentIndex ? 1 : -1)
-    previousSlideIndex.current = currentIndex
 
     if (!isControlled) {
       setInternalSlide(newSlide)
