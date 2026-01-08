@@ -597,17 +597,20 @@ export class DockerClientManagerCore {
 
   public internalListeners(wrapper: WorkerWrapper, msg: EventMessage<keyof EVENTS>) {
     switch (msg.type) {
-      case "host:init":
       case "host:added": {
         const hostId = (msg.ctx as Parameters<EVENTS[typeof msg.type]>[0]).hostId
-        this.logger.debug(`Received ${msg.type} - adding host to Set: wrapper.hostIds`)
+        this.logger.debug(
+          `Received ${msg.type} - adding host to Set: wrapper.hostIds.add(${hostId})`
+        )
         wrapper.hostIds.add(hostId)
         break
       }
 
       case "host:removed": {
-        const hostId = (msg.ctx as Parameters<EVENTS["host:removed"]>[0]).hostId
-        this.logger.debug("Received host:removed - removing host from Set: wrapper.hostIds")
+        const hostId = (msg.ctx as Parameters<EVENTS[typeof msg.type]>[0]).hostId
+        this.logger.debug(
+          `Received ${msg.type} - deleting host from Set: wrapper.hostIds.delete(${hostId})`
+        )
         wrapper.hostIds.delete(hostId)
         break
       }
