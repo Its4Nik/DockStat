@@ -1,4 +1,4 @@
-import { Divider } from "@dockstat/ui"
+import { Card, Divider } from "@dockstat/ui"
 import { useQuery } from "@tanstack/react-query"
 import { Hammer, Split } from "lucide-react"
 import { useContext } from "react"
@@ -46,10 +46,10 @@ export default function ClientsPage() {
 
       {/* Clients Section */}
       <div>
-        <div className="flex items-center gap-2 mb-4">
-          <Split size={24} className="text-primary-text" />
-          <h2 className="text-2xl font-semibold text-primary-text">Docker Clients</h2>
-        </div>
+        <Card size="sm" variant="flat" className="flex items-center gap-2 mb-4">
+          <Split size={24} className="text-accent" />
+          <h2 className="text-2xl font-semibold text-muted-text">Docker Clients</h2>
+        </Card>
 
         {clientsLoading ? (
           <div className="text-center py-12 text-muted-text">Loading clients...</div>
@@ -58,7 +58,7 @@ export default function ClientsPage() {
             No Docker clients configured. Add a client to get started.
           </div>
         ) : (
-          <div className="flex flex-wrap gap-4">
+          <Card variant="dark" className="flex flex-wrap gap-4">
             {clientsData.map((client) => (
               <ClientCard
                 key={client.id}
@@ -66,7 +66,7 @@ export default function ClientsPage() {
                 workerInfo={client.id ? workersByClientId[client.id] : undefined}
               />
             ))}
-          </div>
+          </Card>
         )}
       </div>
 
@@ -75,10 +75,10 @@ export default function ClientsPage() {
 
       {/* Workers Section */}
       <div>
-        <div className="flex items-center gap-2 mb-4">
-          <Hammer size={24} className="text-primary-text" />
-          <h2 className="text-2xl font-semibold text-primary-text">Worker Pool</h2>
-        </div>
+        <Card size="sm" variant="flat" className="flex items-center gap-2 mb-4">
+          <Hammer size={24} className="text-accent" />
+          <h2 className="text-2xl font-semibold text-muted-text">Worker Pool</h2>
+        </Card>
 
         {poolLoading ? (
           <div className="text-center py-12 text-muted-text">Loading workers...</div>
@@ -87,7 +87,9 @@ export default function ClientsPage() {
             No workers currently active in the pool.
           </div>
         ) : (
-          <WorkersTable workers={poolStatus.workers} />
+          <Card variant="dark">
+            <WorkersTable workers={poolStatus.workers} />
+          </Card>
         )}
       </div>
 

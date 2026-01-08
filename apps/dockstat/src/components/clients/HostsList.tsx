@@ -15,35 +15,35 @@ interface HostsListProps {
 export function HostsList({ hosts }: HostsListProps) {
   if (!hosts || hosts.length === 0) {
     return (
-      <Card size="sm" variant="outlined" className="w-full">
-        <CardHeader size="sm">
+      <>
+        <Card size="sm" variant="outlined" className="w-full mb-4">
           <div className="flex items-center gap-2">
             <Server size={20} />
-            <span className="font-semibold text-lg">Docker Hosts</span>
+            <span className="font-semibold text-2xl">Docker Hosts</span>
           </div>
-        </CardHeader>
-        <CardBody>
+        </Card>
+        <Card variant="dark">
           <div className="text-center text-muted-text py-8">No hosts configured</div>
-        </CardBody>
-      </Card>
+        </Card>
+      </>
     )
   }
 
   return (
-    <Card size="sm" variant="outlined" className="w-full">
-      <CardHeader size="sm" className="pb-3">
+    <>
+      <Card size="sm" variant="flat" className="w-full mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Server size={20} className="text-primary-text" />
-            <span className="font-semibold text-lg">Docker Hosts</span>
+            <Server size={20} className="text-accent" />
+            <span className="font-semibold text-2xl">Docker Hosts</span>
           </div>
           <Badge variant="primary" size="sm">
             {hosts.length} {hosts.length === 1 ? "Host" : "Hosts"}
           </Badge>
         </div>
-      </CardHeader>
+      </Card>
 
-      <CardBody>
+      <Card variant="dark">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {hosts.map((host) => (
             <div
@@ -80,7 +80,7 @@ export function HostsList({ hosts }: HostsListProps) {
             </div>
           ))}
         </div>
-      </CardBody>
-    </Card>
+      </Card>
+    </>
   )
 }

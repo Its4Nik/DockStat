@@ -19,3 +19,15 @@ export const DockStatDB: {
   repositoriesTable: InitialDockStatDB.getRepositoriesTable(),
   metricsTable: InitialDockStatDB.getMetricsTable(),
 }
+
+process.on("SIGINT", () => {
+  BaseLogger.info("Shutting down...")
+  InitialDockStatDB.close()
+  process.exit(0)
+})
+
+process.on("SIGTERM", () => {
+  BaseLogger.info("Shutting down...")
+  InitialDockStatDB.close()
+  process.exit(0)
+})

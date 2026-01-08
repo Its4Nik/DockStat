@@ -58,7 +58,7 @@ export const Toggle: React.FC<ToggleProps> = ({
           className={`absolute top-1/2 -translate-y-1/2 ${dotSizeClasses[size]} rounded-full bg-toggle-dot transition-transform ${dotPositionClasses[size]}`}
         />
       </div>
-      {label && <span className="ml-3 text-gray-700">{label}</span>}
+      {label && <span className="ml-3 text-secondary-text">{label}</span>}
     </label>
   )
 }

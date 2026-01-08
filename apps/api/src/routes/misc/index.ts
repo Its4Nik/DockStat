@@ -1,10 +1,11 @@
 import os from "node:os"
 import { formatBytes } from "@dockstat/utils"
+import { memoryUsage, heapStats } from "bun:jsc"
 import Elysia from "elysia"
 import PrometheusMetricsRoute from "../metrics/prometheus"
 
 let lastCpu = process.cpuUsage()
-let lastTime = performance.now()
+let lastTime = Bun.nanoseconds()
 
 const DockStatMiscRoutes = new Elysia({
   prefix: "/misc",
@@ -12,14 +13,15 @@ const DockStatMiscRoutes = new Elysia({
 })
   .use(PrometheusMetricsRoute)
   .get("/stats", () => {
-    const mem = process.memoryUsage()
-    const rssBytes = mem.rss
+    const mem = memoryUsage()
+    const heap = heapStats()
+    const rssBytes = mem.current
 
     const totalMem = os.totalmem()
     const freeMem = os.freemem()
     const usedMem = totalMem - freeMem
 
-    const now = performance.now()
+    const now = Bun.nanoseconds()
     const cpuNow = process.cpuUsage()
 
     const deltaUserUs = cpuNow.user - lastCpu.user
@@ -39,10 +41,9 @@ const DockStatMiscRoutes = new Elysia({
         uptimeSec: process.uptime(),
         memory: {
           rss: formatBytes(rssBytes),
-          heapTotal: formatBytes(mem.heapTotal),
-          heapUsed: formatBytes(mem.heapUsed),
-          external: formatBytes(mem.external),
-          arrayBuffers: formatBytes(mem.arrayBuffers),
+          heapTotal: formatBytes(heap.heapCapacity),
+          heapUsed: formatBytes(heap.heapSize),
+          external: formatBytes(heap.globalObjectCount),
         },
         cpu: {
           userMs: cpuNow.user / 1000,

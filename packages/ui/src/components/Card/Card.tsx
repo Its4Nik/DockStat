@@ -63,7 +63,7 @@ export const Card: React.FC<CardProps> = ({
   }
 
   const hoverClasses = hoverable
-    ? `hover:shadow-lg ${variant === "outlined" ? "hover:border-2" : ""}`
+    ? `hover:shadow-lg ${variant === "outlined" ? "hover:border-1" : ""}`
     : ""
 
   const classes = `${baseClasses} ${glass ? glassVariantClasses[variant] : variantClasses[variant]} ${sizeClasses[size]} ${hoverClasses} ${className}`

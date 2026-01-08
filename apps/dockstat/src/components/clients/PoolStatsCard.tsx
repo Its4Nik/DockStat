@@ -16,32 +16,31 @@ interface PoolStatsCardProps {
 export function PoolStatsCard({ poolStatus }: PoolStatsCardProps) {
   if (!poolStatus) {
     return (
-      <Card size="sm" variant="outlined" className="w-full">
-        <CardHeader size="sm">
+      <>
+        <Card size="sm" variant="flat" className="w-full">
           <div className="flex items-center gap-2">
-            <Activity size={20} />
-            <span className="font-semibold text-lg">Pool Status</span>
+            <Activity size={20} className="text-accent" />
+            <span className="font-semibold text-2xl text-muted-text">Pool Status</span>
           </div>
-        </CardHeader>
-        <CardBody>
+        </Card>
+        <Card>
           <div className="text-center text-muted-text py-4">Loading pool status...</div>
-        </CardBody>
-      </Card>
+        </Card>
+      </>
     )
   }
 
   return (
-    <Card size="sm" variant="outlined" className="w-full">
-      <CardHeader size="sm" className="pb-3">
+    <>
+      <Card size="sm" variant="flat" className="w-full">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Activity size={20} className="text-primary-text" />
-            <span className="font-semibold text-lg">Pool Status</span>
+            <Activity size={20} className="text-accent" />
+            <span className="font-semibold text-2xl text-muted-text">Pool Status</span>
           </div>
         </div>
-      </CardHeader>
-
-      <CardBody>
+      </Card>
+      <Card variant="dark">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {/* Total Workers */}
           <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-card-default-bg border border-card-default-border">
@@ -85,7 +84,7 @@ export function PoolStatsCard({ poolStatus }: PoolStatsCardProps) {
             <div className="text-xs text-muted-text mt-1">hosts/worker</div>
           </div>
         </div>
-      </CardBody>
-    </Card>
+      </Card>
+    </>
   )
 }

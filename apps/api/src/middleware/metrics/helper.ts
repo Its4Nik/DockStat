@@ -3,6 +3,7 @@ import type { Elysia } from "elysia"
 import { DockStatDB } from "../../database"
 import BaseLogger from "../../logger"
 import { type MetricFamily, renderPrometheusMetrics } from "./prometheus"
+import { memoryUsage, heapStats } from "bun:jsc"
 
 /**
  * In-memory metrics (current server session)
@@ -664,15 +665,16 @@ export function formatPrometheusMetrics(db: Database) {
 
   // ---------- PROCESS METRICS ----------
 
-  const memUsage = process.memoryUsage()
+  const memUsage = memoryUsage().current
+  const heap = heapStats()
 
   families.push({
-    name: "process_memory_rss_bytes",
-    help: "Process resident memory in bytes",
+    name: "process_memory_bytes",
+    help: "Current process memory in bytes",
     type: "gauge",
     samples: [
       {
-        value: memUsage.rss,
+        value: memUsage,
         timestamp,
       },
     ],
@@ -684,7 +686,7 @@ export function formatPrometheusMetrics(db: Database) {
     type: "gauge",
     samples: [
       {
-        value: memUsage.heapUsed,
+        value: heap.heapSize,
         timestamp,
       },
     ],
@@ -696,7 +698,7 @@ export function formatPrometheusMetrics(db: Database) {
     type: "gauge",
     samples: [
       {
-        value: memUsage.heapTotal,
+        value: heap.heapCapacity,
         timestamp,
       },
     ],
@@ -708,7 +710,7 @@ export function formatPrometheusMetrics(db: Database) {
     type: "counter",
     samples: [
       {
-        value: Number(Math.floor(process.uptime()).toFixed(2)),
+        value: Number(Math.floor(Bun.nanoseconds()).toFixed(2)),
         timestamp,
       },
     ],

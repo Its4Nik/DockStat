@@ -1,9 +1,10 @@
 import type { DOCKER } from "@dockstat/typings"
-import { Badge, Card, CardBody, CardHeader } from "@dockstat/ui"
+import { Badge, Card, CardBody, CardHeader, type CardProps } from "@dockstat/ui"
 import { formatDuration } from "@dockstat/utils"
 import { Activity, CheckCircle, Clock, XCircle } from "lucide-react"
 
 interface ClientCardProps {
+  variant?: CardProps["variant"]
   client: {
     id?: number
     name: string
@@ -19,9 +20,9 @@ interface ClientCardProps {
   }
 }
 
-export function ClientCard({ client, workerInfo }: ClientCardProps) {
+export function ClientCard({ client, workerInfo, variant = "outlined" }: ClientCardProps) {
   return (
-    <Card size="sm" variant="outlined" hoverable className="min-w-70 max-w-80">
+    <Card size="sm" variant={variant} hoverable className="min-w-70 max-w-80">
       <CardHeader size="sm" className="flex items-center justify-between pb-2">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-lg truncate">{client.name}</span>
@@ -65,8 +66,8 @@ export function ClientCard({ client, workerInfo }: ClientCardProps) {
 
             {workerInfo.isMonitoring && (
               <div className="flex items-center gap-2 text-sm">
-                <Activity size={14} className="text-green-500" />
-                <span className="text-green-500 font-medium">Monitoring Active</span>
+                <Activity size={14} className="text-success" />
+                <span className="text-success font-medium">Monitoring Active</span>
               </div>
             )}
 
@@ -97,7 +98,7 @@ export function ClientCard({ client, workerInfo }: ClientCardProps) {
 
           {client.options.enableMonitoring !== undefined && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-text">Monitoring:</span>
+              <span className="text-muted-text">Monitoring Manager:</span>
               <Badge variant={client.options.enableMonitoring ? "success" : "secondary"} size="sm">
                 {client.options.enableMonitoring ? "Enabled" : "Disabled"}
               </Badge>
