@@ -1,7 +1,6 @@
 import { Pin } from "lucide-react"
-import { LinkWithIcon } from "../Link/Link"
 import { Divider } from "../Divider/Divider"
-import { NavLink, useLocation } from "react-router"
+import { LinkWithIcon } from "../Link/Link"
 
 type PathItem = {
   slug: string

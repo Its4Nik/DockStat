@@ -9,8 +9,8 @@ import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
 import { LinkWithIcon } from "../Link/Link"
 import DockStatLogo from "./DockStat2-06.png"
-import { Sidebar, type SidebarProps } from "./Sidebar"
 import { SearchLinkModal } from "./SearchLinks"
+import { Sidebar, type SidebarProps } from "./Sidebar"
 
 type NavbarProps = {
   isBusy: boolean

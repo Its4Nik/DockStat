@@ -1,14 +1,14 @@
-import { useState, useEffect, useCallback, useMemo } from "react"
-import { Modal } from "../Modal/Modal"
-import { Input } from "../Forms/Input"
-import { motion, AnimatePresence, type Variants } from "framer-motion"
-import { Badge } from "../Badge/Badge"
+import { AnimatePresence, motion, type Variants } from "framer-motion"
+import { Link, Pin, Puzzle } from "lucide-react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router"
-import { Pin, Puzzle, Link } from "lucide-react"
+import { Badge } from "../Badge/Badge"
 import { Card } from "../Card/Card"
-import { SidebarPaths, type PathItem } from "./consts"
 import { Divider } from "../Divider/Divider"
+import { Input } from "../Forms/Input"
 import { HoverBubble } from "../HoverBubble/HoverBubble"
+import { Modal } from "../Modal/Modal"
+import { type PathItem, SidebarPaths } from "./consts"
 
 export function SearchLinkModal({
   pins,
