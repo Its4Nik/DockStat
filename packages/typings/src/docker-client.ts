@@ -246,6 +246,7 @@ type BaseCtx = {
 export interface DockerClientEvents {
   "host:added": (ctx: BaseHostCtx & BaseCtx) => void
   "host:removed": (ctx: BaseHostCtx) => void
+  "host:init": (ctx: BaseHostCtx) => void
   "host:updated": (ctx: BaseHostCtx) => void
   "host:health:changed": (ctx: HostHealthContext) => void
 
