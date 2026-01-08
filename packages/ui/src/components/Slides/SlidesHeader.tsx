@@ -1,6 +1,6 @@
 import { CardHeader } from "../Card/CardHeader"
-import type { UseSlideReturn } from "./useSlideState"
 import { ButtonRow } from "./ButtonRow"
+import type { UseSlideReturn } from "./useSlideState"
 
 interface SlidesHeaderProps {
   header?: string

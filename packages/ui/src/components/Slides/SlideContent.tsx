@@ -1,6 +1,6 @@
-import type { UseSlideReturn } from "./useSlideState"
 import { AnimatePresence, motion } from "framer-motion"
 import { collapseVariants, slideVariants } from "./animations"
+import type { UseSlideReturn } from "./useSlideState"
 
 export const SlideContent = ({
   state,

@@ -1,9 +1,9 @@
 import { Card, CardBody } from "../Card/Card"
-import { SlidesHeader } from "./SlidesHeader"
 import { MinimalSlidesHeader } from "./MinimalSlidesHeader"
 import { SlideContent } from "./SlideContent"
-import { useSlidesState } from "./useSlideState"
+import { SlidesHeader } from "./SlidesHeader"
 import type { SlidesProps } from "./types"
+import { useSlidesState } from "./useSlideState"
 
 export function Slides({
   children,
