@@ -1,16 +1,15 @@
 import { Card, Divider } from "@dockstat/ui"
 import { useQuery } from "@tanstack/react-query"
 import { Hammer, Split } from "lucide-react"
-import { useContext } from "react"
 import { ClientCard } from "@/components/clients/ClientCard"
 import { HostsList } from "@/components/clients/HostsList"
 import { PoolStatsCard } from "@/components/clients/PoolStatsCard"
 import { WorkersTable } from "@/components/clients/WorkersTable"
-import { PageHeadingContext } from "@/contexts/pageHeadingContext"
+import { usePageHeading } from "@/hooks/useHeading"
 import { fetchClients, fetchHosts, fetchPoolStatus } from "@/lib/queries"
 
 export default function ClientsPage() {
-  useContext(PageHeadingContext).setHeading("Clients & Workers")
+  usePageHeading("Clients & Workers")
 
   const { data: clientsData, isLoading: clientsLoading } = useQuery({
     queryKey: ["fetchDockerClients"],
