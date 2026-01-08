@@ -1,4 +1,4 @@
-import { Badge, Card, CardBody, CardHeader } from "@dockstat/ui"
+import { Badge, Card } from "@dockstat/ui"
 import { Globe, Server } from "lucide-react"
 
 interface Host {

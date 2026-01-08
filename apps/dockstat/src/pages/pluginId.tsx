@@ -2,9 +2,8 @@ import { TemplateRenderer } from "@dockstat/template-renderer"
 import { Card } from "@dockstat/ui"
 import { motion } from "framer-motion"
 import { AlertTriangle, ArrowLeft, FileX, Home, Loader2, Search } from "lucide-react"
-import { useContext, useEffect } from "react"
 import { useNavigate } from "react-router"
-import { PageHeadingContext } from "@/contexts/pageHeadingContext"
+import { usePageHeading } from "@/hooks/useHeading"
 import { usePluginPage } from "@/hooks/usePluginPage"
 
 export default function PluginIdPage() {
@@ -23,12 +22,9 @@ export default function PluginIdPage() {
     handleNavigate,
   } = usePluginPage()
 
-  const { setHeading } = useContext(PageHeadingContext)
   const heading = data?.route?.meta?.title ? data.route.meta.title : `/p/${pluginId}/${routePath}`
 
-  useEffect(() => {
-    setHeading(heading)
-  }, [setHeading, heading])
+  usePageHeading(heading)
 
   // Animation variants
   const cardVariants = {

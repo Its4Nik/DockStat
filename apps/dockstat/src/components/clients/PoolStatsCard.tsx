@@ -1,4 +1,4 @@
-import { Card, CardBody, CardHeader } from "@dockstat/ui"
+import { Card } from "@dockstat/ui"
 import { Activity, Box, Cpu, Users } from "lucide-react"
 
 interface PoolMetrics {
