@@ -1,5 +1,5 @@
-import { formatBytes } from "@dockstat/utils"
 import { memoryUsage } from "bun:jsc"
+import { formatBytes } from "@dockstat/utils"
 import Elysia, { t } from "elysia"
 
 const wsIntervals = new WeakMap<object, Timer>()

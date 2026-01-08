@@ -1,6 +1,6 @@
+import { heapStats, memoryUsage } from "bun:jsc"
 import os from "node:os"
 import { formatBytes } from "@dockstat/utils"
-import { memoryUsage, heapStats } from "bun:jsc"
 import Elysia from "elysia"
 import PrometheusMetricsRoute from "../metrics/prometheus"
 

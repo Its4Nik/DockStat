@@ -1,8 +1,8 @@
-import { createNewClient } from "@/lib/actions"
 import type { DockerAdapterOptionsSchema, MonitoringOptions } from "@dockstat/typings"
-import { Input, Toggle, Divider, Slider, Button, Card, CardBody } from "@dockstat/ui"
+import { Button, Card, CardBody, Divider, Input, Slider, Toggle } from "@dockstat/ui"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
+import { createNewClient } from "@/lib/actions"
 
 export function AddClient() {
   const qc = useQueryClient()

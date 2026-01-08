@@ -1,6 +1,6 @@
+import type { DockerAdapterOptionsSchema } from "@dockstat/typings"
 import { extractEdenError } from "@dockstat/utils"
 import { api } from "../api"
-import type { DockerAdapterOptionsSchema } from "@dockstat/typings"
 
 export async function createNewClient(client: {
   clientName: string

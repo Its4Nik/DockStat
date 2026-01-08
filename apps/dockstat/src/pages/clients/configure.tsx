@@ -1,12 +1,12 @@
+import { Card, CardBody, Divider, Slides } from "@dockstat/ui"
+import { useQuery } from "@tanstack/react-query"
+import { Plus, Split } from "lucide-react"
+import { useContext, useEffect } from "react"
 import { ClientCard, HostsList } from "@/components/clients"
 import { AddClient } from "@/components/clients/configure/AddClient"
 import { AddHost } from "@/components/clients/configure/AddHost"
 import { PageHeadingContext } from "@/contexts/pageHeadingContext"
 import { fetchClients, fetchHosts, fetchPoolStatus } from "@/lib/queries"
-import { Card, CardBody, Divider, Slides } from "@dockstat/ui"
-import { useQuery } from "@tanstack/react-query"
-import { Plus, Split } from "lucide-react"
-import { useContext, useEffect } from "react"
 
 export default function ConfigureClientsPage() {
   const { setHeading } = useContext(PageHeadingContext)
