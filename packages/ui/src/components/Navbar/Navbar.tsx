@@ -10,6 +10,7 @@ import { Divider } from "../Divider/Divider"
 
 import DockStatLogo from "./DockStat2-06.png"
 import { Sidebar, type SidebarProps } from "./Sidebar"
+import { LinkWithIcon } from "../Link/Link"
 
 type NavbarProps = {
   isBusy: boolean
@@ -52,7 +53,9 @@ export function Navbar({
               </Badge>
             </motion.button>
 
-            <img src={DockStatLogo} alt="DockStat Logo" className="w-8 shrink-0" />
+            <LinkWithIcon href="/">
+              <img src={DockStatLogo} alt="DockStat Logo" className="w-8 shrink-0" />
+            </LinkWithIcon>
           </div>
 
           {(heading || "").length > 0 && (
