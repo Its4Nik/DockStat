@@ -10,8 +10,7 @@ export const SlideContent = ({
   children: Record<string, React.ReactNode>
 }) => {
   const activeKey = state.activeSlide
-  const hasContent =
-    activeKey in children && children[activeKey] != null
+  const hasContent = activeKey in children && children[activeKey] != null
   const show = hasContent || !state.isCollapsed
 
   return (
