@@ -1,4 +1,4 @@
-type PathItem = {
+export type PathItem = {
   slug: string
   path: string
   isPinned?: boolean
@@ -18,6 +18,10 @@ export const SidebarPaths: PathItem[] = [
   {
     path: "/extensions",
     slug: "Extensions",
-    children: [{ path: "/extensions/plugins", slug: "Browse Plugins" }],
+    children: [
+      { path: "/extensions/plugins", slug: "Browse Plugins" },
+      { path: "/extensions/themes", slug: "Explore themes" },
+      { path: "/extensions/stacks", slug: "Stacks" },
+    ],
   },
 ]

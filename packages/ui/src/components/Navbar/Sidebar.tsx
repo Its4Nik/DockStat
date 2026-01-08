@@ -5,7 +5,7 @@ import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons"
 import type { UseMutationResult } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import { BookMarkedIcon, X } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Badge } from "../Badge/Badge"
 import { Button } from "../Button/Button"
 import { Card } from "../Card/Card"
@@ -71,6 +71,15 @@ export function Sidebar({
 }: SidebarProps) {
   const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
   const [showPluginRoutes, setShowPluginRoutes] = useState<boolean>(false)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [isOpen, onClose])
 
   const handleTogglePin = (item: PathItem) => {
     const payload = { slug: item.slug, path: item.path }

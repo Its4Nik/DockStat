@@ -14,6 +14,7 @@ export interface InputProps {
   className?: string
   error?: boolean
   success?: boolean
+  autoFocus?: boolean
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -26,6 +27,7 @@ export const Input: React.FC<InputProps> = ({
   onChange,
   className = "",
   error = false,
+  autoFocus = false,
   success = false,
 }) => {
   const baseClasses = "w-full transition-colors focus:outline-none"
@@ -59,6 +61,8 @@ export const Input: React.FC<InputProps> = ({
         error ? "border-error! focus:border-error! focus:ring-error!" : "",
         success ? "border-success! focus:border-success! focus:ring-success!" : "",
       ].join(" ")}
+      // biome-ignore lint/a11y/noAutofocus: Used in other components
+      autoFocus={autoFocus}
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange?.(e.target.value)}
