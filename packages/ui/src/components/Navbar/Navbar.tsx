@@ -9,8 +9,8 @@ import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
 import { LinkWithIcon } from "../Link/Link"
 import DockStatLogo from "./DockStat2-06.png"
-import { SearchLinkModal } from "./SearchLinks"
-import { Sidebar, type SidebarProps } from "./Sidebar"
+import { LinkLookup } from "../HotkeyMenus/LinkLookup"
+import { Sidebar, type SidebarProps } from "../Sidebar/Sidebar"
 
 type NavbarProps = {
   isBusy: boolean
@@ -35,7 +35,7 @@ export function Navbar({
 
   return (
     <>
-      <SearchLinkModal pins={navLinks || []} pluginLinks={pluginLinks} />
+      <LinkLookup pins={navLinks || []} pluginLinks={pluginLinks} />
 
       <Card size="sm" className="w-full p-0.5 mb-4 relative overflow-visible">
         <div

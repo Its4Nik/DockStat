@@ -5,34 +5,20 @@ import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons"
 import type { UseMutationResult } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import { BookMarkedIcon, X } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Badge } from "../Badge/Badge"
 import { Button } from "../Button/Button"
 import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
 import { LinkWithIcon } from "../Link/Link"
 import { Modal } from "../Modal/Modal"
-import { Table } from "../Table/Table"
-import { backdropVariants, slideInVariants } from "./animations"
-import { SidebarPaths } from "./consts"
-import DockStatLogo from "./DockStat2-06.png"
+import { backdropVariants, slideInVariants } from "../Navbar/animations"
+import { SidebarPaths } from "../Navbar/consts"
 import { SidebarItem } from "./SidebarItem"
-import { usePinnedPaths } from "./usePinnedPaths"
-
-const listVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-    },
-  },
-}
-
-const itemVariants = {
-  hidden: { opacity: 0, x: -10 },
-  visible: { opacity: 1, x: 0 },
-}
+import { usePinnedPaths } from "../Navbar/usePinnedPaths"
+import { Table } from "../Table/Table"
+import DockStatLogo from "../Navbar/DockStat2-06.png"
+import { SidebarAnimatedItem, SidebarAnimatedNav } from "./SidebarAnimatedNav"
 
 type PinLinkMutation = UseMutationResult<
   UpdateResult,
@@ -71,6 +57,10 @@ export function Sidebar({
 }: SidebarProps) {
   const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
   const [showPluginRoutes, setShowPluginRoutes] = useState<boolean>(false)
+
+  const pinnedPaths = useMemo(() => new Set(pins.map((p) => p.path)), [pins])
+
+  const isPinned = (path: string) => pinnedPaths.has(path)
 
   useEffect(() => {
     if (!isOpen) return
@@ -149,64 +139,46 @@ export function Sidebar({
 
                 <AnimatePresence mode="wait" initial={false}>
                   {showPluginRoutes ? (
-                    <motion.nav
-                      key="plugins"
-                      variants={listVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="hidden"
-                      className="flex flex-1 flex-col gap-1 mt-4"
-                    >
+                    <SidebarAnimatedNav key="plugins">
                       {pluginLinks.map((plugin) => (
                         <div key={plugin.pluginName}>
                           <Divider label={plugin.pluginName} className="mb-2" />
                           <div className="flex flex-1 flex-col gap-1">
                             {plugin.paths.map((path) => (
-                              <motion.div
-                                key={path.fullPath}
-                                variants={itemVariants}
-                                transition={{ duration: 0.2 }}
-                              >
+                              <SidebarAnimatedItem key={path.fullPath}>
                                 <SidebarItem
                                   handleTogglePin={() =>
                                     handleTogglePin({
                                       path: path.fullPath,
                                       slug: path.metaTitle,
-                                      isPinned: pins.some((p) => p.path === path.fullPath),
+                                      isPinned: isPinned(path.fullPath),
                                     })
                                   }
                                   isLoading={mutationFn.pin.isPending || mutationFn.unpin.isPending}
                                   item={{
                                     path: path.fullPath,
                                     slug: path.metaTitle,
-                                    isPinned: pins.some((p) => p.path === path.fullPath),
+                                    isPinned: isPinned(path.fullPath),
                                   }}
                                 />
-                              </motion.div>
+                              </SidebarAnimatedItem>
                             ))}
                           </div>
                         </div>
                       ))}
-                    </motion.nav>
+                    </SidebarAnimatedNav>
                   ) : (
-                    <motion.nav
-                      key="default"
-                      variants={listVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="hidden"
-                      className="flex flex-1 flex-col gap-1 mt-4"
-                    >
+                    <SidebarAnimatedNav key="default">
                       {pathsWithPinStatus?.map((p) => (
-                        <motion.div key={p.slug} variants={itemVariants}>
+                        <SidebarAnimatedItem key={p.slug}>
                           <SidebarItem
                             item={p}
                             handleTogglePin={handleTogglePin}
                             isLoading={mutationFn.pin.isPending || mutationFn.unpin.isPending}
                           />
-                        </motion.div>
+                        </SidebarAnimatedItem>
                       ))}
-                    </motion.nav>
+                    </SidebarAnimatedNav>
                   )}
                 </AnimatePresence>
               </div>

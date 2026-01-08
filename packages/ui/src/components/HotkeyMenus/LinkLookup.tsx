@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, type Variants } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { Link, Pin, Puzzle } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router"
@@ -8,9 +8,10 @@ import { Divider } from "../Divider/Divider"
 import { Input } from "../Forms/Input"
 import { HoverBubble } from "../HoverBubble/HoverBubble"
 import { Modal } from "../Modal/Modal"
-import { type PathItem, SidebarPaths } from "./consts"
+import { type PathItem, SidebarPaths } from "../Navbar/consts"
+import { containerVariants, itemVariants } from "./animations"
 
-export function SearchLinkModal({
+export function LinkLookup({
   pins,
   pluginLinks,
   sidebarLinks = SidebarPaths,
@@ -26,7 +27,6 @@ export function SearchLinkModal({
 
   const [modalOpen, setModalOpen] = useState<boolean>(false)
   const [searchQuery, setSearchQuery] = useState<string>("")
-  const [filteredResults, setFilteredResults] = useState<SearchResult[]>([])
 
   interface SearchResult {
     id: string
@@ -97,22 +97,16 @@ export function SearchLinkModal({
     return Array.from(map.values())
   }, [pins, pluginLinks, sidebarLinks])
 
-  // Filter results based on search query
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredResults(allResults)
-      return
-    }
-
+  const filteredResults = useMemo(() => {
     const query = searchQuery.toLowerCase().trim()
-    const filtered = allResults.filter(
+    if (!query) return allResults
+
+    return allResults.filter(
       (result) =>
         result.title.toLowerCase().includes(query) ||
         result.path.toLowerCase().includes(query) ||
-        (result?.pluginName || "").toLowerCase().includes(query)
+        (result.pluginName ?? "").toLowerCase().includes(query)
     )
-
-    setFilteredResults(filtered)
   }, [searchQuery, allResults])
 
   // Hotkey handler
@@ -144,59 +138,6 @@ export function SearchLinkModal({
     },
     [navigate]
   )
-
-  // Animation variants
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.03,
-        delayChildren: 0.05,
-      },
-    },
-  }
-
-  const itemVariants: Variants = {
-    hidden: {
-      opacity: 0,
-      scale: 0.8,
-      y: 20,
-      filter: "blur(4px)",
-    },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      filter: "blur(0px)",
-      transition: {
-        type: "spring",
-        stiffness: 300,
-        damping: 24,
-      },
-    },
-    exit: {
-      opacity: 0,
-      scale: 0.8,
-      y: -10,
-      filter: "blur(4px)",
-      transition: {
-        duration: 0.2,
-        ease: "easeOut",
-      },
-    },
-    hover: {
-      scale: 1.02,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 25,
-      },
-    },
-    tap: {
-      scale: 0.98,
-    },
-  }
 
   return (
     <Modal
@@ -237,84 +178,78 @@ export function SearchLinkModal({
               animate="visible"
               className="flex flex-wrap gap-2"
             >
-              <AnimatePresence mode="popLayout">
-                {filteredResults.map((result, index) => (
-                  <motion.div
-                    key={result.id}
-                    layout
-                    layoutId={result.id}
-                    variants={itemVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    whileHover="hover"
-                    whileTap="tap"
-                    className="flex-1"
+              {filteredResults.map((result, index) => (
+                <motion.div
+                  key={result.id}
+                  layout
+                  layoutId={result.id}
+                  variants={itemVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  whileHover="hover"
+                  whileTap="tap"
+                  className="flex-1"
+                >
+                  <Card
+                    variant="outlined"
+                    className="cursor-pointer w-full transition-colors min-w-40"
+                    size="sm"
+                    onClick={() => handleResultClick(result)}
                   >
-                    <Card
-                      variant="outlined"
-                      className="cursor-pointer w-full transition-colors min-w-40"
-                      size="sm"
-                      onClick={() => handleResultClick(result)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-2">
-                          <div className="flex justify-between gap-2 mb-1">
-                            <Badge
-                              rounded
-                              outlined={result.type === "sidebar"}
-                              variant={
-                                result.type === "pin"
-                                  ? "primary"
-                                  : result.type === "plugin"
-                                    ? "secondary"
-                                    : "primary"
-                              }
-                            >
-                              {result.type === "pin" ? (
-                                <HoverBubble
-                                  label="A pinned link"
-                                  position="bottom"
-                                  className="w-40"
-                                >
-                                  <Pin size={15} />
-                                </HoverBubble>
-                              ) : result.type === "plugin" ? (
-                                <HoverBubble
-                                  label="A link extracted out of a plugin bundle"
-                                  position="bottom"
-                                  className="w-40"
-                                >
-                                  <Puzzle size={15} />
-                                </HoverBubble>
-                              ) : (
-                                <HoverBubble
-                                  label="A default page of DockStat"
-                                  position="bottom"
-                                  className="w-40"
-                                >
-                                  <Link size={15} />
-                                </HoverBubble>
-                              )}
-                            </Badge>
-                            {result.pluginName && (
-                              <Badge size="sm" variant="secondary">
-                                {result.pluginName}
-                              </Badge>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-2">
+                        <div className="flex justify-between gap-2 mb-1">
+                          <Badge
+                            rounded
+                            outlined={result.type === "sidebar"}
+                            variant={
+                              result.type === "pin"
+                                ? "primary"
+                                : result.type === "plugin"
+                                  ? "secondary"
+                                  : "primary"
+                            }
+                          >
+                            {result.type === "pin" ? (
+                              <HoverBubble label="A pinned link" position="bottom" className="w-40">
+                                <Pin size={15} />
+                              </HoverBubble>
+                            ) : result.type === "plugin" ? (
+                              <HoverBubble
+                                label="A link extracted out of a plugin bundle"
+                                position="bottom"
+                                className="w-40"
+                              >
+                                <Puzzle size={15} />
+                              </HoverBubble>
+                            ) : (
+                              <HoverBubble
+                                label="A default page of DockStat"
+                                position="bottom"
+                                className="w-40"
+                              >
+                                <Link size={15} />
+                              </HoverBubble>
                             )}
+                          </Badge>
+                          {result.pluginName && (
                             <Badge size="sm" variant="secondary">
-                              {index + 1}
+                              {result.pluginName}
                             </Badge>
-                          </div>
-                          <Divider />
-                          <h3 className="font-medium text-primary-text">{result.title}</h3>
-                          <p className="text-sm text-muted-text">{result.path}</p>
+                          )}
+                          <Badge size="sm" variant="secondary">
+                            {index + 1}
+                          </Badge>
                         </div>
+                        <Divider />
+                        <h3 className="font-medium text-primary-text">{result.title}</h3>
+                        <p className="text-sm text-muted-text">{result.path}</p>
                       </div>
-                    </Card>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
             </motion.div>
           ) : searchQuery ? (
             <motion.div

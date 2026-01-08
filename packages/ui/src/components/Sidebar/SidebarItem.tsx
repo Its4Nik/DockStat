@@ -18,11 +18,6 @@ type SidebarItemProps = {
 
 export const SidebarItem = ({ item, depth = 0, handleTogglePin, isLoading }: SidebarItemProps) => {
   const onToggle = () => handleTogglePin(item)
-  let showDiv = true
-
-  if (depth === 0) {
-    showDiv = false
-  }
 
   return (
     <div className="flex flex-col gap-1">
@@ -57,7 +52,7 @@ export const SidebarItem = ({ item, depth = 0, handleTogglePin, isLoading }: Sid
         </button>
       </div>
 
-      {item.children && item.children.length > 0 && (
+      {item.children?.length ? (
         <div className="flex flex-col gap-1">
           {item.children.map((child) => (
             <SidebarItem
@@ -69,8 +64,9 @@ export const SidebarItem = ({ item, depth = 0, handleTogglePin, isLoading }: Sid
             />
           ))}
         </div>
-      )}
-      {!showDiv && <Divider variant="dotted" />}
+      ) : null}
+
+      {depth === 0 && <Divider variant="dotted" />}
     </div>
   )
 }
