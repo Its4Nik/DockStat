@@ -3,6 +3,7 @@ import DB from "@dockstat/sqlite-wrapper"
 import type { DOCKER } from "@dockstat/typings"
 import DockerClient, { type DockerClientInstance } from "./client"
 import type { WorkerRequest, WorkerResponse } from "./shared/types"
+import { proxyEvent } from "./events/workerEventProxy"
 
 declare const self: Worker
 
@@ -268,6 +269,47 @@ self.onmessage = async (event: MessageEvent<InboundMessage>) => {
 
       case "deleteTable":
         result = c.deleteTable()
+        break
+
+      // Streams
+      case "stream_createConnection":
+        c.streamManager?.createConnection(request.connectionId)
+        result = undefined
+        break
+      case "stream_closeConnection":
+        c.streamManager?.closeConnection(request.connectionId)
+        result = undefined
+        break
+      case "stream_subscribe":
+        result = c.streamManager?.subscribe(
+          request.connectionId,
+          request.channel,
+          request.options,
+          (message) => {
+            proxyEvent("message:send", {
+              connectionId: request.connectionId,
+              message,
+            })
+          }
+        )
+        break
+      case "stream_unsubscribe":
+        result = c.streamManager?.unsubscribe(request.subscriptionId)
+        break
+      case "stream_getSubscriptions": {
+        const subs = c.streamManager?.getSubscriptions(request.connectionId) ?? []
+        // Return a structured-cloneable view (omit callback functions)
+        result = subs.map(({ id, channel, options, active, lastActivity }) => ({
+          id,
+          channel,
+          options,
+          active,
+          lastActivity,
+        }))
+        break
+      }
+      case "stream_getChannels":
+        result = c.streamManager?.getAvailableChannels()
         break
 
       default:

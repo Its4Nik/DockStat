@@ -94,6 +94,17 @@ export type WorkerRequest = WorkerRequestBase &
     | { type: "cleanup" }
     | { type: "deleteTable" }
     | { type: "createMonitoringManager" }
+    | { type: "stream_createConnection"; connectionId: string }
+    | { type: "stream_closeConnection"; connectionId: string }
+    | {
+        type: "stream_subscribe"
+        connectionId: string
+        channel: string
+        options: DOCKER.StreamOptions
+      }
+    | { type: "stream_unsubscribe"; subscriptionId: string }
+    | { type: "stream_getSubscriptions"; connectionId?: string }
+    | { type: "stream_getChannels" }
   )
 
 export type WorkerResponse<T = unknown> =

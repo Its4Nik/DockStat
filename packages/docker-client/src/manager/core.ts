@@ -387,7 +387,7 @@ export class DockerClientManagerCore {
       const errorMessage = err instanceof Error ? err.message : String(err)
       wrapper.lastError = errorMessage
       wrapper.errorCount += 1
-      throw err instanceof Error ? err : new Error(String(err))
+      throw err instanceof Error ? err : new Error(errorMessage)
     } finally {
       wrapper.busy = false
     }
@@ -458,8 +458,8 @@ export class DockerClientManagerCore {
     }
 
     try {
-      await this.sendRequest(clientId, { type: "cleanup" })
       await this.sendRequest(clientId, { type: "deleteTable" })
+      await this.sendRequest(clientId, { type: "cleanup" })
     } catch (error) {
       this.logger.warn(`Error cleaning up worker ${clientId}: ${String(error)}`)
     }

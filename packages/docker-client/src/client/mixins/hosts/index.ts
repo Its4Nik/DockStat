@@ -278,6 +278,7 @@ export class Hosts extends DockerClientBase {
     const results = await Promise.all(
       instances.map(async ([id, docker]) => {
         try {
+          this.logger.debug(`Pinging: ID:${id}`)
           await docker.ping()
           return { id, ok: true as const }
         } catch (err) {

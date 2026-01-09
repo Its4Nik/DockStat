@@ -7,6 +7,7 @@ import { Monitoring } from "./monitoring"
 import { Networks } from "./networks"
 import { System } from "./system"
 import { Volumes } from "./volumes"
+import { Streams } from "./stream"
 
 const DCM = applyMixins(
   DockerClientManagerCore,
@@ -16,7 +17,8 @@ const DCM = applyMixins(
   Networks,
   Volumes,
   System,
-  Monitoring
+  Monitoring,
+  Streams
 )
 
 export default DCM
