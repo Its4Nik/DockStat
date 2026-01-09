@@ -1,24 +1,33 @@
 import Logger from "@dockstat/logger"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
 import type Dockerode from "dockerode"
-import { proxyEvent } from "../../events/workerEventProxy"
-import { withRetry } from "../utils/retry"
+import { retry } from "@dockstat/utils"
 
-export class HostMetricsMonitor {
+class HostMetricsMonitor {
   private intervalId?: ReturnType<typeof setInterval>
   private logger: Logger
+  private dockerInstances: Map<number, Dockerode>
+  private hosts: DATABASE.DB_target_host[]
+  private options: {
+    interval: number
+    retryAttempts: number
+    retryDelay: number
+  }
 
   constructor(
-    loggerParents: string[],
-    private dockerInstances: Map<number, Dockerode>,
-    private hosts: DATABASE.DB_target_host[],
-    private options: {
+    baseLogger: Logger,
+    dockerInstances: Map<number, Dockerode>,
+    hosts: DATABASE.DB_target_host[],
+    options: {
       interval: number
       retryAttempts: number
       retryDelay: number
     }
   ) {
-    this.logger = new Logger("HMM", loggerParents)
+    this.logger = baseLogger.spawn("HCM")
+    this.dockerInstances = dockerInstances
+    this.hosts = hosts
+    this.options = options
   }
 
   start(): void {
@@ -78,16 +87,14 @@ export class HostMetricsMonitor {
     }
 
     const [info, version] = await Promise.all([
-      withRetry<DOCKER.DockerAPIResponse["systemInfo"]>(
-        () => docker.info(),
-        this.options.retryAttempts,
-        this.options.retryDelay
-      ),
-      withRetry<DOCKER.DockerAPIResponse["dockerVersion"]>(
-        () => docker.version(),
-        this.options.retryAttempts,
-        this.options.retryDelay
-      ),
+      retry<DOCKER.DockerAPIResponse["systemInfo"]>(() => docker.info(), {
+        attempts: this.options.retryAttempts,
+        delay: this.options.retryDelay,
+      }),
+      retry<DOCKER.DockerAPIResponse["dockerVersion"]>(() => docker.version(), {
+        attempts: this.options.retryAttempts,
+        delay: this.options.retryDelay,
+      }),
     ])
 
     this.logger.debug(`Collected Host Metrics for ${JSON.stringify({ hostId })}`)
@@ -111,3 +118,5 @@ export class HostMetricsMonitor {
     }
   }
 }
+
+export default HostMetricsMonitor

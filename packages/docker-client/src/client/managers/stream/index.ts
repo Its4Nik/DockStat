@@ -1,6 +1,6 @@
 import Logger from "@dockstat/logger"
 import type { DOCKER } from "@dockstat/typings"
-import type DockerClient from "../docker-client"
+import type { BaseDockerClient } from "../.."
 import { proxyEvent } from "../events/workerEventProxy"
 
 export const STREAM_CHANNELS: Record<string, DOCKER.StreamChannel> = {
@@ -54,17 +54,17 @@ export const STREAM_CHANNELS: Record<string, DOCKER.StreamChannel> = {
   },
 }
 
-export class StreamManager {
+export default class StreamManager {
   private logger
   private subscriptions: Map<string, DOCKER.StreamSubscription> = new Map()
   private streamIntervals: Map<string, NodeJS.Timeout> = new Map()
-  private dockerClient: DockerClient // Reference to DockerClient
+  private dockerClient: BaseDockerClient // Reference to DockerClient
   private activeConnections: Set<string> = new Set()
   private heartbeatInterval?: NodeJS.Timeout
   private readonly heartbeatIntervalMs = 30000 // 30 seconds
 
-  constructor(dockerClient: DockerClient, loggerParents: string[]) {
-    this.logger = new Logger("SM", loggerParents)
+  constructor(dockerClient: BaseDockerClient, baseLogger: Logger) {
+    this.logger = baseLogger.spawn("SM")
     this.logger.info("Initializing StreamManager")
     this.dockerClient = dockerClient
     this.setupHeartbeat()
@@ -580,7 +580,7 @@ export class StreamManager {
         timestamps: true,
       })
 
-      return logsString.split("\n").filter((line) => line.trim().length > 0)
+      return logsString.split("\n").filter((line: string) => line.trim().length > 0)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error"
       console.error(`Failed to get container logs for ${containerId}:`, errorMessage)

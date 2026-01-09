@@ -1,21 +1,29 @@
 import Logger from "@dockstat/logger"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
 import type Dockerode from "dockerode"
-import { proxyEvent } from "../../events/workerEventProxy"
-import { mapContainerInfoFromInspect } from "../utils/containerMapper"
-import { withRetry } from "../utils/retry"
+import { mapContainerInfoFromInspect } from "../../utils/mapContainerInfo"
+import { retry } from "@dockstat/utils"
 
-export class DockerEventStreamManager {
+class DockerEventStreamManager {
   private streams = new Map<number, NodeJS.ReadableStream>()
   private logger: Logger
+  private dockerInstances: Map<number, Dockerode>
+  private hosts: DATABASE.DB_target_host[]
+  private options: { retryAttempts: number; retryDelay: number }
 
   constructor(
-    loggerParents: string[],
-    private dockerInstances: Map<number, Dockerode>,
-    private hosts: DATABASE.DB_target_host[],
-    private options: { retryAttempts: number; retryDelay: number }
+    baseLogger: Logger,
+    dockerInstances: Map<number, Dockerode>,
+    hosts: DATABASE.DB_target_host[],
+    options: {
+      retryAttempts: number
+      retryDelay: number
+    }
   ) {
-    this.logger = new Logger("DESM", loggerParents)
+    this.logger = baseLogger.spawn("DESM")
+    this.dockerInstances = dockerInstances
+    this.hosts = hosts
+    this.options = options
   }
 
   start(): void {
@@ -192,11 +200,12 @@ export class DockerEventStreamManager {
     }
 
     const container = docker.getContainer(containerId)
-    const info = await withRetry<DOCKER.DockerAPIResponse["containerInspect"]>(
+    const info = await retry<DOCKER.DockerAPIResponse["containerInspect"]>(
       () => container.inspect(),
-      this.options.retryAttempts,
-      this.options.retryDelay
+      { attempts: this.options.retryAttempts, delay: this.options.retryDelay }
     )
     return mapContainerInfoFromInspect(info, hostId)
   }
 }
+
+export default DockerEventStreamManager

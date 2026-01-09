@@ -1,25 +1,34 @@
 import Logger from "@dockstat/logger"
-import type { DATABASE } from "@dockstat/typings"
+import type { DATABASE, DB_target_host } from "@dockstat/typings"
 import type Dockerode from "dockerode"
-import { proxyEvent } from "../../events/workerEventProxy"
-import { withRetry } from "../utils/retry"
+import { retry } from "@dockstat/utils"
 
-export class HealthCheckMonitor {
+class HealthCheckMonitor {
   private intervalId?: ReturnType<typeof setInterval>
   private lastHealthStatus = new Map<number, boolean>()
   private logger: Logger
+  private dockerInstances: Map<number, Dockerode>
+  private hosts: DATABASE.DB_target_host[]
+  private options: {
+    interval: number
+    retryAttempts: number
+    retryDelay: number
+  }
 
   constructor(
-    loggerParents: string[],
-    private dockerInstances: Map<number, Dockerode>,
-    private hosts: DATABASE.DB_target_host[],
-    private options: {
+    baseLogger: Logger,
+    dockerInstances: Map<number, Dockerode>,
+    hosts: DATABASE.DB_target_host[],
+    options: {
       interval: number
       retryAttempts: number
       retryDelay: number
     }
   ) {
-    this.logger = new Logger("HCM", loggerParents)
+    this.logger = baseLogger.spawn("HCM")
+    this.dockerInstances = dockerInstances
+    this.hosts = hosts
+    this.options = options
   }
 
   start(): void {
@@ -66,7 +75,10 @@ export class HealthCheckMonitor {
         throw new Error(`No Docker instance found for host ${host.id}`)
       }
 
-      await withRetry(() => docker.ping(), this.options.retryAttempts, this.options.retryDelay)
+      await retry(() => docker.ping(), {
+        attempts: this.options.retryAttempts,
+        delay: this.options.retryDelay,
+      })
 
       const wasHealthy = this.lastHealthStatus.get(Number(host.id))
       if (wasHealthy !== true) {
@@ -78,9 +90,9 @@ export class HealthCheckMonitor {
         })
       }
     } catch (error) {
-      const wasHealthy = this.lastHealthStatus.get(host.id)
+      const wasHealthy = this.lastHealthStatus.get(host.id as Required<DB_target_host>["id"])
       if (wasHealthy !== false) {
-        this.lastHealthStatus.set(host.id, false)
+        this.lastHealthStatus.set(host.id as Required<DB_target_host>["id"], false)
         proxyEvent("host:health:changed", {
           healthy: false,
           hostId: host.id,
@@ -94,3 +106,5 @@ export class HealthCheckMonitor {
     }
   }
 }
+
+export default HealthCheckMonitor

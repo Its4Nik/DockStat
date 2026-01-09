@@ -1,4 +1,4 @@
-import { applyMixins } from "./_mixin"
+import { applyMixins } from "../shared/mixin"
 import { Containers } from "./containers"
 import { DockerClientManagerCore } from "./core"
 import { Hosts } from "./hosts"

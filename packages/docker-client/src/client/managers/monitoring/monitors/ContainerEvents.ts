@@ -1,26 +1,35 @@
 import Logger from "@dockstat/logger"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
 import type Dockerode from "dockerode"
-import { proxyEvent } from "../../events/workerEventProxy"
-import { mapContainerInfo } from "../utils/containerMapper"
-import { withRetry } from "../utils/retry"
+import { mapContainerInfo } from "../../../utils/mapContainerInfo"
+import { retry } from "@dockstat/utils"
 
-export class ContainerEventMonitor {
+class ContainerEventMonitor {
   private logger: Logger
   private intervalId?: ReturnType<typeof setInterval>
+  private dockerInstances: Map<number, Dockerode>
   private lastContainerStates = new Map<string, DOCKER.ContainerInfo[]>()
+  private hosts: DATABASE.DB_target_host[]
+  private options: {
+    interval: number
+    retryAttempts: number
+    retryDelay: number
+  }
 
   constructor(
-    loggerParents: string[],
-    private dockerInstances: Map<number, Dockerode>,
-    private hosts: DATABASE.DB_target_host[],
-    private options: {
+    baseLogger: Logger,
+    dockerInstances: Map<number, Dockerode>,
+    hosts: DATABASE.DB_target_host[],
+    options: {
       interval: number
       retryAttempts: number
       retryDelay: number
     }
   ) {
-    this.logger = new Logger("CEM", loggerParents)
+    this.logger = baseLogger.spawn("CEM")
+    this.dockerInstances = dockerInstances
+    this.hosts = hosts
+    this.options = options
   }
 
   start(): void {
@@ -136,11 +145,12 @@ export class ContainerEventMonitor {
         `No Docker instance found for host ${hostId}. Available instances: ${availableKeys.join(", ")}`
       )
     }
-    const containers = await withRetry(
-      () => docker.listContainers({ all: true }),
-      this.options.retryAttempts,
-      this.options.retryDelay
-    )
+    const containers = await retry(() => docker.listContainers({ all: true }), {
+      attempts: this.options.retryAttempts,
+      delay: this.options.retryDelay,
+    })
     return containers.map((c) => mapContainerInfo(c, hostId))
   }
 }
+
+export default ContainerEventMonitor

@@ -1,11 +1,14 @@
-import Logger from "@dockstat/logger"
+import type Logger from "@dockstat/logger"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
+
+import ContainerEventMonitor from "./monitors/ContainerEvents"
+import ContainerMetricsMonitor from "./monitors/ContainerMetrics"
+import HealthCheckMonitor from "./monitors/HealthCheck"
+import HostMetricsMonitor from "./monitors/HostMetrics"
+
+import DockerEventStreamManager from "./eventStreamMonitor"
+
 import type Dockerode from "dockerode"
-import { ContainerEventMonitor } from "./monitors/ContainerEventMonitor"
-import { ContainerMetricsMonitor } from "./monitors/ContainerMetricsMonitor"
-import { DockerEventStreamManager } from "./monitors/DockerEventStreamManager"
-import { HealthCheckMonitor } from "./monitors/HealthCheckMonitor"
-import { HostMetricsMonitor } from "./monitors/HostMetricsMonitor"
 
 export default class MonitoringManager {
   private logger: Logger
@@ -21,14 +24,14 @@ export default class MonitoringManager {
   private hosts: DATABASE.DB_target_host[]
 
   constructor(
-    loggerParents: string[],
+    baseLogger: Logger,
     dockerInstances: Map<number, Dockerode>,
     hosts: DATABASE.DB_target_host[],
     options: DOCKER.MonitoringOptions = {}
   ) {
     this.dockerInstances = dockerInstances
     this.hosts = hosts
-    this.logger = new Logger("MM", loggerParents)
+    this.logger = baseLogger.spawn("MM")
 
     this.options = {
       healthCheckInterval: options.healthCheckInterval ?? 30000,
@@ -48,15 +51,18 @@ export default class MonitoringManager {
       retryDelay: this.options.retryDelay,
     }
 
-    const parents = this.logger.getParentsForLoggerChaining()
-
-    this.healthCheckMonitor = new HealthCheckMonitor(parents, this.dockerInstances, this.hosts, {
-      interval: this.options.healthCheckInterval,
-      ...retryOpts,
-    })
+    this.healthCheckMonitor = new HealthCheckMonitor(
+      this.logger,
+      this.dockerInstances,
+      this.hosts,
+      {
+        interval: this.options.healthCheckInterval,
+        ...retryOpts,
+      }
+    )
 
     this.containerEventMonitor = new ContainerEventMonitor(
-      parents,
+      this.logger,
       this.dockerInstances,
       this.hosts,
       {
@@ -65,13 +71,18 @@ export default class MonitoringManager {
       }
     )
 
-    this.hostMetricsMonitor = new HostMetricsMonitor(parents, this.dockerInstances, this.hosts, {
-      interval: this.options.hostMetricsInterval,
-      ...retryOpts,
-    })
+    this.hostMetricsMonitor = new HostMetricsMonitor(
+      this.logger,
+      this.dockerInstances,
+      this.hosts,
+      {
+        interval: this.options.hostMetricsInterval,
+        ...retryOpts,
+      }
+    )
 
     this.containerMetricsMonitor = new ContainerMetricsMonitor(
-      parents,
+      this.logger,
       this.dockerInstances,
       this.hosts,
       {
@@ -81,7 +92,7 @@ export default class MonitoringManager {
     )
 
     this.dockerEventStreamManager = new DockerEventStreamManager(
-      parents,
+      this.logger,
       this.dockerInstances,
       this.hosts,
       retryOpts

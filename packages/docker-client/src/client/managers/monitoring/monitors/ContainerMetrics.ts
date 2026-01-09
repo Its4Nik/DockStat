@@ -1,25 +1,34 @@
 import Logger from "@dockstat/logger"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
 import type Dockerode from "dockerode"
-import { proxyEvent } from "../../events/workerEventProxy"
-import { mapContainerInfo } from "../utils/containerMapper"
-import { withRetry } from "../utils/retry"
+import { retry } from "@dockstat/utils"
+import { mapContainerInfo } from "../../../utils/mapContainerInfo"
 
-export class ContainerMetricsMonitor {
+class ContainerMetricsMonitor {
   private intervalId?: ReturnType<typeof setInterval>
   private logger: Logger
+  private dockerInstances: Map<number, Dockerode>
+  private hosts: DATABASE.DB_target_host[]
+  private options: {
+    interval: number
+    retryAttempts: number
+    retryDelay: number
+  }
 
   constructor(
-    loggerParents: string[],
-    private dockerInstances: Map<number, Dockerode>,
-    private hosts: DATABASE.DB_target_host[],
-    private options: {
+    baseLogger: Logger,
+    dockerInstances: Map<number, Dockerode>,
+    hosts: DATABASE.DB_target_host[],
+    options: {
       interval: number
       retryAttempts: number
       retryDelay: number
     }
   ) {
-    this.logger = new Logger("CMM", loggerParents)
+    this.logger = baseLogger.spawn("CMM")
+    this.dockerInstances = dockerInstances
+    this.hosts = hosts
+    this.options = options
   }
 
   start(): void {
@@ -83,10 +92,9 @@ export class ContainerMetricsMonitor {
     const statsPromises = containers.map(async (containerInfo) => {
       try {
         const container = docker.getContainer(containerInfo.Id)
-        const stats = await withRetry(
+        const stats = await retry(
           () => container.stats({ stream: false }) as Promise<Dockerode.ContainerStats>,
-          this.options.retryAttempts,
-          this.options.retryDelay
+          { attempts: this.options.retryAttempts, delay: this.options.retryDelay }
         )
 
         const containerStatsInfo = this.mapContainerStats(containerInfo, stats, hostId)
@@ -187,3 +195,5 @@ export class ContainerMetricsMonitor {
     return { read, write }
   }
 }
+
+export default ContainerMetricsMonitor
