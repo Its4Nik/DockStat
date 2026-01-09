@@ -1,9 +1,9 @@
 ---
 id: 57802308-6a42-4d47-82b6-bc553ae10e9c
-title: "Frontend: Actions"
+title: "Frontend: actions"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: a81b5d89-a300-47ac-8ffa-a3b851645978
-updatedAt: 2026-01-01T20:40:03.579Z
+updatedAt: 2026-01-01T14:27:30.440Z
 urlId: 0tWEK43tNb
 ---
 
@@ -34,9 +34,9 @@ export async function updateProfile(input: UpdateProfileInput) {
   })
 
   if (error) {
-    throw new Error(String(error.value))
+    throw new Error(extractEdenError({ data, error }))
   }
-
+  
   return data
 }
 ```
