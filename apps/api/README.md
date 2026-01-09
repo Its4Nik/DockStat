@@ -7,6 +7,8 @@ updatedAt: 2026-01-01T15:02:00.500Z
 urlId: gVYlljv3Fs
 ---
 
+![DockStatAPI Animation](https://raw.githubusercontent.com/Its4Nik/DockStat/refs/heads/DockStatAPI-readme-update/.github/assets/gifs/DockStatAPI-startup.gif)
+
 > The DockStatAPI is implemented with Elysia and exposed under the prefix `/api/v2`. The canonical route definitions are in `apps/api/src/routes/` with schemas in `apps/api/src/models/`.
 
 ## Base URL
