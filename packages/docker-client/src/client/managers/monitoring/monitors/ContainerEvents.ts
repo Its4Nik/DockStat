@@ -1,8 +1,9 @@
-import Logger from "@dockstat/logger"
+import type Logger from "@dockstat/logger"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
-import type Dockerode from "dockerode"
-import { mapContainerInfo } from "../../../utils/mapContainerInfo"
 import { retry } from "@dockstat/utils"
+import type Dockerode from "dockerode"
+import { proxyEvent } from "../../../../events/workerEventProxy"
+import { mapContainerInfo } from "../../../utils/mapContainerInfo"
 
 class ContainerEventMonitor {
   private logger: Logger

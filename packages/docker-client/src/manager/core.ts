@@ -5,21 +5,18 @@ import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DOCKER, EVENTS } from "@dockstat/typings"
 import type { buildMessageFromProxyRes } from "@dockstat/typings/types"
 import { truncate, worker as workerUtils } from "@dockstat/utils"
-import { generateRequestId, type PoolMetrics, type WorkerMetrics } from "../types"
+
+import type { PoolMetrics, WorkerMetrics, WorkerRequest } from "../shared/types"
+
 import type {
   DBType,
   DockerClientTable,
   DockerClientTableQuery,
   EventMessage,
-  WorkerRequest,
   WorkerWrapper,
 } from "./types"
-import {
-  isInitCompleteMessage,
-  isInternalWorkerMessage,
-  isProxyEventEnvelope,
-  looksLikeEventMessage,
-} from "./types"
+import { isInitCompleteMessage, looksLikeEventMessage } from "./types"
+import { sendWorkerMessage } from "./utils/sendWorkerMessage"
 
 export class DockerClientManagerCore {
   readonly table: DockerClientTableQuery
@@ -367,109 +364,33 @@ export class DockerClientManagerCore {
       throw new Error(`Worker ${clientId} not initialized`)
     }
 
-    // Generate a unique request ID to correlate request with response
-    const requestId = generateRequestId()
-    const requestWithId = { ...request, requestId }
+    wrapper.busy = true
+    wrapper.lastUsed = Date.now()
 
-    return new Promise<T>((resolve, reject) => {
-      wrapper.busy = true
-      wrapper.lastUsed = Date.now()
-
-      let settled = false
-      let timeoutId: ReturnType<typeof setTimeout>
-
-      const finalize = () => {
-        wrapper.busy = false
+    try {
+      const response = await sendWorkerMessage<T>(wrapper.worker, request)
+      if (response.success) {
+        return response.data as T
       }
 
-      const messageHandler = (event: MessageEvent) => {
-        const raw = event.data
+      const err = response.error
+      const errorMessage = typeof err === "string" ? err : String(err)
 
-        if (isInternalWorkerMessage(raw)) {
-          return
-        }
+      this.logger.error(
+        `Worker ${clientId} returned error for request (${request.type}): ${errorMessage}`
+      )
 
-        if (isProxyEventEnvelope(raw)) {
-          return
-        }
-
-        if (raw.requestId !== requestId) {
-          return
-        }
-
-        if (settled) return
-        settled = true
-        clearTimeout(timeoutId)
-        finalize()
-        wrapper.worker.removeEventListener("message", messageHandler)
-
-        const response = raw
-
-        if (response.success) {
-          resolve(response.data)
-        } else {
-          // Extract error message - handle various error formats
-          let errorMessage = "Unknown worker error"
-          const err = response.error ?? response.message
-          if (typeof err === "string") {
-            errorMessage = err
-          } else if (err instanceof Error) {
-            errorMessage = err.message
-          } else if (err && typeof err === "object") {
-            // Handle nested error objects
-            const errObj = err as Record<string, unknown>
-            if (typeof errObj.message === "string") {
-              errorMessage = errObj.message
-            } else if (typeof errObj.error === "string") {
-              errorMessage = errObj.error
-            } else {
-              // Last resort - try to stringify but avoid [object Object]
-              try {
-                const str = JSON.stringify(err)
-                if (str && str !== "{}") {
-                  errorMessage = str
-                }
-              } catch {
-                // Keep default error message
-              }
-            }
-          }
-
-          this.logger.error(
-            `Worker ${clientId} returned error for request ${requestId} (${request.type}): ${errorMessage}`
-          )
-
-          wrapper.lastError = errorMessage
-          wrapper.errorCount += 1
-          reject(new Error(errorMessage))
-        }
-      }
-
-      timeoutId = setTimeout(() => {
-        if (settled) return
-        settled = true
-        finalize()
-        wrapper.lastError = "Request timeout"
-        wrapper.errorCount += 1
-        wrapper.worker.removeEventListener("message", messageHandler)
-        reject(new Error("Request timeout"))
-      }, 30000)
-
-      wrapper.worker.addEventListener("message", messageHandler)
-
-      try {
-        wrapper.worker.postMessage(requestWithId)
-      } catch (err) {
-        clearTimeout(timeoutId)
-        finalize()
-        wrapper.worker.removeEventListener("message", messageHandler)
-
-        wrapper.lastError = err instanceof Error ? err.message : String(err)
-        wrapper.errorCount += 1
-
-        reject(err instanceof Error ? err : new Error(String(err)))
-      }
-    })
+      wrapper.lastError = errorMessage
+      wrapper.errorCount += 1
+      throw new Error(errorMessage)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      wrapper.lastError = errorMessage
+      wrapper.errorCount += 1
+      throw err instanceof Error ? err : new Error(String(err))
+    } finally {
+      wrapper.busy = false
+    }
   }
 
   // ---------- Client management ----------

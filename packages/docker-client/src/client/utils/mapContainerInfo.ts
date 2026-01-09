@@ -48,3 +48,45 @@ export function mapContainerInfoFromInspect(
     },
   }
 }
+
+export function mapContainerStats(
+  containerInfo: DOCKER.ContainerInfo,
+  stats: Dockerode.ContainerStats
+): DOCKER.ContainerStatsInfo {
+  const cpuDelta =
+    stats.cpu_stats.cpu_usage.total_usage - (stats.precpu_stats?.cpu_usage?.total_usage || 0)
+  const systemDelta = stats.cpu_stats.system_cpu_usage - (stats.precpu_stats?.system_cpu_usage || 0)
+  const cpuUsage =
+    systemDelta > 0 ? (cpuDelta / systemDelta) * stats.cpu_stats.online_cpus * 100 : 0
+
+  const memoryUsage = stats.memory_stats.usage || 0
+  const memoryLimit = stats.memory_stats.limit || 0
+
+  let networkRx = 0
+  let networkTx = 0
+
+  if (stats.networks) {
+    for (const network of Object.values(stats.networks)) {
+      networkRx += network.rx_bytes || 0
+      networkTx += network.tx_bytes || 0
+    }
+  }
+
+  const blockRead =
+    stats.blkio_stats?.io_service_bytes_recursive?.find((stat) => stat.op === "Read")?.value || 0
+
+  const blockWrite =
+    stats.blkio_stats?.io_service_bytes_recursive?.find((stat) => stat.op === "Write")?.value || 0
+
+  return {
+    ...containerInfo,
+    stats,
+    cpuUsage: Math.round(cpuUsage * 100) / 100,
+    memoryUsage,
+    memoryLimit,
+    networkRx,
+    networkTx,
+    blockRead,
+    blockWrite,
+  }
+}

@@ -1,14 +1,11 @@
 import type Logger from "@dockstat/logger"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
-
+import type Dockerode from "dockerode"
+import DockerEventStreamManager from "./eventStreamMonitor"
 import ContainerEventMonitor from "./monitors/ContainerEvents"
 import ContainerMetricsMonitor from "./monitors/ContainerMetrics"
 import HealthCheckMonitor from "./monitors/HealthCheck"
 import HostMetricsMonitor from "./monitors/HostMetrics"
-
-import DockerEventStreamManager from "./eventStreamMonitor"
-
-import type Dockerode from "dockerode"
 
 export default class MonitoringManager {
   private logger: Logger
@@ -184,5 +181,76 @@ export default class MonitoringManager {
       lastContainerStates: this.containerEventMonitor.getLastContainerStates(),
       dockerEventStreams: this.dockerEventStreamManager.getStreams(),
     }
+  }
+
+  public async getHostMetrics(hostId: number): Promise<DOCKER.HostMetrics> {
+    const docker = this.dockerInstances.get(hostId)
+    const host = this.hosts.find((h) => Number(h.id) === hostId)
+
+    if (!docker || !host) {
+      throw new Error(`Docker instance or host not found for ID ${hostId}`)
+    }
+
+    const [info, version] = await Promise.all([docker.info(), docker.version()])
+
+    return {
+      hostId,
+      hostName: host.name,
+      dockerVersion: version.Version,
+      apiVersion: version.ApiVersion,
+      os: info.OperatingSystem,
+      architecture: info.Architecture,
+      totalMemory: info.MemTotal,
+      totalCPU: info.NCPU,
+      kernelVersion: info.KernelVersion,
+      containers: info.Containers,
+      containersRunning: info.ContainersRunning,
+      containersStopped: info.ContainersStopped,
+      containersPaused: info.ContainersPaused,
+      images: info.Images,
+      systemTime: info.SystemTime,
+    }
+  }
+
+  public async getAllHostMetrics(): Promise<DOCKER.HostMetrics[]> {
+    const results = await Promise.allSettled(
+      this.hosts.map((h) => this.getHostMetrics(Number(h.id ?? 0)))
+    )
+
+    const successful: DOCKER.HostMetrics[] = []
+    for (const r of results) {
+      if (r.status === "fulfilled") successful.push(r.value)
+      else this.logger.warn(`getAllHostMetrics failed for one host: ${String(r.reason)}`)
+    }
+    return successful
+  }
+
+  public async checkHostHealth(hostId: number): Promise<boolean> {
+    try {
+      const docker = this.dockerInstances.get(hostId)
+      if (!docker) return false
+      await docker.ping()
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  public async checkAllHostsHealth(): Promise<Record<number, boolean>> {
+    const entries = await Promise.all(
+      this.hosts.map(async (h) => {
+        const id = Number(h.id ?? 0)
+        const healthy = await this.checkHostHealth(id)
+        return [id, healthy] as const
+      })
+    )
+    return Object.fromEntries(entries)
+  }
+
+  public async getAllStats(): Promise<DOCKER.AllStatsResponse> {
+    // Aggregate host metrics and (optionally) container stats in future.
+    // For now, return host metrics and leave container part to be expanded as needed.
+    const hostMetrics = await this.getAllHostMetrics()
+    return { hostMetrics } as unknown as DOCKER.AllStatsResponse
   }
 }

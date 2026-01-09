@@ -1,7 +1,8 @@
-import Logger from "@dockstat/logger"
+import type Logger from "@dockstat/logger"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
-import type Dockerode from "dockerode"
 import { retry } from "@dockstat/utils"
+import type Dockerode from "dockerode"
+import { proxyEvent } from "../../../../events/workerEventProxy"
 
 class HostMetricsMonitor {
   private intervalId?: ReturnType<typeof setInterval>

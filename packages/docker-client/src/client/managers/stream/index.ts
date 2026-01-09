@@ -1,7 +1,32 @@
-import Logger from "@dockstat/logger"
+import type Logger from "@dockstat/logger"
 import type { DOCKER } from "@dockstat/typings"
-import type { BaseDockerClient } from "../.."
-import { proxyEvent } from "../events/workerEventProxy"
+import { proxyEvent } from "../../../events/workerEventProxy"
+/**
+ * Narrow, runtime-safe client surface used by StreamManager to avoid circular mixin typing.
+ * This interface lists only the methods/properties StreamManager calls.
+ */
+export interface StreamCapableClient {
+  getContainerStats(hostId: number, containerId: string): Promise<DOCKER.ContainerStatsInfo>
+  getContainersForHost(hostId: number): Promise<DOCKER.ContainerInfo[]>
+  getAllContainers(): Promise<DOCKER.ContainerInfo[]>
+  getContainerLogs(
+    hostId: number,
+    containerId: string,
+    options?: {
+      stdout?: boolean
+      stderr?: boolean
+      timestamps?: boolean
+      tail?: number
+      since?: string
+      until?: string
+    }
+  ): Promise<string>
+  monitoringManager?: {
+    getHostMetrics(hostId: number): Promise<DOCKER.HostMetrics>
+    getAllHostMetrics(): Promise<DOCKER.HostMetrics[]>
+    getAllStats(): Promise<DOCKER.AllStatsResponse>
+  }
+}
 
 export const STREAM_CHANNELS: Record<string, DOCKER.StreamChannel> = {
   container_stats: {
@@ -58,12 +83,12 @@ export default class StreamManager {
   private logger
   private subscriptions: Map<string, DOCKER.StreamSubscription> = new Map()
   private streamIntervals: Map<string, NodeJS.Timeout> = new Map()
-  private dockerClient: BaseDockerClient // Reference to DockerClient
+  private dockerClient: StreamCapableClient // Reference to DockerClient
   private activeConnections: Set<string> = new Set()
   private heartbeatInterval?: NodeJS.Timeout
   private readonly heartbeatIntervalMs = 30000 // 30 seconds
 
-  constructor(dockerClient: BaseDockerClient, baseLogger: Logger) {
+  constructor(dockerClient: StreamCapableClient, baseLogger: Logger) {
     this.logger = baseLogger.spawn("SM")
     this.logger.info("Initializing StreamManager")
     this.dockerClient = dockerClient
@@ -353,12 +378,13 @@ export default class StreamManager {
       if (!subscription.active) return
 
       try {
-        const stats = await this.dockerClient.getContainerStats(hostId, containerId)
+        const statsInfo = await this.dockerClient.getContainerStats(hostId, containerId)
+
         subscription.callback({
           id: `stats-${Date.now()}`,
           type: "data",
           channel: "container_stats",
-          data: stats,
+          data: statsInfo,
           timestamp: Date.now(),
         })
         subscription.lastActivity = Date.now()
@@ -384,9 +410,12 @@ export default class StreamManager {
       if (!subscription.active) return
 
       try {
-        const metrics = hostId
-          ? await this.dockerClient.getHostMetrics(hostId)
-          : await this.dockerClient.getAllHostMetrics()
+        const mm = this.dockerClient.monitoringManager
+        if (!mm) {
+          throw new Error("Monitoring manager not initialized")
+        }
+
+        const metrics = hostId ? await mm.getHostMetrics(hostId) : await mm.getAllHostMetrics()
 
         subscription.callback({
           id: `metrics-${Date.now()}`,
@@ -508,7 +537,12 @@ export default class StreamManager {
       if (!subscription.active) return
 
       try {
-        const allStats = await this.dockerClient.getAllStats()
+        const mm = this.dockerClient.monitoringManager
+        if (!mm) {
+          throw new Error("Monitoring manager not initialized")
+        }
+
+        const allStats = await mm.getAllStats()
 
         subscription.callback({
           id: `all-stats-${Date.now()}`,

@@ -1,7 +1,8 @@
-import Logger from "@dockstat/logger"
+import type Logger from "@dockstat/logger"
 import type { DATABASE, DB_target_host } from "@dockstat/typings"
-import type Dockerode from "dockerode"
 import { retry } from "@dockstat/utils"
+import type Dockerode from "dockerode"
+import { proxyEvent } from "../../../../events/workerEventProxy"
 
 class HealthCheckMonitor {
   private intervalId?: ReturnType<typeof setInterval>
@@ -85,7 +86,7 @@ class HealthCheckMonitor {
         this.lastHealthStatus.set(Number(host.id), true)
         proxyEvent("host:health:changed", {
           healthy: true,
-          hostId: host.id,
+          hostId: Number(host.id),
           hostName: host.name,
         })
       }
@@ -95,7 +96,7 @@ class HealthCheckMonitor {
         this.lastHealthStatus.set(host.id as Required<DB_target_host>["id"], false)
         proxyEvent("host:health:changed", {
           healthy: false,
-          hostId: host.id,
+          hostId: Number(host.id),
           hostName: host.name,
         })
       }

@@ -92,7 +92,7 @@ export class Hosts extends DockerClientManagerCore {
     return this.sendRequest(clientId, { type: "getHosts" })
   }
 
-  public async getAllHosts() {
+  public override async getAllHosts() {
     this.logger.debug("Getting all hosts")
     const clients = this.getAllClients()
     this.logger.debug(`Clients: ${JSON.stringify(clients)}`)

@@ -3,7 +3,7 @@ import type DB from "@dockstat/sqlite-wrapper"
 import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DOCKER, EVENTS } from "@dockstat/typings"
 import type { buildMessageFromProxyRes } from "@dockstat/typings/types"
-import type { WorkerRequest, WorkerResponse } from "../types"
+import type { WorkerRequest, WorkerResponse } from "../shared/types"
 
 export type { WorkerRequest, WorkerResponse }
 

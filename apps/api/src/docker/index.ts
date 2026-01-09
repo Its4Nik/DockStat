@@ -1,4 +1,4 @@
-import DockerClientManager from "@dockstat/docker-client/manager"
+import DockerClientManager from "@dockstat/docker-client"
 import { DockStatDB } from "../database"
 import BaseLogger from "../logger"
 import PluginHandler from "../plugins"
