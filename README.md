@@ -3,16 +3,51 @@
 </p>
 
 <p align="center">
-  <a href="https://outline.itsnik.de/s/9d88c471-373e-4ef2-a955-b1058eb7dc99">Wiki</a> · <a href="#-getting-started">Getting Started</a> · <a href="#-features">Features</a> · <a href="#-architecture-and-apps">Architecture & Apps</a> · <a href="#-development-workflow">Development</a>
+  <a href="https://dockstat.itsnik.de" title="Wiki">
+    <img
+      alt="Wiki"
+      src="https://img.shields.io/badge/-Wiki-0B7285?style=for-the-badge&logo=readthedocs&logoColor=white"
+    />
+  </a>
+  <a href="#key-features" title="Features">
+    <img
+      alt="Features"
+      src="https://img.shields.io/badge/-Features-1864AB?style=for-the-badge&logo=sparkfun&logoColor=white"
+    />
+  </a>
+  <a href="#getting-started-developer--local" title="Getting started (developer)">
+    <img
+      alt="Getting started (developer)"
+      src="https://img.shields.io/badge/-Dev%20Setup-2F9E44?style=for-the-badge&logo=visualstudiocode&logoColor=white"
+    />
+  </a>
+  <a href="#plugins-themes--stacks---dockstore" title="DockStore">
+    <img
+      alt="DockStore"
+      src="https://img.shields.io/badge/-DockStore-F08C00?style=for-the-badge&logo=docker&logoColor=white"
+    />
+  </a>
+  <a href="#development-workflow--guidelines" title="Development guide">
+    <img
+      alt="Development guide"
+      src="https://img.shields.io/badge/-Development%20Guide-7048E8?style=for-the-badge&logo=gitbook&logoColor=white"
+    />
+  </a>
 </p>
 
 ---
 
-# DockStat
-
-| ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) | ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)            | ![Biome](https://img.shields.io/badge/biome-%2360A5FA.svg?style=for-the-badge&logo=biome&logoColor=white)         | ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)          |
-| ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)     | ![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white) | ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=Prometheus&logoColor=white) | ![Turborepo](https://img.shields.io/badge/Turborepo-%230F0813.svg?style=for-the-badge&logo=Turborepo&logoColor=white) |
+<p align="center">
+  <img alt="TailwindCSS" src="https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
+  <img alt="Docker" src="https://img.shields.io/badge/Docker-0DB7ED?style=for-the-badge&logo=docker&logoColor=white" />
+  <img alt="Biome" src="https://img.shields.io/badge/Biome-60A5FA?style=for-the-badge&logo=biome&logoColor=white" />
+  <img alt="SQLite" src="https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white" />
+  <br />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
+  <img alt="React Router" src="https://img.shields.io/badge/React%20Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white" />
+  <img alt="Prometheus" src="https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white" />
+  <img alt="Turborepo" src="https://img.shields.io/badge/Turborepo-0F0813?style=for-the-badge&logo=turborepo&logoColor=white" />
+</p>
 
 DockStat is an extensible container administration and monitoring platform that aims to combine the best ideas from tools like Portainer, Grafana and Dockge into a single, modular solution. It focuses on real-world manageability, deep observability and a runtime plugin-first architecture so the platform can evolve with your stack.
 
@@ -21,7 +56,7 @@ DockStat is an extensible container administration and monitoring platform that 
 
 ---
 
-## 📖 Project overview
+## Project overview
 
 DockStat's goal is to be the unified UI and runtime for managing containerized infrastructures (Docker for now, with intentions to expand). It provides:
 
@@ -33,19 +68,19 @@ DockStat's goal is to be the unified UI and runtime for managing containerized i
 
 ---
 
-## ✨ Key features
+## Key features
 
 - Runtime-compatible plugin system:
   - Frontend UI components (widgets, pages)
-  - Backend services (collectors, adapters)
+  - Backend services (notification providers, integrations with other software)
   - Full-stack plugins (both frontend and backend)
 - Theming:
   - CSS variable driven theming for deep customization
 - Stacks & Templates:
   - Prebuilt Docker Compose templates (DockStore)
   - Stack-level plugin hooks (Traefik/Caddy examples)
-  - Automatic node provisioning (e.g. Hetzner Cloud plugin)
-  - Future: Kubernetes support roadmap
+  - Automatic DockNode provisioning (e.g. Hetzner Cloud plugin)
+  - Future: Kubernetes support (?)
 - Monitoring & Visualization:
   - Table-based and graph-based metrics
   - Network visualization with sigma.js / reagraph
@@ -60,36 +95,42 @@ DockStat's goal is to be the unified UI and runtime for managing containerized i
 
 ---
 
-## 🛠 Tech stack
+## Tech stack
 
-- Core: React, React Router v7, Bun
-- Frontend: TypeScript, TailwindCSS, GSAP, lucide-react
-- Backend / Integrations: ElysiaJS, Dockerode, bun:sqlite, @dockstat/\* packages (internal libs)
+- Frontend: TypeScript, TailwindCSS, Framer-Motion, lucide-react, Simple-Icons-React
+- Backend: ElysiaJS, Dockerode, bun:sqlite, @dockstat/\*
 - Monorepo layout: apps/, packages/ (typings, db, sql-wrapper, plugins, ...)
 
 ---
 
-## 📁 Repo structure (high level)
+## Repo structure (high level)
 
 - apps/
-  - dockstat — main frontend / UI app (React Router SPA)
-  - dockstore — community hub for templates, themes & plugins
-  - docs — documentation and Outline wiki sync helpers
-- packages/ (internal packages / libraries used by apps)
-- .github/ (assets such as logos and CI configs)
-
-See apps/README.md for per-app details.
+  - `api` [Container]: The backend which leverages ElysiaJS's speed and various `@dockstat/*` packages
+  - `dockstat` [Container]: Main frontend / UI app (React)
+  - `dockstore-validator` [Container]: An ElysiaJS + HTMX based application for manual approving of Plugins; stores version hashes of the Plugins to be compared pre-installation by DockStatAPI (has to be enabled for a repository).
+  - `dockstore`: — community hub for templates, themes & plugins (Markdown only for now)
+  - `docs`: — documentation (mirrored from [Outline](https://dockstat.itsnik.de))
+- packages/
+  - `db`: DockStatAPI DB Setup
+  - `docker-client`: A Docker Client Manager package, that splits up each client into a seperate Bun Worker
+  - `logger` [PUBLIC]: An extensible Logger which also proxies logs to a Websocket (`/api/v2/ws/logs`)
+  - `outline-sync` [PUBLIC]: A synchronisation library to mirror an external Outline Wiki to a local filesystem
+  - `plugin-builder` [PUBLIC]: A package to make building Plugins for DockStat easier
+  - `sqlite-wrapper` [PUBLIC]: Self-built ORM with full typesafety, parsing and validation for `bun:sqlite` for optimal performance
+  - `template-renderer`: Helper library to allow usage of Frontend Plugins in DockStat
+  - `typings` [PUBLIC]: Shared typings
+  - `ui`: DockStat's UI library
+  - `utils` [PUBLIC]: Various utils used across DockStat
 
 ---
 
-## 🚀 Getting started (developer / local)
+## Getting started (developer / local)
 
 Requirements
 
-- Bun (used for development and scripts)
-- Node ecosystem tools (if you prefer npm/pnpm for some tasks)
-- Docker (for testing container interactions)
-- Optional: access to cloud provider API keys (for provisioning plugins)
+- Bun
+- Docker
 
 Quick start (from Repo root)
 
@@ -99,29 +140,28 @@ Quick start (from Repo root)
 bun install
 ```
 
-2. Start dockstat in development:
+2. Start `dockstat` and `@dockstat/api` in development:
 
 ```bash
-cd ./apps/dockstat
-bun run dev
+bun run dev:dockstat
+# bun run docker-up && bun run dev --filter=@dockstat/frontend --filter=@dockstat/api
 ```
 
 ---
 
-## 🧩 Plugin system (overview)
+## Plugin system (overview)
 
-DockStat is designed to grow through plugins. Plugins can register UI components, provide backend services (collectors, adapters, provisioning modules), or both.
+DockStat is designed to grow through plugins. Plugins can register new pages, provide backend services (collectors, adapters, provisioning modules), or both.
 
 Plugin types
 
-- Frontend plugin: Registers routes, pages or widgets in the UI. Usually provides a manifest and runtime hooks.
+- Frontend plugin: Registers routes, pages or widgets in the UI. Usually provides data loaders, pages and actions.
 - Backend plugin: Runs a process/service that collects metrics, talks to external APIs or adds adapters for new node types.
 - Full-stack plugin: Includes both frontend and backend parts and ships as a single distributable.
 
 Concepts
 
-- Manifest: A plugin manifest describes name, version, provided capabilities, and entry points.
-- Lifecycle: Plugins are discovered at runtime and may be started/stopped without recompiling the host (subject to host safety).
+- Lifecycle: Plugins are discovered at runtime and may be started/stopped without recompiling the host (validation of plugins can be done through `dockstore-validator`, if enabled).
 
 Developer notes
 
@@ -129,33 +169,58 @@ Developer notes
 
 ---
 
-## 🔌 Stacks & DockStore
+## Plugins, Themes & Stacks - DockStore
 
-DockStore is the ecosystem hub for templates, themes and plugins:
+DockStore serves as the ecosystem hub for reusable assets:
 
-- Pre-built Docker Compose templates for common apps (AdGuard, Grafana, Home Assistant, etc.)
-- Themes and UI tweaks
-- Plugin marketplace / registry for community contributions
+- Docker‑Compose templates – ready‑made stacks for common services (AdGuard, Grafana, Home Assistant, Arr‑suite, etc.).
+- Themes & UI tweaks – community‑crafted visual customisations.
+- Plugin marketplace – a registry where developers can publish and discover plugins.
 
----
-
-## ⚙️ Multi-node & adapters
-
-DockStat separates collection and aggregation from visualization via adapters:
-
-- Docker client adapters (can manage multiple hosts)
-- Cloud provisioning adapters (Hetzner, others planned)
-- Custom adapters can be written as backend plugins to bring new node types under management
-
-Adapters expose:
-
-- Node discovery & registration
-- Metrics collection configuration
-- Connection and credential management
+> Add your own templates, plugins or themes under `apps/dockstore/src/content/<plugins,themes,stacks>` (or via git sub‑modules) to make them discoverable by the platform.
 
 ---
 
-## ✅ Development workflow & guidelines
+## Multi-node
+
+DockStat separates data collection from visualisation, enabling scalable monitoring across many Docker hosts.
+
+### Agregation
+
+Agregation is done by querying workers, which can respond as soon as the data is gathered, without halting the entire backend.
+
+#### Example Docker-Client-Manager request Lifecycle
+
+```mermaid
+flowchart TB
+    A{{"[GET] /api/v2/docker/containers/all"}}
+    subgraph DCM
+        B["Get all workers from internal map"]
+        C["Get client's options from client ID saved in Worker Map"]
+        D("Promise.all[...]")
+        E["Send 'getAllContainers' request to worker(s)"]
+    end
+
+    subgraph Worker
+        F["Get All Hosts from Host-Handler-${clientId} table"]
+        G["Get Docker Instance for ${hostId}"]
+        H("dockerInstance.listContainers()")
+        I["Agregate Containers to single Array"]
+        J{{"Publish Response to DCM"}}
+    end
+
+    K["Build per-host array for clearer data structure"]
+    L{{"[GET] Answer request"}}
+
+    A-->B-->C-->D-->E-->F-->G-->H-->I-->J-->K-->L
+```
+
+---
+
+## Development workflow & guidelines
+
+> [!TIP]
+> Please follow the Patterns mentioned in the Wiki: [Patterns](https://outline.itsnik.de/s/dockstat/doc/patterns-bHRdz02Jsy)
 
 - Each app/package should have its own README and local dev scripts.
 - Use TypeScript and JSDoc for public APIs.
@@ -166,7 +231,7 @@ Common scripts
 
 - bun run dev — start development servers
 - bun run build — build production bundles
-- biome — linting and type checks (project specific)
+- bun run lint — linting and type checks
 
 Adding an app
 
@@ -177,7 +242,7 @@ Adding an app
 
 ---
 
-## 🧪 Known limitations & stability
+## Known limitations & stability
 
 - Pre-Alpha: expect breaking API and UX changes.
 - Limited production hardening; use only for testing.
@@ -185,48 +250,23 @@ Adding an app
 
 ---
 
-## 📦 Roadmap (high level)
-
-Short term
-
-- Stabilize plugin runtime API
-- Improve adapter management and credentials handling
-- Expand DockStore templates and build a simple web marketplace
-
-Medium term
-
-- Advanced dashboards and widget editor
-- Built-in alerting and notification center
-- Optional integration with time-series DB for long-term metrics
-
-Long term
-
-- Kubernetes management support
-- Multi-tenant and RBAC features
-- Rich plugin ecosystem and marketplace
-
----
-
-## 🤝 Contributing
+## Contributing
 
 Contributions, ideas and bug reports are welcome.
 
 - Check the Wiki for developer docs and architecture notes
 - Open issues for bugs or feature requests
 - Submit PRs with small, focused changes and good descriptions
-- If you're adding a plugin or template, prefer adding it to apps/dockstore for discoverability
+- If you're writing a plugin or template, prefer adding it to apps/dockstore for discoverability; Can be done through git-submodules
 
 ---
 
-## 📚 Documentation & Support
+## Documentation & Support
 
-Start with the repository Wiki and the Outline docs:
-
-- Wiki: https://outline.itsnik.de/s/9d88c471-373e-4ef2-a955-b1058eb7dc99
-- apps/README.md and apps/dockstat/README.md for per-app instructions
+Start with the [Outline docs](https://dockstat.itsnik.de), if there are still questions about DockStat feel free to start a new discussion :)
 
 ---
 
-## 📝 License
+## License
 
 > [Mozilla Public License Version 2.0](https://www.mozilla.org/en-US/MPL/2.0/)

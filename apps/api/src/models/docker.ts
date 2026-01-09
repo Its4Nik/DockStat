@@ -94,6 +94,7 @@ export namespace DockerModel {
       name: t.String(),
       id: t.Number(),
       clientId: t.Number(),
+      reachable: t.Boolean(),
     })
   )
 

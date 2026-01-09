@@ -31,7 +31,9 @@ export class Hosts extends DockerClientManagerCore {
     })
 
     const wrapper = this.workers.get(clientId)
+
     if (wrapper && result.id) {
+      this.logger.info("Wrapper and result.id found - adding hostId to wrapper")
       wrapper.hostIds.add(result.id)
       this.workers.set(clientId, wrapper)
     }
@@ -52,6 +54,33 @@ export class Hosts extends DockerClientManagerCore {
     }
   }
 
+  private async fetchClientHostsSafely(client: { id: number; name: string }) {
+    try {
+      const [pRes, clientHosts] = await Promise.all([
+        this.ping(client.id),
+        this.getHosts(client.id),
+      ])
+
+      const mappedHosts = clientHosts.map((c) => ({
+        name: c.name,
+        id: Number(c.id),
+        clientId: Number(client.id),
+        reachable: pRes.reachableInstances.includes(Number(c.id)),
+      }))
+
+      this.logger.debug(`Clients Hosts for ${client.name}: ${JSON.stringify(mappedHosts)}`)
+
+      return mappedHosts
+    } catch (error) {
+      this.logger.error(
+        `Failed to get hosts for client ${client.id} (${client.name}): ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      )
+      return []
+    }
+  }
+
   public async updateHost(clientId: number, host: DATABASE.DB_target_host): Promise<void> {
     return this.sendRequest(clientId, {
       type: "updateHost",
@@ -67,28 +96,23 @@ export class Hosts extends DockerClientManagerCore {
     this.logger.debug("Getting all hosts")
     const clients = this.getAllClients()
     this.logger.debug(`Clients: ${JSON.stringify(clients)}`)
-    let hosts: Array<{
-      name: string
-      id: number
-      clientId: number
-      reachable: boolean
-    }> = []
 
-    for (const client of clients) {
-      const pRes = await this.ping(client.id)
+    try {
+      const allClientHosts = await Promise.all(
+        clients.map((client) => this.fetchClientHostsSafely(client))
+      )
+      const hosts = allClientHosts.flat()
 
-      const clientsHosts = (await this.getHosts(client.id)).map((c) => ({
-        name: c.name,
-        id: Number(c.id),
-        clientId: Number(client.id),
-        reachable: pRes.reachableInstances.includes(Number(c.id)),
-      }))
-      this.logger.debug(`Clients Hosts: ${JSON.stringify(clientsHosts)}`)
-      hosts = hosts.concat(clientsHosts)
+      this.logger.debug(`All Hosts: ${JSON.stringify(hosts)}`)
+      return hosts
+    } catch (error) {
+      this.logger.error(
+        `Failed to get all hosts: ${error instanceof Error ? error.message : String(error)}`
+      )
+      throw new Error(
+        `Failed to get all hosts: ${error instanceof Error ? error.message : "Unknown error"}`
+      )
     }
-
-    this.logger.debug(`All Hosts: ${JSON.stringify(hosts)}`)
-    return hosts
   }
 
   public async ping(clientId: number) {

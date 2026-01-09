@@ -49,5 +49,6 @@ const DockMon = pluginBuilder<DockMonTable, typeof DockMonActions>()
       },
     },
   })
+  .build()
 
 export default DockMon

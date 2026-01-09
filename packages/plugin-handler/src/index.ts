@@ -10,7 +10,9 @@ import type {
   FrontendLoaderResult,
   PluginRoute,
 } from "@dockstat/typings"
-import type { DBPluginShemaT, Plugin } from "@dockstat/typings/types"
+import type { DBPluginShemaT, Plugin, PluginMetaType, RepoType } from "@dockstat/typings/types"
+import { repo, retry } from "@dockstat/utils"
+import { hashString } from "@dockstat/utils/src/string"
 import {
   type ExecutionContext,
   FrontendActionsHandler,
@@ -22,18 +24,20 @@ import {
   type PluginFrontendRoutes,
   type ResolvedFrontendRoute,
 } from "./frontend"
+import type { CompareResult } from "./types"
 
 class PluginHandler {
   private loadedPluginsMap = new Map<number, Plugin>()
   private pluginServerHooks = new Map<number, { table: QueryBuilder; logger: Logger }>()
   private DB: DB
   private table: QueryBuilder<DBPluginShemaT>
+  private repositories: QueryBuilder<RepoType>
   private logger: Logger
   private frontendHandler: PluginFrontendHandler
   private actionsHandler: FrontendActionsHandler
 
-  constructor(db: DB, loggerParents: string[] = []) {
-    this.logger = new Logger("PluginHandler", loggerParents)
+  constructor(db: DB, logger: Logger) {
+    this.logger = logger
     this.logger.debug("Initializing...")
 
     this.DB = db
@@ -52,7 +56,7 @@ class PluginHandler {
         repository: column.text({ notNull: true }),
         manifest: column.text({ notNull: true }),
         author: column.json({ notNull: true }),
-        plugin: column.text(),
+        plugin: column.text({ notNull: true }),
       },
       {
         ifNotExists: true,
@@ -62,9 +66,12 @@ class PluginHandler {
       }
     )
 
+    this.logger.debug("Loading repo Table")
+    this.repositories = this.DB.table<RepoType>("repositories")
+
     // Initialize frontend handler
     this.frontendHandler = new PluginFrontendHandler({
-      basePathPrefix: "/plugins",
+      basePathPrefix: "/p",
       logger: this.logger.spawn("Frontend"),
     })
 
@@ -91,18 +98,171 @@ class PluginHandler {
       .all()
   }
 
-  public savePlugin(plugin: DBPluginShemaT, update?: boolean) {
-    try {
-      if (update) {
-        this.logger.info(`Updating Plugin ${plugin.name}`)
-        this.unloadPlugin(Number(plugin.id))
-        this.deletePlugin(Number(plugin.id))
-        this.savePlugin(plugin, false)
-        return {
-          success: true,
-          message: "Plugin saved successfully",
-        }
+  private async verifyPlugin(plugin: PluginMetaType) {
+    this.logger.info(`Verifiying ${plugin.name}`)
+    const repo = this.repositories.select(["*"]).where({ source: plugin.repository }).get()
+
+    if (!repo || !repo.verification_api) {
+      return 0
+    }
+
+    const metaString = plugin.description + plugin.repository
+    this.logger.debug(`Hashing string: ${metaString} + ${plugin.version}`)
+    const sourceHash = await hashString(
+      (metaString + plugin.version).replaceAll("\n", ":::").replaceAll(" ", "/x/")
+    )
+
+    const res = await fetch(new URL(`${repo.verification_api}/api/compare`), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        pluginName: plugin.name,
+        pluginHash: sourceHash,
+        pluginVersion: plugin.version,
+      }),
+    })
+
+    const response = (await res.json()) as CompareResult
+
+    if (response.verified) {
+      this.logger.debug("Plugin has been verified, checking security status")
+
+      if (response.securityStatus === "safe") {
+        return true
+      } else if (response.securityStatus === "unsafe") {
+        return false
       }
+
+      if (repo.policy === "relaxed") {
+        this.logger.debug("Repo is set to relaxed, unknown status is accepted")
+        return true
+      }
+
+      const msg = "Plugin status unknown"
+      this.logger.debug(msg)
+      return msg
+    } else {
+      const msg = "Plugin hasn't been verified yet"
+      this.logger.debug(msg)
+      if (repo.policy === "relaxed") {
+        this.logger.debug("Repo is set to relaxed, unverified status is accepted")
+        return true
+      }
+      return msg
+    }
+  }
+
+  public async savePlugin(plugin: DBPluginShemaT, update?: boolean) {
+    // Check for duplicates (skip during updates)
+    if (!update && this.isDuplicatePlugin(plugin.name)) {
+      return { success: false, message: "Plugin is already installed!" }
+    }
+
+    // Ensure plugin bundle is available
+    const bundleResult = await this.ensurePluginBundle(plugin)
+    if (!bundleResult.success) {
+      return bundleResult
+    }
+
+    // Verify plugin safety
+    const verificationResult = await this.checkPluginSafety(plugin)
+    if (!verificationResult.success) {
+      return verificationResult
+    }
+
+    // Handle update vs new installation
+    if (update) {
+      return this.updateExistingPlugin(plugin)
+    }
+
+    let loadedPlugin = false
+
+    const res = this.insertNewPlugin(plugin)
+    if (res.id) {
+      try {
+        await this.loadPlugin(res.id)
+        loadedPlugin = true
+      } catch (err) {
+        loadedPlugin = false
+        this.logger.error(
+          `Could not load plugin on save ${err instanceof Error ? err.message : String(err)}`
+        )
+      }
+    }
+
+    return { ...res, message: `${res.message} - loaded plugin: ${loadedPlugin}` }
+  }
+
+  private isDuplicatePlugin(name: string): boolean {
+    return this.getAll()
+      .flatMap((i) => i.name)
+      .includes(name)
+  }
+
+  private async ensurePluginBundle(plugin: DBPluginShemaT) {
+    if (plugin.plugin.length > 10) {
+      return { success: true }
+    }
+
+    try {
+      this.logger.info(`Plugin ${plugin.name} has no bundle, fetching...`)
+      plugin.plugin = await retry(
+        () => repo.getPluginBundle(plugin.repoType, `${plugin.repository}/${plugin.manifest}`),
+        { attempts: 3, delay: 2000 }
+      )
+      return { success: true }
+    } catch (error) {
+      return {
+        success: false,
+        message: `Failed to fetch plugin bundle: ${error instanceof Error ? error.message : String(error)}`,
+      }
+    }
+  }
+
+  private async checkPluginSafety(plugin: DBPluginShemaT) {
+    const verificationRes = await this.verifyPlugin(plugin)
+
+    if (verificationRes === 0) {
+      this.logger.debug("No verification endpoint found; continuing")
+      return { success: true }
+    }
+
+    if (verificationRes === true) {
+      this.logger.info(`Plugin ${plugin.name} is safe!`)
+      return { success: true }
+    }
+
+    // Handle failure cases
+    const errorMessages = {
+      "Plugin hasn't been verified yet": "Plugin hasn't been verified yet",
+      "Plugin status unknown": "Plugin status unknown",
+      false: "Plugin is not safe! Aborting installation",
+    }
+
+    const message =
+      errorMessages[verificationRes as keyof typeof errorMessages] || "Plugin verification failed"
+
+    return { success: false, message }
+  }
+
+  private updateExistingPlugin(plugin: DBPluginShemaT) {
+    this.logger.info(`Updating Plugin ${plugin.name}`)
+    this.unloadPlugin(Number(plugin.id))
+    const delRes = this.deletePlugin(Number(plugin.id))
+
+    if (delRes.success === false) {
+      return delRes
+    }
+
+    const res = this.insertNewPlugin(plugin)
+    res.id && this.loadPlugin(res.id)
+    return res
+  }
+
+  private insertNewPlugin(plugin: DBPluginShemaT) {
+    try {
       this.logger.debug(`Saving Plugin ${plugin.name} to DB`)
       const res = this.table.insert(plugin)
       this.logger.debug(`Plugin ${plugin.name} saved`)
@@ -126,9 +286,12 @@ class PluginHandler {
     try {
       this.table.where({ id: id }).delete()
       this.logger.info(`Deleted Plugin: ${id}`)
+
+      const unloaded = this.unloadPlugin(id)
+
       return {
         success: true,
-        message: "Deleted Plugin",
+        message: unloaded ? "Deleted and unloaded Plugin" : "Delete plugin; couldn't unload",
       }
     } catch (error: unknown) {
       this.logger.error(`Could not delete Plugin: ${id} - ${error}`)
@@ -164,8 +327,13 @@ class PluginHandler {
   }
 
   public async loadAllPlugins() {
+    this.logger.info("Loading all plugins")
     const plugins = this.table.select(["*"]).all()
     const loadedPlugins = this.loadedPluginsMap
+
+    this.logger.debug(
+      `Found ${plugins.length} Plugins in DB & ${loadedPlugins.size} already loaded`
+    )
 
     const validPlugins = plugins.filter((p): p is DBPluginShemaT => {
       if (loadedPlugins.get(p.id as number)) {
@@ -178,11 +346,12 @@ class PluginHandler {
 
     const imports = await Promise.allSettled(
       validPlugins.map(async (plugin) => {
-        const tempPath = join(tmpdir(), `/dockstat-plugins/plugin-${plugin.id}-${Date.now()}.js`)
-        this.logger.debug(`Writing plugin ${plugin.id} to ${tempPath}`)
+        let blobUrl: string | null = null
         try {
-          await Bun.write(tempPath, plugin.plugin)
-          const { default: mod } = await import(/* @vite-ignore */ tempPath)
+          const blob = new Blob([plugin.plugin], { type: "text/javascript" })
+          blobUrl = URL.createObjectURL(blob)
+
+          const { default: mod } = await import(/* @vite-ignore */ blobUrl)
 
           mod.id = plugin.id as number
 
@@ -221,7 +390,9 @@ class PluginHandler {
           this.logger.error(`Failed to import plugin ${plugin.id}: ${err}`)
           return null
         } finally {
-          await unlink(tempPath).catch(() => {})
+          if (blobUrl) {
+            URL.revokeObjectURL(blobUrl)
+          }
         }
       })
     )
@@ -241,6 +412,29 @@ class PluginHandler {
 
   public getServerHooks(id: number) {
     return this.pluginServerHooks.get(id)
+  }
+
+  public async unloadPlugins(ids: number[]) {
+    this.logger.debug(`Unloading plugins: ${ids}`)
+    const successes: number[] = []
+    const errors: { pluginId: number; error: string }[] = []
+    let step = 0
+
+    for (const id of ids) {
+      ++step
+      try {
+        this.unloadPlugin(id)
+        successes.push(id)
+      } catch (error: unknown) {
+        const msg = `Could not unload ${id} - ${error}`
+        this.logger.error(msg)
+        errors.push({ pluginId: id, error: msg })
+      }
+    }
+
+    this.logger.info(`Done with ${step}/${ids.length}`)
+
+    return { errors, successes }
   }
 
   public unloadAllPlugins() {

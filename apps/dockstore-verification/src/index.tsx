@@ -1,4 +1,5 @@
 import { Html, html } from "@elysiajs/html"
+import openapi from "@elysiajs/openapi"
 import { staticPlugin } from "@elysiajs/static"
 import { Elysia } from "elysia"
 import BaseLogger from "./base-logger"
@@ -36,6 +37,13 @@ const authConfig: Partial<AuthConfig> = {
 const app = new Elysia()
   // HTML plugin for JSX support
   .use(html())
+
+  .use(
+    openapi({
+      path: "/docs",
+      provider: "scalar",
+    })
+  )
 
   // Static file serving
   .use(

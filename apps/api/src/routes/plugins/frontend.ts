@@ -1,15 +1,37 @@
 import Elysia, { t } from "elysia"
+import { PluginModel } from "../../models/plugins"
 import PluginHandler from "../../plugins"
 
 const DockStatAPIFrontendPluginRoutes = new Elysia({
   detail: { tags: ["Frontend"] },
   prefix: "/frontend",
 })
-  .get("/routes", () => PluginHandler.getAllFrontendRoutes(), {
-    detail: {
-      description: "Get all frontend routes from loaded plugins",
+  .get(
+    "/routes",
+    ({ status }) => {
+      const data: typeof PluginModel.pathItems.static = {} as typeof PluginModel.pathItems.static
+
+      for (const route of PluginHandler.getAllFrontendRoutes()) {
+        data[route.pluginName] = {
+          pluginName: route.pluginName,
+          paths: [
+            ...((data[route.pluginName] || { paths: [] }).paths || []),
+            { fullPath: route.fullPath, metaTitle: route.meta?.title || "Unknown" },
+          ],
+        }
+      }
+
+      return status(200, Object.values(data))
     },
-  })
+    {
+      detail: {
+        description: "Get all frontend routes from loaded plugins",
+      },
+      response: {
+        200: t.Array(PluginModel.singlePathItem),
+      },
+    }
+  )
   .get("/routes/by-plugin", () => PluginHandler.getFrontendRoutesByPlugin(), {
     detail: {
       description: "Get frontend routes grouped by plugin",

@@ -1,7 +1,7 @@
 import type { DatabaseModel } from "../models/database"
 import { DockStatDB } from "."
 
-export function updateConfig(config: DatabaseModel.updateBody) {
+export function updateConfig(config: typeof DatabaseModel.updateBody.static) {
   const updateRes = DockStatDB.configTable
     .where({
       id: 0,

@@ -1,16 +1,8 @@
 import { Database, type SQLQueryBindings } from "bun:sqlite"
+import { Logger } from "@dockstat/logger"
 import { QueryBuilder } from "./query-builder/index"
 import type { ColumnDefinition, Parser, TableConstraints, TableOptions, TableSchema } from "./types"
-import { addLoggerParents as addParents, createLogger, logger as sqliteLogger } from "./utils"
-
-// Re-export logger utilities for external use
-export const logger = sqliteLogger
-export const addLoggerParents = addParents
-
-// Internal loggers for different components
-const dbLog = createLogger("db")
-const backupLog = createLogger("backup")
-const tableLog = createLogger("table")
+import { createLogger, type SqliteLogger } from "./utils"
 
 /**
  * Re-export all types and utilities
@@ -92,6 +84,10 @@ class DB {
   protected dbPath: string
   private autoBackupTimer: ReturnType<typeof setInterval> | null = null
   private autoBackupOptions: AutoBackupOptions | null = null
+  private baseLogger: Logger
+  private dbLog: SqliteLogger
+  private backupLog: SqliteLogger
+  private tableLog: SqliteLogger
 
   /**
    * Open or create a SQLite database at `path`.
@@ -99,8 +95,20 @@ class DB {
    * @param path - Path to the SQLite file (e.g. "app.db"). Use ":memory:" for in-memory DB.
    * @param options - Optional database configuration
    */
-  constructor(path: string, options?: DBOptions) {
-    dbLog.connection(path, "open")
+  constructor(path: string, options?: DBOptions, baseLogger?: Logger) {
+    if (!baseLogger) {
+      this.baseLogger = new Logger("Sqlite-Wrapper")
+    } else {
+      this.baseLogger = baseLogger
+    }
+
+    // Wire base logger so sqlite-wrapper logs inherit the same LogHook/parents as the consumer.
+    this.dbLog = createLogger("DB", this.baseLogger)
+    this.backupLog = createLogger("Backup", this.baseLogger)
+    this.tableLog = createLogger("Table", this.baseLogger)
+
+    this.dbLog.connection(path, "open")
+
     this.dbPath = path
     this.db = new Database(path)
 
@@ -129,8 +137,7 @@ class DB {
    */
   private setupAutoBackup(options: AutoBackupOptions): void {
     if (this.dbPath === ":memory:") {
-      backupLog.warn("Auto-backup is not available for in-memory databases")
-      return
+      this.backupLog.warn("Auto-backup is not available for in-memory databases")
     }
 
     this.autoBackupOptions = {
@@ -146,7 +153,7 @@ class DB {
     const fs = require("node:fs")
     if (!fs.existsSync(this.autoBackupOptions.directory)) {
       fs.mkdirSync(this.autoBackupOptions.directory, { recursive: true })
-      backupLog.info(`Created backup directory: ${this.autoBackupOptions.directory}`)
+      this.backupLog.info(`Created backup directory: ${this.autoBackupOptions.directory}`)
     }
 
     // Create initial backup
@@ -157,7 +164,7 @@ class DB {
       this.backup()
     }, this.autoBackupOptions.intervalMs)
 
-    backupLog.info(
+    this.backupLog.info(
       `Auto-backup enabled: interval=${this.autoBackupOptions.intervalMs}ms, maxBackups=${this.autoBackupOptions.maxBackups}`
     )
   }
@@ -194,7 +201,7 @@ class DB {
     // Use SQLite's backup API via VACUUM INTO for a consistent backup
     try {
       this.db.run(`VACUUM INTO '${backupPath.replace(/'/g, "''")}'`)
-      backupLog.backup("create", backupPath)
+      this.backupLog.backup("create", backupPath)
 
       // Apply retention policy if auto-backup is enabled
       if (this.autoBackupOptions) {
@@ -203,7 +210,7 @@ class DB {
 
       return backupPath
     } catch (error) {
-      backupLog.error(`Failed to create backup: ${error}`)
+      this.backupLog.error(`Failed to create backup: ${error}`)
       throw error
     }
   }
@@ -238,12 +245,12 @@ class DB {
         const toDelete = files.slice(maxBackups)
         for (const file of toDelete) {
           fs.unlinkSync(file.path)
-          backupLog.debug(`Removed old backup: ${file.name}`)
+          this.backupLog.debug(`Removed old backup: ${file.name}`)
         }
-        backupLog.info(`Retention policy applied: removed ${toDelete.length} old backup(s)`)
+        this.backupLog.info(`Retention policy applied: removed ${toDelete.length} old backup(s)`)
       }
     } catch (error) {
-      backupLog.error(`Failed to apply retention policy: ${error}`)
+      this.backupLog.error(`Failed to apply retention policy: ${error}`)
     }
   }
 
@@ -254,7 +261,8 @@ class DB {
    */
   listBackups(): Array<{ filename: string; path: string; size: number; created: Date }> {
     if (!this.autoBackupOptions) {
-      backupLog.warn("Auto-backup is not configured. Use backup() with a custom path instead.")
+      this.backupLog.warn("Auto-backup is not configured. Use backup() with a custom path instead.")
+
       return []
     }
 
@@ -282,7 +290,7 @@ class DB {
           (a: { created: Date }, b: { created: Date }) => b.created.getTime() - a.created.getTime()
         )
     } catch (error) {
-      backupLog.error(`Failed to list backups: ${error}`)
+      this.backupLog.error(`Failed to list backups: ${error}`)
       return []
     }
   }
@@ -313,15 +321,15 @@ class DB {
 
     try {
       fs.copyFileSync(backupPath, restorePath)
-      backupLog.backup("restore", backupPath)
+      this.backupLog.backup("restore", backupPath)
 
       // Reopen database if we closed it
       if (restorePath === this.dbPath) {
         this.db = new Database(this.dbPath)
-        dbLog.info("Database connection reopened after restore")
+        this.dbLog.info("Database connection reopened after restore")
       }
     } catch (error) {
-      backupLog.error(`Failed to restore backup: ${error}`)
+      this.backupLog.error(`Failed to restore backup: ${error}`)
       throw error
     }
   }
@@ -333,7 +341,7 @@ class DB {
     if (this.autoBackupTimer) {
       clearInterval(this.autoBackupTimer)
       this.autoBackupTimer = null
-      backupLog.info("Auto-backup stopped")
+      this.backupLog.info("Auto-backup stopped")
     }
   }
 
@@ -350,7 +358,7 @@ class DB {
    */
   table<T extends Record<string, unknown>>(
     tableName: string,
-    parser: Partial<Parser<T>>
+    parser: Partial<Parser<T>> = {}
   ): QueryBuilder<T> {
     const pObj: Parser<T> = {
       JSON: parser.JSON || [],
@@ -358,8 +366,8 @@ class DB {
       BOOLEAN: parser.BOOLEAN || [],
     }
 
-    tableLog.debug(`Creating QueryBuilder for: ${tableName}`)
-    return new QueryBuilder<T>(this.db, tableName, pObj)
+    this.tableLog.debug(`Creating QueryBuilder for: ${tableName}`)
+    return new QueryBuilder<T>(this.db, tableName, pObj, this.baseLogger)
   }
 
   /**
@@ -367,7 +375,7 @@ class DB {
    * Also stops auto-backup if it's running.
    */
   close(): void {
-    dbLog.connection(this.dbPath, "close")
+    this.dbLog.connection(this.dbPath, "close")
     this.stopAutoBackup()
     this.db.close()
   }
@@ -521,7 +529,7 @@ class DB {
     const allDefinitions = [columnDefs, ...tableConstraints].join(", ")
 
     const columnNames = Object.keys(columns)
-    tableLog.tableCreate(tableName, columnNames)
+    this.tableLog.tableCreate(tableName, columnNames)
 
     const sql = `CREATE ${temp}TABLE ${ifNot}${quoteIdent(
       tableName
@@ -564,7 +572,11 @@ class DB {
       BOOLEAN: mergedBoolean,
     }
 
-    tableLog.parserConfig(pObj.JSON.map(String), pObj.BOOLEAN.map(String), Object.keys(pObj.MODULE))
+    this.tableLog.parserConfig(
+      pObj.JSON.map(String),
+      pObj.BOOLEAN.map(String),
+      Object.keys(pObj.MODULE)
+    )
 
     return this.table<_T>(tableName, pObj)
   }
@@ -883,7 +895,7 @@ class DB {
       stmt.run(tableName, comment)
     } catch (error) {
       // Silently ignore if we can't create metadata table
-      logger.warn(`Could not store table comment for ${tableName}: ${error}`)
+      this.tableLog.warn(`Could not store table comment for ${tableName}: ${error}`)
     }
   }
 
@@ -906,7 +918,7 @@ class DB {
    * runute a raw SQL statement
    */
   run(sql: string): void {
-    logger.debug(`runuting SQL: ${sql}`)
+    this.tableLog.debug(`Running SQL: ${sql}`)
     this.db.run(sql)
   }
 
@@ -936,7 +948,7 @@ class DB {
    * Commit a transaction
    */
   commit(): void {
-    dbLog.transaction("commit")
+    this.dbLog.transaction("commit")
     this.run("COMMIT")
   }
 
@@ -944,7 +956,7 @@ class DB {
    * Rollback a transaction
    */
   rollback(): void {
-    dbLog.transaction("rollback")
+    this.dbLog.transaction("rollback")
     this.run("ROLLBACK")
   }
 
@@ -977,7 +989,7 @@ class DB {
    */
   vacuum() {
     const result = this.db.run("VACUUM")
-    dbLog.debug("Vacuum completed")
+    this.dbLog.debug("Vacuum completed")
     return result
   }
 

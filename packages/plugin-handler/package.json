@@ -13,6 +13,7 @@
   "dependencies": {
     "@dockstat/typings": "workspace:*",
     "@dockstat/logger": "workspace:*",
+    "@dockstat/utils": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*"
   },
   "devDependencies": {

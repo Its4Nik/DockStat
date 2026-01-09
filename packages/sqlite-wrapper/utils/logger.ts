@@ -1,4 +1,4 @@
-import { Logger } from "@dockstat/logger"
+import { Logger, type LogHook } from "@dockstat/logger"
 
 /**
  * Centralized logging for sqlite-wrapper
@@ -31,8 +31,18 @@ export class SqliteLogger {
   private logger: Logger
   private tableName?: string
 
-  constructor(name: string, parent?: Logger, tableName?: string) {
-    this.logger = parent ? parent.spawn(name) : new Logger(name)
+  constructor(name: string, parent?: Logger, tableName?: string, logHook?: LogHook) {
+    try {
+      if (parent && typeof parent.spawn === "function") {
+        this.logger = parent.spawn(name)
+      } else {
+        this.logger = new Logger(name, [], logHook)
+      }
+    } catch (error) {
+      this.logger = new Logger(name, [], logHook)
+      console.error(error)
+    }
+
     this.tableName = tableName
   }
 
@@ -173,12 +183,37 @@ export const logger = new SqliteLogger("Sqlite")
 /**
  * Create a new logger for a specific module
  */
-export function createLogger(name: string): SqliteLogger {
+export function createLogger(name: string, baseLogger?: Logger): SqliteLogger {
+  // If a base logger is provided (recommended for apps/packages that want shared LogHook/parents),
+  // derive a sqlite-scoped child logger from it.
+  if (baseLogger) return new SqliteLogger(name, baseLogger)
+
+  // Fallback to the package-level logger (works, but won't automatically inherit app hooks)
   return logger.child(name)
 }
 
 export function addLoggerParents(parents: string[]): void {
   logger.addParents(parents)
+}
+
+/**
+ * Configure a shared LogHook for sqlite-wrapper's root logger.
+ *
+ * Useful when consumers (e.g. `apps/api`, `packages/db`) want sqlite-wrapper logs
+ * to be routed through the same sink/formatter as the rest of the app.
+ */
+export function setSqliteLogHook(logHook: LogHook): void {
+  logger.getBaseLogger().setLogHook(logHook)
+}
+
+/**
+ * Optional convenience for consumers: create a sqlite-scoped base Logger that shares a LogHook.
+ *
+ * This is handy if you want to pass a base logger into `createLogger()` / `DB` and have
+ * everything inherit the same hook.
+ */
+export function createSqliteBaseLogger(logHook?: LogHook): Logger {
+  return new Logger("Sqlite", [], logHook)
 }
 
 export default logger

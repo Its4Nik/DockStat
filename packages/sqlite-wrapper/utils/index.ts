@@ -8,8 +8,10 @@
 export {
   addLoggerParents,
   createLogger,
+  createSqliteBaseLogger,
   logger,
   SqliteLogger,
+  setSqliteLogHook,
 } from "./logger"
 
 // SQL utilities

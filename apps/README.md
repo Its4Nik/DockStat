@@ -4,49 +4,73 @@ This directory contains all the applications in the Dockstat monorepo.
 
 ## 🏗️ Application Overview
 
+### `api`
+
+**Backend Server** - Tying all elements of the DockStat Monorepo together
+
+**Features:**
+
+- Bun native runtime
+- ElysiaJS
+- Scalar API docs (available at `/api/v2/docs`)
+  - OpenAPI Spec sheet at `/api/v2/docs/json`
+- Websocket support
+
 ### `dockstat`
-**Frontend Application** - React Router SPA
+
+**Frontend Application** - React + React Router (Declarative mode)
 
 The main user interface for Docker container monitoring and management. Built with React Router for client-side routing and modern React patterns.
 
 **Features:**
+
 - Real-time Docker container statistics
 - Container management interface
 - Theme support
+- Plugins
 - Responsive design with TailwindCSS
 
 **Tech Stack:**
-- React Router v7
+
+- React Router v7 (Declarative)
 - TypeScript
 - TailwindCSS
 - Bun runtime
+- Framer motion
 
 ### `dockstore`
+
 **Community Hub** - Themes, Stacks & Plugins
 
 A curated repository of Docker Compose templates, themes, and plugins for the Dockstat ecosystem.
 
 **Features:**
+
 - Pre-built Docker Compose templates
 - Community-contributed themes
 - Plugin marketplace
 - Easy integration with DockStat
 
-**Included Templates:**
-- AdGuardHome, Bookstack, Gitea
-- Grafana, Heimdall, Home Assistant
-- Nginx Proxy Manager, PiHole
-- Uptime Kuma, Tianji, and more
+### `dockstore-verification`
+
+**Verification for Plugins**
+
+If a verifiation API is provided for a Repository, then all plugins will get compared against "trusted" packages. Each plugin version has to be manually approved.
+
+**Features**
+
+- Verification of Plugin versions
 
 ### `docs`
+
 **Documentation Sync** - Outline Wiki Integration
 
 Contains documentation files and sync configuration for bi-directional synchronization with Outline Wiki.
 
 **Structure:**
+
 - `docs/` - Markdown documentation files
-- `pages.json` - Outline sync manifest
-- `sync.sh` - Sync script
+- `outline-sync.config.json` - Outline sync manifest
 
 ## 🚀 Development
 
@@ -61,25 +85,13 @@ cd apps/dockstat && bun run dev
 cd apps/dockstore && bun run dev
 ```
 
-## 📦 Building
-
-Build all applications:
-
-```bash
-# From root
-bun run build
-
-# Or build individually
-cd apps/dockstat && bun run build
-cd apps/dockstore && bun run build
-```
-
 ## 🔧 Configuration
 
 Each application has its own:
+
 - `package.json` with app-specific dependencies
 - `tsconfig.json` extending the base configuration
-- Application-specific configuration files
+- Application-specific configuration files (.env)
 
 ## 📁 Adding New Applications
 
@@ -104,9 +116,9 @@ Each application has its own:
 Applications can use shared packages:
 
 ```typescript
-import { BaseConfig } from '@dockstat/typings';
-import { Database } from '@dockstat/db';
-import { SQLiteWrapper } from '@dockstat/sqlite-wrapper';
+import { DOCKER } from "@dockstat/typings";
+import { Database } from "@dockstat/db";
+import { SQLiteWrapper } from "@dockstat/sqlite-wrapper";
 ```
 
 ## 📄 Documentation

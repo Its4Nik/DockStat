@@ -4,7 +4,9 @@ import BaseLogger from "../logger"
 
 const PluginHandler = new PluginHandlerFactory(
   DockStatDB._sqliteWrapper,
-  BaseLogger.getParentsForLoggerChaining()
+  BaseLogger.spawn("PluginHandler")
 )
+
+await PluginHandler.loadAllPlugins()
 
 export default PluginHandler

@@ -12,13 +12,17 @@ logger.info(`Initializing verification database at ${DB_PATH}`)
 /**
  * Database instance - initialized once at module load
  */
-export const db = new DB(DB_PATH, {
-  pragmas: [
-    ["journal_mode", "WAL"],
-    ["foreign_keys", "ON"],
-    ["synchronous", "NORMAL"],
-  ],
-})
+export const db = new DB(
+  DB_PATH,
+  {
+    pragmas: [
+      ["journal_mode", "WAL"],
+      ["foreign_keys", "ON"],
+      ["synchronous", "NORMAL"],
+    ],
+  },
+  logger
+)
 
 // Create repositories table
 db.createTable<Repository>(

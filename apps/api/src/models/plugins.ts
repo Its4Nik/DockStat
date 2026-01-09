@@ -10,5 +10,12 @@ export namespace PluginModel {
     successes: t.Array(t.Number()),
   })
 
+  export const singlePathItem = t.Object({
+    pluginName: t.String(),
+    paths: t.Array(t.Object({ fullPath: t.String(), metaTitle: t.String() })),
+  })
+
+  export const pathItems = t.Record(t.String(), singlePathItem)
+
   export const deletePluginBody = t.Object({ pluginId: t.Number() })
 }

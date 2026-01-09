@@ -1,4 +1,4 @@
-import Elysia from "elysia"
+import Elysia, { t } from "elysia"
 import { PluginModel } from "../../models/plugins"
 import PluginHandler from "../../plugins"
 import DockStatAPIFrontendPluginRoutes from "./frontend"
@@ -30,12 +30,17 @@ const PluginRoutes = new Elysia({
     body: PluginModel.installPluginBody,
   })
   .post(
-    "/activate",
+    "/loadPlugins",
     async ({ body, status }) => status(200, await PluginHandler.loadPlugins(body)),
     {
       body: PluginModel.activatePluginBody,
       responses: { 200: PluginModel.activatePluginRes },
     }
+  )
+  .post(
+    "/unloadPlugins",
+    async ({ status, body }) => status(200, await PluginHandler.unloadPlugins(body.ids)),
+    { body: t.Object({ ids: t.Array(t.Number()) }) }
   )
   .post("/delete", ({ body }) => PluginHandler.deletePlugin(body.pluginId), {
     body: PluginModel.deletePluginBody,

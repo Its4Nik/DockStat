@@ -4,7 +4,7 @@ import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DockStatConfigTableType, RepoType } from "@dockstat/typings/types"
 import BaseLogger from "../logger"
 
-const InitialDockStatDB = new DBFactory("DB", BaseLogger.getParentsForLoggerChaining())
+const InitialDockStatDB = new DBFactory("DB", BaseLogger)
 
 export const DockStatDB: {
   _sqliteWrapper: DB
@@ -19,3 +19,15 @@ export const DockStatDB: {
   repositoriesTable: InitialDockStatDB.getRepositoriesTable(),
   metricsTable: InitialDockStatDB.getMetricsTable(),
 }
+
+process.on("SIGINT", () => {
+  BaseLogger.info("Shutting down...")
+  InitialDockStatDB.close()
+  process.exit(0)
+})
+
+process.on("SIGTERM", () => {
+  BaseLogger.info("Shutting down...")
+  InitialDockStatDB.close()
+  process.exit(0)
+})

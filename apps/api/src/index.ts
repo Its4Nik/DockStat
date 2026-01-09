@@ -1,6 +1,7 @@
 import Elysia from "elysia"
 import DockStatElysiaPlugins from "./elysia-plugins"
 import { errorHandler } from "./handlers/onError"
+import RequestLogger from "./handlers/requestLogger"
 import BaseLogger from "./logger"
 import MetricsMiddleware from "./middleware/metrics"
 import DBRoutes from "./routes/db"
@@ -14,6 +15,7 @@ import DockStatWebsockets from "./websockets"
 const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 
 export const DockStatAPI = new Elysia({ prefix: "/api/v2" })
+  .use(RequestLogger)
   .use(MetricsMiddleware)
   .use(DockStatElysiaPlugins)
   .use(errorHandler)

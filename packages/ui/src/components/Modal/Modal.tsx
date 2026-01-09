@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "../Button/Button"
 import { Card, CardBody, CardFooter, CardHeader } from "../Card/Card"
+import { backdropVariants, glassModalVariants, modalVariants } from "./variants"
 
 export type ModalSize = "sm" | "md" | "lg" | "xl" | "full"
 
@@ -14,6 +15,7 @@ export interface ModalProps {
   children?: React.ReactNode
   bodyClasses?: string
   size?: ModalSize
+  transparent?: boolean
 }
 
 const sizeClasses: Record<ModalSize, string> = {
@@ -24,39 +26,6 @@ const sizeClasses: Record<ModalSize, string> = {
   full: "max-w-[90vw]",
 }
 
-const backdropVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1 },
-  exit: { opacity: 0 },
-} as const
-
-const modalVariants = {
-  hidden: {
-    opacity: 0,
-    scale: 0.95,
-    y: 10,
-  },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    y: 0,
-    transition: {
-      type: "spring" as const,
-      stiffness: 300,
-      damping: 25,
-    },
-  },
-  exit: {
-    opacity: 0,
-    scale: 0.95,
-    y: 10,
-    transition: {
-      duration: 0.15,
-      ease: "easeOut" as const,
-    },
-  },
-}
-
 export const Modal: React.FC<ModalProps> = ({
   open,
   onClose,
@@ -64,6 +33,7 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   footer,
   bodyClasses,
+  transparent = false,
   size = "md",
 }) => {
   // client-only portal container
@@ -122,9 +92,10 @@ export const Modal: React.FC<ModalProps> = ({
   }
 
   return createPortal(
-    <AnimatePresence mode="wait">
+    <AnimatePresence>
       {open && (
         <motion.div
+          key="modal-backdrop"
           role="dialog"
           aria-modal="true"
           aria-labelledby={title ? "modal-title" : undefined}
@@ -135,16 +106,23 @@ export const Modal: React.FC<ModalProps> = ({
           initial="hidden"
           animate="visible"
           exit="exit"
-          transition={{ duration: 0.2 }}
+          // transition={{ duration: 0.2 }}
         >
           <motion.div
-            className={`${sizeClasses[size]} w-full max-h-[90vh] px-4`}
-            variants={modalVariants}
+            key="modal-content"
+            className={`${sizeClasses[size]} w-full max-h-[90vh] mx-4 rounded-lg`}
+            variants={transparent ? glassModalVariants : modalVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
+            onClick={(e) => e.stopPropagation()}
+            style={{ willChange: "opacity, transform" }}
+            //transition={{ duration: 0.2 }}
           >
-            <Card className="w-full shadow-lg cursor-default flex flex-col max-h-[90vh] overflow-hidden">
+            <Card
+              glass={transparent || false}
+              className={`w-full shadow-lg cursor-default flex flex-col max-h-[90vh] overflow-hidden`}
+            >
               {title && <CardHeader className="shrink-0">{title}</CardHeader>}
 
               {/* Make the body scrollable and flexible. Consumers can pass extra body classes via `bodyClasses`. */}

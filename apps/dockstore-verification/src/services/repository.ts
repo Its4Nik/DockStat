@@ -1,7 +1,7 @@
 import type { PluginMetaType } from "@dockstat/typings/types"
+import { hashString } from "@dockstat/utils"
 import { YAML } from "bun"
 import BaseLogger from "../base-logger"
-import { hashString } from "./hash"
 
 const logger = BaseLogger.spawn("Repository-Service")
 
@@ -127,9 +127,11 @@ export async function fetchPluginSource(
   logger.info(`Fetching plugin source: ${plugin.name} v${plugin.version}`)
 
   try {
-    const metaString = JSON.stringify(plugin, null, 2)
-    const sourceHash = await hashString(metaString + plugin.version)
-
+    const metaString = plugin.description + plugin.repository
+    logger.debug(`Hashing string: ${metaString} + ${plugin.version}`)
+    const sourceHash = await hashString(
+      (metaString + plugin.version).replaceAll("\n", ":::").replaceAll(" ", "/x/")
+    )
     return {
       meta: plugin,
       sourceHash,

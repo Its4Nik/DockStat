@@ -1,5 +1,6 @@
-import type { SQLQueryBindings } from "bun:sqlite"
-import type { DeleteResult } from "../types"
+import type { Database, SQLQueryBindings } from "bun:sqlite"
+import type { Logger } from "@dockstat/logger"
+import type { DeleteResult, Parser } from "../types"
 import { createLogger, quoteIdentifier } from "../utils"
 import { SelectQueryBuilder } from "./select"
 
@@ -17,7 +18,12 @@ import { SelectQueryBuilder } from "./select"
  * - Truncate (explicit full-table delete)
  */
 export class DeleteQueryBuilder<T extends Record<string, unknown>> extends SelectQueryBuilder<T> {
-  private deleteLog = createLogger("delete")
+  private deleteLog: ReturnType<typeof createLogger>
+
+  constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger?: Logger) {
+    super(db, tableName, parser, baseLogger)
+    this.deleteLog = createLogger("Delete", baseLogger)
+  }
 
   // ===== Public Delete Methods =====
 

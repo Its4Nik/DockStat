@@ -1,3 +1,4 @@
+import { heapStats, memoryUsage } from "bun:jsc"
 import type { Database } from "bun:sqlite"
 import type { Elysia } from "elysia"
 import { DockStatDB } from "../../database"
@@ -161,33 +162,27 @@ const MetricsMiddleware = (app: Elysia) => {
       {
         as: "global",
       },
-      ({ store, request }) => {
+      ({ store, headers }) => {
         store.startTime = performance.now()
-        logger.debug(
-          `Started performance tracking`,
-          request.headers.get("x-dockstatapi-requestid") ?? undefined
-        )
+        logger.debug(`Started performance tracking`, headers["x-dockstatapi-reqid"])
       }
     )
-    .onAfterHandle(
+    .onAfterResponse(
       {
         as: "global",
       },
-      ({ request, responseValue, store }) => {
+      ({ request, responseValue, store, headers }) => {
         const duration = performance.now() - (store.startTime || 0)
         const method = request.method
         const path = new URL(request.url).pathname
 
         logger.debug(
           `[${method}] Took ${Math.round(duration)}ms on ${path}`,
-          request.headers.get("x-dockstatapi-requestid") ?? undefined
+          headers["x-dockstatapi-reqid"] ?? undefined
         )
 
         if (path === "/api/metrics") {
-          logger.debug(
-            `Skipped path: ${path}`,
-            request.headers.get("x-dockstatapi-requestid") ?? undefined
-          )
+          logger.debug(`Skipped path: ${path}`, headers["x-dockstatapi-reqid"] ?? undefined)
         } else {
           // ---- SESSION METRICS ----
           metrics.totalRequests++
@@ -218,14 +213,15 @@ const MetricsMiddleware = (app: Elysia) => {
           savePersistedMetrics()
         }
 
-        logger.debug("Tracked metrics", request.headers.get("x-dockstatapi-requestid") ?? undefined)
+        logger.debug("Tracked metrics", headers["x-dockstatapi-reqid"] ?? undefined)
+        logger.info("Request finished", headers["x-dockstatapi-reqid"] ?? undefined)
       }
     )
     .onError(
       {
         as: "global",
       },
-      ({ store, request }) => {
+      ({ store, headers, error }) => {
         const duration = performance.now() - (store.startTime || 0)
 
         // Session metrics
@@ -237,7 +233,21 @@ const MetricsMiddleware = (app: Elysia) => {
         trackDuration(persistedMetrics.requestDurations, duration)
         savePersistedMetrics()
 
-        logger.debug("Tracked Error", request.headers.get("x-dockstatapi-requestid") ?? undefined)
+        // Better error serialization to handle Error objects properly
+        const errorDetails =
+          error instanceof Error
+            ? {
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+                cause: error.cause,
+              }
+            : error
+
+        logger.error(
+          `Tracked Error: ${JSON.stringify(errorDetails, null, 2)}`,
+          headers["x-dockstatapi-reqid"]
+        )
       }
     )
 }
@@ -655,15 +665,16 @@ export function formatPrometheusMetrics(db: Database) {
 
   // ---------- PROCESS METRICS ----------
 
-  const memUsage = process.memoryUsage()
+  const memUsage = memoryUsage().current
+  const heap = heapStats()
 
   families.push({
-    name: "process_memory_rss_bytes",
-    help: "Process resident memory in bytes",
+    name: "process_memory_bytes",
+    help: "Current process memory in bytes",
     type: "gauge",
     samples: [
       {
-        value: memUsage.rss,
+        value: memUsage,
         timestamp,
       },
     ],
@@ -675,7 +686,7 @@ export function formatPrometheusMetrics(db: Database) {
     type: "gauge",
     samples: [
       {
-        value: memUsage.heapUsed,
+        value: heap.heapSize,
         timestamp,
       },
     ],
@@ -687,7 +698,7 @@ export function formatPrometheusMetrics(db: Database) {
     type: "gauge",
     samples: [
       {
-        value: memUsage.heapTotal,
+        value: heap.heapCapacity,
         timestamp,
       },
     ],
@@ -699,7 +710,7 @@ export function formatPrometheusMetrics(db: Database) {
     type: "counter",
     samples: [
       {
-        value: Number(Math.floor(process.uptime()).toFixed(2)),
+        value: Number(Math.floor(Bun.nanoseconds()).toFixed(2)),
         timestamp,
       },
     ],

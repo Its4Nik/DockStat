@@ -165,8 +165,12 @@ export function VerificationCard({
         {/* Plugin Info */}
         <div class="flex-1">
           <div class="flex items-center gap-3 mb-2">
-            <h3 class="text-lg font-semibold text-white">{plugin.plugin_name}</h3>
-            <code class="text-sm bg-gray-800 px-2 py-0.5 rounded">v{plugin.version}</code>
+            <h3 class="text-lg font-semibold text-white" safe>
+              {plugin.plugin_name}
+            </h3>
+            <code class="text-sm bg-gray-800 px-2 py-0.5 rounded" safe>
+              v{plugin.version}
+            </code>
             <span
               class={`badge ${
                 plugin.repo_type === "github"
@@ -175,26 +179,36 @@ export function VerificationCard({
                     ? "bg-orange-600 text-white"
                     : "bg-blue-600 text-white"
               }`}
+              safe
             >
               {plugin.repo_type.charAt(0).toUpperCase() + plugin.repo_type.slice(1)}
             </span>
             {isHighlighted && <span class="badge bg-blue-600 text-white">Selected</span>}
           </div>
-          <p class="text-sm text-gray-400 mb-4">{plugin.description}</p>
+          <p class="text-sm text-gray-400 mb-4" safe>
+            {plugin.description}
+          </p>
 
           {/* Meta Grid */}
           <div class="grid grid-cols-2 gap-4 text-sm mb-4">
             <div>
               <span class="text-gray-500">Author:</span>
-              <span class="ml-2 text-gray-300">{plugin.author_name}</span>
+              <span class="ml-2 text-gray-300" safe>
+                {plugin.author_name}
+              </span>
             </div>
             <div>
               <span class="text-gray-500">License:</span>
-              <span class="ml-2 text-gray-300">{plugin.license}</span>
+              <span class="ml-2 text-gray-300" safe>
+                {plugin.license}
+              </span>
             </div>
             <div class="col-span-2">
               <span class="text-gray-500">Hash:</span>
-              <code class="ml-2 text-xs bg-gray-800 px-2 py-1 rounded font-mono text-green-400">
+              <code
+                class="ml-2 text-xs bg-gray-800 px-2 py-1 rounded font-mono text-green-400"
+                safe
+              >
                 {plugin.version_hash}
               </code>
             </div>

@@ -9,12 +9,12 @@ interface TableHeaderProps<T> {
 
 function TableHeaderInner<T>({ columns, size }: TableHeaderProps<T>): React.ReactElement {
   return (
-    <thead className="bg-gray-50 sticky top-0 z-10">
+    <thead className="bg-table-head-bg sticky top-0 z-10">
       <tr>
         {columns.map((column) => (
           <th
             key={String(column.key)}
-            className={`${SIZE_CLASSES[size]} font-semibold text-gray-700 whitespace-nowrap`}
+            className={`${SIZE_CLASSES[size]} font-semibold text-table-head-text whitespace-nowrap`}
             style={{
               width: column.width,
               minWidth: column.minWidth ?? 100,

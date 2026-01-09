@@ -25,14 +25,14 @@ function TableRowInner<T extends Record<string, unknown>>({
     <tr
       style={style}
       className={`
-        ${hoverable ? "transition-colors duration-150 hover:bg-gray-50" : ""}
-        ${striped && index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+        ${hoverable ? "transition-colors duration-150 hover:bg-table-body-hover" : ""}
+        ${striped && index % 2 === 0 ? "bg-table-body-stripe" : "bg-table-body-bg"}
       `}
     >
       {columns.map((column) => (
         <td
           key={String(column.key)}
-          className={`${SIZE_CLASSES[size]} text-gray-900`}
+          className={`${SIZE_CLASSES[size]} text-table-body-text`}
           style={{
             textAlign: column.align ?? "left",
             minWidth: column.minWidth ?? 100,

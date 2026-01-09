@@ -76,3 +76,16 @@ export function escapeHtml(str: string): string {
 
   return str.replace(/[&<>"']/g, (char) => String(htmlEscapes[char]))
 }
+
+/**
+ * Hashes a String using SHA-256.
+ * @param content - The string to escape
+ * @returns Promise<Hash of the content>
+ */
+export async function hashString(content: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(content)
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+}

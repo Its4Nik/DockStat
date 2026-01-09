@@ -1,3 +1,4 @@
+import { heapStats } from "bun:jsc"
 import type Logger from "@dockstat/logger"
 import type PluginHandler from "@dockstat/plugin-handler"
 import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
@@ -384,17 +385,14 @@ export class DockerClientManagerCore {
       const messageHandler = (event: MessageEvent) => {
         const raw = event.data
 
-        // Skip internal worker messages (init, metrics)
         if (isInternalWorkerMessage(raw)) {
           return
         }
 
-        // Skip proxy event messages - these are handled by attachEventListener
         if (isProxyEventEnvelope(raw)) {
           return
         }
 
-        // Skip messages that don't match our requestId
         if (raw.requestId !== requestId) {
           return
         }
@@ -436,6 +434,11 @@ export class DockerClientManagerCore {
               }
             }
           }
+
+          this.logger.error(
+            `Worker ${clientId} returned error for request ${requestId} (${request.type}): ${errorMessage}`
+          )
+
           wrapper.lastError = errorMessage
           wrapper.errorCount += 1
           reject(new Error(errorMessage))
@@ -475,7 +478,12 @@ export class DockerClientManagerCore {
     return this.workers.get(clientId)
   }
 
-  public getAllClients(all = false): Array<{ id: number; name: string; initialized: boolean }> {
+  public getAllClients(all = false): Array<{
+    id: number
+    name: string
+    options: DOCKER.DockerAdapterOptions
+    initialized: boolean
+  }> {
     const liveMap = new Map<
       number,
       { id: number; name: string; initialized: true; options: DOCKER.DockerAdapterOptions }
@@ -579,11 +587,34 @@ export class DockerClientManagerCore {
 
       if (!message) return
 
+      this.internalListeners(wrapper, message)
       this.triggerHooks(message)
     }
 
     worker.addEventListener("message", listener)
     wrapper.messageListener = listener
+  }
+
+  public internalListeners(wrapper: WorkerWrapper, msg: EventMessage<keyof EVENTS>) {
+    switch (msg.type) {
+      case "host:added": {
+        const hostId = (msg.ctx as Parameters<EVENTS[typeof msg.type]>[0]).hostId
+        this.logger.debug(
+          `Received ${msg.type} - adding host to Set: wrapper.hostIds.add(${hostId})`
+        )
+        wrapper.hostIds.add(hostId)
+        break
+      }
+
+      case "host:removed": {
+        const hostId = (msg.ctx as Parameters<EVENTS[typeof msg.type]>[0]).hostId
+        this.logger.debug(
+          `Received ${msg.type} - deleting host from Set: wrapper.hostIds.delete(${hostId})`
+        )
+        wrapper.hostIds.delete(hostId)
+        break
+      }
+    }
   }
 
   public listenForEvents({ eventType, clientId }: { clientId?: string; eventType: keyof EVENTS }) {
@@ -611,8 +642,6 @@ export class DockerClientManagerCore {
     this.logger.debug(
       `Triggering hooks for event "${String(message.type)} - ctx: ${truncate(JSON.stringify(message.ctx), 100)}"`
     )
-
-    this.logger.debug(`${this.events.size} Events registered`)
 
     for (const [id, hooks] of this.events.entries()) {
       const serverHooks = this.pluginHandler.getServerHooks(id)
@@ -712,7 +741,7 @@ export class DockerClientManagerCore {
         hasMonitoringManager,
         isMonitoring,
         options: this.table.select(["options"]).where({ id: wrapper.clientId }).first()?.options,
-        memoryUsage: process.memoryUsage(),
+        memoryUsage: heapStats(),
         uptime: Date.now() - wrapper.createdAt,
       }
 
@@ -764,7 +793,7 @@ export class DockerClientManagerCore {
       activeStreams: 0,
       hasMonitoringManager,
       isMonitoring,
-      memoryUsage: process.memoryUsage(),
+      memoryUsage: heapStats(),
       uptime: Date.now() - wrapper.createdAt,
     }
   }

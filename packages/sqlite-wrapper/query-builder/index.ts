@@ -1,4 +1,5 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
+import type { Logger } from "@dockstat/logger"
 import type {
   ColumnNames,
   DeleteResult,
@@ -32,12 +33,12 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
   private updateBuilder: UpdateQueryBuilder<T>
   private deleteBuilder: DeleteQueryBuilder<T>
 
-  constructor(db: Database, tableName: string, parser: Parser<T>) {
+  constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger?: Logger) {
     // Create instances of each specialized builder
-    this.selectBuilder = new SelectQueryBuilder<T>(db, tableName, parser)
-    this.insertBuilder = new InsertQueryBuilder<T>(db, tableName, parser)
-    this.updateBuilder = new UpdateQueryBuilder<T>(db, tableName, parser)
-    this.deleteBuilder = new DeleteQueryBuilder<T>(db, tableName, parser)
+    this.selectBuilder = new SelectQueryBuilder<T>(db, tableName, parser, baseLogger)
+    this.insertBuilder = new InsertQueryBuilder<T>(db, tableName, parser, baseLogger)
+    this.updateBuilder = new UpdateQueryBuilder<T>(db, tableName, parser, baseLogger)
+    this.deleteBuilder = new DeleteQueryBuilder<T>(db, tableName, parser, baseLogger)
 
     // Ensure all builders share the same state for WHERE conditions
     this.syncBuilderStates()

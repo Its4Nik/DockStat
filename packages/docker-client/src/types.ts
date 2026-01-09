@@ -1,3 +1,4 @@
+import type { HeapStats } from "bun:jsc"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
 
 export type WorkerRequestBase = {
@@ -108,12 +109,7 @@ export interface WorkerMetrics {
   hasMonitoringManager: boolean
   isMonitoring: boolean
   initialized: boolean
-  memoryUsage?: {
-    rss: number
-    heapTotal: number
-    heapUsed: number
-    external: number
-  }
+  memoryUsage: HeapStats
   options?: DOCKER.DockerAdapterOptions
   uptime: number
 }
