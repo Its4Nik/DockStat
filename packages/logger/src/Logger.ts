@@ -44,6 +44,7 @@ class Logger {
   }
 
   spawn(prefix: string, additionalParents?: string[]) {
+    this.debug(`Spawned ${prefix}`)
     return new Logger(
       prefix,
       [this.name, ...(additionalParents || []), ...this.parents],

@@ -246,7 +246,7 @@ const MetricsMiddleware = (app: Elysia) => {
 
         logger.error(
           `Tracked Error: ${JSON.stringify(errorDetails, null, 2)}`,
-          headers["x-dockstatapi-reqid"]
+          headers["x-dockstatapi-reqid"] || undefined
         )
       }
     )

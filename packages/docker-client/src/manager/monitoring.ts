@@ -10,7 +10,7 @@ export class Monitoring extends DockerClientManagerCore {
     return this.sendRequest(clientId, { type: "stopMonitoring" })
   }
 
-  public async isMonitoring(clientId: number): Promise<boolean> {
+  public override async isMonitoring(clientId: number): Promise<boolean> {
     const res = await this.sendRequest(clientId, { type: "isMonitoring" })
 
     return res === true
@@ -54,7 +54,7 @@ export class Monitoring extends DockerClientManagerCore {
     })
   }
 
-  public async hasMonitoringManager(clientId: number): Promise<boolean> {
+  public override async hasMonitoringManager(clientId: number): Promise<boolean> {
     const res = await this.sendRequest(clientId, { type: "hasMonitoringManager" })
     return res === true
   }

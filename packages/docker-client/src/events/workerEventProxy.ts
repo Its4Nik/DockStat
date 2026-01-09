@@ -3,17 +3,22 @@ import type { EVENTS } from "@dockstat/typings"
 import type { ProxyEventMessage } from "@dockstat/typings/types"
 import { worker } from "@dockstat/utils"
 
-declare var self: Worker
+declare const self: Worker
 
 const logger = new Logger("DEP")
 
+/**
+ * Proxies events originating inside a Worker back to the Docker Client Manager (host thread).
+ * This keeps worker <-> host communication consistent and typed.
+ */
 export function proxyEvent<K extends keyof EVENTS>(
   eventType: K,
   ctx: Omit<Parameters<EVENTS[K]>[0], "logger">,
   additionalDockerClientCtx?: Parameters<EVENTS[K]>[1]
 ) {
-  logger.info(`Proxying Event (${eventType}) to DCM`)
+  logger.info(`Proxying Event (${String(eventType)}) to DCM`)
 
+  // Structured logging for errors to aid debugging
   if (eventType === "error") {
     const errorCtx = ctx as Error | string
     if (errorCtx instanceof Error) {
@@ -35,6 +40,7 @@ export function proxyEvent<K extends keyof EVENTS>(
     }
   }
 
+  // Send a normalized proxy envelope to the host
   self.postMessage({
     type: "__event__",
     data: worker.buildMessage.buildMessageData(
