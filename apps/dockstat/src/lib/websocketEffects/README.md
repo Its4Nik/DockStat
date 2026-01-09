@@ -3,7 +3,7 @@ id: aab7cefb-b84b-4be9-8840-a873b69c6850
 title: "Frontend: Websockets"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: a81b5d89-a300-47ac-8ffa-a3b851645978
-updatedAt: 2026-01-01T14:28:14.767Z
+updatedAt: 2026-01-01T20:39:33.079Z
 urlId: vcQwuQaPn0
 ---
 
