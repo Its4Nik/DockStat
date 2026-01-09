@@ -1,10 +1,11 @@
-import { applyMixins } from "./_mixin"
+import { applyMixins } from "../shared/mixin"
 import { Containers } from "./containers"
 import { DockerClientManagerCore } from "./core"
 import { Hosts } from "./hosts"
 import { Images } from "./images"
 import { Monitoring } from "./monitoring"
 import { Networks } from "./networks"
+import { Streams } from "./stream"
 import { System } from "./system"
 import { Volumes } from "./volumes"
 
@@ -16,7 +17,8 @@ const DCM = applyMixins(
   Networks,
   Volumes,
   System,
-  Monitoring
+  Monitoring,
+  Streams
 )
 
 export default DCM

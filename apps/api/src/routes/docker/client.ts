@@ -17,8 +17,6 @@ export const DockerClientElysia = new Elysia({
     "/register",
     async ({ status, body }) => {
       try {
-        console.log("Registering client:", body.clientName, body.options)
-
         const res = (await DCM.registerClient(
           body.clientName,
           body.options || undefined
