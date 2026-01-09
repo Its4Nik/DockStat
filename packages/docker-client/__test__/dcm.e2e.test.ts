@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import Logger from "@dockstat/logger"
-import DB from "@dockstat/sqlite-wrapper"
 import type PluginHandler from "@dockstat/plugin-handler"
+import DB from "@dockstat/sqlite-wrapper"
 import DCM from "../src/manager/index"
 
 const DOCKER_HOST = "127.0.0.1"

@@ -2,8 +2,8 @@ import Logger from "@dockstat/logger"
 import DB from "@dockstat/sqlite-wrapper"
 import type { DOCKER } from "@dockstat/typings"
 import DockerClient, { type DockerClientInstance } from "./client"
-import type { WorkerRequest, WorkerResponse } from "./shared/types"
 import { proxyEvent } from "./events/workerEventProxy"
+import type { WorkerRequest, WorkerResponse } from "./shared/types"
 
 declare const self: Worker
 

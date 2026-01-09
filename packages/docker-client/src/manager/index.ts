@@ -5,9 +5,9 @@ import { Hosts } from "./hosts"
 import { Images } from "./images"
 import { Monitoring } from "./monitoring"
 import { Networks } from "./networks"
+import { Streams } from "./stream"
 import { System } from "./system"
 import { Volumes } from "./volumes"
-import { Streams } from "./stream"
 
 const DCM = applyMixins(
   DockerClientManagerCore,
