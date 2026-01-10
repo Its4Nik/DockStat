@@ -1,25 +1,15 @@
 import Logger from "@dockstat/logger"
 import DB from "@dockstat/sqlite-wrapper"
-import type { DOCKER } from "@dockstat/typings"
 import DockerClient, { type DockerClientInstance } from "./client"
 import { proxyEvent } from "./events/workerEventProxy"
 import type { WorkerRequest, WorkerResponse } from "./shared/types"
+import type { InboundMessage } from "./shared/worker"
+
+const WorkerLogger = new Logger("DCW", [], (entry) => {
+  proxyEvent("__log__", entry)
+})
 
 declare const self: Worker
-
-type InitMessage = {
-  type: "__init__"
-  dbPath: string
-  clientId: number
-  clientName: string
-  options: DOCKER.DockerAdapterOptions
-}
-
-type MetricsMessage = {
-  type: "__get_metrics__"
-}
-
-type InboundMessage = WorkerRequest | InitMessage | MetricsMessage
 
 let client: DockerClientInstance | null = null
 let clientId = -1
@@ -40,7 +30,7 @@ self.onmessage = async (event: MessageEvent<InboundMessage>) => {
       clientId = Number(msg.clientId)
       clientName = msg.clientName
 
-      const logger = new Logger(`DockerClient-${clientId}`)
+      const logger = WorkerLogger.spawn(`DC-${clientId}`)
       client = new DockerClient(clientId, clientName, db, msg.options, logger)
 
       // Initialize with whatever is already in the host table; explicit init with hosts can come later.

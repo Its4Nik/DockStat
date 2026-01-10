@@ -4,7 +4,6 @@ import type PluginHandler from "@dockstat/plugin-handler"
 import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DOCKER, EVENTS } from "@dockstat/typings"
 import type { buildMessageFromProxyRes } from "@dockstat/typings/types"
-import { truncate, worker as workerUtils } from "@dockstat/utils"
 
 import type { PoolMetrics, WorkerMetrics, WorkerRequest } from "../shared/types"
 
@@ -17,6 +16,9 @@ import type {
 } from "./types"
 import { isInitCompleteMessage, looksLikeEventMessage } from "./types"
 import { sendWorkerMessage } from "./utils/sendWorkerMessage"
+import type { LogEntry } from "@dockstat/logger"
+import { tryBuildFromProxy } from "./utils/buildFromProxy"
+import { truncate } from "@dockstat/utils"
 
 export class DockerClientManagerCore {
   readonly table: DockerClientTableQuery
@@ -238,7 +240,7 @@ export class DockerClientManagerCore {
 
       this.workers.set(clientId, wrapper)
 
-      // Persistent plugin event listener
+      // Persistent event listener
       this.attachEventListener(wrapper)
 
       // Initialize worker
@@ -268,6 +270,10 @@ export class DockerClientManagerCore {
       const initHandler = (event: MessageEvent) => {
         const message = event.data
 
+        if (message?.type === "__event__") {
+          return
+        }
+
         this.logger.debug(`Init handler received: ${JSON.stringify(message)}`)
 
         if (!isInitCompleteMessage(message)) {
@@ -277,12 +283,12 @@ export class DockerClientManagerCore {
         clearTimeout(timeoutId)
         wrapper.worker.removeEventListener("message", initHandler)
 
-        if (message.success) {
+        if (message) {
           wrapper.initialized = true
           this.logger.info(`Worker ${clientId} initialized successfully`)
           resolve()
         } else {
-          wrapper.lastError = message.error ?? "Unknown init error"
+          wrapper.lastError = (message as { error: string }).error ?? "Unknown init error"
           wrapper.errorCount += 1
 
           try {
@@ -292,7 +298,9 @@ export class DockerClientManagerCore {
           }
           this.workers.delete(clientId)
 
-          reject(new Error(`Worker init failed: ${message.error ?? "unknown"}`))
+          reject(
+            new Error(`Worker init failed: ${(message as { error: string }).error ?? "unknown"}`)
+          )
         }
       }
 
@@ -492,13 +500,6 @@ export class DockerClientManagerCore {
 
     const { worker } = wrapper
 
-    const tryBuildFromProxy = (payload: unknown): EventMessage<keyof EVENTS> | null => {
-      const message = workerUtils.buildMessage.tryBuildMessageFromProxy(payload)
-      if (!message) return null
-
-      return message
-    }
-
     const listener = (event: MessageEvent) => {
       const payload = event.data
 
@@ -506,7 +507,10 @@ export class DockerClientManagerCore {
         ? payload
         : tryBuildFromProxy(payload)
 
-      if (!message) return
+      if (!message) {
+        this.logger.debug(`No message! ${JSON.stringify(payload)}`)
+        return null
+      }
 
       this.internalListeners(wrapper, message)
       this.triggerHooks(message)
@@ -535,6 +539,13 @@ export class DockerClientManagerCore {
         wrapper.hostIds.delete(hostId)
         break
       }
+
+      case "__log__": {
+        const { level, message, caller, name, parents, timestamp }: LogEntry =
+          msg.ctx as Parameters<EVENTS[typeof msg.type]>[0]
+
+        this.logger.emitLogEntry(level, message, { caller, name, parents, timestamp })
+      }
     }
   }
 
@@ -557,6 +568,10 @@ export class DockerClientManagerCore {
 
   readonly triggerHooks = <K extends keyof EVENTS>(message: buildMessageFromProxyRes<K>) => {
     if (!message.type) {
+      return
+    }
+
+    if (message.type === "__log__") {
       return
     }
 

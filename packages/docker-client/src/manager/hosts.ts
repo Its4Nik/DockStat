@@ -1,5 +1,6 @@
 import type { DATABASE } from "@dockstat/typings"
 import { DockerClientManagerCore } from "./core"
+import { truncate } from "@dockstat/utils"
 
 export class Hosts extends DockerClientManagerCore {
   public async init(clientId: number, hosts?: DATABASE.DB_target_host[]): Promise<void> {
@@ -95,7 +96,7 @@ export class Hosts extends DockerClientManagerCore {
   public override async getAllHosts() {
     this.logger.debug("Getting all hosts")
     const clients = this.getAllClients()
-    this.logger.debug(`Clients: ${JSON.stringify(clients)}`)
+    this.logger.debug(`Clients: ${truncate(JSON.stringify(clients), 100)}`)
 
     try {
       const allClientHosts = await Promise.all(

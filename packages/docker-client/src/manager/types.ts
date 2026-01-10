@@ -108,12 +108,13 @@ export const looksLikeEventMessage = (payload: unknown): payload is EventMessage
   const p = payload as Record<string, unknown>
   // Must have a 'type' property to be an event message
   // Worker responses have {success, data/error} but no 'type'
-  return (
+  const isEventMsg =
     typeof payload === "object" &&
     payload !== null &&
     typeof p.type === "string" &&
     typeof p.ctx === "object"
-  )
+
+  return isEventMsg
 }
 
 // For convenience in mixins

@@ -228,20 +228,38 @@ export function Sidebar({
                     hoverable
                     searchable
                     columns={[
-                      { key: "name", title: "Logger Name" },
-                      { key: "level", title: "Level" },
+                      {
+                        key: "name",
+                        title: "Logger Name",
+                        align: "center",
+                        render: (reqId) => reqId && <Badge rounded>{String(reqId)}</Badge>,
+                      },
+                      {
+                        key: "level",
+                        align: "center",
+                        title: "Level",
+                        render: (level) =>
+                          level && (
+                            <span
+                              className={`${level === "info" ? "text-accent" : level === "debug" ? "text-muted-text" : level === "error" ? "text-error" : "text-orange-400"}`}
+                            >
+                              {String(level)}
+                            </span>
+                          ),
+                      },
                       { key: "message", title: "Log Message" },
                       {
                         key: "requestId",
                         title: "RequestID",
+                        align: "center",
                         render: (reqId) => reqId && <Badge unique>{String(reqId)}</Badge>,
                       },
-                      { key: "caller", title: "Caller" },
+                      { key: "caller", title: "Caller", align: "center" },
                       { key: "parents", title: "Parents" },
                       {
                         key: "timestamp",
                         title: "Timestamp",
-                        render: (date) => <span>{formatDate(date as Date, "datetime")}</span>,
+                        render: (date) => <span>{formatDate(date as Date, "log")}</span>,
                       },
                     ]}
                     data={logEntries}
