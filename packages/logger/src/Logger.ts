@@ -29,16 +29,26 @@ class Logger {
     this.logHook = hook
   }
 
-  private emitLogEntry(level: LogLevel, message: string, requestId?: string) {
+  public emitLogEntry(
+    level: LogLevel,
+    message: string,
+    meta?: {
+      requestId?: string
+      parents?: string[]
+      name?: string
+      caller?: string
+      timestamp?: Date
+    }
+  ) {
     if (this.logHook) {
       this.logHook({
         level,
         message,
-        name: this.name,
-        parents: this.parents,
-        requestId,
-        timestamp: new Date(),
-        caller: getCallerInfo(),
+        name: meta?.name || this.name,
+        parents: meta?.parents || this.parents,
+        requestId: meta?.requestId,
+        timestamp: meta?.timestamp || new Date(),
+        caller: meta?.caller || getCallerInfo(),
       })
     }
   }
@@ -52,31 +62,31 @@ class Logger {
     )
   }
 
-  error(msg: string, requestid?: string) {
+  error(msg: string, requestId?: string) {
     if (!this.disabled && !shouldIgnore(msg, ignoreMessages) && shouldLog("error")) {
-      console.error(this.formatMessage("error", msg, requestid))
-      this.emitLogEntry("error", msg, requestid)
+      console.error(this.formatMessage("error", msg, requestId))
+      this.emitLogEntry("error", msg, { requestId })
     }
   }
 
-  warn(msg: string, requestid?: string) {
+  warn(msg: string, requestId?: string) {
     if (!this.disabled && !shouldIgnore(msg, ignoreMessages) && shouldLog("warn")) {
-      console.warn(this.formatMessage("warn", msg, requestid))
-      this.emitLogEntry("warn", msg, requestid)
+      console.warn(this.formatMessage("warn", msg, requestId))
+      this.emitLogEntry("warn", msg, { requestId })
     }
   }
 
-  info(msg: string, requestid?: string) {
+  info(msg: string, requestId?: string) {
     if (!this.disabled && !shouldIgnore(msg, ignoreMessages) && shouldLog("info")) {
-      console.info(this.formatMessage("info", msg, requestid))
-      this.emitLogEntry("info", msg, requestid)
+      console.info(this.formatMessage("info", msg, requestId))
+      this.emitLogEntry("info", msg, { requestId })
     }
   }
 
-  debug(msg: string, requestid?: string) {
+  debug(msg: string, requestId?: string) {
     if (!this.disabled && !shouldIgnore(msg, ignoreMessages) && shouldLog("debug")) {
-      console.debug(this.formatMessage("debug", msg, requestid))
-      this.emitLogEntry("debug", msg, requestid)
+      console.debug(this.formatMessage("debug", msg, requestId))
+      this.emitLogEntry("debug", msg, { requestId })
     }
   }
 
@@ -113,6 +123,7 @@ class Logger {
     const timestamp = chalk.magenta(new Date().toISOString().slice(11, 19))
     const levelTag = levelColors[level](level.toUpperCase().padEnd(5, " "))
     const callerInfo = chalk.blue(getCallerInfo())
+    const hook = chalk.green("—>")
 
     const nameChain =
       this.parents.length > 0
@@ -127,8 +138,10 @@ class Logger {
       requestTag = chalk.gray(`(${coloredId}${displayFrom ? `@${chalk.green(displayFrom)}` : ""}) `)
     }
 
+    const hasHook = typeof this.logHook === "function"
+
     const prefix = `${timestamp} ${levelTag} ${requestTag}[${nameChain}] ${callerInfo}`
-    return `${prefix} — ${chalk.grey(message)}`
+    return `${prefix} ${hasHook ? hook : "—"} ${chalk.grey(message)}`
   }
 }
 

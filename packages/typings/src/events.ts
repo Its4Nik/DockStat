@@ -2,7 +2,23 @@ import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DockerClientEvents } from "./docker-client"
 import type { DockerStreamManagerProxy } from "./docker-monitoring-manager"
 
-type BaseEvents = DockerClientEvents & DockerStreamManagerProxy
+export type LogLevel = "error" | "warn" | "info" | "debug"
+
+export type LogEntry = {
+  level: LogLevel
+  message: string
+  name: string
+  parents: string[]
+  requestId?: string
+  timestamp: Date
+  caller: string
+}
+
+type workerLoggerResponse = {
+  __log__: (ctx: LogEntry) => void
+}
+
+type BaseEvents = DockerClientEvents & DockerStreamManagerProxy & workerLoggerResponse
 
 type ExtentWithExtraObject<E, ExtraArgs extends Record<string, unknown>> = {
   [K in keyof E]: E[K] extends (...args: infer A) => void
