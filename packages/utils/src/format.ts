@@ -87,32 +87,42 @@ export function formatPercent(num: number, decimals = 0): string {
  */
 export function formatDate(
   date: Date,
-  format: "short" | "long" | "time" | "datetime" | "iso" = "short"
+  format: "short" | "long" | "time" | "datetime" | "iso" | "log" = "short"
 ): string {
   switch (format) {
     case "short":
-      return new Intl.DateTimeFormat("en-US", {
-        month: "numeric",
+      return new Intl.DateTimeFormat("de-DE", {
         day: "numeric",
+        month: "numeric",
         year: "2-digit",
       }).format(date)
 
+    case "log": {
+      const base = new Intl.DateTimeFormat("de-DE", {
+        hour12: false,
+        minute: "2-digit",
+        hour: "2-digit",
+      }).format(date)
+
+      return `${base}.${new Intl.DateTimeFormat("de-DE", { second: "2-digit" }).format(date)}`
+    }
+
     case "long":
-      return new Intl.DateTimeFormat("en-US", {
+      return new Intl.DateTimeFormat("de-DE", {
         month: "long",
         day: "numeric",
         year: "numeric",
       }).format(date)
 
     case "time":
-      return new Intl.DateTimeFormat("en-US", {
+      return new Intl.DateTimeFormat("de-DE", {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
       }).format(date)
 
     case "datetime":
-      return new Intl.DateTimeFormat("en-US", {
+      return new Intl.DateTimeFormat("de-DE", {
         month: "short",
         day: "numeric",
         year: "numeric",
