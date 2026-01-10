@@ -40,7 +40,4 @@ type ServerEvents<T extends Record<string, unknown> = Record<string, unknown>> =
 }
 
 export type EVENTS<Table extends Record<string, unknown> = Record<string, unknown>> =
-  ExtentWithExtraObject<
-    ExtentWithExtraObject<BaseEvents, ServerEvents<Table>>,
-    workerLoggerResponse
-  >
+  ExtentWithExtraObject<BaseEvents, ServerEvents<Table>>

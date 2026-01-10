@@ -232,7 +232,8 @@ export function Sidebar({
                         key: "name",
                         title: "Logger Name",
                         align: "center",
-                        render: (reqId) => reqId && <Badge rounded>{String(reqId)}</Badge>,
+                        render: (loggerName) =>
+                          loggerName && <Badge rounded>{String(loggerName)}</Badge>,
                       },
                       {
                         key: "level",

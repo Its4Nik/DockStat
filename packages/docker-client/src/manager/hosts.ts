@@ -1,6 +1,6 @@
 import type { DATABASE } from "@dockstat/typings"
-import { DockerClientManagerCore } from "./core"
 import { truncate } from "@dockstat/utils"
+import { DockerClientManagerCore } from "./core"
 
 export class Hosts extends DockerClientManagerCore {
   public async init(clientId: number, hosts?: DATABASE.DB_target_host[]): Promise<void> {

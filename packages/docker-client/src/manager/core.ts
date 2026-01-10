@@ -1,12 +1,12 @@
 import { heapStats } from "bun:jsc"
 import type Logger from "@dockstat/logger"
+import type { LogEntry } from "@dockstat/logger"
 import type PluginHandler from "@dockstat/plugin-handler"
 import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DOCKER, EVENTS } from "@dockstat/typings"
 import type { buildMessageFromProxyRes } from "@dockstat/typings/types"
-
+import { truncate } from "@dockstat/utils"
 import type { PoolMetrics, WorkerMetrics, WorkerRequest } from "../shared/types"
-
 import type {
   DBType,
   DockerClientTable,
@@ -15,10 +15,8 @@ import type {
   WorkerWrapper,
 } from "./types"
 import { isInitCompleteMessage, looksLikeEventMessage } from "./types"
-import { sendWorkerMessage } from "./utils/sendWorkerMessage"
-import type { LogEntry } from "@dockstat/logger"
 import { tryBuildFromProxy } from "./utils/buildFromProxy"
-import { truncate } from "@dockstat/utils"
+import { sendWorkerMessage } from "./utils/sendWorkerMessage"
 
 export class DockerClientManagerCore {
   readonly table: DockerClientTableQuery
@@ -283,7 +281,7 @@ export class DockerClientManagerCore {
         clearTimeout(timeoutId)
         wrapper.worker.removeEventListener("message", initHandler)
 
-        if (message) {
+        if (message.success) {
           wrapper.initialized = true
           this.logger.info(`Worker ${clientId} initialized successfully`)
           resolve()
@@ -541,10 +539,10 @@ export class DockerClientManagerCore {
       }
 
       case "__log__": {
-        const { level, message, caller, name, parents, timestamp }: LogEntry =
+        const { level, message, caller, name, parents, timestamp, requestId }: LogEntry =
           msg.ctx as Parameters<EVENTS[typeof msg.type]>[0]
 
-        this.logger.emitLogEntry(level, message, { caller, name, parents, timestamp })
+        this.logger.emitLogEntry(level, message, { caller, name, parents, timestamp, requestId })
       }
     }
   }
