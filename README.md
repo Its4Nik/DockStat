@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./.github/DockStat2-04.png" alt="DockStat Logo" />
+  <img src="./.github/assets/logos/withText-white.png" alt="DockStat Logo" />
 </p>
 
 <p align="center">
