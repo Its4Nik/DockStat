@@ -1,7 +1,7 @@
 import type { RepoType } from "@dockstat/typings/types"
-import { Button, Card, CardHeader, LinkWithIcon, RepoIcons, Badge, Divider } from "@dockstat/ui"
+import { Badge, Button, Card, CardHeader, Divider, LinkWithIcon, RepoIcons } from "@dockstat/ui"
 import { repo } from "@dockstat/utils"
-import { ShieldCheck, ShieldAlert, ShieldX, Trash2, ExternalLink } from "lucide-react"
+import { ExternalLink, ShieldAlert, ShieldCheck, ShieldX, Trash2 } from "lucide-react"
 import { useEdenMutation } from "@/hooks/useEdenMutation"
 import { api } from "@/lib/api"
 

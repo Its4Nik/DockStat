@@ -1,10 +1,10 @@
 import { heapStats, memoryUsage } from "bun:jsc"
 import type { Database } from "bun:sqlite"
+import { truncate } from "@dockstat/utils"
 import type { Elysia } from "elysia"
 import { DockStatDB } from "../../database"
 import BaseLogger from "../../logger"
 import { type MetricFamily, renderPrometheusMetrics } from "./prometheus"
-import { truncate } from "@dockstat/utils"
 
 /**
  * In-memory metrics (current server session)
