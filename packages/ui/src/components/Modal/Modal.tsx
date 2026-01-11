@@ -95,7 +95,7 @@ export const Modal: React.FC<ModalProps> = ({
     <AnimatePresence>
       {open && (
         <motion.div
-          key="modal-backdrop"
+          key={`modal-backdrop-${Math.random()}`}
           role="dialog"
           aria-modal="true"
           aria-labelledby={title ? "modal-title" : undefined}

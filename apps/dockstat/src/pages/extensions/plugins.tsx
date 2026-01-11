@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Divider, Input, LinkWithIcon, Modal } from "@dockstat/ui"
+import { Badge, Button, Card, Divider, Input, LinkWithIcon, Modal, Select } from "@dockstat/ui"
 import { repo } from "@dockstat/utils"
 import { Link } from "lucide-react"
 import { useMemo, useState } from "react"
@@ -90,7 +90,7 @@ export default function PluginBrowser() {
 
     return plugins.filter(
       (p) =>
-        (selectedRepo === "all" || p.repository === selectedRepo) &&
+        (selectedRepo === "all" || p.repository.toLowerCase() === selectedRepo) &&
         (searchQuery === "" ||
           p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -108,18 +108,16 @@ export default function PluginBrowser() {
           onChange={(e) => setSearchQuery(e)}
           className="flex-1 px-4 py-2 border rounded"
         />
-        <select
-          value={selectedRepo}
-          onChange={(e) => setSelectedRepo(e.target.value)}
-          className="px-4 py-2 border rounded"
-        >
-          <option value="all">All Repositories</option>
-          {allRepos?.map((repo) => (
-            <option key={repo.id} value={repo.source}>
-              {repo.name}
-            </option>
-          ))}
-        </select>
+        <Select
+          className="max-w-[50%]"
+          options={[
+            ...(allRepos || []).map((repo) => {
+              return { value: repo.source, label: repo.name }
+            }),
+            { label: "All", value: "all" },
+          ]}
+          onChange={(value) => setSelectedRepo(value.toLowerCase())}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -139,7 +137,7 @@ export default function PluginBrowser() {
               {plugin.tags && plugin.tags.length > 0 && (
                 <div className="flex gap-2 flex-wrap">
                   {plugin.tags.map((tag) => (
-                    <Badge key={tag} unique>
+                    <Badge key={`${plugin.name}-${plugin.repoSource}-${tag}`} unique>
                       {tag}
                     </Badge>
                   ))}
@@ -211,7 +209,6 @@ export default function PluginBrowser() {
         open={!!selectedPlugin}
         onClose={() => setSelectedPlugin(null)}
         title={selectedPlugin?.name}
-        bodyClasses=""
       >
         {selectedPlugin && (
           <div className="space-y-4 w-60">

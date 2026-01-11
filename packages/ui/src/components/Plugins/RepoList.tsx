@@ -14,7 +14,7 @@ export function RepositoriesList({ repositories }: RepositoriesListProps) {
       <CardBody>
         <div className="space-y-2">
           {repositories.map((repo) => (
-            <Card key={repo} variant="outlined" size="sm">
+            <Card key={"bepis"} variant="outlined" size="sm">
               <Link target="_blank" to={`/api/extensions/proxy/false/github/${repo}`}>
                 <span className="font-mono text-sm">{repo}</span>
               </Link>

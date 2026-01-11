@@ -34,6 +34,10 @@ export {
   type CheckboxSize,
 } from "./Forms/Checkbox"
 export {
+  Select,
+  type SelectProps,
+} from "./Forms/Selection"
+export {
   CheckboxGroup,
   type CheckboxGroupOption,
   type CheckboxGroupProps,

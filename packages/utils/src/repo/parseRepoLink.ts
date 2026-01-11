@@ -21,6 +21,9 @@ export function parseFromDBToRepoLink(
   raw = true
 ) {
   switch (type) {
+    case "default":
+      return source
+
     case "http":
       return source
 

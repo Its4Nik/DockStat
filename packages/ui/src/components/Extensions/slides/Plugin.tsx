@@ -64,7 +64,7 @@ export function RepoPluginSlide({ plugins, installedPlugins }: RepoPluginSlidePr
               <PluginCard
                 isInstalled={isInstalled}
                 canBeUpdated={canBeUpdated}
-                key={`${plugin.name}-${plugin.repository}`}
+                key={`${plugin.name}-${plugin.repository}-${new Date().toTimeString()}`}
                 plugin={plugin}
                 showModal={showModal}
                 setShowModal={setShowModal}

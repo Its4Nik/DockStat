@@ -4,6 +4,7 @@ import type { Elysia } from "elysia"
 import { DockStatDB } from "../../database"
 import BaseLogger from "../../logger"
 import { type MetricFamily, renderPrometheusMetrics } from "./prometheus"
+import { truncate } from "@dockstat/utils"
 
 /**
  * In-memory metrics (current server session)
@@ -245,7 +246,7 @@ const MetricsMiddleware = (app: Elysia) => {
             : error
 
         logger.error(
-          `Tracked Error: ${JSON.stringify(errorDetails, null, 2)}`,
+          `Tracked Error: ${truncate(JSON.stringify(errorDetails), 100)}`,
           headers["x-dockstatapi-reqid"] || undefined
         )
       }

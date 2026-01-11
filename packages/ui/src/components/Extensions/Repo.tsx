@@ -2,14 +2,12 @@ import type { PluginMetaType, RepoType } from "@dockstat/typings/types"
 import {
   Blocks,
   BookTemplate,
-  Check,
   Link,
   Lock,
   LockOpen,
   PaintBucket,
   Puzzle,
   Table,
-  X,
 } from "lucide-react"
 import { useState } from "react"
 import { getRepoIcon } from "../../utils/repoIcons"
@@ -59,7 +57,7 @@ export function Repo({
             <LinkWithIcon
               iconPosition="left"
               external
-              key={repo.source}
+              key={`${repo.source}-${new Date().toString()}`}
               icon={<Link />}
               href={`/api/extensions/proxy/repo/${repo.type}/${repo.source}`}
             >
@@ -89,29 +87,6 @@ export function Repo({
               )}
             </Badge>
 
-            {repo.policy === "strict" ? (
-              <Badge variant={repo.isVerified ? "success" : "error"}>
-                {repo.isVerified ? (
-                  <HoverBubble
-                    position="bottom"
-                    label="Repository is verified.
-
-             This Repository is verified and trusted by the Auth-API"
-                  >
-                    <Check />
-                  </HoverBubble>
-                ) : (
-                  <HoverBubble
-                    position="bottom"
-                    label="This Repository is not verified!
-
-                    You can still download from here, but there will be a warning everytime!"
-                  >
-                    <X />
-                  </HoverBubble>
-                )}
-              </Badge>
-            ) : null}
             <Divider shadow={false} orientation="vertical" className="ml-4 py-4" variant="solid" />
             <Badge className="mx-4">{getRepoIcon(repo.type)}</Badge>
           </div>
