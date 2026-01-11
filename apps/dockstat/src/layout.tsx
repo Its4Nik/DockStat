@@ -1,52 +1,41 @@
-import { pinNavLink, unPinNavLink } from "@Actions"
-import { fetchFrontendPluginRoutes, fetchNavLinks } from "@Queries"
 import { logFeedEffect, rssFeedEffect } from "@WSS"
 import type { LogEntry } from "@dockstat/logger"
 import { Navbar } from "@dockstat/ui"
 import { arrayUtils } from "@dockstat/utils"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useContext, useEffect, useState } from "react"
 import { Toaster } from "sonner"
-import { AdditionalSettingsContext } from "@/contexts/additionalSettings"
+import { ConfigProviderContext } from "@/contexts/config"
 import { PageHeadingContext } from "./contexts/pageHeadingContext"
 import { useGlobalBusy } from "./hooks/useGlobalBusy"
 import { toast } from "./lib/toast"
+import { useEdenMutation } from "./hooks/useEdenMutation"
+import { api } from "./lib/api"
+import { useEdenQuery } from "./hooks/useEdenQuery"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const qc = useQueryClient()
-
   const [ramUsage, setRamUsage] = useState<string>("Connecting...")
   const [logMessage, setLogMessage] = useState<LogEntry>()
   const [logMessagesArr, setlogMessagesArr] = useState<LogEntry[]>([])
 
-  const showRamUsage = useContext(AdditionalSettingsContext).showBackendRamUsageInNavbar
+  const config = useContext(ConfigProviderContext)
   const heading = useContext(PageHeadingContext).heading
   const isBusy = useGlobalBusy()
 
-  const { data: navLinks } = useQuery({
-    queryKey: ["fetchNavLinks"],
-    queryFn: fetchNavLinks,
-  })
-
-  const { data: frontendPluginRoutes } = useQuery({
+  const { data: frontendPluginRoutes } = useEdenQuery({
     queryKey: ["fetchFrontendPluginRoutes"],
-    queryFn: fetchFrontendPluginRoutes,
+    route: api.api.v2.plugins.frontend.routes.get,
   })
 
-  const pinMutation = useMutation({
-    mutationFn: pinNavLink,
+  const pinMutation = useEdenMutation({
     mutationKey: ["pinNavLink"],
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["fetchNavLinks"] })
-    },
+    route: api.api.v2.db.config.pinItem.post,
+    invalidateQueries: [["fetchNavLinks"]],
   })
 
-  const unPinMutation = useMutation({
-    mutationFn: unPinNavLink,
+  const unPinMutation = useEdenMutation({
     mutationKey: ["unPinNavLink"],
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["fetchNavLinks"] })
-    },
+    route: api.api.v2.db.config.unpinItem.post,
+    invalidateQueries: [["fetchNavLinks"]],
   })
 
   useEffect(() => rssFeedEffect(setRamUsage), [])
@@ -79,12 +68,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <Toaster expand position="bottom-right" />
       <Navbar
         isBusy={isBusy}
-        navLinks={navLinks}
+        navLinks={config?.navLinks || []}
         pluginLinks={frontendPluginRoutes || []}
-        ramUsage={showRamUsage ? ramUsage : undefined}
+        ramUsage={config.additionalSettings?.showBackendRamUsageInNavbar ? ramUsage : undefined}
         logEntries={logMessagesArr}
         heading={heading}
-        mutationFn={{ pin: pinMutation, unpin: unPinMutation }}
+        mutationFn={{
+          pin: pinMutation.mutateAsync,
+          unpin: unPinMutation.mutateAsync,
+          isBusy: useGlobalBusy(),
+        }}
       />
       <div className="px-4">{children}</div>
     </div>

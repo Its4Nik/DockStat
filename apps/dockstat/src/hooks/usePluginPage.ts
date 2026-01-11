@@ -1,11 +1,12 @@
 import type { ActionConfig, PageTemplate, TemplateFragment } from "@dockstat/template-renderer"
 import { parseTemplate } from "@dockstat/template-renderer"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router"
 import type { LoaderResult, PluginPageData, ResolvedAction } from "@/components/plugins/id/types"
 import { executePluginAction, executePluginLoader } from "@/lib/actions/plugins"
-import { fetchPluginTemplate } from "@/lib/queries/plugins"
+import { useEdenMutation } from "./useEdenMutation"
+import { api } from "@/lib/api"
 
 function getValueByPath(obj: Record<string, unknown> | undefined, path: string): unknown {
   if (!obj) return undefined
@@ -32,15 +33,18 @@ export function usePluginPage() {
     new Map()
   )
 
+  if (!isValidPluginId) {
+    throw new Error("Not a valid plugin ID!")
+  }
+
   // Fetch plugin template data
   const {
     data: rawData,
-    isLoading,
     error: queryError,
-  } = useQuery({
-    queryKey: ["plugin-template", pluginId, routePath],
-    queryFn: ({ signal }) => fetchPluginTemplate({ signal }, pluginId, routePath),
-    enabled: isValidPluginId,
+    isPending: isLoading,
+  } = useEdenMutation({
+    mutationKey: ["plugin-template", String(pluginId), routePath],
+    route: api.api.v2.plugins.frontend({ pluginId: pluginId }).template.post,
   })
 
   // Normalize the data

@@ -1,14 +1,14 @@
-import { fetchBackendStatus } from "@Queries"
 import { Badge, type BadgeVariant, Card, Divider } from "@dockstat/ui"
-import { useQuery } from "@tanstack/react-query"
 import { usePageHeading } from "@/hooks/useHeading"
+import { useEdenQuery } from "@/hooks/useEdenQuery"
+import { api } from "@/lib/api"
 
 export default function IndexPage() {
   usePageHeading("Home")
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useEdenQuery({
     queryKey: ["fetchBackendStatus"],
-    queryFn: fetchBackendStatus,
+    route: api.api.v2.status.get,
   })
 
   if (isLoading) return <div>Loading...</div>

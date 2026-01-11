@@ -4,8 +4,6 @@
   "includeCollections": ["DockStat"],
   "customPaths": {
     "aab7cefb-b84b-4be9-8840-a873b69c6850": "../../apps/dockstat/src/lib/websocketEffects/README.md",
-    "da3758e1-2d46-4dd5-85c5-eb9d19ee2054": "../../apps/dockstat/src/lib/queries/README.md",
-    "57802308-6a42-4d47-82b6-bc553ae10e9c": "../../apps/dockstat/src/lib/actions/README.md",
     "453740d4-b426-423d-98fc-b36f6dff7644": "../../packages/template-renderer/README.md"
   }
 }

@@ -5,6 +5,7 @@ import ConfigureClientsPage from "./pages/clients/configure"
 import ClientsPage from "./pages/clients/index"
 import PluginBrowser from "./pages/extensions/plugins"
 import PluginIdPage from "./pages/pluginId"
+import ExtensionsIndex from "./pages/extensions"
 
 export default function DockStatRouter() {
   return (
@@ -13,7 +14,7 @@ export default function DockStatRouter() {
       <Route path="/clients" element={<ClientsPage />} />
       <Route path="/clients/configure" element={<ConfigureClientsPage />} />
       <Route path="/p/:pluginId/*" element={<PluginIdPage />} />
-      <Route path="/extensions" />
+      <Route path="/extensions" element={<ExtensionsIndex />} />
       <Route path="/extensions/plugins" element={<PluginBrowser />} />
     </Routes>
   )

@@ -3,7 +3,7 @@ import { NavLink, type NavLinkRenderProps } from "react-router"
 
 export interface LinkWithIconProps {
   href: string
-  children: React.ReactNode
+  children?: React.ReactNode
   icon?: React.ReactNode
   iconPosition?: "left" | "right"
   className?: string

@@ -9,7 +9,6 @@ function parseRepoParts(source: string) {
 
   const parts = branchAndPath?.split("/") || []
   const branch = parts[0]
-  // Fixes potential bug with deep paths by joining remaining segments
   const path = parts.slice(1).join("/")
 
   return { ownerRepo, branch, path }
@@ -18,7 +17,8 @@ function parseRepoParts(source: string) {
 export function parseFromDBToRepoLink(
   type: RepoType["type"],
   source: string,
-  file = "manifest.yaml"
+  file = "manifest.yaml",
+  raw = true
 ) {
   switch (type) {
     case "http":
@@ -26,21 +26,29 @@ export function parseFromDBToRepoLink(
 
     case "github": {
       const { ownerRepo, branch, path } = parseRepoParts(source)
-      return `https://raw.githubusercontent.com/${ownerRepo}/refs/heads/${branch}/${path}/${file}`
+      if (raw) {
+        return `https://raw.githubusercontent.com/${ownerRepo}/refs/heads/${branch}/${path}/${file}`
+      }
+      return `https://github.com/${ownerRepo}/tree/${branch}/${path}`
     }
 
     case "gitlab": {
       const cleanSource = source.replace("gitlab://", "")
       const { ownerRepo, branch, path } = parseRepoParts(cleanSource)
-      return `https://gitlab.com/${ownerRepo}/-/raw/${branch}/${path}/${file}`
+      if (raw) {
+        return `https://gitlab.com/${ownerRepo}/-/raw/${branch}/${path}/${file}`
+      }
+      return `https://gitlab.com/${ownerRepo}/-/tree/${branch}/${path}`
     }
 
     case "gitea": {
       const cleanSource = source.replace("gitea://", "")
       const { ownerRepo, branch, path } = parseRepoParts(cleanSource)
-      // Replace with your specific Gitea domain if needed
       const domain = "gitea.com"
-      return `https://${domain}/${ownerRepo}/raw/branch/${branch}/${path}/${file}`
+      if (raw) {
+        return `https://${domain}/${ownerRepo}/raw/branch/${branch}/${path}/${file}`
+      }
+      return `https://${domain}/${ownerRepo}/src/branch/${branch}/${path}`
     }
 
     default:

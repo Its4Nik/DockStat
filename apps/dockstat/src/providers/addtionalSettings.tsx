@@ -1,12 +1,17 @@
-import { fetchAdditionalSettings } from "@Queries"
-import { useQuery } from "@tanstack/react-query"
-import { AdditionalSettingsContext } from "@/contexts/additionalSettings"
+import { ConfigProviderContext, type ConfigProviderData } from "@/contexts/config"
+import { useEdenQuery } from "@/hooks/useEdenQuery"
+import { api } from "@/lib/api"
 
-export function AdditionalSettingsProvider({ children }: { children: React.ReactNode }) {
-  const { data } = useQuery({
-    queryFn: fetchAdditionalSettings,
-    queryKey: ["fetchAdditionalContext"],
+export function ConfigProvider({ children }: { children: React.ReactNode }) {
+  const { data } = useEdenQuery({
+    queryKey: ["fetchAdditionalSettings"],
+    route: api.api.v2.db.config.get,
   })
 
-  return <AdditionalSettingsContext value={data || {}}>{children}</AdditionalSettingsContext>
+  const pDat: ConfigProviderData = {
+    additionalSettings: data?.addtionalSettings,
+    navLinks: data?.nav_links,
+  }
+
+  return <ConfigProviderContext value={pDat || {}}>{children}</ConfigProviderContext>
 }

@@ -1,28 +1,28 @@
 import { Card, CardBody, Divider, Slides } from "@dockstat/ui"
-import { useQuery } from "@tanstack/react-query"
 import { Plus, Split } from "lucide-react"
 import { ClientCard, HostsList } from "@/components/clients"
 import { AddClient } from "@/components/clients/configure/AddClient"
 import { AddHost } from "@/components/clients/configure/AddHost"
 import { usePageHeading } from "@/hooks/useHeading"
-import { fetchClients, fetchHosts, fetchPoolStatus } from "@/lib/queries"
+import { useEdenQuery } from "@/hooks/useEdenQuery"
+import { api } from "@/lib/api"
 
 export default function ConfigureClientsPage() {
   usePageHeading("Configure Clients & Hosts")
 
-  const { data: clientsData } = useQuery({
+  const { data: clientsData } = useEdenQuery({
+    route: api.api.v2.docker.client.all({ stored: "true" }).get,
     queryKey: ["fetchDockerClients"],
-    queryFn: fetchClients,
   })
 
-  const { data: poolStatus } = useQuery({
+  const { data: poolStatus } = useEdenQuery({
+    route: api.api.v2.docker.manager["pool-stats"].get,
     queryKey: ["fetchPoolStatus"],
-    queryFn: fetchPoolStatus,
   })
 
-  const { data: hosts } = useQuery({
+  const { data: hosts } = useEdenQuery({
+    route: api.api.v2.docker.hosts.get,
     queryKey: ["fetchHosts"],
-    queryFn: fetchHosts,
   })
 
   const workersByClientId =

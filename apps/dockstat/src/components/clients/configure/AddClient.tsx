@@ -1,11 +1,10 @@
 import type { DockerAdapterOptionsSchema, MonitoringOptions } from "@dockstat/typings"
 import { Button, Card, CardBody, Divider, Input, Slider, Toggle } from "@dockstat/ui"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
-import { createNewClient } from "@/lib/actions"
+import { useEdenMutation } from "@/hooks/useEdenMutation"
+import { api } from "@/lib/api"
 
 export function AddClient() {
-  const qc = useQueryClient()
   const [clientName, setClientName] = useState("")
   const [options, setOptions] = useState<typeof DockerAdapterOptionsSchema.static>({
     defaultTimeout: 5000,
@@ -32,15 +31,13 @@ export function AddClient() {
     },
   })
 
-  const registerClientMutation = useMutation({
+  const registerClientMutation = useEdenMutation({
     mutationKey: ["createNewClient"],
-    mutationFn: createNewClient,
-    onSuccess: async () => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["fetchDockerClients"] }),
-        qc.invalidateQueries({ queryKey: ["fetchPoolStatus"] }),
-      ])
-      setClientName("")
+    route: api.api.v2.docker.client.register.post,
+    invalidateQueries: [["fetchDockerClients"], ["fetchPoolStatus"]],
+    toast: {
+      successTitle: (c) => `Client ${c.clientName} created`,
+      errorTitle: (c) => `Could not create client ${c.clientName}`,
     },
   })
 

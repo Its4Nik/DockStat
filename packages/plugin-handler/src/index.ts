@@ -112,45 +112,53 @@ class PluginHandler {
       (metaString + plugin.version).replaceAll("\n", ":::").replaceAll(" ", "/x/")
     )
 
-    const res = await fetch(new URL(`${repo.verification_api}/api/compare`), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        pluginName: plugin.name,
-        pluginHash: sourceHash,
-        pluginVersion: plugin.version,
-      }),
-    })
+    try {
+      const res = await fetch(new URL(`${repo.verification_api}/api/compare`), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pluginName: plugin.name,
+          pluginHash: sourceHash,
+          pluginVersion: plugin.version,
+        }),
+      })
 
-    const response = (await res.json()) as CompareResult
-
-    if (response.verified) {
-      this.logger.debug("Plugin has been verified, checking security status")
-
-      if (response.securityStatus === "safe") {
-        return true
-      } else if (response.securityStatus === "unsafe") {
-        return false
+      if (res.status !== 200) {
+        return "DVA not reachable"
       }
 
-      if (repo.policy === "relaxed") {
-        this.logger.debug("Repo is set to relaxed, unknown status is accepted")
-        return true
-      }
+      const response = (await res.json()) as CompareResult
 
-      const msg = "Plugin status unknown"
-      this.logger.debug(msg)
-      return msg
-    } else {
-      const msg = "Plugin hasn't been verified yet"
-      this.logger.debug(msg)
-      if (repo.policy === "relaxed") {
-        this.logger.debug("Repo is set to relaxed, unverified status is accepted")
-        return true
+      if (response.verified) {
+        this.logger.debug("Plugin has been verified, checking security status")
+
+        if (response.securityStatus === "safe") {
+          return true
+        } else if (response.securityStatus === "unsafe") {
+          return false
+        }
+
+        if (repo.policy === "relaxed") {
+          this.logger.debug("Repo is set to relaxed, unknown status is accepted")
+          return true
+        }
+
+        const msg = "Plugin status unknown"
+        this.logger.debug(msg)
+        return msg
+      } else {
+        const msg = "Plugin hasn't been verified yet"
+        this.logger.debug(msg)
+        if (repo.policy === "relaxed") {
+          this.logger.debug("Repo is set to relaxed, unverified status is accepted")
+          return true
+        }
+        return msg
       }
-      return msg
+    } catch (_) {
+      return "DVA not reachable"
     }
   }
 
@@ -202,7 +210,7 @@ class PluginHandler {
   }
 
   private async ensurePluginBundle(plugin: DBPluginShemaT) {
-    if (plugin.plugin.length > 10) {
+    if ((plugin.plugin || "").length > 10) {
       return { success: true }
     }
 
@@ -238,6 +246,7 @@ class PluginHandler {
     const errorMessages = {
       "Plugin hasn't been verified yet": "Plugin hasn't been verified yet",
       "Plugin status unknown": "Plugin status unknown",
+      "DVA not reachable": `DockStore Verification API (Repo: ${plugin.repository}) not reachable`,
       false: "Plugin is not safe! Aborting installation",
     }
 

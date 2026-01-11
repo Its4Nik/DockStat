@@ -2,7 +2,7 @@ import type { LogEntry } from "@dockstat/logger"
 import type { UpdateResult } from "@dockstat/sqlite-wrapper"
 import { formatDate } from "@dockstat/utils"
 import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons"
-import type { UseMutationResult } from "@tanstack/react-query"
+import type { UseMutateAsyncFunction } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import { BookMarkedIcon, X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
@@ -20,12 +20,14 @@ import { Table } from "../Table/Table"
 import { SidebarAnimatedItem, SidebarAnimatedNav } from "./SidebarAnimatedNav"
 import { SidebarItem } from "./SidebarItem"
 
-type PinLinkMutation = UseMutationResult<
-  UpdateResult,
+type PinLinkMutation = UseMutateAsyncFunction<
+  UpdateResult & {
+    message: string
+  },
   Error,
   {
-    slug: string
     path: string
+    slug: string
   },
   unknown
 >
@@ -42,7 +44,7 @@ export type SidebarProps = {
   onClose: () => void
   isBusy: boolean
   logEntries: LogEntry[]
-  mutationFn: { pin: PinLinkMutation; unpin: PinLinkMutation }
+  mutationFn: { pin: PinLinkMutation; unpin: PinLinkMutation; isBusy: boolean }
   pins: { path: string; slug: string }[]
   pluginLinks: { pluginName: string; paths: { fullPath: string; metaTitle: string }[] }[]
 }
@@ -74,9 +76,9 @@ export function Sidebar({
   const handleTogglePin = (item: PathItem) => {
     const payload = { slug: item.slug, path: item.path }
     if (item.isPinned) {
-      mutationFn.unpin.mutate(payload)
+      mutationFn.unpin(payload)
     } else {
-      mutationFn.pin.mutate(payload)
+      mutationFn.pin(payload)
     }
   }
 
@@ -154,7 +156,7 @@ export function Sidebar({
                                       isPinned: isPinned(path.fullPath),
                                     })
                                   }
-                                  isLoading={mutationFn.pin.isPending || mutationFn.unpin.isPending}
+                                  isLoading={mutationFn.isBusy}
                                   item={{
                                     path: path.fullPath,
                                     slug: path.metaTitle,

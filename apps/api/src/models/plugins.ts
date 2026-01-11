@@ -2,7 +2,7 @@ import { DBPluginShema } from "@dockstat/typings/schemas"
 import { t } from "elysia"
 
 export namespace PluginModel {
-  export const installPluginBody = DBPluginShema
+  export const installPluginBody = t.Omit(DBPluginShema, t.Union([t.Literal("plugin")]))
 
   export const activatePluginBody = t.Array(t.Number())
   export const activatePluginRes = t.Object({

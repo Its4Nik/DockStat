@@ -1,29 +1,29 @@
 import { Card, Divider } from "@dockstat/ui"
-import { useQuery } from "@tanstack/react-query"
 import { Hammer, Split } from "lucide-react"
 import { ClientCard } from "@/components/clients/ClientCard"
 import { HostsList } from "@/components/clients/HostsList"
 import { PoolStatsCard } from "@/components/clients/PoolStatsCard"
 import { WorkersTable } from "@/components/clients/WorkersTable"
 import { usePageHeading } from "@/hooks/useHeading"
-import { fetchClients, fetchHosts, fetchPoolStatus } from "@/lib/queries"
+import { api } from "@/lib/api"
+import { useEdenQuery } from "@/hooks/useEdenQuery"
 
 export default function ClientsPage() {
   usePageHeading("Clients & Workers")
 
-  const { data: clientsData, isLoading: clientsLoading } = useQuery({
+  const { data: clientsData, isLoading: clientsIsLoading } = useEdenQuery({
+    route: api.api.v2.docker.client.all({ stored: "true" }).get,
     queryKey: ["fetchDockerClients"],
-    queryFn: fetchClients,
   })
 
-  const { data: poolStatus, isLoading: poolLoading } = useQuery({
+  const { data: poolStatus, isLoading: poolLoading } = useEdenQuery({
+    route: api.api.v2.docker.manager["pool-stats"].get,
     queryKey: ["fetchPoolStatus"],
-    queryFn: fetchPoolStatus,
   })
 
-  const { data: hosts, isLoading: hostsLoading } = useQuery({
+  const { data: hosts, isLoading: hostsLoading } = useEdenQuery({
+    route: api.api.v2.docker.hosts.get,
     queryKey: ["fetchHosts"],
-    queryFn: fetchHosts,
   })
 
   // Create a map of worker info by client ID for easy lookup
@@ -50,7 +50,7 @@ export default function ClientsPage() {
           <h2 className="text-2xl font-semibold text-muted-text">Docker Clients</h2>
         </Card>
 
-        {clientsLoading ? (
+        {clientsIsLoading ? (
           <div className="text-center py-12 text-muted-text">Loading clients...</div>
         ) : !clientsData || clientsData.length === 0 ? (
           <div className="text-center py-12 text-muted-text">
