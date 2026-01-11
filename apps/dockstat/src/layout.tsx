@@ -23,18 +23,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const { data: frontendPluginRoutes } = useEdenQuery({
     queryKey: ["fetchFrontendPluginRoutes"],
-    route: api.api.v2.plugins.frontend.routes.get,
+    route: api.plugins.frontend.routes.get,
   })
 
   const pinMutation = useEdenMutation({
     mutationKey: ["pinNavLink"],
-    route: api.api.v2.db.config.pinItem.post,
+    route: api.db.config.pinItem.post,
     invalidateQueries: [["fetchNavLinks"]],
   })
 
   const unPinMutation = useEdenMutation({
     mutationKey: ["unPinNavLink"],
-    route: api.api.v2.db.config.unpinItem.post,
+    route: api.db.config.unpinItem.post,
     invalidateQueries: [["fetchNavLinks"]],
   })
 

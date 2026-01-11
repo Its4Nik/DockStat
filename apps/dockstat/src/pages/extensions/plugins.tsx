@@ -38,21 +38,21 @@ export default function PluginBrowser() {
 
   const { data: allPlugins } = useEdenQuery({
     queryKey: ["fetchAllPlugins"],
-    route: api.api.v2.plugins.all.get,
+    route: api.plugins.all.get,
   })
 
   const { data: allRepos } = useEdenQuery({
     queryKey: ["fetchAllRepositories"],
-    route: api.api.v2.repositories.all.get,
+    route: api.repositories.all.get,
   })
 
   const { data: allManifests } = useEdenQuery({
     queryKey: ["fetchAllManifests"],
-    route: api.api.v2.repositories["all-manifests"].get,
+    route: api.repositories["all-manifests"].get,
   })
 
   const installPluginMutation = useEdenMutation({
-    route: api.api.v2.plugins.install.post,
+    route: api.plugins.install.post,
     mutationKey: ["installPlugin"],
     invalidateQueries: [["fetchAllPlugins"], ["fetchFrontendPluginRoutes"]],
     toast: {
@@ -62,7 +62,7 @@ export default function PluginBrowser() {
   })
 
   const deletePluginMutation = useEdenMutation({
-    route: api.api.v2.plugins.delete.post,
+    route: api.plugins.delete.post,
     mutationKey: ["deletePlugin"],
     invalidateQueries: [["fetchAllPlugins"], ["fetchFrontendPluginRoutes"]],
     toast: {

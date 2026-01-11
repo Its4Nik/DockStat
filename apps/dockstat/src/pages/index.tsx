@@ -8,7 +8,7 @@ export default function IndexPage() {
 
   const { data, isLoading, error } = useEdenQuery({
     queryKey: ["fetchBackendStatus"],
-    route: api.api.v2.status.get,
+    route: api.status.get,
   })
 
   if (isLoading) return <div>Loading...</div>

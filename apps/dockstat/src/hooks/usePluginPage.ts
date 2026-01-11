@@ -43,7 +43,7 @@ export function usePluginPage() {
     isPending: isLoading,
   } = edenMut({
     mutationKey: ["plugin-template", String(pluginId), routePath],
-    route: api.api.v2.plugins.frontend({ pluginId: pluginId }).template.post,
+    route: api.plugins.frontend({ pluginId: pluginId }).template.post,
   })
 
   // Normalize the data
@@ -177,7 +177,7 @@ export function usePluginPage() {
 
       const executeLoaderMutation = edenMut({
         mutationKey: ["executeLoaders", String(data.route.pluginId), String(loaderId)],
-        route: api.api.v2.plugins
+        route: api.plugins
           .frontend({ pluginId: data.route.pluginId })
           .loaders({ loaderId: loaderId }).execute.post,
       })
@@ -230,7 +230,7 @@ export function usePluginPage() {
       if (!data?.route) throw new Error("No route")
 
       const executePluginActionMutation = edenMut({
-        route: api.api.v2.plugins
+        route: api.plugins
           .frontend({ pluginId: data.route.pluginId })
           .actions({ actionId: action.id }).execute.post,
         mutationKey: ["executePluginAction", String(data.route.pluginId), String(action.id)],

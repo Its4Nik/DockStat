@@ -5,7 +5,7 @@ import { api } from "@/lib/api"
 export function ConfigProvider({ children }: { children: React.ReactNode }) {
   const { data } = useEdenQuery({
     queryKey: ["fetchAdditionalSettings"],
-    route: api.api.v2.db.config.get,
+    route: api.db.config.get,
   })
 
   const pDat: ConfigProviderData = {

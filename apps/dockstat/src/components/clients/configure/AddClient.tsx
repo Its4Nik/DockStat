@@ -33,7 +33,7 @@ export function AddClient() {
 
   const registerClientMutation = useEdenMutation({
     mutationKey: ["createNewClient"],
-    route: api.api.v2.docker.client.register.post,
+    route: api.docker.client.register.post,
     invalidateQueries: [["fetchDockerClients"], ["fetchPoolStatus"]],
     toast: {
       successTitle: (c) => `Client ${c.clientName} created`,

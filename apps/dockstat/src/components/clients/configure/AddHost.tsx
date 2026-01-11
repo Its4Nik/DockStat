@@ -22,7 +22,7 @@ export function AddHost({ registeredClients }: { registeredClients: number[] }) 
 
   const addHostMutation = useEdenMutation({
     mutationKey: ["addHost"],
-    route: api.api.v2.docker.hosts.add.post,
+    route: api.docker.hosts.add.post,
     invalidateQueries: [["fetchHosts"]],
     toast: {
       successTitle: (h) => `Added Host: ${h.name}`,

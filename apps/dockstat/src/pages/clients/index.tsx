@@ -12,17 +12,17 @@ export default function ClientsPage() {
   usePageHeading("Clients & Workers")
 
   const { data: clientsData, isLoading: clientsIsLoading } = useEdenQuery({
-    route: api.api.v2.docker.client.all({ stored: "true" }).get,
+    route: api.docker.client.all({ stored: "true" }).get,
     queryKey: ["fetchDockerClients"],
   })
 
   const { data: poolStatus, isLoading: poolLoading } = useEdenQuery({
-    route: api.api.v2.docker.manager["pool-stats"].get,
+    route: api.docker.manager["pool-stats"].get,
     queryKey: ["fetchPoolStatus"],
   })
 
   const { data: hosts, isLoading: hostsLoading } = useEdenQuery({
-    route: api.api.v2.docker.hosts.get,
+    route: api.docker.hosts.get,
     queryKey: ["fetchHosts"],
   })
 

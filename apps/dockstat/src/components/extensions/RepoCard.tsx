@@ -7,7 +7,7 @@ import { api } from "@/lib/api"
 
 export function RepoCard({ id, name, policy, source, type, verification_api }: RepoType) {
   const deleteRepoMutation = useEdenMutation({
-    route: api.api.v2.db.repositories({ id: id }).delete,
+    route: api.db.repositories({ id: id }).delete,
     mutationKey: ["addRepo"],
     invalidateQueries: [["fetchAllRepositories"]],
     toast: { errorTitle: "Could not delete Repo", successTitle: "Deleted Repo" },

@@ -11,17 +11,17 @@ export default function ConfigureClientsPage() {
   usePageHeading("Configure Clients & Hosts")
 
   const { data: clientsData } = useEdenQuery({
-    route: api.api.v2.docker.client.all({ stored: "true" }).get,
+    route: api.docker.client.all({ stored: "true" }).get,
     queryKey: ["fetchDockerClients"],
   })
 
   const { data: poolStatus } = useEdenQuery({
-    route: api.api.v2.docker.manager["pool-stats"].get,
+    route: api.docker.manager["pool-stats"].get,
     queryKey: ["fetchPoolStatus"],
   })
 
   const { data: hosts } = useEdenQuery({
-    route: api.api.v2.docker.hosts.get,
+    route: api.docker.hosts.get,
     queryKey: ["fetchHosts"],
   })
 

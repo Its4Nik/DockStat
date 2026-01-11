@@ -11,11 +11,11 @@ export default function ExtensionsIndex() {
 
   const { data } = useEdenQuery({
     queryKey: ["fetchAllRepositories"],
-    route: api.api.v2.repositories.all.get,
+    route: api.repositories.all.get,
   })
 
   const _addRepoMutation = useEdenMutation({
-    route: api.api.v2.db.repositories.post,
+    route: api.db.repositories.post,
     mutationKey: ["addRepo"],
     invalidateQueries: [["fetchAllRepositories"]],
     toast: {
