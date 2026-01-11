@@ -4,9 +4,9 @@ import { ClientCard } from "@/components/clients/ClientCard"
 import { HostsList } from "@/components/clients/HostsList"
 import { PoolStatsCard } from "@/components/clients/PoolStatsCard"
 import { WorkersTable } from "@/components/clients/WorkersTable"
+import { useEdenQuery } from "@/hooks/useEdenQuery"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
-import { useEdenQuery } from "@/hooks/useEdenQuery"
 
 export default function ClientsPage() {
   usePageHeading("Clients & Workers")

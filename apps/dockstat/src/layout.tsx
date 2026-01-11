@@ -6,11 +6,11 @@ import { useContext, useEffect, useState } from "react"
 import { Toaster } from "sonner"
 import { ConfigProviderContext } from "@/contexts/config"
 import { PageHeadingContext } from "./contexts/pageHeadingContext"
-import { useGlobalBusy } from "./hooks/useGlobalBusy"
-import { toast } from "./lib/toast"
 import { useEdenMutation } from "./hooks/useEdenMutation"
-import { api } from "./lib/api"
 import { useEdenQuery } from "./hooks/useEdenQuery"
+import { useGlobalBusy } from "./hooks/useGlobalBusy"
+import { api } from "./lib/api"
+import { toast } from "./lib/toast"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [ramUsage, setRamUsage] = useState<string>("Connecting...")

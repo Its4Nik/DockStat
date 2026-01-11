@@ -3,8 +3,8 @@ import { Plus, Split } from "lucide-react"
 import { ClientCard, HostsList } from "@/components/clients"
 import { AddClient } from "@/components/clients/configure/AddClient"
 import { AddHost } from "@/components/clients/configure/AddHost"
-import { usePageHeading } from "@/hooks/useHeading"
 import { useEdenQuery } from "@/hooks/useEdenQuery"
+import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
 
 export default function ConfigureClientsPage() {

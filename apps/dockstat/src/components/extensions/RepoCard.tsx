@@ -1,10 +1,9 @@
-import { useEdenMutation } from "@/hooks/useEdenMutation"
-import { api } from "@/lib/api"
 import type { RepoType } from "@dockstat/typings/types"
 import { Button, Card, CardHeader, LinkWithIcon, RepoIcons } from "@dockstat/ui"
 import { repo } from "@dockstat/utils"
-
 import { ShieldMinus, ShieldPlus, ShieldX, Trash2 } from "lucide-react"
+import { useEdenMutation } from "@/hooks/useEdenMutation"
+import { api } from "@/lib/api"
 
 export function RepoCard({ id, name, policy, source, type, verification_api }: RepoType) {
   const deleteRepoMutation = useEdenMutation({

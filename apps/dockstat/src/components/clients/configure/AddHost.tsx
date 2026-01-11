@@ -1,7 +1,7 @@
-import { useEdenMutation } from "@/hooks/useEdenMutation"
-import { api } from "@/lib/api"
 import { Button, Card, CardBody, Input, Toggle } from "@dockstat/ui"
 import { useState } from "react"
+import { useEdenMutation } from "@/hooks/useEdenMutation"
+import { api } from "@/lib/api"
 
 type hostToAdd = {
   secure: boolean

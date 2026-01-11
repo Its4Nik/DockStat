@@ -1,6 +1,6 @@
+import { extractEdenError } from "@dockstat/utils"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "@/lib/toast"
-import { extractEdenError } from "@dockstat/utils"
 
 type EdenRoute = (...args: never[]) => Promise<{ data: unknown; error: unknown }>
 type EdenData<T extends EdenRoute> = Awaited<ReturnType<T>>["data"]

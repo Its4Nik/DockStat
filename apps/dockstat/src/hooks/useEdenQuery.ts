@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query"
 import { extractEdenError } from "@dockstat/utils"
+import { useQuery } from "@tanstack/react-query"
 
 type EdenQueryRoute = (options?: {
   fetch?: RequestInit

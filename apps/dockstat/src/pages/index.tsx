@@ -1,6 +1,6 @@
 import { Badge, type BadgeVariant, Card, Divider } from "@dockstat/ui"
-import { usePageHeading } from "@/hooks/useHeading"
 import { useEdenQuery } from "@/hooks/useEdenQuery"
+import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
 
 export default function IndexPage() {

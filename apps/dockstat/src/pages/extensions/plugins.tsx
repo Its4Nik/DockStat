@@ -2,10 +2,10 @@ import { Badge, Button, Card, Divider, Input, LinkWithIcon, Modal } from "@docks
 import { repo } from "@dockstat/utils"
 import { Link } from "lucide-react"
 import { useMemo, useState } from "react"
-import { usePageHeading } from "@/hooks/useHeading"
 import { useEdenMutation } from "@/hooks/useEdenMutation"
-import { api } from "@/lib/api"
 import { useEdenQuery } from "@/hooks/useEdenQuery"
+import { usePageHeading } from "@/hooks/useHeading"
+import { api } from "@/lib/api"
 
 const parseRepoLink = repo.parseFromDBToRepoLink
 

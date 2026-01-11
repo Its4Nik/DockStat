@@ -4,9 +4,8 @@ import { useMutation } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router"
 import type { LoaderResult, PluginPageData, ResolvedAction } from "@/components/plugins/id/types"
-import { executePluginAction, executePluginLoader } from "@/lib/actions/plugins"
-import { useEdenMutation } from "./useEdenMutation"
 import { api } from "@/lib/api"
+import { useEdenMutation as edenMut } from "./useEdenMutation"
 
 function getValueByPath(obj: Record<string, unknown> | undefined, path: string): unknown {
   if (!obj) return undefined
@@ -42,7 +41,7 @@ export function usePluginPage() {
     data: rawData,
     error: queryError,
     isPending: isLoading,
-  } = useEdenMutation({
+  } = edenMut({
     mutationKey: ["plugin-template", String(pluginId), routePath],
     route: api.api.v2.plugins.frontend({ pluginId: pluginId }).template.post,
   })
@@ -176,14 +175,16 @@ export function usePluginPage() {
     }) => {
       if (!data?.route) throw new Error("No route")
 
-      const response = await executePluginLoader({
-        pluginId: data.route.pluginId,
-        loaderId,
-        path: routePath,
-        state: currentState,
+      const executeLoaderMutation = edenMut({
+        mutationKey: ["executeLoaders", String(data.route.pluginId), String(loaderId)],
+        route: api.api.v2.plugins
+          .frontend({ pluginId: data.route.pluginId })
+          .loaders({ loaderId: loaderId }).execute.post,
       })
 
-      return { loaderId, result: (response as { result?: LoaderResult }).result }
+      const res = await executeLoaderMutation.mutateAsync({ path: routePath, state: currentState })
+
+      return { loaderId, result: (res as { result?: LoaderResult }).result }
     },
     onSuccess: ({ loaderId, result }) => {
       if (!result?.success) return
@@ -228,12 +229,17 @@ export function usePluginPage() {
     }) => {
       if (!data?.route) throw new Error("No route")
 
-      const response = await executePluginAction({
-        pluginId: String(data.route.pluginId),
-        actionId: action.id,
+      const executePluginActionMutation = edenMut({
+        route: api.api.v2.plugins
+          .frontend({ pluginId: data.route.pluginId })
+          .actions({ actionId: action.id }).execute.post,
+        mutationKey: ["executePluginAction", String(data.route.pluginId), String(action.id)],
+      })
+
+      const response = await executePluginActionMutation.mutateAsync({
         path: routePath,
+        payload: payload,
         state: currentState,
-        payload,
       })
 
       return {

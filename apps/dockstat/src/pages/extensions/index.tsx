@@ -1,10 +1,10 @@
-import { RepoCard } from "@/components/extensions/RepoCard"
-import { usePageHeading } from "@/hooks/useHeading"
 import { Card } from "@dockstat/ui"
 import { Plus } from "lucide-react"
+import { RepoCard } from "@/components/extensions/RepoCard"
 import { useEdenMutation } from "@/hooks/useEdenMutation"
-import { api } from "@/lib/api"
 import { useEdenQuery } from "@/hooks/useEdenQuery"
+import { usePageHeading } from "@/hooks/useHeading"
+import { api } from "@/lib/api"
 
 export default function ExtensionsIndex() {
   usePageHeading("Repositories")
@@ -14,7 +14,7 @@ export default function ExtensionsIndex() {
     route: api.api.v2.repositories.all.get,
   })
 
-  const addRepoMutation = useEdenMutation({
+  const _addRepoMutation = useEdenMutation({
     route: api.api.v2.db.repositories.post,
     mutationKey: ["addRepo"],
     invalidateQueries: [["fetchAllRepositories"]],
