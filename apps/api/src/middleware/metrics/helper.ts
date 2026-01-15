@@ -1,5 +1,6 @@
 import { heapStats, memoryUsage } from "bun:jsc"
 import type { Database } from "bun:sqlite"
+import { truncate } from "@dockstat/utils"
 import type { Elysia } from "elysia"
 import { DockStatDB } from "../../database"
 import BaseLogger from "../../logger"
@@ -245,7 +246,7 @@ const MetricsMiddleware = (app: Elysia) => {
             : error
 
         logger.error(
-          `Tracked Error: ${JSON.stringify(errorDetails, null, 2)}`,
+          `Tracked Error: ${truncate(JSON.stringify(errorDetails), 100)}`,
           headers["x-dockstatapi-reqid"] || undefined
         )
       }

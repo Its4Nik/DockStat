@@ -10,8 +10,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@Queries": path.resolve(__dirname, "./src/lib/queries/index.ts"),
-      "@Actions": path.resolve(__dirname, "./src/lib/actions/index.ts"),
       "@WSS": path.resolve(__dirname, "./src/lib/websocketEffects/index.ts"),
     },
   },

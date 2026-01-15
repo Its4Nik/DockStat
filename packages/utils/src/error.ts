@@ -96,8 +96,11 @@ export function extractErrorMessage(
     return error.trim() || fallback
   }
 
-  // Handle Error instances
+  if (typeof (error as { value?: { error?: string } })?.value?.error === "string") {
+    return (error as { value?: { error?: string } })?.value?.error || fallback
+  }
   if (error instanceof Error) {
+    // Handle Error instances
     return error.message || fallback
   }
 

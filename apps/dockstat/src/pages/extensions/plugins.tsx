@@ -1,12 +1,11 @@
-import { deletePlugin, installPlugin } from "@Actions"
-import { fetchAllManifests, fetchAllPlugins, fetchAllRepositories } from "@Queries"
-import { Badge, Button, Card, Divider, Input, LinkWithIcon, Modal } from "@dockstat/ui"
+import { Badge, Button, Card, Divider, Input, LinkWithIcon, Modal, Select } from "@dockstat/ui"
 import { repo } from "@dockstat/utils"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "lucide-react"
 import { useMemo, useState } from "react"
+import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
+import { useEdenQuery } from "@/hooks/useEdenQuery"
 import { usePageHeading } from "@/hooks/useHeading"
-import { toast } from "@/lib/toast"
+import { api } from "@/lib/api"
 
 const parseRepoLink = repo.parseFromDBToRepoLink
 
@@ -33,82 +32,44 @@ type AvailablePlugin = {
 export default function PluginBrowser() {
   usePageHeading("Plugin Browser")
 
-  const qc = useQueryClient()
   const [selectedRepo, setSelectedRepo] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedPlugin, setSelectedPlugin] = useState<AvailablePlugin | null>(null)
 
-  const { data: allPlugins } = useQuery({
-    queryFn: fetchAllPlugins,
+  const { data: allPlugins } = useEdenQuery({
     queryKey: ["fetchAllPlugins"],
+    route: api.plugins.all.get,
   })
 
-  const { data: allRepos } = useQuery({
-    queryFn: fetchAllRepositories,
+  const { data: allRepos } = useEdenQuery({
     queryKey: ["fetchAllRepositories"],
+    route: api.repositories.all.get,
   })
 
-  const { data: allManifests } = useQuery({
-    queryFn: fetchAllManifests,
+  const { data: allManifests } = useEdenQuery({
     queryKey: ["fetchAllManifests"],
+    route: api.repositories["all-manifests"].get,
   })
 
-  const installPluginMutation = useMutation({
-    mutationFn: installPlugin,
+  const installPluginMutation = useEdenMutation({
+    route: api.plugins.install.post,
     mutationKey: ["installPlugin"],
-    onSuccess: async () => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["fetchAllPlugins"] }),
-        qc.invalidateQueries({ queryKey: ["fetchFrontendPluginRoutes"] }),
-      ])
+    invalidateQueries: [["fetchAllPlugins"], ["fetchFrontendPluginRoutes"]],
+    toast: {
+      errorTitle: (plugin) => `Failed to install ${plugin.name}`,
+      successTitle: (plugin) => `Installed ${plugin.name}`,
     },
   })
 
-  const deletePluginMutation = useMutation({
-    mutationFn: deletePlugin,
+  const deletePluginMutation = useEdenMutation({
+    route: api.plugins.delete.post,
     mutationKey: ["deletePlugin"],
-    onSuccess: async () => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["fetchAllPlugins"] }),
-        qc.invalidateQueries({ queryKey: ["fetchFrontendPluginRoutes"] }),
-      ])
+    invalidateQueries: [["fetchAllPlugins"], ["fetchFrontendPluginRoutes"]],
+    toast: {
+      errorTitle: (p) => `Error while uninstalling PluginID: ${p.pluginId}`,
+      successTitle: (p) => `Uninstalled PluginID: ${p.pluginId}`,
     },
   })
-
-  const handleDelete = async (id: number) => {
-    const res = await deletePluginMutation.mutateAsync(id)
-
-    toast({
-      description: res.message,
-      title: res.success
-        ? `Uninstalled PluginID: ${id}`
-        : `Error while uninstalling PluginID: ${id}`,
-      variant: res.success ? "success" : "error",
-    })
-  }
-
-  const handleInstall = async (plugin: AvailablePlugin) => {
-    const res = await installPluginMutation.mutateAsync({
-      id: plugin.isInstalled && plugin.installedId ? plugin.installedId : null,
-      plugin: "", // handled by backend
-      name: plugin.name,
-      description: plugin.description,
-      version: plugin.version,
-      repository: plugin.repository,
-      repoType: plugin.repoType,
-      manifest: plugin.manifest,
-      author: plugin.author,
-      tags: plugin.tags,
-    })
-
-    toast({
-      title: res.success ? `Installed ${plugin.name}` : `Failed to install ${plugin.name}`,
-      description: res.message,
-      variant: res.success ? "success" : "error",
-    })
-
-    return
-  }
 
   const availablePlugins = useMemo(() => {
     if (!allManifests) return []
@@ -129,7 +90,7 @@ export default function PluginBrowser() {
 
     return plugins.filter(
       (p) =>
-        (selectedRepo === "all" || p.repository === selectedRepo) &&
+        (selectedRepo === "all" || p.repository.toLowerCase() === selectedRepo) &&
         (searchQuery === "" ||
           p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -147,18 +108,15 @@ export default function PluginBrowser() {
           onChange={(e) => setSearchQuery(e)}
           className="flex-1 px-4 py-2 border rounded"
         />
-        <select
+        <Select
+          className="max-w-[50%]"
+          options={[
+            ...(allRepos || []).map((repo) => ({ value: repo.source, label: repo.name })),
+            { label: "All", value: "all" },
+          ]}
           value={selectedRepo}
-          onChange={(e) => setSelectedRepo(e.target.value)}
-          className="px-4 py-2 border rounded"
-        >
-          <option value="all">All Repositories</option>
-          {allRepos?.map((repo) => (
-            <option key={repo.id} value={repo.source}>
-              {repo.name}
-            </option>
-          ))}
-        </select>
+          onChange={(value) => setSelectedRepo(value.toLowerCase())}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -178,7 +136,7 @@ export default function PluginBrowser() {
               {plugin.tags && plugin.tags.length > 0 && (
                 <div className="flex gap-2 flex-wrap">
                   {plugin.tags.map((tag) => (
-                    <Badge key={tag} unique>
+                    <Badge key={`${plugin.name}-${plugin.repoSource}-${tag}`} unique>
                       {tag}
                     </Badge>
                   ))}
@@ -216,7 +174,9 @@ export default function PluginBrowser() {
                   Details
                 </Button>
                 <Button
-                  onClick={() => handleInstall(plugin)}
+                  onClick={() =>
+                    installPluginMutation.mutateAsync({ ...plugin, id: plugin.installedId || null })
+                  }
                   disabled={plugin.isInstalled || installPluginMutation.isPending}
                   className="flex-1"
                 >
@@ -226,8 +186,10 @@ export default function PluginBrowser() {
                   <Button
                     className="flex-1"
                     variant="danger"
-                    // biome-ignore lint/style/noNonNullAssertion: checked if an ID exists
-                    onClick={() => handleDelete(plugin.installedId!)}
+                    onClick={() =>
+                      // biome-ignore lint/style/noNonNullAssertion: checked if an ID exists
+                      deletePluginMutation.mutateAsync({ pluginId: plugin.installedId! })
+                    }
                   >
                     Delete
                   </Button>
@@ -246,7 +208,6 @@ export default function PluginBrowser() {
         open={!!selectedPlugin}
         onClose={() => setSelectedPlugin(null)}
         title={selectedPlugin?.name}
-        bodyClasses=""
       >
         {selectedPlugin && (
           <div className="space-y-4 w-60">
@@ -295,9 +256,14 @@ export default function PluginBrowser() {
             )}
 
             <Button
-              onClick={() => handleInstall(selectedPlugin)}
+              onClick={() =>
+                installPluginMutation.mutateAsync({
+                  ...selectedPlugin,
+                  id: selectedPlugin.installedId || null,
+                })
+              }
               disabled={selectedPlugin.isInstalled || installPluginMutation.isPending}
-              className="w-full"
+              fullWidth
             >
               {selectedPlugin.isInstalled ? "Already Installed" : "Install"}
             </Button>

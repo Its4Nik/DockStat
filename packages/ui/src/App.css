@@ -140,6 +140,24 @@
   --color-input-underline-color: #6272a4;
   --color-input-underline-focus-color: #818cf8;
 
+  /* Select */
+  /* Default*/
+  --color-select-default-border: #6272a4;
+  --color-select-default-text: #8b98c4;
+  --color-select-default-focus-border: #818cf8;
+  --color-select-default-focus-ring: #a5b4fc;
+
+  /* Filled */
+  --color-select-filled-bg: #44475a;
+  --color-select-filled-text: #8b98c4;
+  --color-select-filled-focus-bg: #4a4d62;
+  --color-select-filled-focus-ring: #a5b4fc;
+
+  /* Underline */
+  --color-select-underline-text: #8b98c4;
+  --color-select-underline-color: #6272a4;
+  --color-select-underline-focus-color: #818cf8;
+
   /* Slider */
   --color-slider-base-bg: #364153;
   --color-slider-gradient-from: #6272a4;

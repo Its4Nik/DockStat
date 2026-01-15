@@ -1,7 +1,7 @@
-import { addHost } from "@Actions"
 import { Button, Card, CardBody, Input, Toggle } from "@dockstat/ui"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
+import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
+import { api } from "@/lib/api"
 
 type hostToAdd = {
   secure: boolean
@@ -12,7 +12,6 @@ type hostToAdd = {
 }
 
 export function AddHost({ registeredClients }: { registeredClients: number[] }) {
-  const qc = useQueryClient()
   const [formData, setFormData] = useState<hostToAdd>({
     secure: false,
     name: "",
@@ -21,12 +20,13 @@ export function AddHost({ registeredClients }: { registeredClients: number[] }) 
     port: 2375,
   })
 
-  const addHostMutation = useMutation({
+  const addHostMutation = useEdenMutation({
     mutationKey: ["addHost"],
-    mutationFn: addHost,
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["fetchHosts"] })
-      setFormData((p) => ({ ...p, name: "", hostname: "" }))
+    route: api.docker.hosts.add.post,
+    invalidateQueries: [["fetchHosts"]],
+    toast: {
+      successTitle: (h) => `Added Host: ${h.name}`,
+      errorTitle: (h) => `Could not add Host: ${h.name}`,
     },
   })
 
