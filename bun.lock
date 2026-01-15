@@ -69,25 +69,6 @@
         "vite": "^7.3.0",
       },
     },
-    "apps/dockstore": {
-      "name": "dockstore",
-      "dependencies": {
-        "ajv": "^8.17.1",
-        "ajv-formats": "^3.0.1",
-        "js-yaml": "^4.1.1",
-      },
-      "devDependencies": {
-        "@dockstat/logger": "workspace:*",
-        "@dockstat/plugin-builder": "workspace:*",
-        "@dockstat/plugin-handler": "workspace:*",
-        "@dockstat/sqlite-wrapper": "workspace:*",
-        "@dockstat/typings": "workspace:*",
-        "@types/bun": "latest",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
-      },
-    },
     "apps/dockstore-verification": {
       "name": "@dockstat/store-verification",
       "dependencies": {
@@ -141,23 +122,6 @@
       },
       "peerDependencies": {
         "typescript": "^5.9.3",
-      },
-    },
-    "packages/dockstat-repo-cli": {
-      "name": "@dockstat/repo-cli",
-      "dependencies": {
-        "@commander-js/extra-typings": "^14.0.0",
-        "@dockstat/utils": "workspace:*",
-        "ajv": "^8.17.1",
-        "ajv-formats": "^3.0.1",
-        "commander": "^14.0.2",
-      },
-      "devDependencies": {
-        "@dockstat/typings": "workspace:*",
-        "@types/bun": "latest",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
       },
     },
     "packages/logger": {
@@ -224,6 +188,26 @@
       },
       "peerDependencies": {
         "typescript": "^5.9.3",
+      },
+    },
+    "packages/repo-cli": {
+      "name": "@dockstat/repo-cli",
+      "bin": {
+        "dockstat-repo": "./dist/dockstore-repo-cli",
+      },
+      "dependencies": {
+        "@commander-js/extra-typings": "^14.0.0",
+        "@dockstat/utils": "workspace:*",
+        "ajv": "^8.17.1",
+        "ajv-formats": "^3.0.1",
+        "commander": "^14.0.2",
+      },
+      "devDependencies": {
+        "@dockstat/typings": "workspace:*",
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
       },
     },
     "packages/sqlite-wrapper": {
@@ -414,7 +398,7 @@
 
     "@dockstat/plugin-handler": ["@dockstat/plugin-handler@workspace:packages/plugin-handler"],
 
-    "@dockstat/repo-cli": ["@dockstat/repo-cli@workspace:packages/dockstat-repo-cli"],
+    "@dockstat/repo-cli": ["@dockstat/repo-cli@workspace:packages/repo-cli"],
 
     "@dockstat/sqlite-wrapper": ["@dockstat/sqlite-wrapper@workspace:packages/sqlite-wrapper"],
 
@@ -959,8 +943,6 @@
     "docker-modem": ["docker-modem@5.0.6", "", { "dependencies": { "debug": "^4.1.1", "readable-stream": "^3.5.0", "split-ca": "^1.0.1", "ssh2": "^1.15.0" } }, "sha512-ens7BiayssQz/uAxGzH8zGXCtiV24rRWXdjNha5V4zSOcxmAZsfGVm/PPFbwQdqEkDnhG+SyR9E3zSHUbOKXBQ=="],
 
     "dockerode": ["dockerode@4.0.9", "", { "dependencies": { "@balena/dockerignore": "^1.0.2", "@grpc/grpc-js": "^1.11.1", "@grpc/proto-loader": "^0.7.13", "docker-modem": "^5.0.6", "protobufjs": "^7.3.2", "tar-fs": "^2.1.4", "uuid": "^10.0.0" } }, "sha512-iND4mcOWhPaCNh54WmK/KoSb35AFqPAUWFMffTQcp52uQt36b5uNwEJTSXntJZBbeGad72Crbi/hvDIv6us/6Q=="],
-
-    "dockstore": ["dockstore@workspace:apps/dockstore"],
 
     "doctrine": ["doctrine@3.0.0", "", { "dependencies": { "esutils": "^2.0.2" } }, "sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w=="],
 
