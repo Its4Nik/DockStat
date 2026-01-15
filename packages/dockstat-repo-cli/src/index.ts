@@ -1,7 +1,8 @@
 import { Command } from "@commander-js/extra-typings"
-import { initCommand } from "./commands/init"
-import { bundleCommand } from "./commands/bundle"
 import { badgesCommand } from "./commands/badges"
+import { bundleCommand } from "./commands/bundle"
+import { initCommand } from "./commands/init"
+import { serveCommand } from "./commands/serve"
 
 const program = new Command()
 
@@ -14,5 +15,6 @@ program
 program.addCommand(initCommand)
 program.addCommand(bundleCommand)
 program.addCommand(badgesCommand)
+program.addCommand(serveCommand)
 
 program.parse()

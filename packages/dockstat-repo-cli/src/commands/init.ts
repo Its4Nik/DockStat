@@ -1,7 +1,7 @@
 // cli/commands/init.ts
 import { Command } from "@commander-js/extra-typings"
 import { repo } from "@dockstat/utils"
-import type { Opts, RepoFile } from "../types"
+import type { RepoFile } from "../types"
 
 export const initCommand = new Command("init")
   .description("Initializes a new repository")

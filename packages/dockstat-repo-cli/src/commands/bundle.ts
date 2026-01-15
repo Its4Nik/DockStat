@@ -2,7 +2,7 @@
 import { Command } from "@commander-js/extra-typings"
 import { PluginMeta } from "@dockstat/typings/schemas"
 import { Glob } from "bun"
-import type { BuildResult, RepoFile } from "../types"
+import type { BuildResult } from "../types"
 import { extractMeta } from "../utils/extract"
 import { log, printSummary } from "../utils/logger"
 import { loadRepo, saveRepo } from "../utils/repo"
@@ -96,6 +96,7 @@ export const bundleCommand = new Command("bundle")
     }
 
     // Update repo file
+    // biome-ignore lint/style/noNonNullAssertion: Is checked
     const successfulPlugins = results.filter((r) => r.success && r.meta).map((r) => r.meta!)
     repoData.content.plugins = successfulPlugins
     await saveRepo(globalOptions.root, repoData)
