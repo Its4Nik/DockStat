@@ -111,11 +111,10 @@ export default function PluginBrowser() {
         <Select
           className="max-w-[50%]"
           options={[
-            ...(allRepos || []).map((repo) => {
-              return { value: repo.source, label: repo.name }
-            }),
+            ...(allRepos || []).map((repo) => ({ value: repo.source, label: repo.name })),
             { label: "All", value: "all" },
           ]}
+          value={selectedRepo}
           onChange={(value) => setSelectedRepo(value.toLowerCase())}
         />
       </div>

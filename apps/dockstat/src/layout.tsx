@@ -76,7 +76,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         mutationFn={{
           pin: pinMutation.mutateAsync,
           unpin: unPinMutation.mutateAsync,
-          isBusy: useGlobalBusy(),
+          isBusy: isBusy,
         }}
       />
       <div className="px-4">{children}</div>

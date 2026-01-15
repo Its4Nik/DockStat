@@ -1,6 +1,6 @@
-import { toast } from "@/lib/toast"
 import { extractEdenError } from "@dockstat/utils"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "@/lib/toast"
 
 type BaseToastConfig<TData, TInput> = {
   successTitle: string | ((input: TInput, response: TData) => string)
