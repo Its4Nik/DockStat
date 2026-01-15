@@ -1,0 +1,26 @@
+{
+  "name": "@dockstat/repo-cli",
+  "module": "src/index.ts",
+  "type": "module",
+  "bin": {
+    "dockstat-repo": "./dist/dockstore-repo-cli"
+  },
+  "scripts": {
+    "build": "bun build --target=bun --compile --outfile=dist/dockstore-repo-cli src/index.ts",
+    "prepublishOnly": "bun run build"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@dockstat/typings": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@dockstat/utils": "workspace:*",
+    "@commander-js/extra-typings": "^14.0.0",
+    "commander": "^14.0.2",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  }
+}
