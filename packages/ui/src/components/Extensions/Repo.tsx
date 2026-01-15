@@ -57,7 +57,7 @@ export function Repo({
             <LinkWithIcon
               iconPosition="left"
               external
-              key={`${repo.source}-${new Date().toString()}`}
+              key={repo.source}
               icon={<Link />}
               href={`/api/extensions/proxy/repo/${repo.type}/${repo.source}`}
             >
