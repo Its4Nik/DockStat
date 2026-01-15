@@ -34,10 +34,6 @@ export {
   type CheckboxSize,
 } from "./Forms/Checkbox"
 export {
-  Select,
-  type SelectProps,
-} from "./Forms/Selection"
-export {
   CheckboxGroup,
   type CheckboxGroupOption,
   type CheckboxGroupProps,
@@ -48,6 +44,10 @@ export {
   type InputSize,
   type InputVariant,
 } from "./Forms/Input"
+export {
+  Select,
+  type SelectProps,
+} from "./Forms/Selection"
 export {
   Toggle,
   type ToggleProps,
