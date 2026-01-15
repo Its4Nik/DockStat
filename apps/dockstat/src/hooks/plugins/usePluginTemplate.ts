@@ -1,7 +1,7 @@
+import type { PageTemplate, TemplateFragment } from "@dockstat/template-renderer"
+import { parseTemplate } from "@dockstat/template-renderer"
 import { useEffect, useMemo } from "react"
 import type { PluginPageData } from "@/components/plugins/id/types"
-import type { TemplateFragment, PageTemplate } from "@dockstat/template-renderer"
-import { parseTemplate } from "@dockstat/template-renderer"
 import { api } from "@/lib/api"
 import { useEdenMutation } from "../useEdenMutation"
 

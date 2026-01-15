@@ -1,6 +1,6 @@
+import type { PageTemplate } from "@dockstat/template-renderer"
 import { useCallback, useEffect, useState } from "react"
 import type { PluginPageData } from "@/components/plugins/id/types"
-import type { PageTemplate } from "@dockstat/template-renderer"
 
 export function usePluginState(
   initialData: PluginPageData["initialData"] | undefined,

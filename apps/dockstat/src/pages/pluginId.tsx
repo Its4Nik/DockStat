@@ -1,12 +1,12 @@
 import { TemplateRenderer } from "@dockstat/template-renderer"
-import { usePageHeading } from "@/hooks/useHeading"
-import { usePluginPage } from "@/hooks/plugins/usePluginPage"
 import {
-  PluginPageLoading,
   PluginPageError,
-  PluginPageNotFound,
+  PluginPageLoading,
   PluginPageNoTemplate,
+  PluginPageNotFound,
 } from "@/components/PluginPageStates"
+import { usePluginPage } from "@/hooks/plugins/usePluginPage"
+import { usePageHeading } from "@/hooks/useHeading"
 
 export default function PluginIdPage() {
   const {

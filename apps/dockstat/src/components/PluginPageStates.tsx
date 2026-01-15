@@ -1,6 +1,6 @@
+import { Card } from "@dockstat/ui"
 import { motion } from "framer-motion"
 import { AlertTriangle, ArrowLeft, FileX, Loader2, Search } from "lucide-react"
-import { Card } from "@dockstat/ui"
 import { useNavigate } from "react-router"
 
 const cardVariants = {
