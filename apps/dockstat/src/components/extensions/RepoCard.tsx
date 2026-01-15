@@ -2,7 +2,7 @@ import type { RepoType } from "@dockstat/typings/types"
 import { Badge, Button, Card, CardHeader, Divider, LinkWithIcon, RepoIcons } from "@dockstat/ui"
 import { repo } from "@dockstat/utils"
 import { ExternalLink, ShieldAlert, ShieldCheck, ShieldX, Trash2 } from "lucide-react"
-import { useEdenMutation } from "@/hooks/useEdenMutation"
+import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
 import { api } from "@/lib/api"
 
 export function RepoCard({ id, name, policy, source, type, verification_api }: RepoType) {

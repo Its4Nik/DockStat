@@ -1,7 +1,7 @@
 import type { DockerAdapterOptionsSchema, MonitoringOptions } from "@dockstat/typings"
 import { Button, Card, CardBody, Divider, Input, Slider, Toggle } from "@dockstat/ui"
 import { useState } from "react"
-import { useEdenMutation } from "@/hooks/useEdenMutation"
+import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
 import { api } from "@/lib/api"
 
 export function AddClient() {

@@ -1,6 +1,6 @@
 import { Button, Card, CardBody, Input, Toggle } from "@dockstat/ui"
 import { useState } from "react"
-import { useEdenMutation } from "@/hooks/useEdenMutation"
+import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
 import { api } from "@/lib/api"
 
 type hostToAdd = {

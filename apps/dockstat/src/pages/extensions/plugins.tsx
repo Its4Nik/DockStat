@@ -2,7 +2,7 @@ import { Badge, Button, Card, Divider, Input, LinkWithIcon, Modal, Select } from
 import { repo } from "@dockstat/utils"
 import { Link } from "lucide-react"
 import { useMemo, useState } from "react"
-import { useEdenMutation } from "@/hooks/useEdenMutation"
+import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
 import { useEdenQuery } from "@/hooks/useEdenQuery"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
