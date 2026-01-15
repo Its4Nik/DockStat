@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react"
 import type { LoaderResult, ResolvedLoader } from "@/components/plugins/id/types"
 import { api } from "@/lib/api"
-import { useEdenMutation } from "../useEdenMutation"
+import { useEdenRouteMutation } from "../eden/useEdenRouteMutation"
 import { getValueByPath } from "./utils"
 
 type UsePluginLoadersParams = {
@@ -21,7 +21,7 @@ export function usePluginLoaders({
   onStateUpdate,
   onExternalDataUpdate,
 }: UsePluginLoadersParams) {
-  const loaderMutation = useEdenMutation({
+  const loaderMutation = useEdenRouteMutation({
     mutationKey: ["executeLoader", String(pluginId)],
     routeBuilder: ({ loaderId }: { loaderId: string }) =>
       api.plugins.frontend({ pluginId }).loaders({ loaderId }).execute.post,
