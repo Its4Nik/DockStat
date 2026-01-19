@@ -32,13 +32,13 @@ function useEdenQuery<TRoute>(opts: UseEdenQueryOptions<TRoute>): UseQueryResult
 ### Options
 
 | Key | Type | Default | Description |
-|----|----|----|----|
-| `route` | `TRoute` | — | Eden route function |
-| `queryKey` | `readonly unknown[]` | — | React Query cache key |
-| `enabled` | `boolean` | `true` | Enable/disable the query |
-| `staleTime` | `number` | `0` | Milliseconds until stale |
+|-----|------|---------|-------------|
+| `route` | `TRoute` | —       | Eden route function |
+| `queryKey` | `readonly unknown[]` | —       | React Query cache key |
+| `enabled` | `boolean` | `true`  | Enable/disable the query |
+| `staleTime` | `number` | `0`     | Milliseconds until stale |
 | `refetchInterval` | `number \| false` | `false` | Auto-refetch interval |
-| `refetchOnWindowFocus` | `boolean` | `true` | Refetch on window focus |
+| `refetchOnWindowFocus` | `boolean` | `true`  | Refetch on window focus |
 
 ### Usage
 
@@ -70,11 +70,11 @@ function useEdenMutation<TRoute>(opts: UseEdenMutationOptions<TRoute>): UseMutat
 ### Options
 
 | Key | Type | Description |
-|----|----|----|
+|-----|------|-------------|
 | `route` | `TRoute` | Eden-route function |
 | `mutationKey` | `readonly string[]` | Mutation cache key |
 | `invalidateQueries` | `readonly string[][]` | Keys to invalidate on success |
-| `toast` | `ToasTConfig`   | Toast message headers |
+| `toast` | `ToasTConfig` | Toast message headers |
 
 ### ToastConfig
 

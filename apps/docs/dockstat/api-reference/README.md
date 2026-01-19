@@ -84,11 +84,11 @@ Returns the overall DockerClientManager status, including worker pool metrics.
 ### Hosts `/docker/hosts`
 
 | Method | Path | Description |
-|----|----|----|
-| GET | `/hosts/` | List all hosts |
-| GET | `/hosts/:clientId` | Get metrics for a specific client |
-| POST | `/hosts/add` | Add a new host |
-| POST | `/hosts/update` | Update an existing host |
+|--------|------|-------------|
+| GET    | `/hosts/` | List all hosts |
+| GET    | `/hosts/:clientId` | Get metrics for a specific client |
+| POST   | `/hosts/add` | Add a new host |
+| POST   | `/hosts/update` | Update an existing host |
 
 **POST** `**/hosts/add**` **body:**
 
@@ -120,12 +120,12 @@ Returns the overall DockerClientManager status, including worker pool metrics.
 ### Client `/docker/client`
 
 | Method | Path | Description |
-|----|----|----|
-| POST | `/client/register` | Register a new Docker client |
+|--------|------|-------------|
+| POST   | `/client/register` | Register a new Docker client |
 | DELETE | `/client/delete` | Remove a client |
-| GET | `/client/all/:stored` | List all clients |
-| POST | `/client/monitoring/:id/start` | Start monitoring for a client |
-| POST | `/client/monitoring/:id/stop` | Stop monitoring for a client |
+| GET    | `/client/all/:stored` | List all clients |
+| POST   | `/client/monitoring/:id/start` | Start monitoring for a client |
+| POST   | `/client/monitoring/:id/stop` | Stop monitoring for a client |
 
 **POST** `**/client/register**` **body:**
 
@@ -149,17 +149,17 @@ Returns the overall DockerClientManager status, including worker pool metrics.
 ### Containers `/docker/containers`
 
 | Method | Path | Description |
-|----|----|----|
-| GET | `/containers/all/:clientId` | Get all containers for a client |
+|--------|------|-------------|
+| GET    | `/containers/all/:clientId` | Get all containers for a client |
 
 **Response:** Array of container objects with stats.
 
 ### Manager `/docker/manager`
 
 | Method | Path | Description |
-|----|----|----|
-| GET | `/manager/pool-stats` | Get worker pool statistics |
-| POST | `/manager/init-all-clients` | Initialize all registered clients |
+|--------|------|-------------|
+| GET    | `/manager/pool-stats` | Get worker pool statistics |
+| POST   | `/manager/init-all-clients` | Initialize all registered clients |
 
 ## Metrics Routes `/api/v2/metrics`
 
@@ -200,15 +200,15 @@ sequenceDiagram
 ```
 
 | Method | Path | Description |
-|----|----|----|
-| GET | `/plugins/all` | List all installed plugins |
-| GET | `/plugins/hooks` | Get available hook handlers |
-| GET | `/plugins/status` | Get plugin system status |
-| POST | `/plugins/install` | Install a plugin |
-| POST | `/plugins/activate` | Activate plugins by ID |
-| POST | `/plugins/delete` | Delete a plugin |
-| GET | `/plugins/routes` | List plugin-provided routes |
-| ALL | `/plugins/:id/routes/*` | Proxy requests to plugin Elysia instance |
+|--------|------|-------------|
+| GET    | `/plugins/all` | List all installed plugins |
+| GET    | `/plugins/hooks` | Get available hook handlers |
+| GET    | `/plugins/status` | Get plugin system status |
+| POST   | `/plugins/install` | Install a plugin |
+| POST   | `/plugins/activate` | Activate plugins by ID |
+| POST   | `/plugins/delete` | Delete a plugin |
+| GET    | `/plugins/routes` | List plugin-provided routes |
+| ALL    | `/plugins/:id/routes/*` | Proxy requests to plugin Elysia instance |
 
 **POST** `**/plugins/install**` **body:**
 
@@ -243,9 +243,9 @@ sequenceDiagram
 ## Database Routes `/api/v2/db`
 
 | Method | Path | Description |
-|----|----|----|
-| GET | `/db/config` | Get current configuration |
-| POST | `/db/config` | Update configuration |
+|--------|------|-------------|
+| GET    | `/db/config` | Get current configuration |
+| POST   | `/db/config` | Update configuration |
 
 **POST** `**/db/config**` **body:** Configuration object matching `DockStatConfigTable` schema from `@dockstat/typings`.
 
@@ -285,7 +285,7 @@ The current API implementation does not enforce authentication at the route leve
 ## Source Files
 
 | File | Description |
-|----|----|
+|------|-------------|
 | `apps/api/src/index.ts` | API entry point |
 | `apps/api/src/routes/docker/index.ts` | Docker route aggregator |
 | `apps/api/src/routes/docker/hosts.ts` | Host management routes |

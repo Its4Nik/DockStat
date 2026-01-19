@@ -1038,7 +1038,7 @@ class ServiceContainer {
 ## Related Documentation
 
 | Section | Description |
-|----|----|
+|---------|-------------|
 | [Architecture](/doc/d56ca448-563a-4206-9585-c45f8f6be5cf) | System design and component relationships |
 | [API Reference](/doc/b174143d-f906-4f8d-8cb5-9fc96512e575) | Complete API endpoint documentation |
 | [Configuration](/doc/dec1cb2c-9a13-4e67-a31c-d3a685391208) | Configuration options and settings |

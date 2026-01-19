@@ -598,7 +598,7 @@ users.insertMany(userList);
 ### DB Class
 
 | Method | Description |
-|----|----|
+|--------|-------------|
 | `new DB(path, options?)` | Create database connection |
 | `createTable<T>(name, schema, options?)` | Create table and return QueryBuilder |
 | `transaction<T>(fn: () => T)` | Execute function in transaction |
@@ -609,7 +609,7 @@ users.insertMany(userList);
 ### QueryBuilder Methods
 
 | Method | Description |
-|----|----|
+|--------|-------------|
 | `select(columns)` | Start select query |
 | `insert(data)` | Insert single row |
 | `insertMany(data[])` | Insert multiple rows |
@@ -629,16 +629,16 @@ users.insertMany(userList);
 ### Column Helpers
 
 | Method | SQLite Type | Description |
-|----|----|----|
+|--------|-------------|-------------|
 | `column.id()` | INTEGER PRIMARY KEY | Auto-increment ID |
-| `column.text(opts?)` | TEXT | String column |
-| `column.integer(opts?)` | INTEGER | Integer column |
-| `column.real(opts?)` | REAL | Float column |
-| `column.boolean(opts?)` | INTEGER | Boolean (0/1) |
-| `column.json(opts?)` | TEXT | JSON serialized |
-| `column.blob(opts?)` | BLOB | Binary data |
-| `column.createdAt()` | TEXT | Auto timestamp |
-| `column.generated(expr, type)` | varies | Generated column |
+| `column.text(opts?)` | TEXT        | String column |
+| `column.integer(opts?)` | INTEGER     | Integer column |
+| `column.real(opts?)` | REAL        | Float column |
+| `column.boolean(opts?)` | INTEGER     | Boolean (0/1) |
+| `column.json(opts?)` | TEXT        | JSON serialized |
+| `column.blob(opts?)` | BLOB        | Binary data |
+| `column.createdAt()` | TEXT        | Auto timestamp |
+| `column.generated(expr, type)` | varies      | Generated column |
 
 ## Integration with DockStat
 

@@ -390,23 +390,23 @@ const db = new DockStatDB("./data/myapp.db");
 ### Database Access Methods
 
 | Method | Return Type | Description |
-|----|----|----|
-| `getDB()` | `DB` | Returns the underlying sqlite-wrapper DB instance |
-| `close()` | `void` | Closes the database connection |
-| `exec(sql)` | `any` | Execute raw SQL query |
-| `getSchema()` | `object` | Get database schema information |
-| `getDatabasePath()` | `string` | Returns the database file path |
+|--------|-------------|-------------|
+| `getDB()` | `DB`        | Returns the underlying sqlite-wrapper DB instance |
+| `close()` | `void`      | Closes the database connection |
+| `exec(sql)` | `any`       | Execute raw SQL query |
+| `getSchema()` | `object`    | Get database schema information |
+| `getDatabasePath()` | `string`    | Returns the database file path |
 
 ### Theme Management Methods
 
 | Method | Return Type | Description |
-|----|----|----|
-| `addOrUpdateTheme(theme)` | `void` | Add or update a theme |
+|--------|-------------|-------------|
+| `addOrUpdateTheme(theme)` | `void`      | Add or update a theme |
 | `getTheme(name)` | `THEME_config \| null` | Get theme by name |
 | `getThemes()` | `THEME_config[]` | Get all themes |
-| `setTheme(name)` | `void` | Set the active theme |
+| `setTheme(name)` | `void`      | Set the active theme |
 | `getCurrentTheme()` | `THEME_config` | Get the currently active theme |
-| `getCurrentThemeName()` | `string` | Get the current theme name |
+| `getCurrentThemeName()` | `string`    | Get the current theme name |
 
 ## Default Theme
 
