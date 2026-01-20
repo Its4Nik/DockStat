@@ -5,14 +5,14 @@
     "type": "github",
     "verification_api": "https://dva.dockstore.itsnik.de",
     "themes": {
-      "dir": "./content/themes"
+      "dir": "./themes"
     },
     "plugins": {
-      "dir": "./content/plugins",
+      "dir": "./plugins",
       "bundle": "bundle"
     },
     "stacks": {
-      "dir": "./content/stacks"
+      "dir": "./stacks"
     }
   },
   "content": {
