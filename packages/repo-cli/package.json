@@ -1,6 +1,6 @@
 {
   "name": "@dockstat/repo-cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A CLI helper for administering DockStat Repositories",
   "module": "src/index.ts",
   "type": "module",
@@ -10,10 +10,10 @@
     "README.md"
   ],
   "bin": {
-    "dockstat-repo": "./dist/dockstore-repo-cli"
+    "dockstat-repo": "./dist/dockstat-repo-cli"
   },
   "scripts": {
-    "build": "bun build --target=bun --compile --outfile=dist/dockstore-repo-cli src/index.ts",
+    "build": "bun build --target=bun --compile --outfile=dist/dockstat-repo-cli src/index.ts",
     "prepublishOnly": "bun run build"
   },
   "devDependencies": {
