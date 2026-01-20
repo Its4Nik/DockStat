@@ -1,7 +1,14 @@
 {
   "name": "@dockstat/repo-cli",
+  "version": "1.0.1",
+  "description": "A CLI helper for administering DockStat Repositories",
   "module": "src/index.ts",
   "type": "module",
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
   "bin": {
     "dockstat-repo": "./dist/dockstore-repo-cli"
   },
