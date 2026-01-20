@@ -8,7 +8,7 @@ export interface Opts extends Omit<CreateRepoType, "source"> {
   stacks: { dir: string }
 }
 
-export interface RepoFile {
+export interface RepoFile extends Record<string, unknown> {
   config: Omit<Opts, "root">
   content: {
     plugins: PluginMetaType[]

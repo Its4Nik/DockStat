@@ -12,6 +12,9 @@
   "bin": {
     "dockstat-repo": "./dist/dockstat-repo-cli"
   },
+  "exports": {
+    "./types": "./src/types.ts"
+  },
   "scripts": {
     "build": "bun build --target=bun --compile --outfile=dist/dockstat-repo-cli src/index.ts",
     "prepublishOnly": "bun run build"

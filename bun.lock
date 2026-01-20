@@ -24,6 +24,7 @@
         "@dockstat/docker-client": "workspace:*",
         "@dockstat/logger": "workspace:*",
         "@dockstat/plugin-handler": "workspace:*",
+        "@dockstat/repo-cli": "workspace:*",
         "@dockstat/sqlite-wrapper": "workspace:*",
         "@dockstat/typings": "workspace:*",
         "@dockstat/ui": "workspace:*",
@@ -192,8 +193,9 @@
     },
     "packages/repo-cli": {
       "name": "@dockstat/repo-cli",
+      "version": "1.0.2",
       "bin": {
-        "dockstat-repo": "./dist/dockstore-repo-cli",
+        "dockstat-repo": "./dist/dockstat-repo-cli",
       },
       "dependencies": {
         "@commander-js/extra-typings": "^14.0.0",
