@@ -1,11 +1,10 @@
-import type { DockStatConfigTableType } from "@dockstat/typings/types"
 import type { RepoFile } from "@dockstat/repo-cli/types"
-import { extractErrorMessage } from "@dockstat/utils"
+import type { DockStatConfigTableType } from "@dockstat/typings/types"
+import { extractErrorMessage, repo } from "@dockstat/utils"
 import Elysia, { t } from "elysia"
 import { DockStatDB } from "../database"
 import { updateConfig } from "../database/utils"
 import { DatabaseModel, RepositoryModel } from "../models/database"
-import { repo } from "@dockstat/utils"
 
 const DBRoutes = new Elysia({
   name: "DatabaseElysiaInstance",
