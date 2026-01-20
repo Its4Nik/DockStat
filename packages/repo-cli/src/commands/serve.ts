@@ -17,6 +17,8 @@ export const serveCommand = new Command("serve")
 
         let filePath = decodeURIComponent(url.pathname)
 
+        filePath = filePath.replaceAll("../", "/")
+
         if (filePath.charAt(0) === "/") {
           filePath = filePath.replace("/", "")
         }

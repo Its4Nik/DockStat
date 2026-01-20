@@ -32,43 +32,54 @@ export const badgesCommand = new Command("badges")
 
     const badges: { name: string; svg: string }[] = []
 
-    if (options.plugins) {
-      const count = content.plugins.length
-      badges.push({
+    // Right after `const badges: { name: string; svg: string }[] = []`
+
+    type CountBadgeKey = "plugins" | "themes" | "stacks"
+
+    const countBadgeConfigs: {
+      optionKey: CountBadgeKey
+      name: string
+      label: string
+      color: string
+      icon: IconName
+      getCount: () => number
+    }[] = [
+      {
+        optionKey: "plugins",
         name: "plugins",
-        svg: createBadge({
-          label: "plugins",
-          message: count.toString(),
-          color: count > 0 ? COLORS.blue : COLORS.lightgrey,
-          icon: "puzzle",
-          style,
-        }),
-      })
-    }
-
-    if (options.themes) {
-      const count = content.themes.length
-      badges.push({
+        label: "plugins",
+        color: COLORS.blue,
+        icon: "puzzle",
+        getCount: () => content.plugins.length,
+      },
+      {
+        optionKey: "themes",
         name: "themes",
-        svg: createBadge({
-          label: "themes",
-          message: count.toString(),
-          color: count > 0 ? COLORS.purple : COLORS.lightgrey,
-          icon: "palette",
-          style,
-        }),
-      })
-    }
-
-    if (options.stacks) {
-      const count = content.stacks.length
-      badges.push({
+        label: "themes",
+        color: COLORS.purple,
+        icon: "palette",
+        getCount: () => content.themes.length,
+      },
+      {
+        optionKey: "stacks",
         name: "stacks",
+        label: "stacks",
+        color: COLORS.teal,
+        icon: "layers",
+        getCount: () => content.stacks.length,
+      },
+    ]
+
+    for (const cfg of countBadgeConfigs) {
+      if (!options[cfg.optionKey]) continue
+      const count = cfg.getCount()
+      badges.push({
+        name: cfg.name,
         svg: createBadge({
-          label: "stacks",
+          label: cfg.label,
           message: count.toString(),
-          color: count > 0 ? COLORS.teal : COLORS.lightgrey,
-          icon: "layers",
+          color: count > 0 ? cfg.color : COLORS.lightgrey,
+          icon: cfg.icon,
           style,
         }),
       })

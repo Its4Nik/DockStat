@@ -13,7 +13,7 @@ const PluginHashes = t.Nullable(t.Record(t.String(), PluginHashEntry))
 const Repo = t.Object({
   id: t.Number(),
   name: t.String(),
-  type: t.UnionEnum(["local", "http", "github", "gitlab", "gitea", "default"]),
+  type: t.UnionEnum(["local", "http", "github", "gitlab", "gitea"]),
 
   // Points to root Manifest
   // Is custom format!
