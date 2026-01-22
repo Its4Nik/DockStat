@@ -23,6 +23,7 @@
     "lint:fix": "biome lint --write .",
     "lint:gh": "turbo run lint -- --reporter=github",
     "check-types": "bunx tsc --noEmit",
+    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz && rm -r ./dist",
     "test": "DOCKSTAT_LOGGER_IGNORE_MESSAGES='Logger Status: active - ignoring messages:' bun test"
   },
   "keywords": [

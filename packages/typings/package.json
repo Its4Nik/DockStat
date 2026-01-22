@@ -6,7 +6,7 @@
     "email": "dockstat@itsnik.de",
     "url": "https://itsnik.de"
   },
-  "version": "1.1.0",
+  "version": "1.1.1",
   "exports": {
     ".": "./src/index.ts",
     "./schemas": "./src/typebox/_schemas.ts",
@@ -17,7 +17,8 @@
     "lint:fix": "biome lint --write .",
     "lint:gh": "turbo run lint -- --reporter=github",
     "check-types": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz && rm -r ./dist"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"

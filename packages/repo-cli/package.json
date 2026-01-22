@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "bun build --target=bun --compile --outfile=dist/dockstat-repo-cli src/index.ts",
-    "prepublishOnly": "bun run build"
+    "publish": "bun run build && bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz && rm -r ./dist"
   },
   "devDependencies": {
     "@types/bun": "latest",

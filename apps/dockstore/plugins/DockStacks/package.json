@@ -1,0 +1,13 @@
+{
+  "name": "dockstacks",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@dockstat/plugin-builder": "1.0.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

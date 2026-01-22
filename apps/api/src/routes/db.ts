@@ -1,4 +1,3 @@
-import type { DockStatConfigTableType } from "@dockstat/typings/types"
 import type { RepoFile } from "@dockstat/repo-cli/types"
 import { extractErrorMessage } from "@dockstat/utils"
 import Elysia, { t } from "elysia"
@@ -6,6 +5,7 @@ import { DockStatDB } from "../database"
 import { updateConfig } from "../database/utils"
 import { DatabaseModel, RepositoryModel } from "../models/database"
 import { repo } from "@dockstat/utils"
+import type { DockStatConfigTableType } from "@dockstat/typings/types"
 
 const DBRoutes = new Elysia({
   name: "DatabaseElysiaInstance",
@@ -211,6 +211,11 @@ const DBRoutes = new Elysia({
           source: repo.parseRawToDB(body.link_to_manifest).source,
           verification_api: repoFile.config.verification_api,
           type: repoFile.config.type,
+          paths: {
+            plugins: repoFile.config.plugins,
+            stacks: repoFile.config.stacks,
+            themes: repoFile.config.themes,
+          },
         })
 
         // Fetch the newly created repository
