@@ -10,8 +10,8 @@
 */
 
 import { column } from "@dockstat/sqlite-wrapper"
-import { DockNodeDB } from "../db"
 import * as DC from "docker-compose"
+import { DockNodeDB } from "../db"
 
 const STACK_ROOT = "./stacks"
 
