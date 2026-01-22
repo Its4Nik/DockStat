@@ -3,10 +3,10 @@
   "main": "src/index.ts",
   "type": "module",
   "private": false,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A tiny utils library used in DockStat",
   "scripts": {
-    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz && rm -r ./dist"
+    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
   "devDependencies": {
     "@types/bun": "latest",

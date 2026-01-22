@@ -18,7 +18,7 @@
   ],
   "scripts": {
     "format": "biome format --write",
-    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz && rm -r ./dist"
+    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
   "keywords": [
     "dockstat",
