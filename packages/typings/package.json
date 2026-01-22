@@ -10,7 +10,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./schemas": "./src/typebox/_schemas.ts",
-    "./types": "./src/typebox/_types.ts"
+    "./types": "./src/typebox/_types.ts",
+    "./v2": "./src/v2/index.ts"
   },
   "scripts": {
     "lint": "biome lint .",
