@@ -13,7 +13,7 @@ const PluginHashes = t.Nullable(t.Record(t.String(), PluginHashEntry))
 const Repo = t.Object({
   id: t.Number(),
   name: t.String(),
-  type: t.UnionEnum(["local", "http", "github", "gitlab", "gitea", "default"]),
+  type: t.UnionEnum(["local", "http", "github", "gitlab", "gitea"]),
 
   // Points to root Manifest
   // Is custom format!
@@ -27,12 +27,17 @@ const Repo = t.Object({
   // - If the Policy is set to "relaxed", no verification is performed at all.
   policy: t.UnionEnum(["strict", "relaxed"]),
   verification_api: t.Nullable(t.String({ format: "uri" })),
+  paths: t.Object({
+    themes: t.Object({ dir: t.String() }),
+    plugins: t.Object({ dir: t.String(), bundle: t.String() }),
+    stacks: t.Object({ dir: t.String() }),
+  }),
 })
 
 // Schema for creating a new repository (id is auto-generated)
 const CreateRepo = t.Object({
   name: t.String(),
-  type: t.UnionEnum(["local", "http", "github", "gitlab", "gitea", "default"]),
+  type: t.UnionEnum(["local", "http", "github", "gitlab", "gitea"]),
   source: t.String(),
   policy: t.UnionEnum(["strict", "relaxed"]),
   verification_api: t.Nullable(t.String({ format: "uri" })),
@@ -42,7 +47,7 @@ const CreateRepo = t.Object({
 const UpdateRepo = t.Object({
   id: t.Number(),
   name: t.Optional(t.String()),
-  type: t.Optional(t.UnionEnum(["local", "http", "github", "gitlab", "gitea", "default"])),
+  type: t.Optional(t.UnionEnum(["local", "http", "github", "gitlab", "gitea"])),
   source: t.Optional(t.String()),
   policy: t.Optional(t.UnionEnum(["strict", "relaxed"])),
   verification_api: t.Optional(t.Nullable(t.String({ format: "uri" }))),

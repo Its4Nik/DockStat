@@ -14,12 +14,13 @@
     "@dockstat/plugin-handler": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*",
     "@dockstat/typings": "workspace:*",
+    "@dockstat/repo-cli": "workspace:*",
     "@dockstat/ui": "workspace:*",
     "@dockstat/utils": "workspace:*",
     "@elysiajs/cors": "^1.4.0",
     "@elysiajs/openapi": "^1.4.11",
     "@elysiajs/server-timing": "^1.4.0",
-    "elysia": "1.4.12"
+    "elysia": "catalog:"
   },
   "devDependencies": {
     "bun-types": "latest"

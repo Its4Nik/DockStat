@@ -15,12 +15,25 @@ class DockStatDB {
     this.logger.info("Initializing DockStatDB")
 
     try {
-      this.db = new DB("dockstat.sqlite", this.logger, {
-        pragmas: [
-          ["journal_mode", "WAL"],
-          ["cache_size", -64000],
-        ],
-      })
+      this.db = new DB(
+        "dockstat.sqlite",
+        {
+          pragmas: [
+            ["journal_mode", "WAL"],
+            ["cache_size", -64000],
+          ],
+          autoBackup: {
+            directory: ".backups",
+            enabled: true,
+            compress: true,
+            intervalMs: Bun.env.DOCKSTAT_DB_BACKUP_INTERVAL
+              ? Number(Bun.env.DOCKSTAT_DB_BACKUP_INTERVAL) * 60 * 1000
+              : undefined,
+            maxBackups: Number(Bun.env.DOCKSTAT_MAX_DB_BACKUPS || 10),
+          },
+        },
+        this.logger
+      )
       this.logger.debug("Created DB instance for dockstat.sqlite")
 
       this.config_table = this.db.createTable<DockStatConfigTableType>(
@@ -67,6 +80,7 @@ class DockStatDB {
           type: column.text({ notNull: true }),
           source: column.text({ notNull: true }),
           policy: column.text({ notNull: true, default: "relaxed" }),
+          paths: column.json(),
           verification_api: column.text({ notNull: false }),
         },
         {

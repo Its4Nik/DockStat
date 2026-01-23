@@ -1,0 +1,36 @@
+{
+  "name": "@dockstat/repo-cli",
+  "version": "1.0.3",
+  "description": "A CLI helper for administering DockStat Repositories",
+  "module": "src/index.ts",
+  "type": "module",
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "bin": {
+    "dockstat-repo": "./dist/dockstat-repo-cli"
+  },
+  "exports": {
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "build": "bun build --target=bun --compile --outfile=dist/dockstat-repo-cli src/index.ts",
+    "publish": "bun run build && bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@dockstat/typings": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@dockstat/utils": "workspace:*",
+    "@commander-js/extra-typings": "^14.0.0",
+    "commander": "^14.0.2",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  }
+}

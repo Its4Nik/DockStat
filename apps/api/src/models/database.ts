@@ -1,5 +1,4 @@
 import {
-  CreateRepo,
   DockStatConfigTable,
   Repo,
   RepoResponse,
@@ -38,7 +37,7 @@ export namespace DatabaseModel {
 
 export namespace RepositoryModel {
   // Request body schemas
-  export const createBody = CreateRepo
+  export const createBody = t.Object({ link_to_manifest: t.String({ format: "uri" }) })
   export const updateBody = UpdateRepo
 
   // Response schemas
