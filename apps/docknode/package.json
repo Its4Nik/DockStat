@@ -11,7 +11,7 @@
   "dependencies": {
     "@dockstat/sqlite-wrapper": "workspace:*",
     "docker-compose": "^1.3.0",
-    "elysia": "latest"
+    "elysia": "catalog:"
   },
   "devDependencies": {
     "bun-types": "latest"

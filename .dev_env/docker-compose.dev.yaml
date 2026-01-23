@@ -1,4 +1,4 @@
-name: "dockstatapi-dev"
+name: "dockstat-dev"
 services:
   socket-proxy:
     container_name: socket-proxy-dockstat-dev
@@ -48,7 +48,7 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - ./apps/api:/data
+      - ./../apps/api:/data
     environment:
       - SQLITE_DATABASE=dockstat.sqlite
 
@@ -59,7 +59,7 @@ services:
     ports:
       - 8181:8080
     volumes:
-      - ./apps/dockstore-verification:/data
+      - ./../apps/dockstore-verification:/data
     environment:
       - SQLITE_DATABASE=verification.db
 

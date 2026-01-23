@@ -31,7 +31,7 @@
     "@dockstat/logger": "workspace:*"
   },
   "dependencies": {
-    "elysia": "1.4.12",
+    "elysia": "catalog:",
     "js-yaml": "^4.1.0"
   }
 }
