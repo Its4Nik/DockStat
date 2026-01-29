@@ -1,16 +1,30 @@
 {
   "name": "@dockstat/docknode",
   "version": "1.0.0",
+  "description": "A remote agent for handling verious tasks in the DockStat eco system. Currently only used for Stack administration.",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist",
+    "build": "rm -r ./dist || true && bun build --target bun --sourcemap=inline --outdir=./dist --minify src/index.ts",
+    "build:docker": "bun run build && docker build -t docknode:latest .",
     "dev": "bun run --watch src/index.ts"
   },
+  "files": [
+    "src",
+    "README.md"
+  ],
   "exports": {
     "./treaty": "./src/_treaty.ts"
   },
   "dependencies": {
+    "@dockstat/docker-client": "workspace:*",
+    "@dockstat/logger": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*",
+    "@dockstat/typings": "workspace:*",
+    "@dockstat/utils": "workspace:*",
+    "@elysiajs/openapi": "^1.4.11",
+    "@types/dockerode": "^4.0.1",
     "docker-compose": "^1.3.0",
+    "dockerode": "^4.0.9",
     "elysia": "catalog:"
   },
   "devDependencies": {
