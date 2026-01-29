@@ -1,1 +1,1 @@
-export type { ComposeSpecification } from "./compose"
+export type { ComposeSpecification, Service } from "./compose"

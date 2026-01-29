@@ -9,6 +9,8 @@ import { Streams } from "./stream"
 import { System } from "./system"
 import { Volumes } from "./volumes"
 
+import DockerClient from "../client"
+
 const DCM = applyMixins(
   DockerClientManagerCore,
   Hosts,
@@ -21,4 +23,5 @@ const DCM = applyMixins(
   Streams
 )
 
+export const client = DockerClient
 export default DCM
