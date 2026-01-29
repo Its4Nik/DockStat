@@ -1,7 +1,7 @@
-import { DockNodeLogger } from "./utils/logger"
+import { formatBytes, truncate } from "@dockstat/utils"
 import Docker from "dockerode"
 import { DOCKER_SOCKET_PATH } from "./consts"
-import { formatBytes, truncate } from "@dockstat/utils"
+import { DockNodeLogger } from "./utils/logger"
 
 class Client {
   private logger = DockNodeLogger.spawn("Simple-Docker-Client")

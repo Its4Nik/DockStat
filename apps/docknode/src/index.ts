@@ -1,6 +1,6 @@
+import openapi from "@elysiajs/openapi"
 import { Elysia } from "elysia"
 import { DockStacksRoutes } from "./stacks/routes"
-import openapi from "@elysiajs/openapi"
 import { DockNodeLogger } from "./utils/logger"
 
 const DockNode = new Elysia({ prefix: "/api" })
