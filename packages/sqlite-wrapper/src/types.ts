@@ -519,6 +519,17 @@ export const sql = {
  */
 export type CreateTableColumns = string | Record<string, string> | TableSchema
 
+export type IndexOrder = "ASC" | "DESC"
+
+export type IndexColumn =
+  | string
+  | {
+      name: string
+      order?: IndexOrder
+    }
+
+export type IndexMethod = "btree" | "hash" | "gist" | "spgist" | "gin" | "brin" | string
+
 /**
  * Query builder state interface
  */

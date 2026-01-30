@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, test } from "bun:test"
-import { column, DB } from "../index"
+import { column, DB } from "../src/index"
 
 /**
  * Tests for automatic detection of JSON and BOOLEAN columns from schema definition.
