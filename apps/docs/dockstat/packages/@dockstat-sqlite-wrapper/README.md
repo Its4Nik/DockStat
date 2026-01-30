@@ -3,7 +3,7 @@ id: f543683b-68be-431f-a6d5-7b4012b1345a
 title: "@dockstat/sqlite-wrapper"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: bbcefaa2-6bd4-46e8-ae4b-a6b823593e67
-updatedAt: 2026-01-01T15:02:01.139Z
+updatedAt: 2026-01-30T13:20:24.674Z
 urlId: vCSP0qqnqI
 ---
 
@@ -483,24 +483,80 @@ const results = users
 
 ## Indexes
 
+## `createIndex`
+
+Create an index on a table.
+
 ```typescript
-// Create index after table
-db.exec(`
-  CREATE INDEX IF NOT EXISTS idx_users_email 
-  ON users(email)
-`);
+createIndex(
+  indexName: string,
+  tableName: string,
+  columns:
+    | string
+    | { name: string; order?: "ASC" | "DESC" }
+    | Array<string | { name: string; order?: "ASC" | "DESC" }>,
+  options?: {
+    unique?: boolean
+    ifNotExists?: boolean
+    using?: string
+    where?: string
+    partial?: string
+  }
+): void
+```
 
-// Composite index
-db.exec(`
-  CREATE INDEX IF NOT EXISTS idx_users_active_created 
-  ON users(active, created_at DESC)
-`);
+### Options
 
-// Unique index
-db.exec(`
-  CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username 
-  ON users(username)
-`);
+* `**unique**` — Create a `UNIQUE` index
+* `**ifNotExists**` — Add `IF NOT EXISTS`
+* `**using**` — Index method (`USING btree`, etc.)
+* `**where**` **/** `**partial**` — `WHERE` clause for partial indexes (`partial` is an alias)
+
+
+---
+
+### Examples
+
+**Simple index**
+
+```typescript
+db.createIndex("idx_users_email", "users", "email", { ifNotExists: true })
+```
+
+**Composite index with order**
+
+```typescript
+db.createIndex(
+  "idx_users_active_created",
+  "users",
+  [
+    { name: "active", order: "ASC" },
+    { name: "created_at", order: "DESC" },
+  ],
+  { ifNotExists: true }
+)
+```
+
+**Unique index**
+
+```typescript
+db.createIndex(
+  "idx_users_username",
+  "users",
+  "username",
+  { unique: true, ifNotExists: true }
+)
+```
+
+**Partial index**
+
+```typescript
+db.createIndex(
+  "idx_users_active",
+  "users",
+  "email",
+  { partial: "active = 1" }
+)
 ```
 
 ## Schema Introspection
