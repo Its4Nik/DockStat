@@ -177,6 +177,9 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
 
   // ===== Execution Methods =====
 
+  // Use the protected static helper inherited from WhereQueryBuilder: `safeStringify`
+  // (Removed duplicate implementation to avoid static-side conflicts with the base class.)
+
   /**
    * Execute the query and return all matching rows
    *
@@ -186,6 +189,9 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
   all(): T[] {
     const hasRegex = this.hasRegexConditions()
     const [query, params] = this.buildSelectQuery(!hasRegex)
+
+    // Info-level log for invocation
+    this.selectLog.info(`all | query=${query} params=${WhereQueryBuilder.safeStringify(params)}`)
 
     this.selectLog.query("SELECT", query, params)
 
@@ -200,6 +206,11 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
 
     // Apply client-side operations if needed
     const result = hasRegex ? this.applyClientSideOperations(transformed) : transformed
+
+    // Info-level log for returned data (length + sample)
+    this.selectLog.info(
+      `all | returned=${result.length} sample=${WhereQueryBuilder.safeStringify(result[0] ?? null)}`
+    )
 
     this.reset()
     return result
@@ -216,6 +227,11 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const [query, params] = this.buildSelectQuery(true)
       const optimizedQuery = `${query} LIMIT 1`
 
+      // Info-level log for invocation
+      this.selectLog.info(
+        `get | optimizedQuery=${optimizedQuery} params=${WhereQueryBuilder.safeStringify(params)}`
+      )
+
       this.selectLog.query("SELECT (get)", optimizedQuery, params)
 
       const row = this.getDb()
@@ -225,6 +241,10 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       this.selectLog.result("SELECT (get)", row ? 1 : 0)
 
       const result = row ? this.transformRowFromDb(row) : null
+
+      // Info-level log for returned row
+      this.selectLog.info(`get | returned=${WhereQueryBuilder.safeStringify(result)}`)
+
       this.reset()
       return result
     }
@@ -232,6 +252,9 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
     // If limit is set or regex conditions exist, use standard flow
     if (!this.hasRegexConditions()) {
       const [query, params] = this.buildSelectQuery(true)
+
+      // Info-level log for invocation
+      this.selectLog.info(`get | query=${query} params=${WhereQueryBuilder.safeStringify(params)}`)
 
       this.selectLog.query("SELECT (get)", query, params)
 
@@ -242,6 +265,10 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       this.selectLog.result("SELECT (get)", row ? 1 : 0)
 
       const result = row ? this.transformRowFromDb(row) : null
+
+      // Info-level log for returned row
+      this.selectLog.info(`get | returned=${WhereQueryBuilder.safeStringify(result)}`)
+
       this.reset()
       return result
     }
@@ -272,6 +299,11 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const [whereClause, whereParams] = this.buildWhereClause()
       const query = `SELECT COUNT(*) AS __count FROM ${quoteIdentifier(this.getTableName())}${whereClause}`
 
+      // Info-level log
+      this.selectLog.info(
+        `count | query=${query} params=${WhereQueryBuilder.safeStringify(whereParams)}`
+      )
+
       this.selectLog.query("COUNT", query, whereParams)
 
       const result = this.getDb()
@@ -279,6 +311,10 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
         .get(...whereParams) as { __count: number } | null
 
       this.reset()
+
+      // Info-level log for returned count
+      this.selectLog.info(`count | returned=${result?.__count ?? 0}`)
+
       return result?.__count ?? 0
     }
 
@@ -297,6 +333,11 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const subquery = `SELECT 1 FROM ${quoteIdentifier(this.getTableName())}${whereClause} LIMIT 1`
       const query = `SELECT EXISTS(${subquery}) AS __exists`
 
+      // Info-level log
+      this.selectLog.info(
+        `exists | query=${query} params=${WhereQueryBuilder.safeStringify(whereParams)}`
+      )
+
       this.selectLog.query("EXISTS", query, whereParams)
 
       const result = this.getDb()
@@ -304,6 +345,10 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
         .get(...whereParams) as { __exists: number } | null
 
       this.reset()
+
+      // Info-level log for returned boolean
+      this.selectLog.info(`exists | returned=${Boolean(result?.__exists)}`)
+
       return Boolean(result?.__exists)
     }
 
@@ -319,7 +364,14 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    */
   value<K extends keyof T>(column: K): T[K] | null {
     const row = this.first()
-    return row ? row[column] : null
+    const value = row ? row[column] : null
+
+    // Info-level log
+    this.selectLog.info(
+      `value | column=${String(column)} returned=${WhereQueryBuilder.safeStringify(value)}`
+    )
+
+    return value
   }
 
   /**
@@ -330,6 +382,13 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    */
   pluck<K extends keyof T>(column: K): T[K][] {
     const rows = this.all()
-    return rows.map((row) => row[column])
+    const values = rows.map((row) => row[column])
+
+    // Info-level log
+    this.selectLog.info(
+      `pluck | column=${String(column)} returned=${WhereQueryBuilder.safeStringify(values)}`
+    )
+
+    return values
   }
 }
