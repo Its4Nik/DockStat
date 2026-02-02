@@ -12,6 +12,7 @@
   "dependencies": {
     "@dockstat/docker-client": "workspace:*",
     "@dockstat/template-renderer": "workspace:*",
+    "@dockstat/theme-handler": "workspace:*",
     "@dockstat/typings": "workspace:*",
     "@dockstat/ui": "workspace:*",
     "@dockstat/utils": "workspace:*",

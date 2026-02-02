@@ -11,6 +11,7 @@ import { useEdenQuery } from "./hooks/useEdenQuery"
 import { useGlobalBusy } from "./hooks/useGlobalBusy"
 import { api } from "./lib/api"
 import { toast } from "./lib/toast"
+import { useTheme } from "./hooks/useTheme"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [ramUsage, setRamUsage] = useState<string>("Connecting...")
@@ -18,6 +19,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [logMessagesArr, setlogMessagesArr] = useState<LogEntry[]>([])
 
   const config = useContext(ConfigProviderContext)
+  const { theme, themesList, isLoading: themeLoading, getAllThemes, applyThemeById } = useTheme()
   const heading = useContext(PageHeadingContext).heading
   const isBusy = useGlobalBusy()
 
@@ -77,6 +79,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           pin: pinMutation.mutateAsync,
           unpin: unPinMutation.mutateAsync,
           isBusy: isBusy,
+        }}
+        themeProps={{
+          themes: themesList || [],
+          currentThemeId: theme?.id ?? null,
+          onSelectTheme: (t) => applyThemeById(t.id),
+          isLoading: themeLoading,
+          onOpen: getAllThemes,
         }}
       />
       <div className="px-4">{children}</div>
