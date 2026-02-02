@@ -155,16 +155,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [allThemesQuery])
 
   useEffect(() => {
-    if (theme?.id !== loadThemePreference()) {
-      console.log("Theme preference changed")
+    const savedThemeId = loadThemePreference()
+
+    if (theme?.id !== savedThemeId) {
+      // theme preference has changed; fall through to apply saved theme below
     } else if (hasLoadedSavedTheme.current === true) {
-      console.log("Theme already loaded")
+      // saved theme already applied; no further work needed
       return
     }
 
     hasLoadedSavedTheme.current = true
 
-    const savedThemeId = loadThemePreference()
     if (savedThemeId !== null) {
       applyThemeById(savedThemeId)
     }
