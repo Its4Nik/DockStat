@@ -1,0 +1,24 @@
+{
+  "name": "@dockstat/theme-handler",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./server": "./src/server/index.ts",
+    "./client": "./src/client/index.ts",
+    "./themes": "./src/default-themes/index.ts"
+  },
+  "dependencies": {
+    "react": "^19.2.3",
+    "elysia": "catalog:",
+    "@elysiajs/eden": "catalog:",
+    "@dockstat/sqlite-wrapper": "workspace:*",
+    "@dockstat/logger": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
