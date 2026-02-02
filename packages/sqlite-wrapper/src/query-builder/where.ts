@@ -1,6 +1,12 @@
 import type { SQLQueryBindings } from "bun:sqlite"
 import type { RegexCondition, WhereCondition } from "../types"
-import { buildBetweenClause, buildInClause, normalizeOperator, quoteIdentifier } from "../utils"
+import {
+  buildBetweenClause,
+  buildInClause,
+  normalizeOperator,
+  quoteIdentifier,
+  truncate,
+} from "../utils"
 import { BaseQueryBuilder } from "./base"
 
 /**
@@ -57,9 +63,10 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
   // Helper to stringify values safely (converts RegExp to string and falls back)
   protected static safeStringify(obj: unknown): string {
     try {
-      return JSON.stringify(obj, (_k, v) => (v instanceof RegExp ? v.toString() : v))
+      const dat = JSON.stringify(obj, (_k, v) => (v instanceof RegExp ? v.toString() : v))
+      return truncate(dat, 100)
     } catch {
-      return String(obj)
+      return truncate(String(obj), 100)
     }
   }
 
