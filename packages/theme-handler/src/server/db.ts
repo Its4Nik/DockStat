@@ -1,7 +1,6 @@
 import type Logger from "@dockstat/logger"
-import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type DB from "@dockstat/sqlite-wrapper"
-import type { themeType } from "./types"
+import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import {
   DarkTheme,
   DarkThemeAnimations,
@@ -9,6 +8,7 @@ import {
   OledTheme,
   UltraDarkTheme,
 } from "../default-themes"
+import type { themeType } from "./types"
 
 export class ThemeDB {
   private table: QueryBuilder<themeType>

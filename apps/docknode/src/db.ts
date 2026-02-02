@@ -8,3 +8,5 @@ export const DockNodeDB = new DB("docknode.db", {
     maxBackups: 12,
   },
 })
+
+DockNodeDB.createIndex

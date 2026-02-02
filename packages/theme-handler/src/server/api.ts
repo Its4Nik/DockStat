@@ -1,6 +1,5 @@
 import Elysia, { t } from "elysia"
 import type { ThemeDB } from "./db"
-import type { themeType } from "./types"
 
 /**
  * Theme response model for OpenAPI documentation

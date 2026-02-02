@@ -1,5 +1,5 @@
-import { createContext } from "react"
 import type { ThemeContextData } from "@dockstat/theme-handler/client"
+import { createContext } from "react"
 
 /**
  * Full theme data including name, for use in theme browser/listing.

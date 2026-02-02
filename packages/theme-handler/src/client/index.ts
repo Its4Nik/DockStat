@@ -6,7 +6,7 @@ export type { ThemeFromServer } from "./lib/fetchTheme"
 export { applyThemeToDocument } from "./lib/fetchTheme"
 
 export {
-  saveThemePreference,
-  loadThemePreference,
   clearThemePreference,
+  loadThemePreference,
+  saveThemePreference,
 } from "./lib/storage"

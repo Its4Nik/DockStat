@@ -9,9 +9,9 @@ import { PageHeadingContext } from "./contexts/pageHeadingContext"
 import { useEdenMutation } from "./hooks/eden/useEdenMutation"
 import { useEdenQuery } from "./hooks/useEdenQuery"
 import { useGlobalBusy } from "./hooks/useGlobalBusy"
+import { useTheme } from "./hooks/useTheme"
 import { api } from "./lib/api"
 import { toast } from "./lib/toast"
-import { useTheme } from "./hooks/useTheme"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [ramUsage, setRamUsage] = useState<string>("Connecting...")

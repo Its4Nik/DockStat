@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react"
-import { ThemeProviderContext, type ThemeProviderData, type ThemeListItem } from "@/contexts/theme"
 import {
   applyThemeToDocument,
-  saveThemePreference,
   loadThemePreference,
+  saveThemePreference,
   type ThemeContextData,
 } from "@dockstat/theme-handler/client"
-import { api } from "@/lib/api"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { type ThemeListItem, ThemeProviderContext, type ThemeProviderData } from "@/contexts/theme"
 import { useEdenQuery } from "@/hooks/useEdenQuery"
+import { api } from "@/lib/api"
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themesList, setThemesList] = useState<ThemeListItem[] | null>(null)

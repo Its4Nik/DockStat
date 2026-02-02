@@ -1,13 +1,13 @@
 import type Logger from "@dockstat/logger"
 import type DB from "@dockstat/sqlite-wrapper"
-import { ThemeDB } from "./db"
 import { createThemeRoutes } from "./api"
+import { ThemeDB } from "./db"
 import type { themeType } from "./types"
 
-export type { themeType } from "./types"
 export type { ThemeRoutesType } from "./api"
-export { ThemeDB } from "./db"
 export { createThemeRoutes } from "./api"
+export { ThemeDB } from "./db"
+export type { themeType } from "./types"
 
 export type ThemeHandlerConfig = {
   db: DB
