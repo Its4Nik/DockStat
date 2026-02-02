@@ -158,12 +158,12 @@ import { Card } from "@dockstat/ui";
 **Props:**
 
 | Prop | Type | Default | Description |
-|----|----|----|----|
-| `title` | `string` | — | Card title |
-| `subtitle` | `string` | — | Card subtitle |
-| `children` | `ReactNode` | — | Card content |
-| `className` | `string` | — | Additional CSS classes |
-| `accent` | `string` | — | Accent color override |
+|------|------|---------|-------------|
+| `title` | `string` | —       | Card title  |
+| `subtitle` | `string` | —       | Card subtitle |
+| `children` | `ReactNode` | —       | Card content |
+| `className` | `string` | —       | Additional CSS classes |
+| `accent` | `string` | —       | Accent color override |
 
 #### Divider
 
@@ -221,12 +221,12 @@ function Example() {
 **Props:**
 
 | Prop | Type | Default | Description |
-|----|----|----|----|
+|------|------|---------|-------------|
 | `isOpen` | `boolean` | `false` | Controls modal visibility |
-| `onClose` | `() => void` | — | Close handler |
-| `title` | `string` | — | Modal title |
-| `children` | `ReactNode` | — | Modal content |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Modal size |
+| `onClose` | `() => void` | —       | Close handler |
+| `title` | `string` | —       | Modal title |
+| `children` | `ReactNode` | —       | Modal content |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"`  | Modal size  |
 
 ### Form Components
 
@@ -259,14 +259,14 @@ import { Button } from "@dockstat/ui";
 **Props:**
 
 | Prop | Type | Default | Description |
-|----|----|----|----|
+|------|------|---------|-------------|
 | `variant` | `"primary" \| "secondary" \| "danger" \| "ghost"` | `"primary"` | Button style variant |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | Button size |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"`  | Button size |
 | `disabled` | `boolean` | `false` | Disable button |
 | `loading` | `boolean` | `false` | Show loading state |
-| `icon` | `ReactNode` | — | Icon element |
-| `onClick` | `() => void` | — | Click handler |
-| `children` | `ReactNode` | — | Button text |
+| `icon` | `ReactNode` | —       | Icon element |
+| `onClick` | `() => void` | —       | Click handler |
+| `children` | `ReactNode` | —       | Button text |
 
 #### Form Inputs
 
@@ -361,11 +361,11 @@ import { Badge } from "@dockstat/ui";
 **Props:**
 
 | Prop | Type | Default | Description |
-|----|----|----|----|
+|------|------|---------|-------------|
 | `variant` | `"success" \| "warning" \| "danger" \| "info" \| "default"` | `"default"` | Badge color variant |
-| `size` | `"sm" \| "md"` | `"md"` | Badge size |
+| `size` | `"sm" \| "md"` | `"md"`  | Badge size  |
 | `dot` | `boolean` | `false` | Show status dot |
-| `children` | `ReactNode` | — | Badge text |
+| `children` | `ReactNode` | —       | Badge text  |
 
 #### Table
 
@@ -404,7 +404,7 @@ const data = [
 **Props:**
 
 | Prop | Type | Description |
-|----|----|----|
+|------|------|-------------|
 | `columns` | `Column[]` | Column definitions |
 | `data` | `T[]` | Table data array |
 | `onRowClick` | `(row: T) => void` | Row click handler |

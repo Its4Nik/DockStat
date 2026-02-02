@@ -819,15 +819,15 @@ app.onAfterResponse(({ request }) => {
 ## Common Error Messages
 
 | Error Message | Likely Cause | Solution |
-|----|----|----|
+|---------------|--------------|----------|
 | `ENOENT: no such file or directory` | File/socket doesn't exist | Check path, start Docker daemon |
 | `ECONNREFUSED` | Service not running | Start the service |
-| `ETIMEDOUT` | Network/firewall issue | Check network connectivity |
+| `ETIMEDOUT`   | Network/firewall issue | Check network connectivity |
 | `SQLITE_BUSY` | Database locked | Enable WAL mode, check connections |
 | `SQLITE_CORRUPT` | Database corruption | Restore from backup or recover |
 | `TypeError: Cannot read property` | Null/undefined access | Add null checks |
 | `Plugin validation failed` | Invalid plugin config | Check plugin manifest |
-| `CORS error` | Cross-origin blocked | Configure CORS properly |
+| `CORS error`  | Cross-origin blocked | Configure CORS properly |
 
 ## Getting Help
 
@@ -875,7 +875,7 @@ console.log(JSON.stringify(schema, null, 2));
 ## Related Documentation
 
 | Section | Description |
-|----|----|
+|---------|-------------|
 | [Configuration](/doc/dec1cb2c-9a13-4e67-a31c-d3a685391208) | Configuration options and settings |
 | [Architecture](/doc/d56ca448-563a-4206-9585-c45f8f6be5cf) | System design for debugging context |
 | [API Reference](/doc/b174143d-f906-4f8d-8cb5-9fc96512e575) | API endpoints for diagnostics |

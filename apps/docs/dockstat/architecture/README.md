@@ -407,8 +407,8 @@ The API does not enforce authentication by default (yet). For production:
 ## Extension Points
 
 | Extension Point | Description |
-|----|----|
-| Plugins | Custom routes, DB tables, event hooks |
-| Themes | UI theming via `@dockstat/db` |
+|-----------------|-------------|
+| Plugins         | Custom routes, DB tables, event hooks |
+| Themes          | UI theming via `@dockstat/db` |
 | Docker Adapters | Extend `@dockstat/docker-client` |
-| UI Components | Add to `@dockstat/ui` |
+| UI Components   | Add to `@dockstat/ui` |
