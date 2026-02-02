@@ -9,7 +9,7 @@ import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
 import { LinkLookup } from "../HotkeyMenus/LinkLookup"
 import { LinkWithIcon } from "../Link/Link"
-import { Sidebar, type SidebarProps } from "../Sidebar/Sidebar"
+import { Sidebar, type SidebarProps, type ThemeProps } from "../Sidebar/Sidebar"
 import DockStatLogo from "./DockStat2-06.png"
 
 type NavbarProps = {
@@ -20,6 +20,7 @@ type NavbarProps = {
   ramUsage?: string
   heading?: string
   mutationFn: SidebarProps["mutationFn"]
+  themeProps?: ThemeProps
 }
 
 export function Navbar({
@@ -30,6 +31,7 @@ export function Navbar({
   heading,
   mutationFn,
   pluginLinks,
+  themeProps,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
@@ -86,6 +88,7 @@ export function Navbar({
           mutationFn={mutationFn}
           pins={navLinks || []}
           pluginLinks={pluginLinks || []}
+          themeProps={themeProps}
         />
 
         <style>{`
