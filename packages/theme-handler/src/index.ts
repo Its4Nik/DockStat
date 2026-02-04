@@ -1,2 +1,2 @@
-export * from "./client"
-export * from "./server"
+export * as client from "./client"
+export * as server from "./server"
