@@ -1,3 +1,4 @@
+import { useHotkey } from "@dockstat/utils/react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Link, Pin, Puzzle } from "lucide-react"
 import { useCallback, useMemo, useState } from "react"
@@ -10,7 +11,6 @@ import { HoverBubble } from "../HoverBubble/HoverBubble"
 import { Modal } from "../Modal/Modal"
 import { type PathItem, SidebarPaths } from "../Navbar/consts"
 import { containerVariants, itemVariants } from "./animations"
-import { useHotkey } from "@dockstat/utils/react"
 
 export function LinkLookup({
   pins,

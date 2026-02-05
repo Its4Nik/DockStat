@@ -5,9 +5,9 @@ import ConfigureClientsPage from "./pages/clients/configure"
 import ClientsPage from "./pages/clients/index"
 import ExtensionsIndex from "./pages/extensions"
 import PluginBrowser from "./pages/extensions/plugins"
-import PluginIdPage from "./pages/pluginId"
-import NodeStacksPage from "./pages/node/stacks"
 import DockNodePage from "./pages/node"
+import NodeStacksPage from "./pages/node/stacks"
+import PluginIdPage from "./pages/pluginId"
 
 export default function DockStatRouter() {
   return (
