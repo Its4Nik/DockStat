@@ -44,6 +44,7 @@ export type ThemeProps = {
   themes: ThemeBrowserItem[]
   currentThemeId: number | null
   onSelectTheme: (theme: ThemeBrowserItem) => void
+  toastSuccess: () => void
   isLoading: boolean
   onOpen: () => void
 }
@@ -308,6 +309,7 @@ export function Sidebar({
                     themes={themeProps.themes}
                     currentThemeId={themeProps.currentThemeId}
                     onSelectTheme={themeProps.onSelectTheme}
+                    toastSuccess={themeProps.toastSuccess}
                   />
                 ) : (
                   <p className="text-muted-text">Theme functionality not available</p>

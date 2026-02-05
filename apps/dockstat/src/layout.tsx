@@ -76,8 +76,32 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         logEntries={logMessagesArr}
         heading={heading}
         mutationFn={{
-          pin: pinMutation.mutateAsync,
-          unpin: unPinMutation.mutateAsync,
+          pin: (input: { path: string; slug: string }) => {
+            toast({
+              title: `Pinned "${input.slug}"!`,
+              description: (
+                <span>
+                  Added a new pinned link: "{input.slug}" - <pre>{input.path}</pre>
+                </span>
+              ),
+              variant: "success",
+            })
+
+            return pinMutation.mutateAsync(input)
+          },
+          unpin: (input: { path: string; slug: string }) => {
+            toast({
+              title: `Unpinned "${input.slug}"!`,
+              description: (
+                <span>
+                  Added a new pinned link: "{input.slug}" - <pre>{input.path}</pre>
+                </span>
+              ),
+              variant: "success",
+            })
+
+            return unPinMutation.mutateAsync(input)
+          },
           isBusy: isBusy,
         }}
         themeProps={{
@@ -86,6 +110,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           onSelectTheme: (t) => applyThemeById(t.id),
           isLoading: themeLoading,
           onOpen: getAllThemes,
+          toastSuccess: () => {
+            toast({
+              description: `Set ${theme?.id} active`,
+              title: "Updated Theme Preference",
+              variant: "success",
+            })
+          },
         }}
       />
       <div className="px-4">{children}</div>

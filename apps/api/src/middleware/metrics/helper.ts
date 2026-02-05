@@ -214,8 +214,10 @@ const MetricsMiddleware = (app: Elysia) => {
           savePersistedMetrics()
         }
 
-        logger.debug("Tracked metrics", headers["x-dockstatapi-reqid"] ?? undefined)
-        logger.info("Request finished", headers["x-dockstatapi-reqid"] ?? undefined)
+        logger.info(
+          `Request on ${new URL(request.url).pathname} finished`,
+          headers["x-dockstatapi-reqid"] ?? undefined
+        )
       }
     )
     .onError(

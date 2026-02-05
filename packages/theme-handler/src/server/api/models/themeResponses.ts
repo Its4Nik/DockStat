@@ -1,5 +1,5 @@
 import { t } from "elysia"
-import { theme } from "."
+import { ThemeModel } from "./themeModel"
 
 export namespace themeResponse {
   export const error = t.Object({
@@ -11,12 +11,12 @@ export namespace themeResponse {
     list: t.Object({
       success: t.Literal(true),
       message: t.String(),
-      data: t.Array(theme.model),
+      data: t.Array(ThemeModel),
     }),
     default: t.Object({
       success: t.Literal(true),
       message: t.String(),
-      data: theme.model,
+      data: ThemeModel,
     }),
     delete: t.Object({
       success: t.Literal(true),

@@ -8,7 +8,7 @@ export const createThemeCreationRoute = (themeDB: ThemeDB) => {
     ({ themeDB, body, status }) => {
       try {
         const existing = themeDB.getTheme(body.name)
-        if (existing === null) {
+        if (existing !== null) {
           return status(409, {
             success: false as const,
             error: `Theme with name "${body.name}" already exists`,
