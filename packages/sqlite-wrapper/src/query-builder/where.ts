@@ -23,7 +23,6 @@ import { BaseQueryBuilder } from "./base"
  */
 export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQueryBuilder<T> {
   // ===== Private Helpers =====
-
   protected logWhere(method: string, data: Record<string, unknown>): void {
     const parts = Object.entries(data).map(
       ([key, value]) => `${key}=${WhereQueryBuilder.safeStringify(value)}`

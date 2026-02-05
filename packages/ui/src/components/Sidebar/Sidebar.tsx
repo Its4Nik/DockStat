@@ -45,7 +45,6 @@ export type ThemeProps = {
   currentThemeId: number | null
   onSelectTheme: (theme: ThemeBrowserItem) => void
   toastSuccess: () => void
-  isLoading: boolean
   onOpen: () => void
 }
 
