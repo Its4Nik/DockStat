@@ -12,22 +12,26 @@ Schema-first table helpers, an expressive chainable QueryBuilder, safe defaults 
 ## 🆕 What's New in v1.3
 
 ### Bug Fixes
+
 - **Fixed Boolean parsing** — Boolean columns now correctly convert SQLite's `0`/`1` to JavaScript `true`/`false`
 - **Fixed Wrong packing** — Before the `publish` script was added, workspace dependencies were not correctly propagated
 
 ### New Features
+
 - **Auto-detection of JSON & Boolean columns** — No more manual parser configuration! Columns using `column.json()` or `column.boolean()` are automatically detected from schema
 - **Automatic backups with retention** — Configure `autoBackup` to create periodic backups with automatic cleanup of old files
 - **Backup & Restore API** — New `backup()`, `restore()`, and `listBackups()` methods
 - **`getPath()` method** — Get the database file path
 
 ### Architecture Improvements
+
 - **New `utils/` module** — Reusable utilities for SQL building, logging, and row transformation
 - **Structured logging** — Cleaner, more consistent log output with dedicated loggers per component
 - **Reduced code duplication** — Extracted common patterns into shared utilities
 - **Better maintainability** — Clearer separation of concerns across modules
 
 ### Breaking Changes
+
 - None! v1.3 is fully backward compatible with v1.2.x
 
 ---
@@ -284,7 +288,10 @@ const activeAdmins = userTable
   .all();
 
 // Get first match
-const user = userTable.select(["*"]).where({ email: "alice@example.com" }).first();
+const user = userTable
+  .select(["*"])
+  .where({ email: "alice@example.com" })
+  .first();
 
 // Count records
 const count = userTable.where({ active: true }).count();
@@ -321,7 +328,10 @@ userTable.insertOrIgnore({ email: "existing@example.com", name: "Name" });
 userTable.insertOrReplace({ email: "existing@example.com", name: "New Name" });
 
 // Insert and get the row back
-const newUser = userTable.insertAndGet({ name: "Charlie", email: "charlie@example.com" });
+const newUser = userTable.insertAndGet({
+  name: "Charlie",
+  email: "charlie@example.com",
+});
 ```
 
 ### UPDATE Operations

@@ -1,6 +1,12 @@
 import type { SQLQueryBindings } from "bun:sqlite"
 import type { RegexCondition, WhereCondition } from "../types"
-import { buildBetweenClause, buildInClause, normalizeOperator, quoteIdentifier } from "../utils"
+import {
+  buildBetweenClause,
+  buildInClause,
+  normalizeOperator,
+  quoteIdentifier,
+  truncate,
+} from "../utils"
 import { BaseQueryBuilder } from "./base"
 
 /**
@@ -17,6 +23,20 @@ import { BaseQueryBuilder } from "./base"
  */
 export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQueryBuilder<T> {
   // ===== Private Helpers =====
+  protected logWhere(method: string, data: Record<string, unknown>): void {
+    const parts = Object.entries(data).map(
+      ([key, value]) => `${key}=${WhereQueryBuilder.safeStringify(value)}`
+    )
+    this.log.info(`${method} | ${parts.join(" ")}`)
+  }
+
+  protected logWhereState(method: string, extra: Record<string, unknown> = {}): void {
+    this.logWhere(method, {
+      whereConditions: this.state.whereConditions,
+      whereParams: this.state.whereParams,
+      ...extra,
+    })
+  }
 
   /**
    * Remove an existing condition for a column to prevent duplicates
@@ -54,6 +74,16 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
 
   // ===== Public WHERE Methods =====
 
+  // Helper to stringify values safely (converts RegExp to string and falls back)
+  protected static safeStringify(obj: unknown): string {
+    try {
+      const dat = JSON.stringify(obj, (_k, v) => (v instanceof RegExp ? v.toString() : v))
+      return truncate(dat, 100)
+    } catch {
+      return truncate(String(obj), 100)
+    }
+  }
+
   /**
    * Add simple equality conditions to the WHERE clause
    *
@@ -66,6 +96,8 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * // WHERE "deleted_at" IS NULL
    */
   where(conditions: WhereCondition<T>): this {
+    this.logWhere("where", { conditions })
+
     for (const [column, value] of Object.entries(conditions)) {
       this.removeExistingCondition(column)
 
@@ -76,6 +108,8 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
         this.state.whereParams.push(this.toSqliteValue(value))
       }
     }
+
+    this.logWhereState("where")
     return this
   }
 
@@ -86,6 +120,9 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * .whereRgx({ email: /@gmail\.com$/ })
    */
   whereRgx(conditions: RegexCondition<T>): this {
+    // Log invocation with a safe serializer for regex values
+    this.log.info(`whereRgx | conditions=${WhereQueryBuilder.safeStringify(conditions)}`)
+
     for (const [column, value] of Object.entries(conditions)) {
       this.removeExistingCondition(column)
 
@@ -105,6 +142,10 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
         this.state.whereParams.push(value as SQLQueryBindings)
       }
     }
+
+    // Log resulting WHERE/regex state
+    this.logWhereState("whereRgx", { regexConditions: this.state.regexConditions })
+
     return this
   }
 
@@ -116,6 +157,9 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * .whereExpr("created_at > datetime('now', '-1 day')")
    */
   whereExpr(expr: string, params: SQLQueryBindings[] = []): this {
+    // Log invocation
+    this.log.info(`whereExpr | expr=${expr} params=${WhereQueryBuilder.safeStringify(params)}`)
+
     if (!expr || typeof expr !== "string") {
       throw new Error("whereExpr: expression must be a non-empty string")
     }
@@ -127,6 +171,13 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
       this.state.whereParams.push(...params)
     }
 
+    // Log resulting WHERE clause state
+    this.log.info(
+      `whereExpr | whereConditions=${WhereQueryBuilder.safeStringify(this.state.whereConditions)} params=${WhereQueryBuilder.safeStringify(
+        this.state.whereParams
+      )}`
+    )
+
     return this
   }
 
@@ -134,6 +185,8 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * Alias for whereExpr
    */
   whereRaw(expr: string, params: SQLQueryBindings[] = []): this {
+    // Log alias invocation
+    this.log.info(`whereRaw | expr=${expr} params=${WhereQueryBuilder.safeStringify(params)}`)
     return this.whereExpr(expr, params)
   }
 
@@ -145,6 +198,11 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * // WHERE "status" IN (?, ?)
    */
   whereIn(column: keyof T, values: SQLQueryBindings[]): this {
+    // Log invocation
+    this.log.info(
+      `whereIn | column=${String(column)} values=${WhereQueryBuilder.safeStringify(values)}`
+    )
+
     if (!Array.isArray(values) || values.length === 0) {
       throw new Error("whereIn: values must be a non-empty array")
     }
@@ -154,6 +212,13 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
     const { sql, params } = buildInClause(String(column), values, false)
     this.state.whereConditions.push(sql)
     this.state.whereParams.push(...params)
+
+    // Log resulting WHERE clause state
+    this.log.info(
+      `whereIn | whereConditions=${WhereQueryBuilder.safeStringify(this.state.whereConditions)} params=${WhereQueryBuilder.safeStringify(
+        this.state.whereParams
+      )}`
+    )
 
     return this
   }
@@ -166,6 +231,11 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * // WHERE "role" NOT IN (?, ?)
    */
   whereNotIn(column: keyof T, values: SQLQueryBindings[]): this {
+    // Log invocation
+    this.log.info(
+      `whereNotIn | column=${String(column)} values=${WhereQueryBuilder.safeStringify(values)}`
+    )
+
     if (!Array.isArray(values) || values.length === 0) {
       throw new Error("whereNotIn: values must be a non-empty array")
     }
@@ -175,6 +245,13 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
     const { sql, params } = buildInClause(String(column), values, true)
     this.state.whereConditions.push(sql)
     this.state.whereParams.push(...params)
+
+    // Log resulting WHERE clause state
+    this.log.info(
+      `whereNotIn | whereConditions=${WhereQueryBuilder.safeStringify(this.state.whereConditions)} params=${WhereQueryBuilder.safeStringify(
+        this.state.whereParams
+      )}`
+    )
 
     return this
   }
@@ -189,17 +266,20 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * .whereOp("name", "LIKE", "%smith%")
    */
   whereOp(column: keyof T, op: string, value: SQLQueryBindings): this {
-    const normalizedOp = normalizeOperator(op)
     const columnStr = String(column)
+    this.logWhere("whereOp", { column: columnStr, op, value })
 
-    // Handle NULL special cases
+    const normalizedOp = normalizeOperator(op)
+
     if (value === null || value === undefined) {
       if (normalizedOp === "=" || normalizedOp === "IS") {
         this.state.whereConditions.push(`${quoteIdentifier(columnStr)} IS NULL`)
+        this.logWhere("whereOp", { column: columnStr, added: "IS NULL" })
         return this
       }
       if (normalizedOp === "!=" || normalizedOp === "<>" || normalizedOp === "IS NOT") {
         this.state.whereConditions.push(`${quoteIdentifier(columnStr)} IS NOT NULL`)
+        this.logWhere("whereOp", { column: columnStr, added: "IS NOT NULL" })
         return this
       }
     }
@@ -207,6 +287,7 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
     this.state.whereConditions.push(`${quoteIdentifier(columnStr)} ${normalizedOp} ?`)
     this.state.whereParams.push(value)
 
+    this.logWhereState("whereOp")
     return this
   }
 
@@ -218,11 +299,25 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * // WHERE "age" BETWEEN ? AND ?
    */
   whereBetween(column: keyof T, min: SQLQueryBindings, max: SQLQueryBindings): this {
+    // Log invocation
+    this.log.info(
+      `whereBetween | column=${String(column)} min=${WhereQueryBuilder.safeStringify(min)} max=${WhereQueryBuilder.safeStringify(
+        max
+      )}`
+    )
+
     this.removeExistingCondition(String(column), "BETWEEN")
 
     const { sql, params } = buildBetweenClause(String(column), min, max, false)
     this.state.whereConditions.push(sql)
     this.state.whereParams.push(...params)
+
+    // Log resulting WHERE clause state
+    this.log.info(
+      `whereBetween | whereConditions=${WhereQueryBuilder.safeStringify(this.state.whereConditions)} params=${WhereQueryBuilder.safeStringify(
+        this.state.whereParams
+      )}`
+    )
 
     return this
   }
@@ -235,11 +330,25 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * // WHERE "score" NOT BETWEEN ? AND ?
    */
   whereNotBetween(column: keyof T, min: SQLQueryBindings, max: SQLQueryBindings): this {
+    // Log invocation
+    this.log.info(
+      `whereNotBetween | column=${String(column)} min=${WhereQueryBuilder.safeStringify(min)} max=${WhereQueryBuilder.safeStringify(
+        max
+      )}`
+    )
+
     this.removeExistingCondition(String(column), "NOT BETWEEN")
 
     const { sql, params } = buildBetweenClause(String(column), min, max, true)
     this.state.whereConditions.push(sql)
     this.state.whereParams.push(...params)
+
+    // Log resulting WHERE clause state
+    this.log.info(
+      `whereNotBetween | whereConditions=${WhereQueryBuilder.safeStringify(this.state.whereConditions)} params=${WhereQueryBuilder.safeStringify(
+        this.state.whereParams
+      )}`
+    )
 
     return this
   }
@@ -252,8 +361,19 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * // WHERE "deleted_at" IS NULL
    */
   whereNull(column: keyof T): this {
+    // Log invocation
+    this.log.info(`whereNull | column=${String(column)}`)
+
     this.removeExistingCondition(String(column))
     this.state.whereConditions.push(`${quoteIdentifier(String(column))} IS NULL`)
+
+    // Log resulting WHERE clause state
+    this.log.info(
+      `whereNull | whereConditions=${WhereQueryBuilder.safeStringify(this.state.whereConditions)} params=${WhereQueryBuilder.safeStringify(
+        this.state.whereParams
+      )}`
+    )
+
     return this
   }
 
@@ -265,8 +385,19 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * // WHERE "email" IS NOT NULL
    */
   whereNotNull(column: keyof T): this {
+    // Log invocation
+    this.log.info(`whereNotNull | column=${String(column)}`)
+
     this.removeExistingCondition(String(column))
     this.state.whereConditions.push(`${quoteIdentifier(String(column))} IS NOT NULL`)
+
+    // Log resulting WHERE clause state
+    this.log.info(
+      `whereNotNull | whereConditions=${WhereQueryBuilder.safeStringify(this.state.whereConditions)} params=${WhereQueryBuilder.safeStringify(
+        this.state.whereParams
+      )}`
+    )
+
     return this
   }
 }

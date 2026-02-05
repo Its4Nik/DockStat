@@ -1,9 +1,9 @@
 import { Database, type SQLQueryBindings } from "bun:sqlite"
 import { Logger } from "@dockstat/logger"
-import type { ColumnDefinition, IndexColumn, IndexMethod, Parser, TableOptions } from "./types"
 import { backup as helperBackup } from "./lib/backup/backup"
+import { listBackups as helperListBackups } from "./lib/backup/listBackups"
+import { restore as helperRestore } from "./lib/backup/restore"
 import { setupAutoBackup as helperSetupAutoBackup } from "./lib/backup/setupAutoBackup"
-
 // helpers
 import { createIndex as helperCreateIndex } from "./lib/index/createIndex"
 import { dropIndex as helperDropIndex } from "./lib/index/dropIndex"
@@ -13,9 +13,8 @@ import { getTableComment as helperGetTableComment } from "./lib/table/getTableCo
 import { isTableSchema } from "./lib/table/isTableSchema"
 import { setTableComment as helperSetTableComment } from "./lib/table/setTableComment"
 import { QueryBuilder } from "./query-builder/index"
+import type { ColumnDefinition, IndexColumn, IndexMethod, Parser, TableOptions } from "./types"
 import { createLogger, type SqliteLogger } from "./utils"
-import { listBackups as helperListBackups } from "./lib/backup/listBackups"
-import { restore as helperRestore } from "./lib/backup/restore"
 
 // Re-export all types and utilities
 export { QueryBuilder }

@@ -44,3 +44,5 @@ export {
   transformRowsToDb,
   transformToDb,
 } from "./transformer"
+
+export * from "./truncate"
