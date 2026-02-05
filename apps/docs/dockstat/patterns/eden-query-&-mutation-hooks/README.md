@@ -74,7 +74,7 @@ function useEdenMutation<TRoute>(opts: UseEdenMutationOptions<TRoute>): UseMutat
 | `route` | `TRoute` | Eden-route function |
 | `mutationKey` | `readonly string[]` | Mutation cache key |
 | `invalidateQueries` | `readonly string[][]` | Keys to invalidate on success |
-| `toast` | `ToasTConfig` | Toast message headers |
+| `toast` | `ToastConfig` | Toast message headers |
 
 ### ToastConfig
 
