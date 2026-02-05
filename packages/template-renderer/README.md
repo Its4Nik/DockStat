@@ -183,26 +183,26 @@ function MyPage({ template }) {
 All widgets from `@dockstat/ui` are available:
 
 | Widget Type | Description | Supports Children |
-|----|----|----|
-| `badge` | Status badge | No |
-| `button` | Clickable button | No |
-| `card` | Card container | Yes |
-| `cardHeader` | Card header section | Yes |
-| `cardBody` | Card body section | Yes |
-| `cardFooter` | Card footer section | Yes |
-| `divider` | Visual separator | No |
-| `input` | Text input field | No |
-| `checkbox` | Checkbox input | No |
-| `checkboxGroup` | Group of checkboxes | No |
-| `toggle` | Toggle switch | No |
-| `hoverBubble` | Tooltip on hover | Yes |
-| `link` | Hyperlink with optional icon | No |
-| `modal` | Modal dialog | Yes |
-| `slider` | Range slider | No |
-| `slides` | Tabbed content | Yes |
-| `table` | Data table | No |
-| `text` | Text content | No |
-| `container` | Layout container | Yes |
+|-------------|-------------|-------------------|
+| `badge`     | Status badge | No                |
+| `button`    | Clickable button | No                |
+| `card`      | Card container | Yes               |
+| `cardHeader` | Card header section | Yes               |
+| `cardBody`  | Card body section | Yes               |
+| `cardFooter` | Card footer section | Yes               |
+| `divider`   | Visual separator | No                |
+| `input`     | Text input field | No                |
+| `checkbox`  | Checkbox input | No                |
+| `checkboxGroup` | Group of checkboxes | No                |
+| `toggle`    | Toggle switch | No                |
+| `hoverBubble` | Tooltip on hover | Yes               |
+| `link`      | Hyperlink with optional icon | No                |
+| `modal`     | Modal dialog | Yes               |
+| `slider`    | Range slider | No                |
+| `slides`    | Tabbed content | Yes               |
+| `table`     | Data table  | No                |
+| `text`      | Text content | No                |
+| `container` | Layout container | Yes               |
 
 ## Data Binding
 

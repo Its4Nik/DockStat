@@ -1,6 +1,12 @@
 import type { SQLQueryBindings } from "bun:sqlite"
 import type { RegexCondition, WhereCondition } from "../types"
-import { buildBetweenClause, buildInClause, normalizeOperator, quoteIdentifier } from "../utils"
+import {
+  buildBetweenClause,
+  buildInClause,
+  normalizeOperator,
+  quoteIdentifier,
+  truncate,
+} from "../utils"
 import { BaseQueryBuilder } from "./base"
 
 /**
@@ -17,6 +23,20 @@ import { BaseQueryBuilder } from "./base"
  */
 export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQueryBuilder<T> {
   // ===== Private Helpers =====
+  protected logWhere(method: string, data: Record<string, unknown>): void {
+    const parts = Object.entries(data).map(
+      ([key, value]) => `${key}=${WhereQueryBuilder.safeStringify(value)}`
+    )
+    this.log.info(`${method} | ${parts.join(" ")}`)
+  }
+
+  protected logWhereState(method: string, extra: Record<string, unknown> = {}): void {
+    this.logWhere(method, {
+      whereConditions: this.state.whereConditions,
+      whereParams: this.state.whereParams,
+      ...extra,
+    })
+  }
 
   /**
    * Remove an existing condition for a column to prevent duplicates
@@ -57,9 +77,10 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
   // Helper to stringify values safely (converts RegExp to string and falls back)
   protected static safeStringify(obj: unknown): string {
     try {
-      return JSON.stringify(obj, (_k, v) => (v instanceof RegExp ? v.toString() : v))
+      const dat = JSON.stringify(obj, (_k, v) => (v instanceof RegExp ? v.toString() : v))
+      return truncate(dat, 100)
     } catch {
-      return String(obj)
+      return truncate(String(obj), 100)
     }
   }
 
@@ -75,8 +96,7 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * // WHERE "deleted_at" IS NULL
    */
   where(conditions: WhereCondition<T>): this {
-    // Log invocation with a safe serializer (handles RegExp and other non-JSON types)
-    this.log.info(`where | conditions=${WhereQueryBuilder.safeStringify(conditions)}`)
+    this.logWhere("where", { conditions })
 
     for (const [column, value] of Object.entries(conditions)) {
       this.removeExistingCondition(column)
@@ -89,13 +109,7 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
       }
     }
 
-    // Log resulting WHERE clause state
-    this.log.info(
-      `where | whereConditions=${WhereQueryBuilder.safeStringify(this.state.whereConditions)} params=${WhereQueryBuilder.safeStringify(
-        this.state.whereParams
-      )}`
-    )
-
+    this.logWhereState("where")
     return this
   }
 
@@ -130,11 +144,7 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
     }
 
     // Log resulting WHERE/regex state
-    this.log.info(
-      `whereRgx | whereConditions=${WhereQueryBuilder.safeStringify(this.state.whereConditions)} regexConditions=${WhereQueryBuilder.safeStringify(
-        this.state.regexConditions
-      )} params=${WhereQueryBuilder.safeStringify(this.state.whereParams)}`
-    )
+    this.logWhereState("whereRgx", { regexConditions: this.state.regexConditions })
 
     return this
   }
@@ -256,25 +266,20 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * .whereOp("name", "LIKE", "%smith%")
    */
   whereOp(column: keyof T, op: string, value: SQLQueryBindings): this {
-    // Log invocation
-    this.log.info(
-      `whereOp | column=${String(column)} op=${op} value=${WhereQueryBuilder.safeStringify(value)}`
-    )
+    const columnStr = String(column)
+    this.logWhere("whereOp", { column: columnStr, op, value })
 
     const normalizedOp = normalizeOperator(op)
-    const columnStr = String(column)
 
-    // Handle NULL special cases
     if (value === null || value === undefined) {
       if (normalizedOp === "=" || normalizedOp === "IS") {
         this.state.whereConditions.push(`${quoteIdentifier(columnStr)} IS NULL`)
-        // Log resulting state for null-case
-        this.log.info(`whereOp | added IS NULL for ${columnStr}`)
+        this.logWhere("whereOp", { column: columnStr, added: "IS NULL" })
         return this
       }
       if (normalizedOp === "!=" || normalizedOp === "<>" || normalizedOp === "IS NOT") {
         this.state.whereConditions.push(`${quoteIdentifier(columnStr)} IS NOT NULL`)
-        this.log.info(`whereOp | added IS NOT NULL for ${columnStr}`)
+        this.logWhere("whereOp", { column: columnStr, added: "IS NOT NULL" })
         return this
       }
     }
@@ -282,13 +287,7 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
     this.state.whereConditions.push(`${quoteIdentifier(columnStr)} ${normalizedOp} ?`)
     this.state.whereParams.push(value)
 
-    // Log resulting WHERE clause state
-    this.log.info(
-      `whereOp | whereConditions=${WhereQueryBuilder.safeStringify(this.state.whereConditions)} params=${WhereQueryBuilder.safeStringify(
-        this.state.whereParams
-      )}`
-    )
-
+    this.logWhereState("whereOp")
     return this
   }
 

@@ -51,11 +51,11 @@ graph TB
 ### API Application (`apps/api`)
 
 | Variable | Type | Default | Description |
-|----|----|----|----|
-| `DOCKSTAT_MAX_WORKERS` | `number` | `200` | Maximum worker threads for DockerClientManager |
-| `DOCKSTATAPI_SHOW_TRACES` | `boolean` | `true` | Enable server timing traces in responses |
+|----------|------|---------|-------------|
+| `DOCKSTAT_MAX_WORKERS` | `number` | `200`   | Maximum worker threads for DockerClientManager |
+| `DOCKSTATAPI_SHOW_TRACES` | `boolean` | `true`  | Enable server timing traces in responses |
 | `DOCKSTATAPI_DEFAULT_PLUGIN_DIR` | `string` | `src/plugins/default-plugins` | Default directory for plugin discovery |
-| `DOCKSTATAPI_PORT` | `number` | `9876` | API server port |
+| `DOCKSTATAPI_PORT` | `number` | `9876`  | API server port |
 | `DOCKSTATAPI_HOST` | `string` | `0.0.0.0` | API server host binding |
 
 **Example Configuration:**
@@ -73,11 +73,11 @@ DOCKSTATAPI_HOST=0.0.0.0
 ### DockNode Application (`apps/docknode`)
 
 | Variable | Type | Default | Description |
-|----|----|----|----|
-| `DOCKNODE_DOCKSTACK_AUTH_PSK` | `string` | — | Production pre-shared key for authentication |
-| `DOCKNODE_DOCKSTACK_DEV_AUTH` | `string` | — | Development authentication key |
-| `DOCKNODE_DOCKSTACK_AUTH_PRIORITY` | `string` | `psk` | Authentication method priority (`psk`, `dev`, `none`) |
-| `PORT` | `number` | `4000` | DockNode server port |
+|----------|------|---------|-------------|
+| `DOCKNODE_DOCKSTACK_AUTH_PSK` | `string` | —       | Production pre-shared key for authentication |
+| `DOCKNODE_DOCKSTACK_DEV_AUTH` | `string` | —       | Development authentication key |
+| `DOCKNODE_DOCKSTACK_AUTH_PRIORITY` | `string` | `psk`   | Authentication method priority (`psk`, `dev`, `none`) |
+| `PORT`   | `number` | `4000`  | DockNode server port |
 
 **Example Configuration:**
 
@@ -94,12 +94,12 @@ PORT=4000
 ### Logger Package (`@dockstat/logger`)
 
 | Variable | Type | Default | Description |
-|----|----|----|----|
+|----------|------|---------|-------------|
 | `DOCKSTAT_LOGGER_FULL_FILE_PATH` | `boolean` | `false` | Show full file paths in log output |
-| `DOCKSTAT_LOGGER_IGNORE_MESSAGES` | `string` | — | Comma-separated messages to filter out |
-| `DOCKSTAT_LOGGER_DISABLED_LOGGERS` | `string` | — | Comma-separated logger names to disable |
-| `DOCKSTAT_LOGGER_ONLY_SHOW` | `string` | — | Only show these loggers (comma-separated) |
-| `DOCKSTAT_LOGGER_SEPERATOR` | `string` | `:` | Separator between logger name segments |
+| `DOCKSTAT_LOGGER_IGNORE_MESSAGES` | `string` | —       | Comma-separated messages to filter out |
+| `DOCKSTAT_LOGGER_DISABLED_LOGGERS` | `string` | —       | Comma-separated logger names to disable |
+| `DOCKSTAT_LOGGER_ONLY_SHOW` | `string` | —       | Only show these loggers (comma-separated) |
+| `DOCKSTAT_LOGGER_SEPERATOR` | `string` | `:`     | Separator between logger name segments |
 
 **Example Configuration:**
 
@@ -600,7 +600,7 @@ app.post("/config", ({ body }) => {
 ## Related Documentation
 
 | Section | Description |
-|----|----|
+|---------|-------------|
 | [Architecture](/doc/d56ca448-563a-4206-9585-c45f8f6be5cf) | System design and component relationships |
 | [API Reference](/doc/b174143d-f906-4f8d-8cb5-9fc96512e575) | Complete API endpoint documentation |
 | [Packages](/doc/bbcefaa2-6bd4-46e8-ae4b-a6b823593e67) | Package-specific configuration details |

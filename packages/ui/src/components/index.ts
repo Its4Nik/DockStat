@@ -65,3 +65,8 @@ export { RepoIcons } from "./Repo/RepoIcon"
 export { Slider, type SliderProps } from "./Slider/Slider"
 export { Slides } from "./Slides/Slides"
 export { type Column, Table } from "./Table/Table"
+export {
+  ThemeBrowser,
+  type ThemeBrowserItem,
+  type ThemeBrowserProps,
+} from "./ThemeBrowser/ThemeBrowser"

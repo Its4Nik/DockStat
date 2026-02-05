@@ -388,7 +388,7 @@ unsubscribe();
 ### Stream Channels
 
 | Channel | Description |
-|----|----|
+|---------|-------------|
 | `CONTAINER_STATS` | Real-time container statistics |
 | `CONTAINER_EVENTS` | Container lifecycle events |
 | `DOCKER_EVENTS` | All Docker daemon events |
@@ -582,17 +582,17 @@ new DockerClient(db: DB, options?: DockerClientOptions)
 **Options:**
 
 | Option | Type | Default | Description |
-|----|----|----|----|
+|--------|------|---------|-------------|
 | `enableMonitoring` | `boolean` | `false` | Enable real-time monitoring |
-| `monitoringInterval` | `number` | `5000` | Stats collection interval (ms) |
-| `maxWorkers` | `number` | `200` | Maximum worker threads |
-| `maxRetries` | `number` | `3` | Connection retry attempts |
-| `retryDelay` | `number` | `1000` | Delay between retries (ms) |
+| `monitoringInterval` | `number` | `5000`  | Stats collection interval (ms) |
+| `maxWorkers` | `number` | `200`   | Maximum worker threads |
+| `maxRetries` | `number` | `3`     | Connection retry attempts |
+| `retryDelay` | `number` | `1000`  | Delay between retries (ms) |
 
 ### Client Management
 
 | Method | Description |
-|----|----|
+|--------|-------------|
 | `registerClient(name, options?)` | Register a new Docker client |
 | `removeClient(clientId)` | Remove a client and all hosts |
 | `getClients()` | Get all registered clients |
@@ -601,7 +601,7 @@ new DockerClient(db: DB, options?: DockerClientOptions)
 ### Host Management
 
 | Method | Description |
-|----|----|
+|--------|-------------|
 | `addHost(config)` | Add a Docker host |
 | `updateHost(config)` | Update host configuration |
 | `removeHost(hostId)` | Remove a host |
@@ -612,7 +612,7 @@ new DockerClient(db: DB, options?: DockerClientOptions)
 ### Monitoring
 
 | Method | Description |
-|----|----|
+|--------|-------------|
 | `startMonitoring(clientId)` | Start monitoring for a client |
 | `stopMonitoring(clientId)` | Stop monitoring for a client |
 | `stopAllMonitoring()` | Stop all monitoring |
@@ -621,7 +621,7 @@ new DockerClient(db: DB, options?: DockerClientOptions)
 ### Container Operations
 
 | Method | Description |
-|----|----|
+|--------|-------------|
 | `getAllContainers(clientId)` | Get all containers |
 | `getRunningContainers(clientId)` | Get running containers |
 | `inspectContainer(clientId, containerId)` | Get container details |
@@ -634,7 +634,7 @@ new DockerClient(db: DB, options?: DockerClientOptions)
 ### Status
 
 | Method | Description |
-|----|----|
+|--------|-------------|
 | `getStatus()` | Get overall client status |
 | `getPoolStats()` | Get worker pool statistics |
 

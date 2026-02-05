@@ -606,7 +606,7 @@ const memPercent = calculateMemoryPercent(
 ### String Utilities
 
 | Function | Description |
-|----|----|
+|----------|-------------|
 | `truncate(str, maxLength, suffix?)` | Truncate string with suffix |
 | `capitalize(str)` | Capitalize first letter |
 | `camelToKebab(str)` | Convert camelCase to kebab-case |
@@ -617,7 +617,7 @@ const memPercent = calculateMemoryPercent(
 ### Formatting Utilities
 
 | Function | Description |
-|----|----|
+|----------|-------------|
 | `formatBytes(bytes, decimals?)` | Format bytes to human-readable |
 | `formatDuration(ms, options?)` | Format milliseconds to duration |
 | `formatNumber(num, locale?)` | Format number with separators |
@@ -628,7 +628,7 @@ const memPercent = calculateMemoryPercent(
 ### Type Utilities
 
 | Function | Description |
-|----|----|
+|----------|-------------|
 | `isNotNullish(value)` | Check not null/undefined |
 | `isString(value)` | Type guard for string |
 | `isNumber(value)` | Type guard for number |
@@ -639,7 +639,7 @@ const memPercent = calculateMemoryPercent(
 ### Data Utilities
 
 | Function | Description |
-|----|----|
+|----------|-------------|
 | `deepClone(obj)` | Deep clone object |
 | `deepMerge(...objs)` | Deep merge objects |
 | `pick(obj, keys)` | Pick specific keys |
@@ -651,7 +651,7 @@ const memPercent = calculateMemoryPercent(
 ### Async Utilities
 
 | Function | Description |
-|----|----|
+|----------|-------------|
 | `debounce(fn, wait)` | Debounce function calls |
 | `throttle(fn, wait)` | Throttle function calls |
 | `sleep(ms)` | Delay execution |

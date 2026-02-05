@@ -5,7 +5,14 @@ import { ExternalLink, ShieldAlert, ShieldCheck, ShieldX, Trash2 } from "lucide-
 import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
 import { api } from "@/lib/api"
 
-export function RepoCard({ id, name, policy, source, type, verification_api }: RepoType) {
+export function RepoCard({
+  id,
+  name,
+  policy,
+  source,
+  type,
+  verification_api,
+}: Omit<RepoType, "paths">) {
   const deleteRepoMutation = useEdenMutation({
     route: api.db.repositories({ id: id }).delete,
     mutationKey: ["deleteRepo"],
