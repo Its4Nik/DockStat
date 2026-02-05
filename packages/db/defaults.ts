@@ -10,7 +10,7 @@ export const defaultConfig: DockStatConfigTableType = {
     dark: 0,
     light: 0,
   },
-  hotkeys: {},
+  hotkeys: { "open:quicklinks": "k" },
   nav_links: [],
   autostart_handlers_monitoring: true,
   config_database_rev: "v1.0.1",

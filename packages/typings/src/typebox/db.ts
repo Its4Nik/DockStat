@@ -1,5 +1,12 @@
 import { t } from "elysia"
 
+const HotkeyAction = t.Union([
+  t.Literal("open:sidebar"),
+  t.Literal("close:sidebar"),
+  t.Literal("toggle:sidebar"),
+  t.Literal("open:quicklinks"),
+])
+
 // Hash entry for plugin verification
 const PluginHashEntry = t.Object({
   version: t.String(),
@@ -141,7 +148,7 @@ const DockStatConfigTable = t.Object({
     showBackendRamUsageInNavbar: t.Optional(t.Boolean()),
   }),
 
-  hotkeys: t.Record(t.String(), t.UnionEnum(["open:nav", "close:nav", "toggle:nav"])),
+  hotkeys: t.Partial(t.Record(HotkeyAction, t.String())),
 
   autostart_handlers_monitoring: t.Boolean(),
 })

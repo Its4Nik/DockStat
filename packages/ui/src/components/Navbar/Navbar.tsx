@@ -21,6 +21,7 @@ type NavbarProps = {
   heading?: string
   mutationFn: SidebarProps["mutationFn"]
   themeProps?: ThemeProps
+  openQuickLinksModalHotkey: string
 }
 
 export function Navbar({
@@ -32,12 +33,17 @@ export function Navbar({
   mutationFn,
   pluginLinks,
   themeProps,
+  openQuickLinksModalHotkey,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
     <>
-      <LinkLookup pins={navLinks || []} pluginLinks={pluginLinks} />
+      <LinkLookup
+        pins={navLinks || []}
+        pluginLinks={pluginLinks}
+        hotkey={openQuickLinksModalHotkey}
+      />
 
       <Card size="sm" className="w-full p-0.5 mb-4 relative overflow-visible">
         <div

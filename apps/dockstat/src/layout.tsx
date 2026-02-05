@@ -19,8 +19,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [logMessagesArr, setlogMessagesArr] = useState<LogEntry[]>([])
 
   const config = useContext(ConfigProviderContext)
-  const { theme, themesList, isLoading: themeLoading, getAllThemes, applyThemeById } = useTheme()
   const heading = useContext(PageHeadingContext).heading
+
+  const { theme, themesList, getAllThemes, applyThemeById } = useTheme()
   const isBusy = useGlobalBusy()
 
   const { data: frontendPluginRoutes } = useEdenQuery({
@@ -104,11 +105,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           },
           isBusy: isBusy,
         }}
+        openQuickLinksModalHotkey={config?.hotkeys?.["open:quicklinks"] || "k"}
         themeProps={{
           themes: themesList || [],
           currentThemeId: theme?.id ?? null,
           onSelectTheme: (t) => applyThemeById(t.id),
-          isLoading: themeLoading,
           onOpen: getAllThemes,
           toastSuccess: () => {
             toast({

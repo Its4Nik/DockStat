@@ -15,6 +15,7 @@ export function LinkLookup({
   pins,
   pluginLinks,
   sidebarLinks = SidebarPaths,
+  hotkey = "k",
 }: {
   pins: { path: string; slug: string }[]
   pluginLinks: {
@@ -22,6 +23,7 @@ export function LinkLookup({
     paths: { fullPath: string; metaTitle: string }[]
   }[]
   sidebarLinks?: typeof SidebarPaths
+  hotkey?: string
 }) {
   const navigate = useNavigate()
 
@@ -112,7 +114,7 @@ export function LinkLookup({
   // Hotkey handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+      if (e.ctrlKey && e.key === hotkey) {
         e.preventDefault()
         setModalOpen(true)
         setTimeout(() => {
@@ -128,7 +130,7 @@ export function LinkLookup({
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [modalOpen])
+  }, [modalOpen, hotkey])
 
   const handleResultClick = useCallback(
     (result: SearchResult) => {
@@ -190,8 +192,10 @@ export function LinkLookup({
                   whileHover="hover"
                   whileTap="tap"
                   className="flex-1"
+                  tabIndex={-1}
                 >
                   <Card
+                    tabIndex={0}
                     variant="outlined"
                     className="cursor-pointer w-full transition-colors min-w-40"
                     size="sm"

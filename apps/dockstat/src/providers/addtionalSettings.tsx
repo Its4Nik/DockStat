@@ -11,6 +11,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
   const pDat: ConfigProviderData = {
     additionalSettings: data?.addtionalSettings,
     navLinks: data?.nav_links,
+    hotkeys: data?.hotkeys,
   }
 
   return <ConfigProviderContext value={pDat || {}}>{children}</ConfigProviderContext>

@@ -22,6 +22,16 @@ export const SidebarPaths: PathItem[] = [
     ],
   },
   {
+    path: "/node",
+    slug: "DockNode",
+    children: [
+      {
+        path: "/node/stacks",
+        slug: "Stacks",
+      },
+    ],
+  },
+  {
     path: "/extensions",
     slug: "Extensions",
     children: [
