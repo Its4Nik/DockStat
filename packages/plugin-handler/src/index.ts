@@ -12,7 +12,7 @@ import type {
 } from "@dockstat/typings"
 import type { DBPluginShemaT, Plugin, PluginMetaType, RepoType } from "@dockstat/typings/types"
 import { repo, retry } from "@dockstat/utils"
-import { hashString } from "@dockstat/utils/src/string"
+import { hashString } from "@dockstat/utils"
 import {
   type ExecutionContext,
   FrontendActionsHandler,

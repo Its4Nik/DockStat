@@ -1,6 +1,10 @@
 {
   "name": "@dockstat/utils",
   "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react/index.ts"
+  },
   "type": "module",
   "private": false,
   "version": "1.0.1",

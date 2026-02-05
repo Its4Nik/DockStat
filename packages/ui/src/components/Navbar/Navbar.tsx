@@ -3,6 +3,7 @@ import { motion } from "framer-motion"
 import { Menu } from "lucide-react"
 import { useState } from "react"
 import { NavLink } from "react-router"
+import { useHotkey } from "@dockstat/utils/react"
 
 import { Badge } from "../Badge/Badge"
 import { Card } from "../Card/Card"
@@ -22,6 +23,11 @@ type NavbarProps = {
   mutationFn: SidebarProps["mutationFn"]
   themeProps?: ThemeProps
   openQuickLinksModalHotkey: string
+  sidebarHotkeys: {
+    toggle?: string
+    open?: string
+    close?: string
+  }
 }
 
 export function Navbar({
@@ -34,8 +40,18 @@ export function Navbar({
   pluginLinks,
   themeProps,
   openQuickLinksModalHotkey,
+  sidebarHotkeys,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  useHotkey({
+    close: () => setIsMenuOpen(false),
+    open: () => setIsMenuOpen(true),
+    isOpen: isMenuOpen,
+    closeKey: sidebarHotkeys.close,
+    openKey: sidebarHotkeys.open,
+    toggleKey: sidebarHotkeys.toggle,
+  })
 
   return (
     <>

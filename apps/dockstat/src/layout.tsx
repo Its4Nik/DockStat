@@ -70,6 +70,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div className="bg-main-bg min-h-screen w-screen p-4">
       <Toaster expand position="bottom-right" />
       <Navbar
+        sidebarHotkeys={{
+          close: config.hotkeys?.["close:sidebar"],
+          open: config.hotkeys?.["close:sidebar"],
+          toggle: config.hotkeys?.["toggle:sidebar"],
+        }}
         isBusy={isBusy}
         navLinks={config?.navLinks || []}
         pluginLinks={frontendPluginRoutes || []}

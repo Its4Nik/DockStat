@@ -3,6 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+
   "scripts": {
     "dev": "bunx --bun vite",
     "build": "NODE_ENV=production bunx --bun vite build",
