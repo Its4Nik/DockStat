@@ -1,14 +1,14 @@
 // DockNodeCard.tsx
 import { Badge, Button, Card, CardBody, CardFooter, LinkWithIcon } from "@dockstat/ui"
 import {
-  Server,
-  Globe,
+  Activity,
   Clock,
+  ExternalLink,
+  Globe,
+  Server,
   Shield,
   ShieldCheck,
   Trash2,
-  Activity,
-  ExternalLink,
 } from "lucide-react"
 import { useState } from "react"
 

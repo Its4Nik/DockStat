@@ -1,11 +1,11 @@
+import { Button, Card, CardBody, CardHeader, Divider, Input, Slides, Toggle } from "@dockstat/ui"
+import { Activity, Server, Shield } from "lucide-react"
 import { useState } from "react"
-import { Card, CardBody, CardHeader, Input, Toggle, Button, Divider, Slides } from "@dockstat/ui"
-import { Server, Activity, Shield } from "lucide-react"
-import { useEdenQuery } from "@/hooks/useEdenQuery"
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
-import { usePageHeading } from "@/hooks/useHeading"
-import { useGlobalBusy } from "@/hooks/useGlobalBusy"
 import { DockNodeCard } from "@/components/docknode/card"
+import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
+import { useEdenQuery } from "@/hooks/useEdenQuery"
+import { useGlobalBusy } from "@/hooks/useGlobalBusy"
+import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
 
 type Target = {
