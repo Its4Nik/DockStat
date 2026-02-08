@@ -120,7 +120,7 @@ const DockStatConfigTable = t.Object({
               /keys
                 ${containerName}.key
   */
-  tls_certs_and_keys: t.Object({
+  keys: t.Object({
     web: t.Nullable(
       t.Object({
         key: t.String(),
@@ -134,6 +134,12 @@ const DockStatConfigTable = t.Object({
           key: t.String(),
           cert: t.String(),
         })
+      )
+    ),
+    docknode: t.Nullable(
+      t.Record(
+        t.Number(),
+        t.String() // API KEY
       )
     ),
   }),

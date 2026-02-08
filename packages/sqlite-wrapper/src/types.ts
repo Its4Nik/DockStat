@@ -461,9 +461,9 @@ export const column = {
   /**
    * Create a foreign key reference column
    */
-  foreignKey: (
+  foreignKey: <_T extends Record<string, unknown>>(
     refTable: string,
-    refColumn = "id",
+    refColumn: keyof _T = "id",
     constraints?: ColumnConstraints & {
       onDelete?: ForeignKeyAction
       onUpdate?: ForeignKeyAction
@@ -473,7 +473,7 @@ export const column = {
     type: constraints?.type || SQLiteTypes.INTEGER,
     references: {
       table: refTable,
-      column: refColumn,
+      column: String(refColumn),
       onDelete: constraints?.onDelete,
       onUpdate: constraints?.onUpdate,
     },

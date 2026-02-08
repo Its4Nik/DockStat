@@ -12,6 +12,10 @@
   "scripts": {
     "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.12"
+  },
+
   "devDependencies": {
     "@types/bun": "latest",
     "@dockstat/logger": "workspace:*",

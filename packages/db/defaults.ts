@@ -15,7 +15,7 @@ export const defaultConfig: DockStatConfigTableType = {
   autostart_handlers_monitoring: true,
   config_database_rev: "v1.0.1",
   tables: [],
-  tls_certs_and_keys: { web: null, docker: null },
+  keys: { web: null, docker: null, docknode: null },
   addtionalSettings: {
     showBackendRamUsageInNavbar: true,
   },
