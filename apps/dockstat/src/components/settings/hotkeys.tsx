@@ -1,9 +1,9 @@
-import { Button, Card, Input } from "@dockstat/ui"
+import { Button, Card } from "@dockstat/ui"
+import { Save } from "lucide-react"
 import { useContext, useEffect, useState } from "react"
 import { ConfigProviderContext } from "@/contexts/config"
 import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
 import { api } from "@/lib/api"
-import { Check, ArrowUp, Save } from "lucide-react"
 
 // Helper to determine if shift is active based on string value (e.g. "shift+s")
 const hasShift = (val: string) => val.toLowerCase().includes("shift+")

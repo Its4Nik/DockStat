@@ -1,7 +1,7 @@
-import { usePageHeading } from "@/hooks/useHeading"
 import { Slides } from "@dockstat/ui"
 import { useState } from "react"
 import { HotkeysSlide } from "@/components/settings/hotkeys"
+import { usePageHeading } from "@/hooks/useHeading"
 
 export default function SettingsPage() {
   usePageHeading("Settings")

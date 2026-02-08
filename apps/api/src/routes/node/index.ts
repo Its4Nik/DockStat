@@ -1,7 +1,7 @@
 import Elysia from "elysia"
+import { DockStatDB } from "../../database"
 import DockNodeHandler from "../../docknode"
 import BaseLogger from "../../logger"
-import { DockStatDB } from "../../database"
 import { DockNodeModel } from "../../models/docknode"
 
 const DNH = new DockNodeHandler(DockStatDB._sqliteWrapper, BaseLogger)
