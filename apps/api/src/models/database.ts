@@ -33,6 +33,19 @@ export namespace DatabaseModel {
     200: configRes,
     400: error,
   })
+
+  export const hotkeyRes = t.Object({
+    success: t.Literal(true),
+    message: t.String(),
+    data: t.Array(
+      t.Object({
+        action: t.String(),
+        key: t.String(),
+      })
+    ),
+  })
+
+  export const hotkeyBody = t.Pick(updateBody, t.Literal("hotkeys"))
 }
 
 export namespace RepositoryModel {

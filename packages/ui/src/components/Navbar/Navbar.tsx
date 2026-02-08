@@ -22,7 +22,7 @@ type NavbarProps = {
   heading?: string
   mutationFn: SidebarProps["mutationFn"]
   themeProps?: ThemeProps
-  openQuickLinksModalHotkey: string
+  openQuickLinksModalHotkey?: string
   sidebarHotkeys: {
     toggle?: string
     open?: string

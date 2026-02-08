@@ -114,6 +114,14 @@ const DBRoutes = new Elysia({
     }
   )
 
+  .post(
+    "/config/hotkey",
+    ({ body }) => DockStatDB.configTable.where({ id: 0 }).update({ hotkeys: body.hotkeys }),
+    {
+      body: DatabaseModel.hotkeyBody,
+    }
+  )
+
   // ==================== Repository Routes ====================
   .get(
     "repositories",
