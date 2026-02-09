@@ -54,7 +54,7 @@ export function HotkeysSlide() {
             {/* Header: Action Name */}
             <div className="flex items-center justify-between">
               <kbd className="font-light bg-accent/20 text-sm px-2 py-0.5 rounded-md text-foreground capitalize">
-                {actionName.replace(/_/g, " ")}
+                {actionName.replace(/[:_]/g, " ")}
               </kbd>
 
               {/* Save Button: Only shows when changed */}
@@ -69,7 +69,7 @@ export function HotkeysSlide() {
                   className="h-7 px-2"
                 >
                   <Save size={14} className="mr-1" />
-                  Save
+                  Save all
                 </Button>
               </div>
             </div>

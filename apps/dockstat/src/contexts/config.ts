@@ -2,7 +2,7 @@ import type { DockStatConfigTableType } from "@dockstat/typings/types"
 import { createContext } from "react"
 
 export type ConfigProviderData = {
-  additionalSettings?: DockStatConfigTableType["addtionalSettings"]
+  additionalSettings?: DockStatConfigTableType["additionalSettings"]
   navLinks?: DockStatConfigTableType["nav_links"]
   hotkeys?: DockStatConfigTableType["hotkeys"]
 }

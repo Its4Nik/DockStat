@@ -2,6 +2,7 @@ import { Slides } from "@dockstat/ui"
 import { useState } from "react"
 import { HotkeysSlide } from "@/components/settings/hotkeys"
 import { usePageHeading } from "@/hooks/useHeading"
+import { GeneralSettingsSlide } from "@/components/settings/general/index"
 
 export default function SettingsPage() {
   usePageHeading("Settings")
@@ -27,11 +28,9 @@ export default function SettingsPage() {
         onSlideChange={(key) => setSelectedSlide(String(key))}
       >
         {{
-          General: <div>General Settings</div>,
+          General: <GeneralSettingsSlide />,
           Hotkeys: <HotkeysSlide />,
-          "Database Management": <div>Database Management Settings</div>,
           Certificates: <div>Certificates Settings</div>,
-          "SSL Credentials": <div>SSL Credentials Settings</div>,
           Accounts: <div>Accounts Settings</div>,
         }}
       </Slides>

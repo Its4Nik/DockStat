@@ -46,6 +46,13 @@ export namespace DatabaseModel {
   })
 
   export const hotkeyBody = t.Pick(updateBody, t.Literal("hotkeys"))
+
+  export const additionalSettingsBody = t.Pick(updateBody, t.Literal("additionalSettings"))
+
+  export const additionalSettingsRes = t.Object({
+    success: t.Boolean(),
+    message: t.String(),
+  })
 }
 
 export namespace RepositoryModel {

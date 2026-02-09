@@ -9,7 +9,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
   })
 
   const pDat: ConfigProviderData = {
-    additionalSettings: data?.addtionalSettings,
+    additionalSettings: data?.additionalSettings,
     navLinks: data?.nav_links,
     hotkeys: data?.hotkeys,
   }

@@ -37,7 +37,7 @@ export const SlideContent = ({
                   animate="center"
                   exit="exit"
                   transition={{
-                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    x: { duration: 0.3, type: "tween" },
                   }}
                 >
                   <div

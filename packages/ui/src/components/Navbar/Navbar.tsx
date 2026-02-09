@@ -13,6 +13,8 @@ import { LinkWithIcon } from "../Link/Link"
 import { Sidebar, type SidebarProps, type ThemeProps } from "../Sidebar/Sidebar"
 import DockStatLogo from "./DockStat2-06.png"
 
+export { SidebarPaths, type PathItem } from "./consts"
+
 type NavbarProps = {
   isBusy: boolean
   logEntries: LogEntry[]

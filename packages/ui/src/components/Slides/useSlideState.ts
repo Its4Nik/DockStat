@@ -38,6 +38,26 @@ export const useSlidesState = ({
     }
   }, [controlledSlide, isControlled, activeSlide, slideKeys])
 
+  useEffect(() => {
+    if (!contentRefs.current) return
+
+    const refs = Object.values(contentRefs.current)
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (activeSlide) {
+        const height = contentRefs.current[activeSlide]?.offsetHeight || 0
+        setContentHeight(height)
+      }
+    })
+
+    for (const ref of refs) {
+      if (ref) {
+        resizeObserver.observe(ref)
+      }
+    }
+    return () => resizeObserver.disconnect()
+  })
+
   // Measure content height when active slide changes
   useEffect(() => {
     if (activeSlide && contentRefs.current[activeSlide]) {

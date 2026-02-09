@@ -21,7 +21,7 @@ export const defaultConfig: DockStatConfigTableType = {
   config_database_rev: "v1.0.1",
   tables: [],
   keys: { web: null, docker: null, docknode: null },
-  addtionalSettings: {
+  additionalSettings: {
     showBackendRamUsageInNavbar: true,
   },
 }

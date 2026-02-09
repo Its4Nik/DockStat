@@ -1,4 +1,4 @@
-import { ConfigProvider } from "./addtionalSettings"
+import { ConfigProvider } from "./additionalSettings"
 import { PageHeadingProvider } from "./pageHeading"
 import { QueryClientProvider } from "./queryClient"
 import { ThemeProvider } from "./theme"

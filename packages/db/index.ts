@@ -50,7 +50,7 @@ class DockStatDB {
           hotkeys: column.json(),
           nav_links: column.json(),
           autostart_handlers_monitoring: column.boolean({ default: true }),
-          addtionalSettings: column.json(),
+          additionalSettings: column.json(),
         },
         {
           constraints: {
@@ -58,7 +58,14 @@ class DockStatDB {
           },
           ifNotExists: true,
           parser: {
-            JSON: ["default_themes", "tables", "keys", "hotkeys", "nav_links", "addtionalSettings"],
+            JSON: [
+              "default_themes",
+              "tables",
+              "keys",
+              "hotkeys",
+              "nav_links",
+              "additionalSettings",
+            ],
             BOOLEAN: ["allow_untrusted_repo", "autostart_handlers_monitoring"],
           },
         }

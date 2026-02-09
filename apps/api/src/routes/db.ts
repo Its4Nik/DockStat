@@ -5,6 +5,7 @@ import Elysia, { t } from "elysia"
 import { DockStatDB } from "../database"
 import { updateConfig } from "../database/utils"
 import { DatabaseModel, RepositoryModel } from "../models/database"
+import type { SQLQueryBindings } from "bun:sqlite"
 
 const DBRoutes = new Elysia({
   name: "DatabaseElysiaInstance",
@@ -13,6 +14,51 @@ const DBRoutes = new Elysia({
     tags: ["DB"],
   },
 })
+  .get("/details", () => {
+    const schema = DockStatDB._sqliteWrapper.getSchema()
+    const integrity = DockStatDB._sqliteWrapper.integrityCheck()
+    const backups = DockStatDB._sqliteWrapper.listBackups()
+    const path = DockStatDB._dbPath
+
+    const info: Record<
+      string,
+      {
+        table: {
+          name: string
+          type: string
+          sql: string
+        }
+        info: {
+          cid: number
+          name: string
+          type: string
+          notnull: number
+          dflt_value: SQLQueryBindings
+          pk: number
+        }[]
+      }
+    > = {}
+
+    for (const table of schema) {
+      const i = DockStatDB._sqliteWrapper.getTableInfo(table.name)
+      info[table.name] = { table, info: i }
+    }
+
+    return {
+      info,
+      integrity,
+      path,
+      backups,
+    }
+  })
+  .get(
+    "/details/:tableName/all",
+    ({ params }) => DockStatDB._sqliteWrapper.table(params.tableName).select(["*"]).all(),
+    {
+      params: t.Object({ tableName: t.String() }),
+    }
+  )
+
   // ==================== Config Routes ====================
   .post(
     "config",
@@ -119,6 +165,37 @@ const DBRoutes = new Elysia({
     ({ body }) => DockStatDB.configTable.where({ id: 0 }).update({ hotkeys: body.hotkeys }),
     {
       body: DatabaseModel.hotkeyBody,
+    }
+  )
+
+  .post(
+    "/config/additionalSettings",
+    ({ body, status }) => {
+      try {
+        DockStatDB.configTable
+          .where({ id: 0 })
+          .update({ additionalSettings: body.additionalSettings })
+
+        return status(200, {
+          success: true,
+          message: "Additional settings updated successfully",
+          data: body.additionalSettings,
+        })
+      } catch (error) {
+        const errorMessage = extractErrorMessage(error, "Error while updating additional settings")
+        return status(400, {
+          success: false,
+          error: errorMessage,
+          message: errorMessage,
+        })
+      }
+    },
+    {
+      body: DatabaseModel.additionalSettingsBody,
+      response: {
+        200: DatabaseModel.additionalSettingsRes,
+        400: DatabaseModel.additionalSettingsRes,
+      },
     }
   )
 

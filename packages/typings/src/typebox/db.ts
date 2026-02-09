@@ -150,7 +150,7 @@ const DockStatConfigTable = t.Object({
     })
   ),
 
-  addtionalSettings: t.Object({
+  additionalSettings: t.Object({
     showBackendRamUsageInNavbar: t.Optional(t.Boolean()),
   }),
 
