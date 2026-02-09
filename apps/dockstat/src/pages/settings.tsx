@@ -1,8 +1,8 @@
 import { Slides } from "@dockstat/ui"
 import { useState } from "react"
+import { GeneralSettingsSlide } from "@/components/settings/general/index"
 import { HotkeysSlide } from "@/components/settings/hotkeys"
 import { usePageHeading } from "@/hooks/useHeading"
-import { GeneralSettingsSlide } from "@/components/settings/general/index"
 
 export default function SettingsPage() {
   usePageHeading("Settings")
