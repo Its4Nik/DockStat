@@ -1,10 +1,10 @@
+import type { DockStatConfigTableType } from "@dockstat/typings/types"
+import { type PathItem, SidebarPaths } from "@dockstat/ui"
+import { useContext, useMemo } from "react"
 import { ConfigProviderContext } from "@/contexts/config"
 import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
 import { useEdenQuery } from "@/hooks/useEdenQuery"
 import { api } from "@/lib/api"
-import type { DockStatConfigTableType } from "@dockstat/typings/types"
-import { SidebarPaths, type PathItem } from "@dockstat/ui"
-import { useContext, useMemo } from "react"
 
 export type NavLink = {
   slug: string

@@ -1,6 +1,6 @@
-import { useGlobalBusy } from "@/hooks/useGlobalBusy"
 import { Button, Card } from "@dockstat/ui"
 import { LinkIcon, X } from "lucide-react"
+import { useGlobalBusy } from "@/hooks/useGlobalBusy"
 
 type PinnedNavSectionProps = {
   pinnedLinks: { slug: string; path: string }[]

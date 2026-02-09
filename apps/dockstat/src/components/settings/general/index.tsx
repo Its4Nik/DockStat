@@ -1,9 +1,9 @@
+import { Card, CardBody, Divider } from "@dockstat/ui"
 import { AdditionalSettingsSection } from "./sections/additionalSettings"
 import { PinnableLinksSection } from "./sections/pinnableLinks"
 import { PinnedNavSection } from "./sections/pinnedNav"
 import { PluginLinksSection } from "./sections/pluginLinks"
 import { useGeneralSettings } from "./sections/useGeneralSettings"
-import { Card, CardBody, Divider } from "@dockstat/ui"
 
 export const GeneralSettingsSlide = () => {
   const {
