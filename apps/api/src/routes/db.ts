@@ -185,7 +185,6 @@ const DBRoutes = new Elysia({
         const errorMessage = extractErrorMessage(error, "Error while updating additional settings")
         return status(400, {
           success: false,
-          error: errorMessage,
           message: errorMessage,
         })
       }

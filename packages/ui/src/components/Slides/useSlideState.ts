@@ -56,7 +56,7 @@ export const useSlidesState = ({
       }
     }
     return () => resizeObserver.disconnect()
-  })
+  }, [activeSlide])
 
   // Measure content height when active slide changes
   useEffect(() => {

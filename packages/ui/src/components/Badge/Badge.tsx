@@ -53,7 +53,7 @@ export const Badge: React.FC<BadgeProps> = ({
   }
 
   const sizeClasses = {
-    xs: "px-1 py-.5 text-xs",
+    xs: "px-1 py-0.5 text-xs",
     sm: "px-2 py-0.5 text-xs",
     md: "px-2.5 py-0.5 text-sm",
     lg: "px-3 py-1 text-base",

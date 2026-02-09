@@ -25,7 +25,7 @@ export function PinnedNavSection({ pinnedLinks, unpinLink }: PinnedNavSectionPro
           No pinned links. Pin frequently used pages for quick access in the navbar.
         </Card>
       ) : (
-        <Card variant="dark" className="grid gap-3 p-4">
+        <Card variant="dark" className="grid gap-3 p-4 h-48 resize-y overflow-y-scroll">
           {pinnedLinks.map((link) => (
             <div
               key={`${link.slug}-${link.path}`}

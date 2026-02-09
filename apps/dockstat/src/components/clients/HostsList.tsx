@@ -1,5 +1,5 @@
 import { Badge, Card } from "@dockstat/ui"
-import { Globe, Server } from "lucide-react"
+import { Globe } from "lucide-react"
 
 interface Host {
   name: string
@@ -15,17 +15,9 @@ interface HostsListProps {
 export function HostsList({ hosts }: HostsListProps) {
   if (!hosts || hosts.length === 0) {
     return (
-      <>
-        <Card size="sm" variant="outlined" className="w-full mb-4">
-          <div className="flex items-center gap-2">
-            <Server size={20} />
-            <span className="font-semibold text-muted-text text-accenttext-2xl"></span>
-          </div>
-        </Card>
-        <Card variant="dark">
-          <div className="text-center text-muted-text py-8">No hosts configured</div>
-        </Card>
-      </>
+      <Card variant="dark">
+        <div className="text-center text-muted-text py-8">No hosts configured</div>
+      </Card>
     )
   }
 
