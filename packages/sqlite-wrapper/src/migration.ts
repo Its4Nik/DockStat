@@ -1,6 +1,6 @@
 import type { Database } from "bun:sqlite"
-import type { ColumnDefinition, MigrationOptions } from "./types"
 import { buildColumnSQL } from "./lib/table/buildColumnSQL"
+import type { ColumnDefinition, MigrationOptions } from "./types"
 import { SqliteLogger } from "./utils/logger"
 
 export interface TableColumn {

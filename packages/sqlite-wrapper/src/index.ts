@@ -18,9 +18,9 @@ import type {
   ColumnDefinition,
   IndexColumn,
   IndexMethod,
+  MigrationOptions,
   Parser,
   TableOptions,
-  MigrationOptions,
 } from "./types"
 import { createLogger, type SqliteLogger } from "./utils"
 
