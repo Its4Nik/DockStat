@@ -1,35 +1,14 @@
 import type { Database } from "bun:sqlite"
 import { buildColumnSQL } from "./lib/table/buildColumnSQL"
-import type { ColumnDefinition, MigrationOptions } from "./types"
+import type {
+  ColumnDefinition,
+  ForeignKeyInfo,
+  ForeignKeyStatus,
+  IndexInfo,
+  MigrationOptions,
+  TableColumn,
+} from "./types"
 import { SqliteLogger } from "./utils/logger"
-
-export interface TableColumn {
-  cid: number
-  name: string
-  type: string
-  notnull: number
-  dflt_value: string | number | null
-  pk: number
-}
-
-export interface IndexInfo {
-  name: string
-  sql: string | null
-  unique: boolean
-  origin: string
-  partial: number
-}
-
-export interface ForeignKeyInfo {
-  id: number
-  seq: number
-  table: string
-  from: string
-  to: string
-  on_update: string
-  on_delete: string
-  match: string
-}
 
 /**
  * Get the current schema of a table
@@ -59,10 +38,6 @@ export function getTableIndexes(db: Database, tableName: string): IndexInfo[] {
   const indexes = stmt.all() as PragmaIndex[]
 
   return indexes.map((idx) => {
-    const infoStmt = db.prepare(`PRAGMA index_info("${idx.name}")`)
-    infoStmt.all() // Execute but don't need the result for this use case
-
-    // Get the CREATE INDEX statement if available
     const sqlStmt = db.prepare(`SELECT sql FROM sqlite_master WHERE type = 'index' AND name = ?`)
     const sqlResult = sqlStmt.get(idx.name) as SqliteMasterRow | null
 
@@ -120,7 +95,9 @@ export function schemasAreDifferent(
 
   // Check if column count differs
   if (currentColumnNames.size !== newColumnNames.size) {
-    logger.info("Column count differs")
+    logger.info(
+      `Column count differs (current: ${currentColumnNames.size} [${Array.from(currentColumnNames).join(", ")}], new: ${newColumnNames.size} [${Array.from(newColumnNames).join(", ")}])`
+    )
     return true
   }
 
@@ -229,26 +206,31 @@ export function migrateTable(
   newColumns: Record<string, ColumnDefinition>,
   options: MigrationOptions = {},
   tableConstraints: string[] = [],
-  migrationLog: SqliteLogger
+  migrationLog: SqliteLogger,
+  currentSchema?: TableColumn[]
 ): void {
   const { preserveData = true, onConflict = "fail", tempTableSuffix = "_migration_temp" } = options
 
   migrationLog.info(`Starting migration for table: ${tableName}`)
 
   // Get current table info
-  const currentSchema = getTableColumns(db, tableName)
+  const effectiveSchema = currentSchema ?? getTableColumns(db, tableName)
   const indexes = getTableIndexes(db, tableName)
   const triggers = getTableTriggers(db, tableName)
 
   // Check if migration is needed
-  if (!schemasAreDifferent(currentSchema, newColumns, migrationLog)) {
+  if (!schemasAreDifferent(effectiveSchema, newColumns, migrationLog)) {
     migrationLog.info(`No migration needed for table: ${tableName}`)
     return
   }
 
   const tempTableName = `${tableName}${tempTableSuffix}`
 
-  // Start transaction for atomic migration
+  const fkStatus = db.prepare("PRAGMA foreign_keys").get() as ForeignKeyStatus | null
+  if (fkStatus && fkStatus.foreign_keys === 1) {
+    db.run("PRAGMA foreign_keys = OFF")
+  }
+
   db.transaction(() => {
     try {
       // Step 1: Create temporary table with new schema
@@ -270,8 +252,8 @@ export function migrateTable(
       db.run(createTempTableSql)
 
       // Step 2: Copy data if requested
-      if (preserveData && currentSchema.length > 0) {
-        const { selectColumns, insertColumns } = generateColumnMapping(currentSchema, newColumns)
+      if (preserveData && effectiveSchema.length > 0) {
+        const { selectColumns, insertColumns } = generateColumnMapping(effectiveSchema, newColumns)
 
         if (selectColumns.length > 0) {
           migrationLog.debug(`Copying data from ${tableName} to ${tempTableName}`)
@@ -296,15 +278,6 @@ export function migrateTable(
 
       // Step 3: Drop the original table
       migrationLog.debug(`Dropping original table: ${tableName}`)
-
-      // Temporarily disable foreign key constraints
-      interface ForeignKeyStatus {
-        foreign_keys: number
-      }
-      const fkStatus = db.prepare("PRAGMA foreign_keys").get() as ForeignKeyStatus | null
-      if (fkStatus && fkStatus.foreign_keys === 1) {
-        db.run("PRAGMA foreign_keys = OFF")
-      }
 
       db.run(`DROP TABLE "${tableName}"`)
 
@@ -335,9 +308,6 @@ export function migrateTable(
       }
 
       // Re-enable foreign key constraints if they were enabled
-      if (fkStatus && fkStatus.foreign_keys === 1) {
-        db.run("PRAGMA foreign_keys = ON")
-      }
 
       migrationLog.info(`Successfully migrated table: ${tableName}`)
     } catch (error) {
@@ -345,6 +315,10 @@ export function migrateTable(
       throw error
     }
   })()
+
+  if (fkStatus && fkStatus.foreign_keys === 1) {
+    db.run("PRAGMA foreign_keys = ON")
+  }
 }
 
 /**
@@ -361,13 +335,13 @@ export function checkAndMigrate(
   const logger = new SqliteLogger(tableName, migrationLog.getBaseLogger())
 
   if (!tableExists(db, tableName)) {
-    return false // No existing table, no migration needed
+    return false
   }
 
   const currentSchema = getTableColumns(db, tableName)
 
   if (schemasAreDifferent(currentSchema, newColumns, logger)) {
-    migrateTable(db, tableName, newColumns, options, tableConstraints, migrationLog)
+    migrateTable(db, tableName, newColumns, options, tableConstraints, migrationLog, currentSchema)
     return true
   }
 

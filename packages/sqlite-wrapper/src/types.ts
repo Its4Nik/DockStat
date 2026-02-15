@@ -240,8 +240,6 @@ export interface TableConstraints<T> {
 export interface MigrationOptions {
   /** Whether to preserve data during migration (default: true) */
   preserveData?: boolean
-  /** Whether to drop columns not in new schema (default: true) */
-  dropMissingColumns?: boolean
   /** How to handle constraint violations during data copy */
   onConflict?: "fail" | "ignore" | "replace"
   /** Suffix for temporary table during migration (default: '_migration_temp') */
@@ -630,3 +628,35 @@ export type SqlParameter = SQLQueryBindings
  * Database row with unknown structure
  */
 export type DatabaseRowData = Record<string, SQLQueryBindings>
+
+export interface TableColumn {
+  cid: number
+  name: string
+  type: string
+  notnull: number
+  dflt_value: string | number | null
+  pk: number
+}
+
+export interface IndexInfo {
+  name: string
+  sql: string | null
+  unique: boolean
+  origin: string
+  partial: number
+}
+
+export interface ForeignKeyInfo {
+  id: number
+  seq: number
+  table: string
+  from: string
+  to: string
+  on_update: string
+  on_delete: string
+  match: string
+}
+
+export interface ForeignKeyStatus {
+  foreign_keys: number
+}

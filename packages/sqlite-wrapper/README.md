@@ -22,7 +22,7 @@ Schema-first table helpers, an expressive chainable QueryBuilder, safe defaults 
 ### Bug Fixes
 
 - **Fixed Boolean parsing** — Boolean columns now correctly convert SQLite's `0`/`1` to JavaScript `true`/`false`
-- **Fixed Wrong packing** — Before the `publish` script was added, workspace dependencies were not correctly propagated
+- **Fixed incorrect packaging** — Before the `publish` script was added, workspace dependencies were not correctly propagated
 
 ### Architecture Improvements
 

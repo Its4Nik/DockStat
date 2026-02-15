@@ -277,7 +277,7 @@ class DB {
       }
     }
 
-    const temp = options?.temporary ? "TEMPORARY " : tableName === ":memory" ? "TEMPORARY " : ""
+    const temp = options?.temporary ? "TEMPORARY " : tableName === ":memory:" ? "TEMPORARY " : ""
     const ifNot = options?.ifNotExists ? "IF NOT EXISTS " : ""
     const withoutRowId = options?.withoutRowId ? " WITHOUT ROWID" : ""
 

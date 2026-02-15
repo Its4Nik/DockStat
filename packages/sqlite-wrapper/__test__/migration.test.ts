@@ -292,10 +292,8 @@ describe("Schema Migration", () => {
         id: column.id(),
         email: column.text({ unique: true }),
       })
-
       table.insert({ email: "user1@example.com" })
       table.insert({ email: "user2@example.com" })
-
       // Migrate with potential conflict (adding NOT NULL to email)
       const migratedTable = db.createTable(
         "users",
@@ -309,10 +307,77 @@ describe("Schema Migration", () => {
           },
         }
       )
-
       // Verify data preserved
       const rows = migratedTable.select(["*"]).all()
       expect(rows).toHaveLength(2)
+    })
+
+    test("Migration fails with default onConflict when constraints are violated", () => {
+      // Create a table without constraints and insert data that will violate a stricter constraint
+      const table = db.createTable("users_fail", {
+        id: column.id(),
+        email: column.text(),
+      })
+      table.insert({ email: null })
+      // Attempt to migrate by adding a NOT NULL constraint with default onConflict (fail)
+      expect(() => {
+        db.createTable(
+          "users_fail",
+          {
+            id: column.id(),
+            email: column.text({ notNull: true }),
+          },
+          {
+            migrate: {},
+          }
+        )
+      }).toThrow()
+      // Verify original data and schema remain unchanged (rollback behavior)
+      const rows = db.table("users_fail").select(["*"]).all()
+      expect(rows).toHaveLength(1)
+      expect(rows[0].email).toBeNull()
+    })
+
+    test("does not migrate when switching from TEXT to JSON alias", () => {
+      // Create table using the underlying TEXT storage type
+      const table = db.createTable("config_text", {
+        id: column.id(),
+        settings: column.text(),
+      })
+
+      table.insert({ settings: '{"theme":"dark","lang":"en"}' })
+
+      // Recreate table using the JSON alias
+      const migratedTable = db.createTable("config_text", {
+        id: column.id(),
+        settings: column.json(),
+      })
+
+      // Verify data is preserved and interpreted as JSON
+      const rows = migratedTable.select(["*"]).all()
+      expect(rows).toHaveLength(1)
+      expect(rows[0].settings).toEqual({ theme: "dark", lang: "en" })
+    })
+
+    test("does not migrate when switching from INTEGER to BOOLEAN alias", () => {
+      // Create table using the underlying INTEGER storage type
+      const table = db.createTable("int_to_bool", {
+        id: column.id(),
+        enabled: column.integer(),
+      })
+
+      table.insert({ enabled: 1 })
+
+      // Recreate table using the BOOLEAN alias
+      const migratedTable = db.createTable("int_to_bool", {
+        id: column.id(),
+        enabled: column.boolean(),
+      })
+
+      // Verify data is preserved and interpreted as a boolean
+      const rows = migratedTable.select(["*"]).all()
+      expect(rows).toHaveLength(1)
+      expect(rows[0].enabled).toBe(true)
     })
 
     test("Migration with custom temp table suffix", () => {
