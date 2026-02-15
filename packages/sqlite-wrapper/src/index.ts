@@ -220,6 +220,23 @@ class DB {
     }
   }
 
+  private normalizeMigrationOptions(migrate: TableOptions<Record<string, unknown>>["migrate"]): {
+    enabled: boolean
+    options: MigrationOptions
+  } {
+    if (migrate === false) return { enabled: false, options: {} }
+    if (migrate && typeof migrate === "object") {
+      return { enabled: true, options: migrate }
+    }
+    return { enabled: true, options: {} }
+  }
+
+  private shouldCheckExistingTable<_T>(tableName: string, options?: TableOptions<_T>): boolean {
+    if (options?.temporary) return false
+    if (tableName === ":memory:") return false
+    return true
+  }
+
   /**
    * Create a table with comprehensive type safety and feature support.
    *
@@ -234,20 +251,15 @@ class DB {
     columns: Record<keyof _T, ColumnDefinition>,
     options?: TableOptions<_T>
   ): QueryBuilder<_T> {
-    // Handle migration if enabled (default: true)
-    const migrateOption = options?.migrate !== undefined ? options.migrate : true
+    const { enabled: migrateEnabled, options: migrationOptions } = this.normalizeMigrationOptions(
+      options?.migrate
+    )
 
-    // Check if table already exists
     const tableAlreadyExists =
-      !options?.temporary && tableName !== ":memory:" && tableExists(this.db, tableName)
+      this.shouldCheckExistingTable(tableName, options) && tableExists(this.db, tableName)
 
     if (tableAlreadyExists) {
-      if (migrateOption !== false) {
-        // Migration is enabled, check if we need to migrate
-        const migrationOptions: MigrationOptions =
-          typeof migrateOption === "object" ? migrateOption : {}
-
-        // Build table constraints to pass to migration
+      if (migrateEnabled) {
         let tableConstraints: string[] = []
         if (isTableSchema(columns) && options?.constraints) {
           tableConstraints = buildTableConstraints(options.constraints)
@@ -263,15 +275,10 @@ class DB {
         )
 
         if (migrated) {
-          // Table was migrated, skip creation and go directly to parser setup
           return this._setupTableParser(tableName, columns, options)
         }
       }
 
-      // Table exists and either:
-      // 1. Migration is disabled, or
-      // 2. Migration is enabled but no changes were needed
-      // In both cases, return the existing table without trying to create it
       if (!options?.ifNotExists) {
         return this._setupTableParser(tableName, columns, options)
       }
