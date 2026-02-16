@@ -1,4 +1,4 @@
-import { Database, type SQLQueryBindings } from "bun:sqlite"
+import { Database, SQLiteError, type SQLQueryBindings } from "bun:sqlite"
 import { Logger } from "@dockstat/logger"
 import { backup as helperBackup } from "./lib/backup/backup"
 import { listBackups as helperListBackups } from "./lib/backup/listBackups"
@@ -23,6 +23,7 @@ import type {
   TableOptions,
 } from "./types"
 import { createLogger, type SqliteLogger } from "./utils"
+import { allowMigration } from "./utils/allowMigration"
 
 // Re-export all types and utilities
 export { QueryBuilder }
@@ -250,18 +251,20 @@ class DB {
     columns: Record<keyof _T, ColumnDefinition>,
     options?: TableOptions<_T>
   ): QueryBuilder<_T> {
+    this.dbLog.info(`Creating Table '${tableName}' with ${Object.keys(columns).length} columns`)
+
     const pOpts: TableOptions<_T> = {
       ...options,
       migrate: this.normalizeMigrationOptions(options?.migrate),
     }
 
+    const canMigrate = allowMigration(options || {}, tableName, this.dbLog)
+
     const tableAlreadyExists =
       this.shouldCheckExistingTable(tableName, options) && tableExists(this.db, tableName)
 
     if (tableAlreadyExists) {
-      console.log(pOpts)
-
-      if (pOpts.migrate?.enabled) {
+      if (canMigrate) {
         let tableConstraints: string[] = []
         if (isTableSchema(columns) && options?.constraints) {
           tableConstraints = buildTableConstraints(options.constraints)
@@ -308,16 +311,24 @@ class DB {
       }
     }
 
-    const sql = buildTableSQL(tableName, columns, options)
+    try {
+      const sql = buildTableSQL(tableName, columns, options)
 
-    this.db.run(sql.sql)
+      this.db.run(sql.sql)
 
-    // Store table comment as metadata if provided
-    if (options?.comment) {
-      helperSetTableComment(this.db, this.tableLog, tableName, options.comment)
+      // Store table comment as metadata if provided
+      if (options?.comment) {
+        helperSetTableComment(this.db, this.tableLog, tableName, options.comment)
+      }
+
+      return this._setupTableParser<_T>(tableName, columns, options)
+    } catch (error: unknown) {
+      if ((error as SQLiteError).errno === 1) {
+        return this._setupTableParser<_T>(tableName, columns, options)
+      }
+
+      throw new SQLiteError((error as SQLiteError).message, { cause: (error as SQLiteError).cause })
     }
-
-    return this._setupTableParser<_T>(tableName, columns, options)
   }
 
   /**

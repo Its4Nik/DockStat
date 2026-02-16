@@ -661,4 +661,54 @@ describe("Schema Migration", () => {
       expect(emailColumn).toBeDefined()
     })
   })
+
+  test("does not automatically migrate temporary tables", () => {
+    const tempTable = db.createTable(
+      "temp_products",
+      {
+        id: column.id(),
+        name: column.text({ notNull: true }),
+      },
+      { temporary: true }
+    )
+
+    tempTable.insert({ name: "Temp Product 1" })
+
+    // Calling createTable again with a different schema for the same
+    // temporary table should *not* trigger automatic migration.
+    const tempTableSameName = db.createTable(
+      "temp_products",
+      {
+        id: column.id(),
+        name: column.text({ notNull: true }),
+        price: column.integer({ notNull: true }),
+      },
+      { temporary: true }
+    )
+
+    // We expect the underlying table schema to remain unchanged, so attempts
+    // to use the newly declared column should fail.
+    expect(() => tempTableSameName.insert({ name: "Temp Product 2", price: 100 })).toThrow()
+  })
+
+  test('does not automatically migrate ":memory:" tables', () => {
+    const memoryTable = db.createTable(":memory:", {
+      id: column.id(),
+      name: column.text({ notNull: true }),
+    })
+
+    memoryTable.insert({ name: "Memory Product 1" })
+
+    // Calling createTable again with a different schema for the same
+    // in-memory table should *not* trigger automatic migration.
+    const memoryTableSameName = db.createTable(":memory:", {
+      id: column.id(),
+      name: column.text({ notNull: true }),
+      price: column.integer({ notNull: true }),
+    })
+
+    // As above, if automatic migration is disabled for ":memory:" tables,
+    // this insert using the new column should fail.
+    expect(() => memoryTableSameName.insert({ name: "Memory Product 2", price: 100 })).toThrow()
+  })
 })
