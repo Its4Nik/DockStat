@@ -207,7 +207,7 @@ export function migrateTable<TCols extends Record<string, unknown>>(
 ): void {
   migrationLog.info(`Starting migration for table: ${tableName}`)
 
-  const migrationOpts = options.migrate === true ? {} : options.migrate || {}
+  const migrationOpts = options.migrate !== undefined ? options.migrate : {}
   const {
     preserveData = true,
     onConflict = "fail",
