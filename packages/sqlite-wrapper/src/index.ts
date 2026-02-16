@@ -8,6 +8,7 @@ import { setupAutoBackup as helperSetupAutoBackup } from "./lib/backup/setupAuto
 import { createIndex as helperCreateIndex } from "./lib/index/createIndex"
 import { dropIndex as helperDropIndex } from "./lib/index/dropIndex"
 import { buildTableConstraints } from "./lib/table/buildTableConstraint"
+import { buildTableSQL } from "./lib/table/buildTableSQL"
 import { getTableComment as helperGetTableComment } from "./lib/table/getTableComment"
 import { isTableSchema } from "./lib/table/isTableSchema"
 import { setTableComment as helperSetTableComment } from "./lib/table/setTableComment"
@@ -22,7 +23,6 @@ import type {
   TableOptions,
 } from "./types"
 import { createLogger, type SqliteLogger } from "./utils"
-import { buildTableSQL } from "./lib/table/buildTableSQL"
 
 // Re-export all types and utilities
 export { QueryBuilder }

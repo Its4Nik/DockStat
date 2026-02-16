@@ -1,5 +1,6 @@
 import type { Database } from "bun:sqlite"
 import { buildColumnSQL } from "./lib/table/buildColumnSQL"
+import { buildTableSQL } from "./lib/table/buildTableSQL"
 import type {
   ColumnDefinition,
   ForeignKeyInfo,
@@ -9,7 +10,6 @@ import type {
   TableOptions,
 } from "./types"
 import { SqliteLogger } from "./utils/logger"
-import { buildTableSQL } from "./lib/table/buildTableSQL"
 
 /**
  * Get the current schema of a table
