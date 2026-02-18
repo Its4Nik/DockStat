@@ -39,7 +39,6 @@ describe("Schema Migration", () => {
       const currentSchema = db.getSchema().find((s) => {
         return s.name === "users"
       })!
-
       const newColumns: Record<string, ColumnDefinition> = {
         id: column.id(),
         name: column.text({ notNull: true }),
