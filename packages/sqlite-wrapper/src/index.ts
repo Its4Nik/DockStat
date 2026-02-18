@@ -1,4 +1,4 @@
-import { Database, type SQLQueryBindings } from "bun:sqlite"
+import { Database, SQLiteError, type SQLQueryBindings } from "bun:sqlite"
 import { Logger } from "@dockstat/logger"
 import { backup as helperBackup } from "./lib/backup/backup"
 import { listBackups as helperListBackups } from "./lib/backup/listBackups"
@@ -7,8 +7,8 @@ import { setupAutoBackup as helperSetupAutoBackup } from "./lib/backup/setupAuto
 // helpers
 import { createIndex as helperCreateIndex } from "./lib/index/createIndex"
 import { dropIndex as helperDropIndex } from "./lib/index/dropIndex"
-import { buildColumnSQL } from "./lib/table/buildColumnSQL"
 import { buildTableConstraints } from "./lib/table/buildTableConstraint"
+import { buildTableSQL } from "./lib/table/buildTableSQL"
 import { getTableComment as helperGetTableComment } from "./lib/table/getTableComment"
 import { isTableSchema } from "./lib/table/isTableSchema"
 import { setTableComment as helperSetTableComment } from "./lib/table/setTableComment"
@@ -23,6 +23,7 @@ import type {
   TableOptions,
 } from "./types"
 import { createLogger, type SqliteLogger } from "./utils"
+import { allowMigration } from "./utils/allowMigration"
 
 // Re-export all types and utilities
 export { QueryBuilder }
@@ -220,6 +221,22 @@ class DB {
     }
   }
 
+  private normalizeMigrationOptions<T extends Record<string, unknown>>(
+    migrate: TableOptions<T>["migrate"]
+  ): MigrationOptions {
+    if (migrate?.enabled === false) return { enabled: false }
+    if (migrate && typeof migrate === "object") {
+      return { enabled: true, ...migrate }
+    }
+    return { enabled: true }
+  }
+
+  private shouldCheckExistingTable<_T>(tableName: string, options?: TableOptions<_T>): boolean {
+    if (options?.temporary) return false
+    if (tableName === ":memory:") return false
+    return true
+  }
+
   /**
    * Create a table with comprehensive type safety and feature support.
    *
@@ -234,114 +251,84 @@ class DB {
     columns: Record<keyof _T, ColumnDefinition>,
     options?: TableOptions<_T>
   ): QueryBuilder<_T> {
-    // Handle migration if enabled (default: true)
-    const migrateOption = options?.migrate !== undefined ? options.migrate : true
+    this.dbLog.info(`Creating Table '${tableName}' with ${Object.keys(columns).length} columns`)
 
-    // Check if table already exists
+    const pOpts: TableOptions<_T> = {
+      ...options,
+      migrate: this.normalizeMigrationOptions(options?.migrate),
+    }
+
+    const canMigrate = allowMigration(options || {}, tableName, this.dbLog)
+
     const tableAlreadyExists =
-      !options?.temporary && tableName !== ":memory:" && tableExists(this.db, tableName)
+      this.shouldCheckExistingTable(tableName, options) && tableExists(this.db, tableName)
 
     if (tableAlreadyExists) {
-      if (migrateOption !== false) {
-        // Migration is enabled, check if we need to migrate
-        const migrationOptions: MigrationOptions =
-          typeof migrateOption === "object" ? migrateOption : {}
-
-        // Build table constraints to pass to migration
+      if (canMigrate) {
         let tableConstraints: string[] = []
         if (isTableSchema(columns) && options?.constraints) {
           tableConstraints = buildTableConstraints(options.constraints)
         }
 
-        const migrated = checkAndMigrate(
+        const currentSchema = this.getSchema().find((o) => {
+          return o.name === tableName
+        })
+
+        this.migrationLog.debug(`${JSON.stringify(currentSchema)}`)
+
+        if (!currentSchema) {
+          this.migrationLog.info("Schema of table not found; new table => no migration needed")
+        } else {
+          const migrated = checkAndMigrate({
+            db: this.db,
+            tableName,
+            currentSchema,
+            migrationLog: this.migrationLog,
+            newColumns: columns,
+            tableConstraints,
+            options: (pOpts || {}) as TableOptions<Record<string, unknown>>,
+          })
+
+          /*
           this.db,
           tableName,
-          columns as Record<string, ColumnDefinition>,
+          columns,
           this.migrationLog,
-          migrationOptions,
+          currentSchema,
           tableConstraints
-        )
+          pOpts,
 
-        if (migrated) {
-          // Table was migrated, skip creation and go directly to parser setup
-          return this._setupTableParser(tableName, columns, options)
+          */
+
+          if (migrated) {
+            return this._setupTableParser<_T>(tableName, columns, options)
+          }
         }
       }
 
-      // Table exists and either:
-      // 1. Migration is disabled, or
-      // 2. Migration is enabled but no changes were needed
-      // In both cases, return the existing table without trying to create it
       if (!options?.ifNotExists) {
-        return this._setupTableParser(tableName, columns, options)
+        return this._setupTableParser<_T>(tableName, columns, options)
       }
     }
 
-    const temp = options?.temporary ? "TEMPORARY " : tableName === ":memory:" ? "TEMPORARY " : ""
-    const ifNot = options?.ifNotExists ? "IF NOT EXISTS " : ""
-    const withoutRowId = options?.withoutRowId ? " WITHOUT ROWID" : ""
+    try {
+      const sql = buildTableSQL(tableName, columns, options)
 
-    const quoteIdent = (s: string) => `"${s.replace(/"/g, '""')}"`
+      this.db.run(sql.sql)
 
-    let columnDefs: string
-    let tableConstraints: string[] = []
-
-    if (isTableSchema(columns)) {
-      //  comprehensive type-safe approach
-      const parts: string[] = []
-      for (const [colName, colDef] of Object.entries(columns)) {
-        if (!colName) continue
-
-        const sqlDef = buildColumnSQL(colName, colDef)
-        parts.push(`${quoteIdent(colName)} ${sqlDef}`)
+      // Store table comment as metadata if provided
+      if (options?.comment) {
+        helperSetTableComment(this.db, this.tableLog, tableName, options.comment)
       }
 
-      if (parts.length === 0) {
-        throw new Error("No columns provided")
+      return this._setupTableParser<_T>(tableName, columns, options)
+    } catch (error: unknown) {
+      if ((error as SQLiteError).errno === 1) {
+        return this._setupTableParser<_T>(tableName, columns, options)
       }
 
-      columnDefs = parts.join(", ")
-
-      // Add table-level constraints
-      if (options?.constraints) {
-        tableConstraints = buildTableConstraints(options.constraints)
-      }
-    } else {
-      // Original object-based approach
-      const parts: string[] = []
-      for (const [col, def] of Object.entries(columns)) {
-        if (!col) continue
-
-        const defTrim = def || ""
-        if (!defTrim) {
-          throw new Error(`Missing SQL type/constraints for column "${col}"`)
-        }
-        parts.push(`${quoteIdent(col)} ${defTrim}`)
-      }
-
-      if (parts.length === 0) {
-        throw new Error("No columns provided")
-      }
-      columnDefs = parts.join(", ")
+      throw new SQLiteError((error as SQLiteError).message, { cause: (error as SQLiteError).cause })
     }
-
-    const allDefinitions = [columnDefs, ...tableConstraints].join(", ")
-
-    const columnNames = Object.keys(columns)
-    this.tableLog.tableCreate(tableName, columnNames)
-
-    const sql = `CREATE ${temp}TABLE ${ifNot}${quoteIdent(
-      tableName
-    )} (${allDefinitions})${withoutRowId};`
-
-    this.db.run(sql)
-
-    // Store table comment as metadata if provided
-    if (options?.comment) {
-      helperSetTableComment(this.db, this.tableLog, tableName, options.comment)
-    }
-
-    return this._setupTableParser(tableName, columns, options)
   }
 
   /**
@@ -349,7 +336,7 @@ class DB {
    */
   private _setupTableParser<_T extends Record<string, unknown> = Record<string, unknown>>(
     tableName: string,
-    columns: Record<keyof _T, ColumnDefinition>,
+    columns: Record<keyof _T, unknown>,
     options?: TableOptions<_T>
   ): QueryBuilder<_T> {
     // Auto-detect JSON and BOOLEAN columns from schema

@@ -423,7 +423,7 @@ export function definePlugin<
 /**
  * Type helper to infer table schema from columns definition
  */
-export type InferTableSchema<Columns extends Record<string, ColumnDefinition>> = {
+export type InferTableSchema<Columns extends Record<string, unknown>> = {
   [K in keyof Columns]: Columns[K]["type"] extends "INTEGER"
     ? number
     : Columns[K]["type"] extends "REAL" | "DOUBLE" | "FLOAT"

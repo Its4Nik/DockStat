@@ -238,6 +238,7 @@ export interface TableConstraints<T> {
  * Enhanced table options
  */
 export interface MigrationOptions {
+  enabled?: boolean
   /** Whether to preserve data during migration (default: true) */
   preserveData?: boolean
   /** How to handle constraint violations during data copy */
@@ -258,7 +259,7 @@ export interface TableOptions<T> {
   /** Table comment */
   comment?: string
   /** Enable automatic schema migration (default: true) */
-  migrate?: boolean | MigrationOptions
+  migrate?: MigrationOptions
 
   parser?: Partial<Parser<T>>
 }

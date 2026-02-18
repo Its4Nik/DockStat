@@ -35,14 +35,17 @@ describe("Schema Migration", () => {
         name: column.text({ notNull: true }),
       })
 
-      const currentSchema = getTableColumns(db.getDb(), "users")
+      // biome-ignore lint/style/noNonNullAssertion: unit test
+      const currentSchema = db.getSchema().find((s) => {
+        return s.name === "users"
+      })!
       const newColumns: Record<string, ColumnDefinition> = {
         id: column.id(),
         name: column.text({ notNull: true }),
         email: column.text({ unique: true }),
       }
 
-      const needsMigration = schemasAreDifferent(currentSchema, newColumns, migrationLog)
+      const needsMigration = schemasAreDifferent(currentSchema, newColumns, {}, migrationLog)
       expect(needsMigration).toBe(true)
     })
 
@@ -53,13 +56,17 @@ describe("Schema Migration", () => {
         email: column.text(),
       })
 
-      const currentSchema = getTableColumns(db.getDb(), "users")
+      // biome-ignore lint/style/noNonNullAssertion: unit test
+      const currentSchema = db.getSchema().find((s) => {
+        return s.name === "users"
+      })!
+
       const newColumns: Record<string, ColumnDefinition> = {
         id: column.id(),
         name: column.text({ notNull: true }),
       }
 
-      const needsMigration = schemasAreDifferent(currentSchema, newColumns, migrationLog)
+      const needsMigration = schemasAreDifferent(currentSchema, newColumns, {}, migrationLog)
       expect(needsMigration).toBe(true)
     })
 
@@ -69,13 +76,17 @@ describe("Schema Migration", () => {
         name: column.text({ notNull: true }),
       })
 
-      const currentSchema = getTableColumns(db.getDb(), "users")
+      // biome-ignore lint/style/noNonNullAssertion: unit test
+      const currentSchema = db.getSchema().find((s) => {
+        return s.name === "users"
+      })!
+
       const newColumns: Record<string, ColumnDefinition> = {
         id: column.id(),
         name: column.text({ notNull: true }),
       }
 
-      const needsMigration = schemasAreDifferent(currentSchema, newColumns, migrationLog)
+      const needsMigration = schemasAreDifferent(currentSchema, newColumns, {}, migrationLog)
       expect(needsMigration).toBe(false)
     })
 
@@ -85,13 +96,16 @@ describe("Schema Migration", () => {
         name: column.text(),
       })
 
-      const currentSchema = getTableColumns(db.getDb(), "users")
+      // biome-ignore lint/style/noNonNullAssertion: unit test
+      const currentSchema = db.getSchema().find((s) => {
+        return s.name === "users"
+      })!
       const newColumns: Record<string, ColumnDefinition> = {
         id: column.id(),
         name: column.text({ notNull: true }), // Added NOT NULL
       }
 
-      const needsMigration = schemasAreDifferent(currentSchema, newColumns, migrationLog)
+      const needsMigration = schemasAreDifferent(currentSchema, newColumns, {}, migrationLog)
       expect(needsMigration).toBe(true)
     })
   })
@@ -167,7 +181,7 @@ describe("Schema Migration", () => {
           name: column.text({ notNull: true }),
           email: column.text(),
         },
-        { migrate: false }
+        { migrate: { enabled: false } }
       )
 
       // Table should remain unchanged
@@ -310,6 +324,74 @@ describe("Schema Migration", () => {
       // Verify data preserved
       const rows = migratedTable.select(["*"]).all()
       expect(rows).toHaveLength(2)
+    })
+
+    test("Migration with onConflict option", () => {
+      // Create table without unique constraint
+      const table = db.createTable("users", {
+        id: column.id(),
+        name: column.text(),
+        active: column.boolean({ default: true }),
+      })
+
+      table.insert({ name: "User 1", active: true })
+      table.insert({ name: "User 2", active: false })
+
+      // Migrate with an additional column and a new UNIQUE constraint on `name`,
+      // using onConflict: "ignore" so that conflicting rows are skipped.
+      const migratedTable = db.createTable(
+        "users",
+        {
+          id: column.id(),
+          name: column.text({ unique: true }),
+          active: column.boolean({ default: true }),
+          email: column.text({ notNull: false }),
+        },
+        { migrate: { onConflict: "ignore" } }
+      )
+
+      const rows = migratedTable.select(["id", "name", "active", "email"]).orderBy("id").all()
+
+      expect(rows).toHaveLength(2)
+      expect(rows[0]).toMatchObject({ name: "User 1", active: true })
+      expect(rows[1]).toMatchObject({ name: "User 2", active: false })
+
+      // Ensure we can still insert a new row that respects the unique constraint
+      migratedTable.insert({ name: "User 3", active: true })
+
+      const rowsAfterInsert = migratedTable.select(["name"]).orderBy("id").all()
+      expect(rowsAfterInsert.map((r) => r.name)).toEqual(["User 1", "User 2", "User 3"])
+    })
+
+    test("Migration with onConflict replace option", () => {
+      // Original table without a unique constraint on `name`
+      const table = db.createTable("users", {
+        id: column.id(),
+        name: column.text(),
+        active: column.boolean({ default: true }),
+      })
+
+      // Two rows that will conflict once we add a UNIQUE constraint on `name`
+      table.insert({ name: "Duplicate", active: true })
+      table.insert({ name: "Duplicate", active: false })
+
+      // Migrate to a schema that adds a UNIQUE constraint on `name`,
+      // using onConflict: "replace" so that later rows replace earlier ones.
+      const migratedTable = db.createTable(
+        "users",
+        {
+          id: column.id(),
+          name: column.text({ unique: true }),
+          active: column.boolean({ default: true }),
+        },
+        { migrate: { onConflict: "replace" } }
+      )
+
+      const rows = migratedTable.select(["id", "name", "active"]).all()
+
+      // With REPLACE, we expect only one row to survive, corresponding to the last inserted row
+      expect(rows).toHaveLength(1)
+      expect(rows[0]).toMatchObject({ name: "Duplicate", active: false })
     })
 
     test("Migration fails with default onConflict when constraints are violated", () => {
@@ -577,5 +659,55 @@ describe("Schema Migration", () => {
       const emailColumn = columns.find((col) => col.name === "email")
       expect(emailColumn).toBeDefined()
     })
+  })
+
+  test("does not automatically migrate temporary tables", () => {
+    const tempTable = db.createTable(
+      "temp_products",
+      {
+        id: column.id(),
+        name: column.text({ notNull: true }),
+      },
+      { temporary: true }
+    )
+
+    tempTable.insert({ name: "Temp Product 1" })
+
+    // Calling createTable again with a different schema for the same
+    // temporary table should *not* trigger automatic migration.
+    const tempTableSameName = db.createTable(
+      "temp_products",
+      {
+        id: column.id(),
+        name: column.text({ notNull: true }),
+        price: column.integer({ notNull: true }),
+      },
+      { temporary: true }
+    )
+
+    // We expect the underlying table schema to remain unchanged, so attempts
+    // to use the newly declared column should fail.
+    expect(() => tempTableSameName.insert({ name: "Temp Product 2", price: 100 })).toThrow()
+  })
+
+  test('does not automatically migrate ":memory:" tables', () => {
+    const memoryTable = db.createTable(":memory:", {
+      id: column.id(),
+      name: column.text({ notNull: true }),
+    })
+
+    memoryTable.insert({ name: "Memory Product 1" })
+
+    // Calling createTable again with a different schema for the same
+    // in-memory table should *not* trigger automatic migration.
+    const memoryTableSameName = db.createTable(":memory:", {
+      id: column.id(),
+      name: column.text({ notNull: true }),
+      price: column.integer({ notNull: true }),
+    })
+
+    // As above, if automatic migration is disabled for ":memory:" tables,
+    // this insert using the new column should fail.
+    expect(() => memoryTableSameName.insert({ name: "Memory Product 2", price: 100 })).toThrow()
   })
 })

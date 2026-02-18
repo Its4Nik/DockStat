@@ -1,12 +1,13 @@
 import type { Database } from "bun:sqlite"
 import { buildColumnSQL } from "./lib/table/buildColumnSQL"
+import { buildTableSQL } from "./lib/table/buildTableSQL"
 import type {
   ColumnDefinition,
   ForeignKeyInfo,
   ForeignKeyStatus,
   IndexInfo,
-  MigrationOptions,
   TableColumn,
+  TableOptions,
 } from "./types"
 import { SqliteLogger } from "./utils/logger"
 
@@ -84,111 +85,102 @@ export function tableExists(db: Database, tableName: string): boolean {
 /**
  * Compare two schemas to determine if migration is needed
  */
-export function schemasAreDifferent(
-  currentSchema: TableColumn[],
-  newColumns: Record<string, ColumnDefinition>,
+export function schemasAreDifferent<TCols extends Record<string, unknown>>(
+  currentSchema: {
+    name: string
+    type: string
+    sql: string
+  },
+  newColumns: Record<keyof TCols, ColumnDefinition>,
+  options: TableOptions<TCols>,
   logger: SqliteLogger
 ): boolean {
   logger.info("Comparing schemas")
-  const currentColumnNames = new Set(currentSchema.map((col) => col.name))
-  const newColumnNames = new Set(Object.keys(newColumns))
 
-  // Check if column count differs
-  if (currentColumnNames.size !== newColumnNames.size) {
-    logger.info(
-      `Column count differs (current: ${currentColumnNames.size} [${Array.from(currentColumnNames).join(", ")}], new: ${newColumnNames.size} [${Array.from(newColumnNames).join(", ")}])`
-    )
+  const pCurrentSchemaSQL = currentSchema.sql.trim().endsWith(";")
+    ? currentSchema.sql.trim()
+    : `${currentSchema.sql.trim()};`
+
+  const newTableSQL = buildTableSQL(currentSchema.name, newColumns, options)
+
+  const pNewSchemaSQL = newTableSQL.sql.trim().endsWith(";")
+    ? newTableSQL.sql.trim()
+    : `${newTableSQL.sql.trim()};`
+
+  if (pCurrentSchemaSQL !== pNewSchemaSQL) {
+    logger.info("Schema changes detected")
+    logger.debug(`Old Schema: ${pCurrentSchemaSQL}`)
+    logger.debug(`New Schema: ${pNewSchemaSQL}`)
     return true
-  }
-
-  // Check if all column names match
-  for (const name of newColumnNames) {
-    if (!currentColumnNames.has(name)) {
-      logger.info(`Column ${name} does not exist`)
-      return true
-    }
-    logger.debug(`Column ${name} exists`)
-  }
-
-  // Check column definitions
-  for (const currentCol of currentSchema) {
-    const newCol = newColumns[currentCol.name]
-    if (!newCol) {
-      logger.info(`Column ${currentCol.name} does not exist`)
-      return true
-    }
-
-    // For primary key columns, SQLite auto-adds AUTOINCREMENT which we need to account for
-    const isCurrentPK = currentCol.pk === 1
-    const isNewPK = newCol.primaryKey === true || newCol.autoincrement === true
-
-    // If both are primary keys, consider them the same (don't check other constraints)
-    if (isCurrentPK && isNewPK) {
-      logger.info(`Column ${currentCol.name} is a primary key`)
-      continue
-    }
-
-    if (isCurrentPK !== isNewPK) {
-      logger.info(
-        `Column ${currentCol.name} primary key status differs (current: ${isCurrentPK}, new: ${isNewPK})`
-      )
-      return true
-    }
-
-    // Check if NOT NULL constraint differs (ignore for primary keys as they're always NOT NULL)
-    if (!isCurrentPK) {
-      const isCurrentNotNull = currentCol.notnull === 1
-      const isNewNotNull = newCol.notNull === true
-      if (isCurrentNotNull !== isNewNotNull) {
-        logger.info(
-          `Column ${currentCol.name} NOT NULL constraint differs (current: ${isCurrentNotNull}, new: ${isNewNotNull})`
-        )
-        return true
-      }
-    }
-
-    // Basic type comparison (normalize types)
-    const normalizeType = (type: string) => type.toUpperCase().split("(")[0].trim()
-    const currentType = normalizeType(currentCol.type)
-    const newType = normalizeType(newCol.type)
-
-    // Handle type aliases
-    const typeAliases: Record<string, string> = {
-      INT: "INTEGER",
-      BOOL: "INTEGER",
-      BOOLEAN: "INTEGER",
-      JSON: "TEXT",
-      VARCHAR: "TEXT",
-      CHAR: "TEXT",
-      DATETIME: "TEXT",
-      DATE: "TEXT",
-      TIMESTAMP: "TEXT",
-    }
-
-    const normalizedCurrentType = typeAliases[currentType] || currentType
-    const normalizedNewType = typeAliases[newType] || newType
-
-    if (normalizedCurrentType !== normalizedNewType) {
-      logger.info(`Column ${currentCol.name} type differs`)
-      return true
-    }
   }
 
   logger.info("No schema changes detected")
   return false
 }
 
-/**
- * Generate column mapping for data migration
- */
+function extractColumnNamesFromCreateTable(sql: string): string[] {
+  // Remove line breaks and collapse spaces
+  const normalized = sql.replace(/\n/g, " ").replace(/\s+/g, " ")
+
+  // Extract everything inside the main parentheses
+  const match = normalized.match(/\((.*)\)/)
+  if (!match) return []
+
+  const body = match[1]
+
+  // Split by commas BUT ignore commas inside parentheses (e.g. DECIMAL(10,2))
+  const parts: string[] = []
+  let current = ""
+  let depth = 0
+
+  for (const char of body) {
+    if (char === "(") depth++
+    if (char === ")") depth--
+
+    if (char === "," && depth === 0) {
+      parts.push(current.trim())
+      current = ""
+      continue
+    }
+
+    current += char
+  }
+  if (current.trim()) parts.push(current.trim())
+
+  // Filter out table constraints and extract column identifiers
+  const columnNames: string[] = []
+
+  for (const part of parts) {
+    const trimmed = part.trim().toUpperCase()
+
+    if (
+      trimmed.startsWith("PRIMARY KEY") ||
+      trimmed.startsWith("FOREIGN KEY") ||
+      trimmed.startsWith("UNIQUE") ||
+      trimmed.startsWith("CHECK") ||
+      trimmed.startsWith("CONSTRAINT")
+    ) {
+      continue
+    }
+
+    // first token = column name
+    const firstToken = part.trim().split(/\s+/)[0]
+
+    const name = firstToken.replace(/^["`[]/, "").replace(/["`\]]$/, "")
+
+    columnNames.push(name)
+  }
+
+  return columnNames
+}
+
 export function generateColumnMapping(
-  currentSchema: TableColumn[],
-  newColumns: Record<string, ColumnDefinition>
+  currentSchema: string,
+  newColumns: Record<string, unknown>
 ): { selectColumns: string[]; insertColumns: string[] } {
-  const currentColumnNames = new Set(currentSchema.map((col) => col.name))
+  const currentColumnNames = new Set(extractColumnNamesFromCreateTable(currentSchema))
   const newColumnNames = Object.keys(newColumns)
 
-  // Find common columns
   const commonColumns = newColumnNames.filter((name) => currentColumnNames.has(name))
 
   return {
@@ -200,26 +192,33 @@ export function generateColumnMapping(
 /**
  * Migrate a table to a new schema
  */
-export function migrateTable(
+export function migrateTable<TCols extends Record<string, unknown>>(
   db: Database,
   tableName: string,
-  newColumns: Record<string, ColumnDefinition>,
-  options: MigrationOptions = {},
+  newColumns: Record<keyof TCols, ColumnDefinition>,
+  options: TableOptions<TCols> = {},
   tableConstraints: string[] = [],
   migrationLog: SqliteLogger,
-  currentSchema?: TableColumn[]
+  currentSchema: {
+    name: string
+    sql: string
+    type: string
+  }
 ): void {
-  const { preserveData = true, onConflict = "fail", tempTableSuffix = "_migration_temp" } = options
-
   migrationLog.info(`Starting migration for table: ${tableName}`)
 
-  // Get current table info
-  const effectiveSchema = currentSchema ?? getTableColumns(db, tableName)
+  const migrationOpts = options.migrate !== undefined ? options.migrate : {}
+  const {
+    preserveData = true,
+    onConflict = "fail",
+    tempTableSuffix = "_migration_temp",
+  } = migrationOpts
+
   const indexes = getTableIndexes(db, tableName)
   const triggers = getTableTriggers(db, tableName)
 
   // Check if migration is needed
-  if (!schemasAreDifferent(effectiveSchema, newColumns, migrationLog)) {
+  if (!schemasAreDifferent(currentSchema, newColumns, options, migrationLog)) {
     migrationLog.info(`No migration needed for table: ${tableName}`)
     return
   }
@@ -237,7 +236,9 @@ export function migrateTable(
       migrationLog.debug(`Creating temporary table: ${tempTableName}`)
       const columnDefs: string[] = []
 
-      for (const [colName, colDef] of Object.entries(newColumns)) {
+      for (const [colName, colDef] of Object.entries(
+        newColumns as Record<string, ColumnDefinition>
+      )) {
         const sqlDef = buildColumnSQL(colName, colDef)
         columnDefs.push(`"${colName}" ${sqlDef}`)
       }
@@ -252,8 +253,11 @@ export function migrateTable(
       db.run(createTempTableSql)
 
       // Step 2: Copy data if requested
-      if (preserveData && effectiveSchema.length > 0) {
-        const { selectColumns, insertColumns } = generateColumnMapping(effectiveSchema, newColumns)
+      if (preserveData && currentSchema.sql.length > 0) {
+        const { selectColumns, insertColumns } = generateColumnMapping(
+          currentSchema.sql,
+          newColumns
+        )
 
         if (selectColumns.length > 0) {
           migrationLog.debug(`Copying data from ${tableName} to ${tempTableName}`)
@@ -261,16 +265,21 @@ export function migrateTable(
           const quotedSelectCols = selectColumns.map((col) => `"${col}"`).join(", ")
           const quotedInsertCols = insertColumns.map((col) => `"${col}"`).join(", ")
 
+          migrationLog.debug("Building base SQL statement")
           let copySql = `INSERT INTO "${tempTableName}" (${quotedInsertCols})
                          SELECT ${quotedSelectCols} FROM "${tableName}"`
 
           if (onConflict === "ignore") {
+            migrationLog.debug("Building ignore statement")
             copySql = `INSERT OR IGNORE INTO "${tempTableName}" (${quotedInsertCols})
                        SELECT ${quotedSelectCols} FROM "${tableName}"`
           } else if (onConflict === "replace") {
+            migrationLog.debug("Building replace statement")
             copySql = `INSERT OR REPLACE INTO "${tempTableName}" (${quotedInsertCols})
                        SELECT ${quotedSelectCols} FROM "${tableName}"`
           }
+
+          migrationLog.debug(`Running migration: ${JSON.stringify(copySql)}`)
 
           db.run(copySql)
         }
@@ -324,24 +333,48 @@ export function migrateTable(
 /**
  * Check if migration is needed and perform if necessary
  */
-export function checkAndMigrate(
-  db: Database,
-  tableName: string,
-  newColumns: Record<string, ColumnDefinition>,
-  migrationLog: SqliteLogger,
-  options?: MigrationOptions,
-  tableConstraints: string[] = []
-): boolean {
+export function checkAndMigrate<TCols extends Record<string, unknown>>({
+  db,
+  tableName,
+  newColumns,
+  migrationLog,
+  currentSchema,
+  options,
+  tableConstraints = [],
+}: {
+  db: Database
+  tableName: string
+  newColumns: Record<keyof TCols, ColumnDefinition>
+  migrationLog: SqliteLogger
+  currentSchema: {
+    name: string
+    type: string
+    sql: string
+  }
+  options?: TableOptions<TCols>
+  tableConstraints?: string[]
+}): boolean {
   const logger = new SqliteLogger(tableName, migrationLog.getBaseLogger())
+
+  logger.debug("Checking if Table exists")
 
   if (!tableExists(db, tableName)) {
     return false
   }
+  logger.debug("Getting current schema")
 
-  const currentSchema = getTableColumns(db, tableName)
+  //const currentSchema = getTableColumns(db, tableName)
 
-  if (schemasAreDifferent(currentSchema, newColumns, logger)) {
-    migrateTable(db, tableName, newColumns, options, tableConstraints, migrationLog, currentSchema)
+  if (schemasAreDifferent(currentSchema, newColumns, options || {}, logger)) {
+    migrateTable(
+      db,
+      tableName,
+      newColumns,
+      options || {},
+      tableConstraints,
+      migrationLog,
+      currentSchema
+    )
     return true
   }
 
