@@ -1,5 +1,5 @@
 import { Database } from "bun:sqlite"
-import type { SqliteLogger } from "../../utils"
+import type Logger from "@dockstat/logger"
 
 /**
  * Restore database from a backup file
@@ -16,7 +16,7 @@ import type { SqliteLogger } from "../../utils"
 export function restore(
   dbPath: string,
   db: Database,
-  backupLog: SqliteLogger,
+  backupLog: Logger,
   backupPath: string,
   targetPath?: string
 ): Database | null {
@@ -44,7 +44,7 @@ export function restore(
 
   try {
     fs.copyFileSync(backupPath, restorePath)
-    backupLog.backup("restore", backupPath)
+    backupLog.info(`Restoring from: ${backupPath}`)
 
     // If we restored to the original database path, reopen and return new Database
     if (restorePath === dbPath) {

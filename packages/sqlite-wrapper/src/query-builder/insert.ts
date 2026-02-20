@@ -1,13 +1,7 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
 import type { Logger } from "@dockstat/logger"
 import type { InsertOptions, InsertResult, Parser } from "../types"
-import {
-  buildPlaceholders,
-  createLogger,
-  quoteIdentifier,
-  quoteIdentifiers,
-  type RowData,
-} from "../utils"
+import { buildPlaceholders, quoteIdentifier, quoteIdentifiers, type RowData } from "../utils"
 import { WhereQueryBuilder } from "./where"
 
 /**
@@ -21,11 +15,11 @@ import { WhereQueryBuilder } from "./where"
  * - Automatic JSON/Boolean serialization
  */
 export class InsertQueryBuilder<T extends Record<string, unknown>> extends WhereQueryBuilder<T> {
-  private insertLog: ReturnType<typeof createLogger>
+  private insertLog: Logger
 
-  constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger?: Logger) {
+  constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {
     super(db, tableName, parser, baseLogger)
-    this.insertLog = createLogger("Insert", baseLogger)
+    this.insertLog = baseLogger.spawn("INSERT")
   }
 
   // ===== Private Helpers =====
@@ -47,6 +41,7 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
    * Extract unique columns from a set of rows
    */
   private extractColumns(rows: RowData[]): string[] {
+    this.insertLog.debug("Extracting columns")
     const columnSet = new Set<string>()
 
     for (const row of rows) {
@@ -62,6 +57,7 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
    * Build an INSERT query
    */
   private buildInsertQuery(columns: string[], options?: InsertOptions): string {
+    this.insertLog.debug("Building insert query")
     const conflictClause = this.getConflictClause(options)
     const tableName = quoteIdentifier(this.getTableName())
     const columnList = quoteIdentifiers(columns)
@@ -78,6 +74,7 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
     row: RowData,
     columns: string[]
   ): { insertId: number; changes: number } {
+    this.insertLog.debug("Inserting...")
     const values = columns.map((col) => row[col] ?? null) as SQLQueryBindings[]
 
     const result = this.getDb()
@@ -126,7 +123,7 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
     // Build and execute query
     const query = this.buildInsertQuery(columns, options)
 
-    this.insertLog.query("INSERT", query)
+    this.insertLog.info(`INSERT: ${query}`)
 
     let totalChanges = 0
     let lastInsertId = 0
@@ -139,7 +136,7 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
       }
     }
 
-    this.insertLog.result("INSERT", totalChanges)
+    this.insertLog.info(`Changes: ${totalChanges}`)
     this.reset()
 
     return {
@@ -257,10 +254,12 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
       const query = this.buildInsertQuery(columns, options)
       const stmt = db.prepare(query)
 
-      this.insertLog.query("INSERT BATCH", query)
+      this.insertLog.info(`INSERT BATCH: ${query}`)
 
       let totalChanges = 0
       let lastInsertId = 0
+
+      const insertedIDs: number[] = []
 
       // Execute for each row
       for (const row of transformedRows) {
@@ -269,16 +268,17 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
 
         totalChanges += result.changes
         if (result.lastInsertRowid) {
+          insertedIDs.push(Number(result.lastInsertRowid))
           lastInsertId = Number(result.lastInsertRowid)
         }
       }
 
-      return { insertId: lastInsertId, changes: totalChanges }
+      return { insertId: lastInsertId, insertedIDs: insertedIDs, changes: totalChanges }
     })
 
     const result = transaction(rows)
 
-    this.insertLog.result("INSERT BATCH", result.changes)
+    this.insertLog.info(`Changes: ${result.changes}`)
     this.reset()
 
     return result

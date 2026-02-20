@@ -1,8 +1,7 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
-import type { Logger } from "@dockstat/logger"
+import { Logger } from "@dockstat/logger"
 import type { Parser, QueryBuilderState } from "../types"
 import {
-  createLogger,
   quoteIdentifier,
   type RowData,
   transformFromDb,
@@ -21,7 +20,7 @@ import {
  */
 export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
   protected state: QueryBuilderState<T>
-  protected log: ReturnType<typeof createLogger>
+  protected log: Logger
 
   constructor(db: Database, tableName: string, parser?: Parser<T>, baseLogger?: Logger) {
     this.state = {
@@ -34,7 +33,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
     }
 
     // If a base logger is provided, this will inherit the consumer's LogHook/parents.
-    this.log = createLogger("Query", baseLogger)
+    this.log = baseLogger?.spawn("QB") || new Logger("QB")
 
     this.log.debug(`QueryBuilder initialized for table: ${tableName}`)
   }
@@ -68,6 +67,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * Reset query builder state to initial values
    */
   protected reset(): void {
+    this.log.debug("Resseting QueryBuilder state")
     this.state.whereConditions = []
     this.state.whereParams = []
     this.state.regexConditions = []
@@ -84,6 +84,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * Reset only WHERE conditions (useful for reusing builder)
    */
   protected resetWhereConditions(): void {
+    this.log.debug("Ressetting Where conditions")
     this.state.whereConditions = []
     this.state.whereParams = []
     this.state.regexConditions = []
@@ -95,6 +96,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * Quote a SQL identifier to prevent injection
    */
   protected quoteIdentifier(identifier: string): string {
+    this.log.debug("Quoting identifier")
     return quoteIdentifier(identifier)
   }
 
@@ -104,6 +106,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * @returns Tuple of [whereClause, parameters]
    */
   protected buildWhereClause(): [string, SQLQueryBindings[]] {
+    this.log.debug("Building Where Clause")
     if (this.state.whereConditions.length === 0) {
       return ["", []]
     }

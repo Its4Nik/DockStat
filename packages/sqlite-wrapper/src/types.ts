@@ -583,6 +583,7 @@ export type RegexCondition<T> = Partial<Record<keyof T, RegExp | string>>
 export interface InsertResult {
   insertId: number
   changes: number
+  insertedIDs?: number[]
 }
 
 /**

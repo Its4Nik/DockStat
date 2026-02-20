@@ -9,7 +9,7 @@ import type {
   TableColumn,
   TableOptions,
 } from "./types"
-import { SqliteLogger } from "./utils/logger"
+import type Logger from "@dockstat/logger"
 
 /**
  * Get the current schema of a table
@@ -93,7 +93,7 @@ export function schemasAreDifferent<TCols extends Record<string, unknown>>(
   },
   newColumns: Record<keyof TCols, ColumnDefinition>,
   options: TableOptions<TCols>,
-  logger: SqliteLogger
+  logger: Logger
 ): boolean {
   logger.info("Comparing schemas")
 
@@ -107,10 +107,22 @@ export function schemasAreDifferent<TCols extends Record<string, unknown>>(
     ? newTableSQL.sql.trim()
     : `${newTableSQL.sql.trim()};`
 
-  if (pCurrentSchemaSQL !== pNewSchemaSQL) {
+  // Handle IF NOT EXISTS discrepancy and column name quoting differences
+  // SQLite doesn't store IF NOT EXISTS in sqlite_master, so we need to normalize both schemas
+  // by removing IF NOT EXISTS from the new schema before comparison
+  // Also normalize column name quoting differences
+  const normalizedCurrentSchema = pCurrentSchemaSQL.replace(/"(\w+)"/g, "$1") // Remove quotes around column names
+
+  const normalizedNewSchema = options?.ifNotExists
+    ? pNewSchemaSQL
+        .replace(/CREATE\s+(?:TEMPORARY\s+)?TABLE\s+IF\s+NOT\s+EXISTS\s+/, "CREATE TABLE ")
+        .replace(/"(\w+)"/g, "$1") // Remove quotes around column names
+    : pNewSchemaSQL.replace(/"(\w+)"/g, "$1") // Remove quotes around column names
+
+  if (normalizedCurrentSchema !== normalizedNewSchema) {
     logger.info("Schema changes detected")
-    logger.debug(`Old Schema: ${pCurrentSchemaSQL}`)
-    logger.debug(`New Schema: ${pNewSchemaSQL}`)
+    logger.debug(`Old Schema: ${normalizedCurrentSchema}`)
+    logger.debug(`New Schema: ${normalizedNewSchema}`)
     return true
   }
 
@@ -198,7 +210,7 @@ export function migrateTable<TCols extends Record<string, unknown>>(
   newColumns: Record<keyof TCols, ColumnDefinition>,
   options: TableOptions<TCols> = {},
   tableConstraints: string[] = [],
-  migrationLog: SqliteLogger,
+  migrationLog: Logger,
   currentSchema: {
     name: string
     sql: string
@@ -345,16 +357,16 @@ export function checkAndMigrate<TCols extends Record<string, unknown>>({
   db: Database
   tableName: string
   newColumns: Record<keyof TCols, ColumnDefinition>
-  migrationLog: SqliteLogger
+  migrationLog: Logger
   currentSchema: {
     name: string
     type: string
     sql: string
   }
-  options?: TableOptions<TCols>
+  options: TableOptions<TCols>
   tableConstraints?: string[]
 }): boolean {
-  const logger = new SqliteLogger(tableName, migrationLog.getBaseLogger())
+  const logger = migrationLog.spawn(tableName)
 
   logger.debug("Checking if Table exists")
 
@@ -365,16 +377,8 @@ export function checkAndMigrate<TCols extends Record<string, unknown>>({
 
   //const currentSchema = getTableColumns(db, tableName)
 
-  if (schemasAreDifferent(currentSchema, newColumns, options || {}, logger)) {
-    migrateTable(
-      db,
-      tableName,
-      newColumns,
-      options || {},
-      tableConstraints,
-      migrationLog,
-      currentSchema
-    )
+  if (schemasAreDifferent(currentSchema, newColumns, options, logger)) {
+    migrateTable(db, tableName, newColumns, options, tableConstraints, migrationLog, currentSchema)
     return true
   }
 

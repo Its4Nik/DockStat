@@ -1,6 +1,6 @@
 import type { SQLQueryBindings } from "bun:sqlite"
 import type { Parser } from "../types"
-import { createLogger, type SqliteLogger } from "./logger"
+import Logger from "@dockstat/logger"
 
 /**
  * Row Transformer for sqlite-wrapper
@@ -9,7 +9,7 @@ import { createLogger, type SqliteLogger } from "./logger"
  * including JSON columns, Boolean columns, and Module columns.
  */
 
-const defaultLogger = createLogger("Transformer")
+const defaultLogger = new Logger("Transformer")
 
 /**
  * Generic row data type
@@ -21,7 +21,7 @@ export type RowData = Record<string, SQLQueryBindings>
  */
 export interface TransformOptions<T> {
   parser?: Parser<T>
-  logger?: SqliteLogger
+  logger?: Logger
 }
 
 /**
@@ -44,7 +44,7 @@ export function transformFromDb<T extends Record<string, unknown>>(
     return row as T
   }
 
-  const logger = options?.logger || defaultLogger
+  const logger = options?.logger?.spawn("Transformer") || defaultLogger.spawn("Transformer")
   const transformed = { ...row } as RowData
   const transformedColumns: string[] = []
 
@@ -129,7 +129,7 @@ export function transformFromDb<T extends Record<string, unknown>>(
   }
 
   if (transformedColumns.length > 0) {
-    logger.transform("deserialize", transformedColumns)
+    logger.info(`Deserialized columns: ${transformedColumns.join(", ")}`)
   }
 
   return transformed as T
@@ -159,6 +159,8 @@ export function transformToDb<T extends Record<string, unknown>>(
   row: Partial<T>,
   options?: TransformOptions<T>
 ): RowData {
+  const logger = options?.logger?.spawn("Transformer") || defaultLogger.spawn("Transformer")
+
   if (!row || typeof row !== "object") {
     return row as RowData
   }
@@ -168,7 +170,6 @@ export function transformToDb<T extends Record<string, unknown>>(
     return row as RowData
   }
 
-  const logger = options?.logger || defaultLogger
   const transformed = { ...row } as RowData
   const transformedColumns: string[] = []
 
@@ -204,7 +205,7 @@ export function transformToDb<T extends Record<string, unknown>>(
   }
 
   if (transformedColumns.length > 0) {
-    logger.transform("serialize", transformedColumns)
+    logger.info(`Serialized columns: ${transformedColumns.join(", ")}`)
   }
 
   return transformed

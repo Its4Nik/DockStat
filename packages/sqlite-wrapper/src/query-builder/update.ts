@@ -1,7 +1,7 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
 import type { Logger } from "@dockstat/logger"
 import type { Parser, UpdateResult } from "../types"
-import { buildSetClause, createLogger, quoteIdentifier, type RowData } from "../utils"
+import { buildSetClause, quoteIdentifier, type RowData } from "../utils"
 import { SelectQueryBuilder } from "./select"
 
 /**
@@ -16,11 +16,11 @@ import { SelectQueryBuilder } from "./select"
  * - Automatic JSON serialization
  */
 export class UpdateQueryBuilder<T extends Record<string, unknown>> extends SelectQueryBuilder<T> {
-  private updateLog: ReturnType<typeof createLogger>
+  private updateLog: Logger
 
-  constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger?: Logger) {
+  constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {
     super(db, tableName, parser, baseLogger)
-    this.updateLog = createLogger("Update", baseLogger)
+    this.updateLog = baseLogger.spawn("UPDATE")
   }
 
   // ===== Public Update Methods =====
@@ -61,13 +61,13 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     const updateValues = columns.map((col) => transformedData[col])
     const allParams = [...updateValues, ...whereParams] as SQLQueryBindings[]
 
-    this.updateLog.query("UPDATE", query, allParams)
+    this.updateLog.info(`Query: ${query} - Params: {allParams}`)
 
     const result = this.getDb()
       .prepare(query)
       .run(...allParams)
 
-    this.updateLog.result("UPDATE", result.changes)
+    this.updateLog.info(`Changes: ${result.changes}`)
     this.reset()
 
     return { changes: result.changes }
@@ -106,7 +106,7 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     const updateQuery = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${setClause} WHERE rowid = ?`
     const stmt = this.getDb().prepare(updateQuery)
 
-    this.updateLog.query("UPDATE (regex)", updateQuery)
+    this.updateLog.info(`"UPDATE (regex): Query: ${updateQuery}`)
 
     let totalChanges = 0
     const updateValues = columns.map((col) => transformedData[col])
@@ -116,7 +116,7 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
       totalChanges += result.changes
     }
 
-    this.updateLog.result("UPDATE (regex)", totalChanges)
+    this.updateLog.info(`Changes: ${totalChanges}`)
     this.reset()
 
     return { changes: totalChanges }
@@ -148,13 +148,13 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
 
     const query = `INSERT OR REPLACE INTO ${quoteIdentifier(this.getTableName())} (${columnList}) VALUES (${placeholders})`
 
-    this.updateLog.query("UPSERT", query, values)
+    this.updateLog.info(`UPSERT: Query: ${query} - Values: ${values}`)
 
     const result = this.getDb()
       .prepare(query)
       .run(...values)
 
-    this.updateLog.result("UPSERT", result.changes)
+    this.updateLog.info(`Changes: ${result.changes}`)
     this.reset()
 
     return { changes: result.changes }
@@ -178,13 +178,13 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     const query = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${quotedColumn} = ${quotedColumn} + ?${whereClause}`
     const params = [amount, ...whereParams] as SQLQueryBindings[]
 
-    this.updateLog.query("INCREMENT", query, params)
+    this.updateLog.info(`INCREMENT: Query: ${query} - Params: ${params}`)
 
     const result = this.getDb()
       .prepare(query)
       .run(...params)
 
-    this.updateLog.result("INCREMENT", result.changes)
+    this.updateLog.info(`Changes: ${result.changes}`)
     this.reset()
 
     return { changes: result.changes }
@@ -302,11 +302,11 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
       }
     )
 
-    this.updateLog.query("UPDATE BATCH", `${updates.length} updates`)
+    this.updateLog.info(`UPDATE BATCH: ${updates.length} updates`)
 
     const result = transaction(updates)
 
-    this.updateLog.result("UPDATE BATCH", result.changes)
+    this.updateLog.info(`Changes: ${result.changes}`)
     this.reset()
 
     return result
