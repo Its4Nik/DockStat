@@ -1,6 +1,6 @@
 import type { SQLQueryBindings } from "bun:sqlite"
-import type { Parser } from "../types"
 import Logger from "@dockstat/logger"
+import type { Parser } from "../types"
 
 /**
  * Row Transformer for sqlite-wrapper

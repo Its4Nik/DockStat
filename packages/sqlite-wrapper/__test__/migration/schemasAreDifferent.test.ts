@@ -1,20 +1,19 @@
-import { describe, it, expect } from "bun:test"
+import { describe, expect, it } from "bun:test"
+import Logger from "@dockstat/logger"
 import { schemasAreDifferent } from "../../src/migration"
-
 import {
-  SCHEMA_WITH_IF_NOT_EXISTS,
-  SCHEMA_WITHOUT_IF_NOT_EXISTS,
-  SCHEMA_WITH_DIFFERENT_COLUMNS,
-  SCHEMA_WITH_TEMPORARY,
-  SCHEMA_WITHOUT_ROWID,
   COLUMNS_BASIC,
   COLUMNS_WITH_AGE,
   OPTIONS_WITH_IF_NOT_EXISTS,
-  OPTIONS_WITHOUT_IF_NOT_EXISTS,
   OPTIONS_WITH_TEMPORARY,
+  OPTIONS_WITHOUT_IF_NOT_EXISTS,
   OPTIONS_WITHOUT_ROWID,
+  SCHEMA_WITH_DIFFERENT_COLUMNS,
+  SCHEMA_WITH_IF_NOT_EXISTS,
+  SCHEMA_WITH_TEMPORARY,
+  SCHEMA_WITHOUT_IF_NOT_EXISTS,
+  SCHEMA_WITHOUT_ROWID,
 } from "./fixtures/schemas"
-import Logger from "@dockstat/logger"
 
 describe("schemasAreDifferent", () => {
   const logger = new Logger("Schema-Test")
