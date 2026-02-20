@@ -4,7 +4,7 @@ import type { ColumnDefinition } from "../../../src/types"
 export const SCHEMA_WITH_IF_NOT_EXISTS = {
   name: "test_table",
   type: "table",
-  sql: 'CREATE TABLE "test_table" (id INTEGER PRIMARY KEY, name TEXT);',
+  sql: 'CREATE TABLE IF NOT EXISTS "test_table" (id INTEGER PRIMARY KEY, name TEXT);',
 }
 
 export const SCHEMA_WITHOUT_IF_NOT_EXISTS = {

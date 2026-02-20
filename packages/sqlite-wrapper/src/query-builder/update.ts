@@ -61,7 +61,7 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     const updateValues = columns.map((col) => transformedData[col])
     const allParams = [...updateValues, ...whereParams] as SQLQueryBindings[]
 
-    this.updateLog.info(`Query: ${query} - Params: {allParams}`)
+    this.updateLog.info(`Query: ${query} - Params: ${JSON.stringify(allParams)}`)
 
     const result = this.getDb()
       .prepare(query)

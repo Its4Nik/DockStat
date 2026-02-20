@@ -267,7 +267,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const [query, params] = this.buildSelectQuery(true)
 
       this.logSelectStart("get", { query, params })
-      this.selectLog.info(`"SELECT (get): Query: ${query} - Params: ${params}`)
+      this.selectLog.info(`SELECT (get): Query: ${query} - Params: ${JSON.stringify(params)}`)
 
       const row = this.getDb()
         .prepare(query)

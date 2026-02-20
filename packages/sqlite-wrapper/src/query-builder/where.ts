@@ -27,7 +27,7 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
 
   constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {
     super(db, tableName, parser, baseLogger)
-    this.whereLogger = baseLogger.spawn("INSERT")
+    this.whereLogger = baseLogger.spawn("WHERE")
   }
 
   protected logWhere(method: string, data: Record<string, unknown>): void {

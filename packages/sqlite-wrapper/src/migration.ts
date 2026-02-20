@@ -82,6 +82,16 @@ export function tableExists(db: Database, tableName: string): boolean {
   return result !== null
 }
 
+function normalizeCreateTable(sql: string, allowIfNotExists: boolean) {
+  let out = sql.replace(/"([^"]+)"/g, "$1")
+
+  if (allowIfNotExists) {
+    out = out.replace(/CREATE\s+(?:TEMPORARY\s+)?TABLE\s+IF\s+NOT\s+EXISTS\s+/, "CREATE TABLE ")
+  }
+
+  return out.trim().replace(/;$/, "")
+}
+
 /**
  * Compare two schemas to determine if migration is needed
  */
@@ -111,13 +121,11 @@ export function schemasAreDifferent<TCols extends Record<string, unknown>>(
   // SQLite doesn't store IF NOT EXISTS in sqlite_master, so we need to normalize both schemas
   // by removing IF NOT EXISTS from the new schema before comparison
   // Also normalize column name quoting differences
-  const normalizedCurrentSchema = pCurrentSchemaSQL.replace(/"(\w+)"/g, "$1") // Remove quotes around column names
 
-  const normalizedNewSchema = options?.ifNotExists
-    ? pNewSchemaSQL
-        .replace(/CREATE\s+(?:TEMPORARY\s+)?TABLE\s+IF\s+NOT\s+EXISTS\s+/, "CREATE TABLE ")
-        .replace(/"(\w+)"/g, "$1") // Remove quotes around column names
-    : pNewSchemaSQL.replace(/"(\w+)"/g, "$1") // Remove quotes around column names
+  const ifNotExists = options?.ifNotExists === true
+
+  const normalizedNewSchema = normalizeCreateTable(pNewSchemaSQL, ifNotExists)
+  const normalizedCurrentSchema = normalizeCreateTable(pCurrentSchemaSQL, ifNotExists)
 
   if (normalizedCurrentSchema !== normalizedNewSchema) {
     logger.info("Schema changes detected")

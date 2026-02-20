@@ -67,7 +67,8 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * Reset query builder state to initial values
    */
   protected reset(): void {
-    this.log.debug("Resseting QueryBuilder state")
+    this.log.debug("Resetting QueryBuilder state")
+
     this.state.whereConditions = []
     this.state.whereParams = []
     this.state.regexConditions = []
@@ -84,7 +85,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * Reset only WHERE conditions (useful for reusing builder)
    */
   protected resetWhereConditions(): void {
-    this.log.debug("Ressetting Where conditions")
+    this.log.debug("Resetting Where conditions")
     this.state.whereConditions = []
     this.state.whereParams = []
     this.state.regexConditions = []
