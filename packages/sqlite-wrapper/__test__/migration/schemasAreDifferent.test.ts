@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test"
 import { schemasAreDifferent } from "../../src/migration"
-import { SqliteLogger } from "../../src/utils/logger"
+
 import {
   SCHEMA_WITH_IF_NOT_EXISTS,
   SCHEMA_WITHOUT_IF_NOT_EXISTS,
@@ -14,9 +14,10 @@ import {
   OPTIONS_WITH_TEMPORARY,
   OPTIONS_WITHOUT_ROWID,
 } from "./fixtures/schemas"
+import Logger from "@dockstat/logger"
 
 describe("schemasAreDifferent", () => {
-  const logger = new SqliteLogger("test")
+  const logger = new Logger("Schema-Test")
 
   it("should return false when schemas are identical (without IF NOT EXISTS)", () => {
     const result = schemasAreDifferent(
