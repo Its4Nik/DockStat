@@ -1,6 +1,6 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
-import type { Parser, RegexCondition, WhereCondition } from "../types"
 import type Logger from "@dockstat/logger"
+import type { Parser, RegexCondition, WhereCondition } from "../types"
 import {
   buildBetweenClause,
   buildInClause,

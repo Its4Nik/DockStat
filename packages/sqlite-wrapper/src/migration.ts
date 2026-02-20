@@ -1,4 +1,5 @@
 import type { Database } from "bun:sqlite"
+import type Logger from "@dockstat/logger"
 import { buildColumnSQL } from "./lib/table/buildColumnSQL"
 import { buildTableSQL } from "./lib/table/buildTableSQL"
 import type {
@@ -9,7 +10,6 @@ import type {
   TableColumn,
   TableOptions,
 } from "./types"
-import type Logger from "@dockstat/logger"
 
 /**
  * Get the current schema of a table

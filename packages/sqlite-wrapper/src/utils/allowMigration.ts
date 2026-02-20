@@ -1,5 +1,5 @@
-import type { TableOptions } from "../types"
 import type { Logger } from "@dockstat/logger"
+import type { TableOptions } from "../types"
 
 type DenyReason =
   | "migration-disabled"

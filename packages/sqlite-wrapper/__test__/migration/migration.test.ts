@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, rmSync } from "node:fs"
 import { join } from "node:path"
+import Logger from "@dockstat/logger"
 import { column, DB } from "../../src/index"
 import { getTableColumns, schemasAreDifferent, tableExists } from "../../src/migration"
 import type { ColumnDefinition } from "../../src/types"
-import Logger from "@dockstat/logger"
 
 const migrationLog = new Logger("Migration-Test")
 
