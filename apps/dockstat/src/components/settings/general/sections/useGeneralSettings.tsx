@@ -61,7 +61,7 @@ export function useGeneralSettings() {
     mutationKey: ["updateAdditionalSettingsMutation"],
     invalidateQueries: [["fetchAdditionalSettings"]],
     toast: {
-      successTitle: "Additional settings updated successfully",
+      successTitle: "Additional settings updated",
       errorTitle: "Failed to update additional settings",
     },
   })

@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, rmSync } from "node:fs"
 import { join } from "node:path"
-import { column, DB } from "../src/index"
-import { getTableColumns, schemasAreDifferent, tableExists } from "../src/migration"
-import type { ColumnDefinition } from "../src/types"
-import { SqliteLogger } from "../src/utils"
+import Logger from "@dockstat/logger"
+import { column, DB } from "../../src/index"
+import { getTableColumns, schemasAreDifferent, tableExists } from "../../src/migration"
+import type { ColumnDefinition } from "../../src/types"
 
-const migrationLog = new SqliteLogger("Migration-Test")
+const migrationLog = new Logger("Migration-Test")
 
 describe("Schema Migration", () => {
   let db: DB

@@ -1,6 +1,7 @@
 import { Database } from "bun:sqlite"
 import type { AutoBackupOptions } from "../../index"
 import { applyRetentionPolicy } from "./applyRetentionPolicy"
+import type Logger from "@dockstat/logger"
 
 /**
  * Create a backup of the database
@@ -15,7 +16,7 @@ import { applyRetentionPolicy } from "./applyRetentionPolicy"
 export function backup(
   dbPath: string,
   db: Database,
-  backupLog: any,
+  backupLog: Logger,
   autoBackupOptions?: AutoBackupOptions,
   customPath?: string
 ): string {
@@ -42,7 +43,7 @@ export function backup(
 
   try {
     db.run(`VACUUM INTO '${backupPath.replace(/'/g, "''")}'`)
-    backupLog.backup("create", backupPath)
+    backupLog.info(`Creating backup: ${backupPath}`)
 
     if (autoBackupOptions) {
       applyRetentionPolicy(backupLog, autoBackupOptions)

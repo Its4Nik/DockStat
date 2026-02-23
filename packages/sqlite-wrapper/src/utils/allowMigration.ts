@@ -1,5 +1,5 @@
+import type { Logger } from "@dockstat/logger"
 import type { TableOptions } from "../types"
-import type { SqliteLogger } from "./logger"
 
 type DenyReason =
   | "migration-disabled"
@@ -8,12 +8,12 @@ type DenyReason =
   | "sqlite-temp-prefix"
   | "migration-temp-table"
 
-function deny(reason: DenyReason, table: string, log?: SqliteLogger) {
+function deny(reason: DenyReason, table: string, log?: Logger) {
   log?.info(`[migration:deny] ${table} -> ${reason}`)
   return false
 }
 
-function allow(table: string, log?: SqliteLogger) {
+function allow(table: string, log?: Logger) {
   log?.info(`[migration:allow] ${table}`)
   return true
 }
@@ -21,32 +21,32 @@ function allow(table: string, log?: SqliteLogger) {
 export function allowMigration<_T extends Record<string, unknown>>(
   options: TableOptions<_T>,
   tableName: string,
-  log?: SqliteLogger
+  logger?: Logger
 ): boolean {
   // ---- GLOBAL SWITCH ----
   if (options.migrate?.enabled === false) {
-    return deny("migration-disabled", tableName, log)
+    return deny("migration-disabled", tableName, logger)
   }
 
   // ---- TABLE FLAGS ----
   if (options.temporary === true) {
-    return deny("temporary-table", tableName, log)
+    return deny("temporary-table", tableName, logger)
   }
 
   // ---- SQLITE INTERNAL TABLES ----
   if (tableName === ":memory:") {
-    return deny("memory-db", tableName, log)
+    return deny("memory-db", tableName, logger)
   }
 
   if (tableName.startsWith("temp_")) {
-    return deny("sqlite-temp-prefix", tableName, log)
+    return deny("sqlite-temp-prefix", tableName, logger)
   }
 
   const tempSuffix = options.migrate?.tempTableSuffix ?? "_migration_temp"
   if (tableName.startsWith(tempSuffix)) {
-    return deny("migration-temp-table", tableName, log)
+    return deny("migration-temp-table", tableName, logger)
   }
 
   // ---- SUCCESS ----
-  return allow(tableName, log)
+  return allow(tableName, logger)
 }

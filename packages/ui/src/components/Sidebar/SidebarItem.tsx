@@ -57,7 +57,7 @@ export const SidebarItem = ({ item, depth = 0, handleTogglePin, isLoading }: Sid
           {item.children.map((child) => (
             <SidebarItem
               key={child.slug}
-              item={{ ...child, slug: `- ${child.slug}` }}
+              item={child}
               depth={depth + 1}
               handleTogglePin={handleTogglePin}
               isLoading={isLoading}

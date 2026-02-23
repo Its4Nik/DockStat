@@ -13,7 +13,7 @@ export function PluginLinksSection({
     <>
       <Divider variant="dotted" />
       <div>
-        <Card size="sm" variant="outlined" className="flex items-center gap-2 mb-4">
+        <Card size="sm" variant="flat" className="flex items-center gap-2 mb-4">
           <Puzzle size={24} className="text-accent" />
           <h2 className="text-2xl font-semibold text-muted-text">Plugin Routes</h2>
         </Card>

@@ -1,12 +1,12 @@
 import type { Database } from "bun:sqlite"
-import type { SqliteLogger } from "../../utils"
+import type Logger from "@dockstat/logger"
 
 /**
  * Store table comment as metadata (using a system table if needed)
  */
 export function setTableComment(
   db: Database,
-  tableLog: SqliteLogger,
+  tableLog: Logger,
   tableName: string,
   comment: string
 ): void {

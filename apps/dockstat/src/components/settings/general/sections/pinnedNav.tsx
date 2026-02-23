@@ -1,5 +1,5 @@
 import { Button, Card } from "@dockstat/ui"
-import { LinkIcon, X } from "lucide-react"
+import { LinkIcon, Pin, X } from "lucide-react"
 import { useGlobalBusy } from "@/hooks/useGlobalBusy"
 
 type PinnedNavSectionProps = {
@@ -11,10 +11,10 @@ export function PinnedNavSection({ pinnedLinks, unpinLink }: PinnedNavSectionPro
   const busy = useGlobalBusy()
   return (
     <div>
-      <Card size="sm" variant="outlined" className="flex gap-2 mb-4">
+      <Card size="sm" variant="flat" className="flex gap-2 mb-4">
         <div className="mx-auto gap-2">
           <div className="flex items-center gap-2">
-            <LinkIcon size={24} className="text-accent" />
+            <Pin size={24} className="text-accent rotate-45" />
             <h2 className="text-2xl font-semibold text-muted-text">Pinned Links</h2>
           </div>
         </div>
@@ -36,7 +36,7 @@ export function PinnedNavSection({ pinnedLinks, unpinLink }: PinnedNavSectionPro
                   <LinkIcon size={18} className="text-accent" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-white">{link.slug}</div>
+                  <div className="font-semibold text-primary-text">{link.slug}</div>
                   <div className="text-sm text-muted-text truncate">{link.path}</div>
                 </div>
               </div>

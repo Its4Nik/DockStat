@@ -1,4 +1,5 @@
 import { Card, CardBody, Divider } from "@dockstat/ui"
+import { Link } from "lucide-react"
 import { AdditionalSettingsSection } from "./sections/additionalSettings"
 import { PinnableLinksSection } from "./sections/pinnableLinks"
 import { PinnedNavSection } from "./sections/pinnedNav"
@@ -21,6 +22,14 @@ export const GeneralSettingsSlide = () => {
     <div className="space-y-6">
       <div>
         <Card variant="elevated">
+          <Card size="sm" variant="outlined" className="flex gap-2">
+            <div className="mx-auto gap-2">
+              <div className="flex items-center gap-2">
+                <Link size={24} className="text-accent" />
+                <h2 className="text-2xl font-semibold text-muted-text">Link Settings</h2>
+              </div>
+            </div>
+          </Card>
           <CardBody>
             <div className="flex flex-wrap  gap-4 mb-4">
               <div className="flex-1">

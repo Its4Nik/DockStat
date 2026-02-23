@@ -9,7 +9,7 @@ Schema-first table helpers, an expressive chainable QueryBuilder, safe defaults 
 
 ---
 
-## 🆕 What's New in v1.3.5
+## 🆕 What's New in v1.3.5 (last major update)
 
 ### New Features
 

@@ -22,7 +22,6 @@ import type {
   Parser,
   TableOptions,
 } from "./types"
-import { createLogger, type SqliteLogger } from "./utils"
 import { allowMigration } from "./utils/allowMigration"
 
 // Re-export all types and utilities
@@ -93,10 +92,10 @@ class DB {
   private autoBackupTimer: ReturnType<typeof setInterval> | null = null
   private autoBackupOptions: AutoBackupOptions | null = null
   private baseLogger: Logger
-  private dbLog: SqliteLogger
-  private backupLog: SqliteLogger
-  private tableLog: SqliteLogger
-  private migrationLog: SqliteLogger
+  private dbLog: Logger
+  private backupLog: Logger
+  private tableLog: Logger
+  private migrationLog: Logger
 
   /**
    * Open or create a SQLite database at `path`.
@@ -112,12 +111,12 @@ class DB {
     }
 
     // Wire base logger so sqlite-wrapper logs inherit the same LogHook/parents as the consumer.
-    this.dbLog = createLogger("DB", this.baseLogger)
-    this.backupLog = createLogger("Backup", this.baseLogger)
-    this.tableLog = createLogger("Table", this.baseLogger)
-    this.migrationLog = createLogger("Migration", this.baseLogger)
+    this.dbLog = this.baseLogger.spawn("DB")
+    this.backupLog = this.baseLogger.spawn("Backup")
+    this.tableLog = this.baseLogger.spawn("Table")
+    this.migrationLog = this.baseLogger.spawn("Migration")
 
-    this.dbLog.connection(path, "open")
+    this.dbLog.info(`Database open: ${path}`)
 
     this.dbPath = path
     this.db = new Database(path)
@@ -125,6 +124,7 @@ class DB {
     // Apply PRAGMA settings if provided
     if (options?.pragmas) {
       for (const [name, value] of options.pragmas) {
+        this.dbLog.info(`Applying Pragma: ${name} - ${JSON.stringify(value)}`)
         this.pragma(name, value)
       }
     }
@@ -209,7 +209,7 @@ class DB {
    * Also stops auto-backup if it's running.
    */
   close(): void {
-    this.dbLog.connection(this.dbPath, "close")
+    this.dbLog.info(`Closed Database: ${this.dbPath}`)
     this.stopAutoBackup()
     this.db.close()
   }
@@ -258,7 +258,7 @@ class DB {
       migrate: this.normalizeMigrationOptions(options?.migrate),
     }
 
-    const canMigrate = allowMigration(options || {}, tableName, this.dbLog)
+    const canMigrate = allowMigration(options || {}, tableName, this.migrationLog)
 
     const tableAlreadyExists =
       this.shouldCheckExistingTable(tableName, options) && tableExists(this.db, tableName)
@@ -369,11 +369,7 @@ class DB {
       BOOLEAN: mergedBoolean,
     }
 
-    this.tableLog.parserConfig(
-      pObj.JSON.map(String),
-      pObj.BOOLEAN.map(String),
-      Object.keys(pObj.MODULE)
-    )
+    this.tableLog.debug(`Parser config: ${JSON.stringify(pObj)}`)
 
     return this.table<_T>(tableName, pObj)
   }
@@ -457,7 +453,7 @@ class DB {
    * Commit a transaction
    */
   commit(): void {
-    this.dbLog.transaction("commit")
+    this.dbLog.info("Running commit...")
     this.run("COMMIT")
   }
 
@@ -465,7 +461,7 @@ class DB {
    * Rollback a transaction
    */
   rollback(): void {
-    this.dbLog.transaction("rollback")
+    this.dbLog.info("Running rollback..")
     this.run("ROLLBACK")
   }
 
