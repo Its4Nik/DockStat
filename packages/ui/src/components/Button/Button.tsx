@@ -1,4 +1,6 @@
 import { motion } from "framer-motion"
+import { buttonMotionVariants, buttonTransition } from "./animations"
+import { ButtonSpinner } from "./spinner"
 
 export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger"
 export type ButtonSize = "xs" | "sm" | "md" | "lg"
@@ -73,24 +75,10 @@ export const Button: React.FC<ButtonProps> = ({
       onClick={onClick}
       className={`${baseClasses} ${!noFocusRing ? focusCommonClasses : ""} ${variantClasses[variant]} ${!noFocusRing ? variantRingClasses[variant] : ""} ${sizeClasses[size]} ${widthClass} ${className}`}
       /* --- STATE ANIMATION --- */
-      animate={
-        isInactive
-          ? {
-              opacity: 0.55,
-              scale: 0.98,
-              filter: "saturate(0.6) contrast(0.9)",
-            }
-          : {
-              opacity: 1,
-              scale: 1,
-              filter: "saturate(1) contrast(1)",
-            }
-      }
+      variants={buttonMotionVariants}
+      animate={isInactive ? "inactive" : "active"}
       /* entry/exit smoothness */
-      transition={{
-        duration: 0.18,
-        ease: [0.22, 1, 0.36, 1], // smooth UI curve
-      }}
+      transition={buttonTransition}
       /* tactile press feedback */
       whileTap={!isInactive ? { scale: 0.96 } : undefined}
       /* prevents click while animating */
@@ -101,35 +89,7 @@ export const Button: React.FC<ButtonProps> = ({
     >
       <span className="flex items-center justify-center">
         {/* Animated spinner space (no layout jump) */}
-        <motion.span
-          className="inline-flex h-4"
-          animate={{
-            width: loading ? 16 : 0,
-            marginRight: loading ? 8 : 0,
-            opacity: loading ? 1 : 0,
-          }}
-          transition={{ duration: 0.15 }}
-        >
-          <svg className="animate-spin" fill="none" viewBox="0 0 24 24">
-            <title>Loading Spinner</title>
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2
-                5.291A7.962 7.962 0 014 12H0c0
-                3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-        </motion.span>
-
+        <ButtonSpinner loading={loading} />
         {children}
       </span>
     </motion.button>
