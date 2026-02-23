@@ -25,7 +25,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
 
   constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {
     super(db, tableName, parser, baseLogger)
-    this.selectLog = baseLogger.spawn("SELECT")
+    this.selectLog = this.log.spawn("SELECT")
   }
 
   // ===== Query Building Methods =====

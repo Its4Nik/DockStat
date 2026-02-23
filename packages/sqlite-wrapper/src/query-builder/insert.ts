@@ -19,7 +19,7 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
 
   constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {
     super(db, tableName, parser, baseLogger)
-    this.insertLog = baseLogger.spawn("INSERT")
+    this.insertLog = this.log.spawn("INSERT")
   }
 
   // ===== Private Helpers =====

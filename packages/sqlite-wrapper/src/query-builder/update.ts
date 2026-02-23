@@ -20,7 +20,7 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
 
   constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {
     super(db, tableName, parser, baseLogger)
-    this.updateLog = baseLogger.spawn("UPDATE")
+    this.updateLog = this.log.spawn("UPDATE")
   }
 
   // ===== Public Update Methods =====

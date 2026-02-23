@@ -22,7 +22,7 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
 
   constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {
     super(db, tableName, parser, baseLogger)
-    this.deleteLog = baseLogger.spawn("DELETE")
+    this.deleteLog = this.log.spawn("DELETE")
   }
 
   // ===== Public Delete Methods =====

@@ -32,8 +32,9 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
       parser,
     }
 
-    // If a base logger is provided, this will inherit the consumer's LogHook/parents.
-    this.log = baseLogger?.spawn("QB") || new Logger("QB")
+    // If a base logger is provided, use it directly (it's already the QB logger from QueryBuilder).
+    // Otherwise, create a new QB logger.
+    this.log = baseLogger || new Logger("QB")
 
     this.log.debug(`QueryBuilder initialized for table: ${tableName}`)
   }
