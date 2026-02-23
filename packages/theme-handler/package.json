@@ -1,8 +1,13 @@
 {
   "name": "@dockstat/theme-handler",
   "module": "src/index.ts",
+  "version": "2.0.0",
+  "description": "A comprehensive, database-backed theme management system for React applications with server-side support and persistent user preferences.",
   "type": "module",
-  "private": true,
+  "private": false,
+  "scripts": {
+    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
+  },
   "exports": {
     "./server": "./src/server/index.ts",
     "./client": "./src/client/index.ts",

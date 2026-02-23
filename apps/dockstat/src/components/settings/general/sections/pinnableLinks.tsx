@@ -11,7 +11,7 @@ export function PinnableLinksSection({ availableLinks, pinLink }: PinnableLinksS
   const busy = useGlobalBusy()
   return (
     <div>
-      <Card size="sm" variant="outlined" className="flex gap-2 mb-4">
+      <Card size="sm" variant="flat" className="flex gap-2 mb-4">
         <div className="mx-auto gap-2">
           <div className="flex items-center gap-2">
             <LinkIcon size={24} className="text-accent" />

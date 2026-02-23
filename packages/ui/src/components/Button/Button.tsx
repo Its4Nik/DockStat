@@ -1,3 +1,5 @@
+import { motion } from "framer-motion"
+
 export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger"
 export type ButtonSize = "xs" | "sm" | "md" | "lg"
 
@@ -31,6 +33,8 @@ export const Button: React.FC<ButtonProps> = ({
   fullWidth = false,
   noFocusRing = false,
 }) => {
+  const isInactive = disabled || loading
+
   const baseClasses =
     "inline-flex items-center justify-center font-medium rounded-md transition-colors"
   const focusCommonClasses = "focus:outline-none focus:ring-2 focus:ring-offset-2"
@@ -45,7 +49,6 @@ export const Button: React.FC<ButtonProps> = ({
     danger: "bg-button-danger-bg text-button-danger-text hover:bg-button-danger-hover-bg",
   }
 
-  // Separate ring color classes so we can toggle rings on/off cleanly
   const variantRingClasses: Record<ButtonVariant, string> = {
     primary: "focus:ring-button-primary-text-hover-ring",
     secondary: "focus:ring-button-secondary-text-hover-ring",
@@ -61,43 +64,74 @@ export const Button: React.FC<ButtonProps> = ({
     lg: "px-6 py-3 text-lg",
   }
 
-  const disabledClasses = disabled || loading ? "opacity-50 cursor-not-allowed" : ""
-
   const widthClass = fullWidth ? "w-full" : ""
 
   return (
-    <button
+    <motion.button
       type={type}
-      className={`${baseClasses} ${!noFocusRing ? focusCommonClasses : ""} ${variantClasses[variant]} ${!noFocusRing ? variantRingClasses[variant] : ""} ${sizeClasses[size]} ${disabledClasses} ${widthClass} ${className}`}
+      disabled={isInactive}
       onClick={onClick}
-      disabled={disabled || loading}
+      className={`${baseClasses} ${!noFocusRing ? focusCommonClasses : ""} ${variantClasses[variant]} ${!noFocusRing ? variantRingClasses[variant] : ""} ${sizeClasses[size]} ${widthClass} ${className}`}
+      /* --- STATE ANIMATION --- */
+      animate={
+        isInactive
+          ? {
+              opacity: 0.55,
+              scale: 0.98,
+              filter: "saturate(0.6) contrast(0.9)",
+            }
+          : {
+              opacity: 1,
+              scale: 1,
+              filter: "saturate(1) contrast(1)",
+            }
+      }
+      /* entry/exit smoothness */
+      transition={{
+        duration: 0.18,
+        ease: [0.22, 1, 0.36, 1], // smooth UI curve
+      }}
+      /* tactile press feedback */
+      whileTap={!isInactive ? { scale: 0.96 } : undefined}
+      /* prevents click while animating */
+      style={{
+        cursor: isInactive ? "not-allowed" : "pointer",
+        pointerEvents: isInactive ? "none" : "auto",
+      }}
     >
       <span className="flex items-center justify-center">
-        {/* Spinner placeholder */}
-        <span className={`inline-flex ${loading ? "w-4 mr-2" : "w-0"} h-4`}>
-          {loading && (
-            <svg className="animate-spin" fill="none" viewBox="0 0 24 24">
-              <title>Loading Spinner</title>
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2
-                  5.291A7.962 7.962 0 014 12H0c0
-                  3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-          )}
-        </span>
+        {/* Animated spinner space (no layout jump) */}
+        <motion.span
+          className="inline-flex h-4"
+          animate={{
+            width: loading ? 16 : 0,
+            marginRight: loading ? 8 : 0,
+            opacity: loading ? 1 : 0,
+          }}
+          transition={{ duration: 0.15 }}
+        >
+          <svg className="animate-spin" fill="none" viewBox="0 0 24 24">
+            <title>Loading Spinner</title>
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2
+                5.291A7.962 7.962 0 014 12H0c0
+                3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+        </motion.span>
+
         {children}
       </span>
-    </button>
+    </motion.button>
   )
 }

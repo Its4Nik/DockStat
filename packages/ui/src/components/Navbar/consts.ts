@@ -5,6 +5,12 @@ export type PathItem = {
   children?: PathItem[]
 }
 
+export const floatVariants = {
+  initial: { opacity: 0, y: -8, scale: 0.95 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: -8, scale: 0.95 },
+}
+
 export const SidebarPaths: PathItem[] = [
   {
     path: "/",
@@ -33,7 +39,7 @@ export const SidebarPaths: PathItem[] = [
   },
   {
     path: "/extensions",
-    slug: "Extensions",
+    slug: "Extension Repositories",
     children: [
       { path: "/extensions/plugins", slug: "Browse Plugins" },
       { path: "/extensions/themes", slug: "Explore themes" },

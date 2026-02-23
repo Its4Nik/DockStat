@@ -134,6 +134,7 @@ export function Sidebar({
                     className="flex-1 relative"
                     size="xs"
                     variant={!showPluginRoutes ? "outline" : "primary"}
+                    disabled={!showPluginRoutes}
                     onClick={() => setShowPluginRoutes(false)}
                   >
                     Main routes
@@ -145,6 +146,7 @@ export function Sidebar({
                       size="xs"
                       variant={showPluginRoutes ? "outline" : "primary"}
                       onClick={() => setShowPluginRoutes(true)}
+                      disabled={showPluginRoutes}
                     >
                       Plugin routes
                     </Button>
