@@ -15,7 +15,7 @@ import {
   quoteIdentifier,
   quoteIdentifiers,
   quoteString,
-} from "../utils/sql"
+} from "../src/utils/sql"
 
 /**
  * Tests for SQL utility functions

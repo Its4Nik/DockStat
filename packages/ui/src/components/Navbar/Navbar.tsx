@@ -1,5 +1,6 @@
 import type { LogEntry } from "@dockstat/logger"
-import { motion } from "framer-motion"
+import { useHotkey } from "@dockstat/utils/react"
+import { AnimatePresence, motion } from "framer-motion"
 import { Menu } from "lucide-react"
 import { useState } from "react"
 import { NavLink } from "react-router"
@@ -9,8 +10,11 @@ import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
 import { LinkLookup } from "../HotkeyMenus/LinkLookup"
 import { LinkWithIcon } from "../Link/Link"
-import { Sidebar, type SidebarProps } from "../Sidebar/Sidebar"
+import { Sidebar, type SidebarProps, type ThemeProps } from "../Sidebar/Sidebar"
+import { floatVariants } from "./consts"
 import DockStatLogo from "./DockStat2-06.png"
+
+export { type PathItem, SidebarPaths } from "./consts"
 
 type NavbarProps = {
   isBusy: boolean
@@ -20,6 +24,13 @@ type NavbarProps = {
   ramUsage?: string
   heading?: string
   mutationFn: SidebarProps["mutationFn"]
+  themeProps?: ThemeProps
+  openQuickLinksModalHotkey?: string
+  sidebarHotkeys: {
+    toggle?: string
+    open?: string
+    close?: string
+  }
 }
 
 export function Navbar({
@@ -30,12 +41,28 @@ export function Navbar({
   heading,
   mutationFn,
   pluginLinks,
+  themeProps,
+  openQuickLinksModalHotkey,
+  sidebarHotkeys,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
+  useHotkey({
+    close: () => setIsMenuOpen(false),
+    open: () => setIsMenuOpen(true),
+    isOpen: isMenuOpen,
+    closeKey: sidebarHotkeys.close,
+    openKey: sidebarHotkeys.open,
+    toggleKey: sidebarHotkeys.toggle,
+  })
+
   return (
     <>
-      <LinkLookup pins={navLinks || []} pluginLinks={pluginLinks} />
+      <LinkLookup
+        pins={navLinks || []}
+        pluginLinks={pluginLinks}
+        hotkey={openQuickLinksModalHotkey}
+      />
 
       <Card size="sm" className="w-full p-0.5 mb-4 relative overflow-visible">
         <div
@@ -65,16 +92,39 @@ export function Navbar({
           )}
 
           <div className="flex items-center gap-2">
-            {navLinks?.map((nl) => (
-              <NavLink to={nl.path} key={nl.slug}>
-                {({ isActive }) => <Badge outlined={isActive}>{nl.slug}</Badge>}
-              </NavLink>
-            ))}
-            {ramUsage ? (
-              <Badge variant="secondary" className="font-mono">
-                {ramUsage}
-              </Badge>
-            ) : null}
+            <AnimatePresence initial={false}>
+              {navLinks?.map((nl) => (
+                <motion.div
+                  key={nl.slug}
+                  layout
+                  variants={floatVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  <NavLink to={nl.path}>
+                    {({ isActive }) => <Badge outlined={isActive}>{nl.slug}</Badge>}
+                  </NavLink>
+                </motion.div>
+              ))}
+
+              {ramUsage && (
+                <motion.div
+                  key="ram-usage"
+                  layout
+                  variants={floatVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  <Badge variant="secondary" className="font-mono">
+                    {ramUsage}
+                  </Badge>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </nav>
 
@@ -86,6 +136,7 @@ export function Navbar({
           mutationFn={mutationFn}
           pins={navLinks || []}
           pluginLinks={pluginLinks || []}
+          themeProps={themeProps}
         />
 
         <style>{`

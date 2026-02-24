@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, rmSync } from "node:fs"
 import { join } from "node:path"
-import { column, DB } from "../index"
+import { column, DB } from "../src/index"
 
 /**
  * Tests for backup functionality including:

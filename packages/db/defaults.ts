@@ -10,13 +10,18 @@ export const defaultConfig: DockStatConfigTableType = {
     dark: 0,
     light: 0,
   },
-  hotkeys: {},
+  hotkeys: {
+    "open:quicklinks": "k",
+    "toggle:sidebar": "b",
+    "close:sidebar": "",
+    "open:sidebar": "",
+  },
   nav_links: [],
   autostart_handlers_monitoring: true,
   config_database_rev: "v1.0.1",
   tables: [],
-  tls_certs_and_keys: { web: null, docker: null },
-  addtionalSettings: {
+  keys: { web: null, docker: null, docknode: null },
+  additionalSettings: {
     showBackendRamUsageInNavbar: true,
   },
 }

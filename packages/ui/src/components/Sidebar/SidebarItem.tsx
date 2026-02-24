@@ -25,13 +25,13 @@ export const SidebarItem = ({ item, depth = 0, handleTogglePin, isLoading }: Sid
         <LinkWithIcon
           href={item.path}
           navLinkActive={({ isActive }) =>
-            `flex-1 rounded-md py-1.5 text-sm font-medium transition-all duration-300 ${
-              isActive ? "bg-main-bg text-muted-text" : "text-secondary-text hover:bg-main-bg/20"
+            `flex-1 rounded-md py-0.5 text-sm font-medium transition-all duration-300 bg-main-bg/10 ${
+              isActive ? "bg-main-bg! text-muted-text" : "text-secondary-text hover:bg-main-bg/20"
             }`
           }
           style={{ paddingLeft: `${depth * 0.75 + 0.5}rem` }}
         >
-          {item.slug}
+          <div className="flex">{item.slug}</div>
         </LinkWithIcon>
 
         <button
@@ -65,7 +65,6 @@ export const SidebarItem = ({ item, depth = 0, handleTogglePin, isLoading }: Sid
           ))}
         </div>
       ) : null}
-
       {depth === 0 && <Divider variant="dotted" />}
     </div>
   )

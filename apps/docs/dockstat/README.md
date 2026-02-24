@@ -31,7 +31,7 @@ urlId: zqa4IyZtl0
 ## Documentation Index
 
 | Section | Description |
-|----|----|
+|---------|-------------|
 | [Architecture](/doc/d56ca448-563a-4206-9585-c45f8f6be5cf) | System design, data flow, and component relationships |
 | [API Reference](/doc/b174143d-f906-4f8d-8cb5-9fc96512e575) | Complete REST API endpoint documentation |
 | [Apps overview](/doc/fb89c77f-9f0a-497a-bb24-c41d21b37478) | Guide to all DockStat applications |
@@ -133,16 +133,16 @@ The API listens on port 9876 by default with prefix `/api/v2`. The frontend dev 
 ## Applications
 
 | Application | Type | Port | Documentation |
-|----|----|----|----|
-| `dockstat` | Frontend | 5173 / 3000 | [Apps overview](/doc/fb89c77f-9f0a-497a-bb24-c41d21b37478) |
-| `api` | Backend API | 9876 | [API Reference](/doc/b174143d-f906-4f8d-8cb5-9fc96512e575) |
-| `docknode` | Remote Agent | 4000 | [Apps overview](/doc/fb89c77f-9f0a-497a-bb24-c41d21b37478) |
-| `dockstore` | Plugin Registry | — | [Apps overview](/doc/fb89c77f-9f0a-497a-bb24-c41d21b37478) |
+|-------------|------|------|---------------|
+| `dockstat`  | Frontend | 5173 / 3000 | [Apps overview](/doc/fb89c77f-9f0a-497a-bb24-c41d21b37478) |
+| `api`       | Backend API | 9876 | [API Reference](/doc/b174143d-f906-4f8d-8cb5-9fc96512e575) |
+| `docknode`  | Remote Agent | 4000 | [Apps overview](/doc/fb89c77f-9f0a-497a-bb24-c41d21b37478) |
+| `dockstore` | Plugin Registry | —    | [Apps overview](/doc/fb89c77f-9f0a-497a-bb24-c41d21b37478) |
 
 ## Packages
 
 | Package | Description |
-|----|----|
+|---------|-------------|
 | [@dockstat/sqlite-wrapper](/doc/f543683b-68be-431f-a6d5-7b4012b1345a) | Type-safe SQLite query builder |
 | [@dockstat/docker-client](/doc/ef12194c-404e-4bcd-a5b0-31aaf7b1b798) | Docker operations with monitoring |
 | [@dockstat/db](/doc/5176f3ba-1242-4c85-8290-491dcc0f9963) | Database layer with themes |
@@ -157,15 +157,15 @@ The API listens on port 9876 by default with prefix `/api/v2`. The frontend dev 
 ### API (`apps/api`)
 
 | Variable | Description | Default |
-|----|----|----|
-| `DOCKSTAT_MAX_WORKERS` | Max worker threads for DockerClientManager | `200` |
-| `DOCKSTATAPI_SHOW_TRACES` | Enable server timing traces | `true` |
+|----------|-------------|---------|
+| `DOCKSTAT_MAX_WORKERS` | Max worker threads for DockerClientManager | `200`   |
+| `DOCKSTATAPI_SHOW_TRACES` | Enable server timing traces | `true`  |
 | `DOCKSTATAPI_DEFAULT_PLUGIN_DIR` | Default plugin directory | `src/plugins/default-plugins` |
 
 ### Logger (`packages/logger`)
 
 | Variable | Description |
-|----|----|
+|----------|-------------|
 | `DOCKSTAT_LOGGER_FULL_FILE_PATH` | Show full file paths in logs |
 | `DOCKSTAT_LOGGER_IGNORE_MESSAGES` | Comma-separated messages to ignore |
 | `DOCKSTAT_LOGGER_DISABLED_LOGGERS` | Comma-separated logger names to disable |
@@ -175,11 +175,11 @@ The API listens on port 9876 by default with prefix `/api/v2`. The frontend dev 
 ### DockNode (`apps/docknode`)
 
 | Variable | Description |
-|----|----|
+|----------|-------------|
 | `DOCKNODE_DOCKSTACK_AUTH_PSK` | Production pre-shared key |
 | `DOCKNODE_DOCKSTACK_DEV_AUTH` | Development auth key |
 | `DOCKNODE_DOCKSTACK_AUTH_PRIORITY` | Auth method priority |
-| `PORT` | Server port (default `4000`) |
+| `PORT`   | Server port (default `4000`) |
 
 [Full Configuration Documentation →](./configuration)
 
@@ -200,9 +200,9 @@ The frontend Dockerfile at `apps/dockstat/Dockerfile` produces a production imag
 ## Tech Stack
 
 | Layer | Technology |
-|----|----|
-| Runtime | Bun |
-| Backend Framework | Elysia |
+|-------|------------|
+| Runtime | Bun        |
+| Backend Framework | Elysia     |
 | Frontend Framework | React Router v7 (SSR) |
 | Database | SQLite (via `@dockstat/sqlite-wrapper`) |
 | Docker Integration | Dockerode (via `@dockstat/docker-client`) |

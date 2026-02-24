@@ -9,6 +9,7 @@ import { PageHeadingContext } from "./contexts/pageHeadingContext"
 import { useEdenMutation } from "./hooks/eden/useEdenMutation"
 import { useEdenQuery } from "./hooks/useEdenQuery"
 import { useGlobalBusy } from "./hooks/useGlobalBusy"
+import { useTheme } from "./hooks/useTheme"
 import { api } from "./lib/api"
 import { toast } from "./lib/toast"
 
@@ -19,6 +20,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const config = useContext(ConfigProviderContext)
   const heading = useContext(PageHeadingContext).heading
+
+  const { theme, themesList, getAllThemes, applyThemeById } = useTheme()
   const isBusy = useGlobalBusy()
 
   const { data: frontendPluginRoutes } = useEdenQuery({
@@ -67,6 +70,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div className="bg-main-bg min-h-screen w-screen p-4">
       <Toaster expand position="bottom-right" />
       <Navbar
+        sidebarHotkeys={{
+          close: config.hotkeys?.["close:sidebar"],
+          open: config.hotkeys?.["close:sidebar"],
+          toggle: config.hotkeys?.["toggle:sidebar"],
+        }}
         isBusy={isBusy}
         navLinks={config?.navLinks || []}
         pluginLinks={frontendPluginRoutes || []}
@@ -74,9 +82,47 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         logEntries={logMessagesArr}
         heading={heading}
         mutationFn={{
-          pin: pinMutation.mutateAsync,
-          unpin: unPinMutation.mutateAsync,
+          pin: (input: { path: string; slug: string }) => {
+            toast({
+              title: `Pinned "${input.slug}"!`,
+              description: (
+                <span>
+                  Added a new pinned link: "{input.slug}" - <pre>{input.path}</pre>
+                </span>
+              ),
+              variant: "success",
+            })
+
+            return pinMutation.mutateAsync(input)
+          },
+          unpin: (input: { path: string; slug: string }) => {
+            toast({
+              title: `Unpinned "${input.slug}"!`,
+              description: (
+                <span>
+                  Added a new pinned link: "{input.slug}" - <pre>{input.path}</pre>
+                </span>
+              ),
+              variant: "success",
+            })
+
+            return unPinMutation.mutateAsync(input)
+          },
           isBusy: isBusy,
+        }}
+        openQuickLinksModalHotkey={config?.hotkeys?.["open:quicklinks"]}
+        themeProps={{
+          themes: themesList || [],
+          currentThemeId: theme?.id ?? null,
+          onSelectTheme: (t) => applyThemeById(t.id),
+          onOpen: getAllThemes,
+          toastSuccess: () => {
+            toast({
+              description: `Set ${theme?.id} active`,
+              title: "Updated Theme Preference",
+              variant: "success",
+            })
+          },
         }}
       />
       <div className="px-4">{children}</div>

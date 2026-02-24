@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, test } from "bun:test"
-import { column, DB } from "../index"
+import { column, DB } from "../src/index"
 import {
   getParserSummary,
   hasTransformations,
@@ -7,7 +7,7 @@ import {
   transformRowsFromDb,
   transformRowsToDb,
   transformToDb,
-} from "../utils/transformer"
+} from "../src/utils"
 
 /**
  * Tests for Transformer utilities including:

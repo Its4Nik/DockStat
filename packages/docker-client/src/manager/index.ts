@@ -1,3 +1,4 @@
+import DockerClient from "../client"
 import { applyMixins } from "../shared/mixin"
 import { Containers } from "./containers"
 import { DockerClientManagerCore } from "./core"
@@ -21,4 +22,5 @@ const DCM = applyMixins(
   Streams
 )
 
+export const client = DockerClient
 export default DCM

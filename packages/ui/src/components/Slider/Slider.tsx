@@ -8,7 +8,7 @@ export type SliderProps = {
   value?: number
   onChange?: (value: number) => void
   className?: string
-  label?: string
+  label?: string | React.ReactNode
   showValue?: boolean
   disabled?: boolean
   variant?: "gradient" | "solid"

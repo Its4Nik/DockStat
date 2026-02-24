@@ -61,14 +61,15 @@ export function Toast(props: ToastProps) {
 
           <div className="my-auto shrink-0">
             <Button
-              size="sm"
+              size="xs"
+              noFocusRing
               variant={cardVariant === "error" ? "danger" : "secondary"}
               onClick={() => {
                 button?.onClick()
                 sonnerToast.dismiss(id)
               }}
             >
-              {button?.label || <X size={15} />}
+              {button?.label || <X size={10} />}
             </Button>
           </div>
         </div>

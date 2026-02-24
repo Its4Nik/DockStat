@@ -43,7 +43,7 @@ export function Slides({
         connected={connected}
         state={state}
       />
-      <CardBody className="overflow-hidden">
+      <CardBody className="">
         <SlideContent state={state}>{children}</SlideContent>
       </CardBody>
     </Card>

@@ -1,6 +1,7 @@
+import { useHotkey } from "@dockstat/utils/react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Link, Pin, Puzzle } from "lucide-react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useNavigate } from "react-router"
 import { Badge } from "../Badge/Badge"
 import { Card } from "../Card/Card"
@@ -15,6 +16,7 @@ export function LinkLookup({
   pins,
   pluginLinks,
   sidebarLinks = SidebarPaths,
+  hotkey,
 }: {
   pins: { path: string; slug: string }[]
   pluginLinks: {
@@ -22,6 +24,7 @@ export function LinkLookup({
     paths: { fullPath: string; metaTitle: string }[]
   }[]
   sidebarLinks?: typeof SidebarPaths
+  hotkey?: string
 }) {
   const navigate = useNavigate()
 
@@ -109,26 +112,20 @@ export function LinkLookup({
     )
   }, [searchQuery, allResults])
 
-  // Hotkey handler
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        e.preventDefault()
-        setModalOpen(true)
-        setTimeout(() => {
-          const input = document.querySelector<HTMLInputElement>("#search-input")
-          input?.focus()
-        }, 100)
-      }
+  useHotkey({
+    open: () => {
+      setModalOpen(true)
 
-      if (e.key === "Escape" && modalOpen) {
-        setModalOpen(false)
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [modalOpen])
+      setTimeout(() => {
+        document.querySelector<HTMLInputElement>("#search-input")?.focus()
+      }, 100)
+    },
+    close: () => setModalOpen(false),
+    openKey: hotkey,
+    closeKey: "Escape",
+    isOpen: modalOpen,
+    requireModifier: true,
+  })
 
   const handleResultClick = useCallback(
     (result: SearchResult) => {
@@ -190,8 +187,10 @@ export function LinkLookup({
                   whileHover="hover"
                   whileTap="tap"
                   className="flex-1"
+                  tabIndex={-1}
                 >
                   <Card
+                    tabIndex={0}
                     variant="outlined"
                     className="cursor-pointer w-full transition-colors min-w-40"
                     size="sm"

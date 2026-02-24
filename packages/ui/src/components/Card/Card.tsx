@@ -20,6 +20,7 @@ export interface CardProps {
   onClick?: MouseEventHandler<HTMLButtonElement>
   hoverable?: boolean
   glass?: boolean
+  tabIndex?: number
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -30,6 +31,7 @@ export const Card: React.FC<CardProps> = ({
   onClick,
   hoverable = false,
   glass,
+  tabIndex,
 }) => {
   const baseClasses = "shadow-xl rounded-lg transition-all duration-200"
 
@@ -71,6 +73,7 @@ export const Card: React.FC<CardProps> = ({
   if (onClick) {
     return (
       <button
+        tabIndex={tabIndex}
         type="button"
         className={`${classes} cursor-pointer hover:text-muted-text`}
         onClick={onClick}
@@ -80,7 +83,11 @@ export const Card: React.FC<CardProps> = ({
     )
   }
 
-  return <div className={classes}>{children}</div>
+  return (
+    <div tabIndex={tabIndex} className={classes}>
+      {children}
+    </div>
+  )
 }
 
 export { CardBody, type CardBodyProps } from "./CardBody"

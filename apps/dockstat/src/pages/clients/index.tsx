@@ -1,5 +1,5 @@
-import { Card, Divider } from "@dockstat/ui"
-import { Hammer, Split } from "lucide-react"
+import { Badge, Card, Divider } from "@dockstat/ui"
+import { Hammer, Server, Split } from "lucide-react"
 import { ClientCard } from "@/components/clients/ClientCard"
 import { HostsList } from "@/components/clients/HostsList"
 import { PoolStatsCard } from "@/components/clients/PoolStatsCard"
@@ -95,7 +95,19 @@ export default function ClientsPage() {
       <Divider variant="dotted" />
 
       {/* Hosts Section */}
-      <div className="">
+      <div>
+        <Card size="sm" variant="flat" className="flex justify-between justify-centergap-2 mb-4">
+          <div className="flex items-center gap-2">
+            <Server size={24} className="text-accent" />
+            <h2 className="text-2xl font-semibold text-muted-text">Docker Hosts</h2>
+          </div>
+          {hosts && (
+            <Badge variant="primary" size="sm">
+              {hosts.length} {hosts.length === 1 ? "Host" : "Hosts"}
+            </Badge>
+          )}
+        </Card>
+
         {hostsLoading ? (
           <div className="text-center py-12 text-muted-text">Loading hosts...</div>
         ) : (
