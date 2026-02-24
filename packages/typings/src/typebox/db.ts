@@ -1,6 +1,6 @@
 import { t } from "elysia"
 
-const HotkeyAction = t.Union([
+export const HotkeyAction = t.Union([
   t.Literal("open:sidebar"),
   t.Literal("close:sidebar"),
   t.Literal("toggle:sidebar"),
@@ -150,7 +150,7 @@ const DockStatConfigTable = t.Object({
     })
   ),
 
-  addtionalSettings: t.Object({
+  additionalSettings: t.Object({
     showBackendRamUsageInNavbar: t.Optional(t.Boolean()),
   }),
 

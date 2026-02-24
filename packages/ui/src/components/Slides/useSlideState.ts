@@ -42,9 +42,27 @@ export const useSlidesState = ({
     setIsCollapsed(false)
   }, [controlledSlide, isControlled, activeSlide, slideKeys])
 
-  // Measure content height and keep it in sync when active slide changes or its size changes.
-  // We use ResizeObserver when available so dynamic content that changes after mount will
-  // update the measured height automatically.
+  useEffect(() => {
+    if (!contentRefs.current) return
+
+    const refs = Object.values(contentRefs.current)
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (activeSlide) {
+        const height = contentRefs.current[activeSlide]?.offsetHeight || 0
+        setContentHeight(height)
+      }
+    })
+
+    for (const ref of refs) {
+      if (ref) {
+        resizeObserver.observe(ref)
+      }
+    }
+    return () => resizeObserver.disconnect()
+  }, [activeSlide])
+
+  // Measure content height when active slide changes
   useEffect(() => {
     // Cleanup any previous observer
     if (resizeObserverRef.current) {

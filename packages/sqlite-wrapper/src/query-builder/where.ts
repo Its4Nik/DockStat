@@ -1,5 +1,6 @@
-import type { SQLQueryBindings } from "bun:sqlite"
-import type { RegexCondition, WhereCondition } from "../types"
+import type { Database, SQLQueryBindings } from "bun:sqlite"
+import type Logger from "@dockstat/logger"
+import type { Parser, RegexCondition, WhereCondition } from "../types"
 import {
   buildBetweenClause,
   buildInClause,
@@ -22,12 +23,18 @@ import { BaseQueryBuilder } from "./base"
  * - Regex conditions (client-side filtering)
  */
 export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQueryBuilder<T> {
-  // ===== Private Helpers =====
+  whereLogger: Logger
+
+  constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {
+    super(db, tableName, parser, baseLogger)
+    this.whereLogger = baseLogger.spawn("WHERE")
+  }
+
   protected logWhere(method: string, data: Record<string, unknown>): void {
     const parts = Object.entries(data).map(
       ([key, value]) => `${key}=${WhereQueryBuilder.safeStringify(value)}`
     )
-    this.log.info(`${method} | ${parts.join(" ")}`)
+    this.whereLogger.info(`${method} | ${parts.join(" ")}`)
   }
 
   protected logWhereState(method: string, extra: Record<string, unknown> = {}): void {

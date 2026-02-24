@@ -1,4 +1,3 @@
-import { extractEdenError } from "@dockstat/utils"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 export function useBaseEdenMutation<TData, TInput>(opts: {

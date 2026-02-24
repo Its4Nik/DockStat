@@ -1,7 +1,7 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
-import type { Logger } from "@dockstat/logger"
+import type Logger from "@dockstat/logger"
 import type { DeleteResult, Parser } from "../types"
-import { createLogger, quoteIdentifier } from "../utils"
+import { quoteIdentifier } from "../utils"
 import { SelectQueryBuilder } from "./select"
 
 /**
@@ -18,11 +18,11 @@ import { SelectQueryBuilder } from "./select"
  * - Truncate (explicit full-table delete)
  */
 export class DeleteQueryBuilder<T extends Record<string, unknown>> extends SelectQueryBuilder<T> {
-  private deleteLog: ReturnType<typeof createLogger>
+  private deleteLog: Logger
 
-  constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger?: Logger) {
+  constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {
     super(db, tableName, parser, baseLogger)
-    this.deleteLog = createLogger("Delete", baseLogger)
+    this.deleteLog = this.log.spawn("DELETE")
   }
 
   // ===== Public Delete Methods =====
@@ -50,13 +50,14 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const [whereClause, whereParams] = this.buildWhereClause()
     const query = `DELETE FROM ${quoteIdentifier(this.getTableName())}${whereClause}`
 
-    this.deleteLog.query("DELETE", query, whereParams)
+    this.deleteLog.debug(`Query: ${query} - Where: ${whereParams}`)
 
     const result = this.getDb()
       .prepare(query)
       .run(...whereParams)
 
-    this.deleteLog.result("DELETE", result.changes)
+    this.deleteLog.info(`Deleted: ${result.changes}`)
+
     this.reset()
 
     return { changes: result.changes }
@@ -92,7 +93,7 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const deleteQuery = `DELETE FROM ${quoteIdentifier(this.getTableName())} WHERE rowid = ?`
     const stmt = this.getDb().prepare(deleteQuery)
 
-    this.deleteLog.query("DELETE (regex)", deleteQuery)
+    this.deleteLog.debug(`DELETE-RGX: ${deleteQuery}`)
 
     let totalChanges = 0
 
@@ -101,7 +102,7 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
       totalChanges += result.changes
     }
 
-    this.deleteLog.result("DELETE (regex)", totalChanges)
+    this.deleteLog.info(`Changes: ${totalChanges}`)
     this.reset()
 
     return { changes: totalChanges }
@@ -170,13 +171,13 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const query = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${quoteIdentifier(String(deletedColumn))} = ?${whereClause}`
     const params = [deletedValue, ...whereParams] as SQLQueryBindings[]
 
-    this.deleteLog.query("SOFT DELETE", query, params)
+    this.deleteLog.info(`SOFT DELETE: ${JSON.stringify({ query, params })}`)
 
     const result = this.getDb()
       .prepare(query)
       .run(...params)
 
-    this.deleteLog.result("SOFT DELETE", result.changes)
+    this.deleteLog.info(`Changes: ${result.changes}`)
     this.reset()
 
     return { changes: result.changes }
@@ -210,7 +211,7 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const updateQuery = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${quoteIdentifier(String(deletedColumn))} = ? WHERE rowid = ?`
     const stmt = this.getDb().prepare(updateQuery)
 
-    this.deleteLog.query("SOFT DELETE (regex)", updateQuery)
+    this.deleteLog.info(`SOFT DELETE (regex): ${updateQuery}`)
 
     let totalChanges = 0
 
@@ -219,7 +220,7 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
       totalChanges += result.changes
     }
 
-    this.deleteLog.result("SOFT DELETE (regex)", totalChanges)
+    this.deleteLog.info(`Changes: ${totalChanges}`)
     this.reset()
 
     return { changes: totalChanges }
@@ -248,13 +249,13 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const [whereClause, whereParams] = this.buildWhereClause()
     const query = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${quoteIdentifier(String(deletedColumn))} = NULL${whereClause}`
 
-    this.deleteLog.query("RESTORE", query, whereParams)
+    this.deleteLog.info(`RESTORE: ${JSON.stringify({ query, whereParams })}`)
 
     const result = this.getDb()
       .prepare(query)
       .run(...whereParams)
 
-    this.deleteLog.result("RESTORE", result.changes)
+    this.deleteLog.info(`Changes: ${result.changes}`)
     this.reset()
 
     return { changes: result.changes }
@@ -285,7 +286,7 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const updateQuery = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${quoteIdentifier(String(deletedColumn))} = NULL WHERE rowid = ?`
     const stmt = this.getDb().prepare(updateQuery)
 
-    this.deleteLog.query("RESTORE (regex)", updateQuery)
+    this.deleteLog.info(`RESTORE (regex): ${updateQuery}`)
 
     let totalChanges = 0
 
@@ -294,7 +295,7 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
       totalChanges += result.changes
     }
 
-    this.deleteLog.result("RESTORE (regex)", totalChanges)
+    this.deleteLog.info(`Changes: ${totalChanges}`)
     this.reset()
 
     return { changes: totalChanges }
@@ -352,11 +353,11 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
       return { changes: totalChanges }
     })
 
-    this.deleteLog.query("DELETE BATCH", `${conditions.length} deletes`)
+    this.deleteLog.info(`DELETE BATCH: ${conditions.length} deletes`)
 
     const result = transaction(conditions)
 
-    this.deleteLog.result("DELETE BATCH", result.changes)
+    this.deleteLog.info(`Changes: ${result.changes}`)
     this.reset()
 
     return result
@@ -375,11 +376,11 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
   truncate(): DeleteResult {
     const query = `DELETE FROM ${quoteIdentifier(this.getTableName())}`
 
-    this.deleteLog.query("TRUNCATE", query)
+    this.deleteLog.info(`TRUNCATE: ${query}`)
 
     const result = this.getDb().prepare(query).run()
 
-    this.deleteLog.result("TRUNCATE", result.changes)
+    this.deleteLog.info(`Changes: ${result.changes}`)
     this.reset()
 
     return { changes: result.changes }
@@ -435,11 +436,11 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
       )
     `.trim()
 
-    this.deleteLog.query("DELETE DUPLICATES", query)
+    this.deleteLog.info(`DELETE DUPLICATES: ${query}`)
 
     const result = this.getDb().prepare(query).run()
 
-    this.deleteLog.result("DELETE DUPLICATES", result.changes)
+    this.deleteLog.info(`Changes: ${result.changes}`)
     this.reset()
 
     return { changes: result.changes }

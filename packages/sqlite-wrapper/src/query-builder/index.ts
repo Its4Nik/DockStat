@@ -1,5 +1,5 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
-import type { Logger } from "@dockstat/logger"
+import Logger from "@dockstat/logger"
 import type {
   ColumnNames,
   DeleteResult,
@@ -33,12 +33,18 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
   private updateBuilder: UpdateQueryBuilder<T>
   private deleteBuilder: DeleteQueryBuilder<T>
 
+  private qbLogger: Logger
+
   constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger?: Logger) {
+    const logger = baseLogger?.spawn("QB") || new Logger("QB")
+
+    this.qbLogger = logger
+
     // Create instances of each specialized builder
-    this.selectBuilder = new SelectQueryBuilder<T>(db, tableName, parser, baseLogger)
-    this.insertBuilder = new InsertQueryBuilder<T>(db, tableName, parser, baseLogger)
-    this.updateBuilder = new UpdateQueryBuilder<T>(db, tableName, parser, baseLogger)
-    this.deleteBuilder = new DeleteQueryBuilder<T>(db, tableName, parser, baseLogger)
+    this.selectBuilder = new SelectQueryBuilder<T>(db, tableName, parser, logger)
+    this.insertBuilder = new InsertQueryBuilder<T>(db, tableName, parser, logger)
+    this.updateBuilder = new UpdateQueryBuilder<T>(db, tableName, parser, logger)
+    this.deleteBuilder = new DeleteQueryBuilder<T>(db, tableName, parser, logger)
 
     // Ensure all builders share the same state for WHERE conditions
     this.syncBuilderStates()
@@ -48,6 +54,8 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
    * Synchronize the state between all builders so WHERE conditions are shared.
    */
   private syncBuilderStates(): void {
+    this.qbLogger.debug("Syncing Builder States")
+
     const masterState = (this.selectBuilder as unknown as { state: QueryBuilderState<T> }).state
     ;(this.insertBuilder as unknown as { state: QueryBuilderState<T> }).state = masterState
     ;(this.updateBuilder as unknown as { state: QueryBuilderState<T> }).state = masterState

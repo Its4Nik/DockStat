@@ -3,7 +3,6 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-
   "scripts": {
     "dev": "bunx --bun vite",
     "build": "NODE_ENV=production bunx --bun vite build",
@@ -18,6 +17,7 @@
     "@dockstat/ui": "workspace:*",
     "@dockstat/utils": "workspace:*",
     "@elysiajs/eden": "catalog:",
+    "@sglara/cn": "^1.0.0",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.90.12",
     "framer-motion": "^12.24.0",

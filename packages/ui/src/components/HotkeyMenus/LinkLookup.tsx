@@ -16,7 +16,7 @@ export function LinkLookup({
   pins,
   pluginLinks,
   sidebarLinks = SidebarPaths,
-  hotkey = "k",
+  hotkey,
 }: {
   pins: { path: string; slug: string }[]
   pluginLinks: {

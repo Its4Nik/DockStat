@@ -1,6 +1,6 @@
 import type { LogEntry } from "@dockstat/logger"
 import { useHotkey } from "@dockstat/utils/react"
-import { motion } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { Menu } from "lucide-react"
 import { useState } from "react"
 import { NavLink } from "react-router"
@@ -11,7 +11,10 @@ import { Divider } from "../Divider/Divider"
 import { LinkLookup } from "../HotkeyMenus/LinkLookup"
 import { LinkWithIcon } from "../Link/Link"
 import { Sidebar, type SidebarProps, type ThemeProps } from "../Sidebar/Sidebar"
+import { floatVariants } from "./consts"
 import DockStatLogo from "./DockStat2-06.png"
+
+export { type PathItem, SidebarPaths } from "./consts"
 
 type NavbarProps = {
   isBusy: boolean
@@ -22,7 +25,7 @@ type NavbarProps = {
   heading?: string
   mutationFn: SidebarProps["mutationFn"]
   themeProps?: ThemeProps
-  openQuickLinksModalHotkey: string
+  openQuickLinksModalHotkey?: string
   sidebarHotkeys: {
     toggle?: string
     open?: string
@@ -89,16 +92,39 @@ export function Navbar({
           )}
 
           <div className="flex items-center gap-2">
-            {navLinks?.map((nl) => (
-              <NavLink to={nl.path} key={nl.slug}>
-                {({ isActive }) => <Badge outlined={isActive}>{nl.slug}</Badge>}
-              </NavLink>
-            ))}
-            {ramUsage ? (
-              <Badge variant="secondary" className="font-mono">
-                {ramUsage}
-              </Badge>
-            ) : null}
+            <AnimatePresence initial={false}>
+              {navLinks?.map((nl) => (
+                <motion.div
+                  key={nl.slug}
+                  layout
+                  variants={floatVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  <NavLink to={nl.path}>
+                    {({ isActive }) => <Badge outlined={isActive}>{nl.slug}</Badge>}
+                  </NavLink>
+                </motion.div>
+              ))}
+
+              {ramUsage && (
+                <motion.div
+                  key="ram-usage"
+                  layout
+                  variants={floatVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  <Badge variant="secondary" className="font-mono">
+                    {ramUsage}
+                  </Badge>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </nav>
 

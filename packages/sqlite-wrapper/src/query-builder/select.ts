@@ -1,7 +1,7 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
 import type { Logger } from "@dockstat/logger"
 import type { ColumnNames, OrderDirection, Parser } from "../types"
-import { createLogger, quoteIdentifier } from "../utils"
+import { quoteIdentifier } from "../utils"
 import { WhereQueryBuilder } from "./where"
 
 /**
@@ -21,11 +21,11 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
   private limitValue?: number
   private offsetValue?: number
 
-  private selectLog: ReturnType<typeof createLogger>
+  private selectLog: Logger
 
-  constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger?: Logger) {
+  constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {
     super(db, tableName, parser, baseLogger)
-    this.selectLog = createLogger("Select", baseLogger)
+    this.selectLog = this.log.spawn("SELECT")
   }
 
   // ===== Query Building Methods =====
@@ -103,6 +103,8 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    * Build the SELECT query SQL
    */
   private buildSelectQuery(includeOrderAndLimit = true): [string, SQLQueryBindings[]] {
+    this.selectLog.debug("Building select query")
+
     // Build column list
     const cols =
       this.selectedColumns[0] === "*"
@@ -216,12 +218,13 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
     const [query, params] = this.buildSelectQuery(!hasRegex)
 
     this.logSelectStart("all", { query, params })
-    this.selectLog.query("SELECT", query, params)
+    this.selectLog.info(`SELECT: Query: ${query} - Params: ${params.join(", ")}`)
 
     const rows = this.getDb()
       .prepare(query)
       .all(...params) as T[]
-    this.selectLog.result("SELECT", rows.length)
+
+    this.selectLog.info(`Found ${rows.length} row${rows.length > 0 ? "s" : ""}`)
 
     const transformed = this.transformRowsFromDb(rows)
     const result = hasRegex ? this.applyClientSideOperations(transformed) : transformed
@@ -246,12 +249,12 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const optimizedQuery = `${query} LIMIT 1`
 
       this.logSelectStart("get", { optimizedQuery, params })
-      this.selectLog.query("SELECT (get)", optimizedQuery, params)
+      this.selectLog.info(`SELECT (get): Query: ${optimizedQuery} - Params: ${params.join(", ")}`)
 
       const row = this.getDb()
         .prepare(optimizedQuery)
         .get(...params) as T | null
-      this.selectLog.result("SELECT (get)", row ? 1 : 0)
+      this.selectLog.info(row ? "Found row" : "Could not retrieve row")
 
       const result = row ? this.transformRowFromDb(row) : null
       this.logSelectReturn("get", { returned: result })
@@ -264,12 +267,12 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const [query, params] = this.buildSelectQuery(true)
 
       this.logSelectStart("get", { query, params })
-      this.selectLog.query("SELECT (get)", query, params)
+      this.selectLog.info(`SELECT (get): Query: ${query} - Params: ${JSON.stringify(params)}`)
 
       const row = this.getDb()
         .prepare(query)
         .get(...params) as T | null
-      this.selectLog.result("SELECT (get)", row ? 1 : 0)
+      this.selectLog.info(`SELECT (get): ${row ? "Found row" : "Could not get row"}`)
 
       const result = row ? this.transformRowFromDb(row) : null
       this.logSelectReturn("get", { returned: result })
@@ -303,7 +306,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const query = `SELECT COUNT(*) AS __count FROM ${quoteIdentifier(this.getTableName())}${whereClause}`
 
       this.logSelectStart("count", { query, params: whereParams })
-      this.selectLog.query("COUNT", query, whereParams)
+      this.selectLog.info(`COUNT: Query: ${query} - Where: ${whereParams}`)
 
       const result = this.getDb()
         .prepare(query)
@@ -330,7 +333,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const query = `SELECT EXISTS(${subquery}) AS __exists`
 
       this.logSelectStart("exists", { query, params: whereParams })
-      this.selectLog.query("EXISTS", query, whereParams)
+      this.selectLog.info(`"EXISTS: Query: ${query} - Where: ${whereParams}`)
 
       const result = this.getDb()
         .prepare(query)

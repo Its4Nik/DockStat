@@ -110,7 +110,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           },
           isBusy: isBusy,
         }}
-        openQuickLinksModalHotkey={config?.hotkeys?.["open:quicklinks"] || "k"}
+        openQuickLinksModalHotkey={config?.hotkeys?.["open:quicklinks"]}
         themeProps={{
           themes: themesList || [],
           currentThemeId: theme?.id ?? null,

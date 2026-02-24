@@ -45,7 +45,7 @@ export const Divider: React.FC<DividerProps> = ({
   // Vertical divider
   return (
     <div
-      className={`h-full border-l ${variantClasses[variant]} ${baseClasses} ${className}`}
+      className={`min-h-full border-l ${variantClasses[variant]} ${baseClasses} ${className}`}
       aria-hidden="true"
     />
   )

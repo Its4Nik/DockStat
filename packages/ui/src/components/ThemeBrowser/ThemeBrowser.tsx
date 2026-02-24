@@ -34,7 +34,7 @@ function ThemePreviewCard({
       size="sm"
       hoverable
       onClick={onSelect}
-      className={`relative flex-1 cursor-pointer transition-all ${isSelected ? "ring-2 ring-accent" : ""}`}
+      className={`relative flex-1 cursor-pointer transition-all m-1 ${isSelected ? "ring-2 ring-accent" : ""}`}
     >
       {isSelected && (
         <div className="absolute top-2 right-2">
