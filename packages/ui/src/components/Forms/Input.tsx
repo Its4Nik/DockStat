@@ -4,7 +4,7 @@ export type InputSize = "sm" | "md" | "lg"
 export type InputVariant = "default" | "filled" | "underline"
 
 export interface InputProps {
-  type?: "text" | "email" | "password" | "number" | "tel" | "url"
+  type?: "text" | "email" | "password" | "number" | "tel" | "url" | "color"
   size?: InputSize
   variant?: InputVariant
   disabled?: boolean

@@ -100,8 +100,9 @@ export function ThemeBrowser({
             key={theme.id}
             theme={theme}
             isSelected={currentThemeId === theme.id}
-            onSelect={() => {
+            onSelect={async () => {
               toastSuccess()
+
               return onSelectTheme(theme)
             }}
           />

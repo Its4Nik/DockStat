@@ -6,11 +6,11 @@ const STORAGE_KEY = "dockstat-selected-theme-id"
  *
  * @param themeId - The ID of the selected theme
  */
-export function saveThemePreference(themeId: number): void {
+export function saveThemePreference(themeId: number, themeName: string): void {
   if (typeof localStorage === "undefined") return
 
   try {
-    localStorage.setItem(STORAGE_KEY, String(themeId))
+    localStorage.setItem(STORAGE_KEY, `${themeId}|${themeName}`)
   } catch {
     // localStorage may be unavailable (e.g., private browsing mode)
     // Silently fail - theme will just not persist
@@ -22,17 +22,19 @@ export function saveThemePreference(themeId: number): void {
  *
  * @returns The saved theme ID, or null if none was saved or localStorage is unavailable
  */
-export function loadThemePreference(): number | null {
+export function loadThemePreference(): { id: number; name: string } | null {
   if (typeof localStorage === "undefined") return null
 
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored === null) return null
 
-    const parsed = Number(stored)
+    const storageObj = stored.split("|")
+
+    const parsed = Number(storageObj[0])
     if (Number.isNaN(parsed)) return null
 
-    return parsed
+    return { id: parsed, name: storageObj[1] || "Undefined" }
   } catch {
     // localStorage may be unavailable
     return null

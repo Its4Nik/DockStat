@@ -116,7 +116,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           currentThemeId: theme?.id ?? null,
           onSelectTheme: (t) => applyThemeById(t.id),
           onOpen: getAllThemes,
-          toastSuccess: () => {
+          toastSuccess: async () => {
+            await getAllThemes()
             toast({
               description: `Set ${theme?.id} active`,
               title: "Updated Theme Preference",

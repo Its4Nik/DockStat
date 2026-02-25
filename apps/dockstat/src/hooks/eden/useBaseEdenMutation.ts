@@ -1,17 +1,13 @@
 import { extractEdenError } from "@dockstat/utils"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "@/lib/toast"
-
-type BaseToastConfig<TData, TInput> = {
-  successTitle: string | ((input: TInput, response: TData) => string)
-  errorTitle: string | ((input: TInput, error: Error) => string)
-}
+import type { ToastConfig } from "./types"
 
 export function useBaseEdenMutation<TData, TInput>(opts: {
   mutationKey: readonly string[]
   mutationFn: (input: TInput) => Promise<TData>
   invalidateQueries?: readonly string[][]
-  toast?: BaseToastConfig<TData, TInput>
+  toast?: ToastConfig<TData, TInput>
 }) {
   const qc = useQueryClient()
   const { mutationKey, mutationFn, invalidateQueries = [], toast: toastConfig } = opts

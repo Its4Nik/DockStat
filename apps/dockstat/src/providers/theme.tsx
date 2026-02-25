@@ -7,19 +7,58 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react"
 import { type ThemeListItem, ThemeProviderContext, type ThemeProviderData } from "@/contexts/theme"
 import { api } from "@/lib/api"
+import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
+import { toast } from "@/lib/toast"
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themesList, setThemesList] = useState<ThemeListItem[] | null>(null)
   const [theme, setTheme] = useState<ThemeContextData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
+  const [isModifiedTheme, setIsModifiedTheme] = useState<boolean>(false)
   const hasLoadedSavedTheme = useRef(false)
 
   const applyAndPersistTheme = useCallback((themeData: ThemeContextData) => {
     applyThemeToDocument(themeData)
     setTheme(themeData)
-    saveThemePreference(themeData.id)
+    saveThemePreference(themeData.id, themeData.name)
   }, [])
+
+  const adjustCurrentTheme = useCallback((themeVars: ThemeContextData["vars"]) => {
+    applyThemeToDocument(themeVars)
+    setTheme((prev) => (prev ? { ...prev, vars: themeVars } : prev))
+  }, [])
+
+  const createNewThemeFromCurrent = useEdenMutation({
+    mutationKey: ["createNewThemeFromCurrent"],
+    route: api.themes.post,
+    invalidateQueries: [],
+    toast: {
+      errorTitle: () => {
+        setIsModifiedTheme(true)
+        return "Could not create new Theme"
+      },
+      successTitle: () => {
+        setIsModifiedTheme(false)
+        getAllThemes()
+          .then(() => {
+            toast({
+              description: "Updated the Theme Cache",
+              title: "Theme Cache",
+              variant: "success",
+            })
+          })
+          .catch(() => {
+            toast({
+              description: "Could not update the Theme Cache",
+              title: "Theme Cache",
+              variant: "error",
+            })
+          })
+        return "Created new Theme"
+      },
+    },
+  })
 
   const applyTheme = useCallback(
     async (themeName: string) => {
@@ -38,6 +77,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         }
 
         applyAndPersistTheme({
+          name: data.data.name,
           id: data.data.id,
           vars: data.data.variables ?? {},
         })
@@ -68,6 +108,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
         applyAndPersistTheme({
           id: data.data.id,
+          name: data.data.name,
           vars: data.data.variables ?? {},
         })
       } catch (err) {
@@ -112,20 +153,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (hasLoadedSavedTheme.current) return
     hasLoadedSavedTheme.current = true
 
-    const savedThemeId = loadThemePreference()
-    if (savedThemeId != null) {
-      void applyThemeById(savedThemeId)
+    const preference = loadThemePreference()
+
+    if (preference !== null) {
+      void applyThemeById(preference.id)
     }
   }, [applyThemeById])
 
-  const providerValue: ThemeProviderData = {
+  type input = Parameters<typeof createNewThemeFromCurrent.mutateAsync>[0]
+  type routeType = Awaited<ReturnType<typeof api.themes.post>>["data"]
+
+  const providerValue: ThemeProviderData<routeType, input> = {
     theme,
     isLoading,
     error,
     applyTheme,
     applyThemeById,
+    isModifiedTheme,
     themesList,
     getAllThemes,
+    adjustCurrentTheme,
+    createNewThemeFromCurrent,
   }
 
   return <ThemeProviderContext value={providerValue}>{children}</ThemeProviderContext>

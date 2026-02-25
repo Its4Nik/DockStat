@@ -39,40 +39,15 @@ const themeHandler = createThemeHandler({ db, logger });
 const app = new Elysia().use(themeHandler.getRoutes()).listen(3000);
 ```
 
-### Client Setup
+### Client Setup (DockStat Pattern)
+
+In DockStat, the theme context is provided via a custom `ThemeProvider` that handles theme fetching, persistence, and exposes a richer context value.
 
 ```tsx
-import {
-  ThemeContext,
-  applyThemeToDocument,
-} from "@dockstat/theme-handler/client";
-import {
-  loadThemePreference,
-  saveThemePreference,
-} from "@dockstat/theme-handler/client";
+import { ThemeProvider } from "./providers/theme"; // Custom provider from your app
 
-// In your React component
-function App() {
-  const [theme, setTheme] = useState<ThemeContextData | null>(null);
-
-  useEffect(() => {
-    // Load saved theme or fetch from server
-    const themeId = loadThemePreference();
-    fetchTheme(themeId).then(setTheme);
-  }, []);
-
-  useEffect(() => {
-    if (theme) {
-      applyThemeToDocument(theme);
-      saveThemePreference(theme.id);
-    }
-  }, [theme]);
-
-  return (
-    <ThemeContext.Provider value={theme}>
-      {/* Your app components */}
-    </ThemeContext.Provider>
-  );
+export default function App() {
+  return <ThemeProvider>{/* Your app components */}</ThemeProvider>;
 }
 ```
 
@@ -103,16 +78,28 @@ interface ThemeType {
 
 ### Client API
 
-#### ThemeContext
+#### Theme Context Usage
 
-React context for theme data access throughout your component tree.
+In DockStat, access the theme context via `ThemeProviderContext` for full control:
 
-```typescript
-import { ThemeContext } from "@dockstat/theme-handler/client";
+```tsx
+import { useContext } from "react";
+import { ThemeProviderContext } from "@/contexts/theme";
 
 function MyComponent() {
-  const theme = useContext(ThemeContext);
-  // Use theme variables...
+  const themeCtx = useContext(ThemeProviderContext);
+
+  // Access theme variables
+  const themeVars = themeCtx.theme?.vars;
+
+  // Switch theme by name or ID
+  themeCtx.applyTheme("dark");
+  themeCtx.applyThemeById(2);
+
+  // Get all available themes
+  useEffect(() => {
+    themeCtx.getAllThemes();
+  }, []);
 }
 ```
 
@@ -204,44 +191,33 @@ const customTheme = {
 await themeHandler.getThemeDB().createTheme(customTheme);
 ```
 
-### Theme Switching Component
+### Theme Switching & Settings Example
+
+In DockStat, theme switching and editing is handled via context methods and used in the settings page:
 
 ```tsx
-function ThemeSwitcher() {
-  const [themes, setThemes] = useState<ThemeType[]>([]);
-  const [currentTheme, setCurrentTheme] = useState<ThemeContextData | null>(
-    null,
+import { useContext } from "react";
+import { ThemeProviderContext } from "@/contexts/theme";
+
+function SettingsPage() {
+  const themeCtx = useContext(ThemeProviderContext);
+  const colors = Object.entries(themeCtx.theme?.vars ?? {}).map(
+    ([name, value]) => ({
+      colorName: name,
+      color: value,
+    }),
   );
 
-  useEffect(() => {
-    // Fetch available themes
-    fetch("/themes")
-      .then((r) => r.json())
-      .then(setThemes);
-  }, []);
-
-  const handleThemeChange = (themeId: number) => {
-    fetch(`/themes/${themeId}`)
-      .then((r) => r.json())
-      .then((theme) => {
-        const contextData = {
-          id: theme.id,
-          vars: theme.variables,
-        };
-        setCurrentTheme(contextData);
-        applyThemeToDocument(contextData);
-        saveThemePreference(themeId);
-      });
-  };
-
   return (
-    <select onChange={(e) => handleThemeChange(Number(e.target.value))}>
-      {themes.map((theme) => (
-        <option key={theme.id} value={theme.id}>
-          {theme.name}
-        </option>
+    <div>
+      {/* Render color editor, theme switcher, etc. */}
+      {colors.map(({ colorName, color }) => (
+        <div key={colorName}>
+          <span>{colorName}</span>
+          <span style={{ background: color }}>{color}</span>
+        </div>
       ))}
-    </select>
+    </div>
   );
 }
 ```
@@ -331,7 +307,23 @@ function ThemedButton() {
 
 ## TypeScript Support
 
-Full TypeScript support is included:
+Full TypeScript support is included.
+
+The context value exposed by DockStat's ThemeProvider is:
+
+```typescript
+interface ThemeProviderData {
+  theme: ThemeContextData | null;
+  isLoading: boolean;
+  error: Error | null;
+  applyTheme: (themeName: string) => Promise<void>;
+  applyThemeById: (themeId: number) => Promise<void>;
+  themesList: ThemeListItem[] | null;
+  getAllThemes: () => Promise<void>;
+}
+```
+
+You can also import types:
 
 ```typescript
 import type {

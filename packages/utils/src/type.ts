@@ -13,6 +13,17 @@ export function isNotNullish<T>(value: T | null | undefined): value is T {
 }
 
 /**
+ * Type guard that checks if a function is a promise or not
+ * @param value - The funtion to check
+ * @returns True if value is not not
+ */
+export function isPromise<T>(value: T | Promise<T>): value is Promise<T> {
+  return (
+    value !== null && typeof value === "object" && typeof (value as Promise<T>).then === "function"
+  )
+}
+
+/**
  * Type guard for strings.
  * @param value - Value to check
  * @returns True if value is a string

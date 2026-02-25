@@ -43,7 +43,7 @@ type PathItem = {
 export type ThemeProps = {
   themes: ThemeBrowserItem[]
   currentThemeId: number | null
-  onSelectTheme: (theme: ThemeBrowserItem) => void
+  onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
   toastSuccess: () => void
   onOpen: () => void
 }
