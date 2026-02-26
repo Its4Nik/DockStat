@@ -1,7 +1,7 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
 import type { Logger } from "@dockstat/logger"
 import type { Parser, UpdateResult } from "../types"
-import { buildSetClause, quoteIdentifier, truncate, type RowData } from "../utils"
+import { buildSetClause, quoteIdentifier, type RowData, truncate } from "../utils"
 import { SelectQueryBuilder } from "./select"
 
 /**

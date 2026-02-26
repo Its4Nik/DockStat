@@ -1,30 +1,62 @@
 import { logFeedEffect, rssFeedEffect } from "@WSS"
 import type { LogEntry } from "@dockstat/logger"
-import { Navbar } from "@dockstat/ui"
+import { Navbar, ThemeSidebar } from "@dockstat/ui"
 import { arrayUtils } from "@dockstat/utils"
+import { useHotkey } from "@dockstat/utils/react"
 import { useContext, useEffect, useState } from "react"
 import { Toaster } from "sonner"
 import { ConfigProviderContext } from "@/contexts/config"
 import { PageHeadingContext } from "./contexts/pageHeadingContext"
+import { ThemeSidebarContext } from "./contexts/themeSidebar"
 import { useEdenMutation } from "./hooks/eden/useEdenMutation"
 import { useEdenQuery } from "./hooks/useEdenQuery"
 import { useGlobalBusy } from "./hooks/useGlobalBusy"
 import { useTheme } from "./hooks/useTheme"
 import { api } from "./lib/api"
 import { toast } from "./lib/toast"
-import { useHotkey } from "@dockstat/utils/react"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [ramUsage, setRamUsage] = useState<string>("Connecting...")
   const [logMessage, setLogMessage] = useState<LogEntry>()
-  const [isThemeSidebarOpen, setIsThemeSidebarOpen] = useState<boolean>(false)
   const [logMessagesArr, setlogMessagesArr] = useState<LogEntry[]>([])
 
+  const themeSidebarCtx = useContext(ThemeSidebarContext)
   const config = useContext(ConfigProviderContext)
   const heading = useContext(PageHeadingContext).heading
+  const { isThemeSidebarOpen, setIsThemeSidebarOpen, setThemeProps, themeProps } =
+    useContext(ThemeSidebarContext)
 
   const { theme, themesList, getAllThemes, applyThemeById, adjustCurrentTheme } = useTheme()
   const isBusy = useGlobalBusy()
+
+  // Set theme props in context for global access
+  useEffect(() => {
+    setThemeProps({
+      currentThemeColors: Object.entries(theme?.vars || {}).map(([key, val]) => {
+        return { colorName: key, color: val }
+      }),
+      currentThemeName: theme?.name || "Undefined",
+      onColorChange: (colorValue, colorName) => {
+        adjustCurrentTheme({ [colorName]: colorValue })
+        toast({
+          description: `Changed: ${colorName} to ${colorValue}`,
+          title: "Updated color",
+        })
+      },
+      themes: themesList || [],
+      currentThemeId: theme?.id ?? null,
+      onSelectTheme: (t) => applyThemeById(t.id),
+      onOpen: getAllThemes,
+      toastSuccess: async () => {
+        await getAllThemes()
+        toast({
+          description: `Set ${theme?.id} active`,
+          title: "Updated Theme Preference",
+          variant: "success",
+        })
+      },
+    })
+  }, [theme, themesList, getAllThemes, applyThemeById, adjustCurrentTheme, setThemeProps])
 
   const { data: frontendPluginRoutes } = useEdenQuery({
     queryKey: ["fetchFrontendPluginRoutes"],
@@ -82,6 +114,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div className="bg-main-bg min-h-screen w-screen p-4">
       <Toaster expand position="bottom-right" />
       <Navbar
+        themeProps={{
+          ...themeSidebarCtx?.themeProps,
+          currentThemeName: themeSidebarCtx?.themeProps?.currentThemeName || "Undefined",
+          currentThemeId: themeSidebarCtx?.themeProps?.currentThemeId || null,
+          themes: themeSidebarCtx?.themeProps?.themes || [],
+          isOpen: themeSidebarCtx.isThemeSidebarOpen,
+          onSelectTheme: themeSidebarCtx?.themeProps?.onSelectTheme || (() => {}),
+          toastSuccess: themeSidebarCtx?.themeProps?.toastSuccess || (() => {}),
+          onOpen: () => themeSidebarCtx.setIsThemeSidebarOpen(true),
+          currentThemeColors: themeSidebarCtx?.themeProps?.currentThemeColors || [],
+          onColorChange: (color, colorName) =>
+            themeSidebarCtx?.themeProps?.onColorChange(color, colorName),
+        }}
         sidebarHotkeys={{
           close: config.hotkeys?.["close:sidebar"],
           open: config.hotkeys?.["close:sidebar"],
@@ -123,34 +168,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           isBusy: isBusy,
         }}
         openQuickLinksModalHotkey={config?.hotkeys?.["open:quicklinks"]}
-        themeProps={{
-          isOpen: isThemeSidebarOpen,
-          currentThemeColors: Object.entries(theme?.vars || {}).map(([key, val]) => {
-            return { colorName: key, color: val }
-          }),
-          currentThemeName: theme?.name || "Undefined",
-          onColorChange: (colorValue, colorName) => {
-            adjustCurrentTheme({ [colorName]: colorValue })
-            toast({
-              description: `Changed: ${colorName} to ${colorValue}`,
-              title: "Updated color",
-            })
-          },
-          themes: themesList || [],
-          currentThemeId: theme?.id ?? null,
-          onSelectTheme: (t) => applyThemeById(t.id),
-          onOpen: getAllThemes,
-          toastSuccess: async () => {
-            await getAllThemes()
-            toast({
-              description: `Set ${theme?.id} active`,
-              title: "Updated Theme Preference",
-              variant: "success",
-            })
-          },
-        }}
       />
       <div className="px-4">{children}</div>
+
+      {themeProps && (
+        <ThemeSidebar
+          onColorChange={themeProps.onColorChange}
+          isOpen={isThemeSidebarOpen}
+          allColors={themeProps.currentThemeColors || []}
+          currentTheme={themeProps.currentThemeName || "Undefined"}
+          onClose={() => {
+            setIsThemeSidebarOpen(false)
+          }}
+        />
+      )}
     </div>
   )
 }

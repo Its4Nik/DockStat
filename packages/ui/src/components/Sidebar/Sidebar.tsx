@@ -20,7 +20,6 @@ import { Table } from "../Table/Table"
 import { ThemeBrowser, type ThemeBrowserItem } from "../ThemeBrowser/ThemeBrowser"
 import { SidebarAnimatedItem, SidebarAnimatedNav } from "./SidebarAnimatedNav"
 import { SidebarItem } from "./SidebarItem"
-import { ThemeSidebar } from "../ThemeSidebar"
 
 type PinLinkMutation = UseMutateAsyncFunction<
   UpdateResult & {
@@ -76,7 +75,6 @@ export function Sidebar({
   const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
   const [themeModalOpen, setThemeModalOpen] = useState<boolean>(false)
   const [showPluginRoutes, setShowPluginRoutes] = useState<boolean>(false)
-  const [isThemeSidebarOpen, setIsThemeSidebarOpen] = useState<boolean>(false)
 
   const pinnedPaths = useMemo(() => new Set(pins.map((p) => p.path)), [pins])
 
@@ -100,11 +98,7 @@ export function Sidebar({
     }
   }
 
-  useEffect(() => {
-    if (themeProps?.isOpen !== undefined) {
-      setIsThemeSidebarOpen(themeProps.isOpen)
-    }
-  }, [themeProps?.isOpen])
+  // Theme sidebar state is now managed globally in the context
 
   const pathsWithPinStatus = usePinnedPaths([...SidebarPaths], pins)
 
@@ -258,7 +252,6 @@ export function Sidebar({
                     variant="outline"
                     onClick={() => {
                       setThemeModalOpen(true)
-                      themeProps?.onOpen()
                     }}
                     className="flex-1"
                   >
@@ -269,7 +262,7 @@ export function Sidebar({
                     variant="outline"
                     className="flex-1"
                     onClick={() => {
-                      setIsThemeSidebarOpen(true)
+                      themeProps?.onOpen()
                     }}
                   >
                     <Paintbrush size={18} />
@@ -277,6 +270,7 @@ export function Sidebar({
                 </div>
               </div>
               <Modal
+                transparent
                 size="full"
                 title={`${logEntries.length} Logs available`}
                 open={logModalOpen}
@@ -328,6 +322,7 @@ export function Sidebar({
 
               <Modal
                 size="xl"
+                transparent
                 title="Theme Browser"
                 open={themeModalOpen}
                 onClose={() => setThemeModalOpen(false)}
@@ -344,17 +339,7 @@ export function Sidebar({
                 )}
               </Modal>
 
-              {themeProps ? (
-                <ThemeSidebar
-                  onColorChange={themeProps.onColorChange}
-                  isOpen={isThemeSidebarOpen}
-                  allColors={themeProps.currentThemeColors || []}
-                  currentTheme={themeProps.currentThemeName || "Undefined"}
-                  onClose={() => {
-                    setIsThemeSidebarOpen(false)
-                  }}
-                />
-              ) : null}
+              {/* ThemeSidebar is now rendered globally in layout.tsx */}
             </Card>
           </motion.div>
         </>

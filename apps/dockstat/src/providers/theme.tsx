@@ -6,8 +6,8 @@ import {
 } from "@dockstat/theme-handler/client"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { type ThemeListItem, ThemeProviderContext, type ThemeProviderData } from "@/contexts/theme"
-import { api } from "@/lib/api"
 import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
+import { api } from "@/lib/api"
 import { toast } from "@/lib/toast"
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
