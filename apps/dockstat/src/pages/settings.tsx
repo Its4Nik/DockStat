@@ -55,8 +55,6 @@ export default function SettingsPage() {
               currentTheme={themeName}
               allColors={parsedColors}
               onColorChange={(colorValue, colorName) => {
-                console.log({ colorName, colorValue })
-
                 adjustCurrentTheme({ [colorName]: colorValue })
                 toast({
                   description: `Changed: ${colorName} to ${colorValue}`,

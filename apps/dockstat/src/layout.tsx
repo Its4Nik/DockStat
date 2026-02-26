@@ -12,16 +12,18 @@ import { useGlobalBusy } from "./hooks/useGlobalBusy"
 import { useTheme } from "./hooks/useTheme"
 import { api } from "./lib/api"
 import { toast } from "./lib/toast"
+import { useHotkey } from "@dockstat/utils/react"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [ramUsage, setRamUsage] = useState<string>("Connecting...")
   const [logMessage, setLogMessage] = useState<LogEntry>()
+  const [isThemeSidebarOpen, setIsThemeSidebarOpen] = useState<boolean>(false)
   const [logMessagesArr, setlogMessagesArr] = useState<LogEntry[]>([])
 
   const config = useContext(ConfigProviderContext)
   const heading = useContext(PageHeadingContext).heading
 
-  const { theme, themesList, getAllThemes, applyThemeById } = useTheme()
+  const { theme, themesList, getAllThemes, applyThemeById, adjustCurrentTheme } = useTheme()
   const isBusy = useGlobalBusy()
 
   const { data: frontendPluginRoutes } = useEdenQuery({
@@ -39,6 +41,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     mutationKey: ["unPinNavLink"],
     route: api.db.config.unpinItem.post,
     invalidateQueries: [["fetchAdditionalSettings"]],
+  })
+
+  useHotkey({
+    close: () => setIsThemeSidebarOpen(false),
+    open: () => setIsThemeSidebarOpen(true),
+    isOpen: isThemeSidebarOpen,
+    toggle: () => setIsThemeSidebarOpen(!isThemeSidebarOpen),
+    toggleKey: config?.hotkeys?.["toggle:themeEditor"] || "",
+    closeKey: config?.hotkeys?.["close:themeEditor"] || "",
+    openKey: config?.hotkeys?.["open:themeEditor"] || "",
   })
 
   useEffect(() => rssFeedEffect(setRamUsage), [])
@@ -112,6 +124,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         }}
         openQuickLinksModalHotkey={config?.hotkeys?.["open:quicklinks"]}
         themeProps={{
+          isOpen: isThemeSidebarOpen,
+          currentThemeColors: Object.entries(theme?.vars || {}).map(([key, val]) => {
+            return { colorName: key, color: val }
+          }),
+          currentThemeName: theme?.name || "Undefined",
+          onColorChange: (colorValue, colorName) => {
+            adjustCurrentTheme({ [colorName]: colorValue })
+            toast({
+              description: `Changed: ${colorName} to ${colorValue}`,
+              title: "Updated color",
+            })
+          },
           themes: themesList || [],
           currentThemeId: theme?.id ?? null,
           onSelectTheme: (t) => applyThemeById(t.id),

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Button } from "../Button/Button"
 import { Card } from "../Card/Card"
 import { Input } from "../Forms/Input"
-import { backdropVariants, slideInVariants } from "../Navbar/animations"
+import { backdropVariants, reverseSlideInVariants } from "../Navbar/animations"
 import { ThemeEditor } from "../ThemeEditor/ThemeEditor"
 import { getAllComponents, getComponentColors } from "./data/componentColors"
 
@@ -16,7 +16,13 @@ export type ThemeSidebarProps = {
   currentTheme: string
 }
 
-export function ThemeSidebar({ isOpen, onClose, onColorChange, allColors }: ThemeSidebarProps) {
+export function ThemeSidebar({
+  isOpen,
+  onClose,
+  onColorChange,
+  allColors,
+  currentTheme,
+}: ThemeSidebarProps) {
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState<string>("")
 
@@ -65,7 +71,7 @@ export function ThemeSidebar({ isOpen, onClose, onColorChange, allColors }: Them
           />
           <motion.div
             className="fixed right-0 top-0 z-50 h-full w-80 overflow-y-auto p-4"
-            variants={slideInVariants}
+            variants={reverseSlideInVariants}
             initial="closed"
             animate="open"
             exit="closed"

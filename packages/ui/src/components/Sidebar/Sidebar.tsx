@@ -4,7 +4,7 @@ import { formatDate } from "@dockstat/utils"
 import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons"
 import type { UseMutateAsyncFunction } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
-import { BookMarkedIcon, Palette, X } from "lucide-react"
+import { BookMarkedIcon, Paintbrush, Palette, Terminal, X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { Badge } from "../Badge/Badge"
 import { Button } from "../Button/Button"
@@ -20,6 +20,7 @@ import { Table } from "../Table/Table"
 import { ThemeBrowser, type ThemeBrowserItem } from "../ThemeBrowser/ThemeBrowser"
 import { SidebarAnimatedItem, SidebarAnimatedNav } from "./SidebarAnimatedNav"
 import { SidebarItem } from "./SidebarItem"
+import { ThemeSidebar } from "../ThemeSidebar"
 
 type PinLinkMutation = UseMutateAsyncFunction<
   UpdateResult & {
@@ -41,11 +42,15 @@ type PathItem = {
 }
 
 export type ThemeProps = {
+  isOpen: boolean
   themes: ThemeBrowserItem[]
   currentThemeId: number | null
+  currentThemeName: string
   onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
   toastSuccess: () => void
   onOpen: () => void
+  currentThemeColors: { color: string; colorName: string }[]
+  onColorChange: (color: string, colorName: string) => void
 }
 
 export type SidebarProps = {
@@ -71,6 +76,7 @@ export function Sidebar({
   const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
   const [themeModalOpen, setThemeModalOpen] = useState<boolean>(false)
   const [showPluginRoutes, setShowPluginRoutes] = useState<boolean>(false)
+  const [isThemeSidebarOpen, setIsThemeSidebarOpen] = useState<boolean>(false)
 
   const pinnedPaths = useMemo(() => new Set(pins.map((p) => p.path)), [pins])
 
@@ -93,6 +99,12 @@ export function Sidebar({
       mutationFn.pin(payload)
     }
   }
+
+  useEffect(() => {
+    if (themeProps?.isOpen !== undefined) {
+      setIsThemeSidebarOpen(themeProps.isOpen)
+    }
+  }, [themeProps?.isOpen])
 
   const pathsWithPinStatus = usePinnedPaths([...SidebarPaths], pins)
 
@@ -234,18 +246,33 @@ export function Sidebar({
                 <Divider variant="dashed" />
 
                 <div className="flex gap-2">
-                  <Button onClick={() => setLogModalOpen(!logModalOpen)} className="flex-1">
-                    View Backend Logs
+                  <Button
+                    variant="outline"
+                    onClick={() => setLogModalOpen(!logModalOpen)}
+                    className="flex-1"
+                  >
+                    <Terminal size={18} />
                   </Button>
+
                   <Button
                     variant="outline"
                     onClick={() => {
                       setThemeModalOpen(true)
                       themeProps?.onOpen()
                     }}
-                    className="px-3"
+                    className="flex-1"
                   >
                     <Palette size={18} />
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setIsThemeSidebarOpen(true)
+                    }}
+                  >
+                    <Paintbrush size={18} />
                   </Button>
                 </div>
               </div>
@@ -316,6 +343,18 @@ export function Sidebar({
                   <p className="text-muted-text">Theme functionality not available</p>
                 )}
               </Modal>
+
+              {themeProps ? (
+                <ThemeSidebar
+                  onColorChange={themeProps.onColorChange}
+                  isOpen={isThemeSidebarOpen}
+                  allColors={themeProps.currentThemeColors || []}
+                  currentTheme={themeProps.currentThemeName || "Undefined"}
+                  onClose={() => {
+                    setIsThemeSidebarOpen(false)
+                  }}
+                />
+              ) : null}
             </Card>
           </motion.div>
         </>

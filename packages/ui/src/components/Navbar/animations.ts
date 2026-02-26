@@ -58,3 +58,22 @@ export const slideInVariants: Variants = {
     },
   },
 }
+
+export const reverseSlideInVariants: Variants = {
+  closed: {
+    x: "100%",
+    opacity: 0,
+    transition: {
+      stiffness: 300,
+      damping: 30,
+    },
+  },
+  open: {
+    x: 0,
+    opacity: 1,
+    transition: {
+      stiffness: 300,
+      damping: 30,
+    },
+  },
+}

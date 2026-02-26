@@ -11,6 +11,10 @@ type UseHotkeyOptions = {
   requireModifier?: boolean
 }
 
+const _log = (event: KeyboardEvent, configKey: string, type: "close" | "open" | "toggle") => {
+  console.log(`[${type.toUpperCase()}]: Config Key: ${configKey} - Keyboard: ${event.key}`)
+}
+
 // Helper to check if the event matches the config string (e.g. "shift+k")
 const matchesKey = (event: KeyboardEvent, configKey?: string) => {
   if (!configKey) return false
@@ -45,18 +49,21 @@ export const useHotkey = ({
 
       // 2. Check Actions
       if (closeKey && matchesKey(e, closeKey)) {
+        _log(e, closeKey, "close")
         e.preventDefault()
         close?.()
         return
       }
 
       if (openKey && matchesKey(e, openKey)) {
+        _log(e, openKey, "open")
         e.preventDefault()
         open?.()
         return
       }
 
       if (toggleKey && matchesKey(e, toggleKey)) {
+        _log(e, toggleKey, "toggle")
         e.preventDefault()
         if (toggle) {
           toggle()
