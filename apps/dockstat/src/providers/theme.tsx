@@ -7,9 +7,8 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react"
 import { type ThemeListItem, ThemeProviderContext, type ThemeProviderData } from "@/contexts/theme"
 import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
-import { edenQuery } from "@/hooks/useEdenQuery"
+import { useEdenQuery } from "@/hooks/useEdenQuery"
 import { api } from "@/lib/api"
-import { toast } from "@/lib/toast"
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themesList, setThemesList] = useState<ThemeListItem[] | null>(null)
@@ -19,9 +18,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [isModifiedTheme, setIsModifiedTheme] = useState<boolean>(false)
   const hasLoadedSavedTheme = useRef(false)
 
-  const allThemesQuery = edenQuery({
-    queryKey: ["fetchAllThemes"],
+  const { data: ThemesRes } = useEdenQuery({
     route: api.themes.get,
+    queryKey: ["fetchAllThemes"],
   })
 
   const applyAndPersistTheme = useCallback((themeData: ThemeContextData) => {
@@ -57,21 +56,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       },
       successTitle: () => {
         setIsModifiedTheme(false)
-        getAllThemes()
-          .then(() => {
-            toast({
-              description: "Updated the Theme Cache",
-              title: "Theme Cache",
-              variant: "success",
-            })
-          })
-          .catch(() => {
-            toast({
-              description: "Could not update the Theme Cache",
-              title: "Theme Cache",
-              variant: "error",
-            })
-          })
         return "Created new Theme"
       },
     },
@@ -141,49 +125,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     [applyAndPersistTheme]
   )
 
-  const getAllThemes = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-    await allThemesQuery.refetch()
-    const data = allThemesQuery.data
-    const error = allThemesQuery.error
-
-    try {
-      if (error) {
-        toast({
-          description: error.message || "",
-          title: error?.name,
-          variant: "error",
-        })
-        throw new Error("Failed to fetch themes")
-      }
-      if (!data) {
-        toast({
-          description: "No Data received!",
-          title: "Failed to fetch all themes",
-          variant: "error",
-        })
-        throw new Error("Failed to fetch themes")
-      }
-
-      if (!data.success || !data.data) {
-        throw new Error(data.message || "Failed to fetch themes")
-      }
-
-      const themesData: ThemeListItem[] = data.data.map((t) => ({
-        id: t.id,
-        name: t.name,
-        variables: t.variables ?? {},
-      }))
-
-      setThemesList(themesData)
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [allThemesQuery.refetch, allThemesQuery.data, allThemesQuery.error])
-
   useEffect(() => {
     if (hasLoadedSavedTheme.current) return
     hasLoadedSavedTheme.current = true
@@ -194,6 +135,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       void applyThemeById(preference.id)
     }
   }, [applyThemeById])
+
+  useEffect(() => {
+    if (ThemesRes?.data) {
+      setThemesList(ThemesRes.data)
+    }
+  }, [ThemesRes?.data])
 
   type input = Parameters<typeof createNewThemeFromCurrent.mutateAsync>[0]
   type routeType = Awaited<ReturnType<typeof api.themes.post>>["data"]
@@ -206,7 +153,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyThemeById,
     isModifiedTheme,
     themesList,
-    getAllThemes,
     adjustCurrentTheme,
     createNewThemeFromCurrent,
   }

@@ -1,4 +1,7 @@
-import type { QueryClient } from "@tanstack/react-query"
+import { QueryClient } from "@tanstack/react-query"
 import { createContext } from "react"
 
-export const QueryClientContext = createContext<QueryClient>({} as QueryClient)
+// Create a proper QueryClient instance
+const queryClient = new QueryClient()
+
+export const QueryClientContext = createContext<QueryClient>(queryClient)
