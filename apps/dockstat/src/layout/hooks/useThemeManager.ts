@@ -1,9 +1,9 @@
+import { sleep } from "@dockstat/utils"
 import { useContext, useEffect, useRef } from "react"
+import { QueryClientContext } from "@/contexts/queryClient"
 import { ThemeSidebarContext } from "@/contexts/themeSidebar"
 import { useTheme } from "@/hooks/useTheme"
 import { toast } from "@/lib/toast"
-import { sleep } from "@dockstat/utils"
-import { QueryClientContext } from "@/contexts/queryClient"
 
 export function useThemeManager() {
   const themeSidebarCtx = useContext(ThemeSidebarContext)

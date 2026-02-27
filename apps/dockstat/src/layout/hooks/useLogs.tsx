@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react"
 import { logFeedEffect } from "@WSS"
 import type { LogEntry } from "@dockstat/logger"
 import { arrayUtils } from "@dockstat/utils"
+import { useEffect, useState } from "react"
 import { toast } from "@/lib/toast"
 
 export function useLogs() {
