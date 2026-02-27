@@ -16,6 +16,7 @@ import DockStatLogo from "./DockStat2-06.png"
 export { type PathItem, SidebarPaths } from "./consts"
 
 type NavbarProps = {
+  deleteTheme: (themeId: number) => Promise<void>
   isBusy: boolean
   logEntries: LogEntry[]
   navLinks?: { slug: string; path: string }[]
@@ -43,6 +44,7 @@ export function Navbar({
   themeProps,
   openQuickLinksModalHotkey,
   sidebarHotkeys,
+  deleteTheme,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
@@ -128,6 +130,7 @@ export function Navbar({
         </nav>
 
         <Sidebar
+          deleteTheme={deleteTheme}
           isOpen={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
           isBusy={isBusy}

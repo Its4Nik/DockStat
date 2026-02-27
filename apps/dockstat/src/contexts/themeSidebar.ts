@@ -4,6 +4,11 @@ import { createContext, type Dispatch, type SetStateAction } from "react"
 export const ThemeSidebarContext = createContext<{
   isThemeSidebarOpen: boolean
   setIsThemeSidebarOpen: Dispatch<SetStateAction<boolean>>
+  addNewTheme: (
+    name: string,
+    animations: Record<string, unknown>,
+    variables: Record<string, string>
+  ) => Promise<void>
   themeProps?: {
     currentThemeColors: { colorName: string; color: string }[]
     currentThemeName: string
@@ -11,7 +16,7 @@ export const ThemeSidebarContext = createContext<{
     themes: ThemeBrowserItem[]
     currentThemeId: number | null
     onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
-    toastSuccess: () => void
+    toastSuccess: (_: string) => void
     onOpen: () => void
   }
   setThemeProps: Dispatch<
@@ -23,13 +28,14 @@ export const ThemeSidebarContext = createContext<{
           themes: ThemeBrowserItem[]
           currentThemeId: number | null
           onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
-          toastSuccess: () => void
+          toastSuccess: (_: string) => void
           onOpen: () => void
         }
       | undefined
     >
   >
 }>({
+  addNewTheme: async () => {},
   isThemeSidebarOpen: false,
   setIsThemeSidebarOpen: () => {},
   setThemeProps: () => {},

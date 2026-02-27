@@ -46,7 +46,7 @@ export type ThemeProps = {
   currentThemeId: number | null
   currentThemeName: string
   onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
-  toastSuccess: () => void
+  toastSuccess: (themeName: string) => void
   onOpen: () => void
   currentThemeColors: { color: string; colorName: string }[]
   onColorChange: (color: string, colorName: string) => void
@@ -60,6 +60,7 @@ export type SidebarProps = {
   mutationFn: { pin: PinLinkMutation; unpin: PinLinkMutation; isBusy: boolean }
   pins: { path: string; slug: string }[]
   pluginLinks: { pluginName: string; paths: { fullPath: string; metaTitle: string }[] }[]
+  deleteTheme: (themeId: number) => Promise<void>
   themeProps?: ThemeProps
 }
 
@@ -71,6 +72,7 @@ export function Sidebar({
   pluginLinks,
   mutationFn,
   themeProps,
+  deleteTheme,
 }: SidebarProps) {
   const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
   const [themeModalOpen, setThemeModalOpen] = useState<boolean>(false)
@@ -329,9 +331,10 @@ export function Sidebar({
               >
                 {themeProps ? (
                   <ThemeBrowser
+                    deleteTheme={deleteTheme}
                     themes={themeProps.themes}
                     currentThemeId={themeProps.currentThemeId}
-                    onSelectTheme={themeProps.onSelectTheme}
+                    onSelectTheme={async (theme) => await themeProps.onSelectTheme(theme)}
                     toastSuccess={themeProps.toastSuccess}
                   />
                 ) : (

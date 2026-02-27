@@ -15,6 +15,12 @@ export type ThemeSidebarProps = {
   onColorChange: (color: string, colorName: string) => void
   allColors: { color: string; colorName: string }[]
   currentTheme: string
+  currentThemeValues: { vars: Record<string, string>; animations: Record<string, string> }
+  saveNewTheme: (
+    name: string,
+    animations: Record<string, unknown>,
+    variables: Record<string, string>
+  ) => Promise<void>
 }
 
 export function ThemeSidebar({
@@ -23,11 +29,14 @@ export function ThemeSidebar({
   onColorChange,
   allColors,
   currentTheme,
+  saveNewTheme,
+  currentThemeValues,
 }: ThemeSidebarProps) {
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState<string>("")
   const [isModified, setIsModified] = useState<boolean>(false)
   const [showSaveModal, setShowSaveModal] = useState<boolean>(false)
+  const [newThemeName, setNewThemeName] = useState<string>("")
 
   useEffect(() => {
     if (!isOpen) return
@@ -64,7 +73,26 @@ export function ThemeSidebar({
   return (
     <>
       <Modal onClose={() => setShowSaveModal(false)} open={showSaveModal} transparent>
-        Test
+        <div className="flex flex-col items-center justify-center space-y-4 p-4">
+          <Input
+            type="text"
+            placeholder="Theme Name"
+            className="w-full"
+            onChange={(value) => setNewThemeName(value)}
+          />
+          <Button
+            onClick={async () => {
+              await saveNewTheme(
+                newThemeName,
+                currentThemeValues.animations,
+                currentThemeValues.vars
+              )
+              setShowSaveModal(false)
+            }}
+          >
+            Save
+          </Button>
+        </div>
       </Modal>
       <AnimatePresence>
         {isOpen && (
@@ -79,7 +107,7 @@ export function ThemeSidebar({
               onClick={onClose}
             />
             <motion.div
-              className="fixed right-0 top-0 z-50 h-full w-80 overflow-y-auto p-4"
+              className="fixed right-0 top-0 z-50 h-full w-90 overflow-y-auto p-4"
               variants={reverseSlideInVariants}
               initial="closed"
               animate="open"

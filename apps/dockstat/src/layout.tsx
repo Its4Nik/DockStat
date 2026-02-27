@@ -1,15 +1,16 @@
 import { logFeedEffect, rssFeedEffect } from "@WSS"
 import type { LogEntry } from "@dockstat/logger"
 import { Navbar, ThemeSidebar } from "@dockstat/ui"
-import { arrayUtils } from "@dockstat/utils"
+import { arrayUtils, retry, sleep } from "@dockstat/utils"
 import { useHotkey } from "@dockstat/utils/react"
 import { useContext, useEffect, useState } from "react"
 import { Toaster } from "sonner"
 import { ConfigProviderContext } from "@/contexts/config"
 import { PageHeadingContext } from "./contexts/pageHeadingContext"
+import { QueryClientContext } from "./contexts/queryClient"
 import { ThemeSidebarContext } from "./contexts/themeSidebar"
 import { useEdenMutation } from "./hooks/eden/useEdenMutation"
-import { useEdenQuery } from "./hooks/useEdenQuery"
+import { edenQuery, useEdenQuery } from "./hooks/useEdenQuery"
 import { useGlobalBusy } from "./hooks/useGlobalBusy"
 import { useTheme } from "./hooks/useTheme"
 import { api } from "./lib/api"
@@ -20,14 +21,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [logMessage, setLogMessage] = useState<LogEntry>()
   const [logMessagesArr, setlogMessagesArr] = useState<LogEntry[]>([])
 
+  const isBusy = useGlobalBusy()
+
   const themeSidebarCtx = useContext(ThemeSidebarContext)
   const config = useContext(ConfigProviderContext)
   const heading = useContext(PageHeadingContext).heading
   const { isThemeSidebarOpen, setIsThemeSidebarOpen, setThemeProps, themeProps } =
     useContext(ThemeSidebarContext)
+  const qc = useContext(QueryClientContext)
+
+  qc.invalidateQueries({ queryKey: ["fetchAllThemes"] })
 
   const { theme, themesList, getAllThemes, applyThemeById, adjustCurrentTheme } = useTheme()
-  const isBusy = useGlobalBusy()
 
   // Set theme props in context for global access
   useEffect(() => {
@@ -45,12 +50,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       },
       themes: themesList || [],
       currentThemeId: theme?.id ?? null,
-      onSelectTheme: (t) => applyThemeById(t.id),
-      onOpen: getAllThemes,
-      toastSuccess: async () => {
+      onSelectTheme: async (t) => {
+        await applyThemeById(t.id)
+        // Refresh the theme list after applying a new theme
         await getAllThemes()
+      },
+      onOpen: getAllThemes,
+      toastSuccess: (themeName: string) => {
         toast({
-          description: `Set ${theme?.id} active`,
+          description: `Set ${themeName} active`,
           title: "Updated Theme Preference",
           variant: "success",
         })
@@ -74,6 +82,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     route: api.db.config.unpinItem.post,
     invalidateQueries: [["fetchAdditionalSettings"]],
   })
+
+  const deleteThemeMutation = useEdenMutation({
+    mutationKey: ["deleteTheme"],
+    route: api.themes.delete,
+    toast: {
+      successTitle: (input) => `Deleted theme ${input.id}`,
+      errorTitle: (input) => `Could not delete theme ${input.id}`,
+    },
+  })
+
+  const deleteTheme = async (id: number) => {
+    await deleteThemeMutation.mutateAsync({ id })
+  }
 
   useHotkey({
     close: () => setIsThemeSidebarOpen(false),
@@ -110,10 +131,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   }, [logMessage])
 
+  const createNewThemeFromTheme = async (
+    name: string,
+    animations: Record<string, unknown>,
+    vars: Record<string, string>
+  ) => {
+    await themeSidebarCtx.addNewTheme(name, animations, vars)
+    console.log("Theme created")
+    await sleep(10) // needed, otherwise the theme list does not get updated
+    await getAllThemes()
+    console.log("Themes updated")
+  }
+
   return (
     <div className="bg-main-bg min-h-screen w-screen p-4">
       <Toaster expand position="bottom-right" />
       <Navbar
+        deleteTheme={deleteTheme}
         themeProps={{
           ...themeSidebarCtx?.themeProps,
           currentThemeName: themeSidebarCtx?.themeProps?.currentThemeName || "Undefined",
@@ -121,7 +155,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           themes: themeSidebarCtx?.themeProps?.themes || [],
           isOpen: themeSidebarCtx.isThemeSidebarOpen,
           onSelectTheme: themeSidebarCtx?.themeProps?.onSelectTheme || (() => {}),
-          toastSuccess: themeSidebarCtx?.themeProps?.toastSuccess || (() => {}),
+          toastSuccess: themeSidebarCtx?.themeProps?.toastSuccess || ((_: string) => {}),
           onOpen: () => themeSidebarCtx.setIsThemeSidebarOpen(true),
           currentThemeColors: themeSidebarCtx?.themeProps?.currentThemeColors || [],
           onColorChange: (color, colorName) =>
@@ -173,6 +207,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {themeProps && (
         <ThemeSidebar
+          currentThemeValues={{
+            vars: theme?.vars || {},
+            animations: {},
+          }}
+          saveNewTheme={createNewThemeFromTheme}
           onColorChange={themeProps.onColorChange}
           isOpen={isThemeSidebarOpen}
           allColors={themeProps.currentThemeColors || []}

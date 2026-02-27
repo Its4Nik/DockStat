@@ -5,3 +5,5 @@ const queryClient = new QueryClient()
 export function QueryClientProvider({ children }: { children: React.ReactNode }) {
   return <BaseQueryClientProvider client={queryClient}>{children}</BaseQueryClientProvider>
 }
+
+export type QueryClientProviderType = typeof queryClient

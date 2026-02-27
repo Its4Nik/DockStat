@@ -9,6 +9,19 @@ export type EdenBody<T extends EdenRoute> = Parameters<T> extends []
       void
     : Parameters<T>[0]
 
+export type EdenParams<TRoute extends EdenRoute> = Parameters<TRoute> extends []
+  ? undefined
+  : Parameters<TRoute>[0]
+
+export type SmartMutationInput<TRoute extends EdenRoute> = EdenParams<TRoute> extends undefined
+  ? EdenBody<TRoute> extends undefined
+    ? // biome-ignore lint/suspicious/noConfusingVoidType: must be used for correct type propagation
+      void
+    : EdenBody<TRoute>
+  : EdenBody<TRoute> extends undefined
+    ? { params: EdenParams<TRoute> }
+    : { params: EdenParams<TRoute>; body: EdenBody<TRoute> }
+
 export type ToastConfig<TData, TInput> = {
   successTitle: string | ((input: TInput, response: TData) => string)
   errorTitle: string | ((input: TInput, error: Error) => string)

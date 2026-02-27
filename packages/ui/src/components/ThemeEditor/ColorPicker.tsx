@@ -6,7 +6,9 @@ export function SimpleColorPicker({
   colorName,
   displayName,
   updateThemeColor,
+  showName = true,
 }: {
+  showName?: boolean
   color: string
   colorName: string
   displayName?: string
@@ -23,12 +25,14 @@ export function SimpleColorPicker({
 
   return (
     <div className="flex flex-col items-center space-y-1">
-      <div
-        title={name}
-        className="text-xs font-medium text-center mb-1 truncate w-full capitalize text-primary-text"
-      >
-        {name}
-      </div>
+      {showName ? (
+        <div
+          title={name}
+          className="text-xs font-medium text-center mb-1 truncate w-full capitalize text-primary-text"
+        >
+          {name}
+        </div>
+      ) : null}
       <div className="relative">
         <div
           className="w-10 h-10 rounded border border-border"

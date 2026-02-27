@@ -1,15 +1,15 @@
 import { Slides, ThemeEditor } from "@dockstat/ui"
-import { useContext, useState } from "react"
+import { useState } from "react"
 import { GeneralSettingsSlide } from "@/components/settings/general/index"
 import { HotkeysSlide } from "@/components/settings/hotkeys"
-import { ThemeProviderContext } from "@/contexts/theme"
 import { usePageHeading } from "@/hooks/useHeading"
+import { useTheme } from "@/hooks/useTheme"
 import { toast } from "@/lib/toast"
 
 export default function SettingsPage() {
   usePageHeading("Settings")
 
-  const currentThemeContext = useContext(ThemeProviderContext)
+  const currentThemeContext = useTheme()
 
   const allColors = currentThemeContext.theme?.vars || {}
   const themeName = currentThemeContext.theme?.name || "Undefined"

@@ -7,6 +7,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react"
 import { type ThemeListItem, ThemeProviderContext, type ThemeProviderData } from "@/contexts/theme"
 import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
+import { edenQuery } from "@/hooks/useEdenQuery"
 import { api } from "@/lib/api"
 import { toast } from "@/lib/toast"
 
@@ -18,15 +19,31 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [isModifiedTheme, setIsModifiedTheme] = useState<boolean>(false)
   const hasLoadedSavedTheme = useRef(false)
 
+  const allThemesQuery = edenQuery({
+    queryKey: ["fetchAllThemes"],
+    route: api.themes.get,
+  })
+
   const applyAndPersistTheme = useCallback((themeData: ThemeContextData) => {
-    applyThemeToDocument(themeData)
+    console.log("Applying theme:", themeData)
+    applyThemeToDocument(themeData, (msg) => console.log("Theme applied:", msg))
     setTheme(themeData)
     saveThemePreference(themeData.id, themeData.name)
   }, [])
 
   const adjustCurrentTheme = useCallback((themeVars: ThemeContextData["vars"]) => {
-    applyThemeToDocument(themeVars)
-    setTheme((prev) => (prev ? { ...prev, vars: themeVars } : prev))
+    setTheme((prev) => {
+      if (!prev) return prev
+
+      // Merge the new theme vars with the existing ones to preserve all colors
+      const mergedVars = { ...prev.vars, ...themeVars }
+
+      // Apply the merged theme to the document
+      applyThemeToDocument({ ...prev, vars: mergedVars })
+
+      // Return the updated theme with all colors preserved
+      return { ...prev, vars: mergedVars }
+    })
   }, [])
 
   const createNewThemeFromCurrent = useEdenMutation({
@@ -76,11 +93,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           throw new Error(data.message || `Theme "${themeName}" not found`)
         }
 
-        applyAndPersistTheme({
+        const themeData = {
           name: data.data.name,
           id: data.data.id,
           vars: data.data.variables ?? {},
-        })
+        }
+        console.log("Theme data fetched:", themeData)
+        applyAndPersistTheme(themeData)
       } catch (err) {
         setError(err instanceof Error ? err : new Error(String(err)))
       } finally {
@@ -106,11 +125,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           throw new Error(data.message || `Theme with id ${themeId} not found`)
         }
 
-        applyAndPersistTheme({
+        const themeData = {
           id: data.data.id,
           name: data.data.name,
           vars: data.data.variables ?? {},
-        })
+        }
+        console.log("Theme data fetched by ID:", themeData)
+        applyAndPersistTheme(themeData)
       } catch (err) {
         setError(err instanceof Error ? err : new Error(String(err)))
       } finally {
@@ -123,11 +144,25 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const getAllThemes = useCallback(async () => {
     setIsLoading(true)
     setError(null)
+    await allThemesQuery.refetch()
+    const data = allThemesQuery.data
+    const error = allThemesQuery.error
 
     try {
-      const { data, error: fetchError } = await api.themes.get()
-
-      if (fetchError || !data) {
+      if (error) {
+        toast({
+          description: error.message || "",
+          title: error?.name,
+          variant: "error",
+        })
+        throw new Error("Failed to fetch themes")
+      }
+      if (!data) {
+        toast({
+          description: "No Data received!",
+          title: "Failed to fetch all themes",
+          variant: "error",
+        })
         throw new Error("Failed to fetch themes")
       }
 
@@ -147,7 +182,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [allThemesQuery.refetch, allThemesQuery.data, allThemesQuery.error])
 
   useEffect(() => {
     if (hasLoadedSavedTheme.current) return

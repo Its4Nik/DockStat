@@ -15,7 +15,7 @@ export const defaultConfig: DockStatConfigTableType = {
     "toggle:sidebar": "b",
     "close:sidebar": "",
     "open:sidebar": "",
-    "toggle:themeEditor": "t",
+    "toggle:themeEditor": "p",
     "close:themeEditor": "",
     "open:themeEditor": "",
   },
