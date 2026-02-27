@@ -45,7 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }}
         sidebarHotkeys={{
           close: config.hotkeys?.["close:sidebar"],
-          open: config.hotkeys?.["close:sidebar"],
+          open: config.hotkeys?.["open:sidebar"],
           toggle: config.hotkeys?.["toggle:sidebar"],
         }}
         isBusy={isBusy}

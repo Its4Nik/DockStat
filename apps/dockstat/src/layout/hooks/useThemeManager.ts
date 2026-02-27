@@ -1,28 +1,17 @@
-import { useContext, useEffect, useRef } from "react"
+import { sleep } from "@dockstat/utils"
+import { useContext, useEffect } from "react"
+import { QueryClientContext } from "@/contexts/queryClient"
 import { ThemeSidebarContext } from "@/contexts/themeSidebar"
 import { useTheme } from "@/hooks/useTheme"
 import { toast } from "@/lib/toast"
-import { sleep } from "@dockstat/utils"
-import { QueryClientContext } from "@/contexts/queryClient"
 
 export function useThemeManager() {
   const themeSidebarCtx = useContext(ThemeSidebarContext)
-  const { theme, themesList, applyThemeById, adjustCurrentTheme } = useTheme()
   const { setThemeProps, addNewTheme, themeProps, isThemeSidebarOpen, setIsThemeSidebarOpen } =
     themeSidebarCtx
-  const applyThemeByIdRef = useRef(applyThemeById)
-  const adjustCurrentThemeRef = useRef(adjustCurrentTheme)
+  const { theme, themesList, applyThemeById, adjustCurrentTheme } = useTheme()
   const qc = useContext(QueryClientContext)
 
-  useEffect(() => {
-    applyThemeByIdRef.current = applyThemeById
-  }, [applyThemeById])
-
-  useEffect(() => {
-    adjustCurrentThemeRef.current = adjustCurrentTheme
-  }, [adjustCurrentTheme])
-
-  // Set theme props in context
   useEffect(() => {
     setThemeProps({
       currentThemeColors: Object.entries(theme?.vars || {}).map(([key, val]) => ({
@@ -31,7 +20,7 @@ export function useThemeManager() {
       })),
       currentThemeName: theme?.name || "Undefined",
       onColorChange: (colorValue, colorName) => {
-        adjustCurrentThemeRef.current({ [colorName]: colorValue })
+        adjustCurrentTheme({ [colorName]: colorValue })
         toast({
           description: `Changed: ${colorName} to ${colorValue}`,
           title: "Updated color",
@@ -40,7 +29,7 @@ export function useThemeManager() {
       themes: themesList || [],
       currentThemeId: theme?.id ?? null,
       onSelectTheme: async (t) => {
-        await applyThemeByIdRef.current(t.id)
+        await applyThemeById(t.id)
       },
       onOpen: () => {},
       toastSuccess: (themeName: string) => {
@@ -51,7 +40,7 @@ export function useThemeManager() {
         })
       },
     })
-  }, [theme, themesList, setThemeProps])
+  }, [theme, themesList, setThemeProps, applyThemeById, adjustCurrentTheme])
 
   const createNewThemeFromTheme = async (
     name: string,
@@ -59,7 +48,7 @@ export function useThemeManager() {
     vars: Record<string, string>
   ) => {
     await addNewTheme(name, animations, vars)
-    await sleep(10) // allow backend to settle
+    await sleep(10)
     qc.invalidateQueries({ queryKey: ["fetchAllThemes"] })
   }
 

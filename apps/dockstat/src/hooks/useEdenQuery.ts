@@ -1,22 +1,6 @@
-import { extractEdenError } from "@dockstat/utils"
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query"
-
-type EdenQueryRoute = (options?: {
-  fetch?: RequestInit
-  headers?: Record<string, unknown>
-  query?: Record<string, unknown>
-}) => Promise<{ data: unknown; error: unknown }>
-
-type EdenData<T extends EdenQueryRoute> = Awaited<ReturnType<T>>["data"]
-
-type UseEdenQueryOptions<TRoute extends EdenQueryRoute> = {
-  route: TRoute
-  queryKey: readonly unknown[]
-  enabled?: boolean
-  staleTime?: number
-  refetchInterval?: number | false
-  refetchOnWindowFocus?: boolean
-}
+import type { EdenData, EdenQueryData, EdenQueryRoute, UseEdenQueryOptions } from "./eden/types"
+import { createEdenQueryFn } from "./eden/helper"
 
 export function useEdenQuery<TRoute extends EdenQueryRoute>({
   route,
@@ -26,25 +10,17 @@ export function useEdenQuery<TRoute extends EdenQueryRoute>({
   refetchInterval,
   refetchOnWindowFocus,
 }: UseEdenQueryOptions<TRoute>) {
-  type TData = NonNullable<EdenData<TRoute>>
+  type TData = NonNullable<EdenQueryData<TRoute>>
+
   return useQuery<TData, Error>({
     queryKey,
-    queryFn: async ({ signal }) => {
-      const { data, error } = await route({ fetch: { signal } })
-
-      if (error) {
-        throw new Error(extractEdenError({ error }))
-      }
-
-      return data as TData
-    },
+    queryFn: createEdenQueryFn(route),
     enabled,
     staleTime,
     refetchInterval,
     refetchOnWindowFocus,
   })
 }
-
 /* An alias for useEdenQuery
  * use .refetch() for calling it programmatically
  */
@@ -65,15 +41,7 @@ export function edenQuery<TRoute extends EdenQueryRoute>(
   return useQuery<TData, Error>({
     ...tanstackOpts,
     queryKey: opts.queryKey,
-    queryFn: async ({ signal }) => {
-      const { data, error } = await opts.route({ fetch: { signal } })
-
-      if (error) {
-        throw new Error(extractEdenError({ error }))
-      }
-
-      return data as TData
-    },
+    queryFn: createEdenQueryFn(opts.route),
     enabled: false,
   })
 }
