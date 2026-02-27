@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "framer-motion"
 import { Menu } from "lucide-react"
 import { useState } from "react"
 import { NavLink } from "react-router"
-
 import { Badge } from "../Badge/Badge"
 import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
@@ -17,6 +16,7 @@ import DockStatLogo from "./DockStat2-06.png"
 export { type PathItem, SidebarPaths } from "./consts"
 
 type NavbarProps = {
+  deleteTheme: (themeId: number) => Promise<void>
   isBusy: boolean
   logEntries: LogEntry[]
   navLinks?: { slug: string; path: string }[]
@@ -44,6 +44,7 @@ export function Navbar({
   themeProps,
   openQuickLinksModalHotkey,
   sidebarHotkeys,
+  deleteTheme,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
@@ -129,6 +130,7 @@ export function Navbar({
         </nav>
 
         <Sidebar
+          deleteTheme={deleteTheme}
           isOpen={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
           isBusy={isBusy}

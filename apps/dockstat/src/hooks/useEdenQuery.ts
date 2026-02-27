@@ -1,5 +1,5 @@
 import { extractEdenError } from "@dockstat/utils"
-import { useQuery } from "@tanstack/react-query"
+import { type UseQueryOptions, useQuery } from "@tanstack/react-query"
 
 type EdenQueryRoute = (options?: {
   fetch?: RequestInit
@@ -27,7 +27,6 @@ export function useEdenQuery<TRoute extends EdenQueryRoute>({
   refetchOnWindowFocus,
 }: UseEdenQueryOptions<TRoute>) {
   type TData = NonNullable<EdenData<TRoute>>
-
   return useQuery<TData, Error>({
     queryKey,
     queryFn: async ({ signal }) => {
@@ -43,5 +42,38 @@ export function useEdenQuery<TRoute extends EdenQueryRoute>({
     staleTime,
     refetchInterval,
     refetchOnWindowFocus,
+  })
+}
+
+/* An alias for useEdenQuery
+ * use .refetch() for calling it programmatically
+ */
+export function edenQuery<TRoute extends EdenQueryRoute>(
+  opts: Omit<UseEdenQueryOptions<TRoute>, "enabled">,
+  tanstackOpts?: Omit<
+    UseQueryOptions<
+      NonNullable<EdenData<TRoute>>,
+      Error,
+      NonNullable<EdenData<TRoute>>,
+      readonly unknown[]
+    >,
+    "queryKey" | "queryFn"
+  >
+) {
+  type TData = NonNullable<EdenData<TRoute>>
+
+  return useQuery<TData, Error>({
+    ...tanstackOpts,
+    queryKey: opts.queryKey,
+    queryFn: async ({ signal }) => {
+      const { data, error } = await opts.route({ fetch: { signal } })
+
+      if (error) {
+        throw new Error(extractEdenError({ error }))
+      }
+
+      return data as TData
+    },
+    enabled: false,
   })
 }

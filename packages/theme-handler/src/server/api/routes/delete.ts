@@ -4,10 +4,10 @@ import { theme } from "../models"
 
 export const createThemeDeleteRoute = (themeDB: ThemeDB) => {
   return new Elysia().decorate("themeDB", themeDB).delete(
-    "/:id",
-    ({ themeDB, params, status }) => {
+    "/",
+    ({ themeDB, status, body }) => {
       try {
-        const id = Number(params.id)
+        const id = Number(body.id)
 
         if (Number.isNaN(id)) {
           return status(400, {
@@ -38,8 +38,8 @@ export const createThemeDeleteRoute = (themeDB: ThemeDB) => {
       }
     },
     {
-      params: t.Object({
-        id: t.String(),
+      body: t.Object({
+        id: t.Number(),
       }),
       response: {
         200: theme.responses.success.delete,

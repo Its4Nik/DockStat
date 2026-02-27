@@ -18,7 +18,8 @@
     "elysia": "catalog:",
     "@elysiajs/eden": "catalog:",
     "@dockstat/sqlite-wrapper": "workspace:*",
-    "@dockstat/logger": "workspace:*"
+    "@dockstat/logger": "workspace:*",
+    "@dockstat/ui": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest"

@@ -1,7 +1,7 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
 import type { Logger } from "@dockstat/logger"
 import type { ColumnNames, OrderDirection, Parser } from "../types"
-import { quoteIdentifier } from "../utils"
+import { quoteIdentifier, truncate } from "../utils"
 import { WhereQueryBuilder } from "./where"
 
 /**
@@ -218,7 +218,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
     const [query, params] = this.buildSelectQuery(!hasRegex)
 
     this.logSelectStart("all", { query, params })
-    this.selectLog.info(`SELECT: Query: ${query} - Params: ${params.join(", ")}`)
+    this.selectLog.info(`SELECT: Query: ${query} - Params: ${truncate(params.join(", "), 25)}`)
 
     const rows = this.getDb()
       .prepare(query)
@@ -249,7 +249,9 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const optimizedQuery = `${query} LIMIT 1`
 
       this.logSelectStart("get", { optimizedQuery, params })
-      this.selectLog.info(`SELECT (get): Query: ${optimizedQuery} - Params: ${params.join(", ")}`)
+      this.selectLog.info(
+        `SELECT (get): Query: ${optimizedQuery} - Params: ${truncate(params.join(", "), 25)}`
+      )
 
       const row = this.getDb()
         .prepare(optimizedQuery)
@@ -267,7 +269,9 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const [query, params] = this.buildSelectQuery(true)
 
       this.logSelectStart("get", { query, params })
-      this.selectLog.info(`SELECT (get): Query: ${query} - Params: ${JSON.stringify(params)}`)
+      this.selectLog.info(
+        `SELECT (get): Query: ${query} - Params: ${truncate(params.join(", "), 25)}`
+      )
 
       const row = this.getDb()
         .prepare(query)

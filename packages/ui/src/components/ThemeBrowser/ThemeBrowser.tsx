@@ -1,5 +1,6 @@
-import { Check } from "lucide-react"
+import { Check, Trash } from "lucide-react"
 import { Badge } from "../Badge/Badge"
+import { Button } from "../Button/Button"
 import { Card } from "../Card/Card"
 import { getValidColors } from "./getValidColors"
 
@@ -12,16 +13,19 @@ export type ThemeBrowserItem = {
 export type ThemeBrowserProps = {
   themes: ThemeBrowserItem[]
   currentThemeId?: number | null
-  onSelectTheme: (theme: ThemeBrowserItem) => void
-  toastSuccess: () => void
+  onSelectTheme: (theme: ThemeBrowserItem) => Promise<void>
+  deleteTheme: (themeId: number) => Promise<void>
+  toastSuccess: (themeName: string) => void
 }
 
 function ThemePreviewCard({
   theme,
   isSelected,
   onSelect,
+  deleteTheme,
 }: {
   theme: ThemeBrowserItem
+  deleteTheme: (themeId: number) => Promise<void>
   isSelected: boolean
   onSelect: () => void
 }) {
@@ -36,14 +40,27 @@ function ThemePreviewCard({
       onClick={onSelect}
       className={`relative flex-1 cursor-pointer transition-all m-1 ${isSelected ? "ring-2 ring-accent" : ""}`}
     >
-      {isSelected && (
-        <div className="absolute top-2 right-2">
+      <div className="absolute top-2 right-2">
+        {isSelected && (
           <Badge variant="success" size="sm">
             <Check size={12} className="mr-1" />
             Active
           </Badge>
-        </div>
-      )}
+        )}
+        {!(theme.id < 0) ? (
+          <Button
+            className="mt-1"
+            variant="danger"
+            size="xs"
+            onClick={async (e) => {
+              e.stopPropagation()
+              await deleteTheme(theme.id)
+            }}
+          >
+            <Trash size={12} />
+          </Button>
+        ) : null}
+      </div>
 
       <div className="flex flex-col gap-3">
         <p className="font-semibold text-primary-text">{theme.name}</p>
@@ -79,6 +96,7 @@ export function ThemeBrowser({
   currentThemeId,
   onSelectTheme,
   toastSuccess,
+  deleteTheme,
 }: ThemeBrowserProps) {
   if (themes.length === 0) {
     return (
@@ -97,12 +115,13 @@ export function ThemeBrowser({
       <div className="flex flex-wrap gap-2 p-4">
         {themes.map((theme) => (
           <ThemePreviewCard
+            deleteTheme={deleteTheme}
             key={theme.id}
             theme={theme}
             isSelected={currentThemeId === theme.id}
-            onSelect={() => {
-              toastSuccess()
-              return onSelectTheme(theme)
+            onSelect={async () => {
+              await onSelectTheme(theme)
+              toastSuccess(theme.name)
             }}
           />
         ))}

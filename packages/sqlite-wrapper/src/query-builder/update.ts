@@ -1,7 +1,7 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
 import type { Logger } from "@dockstat/logger"
 import type { Parser, UpdateResult } from "../types"
-import { buildSetClause, quoteIdentifier, type RowData } from "../utils"
+import { buildSetClause, quoteIdentifier, type RowData, truncate } from "../utils"
 import { SelectQueryBuilder } from "./select"
 
 /**
@@ -61,7 +61,7 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     const updateValues = columns.map((col) => transformedData[col])
     const allParams = [...updateValues, ...whereParams] as SQLQueryBindings[]
 
-    this.updateLog.info(`Query: ${query} - Params: ${JSON.stringify(allParams)}`)
+    this.updateLog.info(`Query: ${query} - Params: ${truncate(allParams.join(", "), 25)}`)
 
     const result = this.getDb()
       .prepare(query)
@@ -178,7 +178,7 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     const query = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${quotedColumn} = ${quotedColumn} + ?${whereClause}`
     const params = [amount, ...whereParams] as SQLQueryBindings[]
 
-    this.updateLog.info(`INCREMENT: Query: ${query} - Params: ${params}`)
+    this.updateLog.info(`INCREMENT: Query: ${query} - Params: ${truncate(params.join(", "), 25)}`)
 
     const result = this.getDb()
       .prepare(query)
