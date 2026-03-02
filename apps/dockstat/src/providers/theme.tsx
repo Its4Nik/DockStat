@@ -11,7 +11,6 @@ import { useEdenQuery } from "@/hooks/useEdenQuery"
 import { api } from "@/lib/api"
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [themesList, setThemesList] = useState<ThemeListItem[] | null>(null)
   const [theme, setTheme] = useState<ThemeContextData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
@@ -23,27 +22,34 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     queryKey: ["fetchAllThemes"],
   })
 
-  const applyAndPersistTheme = useCallback((themeData: ThemeContextData) => {
+  const themesList: ThemeListItem[] | null = ThemesRes?.data ?? null
+
+  const applyThemeEffect = useCallback((themeData: ThemeContextData) => {
     console.log("Applying theme:", themeData)
     applyThemeToDocument(themeData, (msg) => console.log("Theme applied:", msg))
-    setTheme(themeData)
-    saveThemePreference(themeData.id, themeData.name)
   }, [])
 
-  const adjustCurrentTheme = useCallback((themeVars: ThemeContextData["vars"]) => {
-    setTheme((prev) => {
-      if (!prev) return prev
+  const applyAndPersistTheme = useCallback(
+    (themeData: ThemeContextData) => {
+      applyThemeEffect(themeData)
+      setTheme(themeData)
+      saveThemePreference(themeData.id, themeData.name)
+    },
+    [applyThemeEffect]
+  )
 
-      // Merge the new theme vars with the existing ones to preserve all colors
-      const mergedVars = { ...prev.vars, ...themeVars }
-
-      // Apply the merged theme to the document
-      applyThemeToDocument({ ...prev, vars: mergedVars })
-
-      // Return the updated theme with all colors preserved
-      return { ...prev, vars: mergedVars }
-    })
-  }, [])
+  const adjustCurrentTheme = useCallback(
+    (themeVars: ThemeContextData["vars"]) => {
+      setTheme((prev) => {
+        if (!prev) return prev
+        const mergedVars = { ...prev.vars, ...themeVars }
+        const nextTheme = { ...prev, vars: mergedVars }
+        applyThemeEffect(nextTheme)
+        return nextTheme
+      })
+    },
+    [applyThemeEffect]
+  )
 
   const createNewThemeFromCurrent = useEdenMutation({
     mutationKey: ["createNewThemeFromCurrent"],
@@ -135,12 +141,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       void applyThemeById(preference.id)
     }
   }, [applyThemeById])
-
-  useEffect(() => {
-    if (ThemesRes?.data) {
-      setThemesList(ThemesRes.data)
-    }
-  }, [ThemesRes?.data])
 
   type input = Parameters<typeof createNewThemeFromCurrent.mutateAsync>[0]
   type routeType = Awaited<ReturnType<typeof api.themes.post>>["data"]

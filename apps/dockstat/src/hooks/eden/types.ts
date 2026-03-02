@@ -58,3 +58,20 @@ export type MutationResult<TData, TInput> = {
   isSuccess: boolean
   isError: boolean
 }
+
+export type EdenQueryRoute = (options?: {
+  fetch?: RequestInit
+  headers?: Record<string, unknown>
+  query?: Record<string, unknown>
+}) => Promise<{ data: unknown; error: unknown }>
+
+export type EdenQueryData<T extends EdenQueryRoute> = Awaited<ReturnType<T>>["data"]
+
+export type UseEdenQueryOptions<TRoute extends EdenQueryRoute> = {
+  route: TRoute
+  queryKey: readonly unknown[]
+  enabled?: boolean
+  staleTime?: number
+  refetchInterval?: number | false
+  refetchOnWindowFocus?: boolean
+}

@@ -1,6 +1,6 @@
 import type { ThemeBrowserItem } from "@dockstat/ui"
 import { sleep } from "@dockstat/utils"
-import { useContext, useEffect, useRef } from "react"
+import { useContext, useEffect } from "react"
 import { QueryClientContext } from "@/contexts/queryClient"
 import { useThemeSidebar } from "@/contexts/ThemeSidebarContext"
 import { useThemeSidebarUI } from "@/contexts/ThemeSidebarUIContext"
@@ -59,7 +59,7 @@ export function useThemeManager() {
     vars: Record<string, string>
   ) => {
     await addNewTheme(name, animations, vars)
-    await sleep(10) // allow backend to settle
+    await sleep(10)
     qc.invalidateQueries({ queryKey: ["fetchAllThemes"] })
   }
 
