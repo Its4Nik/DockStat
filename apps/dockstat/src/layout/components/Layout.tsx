@@ -38,9 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         toastSuccess={toastSuccess}
         onSelectTheme={onSelectTheme}
         onColorChange={onColorChange}
-        currentThemeName={currentThemeName}
         currentThemeId={currentThemeId}
-        currentThemeColors={currentThemeColors}
         themes={themes}
         deleteTheme={deleteTheme}
         sidebarHotkeys={{

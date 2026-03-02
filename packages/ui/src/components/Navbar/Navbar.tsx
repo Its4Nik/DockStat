@@ -27,10 +27,8 @@ type NavbarProps = {
   mutationFn: SidebarProps["mutationFn"]
   themes: ThemeBrowserItem[]
   currentThemeId: number | null
-  currentThemeName: string
   onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
   toastSuccess: (themeName: string) => void
-  currentThemeColors: { color: string; colorName: string }[]
   onColorChange: (color: string, colorName: string) => void
   setIsThemeSidebarOpen: (bool: boolean) => void
   openQuickLinksModalHotkey?: string
@@ -51,10 +49,8 @@ export function Navbar({
   pluginLinks,
   themes,
   currentThemeId,
-  currentThemeName,
   onSelectTheme,
   toastSuccess,
-  currentThemeColors,
   onColorChange,
   openQuickLinksModalHotkey,
   sidebarHotkeys,

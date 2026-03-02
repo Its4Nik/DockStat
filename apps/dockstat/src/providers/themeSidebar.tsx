@@ -5,12 +5,9 @@ import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
 import { useTheme } from "@/hooks/useTheme"
 import { api } from "@/lib/api"
 
-/**
- * Internal provider that handles the domain logic (addNewTheme)
- * and provides it through ThemeSidebarContext
- */
-function ThemeSidebarDomainProvider({ children }: { children: React.ReactNode }) {
+export function ThemeSidebarProvider({ children }: { children: React.ReactNode }) {
   const themeCtx = useTheme()
+  const [isThemeSidebarOpen, setIsThemeSidebarOpen] = useState(false)
 
   const addNewThemeMutation = useEdenMutation({
     mutationKey: ["addNewThemeMutation"],
@@ -36,22 +33,10 @@ function ThemeSidebarDomainProvider({ children }: { children: React.ReactNode })
   }
 
   return (
-    <ThemeSidebarContext.Provider value={{ addNewTheme }}>{children}</ThemeSidebarContext.Provider>
-  )
-}
-
-/**
- * Main provider that wraps UI state and domain logic providers.
- *
- * UI state (open/close) is managed by ThemeSidebarUIProvider.
- * Domain logic (addNewTheme) is managed by ThemeSidebarDomainProvider.
- */
-export function ThemeSidebarProvider({ children }: { children: React.ReactNode }) {
-  const [isThemeSidebarOpen, setIsThemeSidebarOpen] = useState<boolean>(false)
-
-  return (
     <ThemeSidebarUIProvider value={{ isThemeSidebarOpen, setIsThemeSidebarOpen }}>
-      <ThemeSidebarDomainProvider>{children}</ThemeSidebarDomainProvider>
+      <ThemeSidebarContext.Provider value={{ addNewTheme }}>
+        {children}
+      </ThemeSidebarContext.Provider>
     </ThemeSidebarUIProvider>
   )
 }
