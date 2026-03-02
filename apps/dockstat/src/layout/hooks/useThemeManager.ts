@@ -1,5 +1,5 @@
-import { sleep } from "@dockstat/utils"
 import type { ThemeBrowserItem } from "@dockstat/ui"
+import { sleep } from "@dockstat/utils"
 import { useContext, useEffect, useRef } from "react"
 import { QueryClientContext } from "@/contexts/queryClient"
 import { useThemeSidebar } from "@/contexts/ThemeSidebarContext"

@@ -10,9 +10,9 @@ import { Divider } from "../Divider/Divider"
 import { LinkLookup } from "../HotkeyMenus/LinkLookup"
 import { LinkWithIcon } from "../Link/Link"
 import { Sidebar, type SidebarProps } from "../Sidebar/Sidebar"
+import type { ThemeBrowserItem } from "../ThemeBrowser/ThemeBrowser"
 import { floatVariants } from "./consts"
 import DockStatLogo from "./DockStat2-06.png"
-import type { ThemeBrowserItem } from "../ThemeBrowser/ThemeBrowser"
 
 export { type PathItem, SidebarPaths } from "./consts"
 

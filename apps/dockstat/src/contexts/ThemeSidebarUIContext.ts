@@ -1,4 +1,4 @@
-import { createContext, useContext, Dispatch, SetStateAction } from "react"
+import { createContext, type Dispatch, type SetStateAction, useContext } from "react"
 
 type ThemeSidebarUIContextValue = {
   isThemeSidebarOpen: boolean
