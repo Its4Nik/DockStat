@@ -10,9 +10,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
     ramUsage,
     logMessagesArr,
     isBusy,
-    themeSidebarCtx,
     config,
-    themeProps,
+    currentThemeColors,
+    currentThemeName,
+    currentThemeId,
+    onColorChange,
+    themes,
+    onSelectTheme,
+    toastSuccess,
     isThemeSidebarOpen,
     setIsThemeSidebarOpen,
     frontendPluginRoutes,
@@ -29,20 +34,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="bg-main-bg min-h-screen w-screen p-4">
       <Toaster expand position="bottom-right" />
       <Navbar
+        setIsThemeSidebarOpen={setIsThemeSidebarOpen}
+        toastSuccess={toastSuccess}
+        onSelectTheme={onSelectTheme}
+        onColorChange={onColorChange}
+        currentThemeName={currentThemeName}
+        currentThemeId={currentThemeId}
+        currentThemeColors={currentThemeColors}
+        themes={themes}
         deleteTheme={deleteTheme}
-        themeProps={{
-          ...themeSidebarCtx?.themeProps,
-          currentThemeName: themeSidebarCtx?.themeProps?.currentThemeName || "Undefined",
-          currentThemeId: themeSidebarCtx?.themeProps?.currentThemeId || null,
-          themes: themeSidebarCtx?.themeProps?.themes || [],
-          isOpen: themeSidebarCtx.isThemeSidebarOpen,
-          onSelectTheme: themeSidebarCtx?.themeProps?.onSelectTheme || (() => {}),
-          toastSuccess: themeSidebarCtx?.themeProps?.toastSuccess || ((_: string) => {}),
-          onOpen: () => themeSidebarCtx.setIsThemeSidebarOpen(true),
-          currentThemeColors: themeSidebarCtx?.themeProps?.currentThemeColors || [],
-          onColorChange: (color, colorName) =>
-            themeSidebarCtx?.themeProps?.onColorChange(color, colorName),
-        }}
         sidebarHotkeys={{
           close: config.hotkeys?.["close:sidebar"],
           open: config.hotkeys?.["close:sidebar"],
@@ -87,22 +87,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
       />
       <div className="px-4">{children}</div>
 
-      {themeProps && (
-        <ThemeSidebar
-          currentThemeValues={{
-            vars: theme?.vars || {},
-            animations: {},
-          }}
-          saveNewTheme={createNewThemeFromTheme}
-          onColorChange={themeProps.onColorChange}
-          isOpen={isThemeSidebarOpen}
-          allColors={themeProps.currentThemeColors || []}
-          currentTheme={themeProps.currentThemeName || "Undefined"}
-          onClose={() => {
-            setIsThemeSidebarOpen(false)
-          }}
-        />
-      )}
+      <ThemeSidebar
+        currentThemeValues={{
+          vars: theme?.vars || {},
+          animations: {},
+        }}
+        saveNewTheme={createNewThemeFromTheme}
+        onColorChange={onColorChange}
+        isOpen={isThemeSidebarOpen}
+        allColors={currentThemeColors || []}
+        currentTheme={currentThemeName || "Undefined"}
+        onClose={() => {
+          setIsThemeSidebarOpen(false)
+        }}
+      />
     </div>
   )
 }

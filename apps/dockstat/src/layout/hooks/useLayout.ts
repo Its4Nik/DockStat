@@ -19,12 +19,17 @@ export function useLayout() {
   const deleteTheme = useDeleteTheme()
 
   const {
-    themeSidebarCtx,
-    themeProps,
     isThemeSidebarOpen,
     setIsThemeSidebarOpen,
     createNewThemeFromTheme,
     theme,
+    currentThemeColors,
+    currentThemeName,
+    currentThemeId,
+    onColorChange,
+    themes,
+    onSelectTheme,
+    toastSuccess,
   } = useThemeManager()
 
   useHotkey({
@@ -41,9 +46,14 @@ export function useLayout() {
     ramUsage,
     logMessagesArr,
     isBusy,
-    themeSidebarCtx,
     config,
-    themeProps,
+    currentThemeColors,
+    currentThemeName,
+    currentThemeId,
+    onColorChange,
+    themes,
+    onSelectTheme,
+    toastSuccess,
     isThemeSidebarOpen,
     setIsThemeSidebarOpen,
     frontendPluginRoutes,

@@ -9,9 +9,10 @@ import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
 import { LinkLookup } from "../HotkeyMenus/LinkLookup"
 import { LinkWithIcon } from "../Link/Link"
-import { Sidebar, type SidebarProps, type ThemeProps } from "../Sidebar/Sidebar"
+import { Sidebar, type SidebarProps } from "../Sidebar/Sidebar"
 import { floatVariants } from "./consts"
 import DockStatLogo from "./DockStat2-06.png"
+import type { ThemeBrowserItem } from "../ThemeBrowser/ThemeBrowser"
 
 export { type PathItem, SidebarPaths } from "./consts"
 
@@ -24,7 +25,14 @@ type NavbarProps = {
   ramUsage?: string
   heading?: string
   mutationFn: SidebarProps["mutationFn"]
-  themeProps?: ThemeProps
+  themes: ThemeBrowserItem[]
+  currentThemeId: number | null
+  currentThemeName: string
+  onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
+  toastSuccess: (themeName: string) => void
+  currentThemeColors: { color: string; colorName: string }[]
+  onColorChange: (color: string, colorName: string) => void
+  setIsThemeSidebarOpen: (bool: boolean) => void
   openQuickLinksModalHotkey?: string
   sidebarHotkeys: {
     toggle?: string
@@ -41,9 +49,16 @@ export function Navbar({
   heading,
   mutationFn,
   pluginLinks,
-  themeProps,
+  themes,
+  currentThemeId,
+  currentThemeName,
+  onSelectTheme,
+  toastSuccess,
+  currentThemeColors,
+  onColorChange,
   openQuickLinksModalHotkey,
   sidebarHotkeys,
+  setIsThemeSidebarOpen,
   deleteTheme,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -130,6 +145,7 @@ export function Navbar({
         </nav>
 
         <Sidebar
+          setIsThemeSidebarOpen={setIsThemeSidebarOpen}
           deleteTheme={deleteTheme}
           isOpen={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
@@ -138,7 +154,13 @@ export function Navbar({
           mutationFn={mutationFn}
           pins={navLinks || []}
           pluginLinks={pluginLinks || []}
-          themeProps={themeProps}
+          themes={themes}
+          currentThemeId={currentThemeId}
+          currentThemeName={currentThemeName}
+          onSelectTheme={onSelectTheme}
+          toastSuccess={toastSuccess}
+          currentThemeColors={currentThemeColors}
+          onColorChange={onColorChange}
         />
 
         <style>{`

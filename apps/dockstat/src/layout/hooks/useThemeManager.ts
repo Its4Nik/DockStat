@@ -1,15 +1,17 @@
 import { sleep } from "@dockstat/utils"
+import type { ThemeBrowserItem } from "@dockstat/ui"
 import { useContext, useEffect, useRef } from "react"
 import { QueryClientContext } from "@/contexts/queryClient"
-import { ThemeSidebarContext } from "@/contexts/themeSidebar"
+import { useThemeSidebar } from "@/contexts/ThemeSidebarContext"
+import { useThemeSidebarUI } from "@/contexts/ThemeSidebarUIContext"
 import { useTheme } from "@/hooks/useTheme"
 import { toast } from "@/lib/toast"
 
 export function useThemeManager() {
-  const themeSidebarCtx = useContext(ThemeSidebarContext)
+  const { addNewTheme } = useThemeSidebar()
+  const { isThemeSidebarOpen, setIsThemeSidebarOpen } = useThemeSidebarUI()
   const { theme, themesList, applyThemeById, adjustCurrentTheme } = useTheme()
-  const { setThemeProps, addNewTheme, themeProps, isThemeSidebarOpen, setIsThemeSidebarOpen } =
-    themeSidebarCtx
+
   const applyThemeByIdRef = useRef(applyThemeById)
   const adjustCurrentThemeRef = useRef(adjustCurrentTheme)
   const qc = useContext(QueryClientContext)
@@ -22,36 +24,35 @@ export function useThemeManager() {
     adjustCurrentThemeRef.current = adjustCurrentTheme
   }, [adjustCurrentTheme])
 
-  // Set theme props in context
-  useEffect(() => {
-    setThemeProps({
-      currentThemeColors: Object.entries(theme?.vars || {}).map(([key, val]) => ({
-        colorName: key,
-        color: val,
-      })),
-      currentThemeName: theme?.name || "Undefined",
-      onColorChange: (colorValue, colorName) => {
-        adjustCurrentThemeRef.current({ [colorName]: colorValue })
-        toast({
-          description: `Changed: ${colorName} to ${colorValue}`,
-          title: "Updated color",
-        })
-      },
-      themes: themesList || [],
-      currentThemeId: theme?.id ?? null,
-      onSelectTheme: async (t) => {
-        await applyThemeByIdRef.current(t.id)
-      },
-      onOpen: () => {},
-      toastSuccess: (themeName: string) => {
-        toast({
-          description: `Set ${themeName} active`,
-          title: "Updated Theme Preference",
-          variant: "success",
-        })
-      },
+  // Derive theme values locally instead of using themeProps bag
+  const currentThemeColors = Object.entries(theme?.vars || {}).map(([key, val]) => ({
+    colorName: key,
+    color: val,
+  }))
+
+  const currentThemeName = theme?.name || "Undefined"
+  const currentThemeId = theme?.id ?? null
+  const themes = themesList || []
+
+  const onColorChange = (colorValue: string, colorName: string) => {
+    adjustCurrentThemeRef.current({ [colorName]: colorValue })
+    toast({
+      description: `Changed: ${colorName} to ${colorValue}`,
+      title: "Updated color",
     })
-  }, [theme, themesList, setThemeProps])
+  }
+
+  const onSelectTheme = async (t: ThemeBrowserItem) => {
+    await applyThemeByIdRef.current(t.id)
+  }
+
+  const toastSuccess = (themeName: string) => {
+    toast({
+      description: `Set ${themeName} active`,
+      title: "Updated Theme Preference",
+      variant: "success",
+    })
+  }
 
   const createNewThemeFromTheme = async (
     name: string,
@@ -64,11 +65,16 @@ export function useThemeManager() {
   }
 
   return {
-    themeSidebarCtx,
-    themeProps,
     isThemeSidebarOpen,
     setIsThemeSidebarOpen,
     createNewThemeFromTheme,
     theme,
+    currentThemeColors,
+    currentThemeName,
+    currentThemeId,
+    onColorChange,
+    themes,
+    onSelectTheme,
+    toastSuccess,
   }
 }

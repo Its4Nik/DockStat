@@ -4,10 +4,12 @@ export function ThemeEditor({
   currentTheme,
   onColorChange,
   allColors,
+  multiColumn = false,
 }: {
   currentTheme: string
   onColorChange: (color: string, colorName: string) => void
   allColors: { color: string; colorName: string; displayName?: string }[]
+  multiColumn?: boolean
 }) {
   const getColorName = (colorName: string) => {
     return colorName.replaceAll("--color-", "").replaceAll("-", " ")
@@ -22,19 +24,38 @@ export function ThemeEditor({
 
       {/* Scrollable list */}
       <div className="flex-1 overflow-y-auto">
-        <div className="divide-y divide-accent">
+        <div
+          className={
+            multiColumn
+              ? `
+                flex flex-wrap
+                divide-y-0
+              `
+              : "divide-y divide-accent"
+          }
+        >
           {allColors.map((c) => {
             const label = c.displayName ?? c.colorName
 
             return (
               <div
                 key={c.colorName}
-                className="
-                  flex items-center gap-4
-                  px-3 py-2
-                  hover:bg-main-bg/80
-                  transition-colors
-                "
+                className={
+                  multiColumn
+                    ? `
+                      w-full sm:w-1/2 lg:w-1/3
+                      flex items-center gap-4
+                      px-3 py-2
+                      hover:bg-main-bg/80
+                      transition-colors
+                    `
+                    : `
+                      flex items-center gap-4
+                      px-3 py-2
+                      hover:bg-main-bg/80
+                      transition-colors
+                    `
+                }
               >
                 {/* LEFT: readable info */}
                 <div className="flex-1 min-w-0">

@@ -1,31 +1,23 @@
-import type { ThemeBrowserItem } from "@dockstat/ui"
 import { useState } from "react"
-import { ThemeSidebarContext } from "@/contexts/themeSidebar"
+import { ThemeSidebarContext } from "@/contexts/ThemeSidebarContext"
+import { ThemeSidebarUIProvider } from "@/contexts/ThemeSidebarUIContext"
 import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
 import { useTheme } from "@/hooks/useTheme"
 import { api } from "@/lib/api"
 
-export function ThemeSidebarProvider({ children }: { children: React.ReactNode }) {
+/**
+ * Internal provider that handles the domain logic (addNewTheme)
+ * and provides it through ThemeSidebarContext
+ */
+function ThemeSidebarDomainProvider({ children }: { children: React.ReactNode }) {
   const themeCtx = useTheme()
-
-  const [isThemeSidebarOpen, setIsThemeSidebarOpen] = useState<boolean>(false)
-  const [themeProps, setThemeProps] = useState<{
-    currentThemeColors: { colorName: string; color: string }[]
-    currentThemeName: string
-    onColorChange: (colorValue: string, colorName: string) => void
-    themes: ThemeBrowserItem[]
-    currentThemeId: number | null
-    onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
-    toastSuccess: (themeName: string) => void
-    onOpen: () => void
-  }>()
 
   const addNewThemeMutation = useEdenMutation({
     mutationKey: ["addNewThemeMutation"],
     route: api.themes.post,
     toast: {
       successTitle: (input) => `Created new Theme: ${input.name}`,
-      errorTitle: (input) => `Could not created new Theme: ${input.name}`,
+      errorTitle: (input) => `Could not create new Theme: ${input.name}`,
     },
   })
 
@@ -44,16 +36,22 @@ export function ThemeSidebarProvider({ children }: { children: React.ReactNode }
   }
 
   return (
-    <ThemeSidebarContext
-      value={{
-        addNewTheme,
-        isThemeSidebarOpen,
-        setIsThemeSidebarOpen,
-        themeProps,
-        setThemeProps,
-      }}
-    >
-      {children}
-    </ThemeSidebarContext>
+    <ThemeSidebarContext.Provider value={{ addNewTheme }}>{children}</ThemeSidebarContext.Provider>
+  )
+}
+
+/**
+ * Main provider that wraps UI state and domain logic providers.
+ *
+ * UI state (open/close) is managed by ThemeSidebarUIProvider.
+ * Domain logic (addNewTheme) is managed by ThemeSidebarDomainProvider.
+ */
+export function ThemeSidebarProvider({ children }: { children: React.ReactNode }) {
+  const [isThemeSidebarOpen, setIsThemeSidebarOpen] = useState<boolean>(false)
+
+  return (
+    <ThemeSidebarUIProvider value={{ isThemeSidebarOpen, setIsThemeSidebarOpen }}>
+      <ThemeSidebarDomainProvider>{children}</ThemeSidebarDomainProvider>
+    </ThemeSidebarUIProvider>
   )
 }
