@@ -1,6 +1,6 @@
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query"
-import type { EdenData, EdenQueryData, EdenQueryRoute, UseEdenQueryOptions } from "./eden/types"
 import { createEdenQueryFn } from "./eden/helper"
+import type { EdenData, EdenQueryData, EdenQueryRoute, UseEdenQueryOptions } from "./eden/types"
 
 export function useEdenQuery<TRoute extends EdenQueryRoute>({
   route,
