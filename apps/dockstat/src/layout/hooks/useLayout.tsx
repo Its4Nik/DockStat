@@ -1,13 +1,13 @@
+import { useHotkey } from "@dockstat/utils/react"
 import { useContext } from "react"
 import { ConfigProviderContext } from "@/contexts/config"
 import { useGlobalBusy } from "@/hooks/useGlobalBusy"
-import { useHotkey } from "@dockstat/utils/react"
-import { useRamUsage } from "./useRamUsage"
-import { useLogs } from "./useLogs"
-import { useThemeManager } from "./useThemeManager"
-import { usePluginRoutes } from "./usePluginRoutes"
-import { usePinMutations } from "./usePinMutations"
 import { useDeleteTheme } from "./useDeleteTheme"
+import { useLogs } from "./useLogs"
+import { usePinMutations } from "./usePinMutations"
+import { usePluginRoutes } from "./usePluginRoutes"
+import { useRamUsage } from "./useRamUsage"
+import { useThemeManager } from "./useThemeManager"
 
 export function useLayout() {
   const ramUsage = useRamUsage()

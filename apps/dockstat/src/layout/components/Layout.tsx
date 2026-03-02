@@ -2,8 +2,8 @@ import { Navbar, ThemeSidebar } from "@dockstat/ui"
 import { useContext } from "react"
 import { Toaster } from "sonner"
 import { PageHeadingContext } from "@/contexts/pageHeadingContext"
-import { useLayout } from "../hooks/useLayout"
 import { toast } from "@/lib/toast"
+import { useLayout } from "../hooks/useLayout"
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const {
