@@ -17,5 +17,3 @@ export const useThemeSidebar = () => {
   }
   return context
 }
-
-export const ThemeSidebarProvider = ThemeSidebarContext.Provider

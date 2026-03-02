@@ -51,11 +51,9 @@ export type SidebarProps = {
   deleteTheme: (themeId: number) => Promise<void>
   themes: ThemeBrowserItem[]
   currentThemeId: number | null
-  currentThemeName: string
   setIsThemeSidebarOpen: (bool: boolean) => void
   onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
   toastSuccess: (themeName: string) => void
-  currentThemeColors: { color: string; colorName: string }[]
   onColorChange: (color: string, colorName: string) => void
 }
 

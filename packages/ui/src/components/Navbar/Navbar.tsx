@@ -156,10 +156,8 @@ export function Navbar({
           pluginLinks={pluginLinks || []}
           themes={themes}
           currentThemeId={currentThemeId}
-          currentThemeName={currentThemeName}
           onSelectTheme={onSelectTheme}
           toastSuccess={toastSuccess}
-          currentThemeColors={currentThemeColors}
           onColorChange={onColorChange}
         />
 

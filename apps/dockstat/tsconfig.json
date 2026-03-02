@@ -11,10 +11,10 @@
     "jsx": "react-jsx",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@WSS": ["./src/lib/websocketEffects/index.ts"]
+      "@WSS": ["./src/lib/websocketEffects/index.ts"],
+      "*": ["./*"]
     }
   },
   "include": ["src"],

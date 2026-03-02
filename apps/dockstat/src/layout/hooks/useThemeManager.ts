@@ -24,7 +24,6 @@ export function useThemeManager() {
     adjustCurrentThemeRef.current = adjustCurrentTheme
   }, [adjustCurrentTheme])
 
-  // Derive theme values locally instead of using themeProps bag
   const currentThemeColors = Object.entries(theme?.vars || {}).map(([key, val]) => ({
     colorName: key,
     color: val,

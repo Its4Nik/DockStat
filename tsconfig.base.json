@@ -19,7 +19,6 @@
     "isolatedModules": true,
 
     /* ---- Project Structure ---- */
-    "baseUrl": ".",
     "outDir": "dist",
 
     /* ---- Emission ---- */
