@@ -9,7 +9,8 @@ import { Card } from "../Card/Card"
 import { Divider } from "../Divider/Divider"
 import { LinkLookup } from "../HotkeyMenus/LinkLookup"
 import { LinkWithIcon } from "../Link/Link"
-import { Sidebar, type SidebarProps, type ThemeProps } from "../Sidebar/Sidebar"
+import { Sidebar, type SidebarProps } from "../Sidebar/Sidebar"
+import type { ThemeBrowserItem } from "../ThemeBrowser/ThemeBrowser"
 import { floatVariants } from "./consts"
 import DockStatLogo from "./DockStat2-06.png"
 
@@ -24,7 +25,12 @@ type NavbarProps = {
   ramUsage?: string
   heading?: string
   mutationFn: SidebarProps["mutationFn"]
-  themeProps?: ThemeProps
+  themes: ThemeBrowserItem[]
+  currentThemeId: number | null
+  onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
+  toastSuccess: (themeName: string) => void
+  onColorChange: (color: string, colorName: string) => void
+  setIsThemeSidebarOpen: (bool: boolean) => void
   openQuickLinksModalHotkey?: string
   sidebarHotkeys: {
     toggle?: string
@@ -41,9 +47,14 @@ export function Navbar({
   heading,
   mutationFn,
   pluginLinks,
-  themeProps,
+  themes,
+  currentThemeId,
+  onSelectTheme,
+  toastSuccess,
+  onColorChange,
   openQuickLinksModalHotkey,
   sidebarHotkeys,
+  setIsThemeSidebarOpen,
   deleteTheme,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -130,6 +141,7 @@ export function Navbar({
         </nav>
 
         <Sidebar
+          setIsThemeSidebarOpen={setIsThemeSidebarOpen}
           deleteTheme={deleteTheme}
           isOpen={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
@@ -138,7 +150,11 @@ export function Navbar({
           mutationFn={mutationFn}
           pins={navLinks || []}
           pluginLinks={pluginLinks || []}
-          themeProps={themeProps}
+          themes={themes}
+          currentThemeId={currentThemeId}
+          onSelectTheme={onSelectTheme}
+          toastSuccess={toastSuccess}
+          onColorChange={onColorChange}
         />
 
         <style>{`

@@ -52,6 +52,7 @@ export default function SettingsPage() {
           Accounts: <div>Accounts Settings</div>,
           Colors: (
             <ThemeEditor
+              multiColumn
               currentTheme={themeName}
               allColors={parsedColors}
               onColorChange={(colorValue, colorName) => {

@@ -40,18 +40,6 @@ type PathItem = {
   children?: PathItem[]
 }
 
-export type ThemeProps = {
-  isOpen: boolean
-  themes: ThemeBrowserItem[]
-  currentThemeId: number | null
-  currentThemeName: string
-  onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
-  toastSuccess: (themeName: string) => void
-  onOpen: () => void
-  currentThemeColors: { color: string; colorName: string }[]
-  onColorChange: (color: string, colorName: string) => void
-}
-
 export type SidebarProps = {
   isOpen: boolean
   onClose: () => void
@@ -61,17 +49,26 @@ export type SidebarProps = {
   pins: { path: string; slug: string }[]
   pluginLinks: { pluginName: string; paths: { fullPath: string; metaTitle: string }[] }[]
   deleteTheme: (themeId: number) => Promise<void>
-  themeProps?: ThemeProps
+  themes: ThemeBrowserItem[]
+  currentThemeId: number | null
+  setIsThemeSidebarOpen: (bool: boolean) => void
+  onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
+  toastSuccess: (themeName: string) => void
+  onColorChange: (color: string, colorName: string) => void
 }
 
 export function Sidebar({
   isOpen,
+  onSelectTheme,
+  setIsThemeSidebarOpen,
   onClose,
   logEntries,
   pins,
   pluginLinks,
   mutationFn,
-  themeProps,
+  themes,
+  currentThemeId,
+  toastSuccess,
   deleteTheme,
 }: SidebarProps) {
   const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
@@ -263,9 +260,7 @@ export function Sidebar({
                   <Button
                     variant="outline"
                     className="flex-1"
-                    onClick={() => {
-                      themeProps?.onOpen()
-                    }}
+                    onClick={() => setIsThemeSidebarOpen(true)}
                   >
                     <Paintbrush size={18} />
                   </Button>
@@ -329,17 +324,13 @@ export function Sidebar({
                 open={themeModalOpen}
                 onClose={() => setThemeModalOpen(false)}
               >
-                {themeProps ? (
-                  <ThemeBrowser
-                    deleteTheme={deleteTheme}
-                    themes={themeProps.themes}
-                    currentThemeId={themeProps.currentThemeId}
-                    onSelectTheme={async (theme) => await themeProps.onSelectTheme(theme)}
-                    toastSuccess={themeProps.toastSuccess}
-                  />
-                ) : (
-                  <p className="text-muted-text">Theme functionality not available</p>
-                )}
+                <ThemeBrowser
+                  deleteTheme={deleteTheme}
+                  themes={themes}
+                  currentThemeId={currentThemeId}
+                  onSelectTheme={async (theme) => await onSelectTheme(theme)}
+                  toastSuccess={toastSuccess}
+                />
               </Modal>
 
               {/* ThemeSidebar is now rendered globally in layout.tsx */}
