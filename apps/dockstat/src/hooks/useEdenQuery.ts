@@ -1,47 +1,32 @@
-import { type UseQueryOptions, useQuery } from "@tanstack/react-query"
-import { createEdenQueryFn } from "./eden/helper"
-import type { EdenData, EdenQueryData, EdenQueryRoute, UseEdenQueryOptions } from "./eden/types"
+import { useQuery } from "@tanstack/react-query";
+import { createEdenQueryFn } from "./eden/helper";
+import type {
+  EdenData,
+  EdenQueryRoute,
+  UseEdenQueryOptions,
+} from "./eden/types";
 
-export function useEdenQuery<TRoute extends EdenQueryRoute>({
-  route,
-  queryKey,
-  enabled,
-  staleTime,
-  refetchInterval,
-  refetchOnWindowFocus,
-}: UseEdenQueryOptions<TRoute>) {
-  type TData = NonNullable<EdenQueryData<TRoute>>
+export function useEdenQuery<TRoute extends EdenQueryRoute>(
+  opts: UseEdenQueryOptions<TRoute>,
+) {
+  type TData = NonNullable<EdenData<TRoute>>;
 
   return useQuery<TData, Error>({
-    queryKey,
-    queryFn: createEdenQueryFn(route),
-    enabled,
-    staleTime,
-    refetchInterval,
-    refetchOnWindowFocus,
-  })
+    ...opts,
+    queryKey: opts.queryKey,
+    queryFn: createEdenQueryFn(opts.route),
+  });
 }
-/* An alias for useEdenQuery
+
+/*
+ * An alias for useEdenQuery
  * use .refetch() for calling it programmatically
  */
 export function edenQuery<TRoute extends EdenQueryRoute>(
   opts: Omit<UseEdenQueryOptions<TRoute>, "enabled">,
-  tanstackOpts?: Omit<
-    UseQueryOptions<
-      NonNullable<EdenData<TRoute>>,
-      Error,
-      NonNullable<EdenData<TRoute>>,
-      readonly unknown[]
-    >,
-    "queryKey" | "queryFn"
-  >
 ) {
-  type TData = NonNullable<EdenData<TRoute>>
-
-  return useQuery<TData, Error>({
-    ...tanstackOpts,
-    queryKey: opts.queryKey,
-    queryFn: createEdenQueryFn(opts.route),
+  return useEdenQuery<TRoute>({
+    ...opts,
     enabled: false,
-  })
+  });
 }
