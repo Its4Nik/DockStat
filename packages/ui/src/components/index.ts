@@ -70,3 +70,5 @@ export {
   type ThemeBrowserItem,
   type ThemeBrowserProps,
 } from "./ThemeBrowser/ThemeBrowser"
+export { ThemeEditor } from "./ThemeEditor/ThemeEditor"
+export { ThemeSidebar } from "./ThemeSidebar/ThemeSidebar"

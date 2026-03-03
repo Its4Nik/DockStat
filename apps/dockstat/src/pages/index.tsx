@@ -1,12 +1,12 @@
 import { Badge, type BadgeVariant, Card, Divider } from "@dockstat/ui"
-import { useEdenQuery } from "@/hooks/useEdenQuery"
+import { eden } from "@dockstat/utils/react"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
 
 export default function IndexPage() {
   usePageHeading("Home")
 
-  const { data, isLoading, error } = useEdenQuery({
+  const { data, isLoading, error } = eden.useEdenQuery({
     queryKey: ["fetchBackendStatus"],
     route: api.status.get,
   })

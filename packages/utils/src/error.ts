@@ -269,11 +269,27 @@ export function isEdenError<T>(response: {
 }
 
 /**
- * Extract error from Eden treaty response
+ * Extracts a readable error message from an Eden response.
  *
- * @param response - Eden treaty response object
- * @param fallback - Fallback error message
- * @returns Error message string
+ * Supports multiple failure formats:
+ * - thrown errors
+ * - Eden `{ error }` responses
+ * - API `{ success: false, error: string }` responses
+ *
+ * @param response Eden response-like object
+ * @param response.status HTTP status (optional)
+ * @param response.error Thrown or returned error
+ * @param response.data Response body
+ * @param fallback Fallback message if no readable error exists
+ *
+ * @returns Human readable error message
+ *
+ * @example
+ * extractEdenError({ error: new Error("Invalid token") })
+ * // => "Invalid token"
+ *
+ * extractEdenError({ data: { success: false, error: "User not found" } })
+ * // => "User not found"
  */
 export function extractEdenError(
   response: { status?: number; error?: unknown; data?: unknown },

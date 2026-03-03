@@ -18,18 +18,31 @@ export type ThemeFromServer = {
  * simply override whatever Tailwind (or other CSS) variables may already exist.
  */
 export const applyThemeToDocument = (
-  theme: ThemeContextData,
+  theme: ThemeContextData | ThemeContextData["vars"],
   onFinish?: (msg: string) => void
 ): void => {
   if (typeof document === "undefined") return
-
   const root = document.documentElement
 
-  for (const [key, value] of Object.entries(theme.vars)) {
-    root.style.setProperty(key.startsWith("--") ? key : `--${key}`, value)
+  if (theme.vars) {
+    for (const [key, value] of Object.entries(theme.vars)) {
+      root.style.setProperty(key.startsWith("--") ? key : `--${key}`, value)
+    }
+
+    if (onFinish) {
+      onFinish(`Applied Theme ${theme.id}`)
+    }
   }
 
-  if (onFinish) {
-    onFinish(`Applied Theme ${theme.id}`)
+  if (Array.isArray(Object.entries(theme))) {
+    for (const [key, value] of Object.entries(theme)) {
+      if (typeof value === "number" || typeof value === "string") {
+        root.style.setProperty(key.startsWith("--") ? key : `--${key}`, String(value))
+      }
+    }
+
+    if (onFinish) {
+      onFinish("Patched current Theme")
+    }
   }
 }

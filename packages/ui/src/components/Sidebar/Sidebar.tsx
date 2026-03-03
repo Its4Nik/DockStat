@@ -4,7 +4,7 @@ import { formatDate } from "@dockstat/utils"
 import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons"
 import type { UseMutateAsyncFunction } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
-import { BookMarkedIcon, Palette, X } from "lucide-react"
+import { BookMarkedIcon, Paintbrush, Palette, Terminal, X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { Badge } from "../Badge/Badge"
 import { Button } from "../Button/Button"
@@ -40,14 +40,6 @@ type PathItem = {
   children?: PathItem[]
 }
 
-export type ThemeProps = {
-  themes: ThemeBrowserItem[]
-  currentThemeId: number | null
-  onSelectTheme: (theme: ThemeBrowserItem) => void
-  toastSuccess: () => void
-  onOpen: () => void
-}
-
 export type SidebarProps = {
   isOpen: boolean
   onClose: () => void
@@ -56,17 +48,28 @@ export type SidebarProps = {
   mutationFn: { pin: PinLinkMutation; unpin: PinLinkMutation; isBusy: boolean }
   pins: { path: string; slug: string }[]
   pluginLinks: { pluginName: string; paths: { fullPath: string; metaTitle: string }[] }[]
-  themeProps?: ThemeProps
+  deleteTheme: (themeId: number) => Promise<void>
+  themes: ThemeBrowserItem[]
+  currentThemeId: number | null
+  setIsThemeSidebarOpen: (bool: boolean) => void
+  onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
+  toastSuccess: (themeName: string) => void
+  onColorChange: (color: string, colorName: string) => void
 }
 
 export function Sidebar({
   isOpen,
+  onSelectTheme,
+  setIsThemeSidebarOpen,
   onClose,
   logEntries,
   pins,
   pluginLinks,
   mutationFn,
-  themeProps,
+  themes,
+  currentThemeId,
+  toastSuccess,
+  deleteTheme,
 }: SidebarProps) {
   const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
   const [themeModalOpen, setThemeModalOpen] = useState<boolean>(false)
@@ -93,6 +96,8 @@ export function Sidebar({
       mutationFn.pin(payload)
     }
   }
+
+  // Theme sidebar state is now managed globally in the context
 
   const pathsWithPinStatus = usePinnedPaths([...SidebarPaths], pins)
 
@@ -234,22 +239,35 @@ export function Sidebar({
                 <Divider variant="dashed" />
 
                 <div className="flex gap-2">
-                  <Button onClick={() => setLogModalOpen(!logModalOpen)} className="flex-1">
-                    View Backend Logs
+                  <Button
+                    variant="outline"
+                    onClick={() => setLogModalOpen(!logModalOpen)}
+                    className="flex-1"
+                  >
+                    <Terminal size={18} />
                   </Button>
+
                   <Button
                     variant="outline"
                     onClick={() => {
                       setThemeModalOpen(true)
-                      themeProps?.onOpen()
                     }}
-                    className="px-3"
+                    className="flex-1"
                   >
                     <Palette size={18} />
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setIsThemeSidebarOpen(true)}
+                  >
+                    <Paintbrush size={18} />
                   </Button>
                 </div>
               </div>
               <Modal
+                transparent
                 size="full"
                 title={`${logEntries.length} Logs available`}
                 open={logModalOpen}
@@ -301,21 +319,21 @@ export function Sidebar({
 
               <Modal
                 size="xl"
+                transparent
                 title="Theme Browser"
                 open={themeModalOpen}
                 onClose={() => setThemeModalOpen(false)}
               >
-                {themeProps ? (
-                  <ThemeBrowser
-                    themes={themeProps.themes}
-                    currentThemeId={themeProps.currentThemeId}
-                    onSelectTheme={themeProps.onSelectTheme}
-                    toastSuccess={themeProps.toastSuccess}
-                  />
-                ) : (
-                  <p className="text-muted-text">Theme functionality not available</p>
-                )}
+                <ThemeBrowser
+                  deleteTheme={deleteTheme}
+                  themes={themes}
+                  currentThemeId={currentThemeId}
+                  onSelectTheme={async (theme) => await onSelectTheme(theme)}
+                  toastSuccess={toastSuccess}
+                />
               </Modal>
+
+              {/* ThemeSidebar is now rendered globally in layout.tsx */}
             </Card>
           </motion.div>
         </>

@@ -5,6 +5,9 @@ export const HotkeyAction = t.Union([
   t.Literal("close:sidebar"),
   t.Literal("toggle:sidebar"),
   t.Literal("open:quicklinks"),
+  t.Literal("toggle:themeEditor"),
+  t.Literal("open:themeEditor"),
+  t.Literal("close:themeEditor"),
 ])
 
 // Hash entry for plugin verification

@@ -1,4 +1,5 @@
 export type EdenRoute = (...args: never[]) => Promise<{ data: unknown; error: unknown }>
+
 export type EdenData<T extends EdenRoute> = Awaited<ReturnType<T>>["data"]
 
 export type EdenQueryRoute = (options?: {
@@ -35,7 +36,7 @@ export type ResponseData<TRoute extends EdenRoute> = NonNullable<EdenData<TRoute
   message: string
 }
 
-// Direct route - no params needed at mutation time
+// Options for when a route is provided directly (no params)
 export type DirectRouteOptions<TRoute extends EdenRoute> = {
   route: TRoute
   routeBuilder?: never
@@ -44,7 +45,7 @@ export type DirectRouteOptions<TRoute extends EdenRoute> = {
   toast?: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
 }
 
-// Route builder - params passed at mutation time
+// Options for when a builder is provided (requires params)
 export type RouteBuilderOptions<TParams, TRoute extends EdenRoute> = {
   route?: never
   routeBuilder: (params: TParams) => TRoute

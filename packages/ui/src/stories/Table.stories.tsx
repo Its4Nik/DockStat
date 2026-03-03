@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { Table } from "../components/Table/Table"
 
-interface User {
+interface User extends Record<string, unknown> {
   id: number
   name: string
   email: string

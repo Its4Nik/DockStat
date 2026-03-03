@@ -156,7 +156,7 @@ export function LinkLookup({
           autoFocus
         />
         <motion.div
-          className="mt-2 text-sm text-gray-400"
+          className="mt-2 text-sm text-secondary-text"
           key={filteredResults.length}
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
@@ -258,14 +258,14 @@ export function LinkLookup({
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
               className="text-center py-12"
             >
-              <div className="text-gray-400 mb-2">No results found</div>
-              <p className="text-sm text-gray-500">Try searching with different keywords</p>
+              <div className="text-primary-text mb-2">No results found</div>
+              <p className="text-sm text-muted-text">Try searching with different keywords</p>
             </motion.div>
           ) : (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-8 text-gray-500"
+              className="text-center py-8 text-primary-text"
             >
               Start typing to search...
             </motion.div>

@@ -29,3 +29,16 @@ export function useEdenQuery<TRoute extends EdenQueryRoute>({
     refetchOnWindowFocus,
   })
 }
+
+/*
+ * An alias for useEdenQuery
+ * use .refetch() for calling it programmatically
+ */
+export function edenQuery<TRoute extends EdenQueryRoute>(
+  opts: Omit<UseEdenQueryOptions<TRoute>, "enabled">
+) {
+  return useEdenQuery<TRoute>({
+    ...opts,
+    enabled: false,
+  })
+}

@@ -1,6 +1,6 @@
 import { Button, Card, CardBody, Input, Toggle } from "@dockstat/ui"
+import { eden } from "@dockstat/utils/react"
 import { useState } from "react"
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
 import { api } from "@/lib/api"
 
 type hostToAdd = {
@@ -20,7 +20,7 @@ export function AddHost({ registeredClients }: { registeredClients: number[] }) 
     port: 2375,
   })
 
-  const addHostMutation = useEdenMutation({
+  const addHostMutation = eden.useEdenMutation({
     mutationKey: ["addHost"],
     route: api.docker.hosts.add.post,
     invalidateQueries: [["fetchHosts"]],
