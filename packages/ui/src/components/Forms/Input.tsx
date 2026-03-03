@@ -4,7 +4,7 @@ export type InputSize = "sm" | "md" | "lg"
 export type InputVariant = "default" | "filled" | "underline"
 
 export interface InputProps {
-  type?: "text" | "email" | "password" | "number" | "tel" | "url"
+  type?: "text" | "email" | "password" | "number" | "tel" | "url" | "color"
   size?: InputSize
   variant?: InputVariant
   disabled?: boolean
@@ -15,6 +15,7 @@ export interface InputProps {
   error?: boolean
   success?: boolean
   autoFocus?: boolean
+  required?: boolean
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -29,6 +30,7 @@ export const Input: React.FC<InputProps> = ({
   error = false,
   autoFocus = false,
   success = false,
+  required = false,
 }) => {
   const baseClasses = "w-full transition-colors focus:outline-none"
 
@@ -52,6 +54,7 @@ export const Input: React.FC<InputProps> = ({
   return (
     <input
       type={type}
+      required={required}
       className={[
         baseClasses,
         sizeClasses[size],

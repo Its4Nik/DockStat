@@ -4,8 +4,9 @@
     "noEmit": true,
     "outDir": "./dist",
     "rootDirs": ["./"],
+    "moduleResolution": "bundler",
     "composite": true
   },
-  "include": ["index.ts", "query-builder/**/*.ts", "utils/**/*.ts", "types.ts"],
+  "include": ["src/index.ts", "src", "types.ts"],
   "exclude": ["node_modules", "dist"]
 }

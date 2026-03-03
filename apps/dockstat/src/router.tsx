@@ -5,12 +5,18 @@ import ConfigureClientsPage from "./pages/clients/configure"
 import ClientsPage from "./pages/clients/index"
 import ExtensionsIndex from "./pages/extensions"
 import PluginBrowser from "./pages/extensions/plugins"
+import DockNodePage from "./pages/node"
+import NodeStacksPage from "./pages/node/stacks"
 import PluginIdPage from "./pages/pluginId"
+import SettingsPage from "./pages/settings"
 
 export default function DockStatRouter() {
   return (
     <Routes>
       <Route path="/" index element={<IndexPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
+      <Route path="/node" element={<DockNodePage />} />
+      <Route path="/node/stacks" element={<NodeStacksPage />} />
       <Route path="/clients" element={<ClientsPage />} />
       <Route path="/clients/configure" element={<ConfigureClientsPage />} />
       <Route path="/p/:pluginId/*" element={<PluginIdPage />} />

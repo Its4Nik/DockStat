@@ -1,6 +1,6 @@
 {
   "name": "@dockstat/repo-cli",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A CLI helper for administering DockStat Repositories",
   "module": "src/index.ts",
   "type": "module",

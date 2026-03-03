@@ -4,7 +4,7 @@ import type { UseSlideReturn } from "./useSlideState"
 
 interface SlidesHeaderProps {
   header?: string
-  description?: string
+  description?: string | React.ReactNode
   buttonPosition: "left" | "center" | "right"
   connected: boolean
   state: UseSlideReturn

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test"
-import { column, DB } from "../index"
+import { column, DB } from "../src/index"
 
 /**
  * Comprehensive tests for DeleteQueryBuilder operations

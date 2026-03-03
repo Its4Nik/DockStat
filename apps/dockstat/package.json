@@ -12,10 +12,12 @@
   "dependencies": {
     "@dockstat/docker-client": "workspace:*",
     "@dockstat/template-renderer": "workspace:*",
+    "@dockstat/theme-handler": "workspace:*",
     "@dockstat/typings": "workspace:*",
     "@dockstat/ui": "workspace:*",
     "@dockstat/utils": "workspace:*",
-    "@elysiajs/eden": "^1.4.6",
+    "@elysiajs/eden": "catalog:",
+    "@sglara/cn": "^1.0.0",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.90.12",
     "framer-motion": "^12.24.0",

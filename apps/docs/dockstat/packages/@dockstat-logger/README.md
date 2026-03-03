@@ -499,14 +499,14 @@ const handler = new PluginHandler(db, baseLog)
 ## Comparison with Other Loggers
 
 | Feature | @dockstat/logger | winston | pino | bunyan |
-|----|----|----|----|----|
-| Bun-Native | ✅ | ❌ | ❌ | ❌ |
-| Request Tracking | ✅ | Manual | Manual | Manual |
-| Hierarchical Spawning | ✅ | ❌ | ❌ | ✅ |
-| Zero Config | ✅ | ❌ | ❌ | ❌ |
-| Source Maps | ✅ | ❌ | ❌ | ❌ |
-| Color Coding | ✅ | Manual | Manual | ❌ |
-| File Size | <5KB | \~500KB | \~50KB | \~100KB |
+|---------|------------------|---------|------|--------|
+| Bun-Native | ✅                | ❌       | ❌    | ❌      |
+| Request Tracking | ✅                | Manual  | Manual | Manual |
+| Hierarchical Spawning | ✅                | ❌       | ❌    | ✅      |
+| Zero Config | ✅                | ❌       | ❌    | ❌      |
+| Source Maps | ✅                | ❌       | ❌    | ❌      |
+| Color Coding | ✅                | Manual  | Manual | ❌      |
+| File Size | <5KB             | \~500KB | \~50KB | \~100KB |
 
 ## License
 

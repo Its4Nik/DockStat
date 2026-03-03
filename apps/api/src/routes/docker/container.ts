@@ -8,7 +8,7 @@ export const DockerContainerElysia = new Elysia({
   },
 })
   .get("/all-containers", async ({ status }) => {
-    const CC = await DCM.getContainerCount()
+    const CC = await DCM.getAllContainerStats()
     return status(200, CC)
   })
   .get("/all/:clientId", async ({ params: { clientId } }) => await DCM.getAllContainers(clientId), {

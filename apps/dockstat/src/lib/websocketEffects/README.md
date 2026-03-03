@@ -22,7 +22,7 @@ export const rssFeedEffect = (
   setRamUsage: React.Dispatch<React.SetStateAction<string>>
 ) => {
   // 1. open the socket
-  const rssFeed = api.misc.stats.rss.subscribe();
+  const rssFeed = api.api.v2.misc.stats.rss.subscribe();
 
   // 2. push every incoming message into React state
   rssFeed.subscribe((message) => setRamUsage(message.data));

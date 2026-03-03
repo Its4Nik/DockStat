@@ -4,7 +4,7 @@ import { formatDate } from "@dockstat/utils"
 import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons"
 import type { UseMutateAsyncFunction } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
-import { BookMarkedIcon, X } from "lucide-react"
+import { BookMarkedIcon, Paintbrush, Palette, Terminal, X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { Badge } from "../Badge/Badge"
 import { Button } from "../Button/Button"
@@ -17,6 +17,7 @@ import { SidebarPaths } from "../Navbar/consts"
 import DockStatLogo from "../Navbar/DockStat2-06.png"
 import { usePinnedPaths } from "../Navbar/usePinnedPaths"
 import { Table } from "../Table/Table"
+import { ThemeBrowser, type ThemeBrowserItem } from "../ThemeBrowser/ThemeBrowser"
 import { SidebarAnimatedItem, SidebarAnimatedNav } from "./SidebarAnimatedNav"
 import { SidebarItem } from "./SidebarItem"
 
@@ -47,17 +48,31 @@ export type SidebarProps = {
   mutationFn: { pin: PinLinkMutation; unpin: PinLinkMutation; isBusy: boolean }
   pins: { path: string; slug: string }[]
   pluginLinks: { pluginName: string; paths: { fullPath: string; metaTitle: string }[] }[]
+  deleteTheme: (themeId: number) => Promise<void>
+  themes: ThemeBrowserItem[]
+  currentThemeId: number | null
+  setIsThemeSidebarOpen: (bool: boolean) => void
+  onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
+  toastSuccess: (themeName: string) => void
+  onColorChange: (color: string, colorName: string) => void
 }
 
 export function Sidebar({
   isOpen,
+  onSelectTheme,
+  setIsThemeSidebarOpen,
   onClose,
   logEntries,
   pins,
   pluginLinks,
   mutationFn,
+  themes,
+  currentThemeId,
+  toastSuccess,
+  deleteTheme,
 }: SidebarProps) {
   const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
+  const [themeModalOpen, setThemeModalOpen] = useState<boolean>(false)
   const [showPluginRoutes, setShowPluginRoutes] = useState<boolean>(false)
 
   const pinnedPaths = useMemo(() => new Set(pins.map((p) => p.path)), [pins])
@@ -81,6 +96,8 @@ export function Sidebar({
       mutationFn.pin(payload)
     }
   }
+
+  // Theme sidebar state is now managed globally in the context
 
   const pathsWithPinStatus = usePinnedPaths([...SidebarPaths], pins)
 
@@ -122,6 +139,7 @@ export function Sidebar({
                     className="flex-1 relative"
                     size="xs"
                     variant={!showPluginRoutes ? "outline" : "primary"}
+                    disabled={!showPluginRoutes}
                     onClick={() => setShowPluginRoutes(false)}
                   >
                     Main routes
@@ -133,6 +151,7 @@ export function Sidebar({
                       size="xs"
                       variant={showPluginRoutes ? "outline" : "primary"}
                       onClick={() => setShowPluginRoutes(true)}
+                      disabled={showPluginRoutes}
                     >
                       Plugin routes
                     </Button>
@@ -176,7 +195,7 @@ export function Sidebar({
                           <SidebarItem
                             item={p}
                             handleTogglePin={handleTogglePin}
-                            isLoading={mutationFn.pin.isPending || mutationFn.unpin.isPending}
+                            isLoading={mutationFn.isBusy}
                           />
                         </SidebarAnimatedItem>
                       ))}
@@ -218,57 +237,103 @@ export function Sidebar({
                 </div>
 
                 <Divider variant="dashed" />
-                <Button onClick={() => setLogModalOpen(!logModalOpen)}>View Backend Logs</Button>
-                <Modal
-                  size="full"
-                  title={`${logEntries.length} Logs available`}
-                  open={logModalOpen}
-                  onClose={() => setLogModalOpen(false)}
-                >
-                  <Table
-                    striped
-                    hoverable
-                    searchable
-                    columns={[
-                      {
-                        key: "name",
-                        title: "Logger Name",
-                        align: "center",
-                        render: (loggerName) =>
-                          loggerName && <Badge rounded>{String(loggerName)}</Badge>,
-                      },
-                      {
-                        key: "level",
-                        align: "center",
-                        title: "Level",
-                        render: (level) =>
-                          level && (
-                            <span
-                              className={`${level === "info" ? "text-accent" : level === "debug" ? "text-muted-text" : level === "error" ? "text-error" : "text-orange-400"}`}
-                            >
-                              {String(level)}
-                            </span>
-                          ),
-                      },
-                      { key: "message", title: "Log Message" },
-                      {
-                        key: "requestId",
-                        title: "RequestID",
-                        align: "center",
-                        render: (reqId) => reqId && <Badge unique>{String(reqId)}</Badge>,
-                      },
-                      { key: "caller", title: "Caller", align: "center" },
-                      { key: "parents", title: "Parents" },
-                      {
-                        key: "timestamp",
-                        title: "Timestamp",
-                        render: (date) => <span>{formatDate(date as Date, "log")}</span>,
-                      },
-                    ]}
-                    data={logEntries}
-                  />
-                </Modal>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setLogModalOpen(!logModalOpen)}
+                    className="flex-1"
+                  >
+                    <Terminal size={18} />
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setThemeModalOpen(true)
+                    }}
+                    className="flex-1"
+                  >
+                    <Palette size={18} />
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setIsThemeSidebarOpen(true)}
+                  >
+                    <Paintbrush size={18} />
+                  </Button>
+                </div>
               </div>
+              <Modal
+                transparent
+                size="full"
+                title={`${logEntries.length} Logs available`}
+                open={logModalOpen}
+                onClose={() => setLogModalOpen(false)}
+              >
+                <Table
+                  striped
+                  hoverable
+                  searchable
+                  columns={[
+                    {
+                      key: "name",
+                      title: "Logger Name",
+                      align: "center",
+                      render: (loggerName) =>
+                        loggerName && <Badge rounded>{String(loggerName)}</Badge>,
+                    },
+                    {
+                      key: "level",
+                      align: "center",
+                      title: "Level",
+                      render: (level) =>
+                        level && (
+                          <span
+                            className={`${level === "info" ? "text-accent" : level === "debug" ? "text-muted-text" : level === "error" ? "text-error" : "text-orange-400"}`}
+                          >
+                            {String(level)}
+                          </span>
+                        ),
+                    },
+                    { key: "message", title: "Log Message" },
+                    {
+                      key: "requestId",
+                      title: "RequestID",
+                      align: "center",
+                      render: (reqId) => reqId && <Badge unique>{String(reqId)}</Badge>,
+                    },
+                    { key: "caller", title: "Caller", align: "center" },
+                    { key: "parents", title: "Parents" },
+                    {
+                      key: "timestamp",
+                      title: "Timestamp",
+                      render: (date) => <span>{formatDate(date as Date, "log")}</span>,
+                    },
+                  ]}
+                  data={logEntries}
+                />
+              </Modal>
+
+              <Modal
+                size="xl"
+                transparent
+                title="Theme Browser"
+                open={themeModalOpen}
+                onClose={() => setThemeModalOpen(false)}
+              >
+                <ThemeBrowser
+                  deleteTheme={deleteTheme}
+                  themes={themes}
+                  currentThemeId={currentThemeId}
+                  onSelectTheme={async (theme) => await onSelectTheme(theme)}
+                  toastSuccess={toastSuccess}
+                />
+              </Modal>
+
+              {/* ThemeSidebar is now rendered globally in layout.tsx */}
             </Card>
           </motion.div>
         </>

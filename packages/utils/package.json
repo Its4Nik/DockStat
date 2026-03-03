@@ -1,6 +1,10 @@
 {
   "name": "@dockstat/utils",
   "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react/index.ts"
+  },
   "type": "module",
   "private": false,
   "version": "1.0.1",
@@ -8,6 +12,10 @@
   "scripts": {
     "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.12"
+  },
+
   "devDependencies": {
     "@types/bun": "latest",
     "@dockstat/logger": "workspace:*",

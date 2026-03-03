@@ -1,12 +1,19 @@
 import type { RepoType } from "@dockstat/typings/types"
 import { Badge, Button, Card, CardHeader, Divider, LinkWithIcon, RepoIcons } from "@dockstat/ui"
 import { repo } from "@dockstat/utils"
+import { eden } from "@dockstat/utils/react"
 import { ExternalLink, ShieldAlert, ShieldCheck, ShieldX, Trash2 } from "lucide-react"
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
 import { api } from "@/lib/api"
 
-export function RepoCard({ id, name, policy, source, type, verification_api }: RepoType) {
-  const deleteRepoMutation = useEdenMutation({
+export function RepoCard({
+  id,
+  name,
+  policy,
+  source,
+  type,
+  verification_api,
+}: Omit<RepoType, "paths">) {
+  const deleteRepoMutation = eden.useEdenMutation({
     route: api.db.repositories({ id: id }).delete,
     mutationKey: ["deleteRepo"],
     invalidateQueries: [["fetchAllRepositories"]],

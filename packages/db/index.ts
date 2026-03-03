@@ -45,12 +45,12 @@ class DockStatDB {
           allow_untrusted_repo: column.boolean({ default: false }),
           default_themes: column.json({ notNull: true }),
           tables: column.json({ notNull: true }),
-          tls_certs_and_keys: column.json({ notNull: true }),
+          keys: column.json({ notNull: true }),
           version: column.text({ notNull: true }),
           hotkeys: column.json(),
           nav_links: column.json(),
           autostart_handlers_monitoring: column.boolean({ default: true }),
-          addtionalSettings: column.json(),
+          additionalSettings: column.json(),
         },
         {
           constraints: {
@@ -61,10 +61,10 @@ class DockStatDB {
             JSON: [
               "default_themes",
               "tables",
-              "tls_certs_and_keys",
+              "keys",
               "hotkeys",
               "nav_links",
-              "addtionalSettings",
+              "additionalSettings",
             ],
             BOOLEAN: ["allow_untrusted_repo", "autostart_handlers_monitoring"],
           },

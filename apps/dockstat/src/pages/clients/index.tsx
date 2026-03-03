@@ -1,27 +1,27 @@
-import { Card, Divider } from "@dockstat/ui"
-import { Hammer, Split } from "lucide-react"
+import { Badge, Card, Divider } from "@dockstat/ui"
+import { eden } from "@dockstat/utils/react"
+import { Hammer, Server, Split } from "lucide-react"
 import { ClientCard } from "@/components/clients/ClientCard"
 import { HostsList } from "@/components/clients/HostsList"
 import { PoolStatsCard } from "@/components/clients/PoolStatsCard"
 import { WorkersTable } from "@/components/clients/WorkersTable"
-import { useEdenQuery } from "@/hooks/useEdenQuery"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
 
 export default function ClientsPage() {
   usePageHeading("Clients & Workers")
 
-  const { data: clientsData, isLoading: clientsIsLoading } = useEdenQuery({
+  const { data: clientsData, isLoading: clientsIsLoading } = eden.useEdenQuery({
     route: api.docker.client.all({ stored: "true" }).get,
     queryKey: ["fetchDockerClients"],
   })
 
-  const { data: poolStatus, isLoading: poolLoading } = useEdenQuery({
+  const { data: poolStatus, isLoading: poolLoading } = eden.useEdenQuery({
     route: api.docker.manager["pool-stats"].get,
     queryKey: ["fetchPoolStatus"],
   })
 
-  const { data: hosts, isLoading: hostsLoading } = useEdenQuery({
+  const { data: hosts, isLoading: hostsLoading } = eden.useEdenQuery({
     route: api.docker.hosts.get,
     queryKey: ["fetchHosts"],
   })
@@ -95,7 +95,19 @@ export default function ClientsPage() {
       <Divider variant="dotted" />
 
       {/* Hosts Section */}
-      <div className="">
+      <div>
+        <Card size="sm" variant="flat" className="flex justify-between justify-centergap-2 mb-4">
+          <div className="flex items-center gap-2">
+            <Server size={24} className="text-accent" />
+            <h2 className="text-2xl font-semibold text-muted-text">Docker Hosts</h2>
+          </div>
+          {hosts && (
+            <Badge variant="primary" size="sm">
+              {hosts.length} {hosts.length === 1 ? "Host" : "Hosts"}
+            </Badge>
+          )}
+        </Card>
+
         {hostsLoading ? (
           <div className="text-center py-12 text-muted-text">Loading hosts...</div>
         ) : (

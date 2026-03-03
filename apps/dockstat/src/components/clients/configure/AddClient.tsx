@@ -1,7 +1,7 @@
 import type { DockerAdapterOptionsSchema, MonitoringOptions } from "@dockstat/typings"
 import { Button, Card, CardBody, Divider, Input, Slider, Toggle } from "@dockstat/ui"
+import { eden } from "@dockstat/utils/react"
 import { useState } from "react"
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
 import { api } from "@/lib/api"
 
 export function AddClient() {
@@ -31,7 +31,7 @@ export function AddClient() {
     },
   })
 
-  const registerClientMutation = useEdenMutation({
+  const registerClientMutation = eden.useEdenMutation({
     mutationKey: ["createNewClient"],
     route: api.docker.client.register.post,
     invalidateQueries: [["fetchDockerClients"], ["fetchPoolStatus"]],
@@ -185,7 +185,10 @@ export function AddClient() {
                           onChange={(c) =>
                             setOptions((p) => ({
                               ...p,
-                              monitoringOptions: { ...p.monitoringOptions, [key]: c },
+                              monitoringOptions: {
+                                ...p.monitoringOptions,
+                                [key]: c,
+                              },
                             }))
                           }
                         />

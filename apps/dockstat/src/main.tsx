@@ -1,7 +1,7 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { BrowserRouter } from "react-router"
-import Layout from "./layout"
+import { Layout } from "./layout"
 import DockStatProviders from "./providers"
 import DockStatRouter from "./router"
 

@@ -115,7 +115,7 @@ const db = new DockStatDB();
 // Share database instance with Docker client
 
 const dockerClient = new DockerClient(db.getDB(), {
-  enableMonitoring: true,
+  enableMonitoring: true
 });
 
 // Share database instance with plugin handler
@@ -147,10 +147,10 @@ const containerLogger = dockerLogger.spawn("Container");
 
 function handleRequest(req: Request) {
   const reqId = req.headers.get("x-request-id") || crypto.randomUUID();
-
+  
   apiLogger.info("Request received", reqId);
   routeLogger.debug("Processing route", reqId);
-
+  
   return processRequest(req, reqId);
 }
 ```
@@ -171,7 +171,7 @@ const host: DOCKER.HostConfig = {
   host: "192.168.1.100",
   port: 2375,
   secure: false,
-  name: "Production Host",
+  name: "Production Host"
 };
 
 // Runtime validation
@@ -189,7 +189,7 @@ const plugin: PLUGIN.Plugin = {
   version: "1.0.0",
   config: {
     // Type-checked configuration
-  },
+  }
 };
 ```
 
@@ -234,12 +234,12 @@ export const api = treaty<TreatyType>("http://localhost:9876");
 // Usage in React components
 
 async function fetchContainers(clientId: number) {
-  const { data, error } = await api.docker.containers.all[clientId].get();
-
+  const { data, error } = await api.api.v2.docker.containers.all[clientId].get();
+  
   if (error) {
     throw new Error(error.message);
   }
-
+  
   return data;
 }
 ```
@@ -259,9 +259,9 @@ async function registerClient(name: string) {
   const response = await fetch(`${DOCKSTAT_API}/docker/client/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ clientName: name }),
+    body: JSON.stringify({ clientName: name })
   });
-
+  
   const result = await response.json();
   return result.clientId;
 }
@@ -272,18 +272,16 @@ async function addHost(clientId: number, config: HostConfig) {
   const response = await fetch(`${DOCKSTAT_API}/docker/hosts/add`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ clientId, ...config }),
+    body: JSON.stringify({ clientId, ...config })
   });
-
+  
   return response.json();
 }
 
 // Get container stats
 
 async function getContainerStats(clientId: number) {
-  const response = await fetch(
-    `${DOCKSTAT_API}/docker/containers/all/${clientId}`,
-  );
+  const response = await fetch(`${DOCKSTAT_API}/docker/containers/all/${clientId}`);
   return response.json();
 }
 ```
@@ -330,7 +328,7 @@ graph TB
 import DockerClient from "@dockstat/docker-client";
 
 const client = new DockerClient(db.getDB(), {
-  enableMonitoring: true,
+  enableMonitoring: true
 });
 
 // Register local client using Unix socket
@@ -345,7 +343,7 @@ await client.addHost({
   host: "/var/run/docker.sock",
   name: "Local Docker",
   secure: false,
-  port: 0, // Not used for socket connections
+  port: 0 // Not used for socket connections
 });
 ```
 
@@ -360,7 +358,7 @@ await client.addHost({
   host: "192.168.1.100",
   port: 2375,
   name: "Remote Docker",
-  secure: false,
+  secure: false
 });
 ```
 
@@ -393,7 +391,7 @@ sequenceDiagram
 
     Client->>Docker: "Subscribe to events"
     Docker-->>Stream: "Event stream"
-
+    
     loop "Container Events"
         Docker->>Stream: "Container event"
         Stream->>WS: "Broadcast event"
@@ -464,7 +462,7 @@ const handler = new PluginHandler(db.getDB());
 // Install from GitHub manifest URL
 
 await handler.installFromManifestLink(
-  "https://raw.githubusercontent.com/user/plugin/main/manifest.yml",
+  "https://raw.githubusercontent.com/user/plugin/main/manifest.yml"
 );
 
 // Or install directly
@@ -477,7 +475,7 @@ const result = await handler.savePlugin({
   author: { name: "Developer", email: "dev@example.com" },
   tags: ["monitoring"],
   repoType: "github",
-  plugin: pluginCode,
+  plugin: pluginCode
 });
 ```
 
@@ -496,22 +494,22 @@ const plugin = {
         id: column.id(),
         metric_name: column.text({ notNull: true }),
         value: column.real(),
-        timestamp: column.createdAt(),
-      },
+        timestamp: column.createdAt()
+      }
     },
     apiRoutes: {
       "/metrics": {
         method: "GET",
-        actions: ["getMetrics"],
+        actions: ["getMetrics"]
       },
       "/metrics/:name": {
         method: "GET",
-        actions: ["getMetricByName"],
+        actions: ["getMetricByName"]
       },
       "/metrics": {
         method: "POST",
-        actions: ["validateMetric", "saveMetric"],
-      },
+        actions: ["validateMetric", "saveMetric"]
+      }
     },
     actions: {
       getMetrics: ({ table }) => {
@@ -530,11 +528,11 @@ const plugin = {
         const { data } = previousResult;
         return table.insert({
           metric_name: data.name,
-          value: data.value,
+          value: data.value
         });
-      },
-    },
-  },
+      }
+    }
+  }
 };
 ```
 
@@ -553,33 +551,33 @@ const eventPlugin = {
         id: column.id(),
         container_id: column.text(),
         event_type: column.text(),
-        timestamp: column.createdAt(),
-      },
-    },
+        timestamp: column.createdAt()
+      }
+    }
   },
   events: {
     onContainerStart: async ({ container, logger, table }) => {
       logger.info(`Container started: ${container.id}`);
       await table.insert({
         container_id: container.id,
-        event_type: "start",
+        event_type: "start"
       });
     },
     onContainerStop: async ({ container, logger, table }) => {
       logger.info(`Container stopped: ${container.id}`);
       await table.insert({
         container_id: container.id,
-        event_type: "stop",
+        event_type: "stop"
       });
     },
     onContainerRestart: async ({ container, logger, table }) => {
       logger.info(`Container restarted: ${container.id}`);
       await table.insert({
         container_id: container.id,
-        event_type: "restart",
+        event_type: "restart"
       });
-    },
-  },
+    }
+  }
 };
 ```
 
@@ -629,16 +627,16 @@ async function deployStack(nodeUrl: string, stack: StackConfig) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${AUTH_TOKEN}`,
+      "Authorization": `Bearer ${AUTH_TOKEN}`
     },
     body: JSON.stringify({
       id: stack.id,
       name: stack.name,
       data: stack.composeFile,
-      vars: stack.variables,
-    }),
+      vars: stack.variables
+    })
   });
-
+  
   return response.json();
 }
 
@@ -648,11 +646,11 @@ async function deleteStack(nodeUrl: string, stackId: number, name: string) {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${AUTH_TOKEN}`,
+      "Authorization": `Bearer ${AUTH_TOKEN}`
     },
-    body: JSON.stringify({ id: stackId, name }),
+    body: JSON.stringify({ id: stackId, name })
   });
-
+  
   return response.json();
 }
 ```
@@ -665,12 +663,12 @@ async function deleteStack(nodeUrl: string, stackId: number, name: string) {
 const authConfig = {
   // Production: Pre-shared key
   psk: process.env.DOCKNODE_DOCKSTACK_AUTH_PSK,
-
+  
   // Development: Dev auth key
   devAuth: process.env.DOCKNODE_DOCKSTACK_DEV_AUTH,
-
+  
   // Priority: 'psk' | 'dev' | 'none'
-  priority: process.env.DOCKNODE_DOCKSTACK_AUTH_PRIORITY || "psk",
+  priority: process.env.DOCKNODE_DOCKSTACK_AUTH_PRIORITY || 'psk'
 };
 ```
 
@@ -706,14 +704,14 @@ sequenceDiagram
 
 async function installFromDockStore(pluginName: string) {
   const manifestUrl = `https://raw.githubusercontent.com/Its4Nik/DockStat/main/apps/dockstore/src/content/plugins/${pluginName}/manifest.yml`;
-
+  
   const result = await pluginHandler.installFromManifestLink(manifestUrl);
-
+  
   if (result.success) {
     // Activate the plugin
     await pluginHandler.loadPlugins([result.id]);
   }
-
+  
   return result;
 }
 ```
@@ -751,11 +749,11 @@ graph LR
 # prometheus.yml
 
 scrape_configs:
-  - job_name: "dockstat"
+  - job_name: 'dockstat'
     scrape_interval: 15s
     static_configs:
-      - targets: ["localhost:9876"]
-    metrics_path: "/api/v2/metrics"
+      - targets: ['localhost:9876']
+    metrics_path: '/api/v2/metrics'
 ```
 
 ### Available Metrics
@@ -794,15 +792,18 @@ const webhookPlugin = {
         id: column.id(),
         url: column.text({ notNull: true }),
         events: column.json(),
-        active: column.boolean(),
+        active: column.boolean()
       },
-      jsonColumns: ["events"],
-    },
+      jsonColumns: ["events"]
+    }
   },
   events: {
     onContainerStart: async ({ container, table }) => {
-      const webhooks = await table.select(["*"]).where({ active: true }).all();
-
+      const webhooks = await table
+        .select(["*"])
+        .where({ active: true })
+        .all();
+      
       for (const webhook of webhooks) {
         if (webhook.events.includes("container.start")) {
           await fetch(webhook.url, {
@@ -813,15 +814,15 @@ const webhookPlugin = {
               container: {
                 id: container.id,
                 name: container.Names[0],
-                image: container.Image,
+                image: container.Image
               },
-              timestamp: new Date().toISOString(),
-            }),
+              timestamp: new Date().toISOString()
+            })
           });
         }
       }
-    },
-  },
+    }
+  }
 };
 ```
 
@@ -831,7 +832,7 @@ const webhookPlugin = {
 // Elysia route for incoming webhooks
 app.post("/api/v2/webhooks/:source", async ({ params, body }) => {
   const { source } = params;
-
+  
   switch (source) {
     case "github":
       return handleGitHubWebhook(body);
@@ -890,7 +891,7 @@ const theme = db.getCurrentTheme();
 // Apply theme variables to CSS
 function applyTheme(theme: THEME.THEME_config) {
   const root = document.documentElement;
-
+  
   // Apply background
   const bg = theme.vars.background_effect;
   if ("Gradient" in bg) {
@@ -898,7 +899,7 @@ function applyTheme(theme: THEME.THEME_config) {
     root.style.setProperty("--bg-to", bg.Gradient.to);
     root.style.setProperty("--bg-direction", bg.Gradient.direction);
   }
-
+  
   // Apply component styles
   const card = theme.vars.components.Card;
   root.style.setProperty("--card-accent", card.accent);
@@ -943,9 +944,9 @@ describe("Integration Tests", () => {
       version: "1.0.0",
       // ... plugin config
     });
-
+    
     expect(result.success).toBe(true);
-
+    
     const loaded = await pluginHandler.loadPlugins([result.id]);
     expect(loaded.successes).toContain(result.id);
   });
@@ -963,7 +964,7 @@ const log = new Logger("Integration");
 
 async function safeApiCall<T>(
   operation: () => Promise<T>,
-  context: string,
+  context: string
 ): Promise<T | null> {
   try {
     return await operation();
@@ -976,7 +977,7 @@ async function safeApiCall<T>(
 // Usage
 const containers = await safeApiCall(
   () => dockerClient.getAllContainers(clientId),
-  "Fetching containers",
+  "Fetching containers"
 );
 ```
 
@@ -986,16 +987,16 @@ const containers = await safeApiCall(
 // Proper cleanup on shutdown
 process.on("SIGTERM", async () => {
   log.info("Shutting down gracefully...");
-
+  
   // Stop monitoring
   await dockerClient.stopAllMonitoring();
-
+  
   // Unload plugins
   await pluginHandler.unloadAllPlugins();
-
+  
   // Close database
   db.close();
-
+  
   process.exit(0);
 });
 ```
@@ -1019,7 +1020,7 @@ class ServiceContainer {
   static getDockerClient(): DockerClient {
     if (!this.dockerClient) {
       this.dockerClient = new DockerClient(this.getDB().getDB(), {
-        enableMonitoring: true,
+        enableMonitoring: true
       });
     }
     return this.dockerClient;
@@ -1036,10 +1037,10 @@ class ServiceContainer {
 
 ## Related Documentation
 
-| Section                                                      | Description                               |
-| ------------------------------------------------------------ | ----------------------------------------- |
-| [Architecture](/doc/d56ca448-563a-4206-9585-c45f8f6be5cf)    | System design and component relationships |
-| [API Reference](/doc/b174143d-f906-4f8d-8cb5-9fc96512e575)   | Complete API endpoint documentation       |
-| [Configuration](/doc/dec1cb2c-9a13-4e67-a31c-d3a685391208)   | Configuration options and settings        |
-| [Packages](./packages/)                                      | Individual package documentation          |
-| [Troubleshooting](/doc/88a5f959-3f89-4266-9d8e-eb50193425b0) | Common issues and solutions               |
+| Section | Description |
+|---------|-------------|
+| [Architecture](/doc/d56ca448-563a-4206-9585-c45f8f6be5cf) | System design and component relationships |
+| [API Reference](/doc/b174143d-f906-4f8d-8cb5-9fc96512e575) | Complete API endpoint documentation |
+| [Configuration](/doc/dec1cb2c-9a13-4e67-a31c-d3a685391208) | Configuration options and settings |
+| [Packages](./packages/) | Individual package documentation |
+| [Troubleshooting](/doc/88a5f959-3f89-4266-9d8e-eb50193425b0) | Common issues and solutions |

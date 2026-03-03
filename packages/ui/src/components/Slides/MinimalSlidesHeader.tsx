@@ -3,7 +3,7 @@ import type { UseSlideReturn } from "./useSlideState"
 
 interface MinimalSlidesHeaderProps {
   header?: string
-  description?: string
+  description?: string | React.ReactNode
   connected: boolean
   state: UseSlideReturn
 }

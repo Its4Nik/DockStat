@@ -1,5 +1,5 @@
 import type { RepoManifestType, RepoType } from "@dockstat/typings/types"
-import { parseFromDBToRepoLink } from "@dockstat/utils/src/repo"
+import { repo } from "@dockstat/utils"
 import Elysia from "elysia"
 import { DockStatDB } from "../../database"
 
@@ -20,8 +20,8 @@ const RepositoryRoutes = new Elysia({
       }
     > = {}
 
-    for (const repo of allRepos) {
-      const link = parseFromDBToRepoLink(repo.type, repo.source)
+    for (const repoElement of allRepos) {
+      const link = repo.parseFromDBToRepoLink(repoElement.type, repoElement.source)
 
       try {
         const response = await fetch(link)
@@ -53,10 +53,10 @@ const RepositoryRoutes = new Elysia({
           }
         }
 
-        result[repo.name] = {
+        result[repoElement.name] = {
           data: data as RepoManifestType,
-          type: repo.type,
-          repoSource: repo.source,
+          type: repoElement.type,
+          repoSource: repoElement.source,
         }
       } catch (error) {
         console.error(`Error processing ${link}:`, error)

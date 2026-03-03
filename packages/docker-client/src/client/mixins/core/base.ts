@@ -30,7 +30,7 @@ export class DockerClientBase {
     id: number,
     name: string,
     DB: DB,
-    options: DOCKER.DockerAdapterOptions = {},
+    options: DOCKER.DockerAdapterOptions,
     logger: Logger
   ) {
     // Validate required parameters
