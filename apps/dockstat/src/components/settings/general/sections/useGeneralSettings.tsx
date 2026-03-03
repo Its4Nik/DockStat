@@ -1,9 +1,8 @@
 import type { DockStatConfigTableType } from "@dockstat/typings/types"
 import { type PathItem, SidebarPaths } from "@dockstat/ui"
+import { eden } from "@dockstat/utils/react"
 import { useContext, useMemo } from "react"
 import { ConfigProviderContext } from "@/contexts/config"
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
-import { useEdenQuery } from "@/hooks/useEdenQuery"
 import { api } from "@/lib/api"
 
 export type NavLink = {
@@ -30,12 +29,12 @@ export function useGeneralSettings() {
   const { additionalSettings, navLinks } = useContext(ConfigProviderContext)
 
   // Fetch plugin routes like layout does
-  const { data: frontendPluginRoutes } = useEdenQuery({
+  const { data: frontendPluginRoutes } = eden.useEdenQuery({
     queryKey: ["fetchFrontendPluginRoutes"],
     route: api.plugins.frontend.routes.get,
   })
 
-  const removeNavLinkMutation = useEdenMutation({
+  const removeNavLinkMutation = eden.useEdenMutation({
     route: api.db.config.unpinItem.post,
     mutationKey: ["unpinItemMutation"],
     invalidateQueries: [["fetchAdditionalSettings"]],
@@ -46,7 +45,7 @@ export function useGeneralSettings() {
   })
 
   // Mutation to pin a nav item
-  const pinLinkMutation = useEdenMutation({
+  const pinLinkMutation = eden.useEdenMutation({
     route: api.db.config.pinItem.post,
     mutationKey: ["pinItemMutation"],
     invalidateQueries: [["fetchAdditionalSettings"]],
@@ -56,7 +55,7 @@ export function useGeneralSettings() {
     },
   })
 
-  const updateAdditionalSettingsMutation = useEdenMutation({
+  const updateAdditionalSettingsMutation = eden.useEdenMutation({
     route: api.db.config.additionalSettings.post,
     mutationKey: ["updateAdditionalSettingsMutation"],
     invalidateQueries: [["fetchAdditionalSettings"]],

@@ -1,8 +1,8 @@
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
+import { eden } from "@dockstat/utils/react"
 import { api } from "@/lib/api"
 
 export function useDeleteTheme() {
-  const deleteThemeMutation = useEdenMutation({
+  const deleteThemeMutation = eden.useEdenMutation({
     mutationKey: ["deleteTheme"],
     route: api.themes.delete,
     toast: {

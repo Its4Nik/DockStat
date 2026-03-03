@@ -8,20 +8,19 @@ export function useBaseEdenMutation<TData, TInput>(opts: {
   const qc = useQueryClient()
   const { mutationKey, mutationFn, invalidateQueries = [] } = opts
 
-  const mutation = useMutation({
+  const mutation = useMutation<TData, Error, TInput>({
     mutationKey,
     mutationFn,
     onSuccess: async () => {
       await Promise.all(invalidateQueries.map((key) => qc.invalidateQueries({ queryKey: key })))
     },
-    onError: () => {},
   })
 
   return {
-    data: mutation.data as TData | undefined,
-    error: mutation.error as Error | null,
-    mutateAsync: mutation.mutateAsync as (input: TInput) => Promise<TData>,
-    mutate: mutation.mutate as (input: TInput) => void,
+    data: mutation.data,
+    error: mutation.error,
+    mutateAsync: mutation.mutateAsync,
+    mutate: mutation.mutate,
     isPending: mutation.isPending,
     isSuccess: mutation.isSuccess,
     isError: mutation.isError,

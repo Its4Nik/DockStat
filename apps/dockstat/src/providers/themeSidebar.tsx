@@ -1,7 +1,7 @@
+import { eden } from "@dockstat/utils/react"
 import { useState } from "react"
 import { ThemeSidebarContext } from "@/contexts/ThemeSidebarContext"
 import { ThemeSidebarUIProvider } from "@/contexts/ThemeSidebarUIContext"
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
 import { useTheme } from "@/hooks/useTheme"
 import { api } from "@/lib/api"
 
@@ -9,7 +9,7 @@ export function ThemeSidebarProvider({ children }: { children: React.ReactNode }
   const themeCtx = useTheme()
   const [isThemeSidebarOpen, setIsThemeSidebarOpen] = useState(false)
 
-  const addNewThemeMutation = useEdenMutation({
+  const addNewThemeMutation = eden.useEdenMutation({
     mutationKey: ["addNewThemeMutation"],
     route: api.themes.post,
     toast: {
