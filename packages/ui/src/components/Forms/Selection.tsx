@@ -15,6 +15,7 @@ export interface SelectProps {
   disabled?: boolean
   placeholder?: string
   value?: string
+  rawOnChange?: (e: React.ChangeEvent<HTMLSelectElement, HTMLSelectElement>) => void
   onChange?: (value: string) => void
   className?: string
   error?: boolean
@@ -30,6 +31,7 @@ export const Select: React.FC<SelectProps> = ({
   placeholder,
   value,
   onChange,
+  rawOnChange,
   className = "",
   error = false,
   success = false,
@@ -69,7 +71,7 @@ export const Select: React.FC<SelectProps> = ({
       // biome-ignore lint/a11y/noAutofocus: Used in other components
       autoFocus={autoFocus}
       value={value}
-      onChange={(e) => onChange?.(e.target.value)}
+      onChange={(e) => rawOnChange?.(e) || onChange?.(e.target.value)}
       disabled={disabled}
     >
       {placeholder && (

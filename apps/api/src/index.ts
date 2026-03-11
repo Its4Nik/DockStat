@@ -13,6 +13,7 @@ import RepositoryRoutes from "./routes/repositories"
 import StatusRoutes from "./routes/status"
 import ThemeRoutes from "./routes/themes"
 import DockStatWebsockets from "./websockets"
+import GraphRoutes from "./routes/graph"
 
 const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 
@@ -30,6 +31,7 @@ export const DockStatAPI = new Elysia({ prefix: "/api/v2" })
   .use(ThemeRoutes)
   .use(DockStatWebsockets)
   .use(DockNodeElyisa)
+  .use(GraphRoutes)
   .listen(PORT)
 
 const hostnameAndPort = `${DockStatAPI.server?.hostname}:${DockStatAPI.server?.port}`

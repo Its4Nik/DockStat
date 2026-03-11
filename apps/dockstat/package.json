@@ -15,6 +15,7 @@
     "@dockstat/theme-handler": "workspace:*",
     "@dockstat/typings": "workspace:*",
     "@dockstat/ui": "workspace:*",
+    "@dockstat/widget-handler": "workspace:*",
     "@dockstat/utils": "workspace:*",
     "@elysiajs/eden": "catalog:",
     "@sglara/cn": "^1.0.0",

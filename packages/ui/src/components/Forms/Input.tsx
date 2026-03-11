@@ -1,5 +1,3 @@
-import type React from "react"
-
 export type InputSize = "sm" | "md" | "lg"
 export type InputVariant = "default" | "filled" | "underline"
 
@@ -18,7 +16,7 @@ export interface InputProps {
   required?: boolean
 }
 
-export const Input: React.FC<InputProps> = ({
+export function Input({
   type = "text",
   size = "md",
   variant = "default",
@@ -31,7 +29,7 @@ export const Input: React.FC<InputProps> = ({
   autoFocus = false,
   success = false,
   required = false,
-}) => {
+}: InputProps) {
   const baseClasses = "w-full transition-colors focus:outline-none"
 
   const sizeClasses = {

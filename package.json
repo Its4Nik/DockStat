@@ -7,6 +7,7 @@
     "docker-up:quiet": "bun run docker-up -- -d",
     "dev": "turbo run dev",
     "dev:dockstat": "bun run docker-up:quiet && bun run dev --filter=@dockstat/frontend --filter=@dockstat/api --filter=@dockstat/store-verification --filter=@dockstat/docknode",
+    "dev:dockstat:no-docker": "bun run dev --filter=@dockstat/frontend --filter=@dockstat/api --filter=@dockstat/store-verification --filter=@dockstat/docknode",
     "dev:dockstat/api": "bun run docker-up && bun run dev --filter=@dockstat/api",
     "lint": "turbo run lint",
     "lint:gh": "turbo run lint -- --reporter=github",
@@ -38,7 +39,8 @@
     "catalog": {
       "elysia": "1.4.18",
       "@elysiajs/eden": "1.4.6",
-      "react": "^19.2.3"
+      "react": "^19.2.3",
+      "react-dom": "^19.2.3"
     }
   },
   "dependencies": {
