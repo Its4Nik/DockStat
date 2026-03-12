@@ -13,6 +13,7 @@ import { useDashboard } from "../context"
 import { WidgetRegistry } from "../lib/widget-registry"
 import { WidgetWrapper } from "./WidgetWrapper"
 import type { WidgetInstance, WidgetLayout, WidgetComponentProps } from "../types"
+import { Replace } from "lucide-react"
 
 /**
  * Convert widget layout to react-grid-layout format
@@ -56,16 +57,18 @@ function fromGridLayout(layout: Layout): { id: string; layout: WidgetLayout } {
  * Custom WidthProvider using ResizeObserver
  */
 function useContainerWidth(containerRef: React.RefObject<HTMLDivElement | null>): number {
-  const [width, setWidth] = useState(1200)
+  const [width, setWidth] = useState(0)
 
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
+    setWidth(Math.floor(container.getBoundingClientRect().width))
+
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0]
       if (entry) {
-        setWidth(entry.contentRect.width)
+        setWidth(Math.floor(entry.contentRect.width))
       }
     })
 
@@ -143,9 +146,8 @@ export function DashboardGrid() {
 
       const widgetType = e.dataTransfer.getData("widget-type")
       if (widgetType) {
-        // Calculate drop position based on mouse position
         const rect = containerRef.current?.getBoundingClientRect()
-        if (rect) {
+        if (rect && width > 0) {
           const x = Math.floor(((e.clientX - rect.left) / width) * config.grid.columns)
           const y = Math.floor((e.clientY - rect.top) / (config.grid.rowHeight ?? 60))
           addWidget(widgetType, {
@@ -166,19 +168,22 @@ export function DashboardGrid() {
   const layout = config.widgets.map(toGridLayout)
   const compactType = getCompactType(config.grid.compact)
 
+  const gridWidth = Math.max(0, width - 32)
+
   return (
     <div
+      role="tabpanel"
       ref={containerRef}
-      className="relative flex-1 overflow-auto"
+      className="relative w-full flex-1 min-w-0 max-w-full overflow-y-auto overflow-x-clip"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {/* Empty State */}
       {config.widgets.length === 0 && (
-        <div className="flex items-center justify-center h-full min-h-[400px]">
+        <div className="flex items-center justify-center h-screen">
           <div className="text-center">
-            <div className="text-6xl mb-4">📊</div>
+            <Replace size={70} className="text-accent mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-primary-text mb-2">No widgets yet</h3>
             <p className="text-muted-text mb-4">Open the widget palette below to add widgets</p>
           </div>
@@ -186,13 +191,13 @@ export function DashboardGrid() {
       )}
 
       {/* Grid */}
-      {config.widgets.length > 0 && (
+      {config.widgets.length > 0 && width > 0 && (
         <GridLayout
-          className="layout"
+          className="layout max-w-full"
           layout={layout}
           cols={config.grid.columns}
           rowHeight={config.grid.rowHeight ?? 60}
-          width={width - 32}
+          width={gridWidth}
           margin={[config.grid.gap ?? 16, config.grid.gap ?? 16]}
           containerPadding={[16, 16]}
           onLayoutChange={handleLayoutChange}

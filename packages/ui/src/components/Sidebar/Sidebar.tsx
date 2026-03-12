@@ -97,8 +97,6 @@ export function Sidebar({
     }
   }
 
-  // Theme sidebar state is now managed globally in the context
-
   const pathsWithPinStatus = usePinnedPaths([...SidebarPaths], pins)
 
   return (

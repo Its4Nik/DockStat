@@ -76,7 +76,7 @@ export function Navbar({
         hotkey={openQuickLinksModalHotkey}
       />
 
-      <Card size="sm" className="w-full p-0.5 mb-4 relative overflow-visible">
+      <Card size="sm" className="max-w-screen p-0.5 mb-4 relative overflow-visible">
         <div
           className={`absolute inset-0 bg-linear-to-r from-blue-500 via-purple-500 to-pink-500 bg-size-[200%_200%] transition-opacity duration-500 ${
             isBusy ? "opacity-20 animate-[gradient_1s_ease_infinite]" : "opacity-0"

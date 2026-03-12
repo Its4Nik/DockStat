@@ -42,8 +42,8 @@ function DashboardInner() {
   }, [])
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col bg-main-bg pb-[calc(env(safe-area-inset-bottom)+4rem)]">
-      <div className="shrink-0">
+    <div className="relative flex h-full min-h-0 flex-col bg-main-bg">
+      <div className="shrink-1">
         <DashboardToolbar />
       </div>
 
@@ -52,7 +52,7 @@ function DashboardInner() {
       </div>
 
       {/* Fixed to bottom of viewport so it stays visible */}
-      <div className="fixed inset-x-0 bottom-0 z-50">
+      <div className="inset-x-0">
         <WidgetDrawer />
       </div>
     </div>

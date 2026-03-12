@@ -18,7 +18,7 @@ import {
   FileJson,
   FileText,
 } from "lucide-react"
-import { Button, Divider } from "@dockstat/ui"
+import { Button, Divider, Card, Input } from "@dockstat/ui"
 import { useDashboard } from "../context"
 import YAML from "yaml"
 
@@ -39,6 +39,7 @@ export function DashboardToolbar() {
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false)
+  const [dashboardName, setDashboardName] = useState(state.config.name)
 
   const { isEditing, isDirty, history } = state
   const canUndo = history.past.length > 0
@@ -103,20 +104,25 @@ export function DashboardToolbar() {
   }
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 bg-card-default-bg border-b border-border-color">
+    <Card className="flex items-center justify-between px-4 py-2 bg-card-default-bg border-b border-border">
       {/* Left Section */}
       <div className="flex items-center gap-2">
         {/* Dashboard Name */}
         <h1 className="text-lg font-semibold text-primary-text">
-          {state.config.name}
+          <Input
+            onChange={(e) => setDashboardName(e)}
+            variant="underline"
+            value={dashboardName}
+            className="w-fit"
+          />
           {isDirty && <span className="ml-2 text-xs text-muted-text">(unsaved)</span>}
         </h1>
 
-        <Divider orientation="vertical" />
+        <Divider orientation="vertical" className="max-h-full h-8 mx-4" shadow variant="solid" />
 
         {/* Edit Mode Toggle */}
         <Button
-          variant={isEditing ? "primary" : "ghost"}
+          variant={isEditing ? "primary" : "secondary"}
           size="sm"
           onClick={() => setEditing(!isEditing)}
         >
@@ -207,6 +213,6 @@ export function DashboardToolbar() {
           <Trash2 className="w-4 h-4 text-error" />
         </Button>
       </div>
-    </div>
+    </Card>
   )
 }

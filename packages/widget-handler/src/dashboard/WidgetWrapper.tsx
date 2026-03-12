@@ -24,7 +24,7 @@ export function WidgetWrapper({ widget, children }: WidgetWrapperProps) {
   const definition = WidgetRegistry.get(widget.type)
 
   return (
-    <div
+    <button
       className={`relative w-full h-full rounded-lg overflow-hidden transition-all duration-200 ${
         isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-main-bg" : ""
       } ${isEditing ? "cursor-move" : ""}`}
@@ -34,7 +34,7 @@ export function WidgetWrapper({ widget, children }: WidgetWrapperProps) {
           removeWidget(widget.id)
         }
       }}
-      role="button"
+      type="button"
       tabIndex={0}
     >
       {/* Widget Content */}
@@ -130,6 +130,6 @@ export function WidgetWrapper({ widget, children }: WidgetWrapperProps) {
           {definition.name}
         </div>
       )}
-    </div>
+    </button>
   )
 }
