@@ -4,8 +4,8 @@
  * Displays a value as a gauge/arc meter.
  */
 
-import type { WidgetDefinition, WidgetComponentProps } from "../types"
 import { Card, CardBody } from "@dockstat/ui"
+import type { WidgetComponentProps, WidgetDefinition } from "../types"
 
 /**
  * Gauge widget configuration

@@ -1,5 +1,5 @@
 import { cn } from "@sglara/cn"
-import { Handle, Position, type NodeProps } from "@xyflow/react"
+import { Handle, type NodeProps, Position } from "@xyflow/react"
 import { Box } from "lucide-react"
 import { memo } from "react"
 
@@ -57,7 +57,7 @@ export const ContainerNode = memo(
         <Handle
           type="target"
           position={Position.Left}
-          className="!w-2.5 !h-2.5 !bg-orange-400 !border-2 !border-orange-200"
+          className="w-2.5! h-2.5! bg-orange-400! border-2! border-orange-200!"
         />
       </div>
     )
@@ -74,9 +74,9 @@ export const nodeTypes = {
     return (
       <div
         className={cn(
-          "min-w-[200px] rounded-xl border-2 p-3 shadow-lg transition-all duration-200",
+          "min-w-50 rounded-xl border-2 p-3 shadow-lg transition-all duration-200",
           selected ? "border-blue-500 ring-2 ring-blue-500/20" : "border-blue-500/30",
-          "bg-gradient-to-br from-blue-950/90 to-blue-900/90"
+          "bg-linear-to-br from-blue-950/90 to-blue-900/90"
         )}
       >
         <div className="flex items-center gap-2 mb-2">

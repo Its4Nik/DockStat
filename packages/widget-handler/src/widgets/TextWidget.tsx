@@ -4,8 +4,8 @@
  * Displays formatted text content with markdown support.
  */
 
-import type { WidgetDefinition, WidgetComponentProps } from "../types"
 import { Card, CardBody } from "@dockstat/ui"
+import type { WidgetComponentProps, WidgetDefinition } from "../types"
 
 /**
  * Text widget configuration

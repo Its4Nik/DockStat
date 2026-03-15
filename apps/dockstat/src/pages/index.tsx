@@ -1,6 +1,6 @@
+import { Dashboard } from "@dockstat/widget-handler"
 import { useEffect } from "react"
 import { usePageHeading } from "@/hooks/useHeading"
-import { Dashboard } from "@dockstat/widget-handler"
 
 export default function IndexPage() {
   usePageHeading("Home")

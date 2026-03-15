@@ -4,9 +4,9 @@
  * Displays an alert/notification message with severity levels.
  */
 
-import type { WidgetDefinition, WidgetComponentProps } from "../types"
-import { Card, CardBody, Badge } from "@dockstat/ui"
-import { AlertTriangle, AlertCircle, Info, CheckCircle, X } from "lucide-react"
+import { Badge, Card, CardBody } from "@dockstat/ui"
+import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react"
+import type { WidgetComponentProps, WidgetDefinition } from "../types"
 
 /**
  * Alert severity levels

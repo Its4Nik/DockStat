@@ -240,11 +240,11 @@ const MetricsMiddleware = (app: Elysia) => {
         const errorDetails =
           error instanceof Error
             ? {
-              name: error.name,
-              message: error.message,
-              stack: error.stack,
-              cause: error.cause,
-            }
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+                cause: error.cause,
+              }
             : error
 
         logger.error(

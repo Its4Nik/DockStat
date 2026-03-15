@@ -21,7 +21,10 @@ type NavbarProps = {
   isBusy: boolean
   logEntries: LogEntry[]
   navLinks?: { slug: string; path: string }[]
-  pluginLinks: Array<{ pluginName: string; paths: Array<{ fullPath: string; metaTitle: string }> }>
+  pluginLinks: Array<{
+    pluginName: string
+    paths: Array<{ fullPath: string; metaTitle: string }>
+  }>
   ramUsage?: string
   heading?: string
   mutationFn: SidebarProps["mutationFn"]
@@ -115,7 +118,7 @@ export function Navbar({
                   exit="exit"
                   transition={{ duration: 0.2, ease: "easeOut" }}
                 >
-                  <NavLink to={nl.path}>
+                  <NavLink end to={nl.path}>
                     {({ isActive }) => <Badge outlined={isActive}>{nl.slug}</Badge>}
                   </NavLink>
                 </motion.div>

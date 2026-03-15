@@ -4,12 +4,12 @@
  * Bottom drawer for drag-and-drop widget palette.
  */
 
+import { Button, Card } from "@dockstat/ui"
+import { AnimatePresence, motion } from "framer-motion"
+import { ChevronDown, ChevronUp, Search, X } from "lucide-react"
 import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { ChevronUp, ChevronDown, Search, X } from "lucide-react"
-import { Card, Button } from "@dockstat/ui"
-import { WidgetRegistry } from "../lib/widget-registry"
 import { useDashboard } from "../context"
+import { WidgetRegistry } from "../lib/widget-registry"
 import type { WidgetDefinition } from "../types"
 
 /**

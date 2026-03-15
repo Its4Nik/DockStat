@@ -4,16 +4,16 @@
  * Responsive grid layout using react-grid-layout.
  */
 
-import { useRef, useEffect, useState, useCallback } from "react"
 import { motion } from "framer-motion"
-import GridLayout from "react-grid-layout"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type { Layout } from "react-grid-layout"
+import GridLayout from "react-grid-layout"
 import "react-grid-layout/css/styles.css"
+import { Replace } from "lucide-react"
 import { useDashboard } from "../context"
 import { WidgetRegistry } from "../lib/widget-registry"
+import type { WidgetComponentProps, WidgetInstance, WidgetLayout } from "../types"
 import { WidgetWrapper } from "./WidgetWrapper"
-import type { WidgetInstance, WidgetLayout, WidgetComponentProps } from "../types"
-import { Replace } from "lucide-react"
 
 /**
  * Convert widget layout to react-grid-layout format

@@ -4,8 +4,8 @@
  * Displays time series data as a line chart.
  */
 
-import type { WidgetDefinition, WidgetComponentProps } from "../types"
 import { Card, CardBody, CardHeader } from "@dockstat/ui"
+import type { WidgetComponentProps, WidgetDefinition } from "../types"
 
 /**
  * Line chart widget configuration

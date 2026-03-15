@@ -1,26 +1,68 @@
-import { Badge, Button, Card, Divider } from "@dockstat/ui"
-import { nodeTypes } from "@dockstat/ui"
+import { Badge, Button, Card, Divider, nodeTypes } from "@dockstat/ui"
 import {
   Background,
-  Controls,
-  MiniMap,
-  ReactFlow,
+  BackgroundVariant,
+  type Edge,
   type Node,
   Panel,
+  ReactFlow,
+  ReactFlowProvider,
   useEdgesState,
   useNodesState,
+  useReactFlow,
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
-import { Activity, MapPin, Maximize2, RefreshCw, Route, Server } from "lucide-react"
+import { Activity, HardDrive, MapPin, Maximize2, RefreshCw, Route, Server } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { useEdenQuery } from "@/hooks/useEdenQuery"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
 
-// Stats display component
-function StatsDisplay({ clients, hosts }: { clients: any[]; hosts: any[] }) {
-  const onlineClients = clients?.filter((c) => c.reachable).length || 0
+// --- Types based on Backend Schema ---
+
+type GraphClient = {
+  id: number
+  name: string
+  initialized: boolean
+}
+
+type GraphHost = {
+  id: number
+  name: string
+  clientId: number
+  reachable: boolean
+}
+
+type GraphDockNode = {
+  id: number
+  name: string
+  hostname: string
+  port: number
+  reachable: "OK" | "NO" | "DockNode not initialised"
+}
+
+type GraphData = {
+  nodes: Node[]
+  edges: Edge[]
+  clients: GraphClient[]
+  hosts: GraphHost[]
+  dockNodes: GraphDockNode[]
+}
+
+// --- Components ---
+
+function StatsDisplay({
+  clients,
+  hosts,
+  dockNodes,
+}: {
+  clients: GraphClient[]
+  hosts: GraphHost[]
+  dockNodes: GraphDockNode[]
+}) {
+  const onlineClients = clients?.filter((c) => c.initialized).length || 0
   const onlineHosts = hosts?.filter((h) => h.reachable).length || 0
+  const onlineDockNodes = dockNodes?.filter((d) => d.reachable === "OK").length || 0
 
   return (
     <div className="flex gap-2 flex-wrap">
@@ -34,19 +76,34 @@ function StatsDisplay({ clients, hosts }: { clients: any[]; hosts: any[] }) {
         <span className="text-emerald-300">Hosts:</span>
         <span className="font-semibold text-emerald-100">{hosts?.length || 0}</span>
       </div>
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 text-xs">
+        <HardDrive className="h-3.5 w-3.5 text-orange-400" />
+        <span className="text-orange-300">DockNodes:</span>
+        <span className="font-semibold text-orange-100">{dockNodes?.length || 0}</span>
+      </div>
       <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-500/10 text-xs">
-        <span className="text-green-300">Online:</span>
-        <span className="font-semibold text-green-100">{onlineClients + onlineHosts}</span>
+        <span className="text-green-300">Online (Total):</span>
+        <span className="font-semibold text-green-100">
+          {onlineClients + onlineHosts + onlineDockNodes}
+        </span>
       </div>
     </div>
   )
 }
 
-// Node details panel
 function NodeDetailsPanel({ node, onClose }: { node: Node | null; onClose: () => void }) {
   if (!node) return null
 
-  const data = node.data as Record<string, any>
+  // Use specific typing for data to avoid 'any'
+  const data = node.data as {
+    label?: string
+    status?: string
+    ipAddress?: string
+    port?: number
+    clientId?: number
+    hostId?: number
+    dockNodeId?: number
+  }
 
   const getNodeIcon = () => {
     switch (node.type) {
@@ -54,8 +111,10 @@ function NodeDetailsPanel({ node, onClose }: { node: Node | null; onClose: () =>
         return <Server className="h-4 w-4 text-blue-400" />
       case "host":
         return <Activity className="h-4 w-4 text-emerald-400" />
+      case "docknode":
+        return <HardDrive className="h-4 w-4 text-orange-400" />
       default:
-        return <MapPin className="h-4 w-4 text-orange-400" />
+        return <MapPin className="h-4 w-4 text-muted-text" />
     }
   }
 
@@ -78,8 +137,10 @@ function NodeDetailsPanel({ node, onClose }: { node: Node | null; onClose: () =>
           .filter(([key]) => !["label", "type"].includes(key))
           .map(([key, value]) => (
             <div key={key} className="flex justify-between items-center">
-              <span className="text-muted-text capitalize">{key}:</span>
-              <span className="font-mono truncate max-w-[150px]" title={String(value)}>
+              <span className="text-muted-text capitalize">
+                {key.replace(/([A-Z])/g, " $1").trim()}:
+              </span>
+              <span className="font-mono truncate max-w-37.5 text-right" title={String(value)}>
                 {String(value ?? "N/A")}
               </span>
             </div>
@@ -89,7 +150,6 @@ function NodeDetailsPanel({ node, onClose }: { node: Node | null; onClose: () =>
   )
 }
 
-// Legend component
 function Legend() {
   return (
     <div className="p-3 border-t border-border">
@@ -97,34 +157,34 @@ function Legend() {
       <div className="space-y-1.5 text-xs">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded bg-blue-500" />
-          <span>Client (DockNode)</span>
+          <span>Client (Monitor)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded bg-emerald-500" />
-          <span>Host</span>
+          <span>Host (Docker)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded bg-orange-500" />
-          <span>Container</span>
+          <span>DockNode (Remote)</span>
         </div>
       </div>
     </div>
   )
 }
 
-export default function GraphPage() {
-  usePageHeading("Infrastructure Graph")
-
+// Inner component to use ReactFlow hooks (requires ReactFlowProvider context)
+function GraphFlow() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  const { fitView } = useReactFlow()
+
   const { data, isLoading, error, refetch } = useEdenQuery({
     queryKey: ["graphData"],
     route: api.graph.get,
   })
 
-  const [nodes, setNodes, onNodesChange] = useNodesState([])
-  const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
 
-  // Update nodes/edges when data changes
   useEffect(() => {
     if (data && !("success" in data && data.success === false)) {
       setNodes(data.nodes || [])
@@ -134,10 +194,6 @@ export default function GraphPage() {
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     setSelectedNode(node)
-  }, [])
-
-  const fitView = useCallback(() => {
-    // Fit view would need a ref to ReactFlow instance
   }, [])
 
   if (error) {
@@ -159,7 +215,7 @@ export default function GraphPage() {
   return (
     <div className="h-[calc(100vh-140px)] w-full flex gap-4">
       {/* Sidebar */}
-      <div className="w-64 flex-shrink-0">
+      <div className="w-64 shrink-0">
         <Card variant="flat" className="h-full flex flex-col">
           <div className="p-3 border-b border-border">
             <h2 className="text-sm font-semibold flex items-center gap-2">
@@ -186,7 +242,7 @@ export default function GraphPage() {
                     variant="outline"
                     size="sm"
                     className="w-full justify-start"
-                    onClick={fitView}
+                    onClick={() => fitView({ padding: 0.2 })}
                   >
                     <Maximize2 className="h-3.5 w-3.5 mr-2" />
                     Fit View
@@ -237,7 +293,7 @@ export default function GraphPage() {
               <Server className="h-12 w-12 text-muted-text mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Infrastructure Data</h3>
               <p className="text-muted-text mb-4">
-                Add DockNodes to visualize your infrastructure.
+                Add Clients, Hosts, or DockNodes to visualize your infrastructure.
               </p>
             </Card>
           </div>
@@ -252,19 +308,19 @@ export default function GraphPage() {
             fitView
             minZoom={0.2}
             maxZoom={2}
+            autoPanOnNodeFocus
+            snapToGrid
           >
-            <Background gap={20} size={1} />
-            <Controls position="bottom-right" />
-            <MiniMap
-              position="bottom-left"
-              nodeStrokeWidth={3}
-              zoomable
-              pannable
-              className="!bg-muted/50"
-            />
+            <Background gap={40} size={1} variant={BackgroundVariant.Dots} />
 
             <Panel position="top-left" className="flex gap-2">
-              <StatsDisplay clients={data?.clients || []} hosts={data?.hosts || []} />
+              {data && (
+                <StatsDisplay
+                  clients={data.clients || []}
+                  hosts={data.hosts || []}
+                  dockNodes={data.dockNodes || []}
+                />
+              )}
             </Panel>
           </ReactFlow>
         )}
@@ -277,5 +333,16 @@ export default function GraphPage() {
         )}
       </div>
     </div>
+  )
+}
+
+// Main Export wrapped in Provider
+export default function GraphPage() {
+  usePageHeading("Infrastructure Graph")
+
+  return (
+    <ReactFlowProvider>
+      <GraphFlow />
+    </ReactFlowProvider>
   )
 }

@@ -18,11 +18,11 @@ export function useThemeManager() {
 
   useEffect(() => {
     applyThemeByIdRef.current = applyThemeById
-  }, [applyThemeById, applyThemeByIdRef])
+  }, [applyThemeById])
 
   useEffect(() => {
     adjustCurrentThemeRef.current = adjustCurrentTheme
-  }, [adjustCurrentTheme, adjustCurrentThemeRef])
+  }, [adjustCurrentTheme])
 
   const currentThemeColors = Object.entries(theme?.vars || {}).map(([key, val]) => ({
     colorName: key,

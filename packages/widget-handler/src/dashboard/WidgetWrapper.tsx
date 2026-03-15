@@ -5,10 +5,10 @@
  */
 
 import { motion } from "framer-motion"
-import { Trash2, Copy, RefreshCw, Settings } from "lucide-react"
-import type { WidgetInstance } from "../types"
-import { WidgetRegistry } from "../lib/widget-registry"
+import { Copy, RefreshCw, Settings, Trash2 } from "lucide-react"
 import { useDashboard, useWidgetDataState } from "../context"
+import { WidgetRegistry } from "../lib/widget-registry"
+import type { WidgetInstance } from "../types"
 
 interface WidgetWrapperProps {
   widget: WidgetInstance

@@ -6,12 +6,12 @@
 
 import { useEffect } from "react"
 import { DashboardProvider } from "../context"
-import { DashboardToolbar } from "./DashboardToolbar"
-import { DashboardGrid } from "./DashboardGrid"
-import { WidgetDrawer } from "./WidgetDrawer"
 import { WidgetRegistry } from "../lib/widget-registry"
-import { builtinWidgets } from "../widgets"
 import type { DashboardConfig } from "../types"
+import { builtinWidgets } from "../widgets"
+import { DashboardGrid } from "./DashboardGrid"
+import { DashboardToolbar } from "./DashboardToolbar"
+import { WidgetDrawer } from "./WidgetDrawer"
 
 // Register built-in widgets
 for (const widget of builtinWidgets) {

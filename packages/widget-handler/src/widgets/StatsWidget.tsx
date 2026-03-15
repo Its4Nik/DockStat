@@ -4,9 +4,9 @@
  * Displays a key metric with optional trend indicator.
  */
 
-import type { WidgetDefinition, WidgetComponentProps } from "../types"
 import { Card, CardBody } from "@dockstat/ui"
-import { TrendingUp, TrendingDown, Minus } from "lucide-react"
+import { Minus, TrendingDown, TrendingUp } from "lucide-react"
+import type { WidgetComponentProps, WidgetDefinition } from "../types"
 
 /**
  * Stats widget configuration

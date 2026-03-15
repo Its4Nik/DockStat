@@ -4,8 +4,8 @@
  * Displays data in a tabular format.
  */
 
-import type { WidgetDefinition, WidgetComponentProps } from "../types"
 import { Card, CardBody, CardHeader } from "@dockstat/ui"
+import type { WidgetComponentProps, WidgetDefinition } from "../types"
 
 /**
  * Table column configuration

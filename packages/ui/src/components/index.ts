@@ -53,6 +53,7 @@ export {
   type ToggleProps,
   type ToggleSize,
 } from "./Forms/Toggle"
+export { ContainerNode, nodeTypes } from "./Graph/index"
 export {
   HoverBubble,
   type HoverBubbleProps,
@@ -72,4 +73,3 @@ export {
 } from "./ThemeBrowser/ThemeBrowser"
 export { ThemeEditor } from "./ThemeEditor/ThemeEditor"
 export { ThemeSidebar } from "./ThemeSidebar/ThemeSidebar"
-export { nodeTypes, ContainerNode } from "./Graph/index"

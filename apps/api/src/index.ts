@@ -6,6 +6,7 @@ import BaseLogger from "./logger"
 import MetricsMiddleware from "./middleware/metrics"
 import DBRoutes from "./routes/db"
 import DockerRoutes from "./routes/docker"
+import GraphRoutes from "./routes/graph"
 import DockStatMiscRoutes from "./routes/misc"
 import { DockNodeElyisa } from "./routes/node"
 import PluginRoutes from "./routes/plugins"
@@ -13,7 +14,6 @@ import RepositoryRoutes from "./routes/repositories"
 import StatusRoutes from "./routes/status"
 import ThemeRoutes from "./routes/themes"
 import DockStatWebsockets from "./websockets"
-import GraphRoutes from "./routes/graph"
 
 const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 
