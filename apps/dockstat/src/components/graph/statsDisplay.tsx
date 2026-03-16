@@ -40,37 +40,43 @@ export function StatsDisplay({
 
   return (
     <div className="flex gap-2 flex-wrap">
-      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 text-xs">
-        <Bolt className="h-3.5 w-3.5 text-blue-400" />
-        <span className="text-blue-300">Clients:</span>
-        <span className="font-semibold text-blue-100">
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-graph-client-card-bg border border-graph-client-card-border/40 text-xs">
+        <Bolt className="h-3.5 w-3.5 text-graph-client-text-secondary" />
+        <span className="text-graph-client-text-secondary">Clients:</span>
+        <span className="font-semibold text-graph-client-text-primary">
           {clients?.length || 0}
         </span>
       </div>
-      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-xs">
-        <Server className="h-3.5 w-3.5 text-emerald-400" />
-        <span className="text-emerald-300">Hosts:</span>
-        <span className="font-semibold text-emerald-100">
+
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-graph-host-card-bg border border-graph-host-card-border/40 text-xs">
+        <Server className="h-3.5 w-3.5 text-graph-host-text-secondary" />
+        <span className="text-graph-host-text-secondary">Hosts:</span>
+        <span className="font-semibold text-graph-host-text-primary">
           {hosts?.length || 0}
         </span>
       </div>
-      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 text-xs">
-        <HardDrive className="h-3.5 w-3.5 text-orange-400" />
-        <span className="text-orange-300">DockNodes:</span>
-        <span className="font-semibold text-orange-100">
+
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-graph-docknode-card-bg border border-graph-docknode-card-border/40 text-xs">
+        <HardDrive className="h-3.5 w-3.5 text-graph-docknode-text-secondary" />
+        <span className="text-graph-docknode-text-secondary">DockNodes:</span>
+        <span className="font-semibold text-graph-docknode-text-primary">
           {dockNodes?.length || 0}
         </span>
       </div>
-      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 text-xs">
-        <Container className="h-3.5 w-3.5 text-orange-400" />
-        <span className="text-orange-300">Containers:</span>
-        <span className="font-semibold text-orange-100">
+
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-graph-container-card-bg border border-graph-container-card-border/40 text-xs">
+        <Container className="h-3.5 w-3.5 text-graph-container-text-secondary" />
+        <span className="text-graph-container-text-secondary">Containers:</span>
+        <span className="font-semibold text-graph-container-text-primary">
           {containers?.length || 0}
         </span>
       </div>
-      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-500/10 text-xs">
-        <span className="text-green-300">Online (Total):</span>
-        <span className="font-semibold text-green-100">
+
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-badge-success-bg/10 border border-badge-success-outlined-border/40 text-xs">
+        <span className="text-badge-success-outlined-text">
+          Online (Total):
+        </span>
+        <span className="font-semibold text-badge-success-outlined-text">
           {onlineClients + onlineHosts + onlineDockNodes}
         </span>
       </div>

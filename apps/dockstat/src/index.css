@@ -1,16 +1,52 @@
 @import "tailwindcss";
 @import "@dockstat/ui/css";
 
-body {
-  font-family:
-    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
-    sans-serif;
-  line-height: 1.5;
+/*
+* Changes to the React-Flow attribution have been accepted. See:
+* https://discord.com/channels/771389069270712320/786621351263207454/1483179313036787824
+* https://discord.com/channels/771389069270712320/786621351263207454/1483188414793646152
+*/
+.react-flow__attribution {
+    background: var(--color-card-default-bg);
+    border-radius: 15px;
+    padding: 5px;
+}
+
+.react-flow__attribution a {
+    color: var(--color-accent);
 }
 
 /*
-    DO NOT REMOVE THIS COMMENT
-    This line is crucial for correct theme usage
+* DO NOT REMOVE THIS COMMENT
+* The following line is crucial for correct theme usage
 */
-
 @source "../../../packages/ui/src/**/*.{js,jsx,ts,tsx}";
+
+@font-face {
+    font-family: "Geist";
+    src: url("/fonts/Geist-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Geist Mono";
+    src: url("/fonts/GeistMono-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Geist Pixel";
+    src: url("/fonts/GeistPixel-Square.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@theme inline {
+    --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "Geist Mono", ui-monospace, monospace;
+}

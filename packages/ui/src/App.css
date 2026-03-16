@@ -4,7 +4,7 @@
     /*
      *  Base
     */
-    /* Accent */
+
     /* Background */
     --color-main-bg: #282a36;
 
@@ -198,30 +198,29 @@
     /* Table */
 
     /* Graph */
-    /* Container */
-    --color-graph-container-card-bg-from: #483a58;
-    --color-graph-container-card-bg-to: #56638a;
-    --color-graph-container-card-border: #b486ab;
+    /* Container — purple tinted, matches screenshot */
+    --color-graph-container-card-bg: #3b3554;
+    --color-graph-container-card-border: #7c6fa0;
     --color-graph-container-text-primary: #f8f8f2;
-    --color-graph-container-text-secondary: #8b98c4;
+    --color-graph-container-text-secondary: #a99dc8;
 
-    /* Host */
-    --color-graph-host-card-bg: #4a4d62;
-    --color-graph-host-card-border: #6272a4;
+    /* Host — muted blue-grey, clearly distinct from client */
+    --color-graph-host-card-bg: #2e3a4a;
+    --color-graph-host-card-border: #4a9470;
     --color-graph-host-text-primary: #f8f8f2;
-    --color-graph-host-text-secondary: #a5b4fc;
+    --color-graph-host-text-secondary: #7ec8a4;
 
-    /* Docknode */
-    --color-graph-docknode-card-bg: #44475a;
-    --color-graph-docknode-card-border: #818cf8;
+    /* Docknode — warm orange tinted dark */
+    --color-graph-docknode-card-bg: #3d2f1f;
+    --color-graph-docknode-card-border: #c2773a;
     --color-graph-docknode-text-primary: #f8f8f2;
-    --color-graph-docknode-text-secondary: #8b98c4;
+    --color-graph-docknode-text-secondary: #d4a574;
 
-    /* Client */
-    --color-graph-client-card-bg: #383a4a;
-    --color-graph-client-card-border: #6272a4;
+    /* Client — cool blue-dark */
+    --color-graph-client-card-bg: #1e2d40;
+    --color-graph-client-card-border: #3b7dd8;
     --color-graph-client-text-primary: #f8f8f2;
-    --color-graph-client-text-secondary: #8b98c4;
+    --color-graph-client-text-secondary: #7aacdf;
     /* Graph */
 
     /* Animations */
