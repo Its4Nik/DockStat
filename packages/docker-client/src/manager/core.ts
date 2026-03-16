@@ -743,6 +743,8 @@ export class DockerClientManagerCore {
       id: number
       clientId: number
       reachable: boolean
+      host: string
+      port: number
     }[]
   > {
     // Default behavior: no hosts known at core level. HostsMixin overrides this.

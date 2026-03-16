@@ -1,121 +1,108 @@
-import type Logger from "@dockstat/logger";
-import type { DATABASE, DOCKER } from "@dockstat/typings";
-import { retry } from "@dockstat/utils";
-import type Dockerode from "dockerode";
-import { proxyEvent } from "../../../../events/workerEventProxy";
-import { mapContainerInfo } from "../../../utils/mapContainerInfo";
+import type Logger from "@dockstat/logger"
+import type { DATABASE, DOCKER } from "@dockstat/typings"
+import { retry } from "@dockstat/utils"
+import type Dockerode from "dockerode"
+import { proxyEvent } from "../../../../events/workerEventProxy"
+import { mapContainerInfo } from "../../../utils/mapContainerInfo"
 
 class ContainerEventMonitor {
-  private logger: Logger;
-  private intervalId?: ReturnType<typeof setInterval>;
-  private dockerInstances: Map<number, Dockerode>;
-  private lastContainerStates = new Map<string, DOCKER.ContainerInfo[]>();
-  private hosts: DATABASE.DB_target_host[];
+  private logger: Logger
+  private intervalId?: ReturnType<typeof setInterval>
+  private dockerInstances: Map<number, Dockerode>
+  private lastContainerStates = new Map<string, DOCKER.ContainerInfo[]>()
+  private hosts: DATABASE.DB_target_host[]
+  private clientId: number
   private options: {
-    interval: number;
-    retryAttempts: number;
-    retryDelay: number;
-  };
+    interval: number
+    retryAttempts: number
+    retryDelay: number
+  }
 
   constructor(
+    clientId: number,
     baseLogger: Logger,
     dockerInstances: Map<number, Dockerode>,
     hosts: DATABASE.DB_target_host[],
     options: {
-      interval: number;
-      retryAttempts: number;
-      retryDelay: number;
-    },
+      interval: number
+      retryAttempts: number
+      retryDelay: number
+    }
   ) {
-    this.logger = baseLogger.spawn("CEM");
-    this.dockerInstances = dockerInstances;
-    this.hosts = hosts;
-    this.options = options;
+    this.clientId = clientId
+    this.logger = baseLogger.spawn("CEM")
+    this.dockerInstances = dockerInstances
+    this.hosts = hosts
+    this.options = options
   }
 
   start(): void {
-    this.logger.info(
-      `Starting container event monitoring at interval ${this.options.interval}ms`,
-    );
-    this.intervalId = setInterval(
-      () => this.monitorChanges(),
-      this.options.interval,
-    );
+    this.logger.info(`Starting container event monitoring at interval ${this.options.interval}ms`)
+    this.intervalId = setInterval(() => this.monitorChanges(), this.options.interval)
     this.captureInitialStates().catch((error) => {
-      proxyEvent(
-        "error",
-        error instanceof Error ? error : new Error(String(error)),
-      );
-    });
+      proxyEvent("error", error instanceof Error ? error : new Error(String(error)))
+    })
   }
 
   stop(): void {
     if (this.intervalId) {
-      clearInterval(this.intervalId);
-      this.intervalId = undefined;
+      clearInterval(this.intervalId)
+      this.intervalId = undefined
     }
   }
 
   getLastContainerStates(): Map<string, DOCKER.ContainerInfo[]> {
-    return new Map(this.lastContainerStates);
+    return new Map(this.lastContainerStates)
   }
 
   updateHosts(hosts: DATABASE.DB_target_host[]): void {
-    this.hosts = hosts;
+    this.hosts = hosts
   }
 
   updateDockerInstances(instances: Map<number, Dockerode>): void {
-    this.dockerInstances = instances;
+    this.dockerInstances = instances
   }
 
   private async captureInitialStates(): Promise<void> {
     const promises = this.hosts.map(async (host) => {
       try {
-        const hostId = host.id ?? 0;
-        const containers = await this.getContainersForHost(hostId);
-        this.lastContainerStates.set(`host-${hostId}`, containers);
+        const hostId = host.id ?? 0
+        const containers = await this.getContainersForHost(hostId)
+        this.lastContainerStates.set(`host-${hostId}`, containers)
       } catch (error) {
-        proxyEvent(
-          "error",
-          error instanceof Error ? error : new Error(String(error)),
-          {
-            hostId: host.id ?? 0,
-          },
-        );
+        proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
+          hostId: host.id ?? 0,
+        })
       }
-    });
-    await Promise.allSettled(promises);
+    })
+    await Promise.allSettled(promises)
   }
 
   private async monitorChanges(): Promise<void> {
-    this.logger.debug(`Checking for changes`);
+    this.logger.debug(`Checking for changes`)
     const promises = this.hosts.map(async (host) => {
       try {
-        const hostId = host.id ?? 0;
-        const current = await this.getContainersForHost(hostId);
-        const last = this.lastContainerStates.get(`host-${hostId}`) || [];
-        this.detectChanges(hostId, last, current);
-        this.lastContainerStates.set(`host-${hostId}`, current);
+        const hostId = host.id ?? 0
+        const current = await this.getContainersForHost(hostId)
+        const last = this.lastContainerStates.get(`host-${hostId}`) || []
+        this.detectChanges(hostId, last, current)
+        this.lastContainerStates.set(`host-${hostId}`, current)
       } catch (error) {
-        proxyEvent(
-          "error",
-          error instanceof Error ? error : new Error(String(error)),
-          {
-            hostId: host.id ?? 0,
-          },
-        );
+        proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
+          hostId: host.id ?? 0,
+        })
       }
-    });
-    await Promise.allSettled(promises);
+    })
+    await Promise.allSettled(promises)
   }
 
   private detectChanges(
     hostId: number,
     last: DOCKER.ContainerInfo[],
-    current: DOCKER.ContainerInfo[],
+    current: DOCKER.ContainerInfo[]
   ): void {
-    const lastMap = new Map(last.map((c) => [c.id, c]));
-    const currentMap = new Map(current.map((c) => [c.id, c]));
+    const lastMap = new Map(last.map((c) => [c.id, c]))
+    const currentMap = new Map(current.map((c) => [c.id, c]))
 
     for (const container of current) {
       if (!lastMap.has(container.id)) {
@@ -123,28 +110,22 @@ class ContainerEventMonitor {
           containerId: container.id,
           containerInfo: container,
           hostId,
-        });
+        })
       } else {
-        const lastContainer = lastMap.get(container.id);
+        const lastContainer = lastMap.get(container.id)
         if (lastContainer && lastContainer.state !== container.state) {
-          if (
-            container.state === "running" &&
-            lastContainer.state !== "running"
-          ) {
+          if (container.state === "running" && lastContainer.state !== "running") {
             proxyEvent("container:started", {
               containerId: container.id,
               containerInfo: container,
               hostId,
-            });
-          } else if (
-            container.state !== "running" &&
-            lastContainer.state === "running"
-          ) {
+            })
+          } else if (container.state !== "running" && lastContainer.state === "running") {
             proxyEvent("container:stopped", {
               containerId: container.id,
               containerInfo: container,
               hostId,
-            });
+            })
           }
         }
       }
@@ -155,27 +136,25 @@ class ContainerEventMonitor {
         proxyEvent("container:removed", {
           containerId: lastContainer.id,
           hostId,
-        });
+        })
       }
     }
   }
 
-  private async getContainersForHost(
-    hostId: number,
-  ): Promise<DOCKER.ContainerInfo[]> {
-    const docker = this.dockerInstances.get(hostId);
+  private async getContainersForHost(hostId: number): Promise<DOCKER.ContainerInfo[]> {
+    const docker = this.dockerInstances.get(hostId)
     if (!docker) {
-      const availableKeys = Array.from(this.dockerInstances.keys());
+      const availableKeys = Array.from(this.dockerInstances.keys())
       throw new Error(
-        `No Docker instance found for host ${hostId}. Available instances: ${availableKeys.join(", ")}`,
-      );
+        `No Docker instance found for host ${hostId}. Available instances: ${availableKeys.join(", ")}`
+      )
     }
     const containers = await retry(() => docker.listContainers({ all: true }), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
-    });
-    return containers.map((c) => mapContainerInfo(c, hostId));
+    })
+    return containers.map((c) => mapContainerInfo(c, hostId, this.clientId))
   }
 }
 
-export default ContainerEventMonitor;
+export default ContainerEventMonitor

@@ -1,16 +1,11 @@
-import type { DOCKER } from "@dockstat/typings";
-import { extractErrorMessage } from "@dockstat/utils";
-import Elysia, { t } from "elysia";
-import DCM from "../../docker";
-import { DNH } from "../../docker/docknode";
-import { GraphModel } from "../../models/graph";
-import {
-  calculateNodeLayout,
-  type DockNodeArray,
-} from "../../graph/calculateNodeLayout";
-import { mapReachableStatus } from "../../graph/reachableStatus";
-
-// --- Route ---
+import type { DOCKER } from "@dockstat/typings"
+import { extractErrorMessage } from "@dockstat/utils"
+import Elysia, { t } from "elysia"
+import DCM from "../../docker"
+import { DNH } from "../../docker/docknode"
+import { calculateNodeLayout, type DockNodeArray } from "../../graph"
+import { mapReachableStatus } from "../../graph/reachableStatus"
+import { GraphModel } from "../../models/graph"
 
 export const GraphElysia = new Elysia({
   prefix: "/graph",
@@ -20,25 +15,23 @@ export const GraphElysia = new Elysia({
 })
   .get(
     "/",
-    async () => {
+    async ({ status }) => {
       try {
-        const clients = DCM.getAllClients();
-        const hosts = await DCM.getAllHosts();
+        const clients = DCM.getAllClients()
+        const hosts = await DCM.getAllHosts()
 
         // Fetch containers per client
-        const containersNested = await Promise.all(
-          clients.map((c) => DCM.getAllContainers(c.id)),
-        );
+        const containersNested = await Promise.all(clients.map((c) => DCM.getAllContainers(c.id)))
 
         // Flatten containers into a single array for the layout function
-        const containers: DOCKER.ContainerInfo[] = containersNested.flat();
+        const containers: DOCKER.ContainerInfo[] = containersNested.flat()
 
-        const rawDockNodes = await DNH.getAllNodes();
+        const rawDockNodes = await DNH.getAllNodes()
 
         // Transform dockNodes to match the strict Schema
         const dockNodes: DockNodeArray = rawDockNodes
           .map((node) => {
-            if (node.id === undefined) return null;
+            if (node.id === undefined) return null
 
             return {
               id: node.id,
@@ -46,19 +39,19 @@ export const GraphElysia = new Elysia({
               hostname: node.host,
               port: node.port,
               reachable: mapReachableStatus(node),
-            };
+            }
           })
-          .filter((node): node is NonNullable<typeof node> => node !== null);
+          .filter((node): node is NonNullable<typeof node> => node !== null)
 
         // Pass the flattened containers array to the layout function
-        const { nodes, edges } = calculateNodeLayout(
+        const { nodes, edges } = calculateNodeLayout({
           clients,
           hosts,
           dockNodes,
           containers,
-        );
+        })
 
-        return {
+        const dat = {
           nodes,
           edges,
           clients: clients.map((c) => ({
@@ -73,26 +66,29 @@ export const GraphElysia = new Elysia({
             reachable: h.reachable ?? false,
           })),
           dockNodes,
-        };
+          containers,
+        }
+
+        return status(200, dat)
       } catch (error) {
-        const errorMessage = extractErrorMessage(
-          error,
-          "Could not fetch graph data",
-        );
-        return {
+        const errorMessage = extractErrorMessage(error, "Could not fetch graph data")
+        return status(400, {
           success: false as const,
           error: errorMessage,
-        };
+        })
       }
     },
     {
-      response: GraphModel.GraphDataSchema,
-    },
+      response: {
+        200: GraphModel.GraphDataSchema,
+        400: t.Object({ success: t.Boolean(), error: t.String() }),
+      },
+    }
   )
   .get("/regions", async () => {
     return {
       regions: [],
-    };
+    }
   })
   .post(
     "/regions",
@@ -100,7 +96,7 @@ export const GraphElysia = new Elysia({
       return {
         success: true as const,
         message: "Region creation not yet implemented",
-      };
+      }
     },
     {
       body: t.Object({
@@ -108,7 +104,7 @@ export const GraphElysia = new Elysia({
         description: t.Optional(t.String()),
         color: t.Optional(t.String()),
       }),
-    },
-  );
+    }
+  )
 
-export default GraphElysia;
+export default GraphElysia

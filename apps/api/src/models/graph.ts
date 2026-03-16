@@ -69,5 +69,6 @@ export namespace GraphModel {
         ]),
       })
     ),
+    containers: t.Array(t.Any()),
   })
 }

@@ -24,6 +24,7 @@ export class Monitoring extends DockerClientBase {
     }
 
     this.monitoringManager = new MonitoringManager(
+      this.id,
       this.logger,
       this.dockerInstances,
       this.hostHandler.getHosts(),
