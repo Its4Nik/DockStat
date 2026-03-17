@@ -1,18 +1,18 @@
-import type { DashboardConfig } from "@/types";
-import type Logger from "@dockstat/logger";
-import type DB from "@dockstat/sqlite-wrapper";
-import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper";
-import Elysia, { t } from "elysia";
-import { DashboardModel } from "./model";
+import type Logger from "@dockstat/logger"
+import type DB from "@dockstat/sqlite-wrapper"
+import { column, type QueryBuilder } from "@dockstat/sqlite-wrapper"
+import Elysia, { t } from "elysia"
+import type { DashboardConfig } from "@/types"
+import { DashboardModel } from "./model"
 
 export class DashboardHandler {
-  db: DB;
-  table: QueryBuilder<DashboardConfig>;
-  logger: Logger;
+  db: DB
+  table: QueryBuilder<DashboardConfig>
+  logger: Logger
 
   constructor(db: DB, logger: Logger) {
-    this.logger = logger.spawn("WidgetHandler");
-    this.db = db;
+    this.logger = logger.spawn("WidgetHandler")
+    this.db = db
 
     this.table = this.db.createTable<DashboardConfig>(
       "dashboards",
@@ -29,8 +29,8 @@ export class DashboardHandler {
       },
       {
         ifNotExists: true,
-      },
-    );
+      }
+    )
   }
 
   getRoutes() {
@@ -44,19 +44,15 @@ export class DashboardHandler {
       .post("/", ({ body }) => this.table.insert(body), {
         body: DashboardModel.DashboardConfig,
       })
-      .patch(
-        "/",
-        ({ body }) => this.table.where({ id: body.id }).update(body),
-        {
-          body: DashboardModel.DashboardConfig,
-        },
-      )
+      .patch("/", ({ body }) => this.table.where({ id: body.id }).update(body), {
+        body: DashboardModel.DashboardConfig,
+      })
       .delete("/", ({ body }) => this.table.where({ id: body.id }).delete(), {
         body: t.Object({ id: t.String() }),
-      });
+      })
   }
 
   getTable() {
-    return this.table;
+    return this.table
   }
 }

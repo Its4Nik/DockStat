@@ -1,26 +1,26 @@
-import { Button, Card } from "@dockstat/ui";
-import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
-import { useState } from "react";
-import { useDashboard } from "../context";
-import { WidgetRegistry } from "../lib/widget-registry";
-import type { WidgetDefinition } from "../types";
+import { Button, Card } from "@dockstat/ui"
+import { AnimatePresence, motion } from "framer-motion"
+import { ChevronDown, ChevronUp, Search, X } from "lucide-react"
+import { useState } from "react"
+import { useDashboard } from "../context"
+import { WidgetRegistry } from "../lib/widget-registry"
+import type { WidgetDefinition } from "../types"
 
 /**
  * Widget Card for the palette
  */
 function WidgetCard({ widget }: { widget: WidgetDefinition }) {
-  const { addWidget, setDrawerOpen } = useDashboard();
+  const { addWidget, setDrawerOpen } = useDashboard()
 
   const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData("widget-type", widget.type);
-    e.dataTransfer.effectAllowed = "copy";
-  };
+    e.dataTransfer.setData("widget-type", widget.type)
+    e.dataTransfer.effectAllowed = "copy"
+  }
 
   const handleClick = () => {
-    addWidget(widget.type);
-    setDrawerOpen(false);
-  };
+    addWidget(widget.type)
+    setDrawerOpen(false)
+  }
 
   return (
     <button
@@ -30,49 +30,40 @@ function WidgetCard({ widget }: { widget: WidgetDefinition }) {
       onClick={handleClick}
       className="cursor-pointer text-left w-full"
     >
-      <Card
-        className="hover:ring-2 hover:ring-primary/50 transition-all"
-        hoverable
-        size="sm"
-      >
+      <Card className="hover:ring-2 hover:ring-primary/50 transition-all" hoverable size="sm">
         <div className="flex flex-col items-center gap-2 text-center">
           <span className="text-2xl">{widget.icon}</span>
-          <span className="text-sm font-medium text-primary-text">
-            {widget.name}
-          </span>
-          <span className="text-xs text-muted-text line-clamp-2">
-            {widget.description}
-          </span>
+          <span className="text-sm font-medium text-primary-text">{widget.name}</span>
+          <span className="text-xs text-muted-text line-clamp-2">{widget.description}</span>
         </div>
       </Card>
     </button>
-  );
+  )
 }
 
 /**
  * Widget Drawer Component
  */
 export function WidgetDrawer() {
-  const { state, setDrawerOpen } = useDashboard();
+  const { state, setDrawerOpen } = useDashboard()
 
-  setDrawerOpen(true);
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  setDrawerOpen(true)
+  const [search, setSearch] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
-  const isOpen = state.isDrawerOpen;
-  const widgets = WidgetRegistry.getAll();
-  const categories = WidgetRegistry.getCategories();
+  const isOpen = state.isDrawerOpen
+  const widgets = WidgetRegistry.getAll()
+  const categories = WidgetRegistry.getCategories()
 
   // Filter widgets by search and category
   const filteredWidgets = widgets.filter((widget) => {
     const matchesSearch =
       !search ||
       widget.name.toLowerCase().includes(search.toLowerCase()) ||
-      widget.description.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory =
-      !selectedCategory || widget.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+      widget.description.toLowerCase().includes(search.toLowerCase())
+    const matchesCategory = !selectedCategory || widget.category === selectedCategory
+    return matchesSearch && matchesCategory
+  })
 
   return (
     <>
@@ -103,11 +94,7 @@ export function WidgetDrawer() {
           className="w-full flex items-center justify-center py-3 cursor-pointer hover:bg-hover-bg transition-colors"
         >
           <div className="flex items-center gap-2 text-muted-text">
-            {isOpen ? (
-              <ChevronDown className="w-5 h-5" />
-            ) : (
-              <ChevronUp className="w-5 h-5" />
-            )}
+            {isOpen ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
             <span className="text-sm font-medium">Widget Palette</span>
             <span className="text-xs">({widgets.length} widgets)</span>
           </div>
@@ -147,11 +134,7 @@ export function WidgetDrawer() {
                   </div>
 
                   {/* Close Button */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setDrawerOpen(false)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setDrawerOpen(false)}>
                     Close
                   </Button>
                 </div>
@@ -205,5 +188,5 @@ export function WidgetDrawer() {
         </AnimatePresence>
       </motion.div>
     </>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import { t } from "elysia";
+import { t } from "elysia"
 
 /**
  * Dashboard Types for Elysia Validation
@@ -18,7 +18,7 @@ export const WidgetLayout = t.Object({
   maxW: t.Optional(t.Number()),
   maxH: t.Optional(t.Number()),
   static: t.Optional(t.Boolean()),
-});
+})
 
 export const DataSourceConfig = t.Union([
   // REST
@@ -55,7 +55,7 @@ export const DataSourceConfig = t.Union([
     query: t.String(),
     variables: t.Optional(t.Record(t.String(), t.Unknown())),
   }),
-]);
+])
 
 export const WidgetConfigField = t.Object({
   name: t.String(),
@@ -77,8 +77,8 @@ export const WidgetConfigField = t.Object({
       t.Object({
         label: t.String(),
         value: t.Unknown(),
-      }),
-    ),
+      })
+    )
   ),
   min: t.Optional(t.Number()),
   max: t.Optional(t.Number()),
@@ -89,13 +89,13 @@ export const WidgetConfigField = t.Object({
       min: t.Optional(t.Number()),
       max: t.Optional(t.Number()),
       message: t.Optional(t.String()),
-    }),
+    })
   ),
-});
+})
 
 export const WidgetConfigSchema = t.Object({
   fields: t.Array(WidgetConfigField),
-});
+})
 
 // We default TConfig to Record<string, unknown> as per your TS definition
 export const WidgetInstance = t.Object({
@@ -106,7 +106,7 @@ export const WidgetInstance = t.Object({
   dataSource: t.Optional(DataSourceConfig),
   title: t.Optional(t.String()),
   visible: t.Optional(t.Boolean()),
-});
+})
 
 // -------------------------------------------
 // Dashboard Core Types
@@ -117,25 +117,21 @@ export const DashboardGridConfig = t.Object({
   rowHeight: t.Number(),
   gap: t.Optional(t.Number()),
   breakpoints: t.Optional(t.Record(t.String(), t.Number())),
-  compact: t.Optional(
-    t.Union([t.Boolean(), t.Literal("vertical"), t.Literal("horizontal")]),
-  ),
+  compact: t.Optional(t.Union([t.Boolean(), t.Literal("vertical"), t.Literal("horizontal")])),
   preventCollision: t.Optional(t.Boolean()),
-});
+})
 
 export const TimeRange = t.Object({
   from: t.Union([t.String(), t.Date()]),
   to: t.Union([t.String(), t.Date()]),
   timeZone: t.Optional(t.String()),
-});
+})
 
 export const DashboardTheme = t.Object({
-  colorScheme: t.Optional(
-    t.Union([t.Literal("light"), t.Literal("dark"), t.Literal("system")]),
-  ),
+  colorScheme: t.Optional(t.Union([t.Literal("light"), t.Literal("dark"), t.Literal("system")])),
   colors: t.Optional(t.Record(t.String(), t.String())),
   fontFamily: t.Optional(t.String()),
-});
+})
 
 export const DashboardSettings = t.Object({
   refreshInterval: t.Optional(t.Number()),
@@ -144,7 +140,7 @@ export const DashboardSettings = t.Object({
   editMode: t.Optional(t.Boolean()),
   showBorders: t.Optional(t.Boolean()),
   background: t.Optional(t.String()),
-});
+})
 
 export const DashboardConfig = t.Object({
   id: t.String(),
@@ -157,7 +153,7 @@ export const DashboardConfig = t.Object({
   createdAt: t.Date(),
   updatedAt: t.Date(),
   version: t.String(),
-});
+})
 
 // -------------------------------------------
 // Runtime State & History Types
@@ -168,19 +164,19 @@ export const DataSourceState = t.Object({
   error: t.Optional(t.Union([t.String(), t.Null()])),
   data: t.Optional(t.Unknown()),
   lastUpdated: t.Optional(t.Date()),
-});
+})
 
 export const DashboardHistoryEntry = t.Object({
   widgets: t.Array(WidgetInstance),
   timestamp: t.Date(),
   action: t.String(),
-});
+})
 
 export const DashboardHistory = t.Object({
   past: t.Array(DashboardHistoryEntry),
   future: t.Array(DashboardHistoryEntry),
   maxSize: t.Number(),
-});
+})
 
 export const DashboardState = t.Object({
   config: DashboardConfig,
@@ -191,7 +187,7 @@ export const DashboardState = t.Object({
   isDirty: t.Boolean(),
   clipboard: t.Union([WidgetInstance, t.Null()]),
   history: DashboardHistory,
-});
+})
 
 // -------------------------------------------
 // Action Types
@@ -213,7 +209,7 @@ export const DashboardAction = t.Union([
       t.Object({
         id: t.String(),
         layout: WidgetLayout,
-      }),
+      })
     ),
   }),
   t.Object({
@@ -236,7 +232,7 @@ export const DashboardAction = t.Union([
   t.Object({ type: t.Literal("REDO") }),
   t.Object({ type: t.Literal("LOAD_DASHBOARD"), payload: DashboardConfig }),
   t.Object({ type: t.Literal("RESET_DASHBOARD") }),
-]);
+])
 
 // -------------------------------------------
 // Import/Export Types
@@ -246,21 +242,21 @@ export const DashboardExportOptions = t.Object({
   includeData: t.Optional(t.Boolean()),
   includeCredentials: t.Optional(t.Boolean()),
   compress: t.Optional(t.Boolean()),
-});
+})
 
 export const DashboardExport = t.Object({
   version: t.String(),
   exportedAt: t.String(),
   dashboard: DashboardConfig,
   options: t.Optional(DashboardExportOptions),
-});
+})
 
 export const DashboardImportResult = t.Object({
   success: t.Boolean(),
   dashboard: t.Optional(DashboardConfig),
   errors: t.Optional(t.Array(t.String())),
   warnings: t.Optional(t.Array(t.String())),
-});
+})
 
 // -------------------------------------------
 // Aggregated Model Export
@@ -292,4 +288,4 @@ export const DashboardModel = {
   DashboardExportOptions,
   DashboardExport,
   DashboardImportResult,
-};
+}
