@@ -10,7 +10,8 @@
     "./widgets": "./src/widgets/index.ts",
     "./dashboard": "./src/dashboard/index.ts",
     "./context": "./src/context/index.ts",
-    "./lib": "./src/lib/index.ts"
+    "./lib": "./src/lib/index.ts",
+    "./server": "./src/server/index.ts"
   },
   "files": [
     "./src/**/*.{ts,tsx,css}"
@@ -21,6 +22,9 @@
   "dependencies": {
     "@dockstat/ui": "workspace:*",
     "@dockstat/typings": "workspace:*",
+    "@dockstat/sqlite-wrapper": "workspace:*",
+    "@dockstat/logger": "workspace:*",
+    "elysia": "catalog:",
     "framer-motion": "^12.34.3",
     "lucide-react": "^0.552.0",
     "react": "catalog:",

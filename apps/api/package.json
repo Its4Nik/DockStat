@@ -19,6 +19,7 @@
     "@dockstat/typings": "workspace:*",
     "@dockstat/ui": "workspace:*",
     "@dockstat/utils": "workspace:*",
+    "@dockstat/widget-handler": "workspace:*",
     "@elysiajs/cors": "^1.4.0",
     "@elysiajs/eden": "catalog:",
     "@elysiajs/openapi": "^1.4.11",
