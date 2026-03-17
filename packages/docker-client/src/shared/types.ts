@@ -8,7 +8,8 @@ export type WorkerRequestBase = {
 export type WorkerRequest = WorkerRequestBase &
   (
     | { type: "init"; hosts: DATABASE.DB_target_host[] }
-    | { type: "ping" }
+    | { type: "ping" } // Pings all hosts of a client
+    | { type: "pingHost"; hostId: number }
     | {
         type: "addHost"
         data: DATABASE.DB_target_host

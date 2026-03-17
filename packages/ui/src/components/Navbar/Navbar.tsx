@@ -21,7 +21,10 @@ type NavbarProps = {
   isBusy: boolean
   logEntries: LogEntry[]
   navLinks?: { slug: string; path: string }[]
-  pluginLinks: Array<{ pluginName: string; paths: Array<{ fullPath: string; metaTitle: string }> }>
+  pluginLinks: Array<{
+    pluginName: string
+    paths: Array<{ fullPath: string; metaTitle: string }>
+  }>
   ramUsage?: string
   heading?: string
   mutationFn: SidebarProps["mutationFn"]
@@ -76,7 +79,7 @@ export function Navbar({
         hotkey={openQuickLinksModalHotkey}
       />
 
-      <Card size="sm" className="w-full p-0.5 mb-4 relative overflow-visible">
+      <Card size="sm" className="max-w-screen p-0.5 mb-4 relative overflow-visible">
         <div
           className={`absolute inset-0 bg-linear-to-r from-blue-500 via-purple-500 to-pink-500 bg-size-[200%_200%] transition-opacity duration-500 ${
             isBusy ? "opacity-20 animate-[gradient_1s_ease_infinite]" : "opacity-0"
@@ -115,7 +118,7 @@ export function Navbar({
                   exit="exit"
                   transition={{ duration: 0.2, ease: "easeOut" }}
                 >
-                  <NavLink to={nl.path}>
+                  <NavLink end to={nl.path}>
                     {({ isActive }) => <Badge outlined={isActive}>{nl.slug}</Badge>}
                   </NavLink>
                 </motion.div>

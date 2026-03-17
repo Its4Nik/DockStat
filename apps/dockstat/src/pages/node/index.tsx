@@ -1,9 +1,9 @@
 import { Button, Card, CardBody, CardHeader, Divider, Input, Slides, Toggle } from "@dockstat/ui"
+import { eden } from "@dockstat/utils/react"
 import { Activity, Server, Shield } from "lucide-react"
 import { useState } from "react"
 import { DockNodeCard } from "@/components/docknode/card"
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
-import { useEdenQuery } from "@/hooks/useEdenQuery"
+import { useDockNodeMutations } from "@/hooks/mutations"
 import { useGlobalBusy } from "@/hooks/useGlobalBusy"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
@@ -32,30 +32,12 @@ export default function DockNodePage() {
   const isValid =
     options.name.trim().length >= 3 && options.host.trim().length >= 5 && options.port > 0
 
-  const { data: docknodes, isLoading } = useEdenQuery({
+  const { data: docknodes, isLoading } = eden.useEdenQuery({
     route: api.node.get,
     queryKey: ["getAllDockNodes"],
   })
 
-  const createDockNodeMutation = useEdenMutation({
-    route: api.node.post,
-    mutationKey: ["createDockNode"],
-    invalidateQueries: [["getAllDockNodes"]],
-    toast: {
-      errorTitle: (dn) => `${dn?.name || "DockNode"} could not be created`,
-      successTitle: (dn) => `${dn?.name || "DockNode"} created`,
-    },
-  })
-
-  const deleteDockNodeMutation = useEdenMutation({
-    route: api.node.delete,
-    mutationKey: ["deleteDockNode"],
-    invalidateQueries: [["getAllDockNodes"]],
-    toast: {
-      errorTitle: (dn) => `${dn?.id || "DockNode"} could not be deleted`,
-      successTitle: (dn) => `${dn?.id || "DockNode"} deleted`,
-    },
-  })
+  const { createDockNodeMutation, deleteDockNodeMutation } = useDockNodeMutations()
 
   const createDockNode = async () => {
     if (!isValid) return

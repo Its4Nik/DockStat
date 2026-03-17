@@ -1,6 +1,6 @@
 import type { ThemeBrowserItem } from "@dockstat/ui"
 import { sleep } from "@dockstat/utils"
-import { useContext, useEffect } from "react"
+import { useContext, useEffect, useRef } from "react"
 import { QueryClientContext } from "@/contexts/queryClient"
 import { useThemeSidebar } from "@/contexts/ThemeSidebarContext"
 import { useThemeSidebarUI } from "@/contexts/ThemeSidebarUIContext"
@@ -18,11 +18,11 @@ export function useThemeManager() {
 
   useEffect(() => {
     applyThemeByIdRef.current = applyThemeById
-  }, [applyThemeById, applyThemeByIdRef])
+  }, [applyThemeById])
 
   useEffect(() => {
     adjustCurrentThemeRef.current = adjustCurrentTheme
-  }, [adjustCurrentTheme, adjustCurrentThemeRef])
+  }, [adjustCurrentTheme])
 
   const currentThemeColors = Object.entries(theme?.vars || {}).map(([key, val]) => ({
     colorName: key,

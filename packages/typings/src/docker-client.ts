@@ -127,6 +127,7 @@ export const DockerAdapterOptionsSchema = t.Partial(
 export interface ContainerInfo {
   id: string
   hostId: number
+  clientId: number
   name: string
   image: string
   status: string

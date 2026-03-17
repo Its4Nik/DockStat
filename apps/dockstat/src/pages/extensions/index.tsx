@@ -1,9 +1,9 @@
 import { Button, Card, Input } from "@dockstat/ui"
+import { eden } from "@dockstat/utils/react"
 import { Plus } from "lucide-react"
 import { useState } from "react"
 import { RepoCard } from "@/components/extensions/RepoCard"
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
-import { useEdenQuery } from "@/hooks/useEdenQuery"
+import { useAddRepoMutation } from "@/hooks/mutations"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
 
@@ -12,20 +12,12 @@ export default function ExtensionsIndex() {
 
   const [repoLink, setRepoLink] = useState("")
 
-  const { data } = useEdenQuery({
+  const { data } = eden.useEdenQuery({
     queryKey: ["fetchAllRepositories"],
     route: api.repositories.all.get,
   })
 
-  const addRepoMutation = useEdenMutation({
-    route: api.db.repositories.post,
-    mutationKey: ["addRepo"],
-    invalidateQueries: [["fetchAllRepositories"]],
-    toast: {
-      errorTitle: () => "Could not add repository",
-      successTitle: () => "Repository added",
-    },
-  })
+  const addRepoMutation = useAddRepoMutation()
 
   const handleRepoAdd = async (link?: string) => {
     const pLink = (link ?? repoLink).trim()

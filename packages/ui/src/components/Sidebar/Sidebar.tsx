@@ -47,7 +47,10 @@ export type SidebarProps = {
   logEntries: LogEntry[]
   mutationFn: { pin: PinLinkMutation; unpin: PinLinkMutation; isBusy: boolean }
   pins: { path: string; slug: string }[]
-  pluginLinks: { pluginName: string; paths: { fullPath: string; metaTitle: string }[] }[]
+  pluginLinks: {
+    pluginName: string
+    paths: { fullPath: string; metaTitle: string }[]
+  }[]
   deleteTheme: (themeId: number) => Promise<void>
   themes: ThemeBrowserItem[]
   currentThemeId: number | null
@@ -97,8 +100,6 @@ export function Sidebar({
     }
   }
 
-  // Theme sidebar state is now managed globally in the context
-
   const pathsWithPinStatus = usePinnedPaths([...SidebarPaths], pins)
 
   return (
@@ -121,7 +122,7 @@ export function Sidebar({
             animate="open"
             exit="closed"
           >
-            <Card className="flex h-full flex-col shadow-xl">
+            <Card className="flex h-full flex-col shadow-xl overflow-y-scroll">
               <div className="flex items-center justify-between p-1">
                 <div className="flex items-center gap-3">
                   <img src={DockStatLogo} alt="DockStat Logo" className="w-8" />

@@ -149,7 +149,12 @@ class DB {
    *
    * @returns Array of backup file information
    */
-  listBackups(): Array<{ filename: string; path: string; size: number; created: Date }> {
+  listBackups(): Array<{
+    filename: string
+    path: string
+    size: number
+    created: Date
+  }> {
     return helperListBackups(this.autoBackupOptions, this.backupLog)
   }
 
@@ -246,9 +251,9 @@ class DB {
    *
    * @throws {Error} If column definitions are invalid or constraints conflict.
    */
-  createTable<_T extends Record<string, unknown> = Record<string, unknown>>(
+  createTable<_T extends Record<string, unknown>>(
     tableName: string,
-    columns: Record<keyof _T, ColumnDefinition>,
+    columns: { [K in keyof _T]: ColumnDefinition }, // 'in keyof' is stricter mapping
     options?: TableOptions<_T>
   ): QueryBuilder<_T> {
     this.dbLog.info(`Creating Table '${tableName}' with ${Object.keys(columns).length} columns`)
@@ -327,7 +332,9 @@ class DB {
         return this._setupTableParser<_T>(tableName, columns, options)
       }
 
-      throw new SQLiteError((error as SQLiteError).message, { cause: (error as SQLiteError).cause })
+      throw new SQLiteError((error as SQLiteError).message, {
+        cause: (error as SQLiteError).cause,
+      })
     }
   }
 

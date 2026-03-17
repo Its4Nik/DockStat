@@ -1,15 +1,7 @@
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
-import { api } from "@/lib/api"
+import { useThemeMutations } from "@/hooks/mutations"
 
 export function useDeleteTheme() {
-  const deleteThemeMutation = useEdenMutation({
-    mutationKey: ["deleteTheme"],
-    route: api.themes.delete,
-    toast: {
-      successTitle: (input) => `Deleted theme ${input.id}`,
-      errorTitle: (input) => `Could not delete theme ${input.id}`,
-    },
-  })
+  const { deleteThemeMutation } = useThemeMutations()
 
   const deleteTheme = async (id: number) => {
     await deleteThemeMutation.mutateAsync({ id })

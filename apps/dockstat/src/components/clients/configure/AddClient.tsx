@@ -1,10 +1,10 @@
 import type { DockerAdapterOptionsSchema, MonitoringOptions } from "@dockstat/typings"
 import { Button, Card, CardBody, Divider, Input, Slider, Toggle } from "@dockstat/ui"
 import { useState } from "react"
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
-import { api } from "@/lib/api"
+import { useDockerClientMutations } from "@/hooks/mutations"
 
 export function AddClient() {
+  const { createClientMutation } = useDockerClientMutations()
   const [clientName, setClientName] = useState("")
   const [options, setOptions] = useState<typeof DockerAdapterOptionsSchema.static>({
     defaultTimeout: 5000,
@@ -31,19 +31,9 @@ export function AddClient() {
     },
   })
 
-  const registerClientMutation = useEdenMutation({
-    mutationKey: ["createNewClient"],
-    route: api.docker.client.register.post,
-    invalidateQueries: [["fetchDockerClients"], ["fetchPoolStatus"]],
-    toast: {
-      successTitle: (c) => `Client ${c.clientName} created`,
-      errorTitle: (c) => `Could not create client ${c.clientName}`,
-    },
-  })
-
   const onSave = async () => {
     if (!clientName.trim()) return
-    await registerClientMutation.mutateAsync({
+    await createClientMutation.mutateAsync({
       clientName,
       options,
     })
@@ -185,7 +175,10 @@ export function AddClient() {
                           onChange={(c) =>
                             setOptions((p) => ({
                               ...p,
-                              monitoringOptions: { ...p.monitoringOptions, [key]: c },
+                              monitoringOptions: {
+                                ...p.monitoringOptions,
+                                [key]: c,
+                              },
                             }))
                           }
                         />
@@ -236,9 +229,9 @@ export function AddClient() {
               size="lg"
               className="w-full"
               onClick={onSave}
-              disabled={!clientName.trim() || registerClientMutation.isPending}
+              disabled={!clientName.trim() || createClientMutation.isPending}
             >
-              {registerClientMutation.isPending ? "Creating..." : "Register Docker Client"}
+              {createClientMutation.isPending ? "Creating..." : "Register Docker Client"}
             </Button>
             <p className="text-center text-xs text-muted-text">
               Settings can be modified later in the client dashboard.

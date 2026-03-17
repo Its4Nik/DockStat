@@ -84,7 +84,6 @@ export class DockerClientManagerCore {
   }
 
   // ---------- Client registration ----------
-
   public async registerClient(name: string, options: DOCKER.DockerAdapterOptions = {}) {
     let dbStepDone = false
     try {
@@ -374,7 +373,7 @@ export class DockerClientManagerCore {
     wrapper.lastUsed = Date.now()
 
     try {
-      const response = await sendWorkerMessage<T>(wrapper.worker, request)
+      const response = await sendWorkerMessage(wrapper.worker, request)
       if (response.success) {
         return response.data as T
       }
@@ -413,8 +412,14 @@ export class DockerClientManagerCore {
   }> {
     const liveMap = new Map<
       number,
-      { id: number; name: string; initialized: true; options: DOCKER.DockerAdapterOptions }
+      {
+        id: number
+        name: string
+        initialized: true
+        options: DOCKER.DockerAdapterOptions
+      }
     >()
+
     for (const w of this.workers.values()) {
       liveMap.set(Number(w.clientId), {
         id: Number(w.clientId),
@@ -434,7 +439,12 @@ export class DockerClientManagerCore {
 
     const resultMap = new Map<
       number,
-      { id: number; name: string; initialized: boolean; options: DOCKER.DockerAdapterOptions }
+      {
+        id: number
+        name: string
+        initialized: boolean
+        options: DOCKER.DockerAdapterOptions
+      }
     >()
 
     for (const { id, name, options } of storedClients) {
@@ -542,7 +552,13 @@ export class DockerClientManagerCore {
         const { level, message, caller, name, parents, timestamp, requestId }: LogEntry =
           msg.ctx as Parameters<EVENTS[typeof msg.type]>[0]
 
-        this.logger.emitLogEntry(level, message, { caller, name, parents, timestamp, requestId })
+        this.logger.emitLogEntry(level, message, {
+          caller,
+          name,
+          parents,
+          timestamp,
+          requestId,
+        })
       }
     }
   }
@@ -632,18 +648,6 @@ export class DockerClientManagerCore {
     return false
   }
 
-  public async getAllHosts(): Promise<
-    {
-      name: string
-      id: number
-      clientId: number
-      reachable: boolean
-    }[]
-  > {
-    // Default behavior: no hosts known at core level. HostsMixin overrides this.
-    return []
-  }
-
   // ---------- Pool metrics & status ----------
 
   public async getPoolMetrics(): Promise<PoolMetrics> {
@@ -730,6 +734,20 @@ export class DockerClientManagerCore {
       memoryUsage: heapStats(),
       uptime: Date.now() - wrapper.createdAt,
     }
+  }
+
+  public async getAllHosts(): Promise<
+    {
+      name: string
+      id: number
+      clientId: number
+      reachable: boolean
+      host: string
+      port: number
+    }[]
+  > {
+    // Default behavior: no hosts known at core level. HostsMixin overrides this.
+    return []
   }
 
   // ---------- Cleanup ----------

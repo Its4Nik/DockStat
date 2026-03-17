@@ -76,7 +76,11 @@ self.onmessage = async (event: MessageEvent<InboundMessage>) => {
   const request = msg as WorkerRequest
   const requestId = request.requestId ?? ""
 
-  const ok = <T>(data: T): WorkerResponse<T> => ({ success: true, data, requestId })
+  const ok = <T>(data: T): WorkerResponse<T> => ({
+    success: true,
+    data,
+    requestId,
+  })
   const fail = (error: unknown): WorkerResponse<never> => ({
     success: false,
     error: error instanceof Error ? error.message : String(error),
@@ -95,6 +99,9 @@ self.onmessage = async (event: MessageEvent<InboundMessage>) => {
         break
       case "ping":
         result = await c.ping()
+        break
+      case "pingHost":
+        result = await c.pingHost(request.hostId)
         break
       case "addHost":
         result = c.addHost(request.data)

@@ -1,9 +1,9 @@
 import { Badge, Button, Card, Divider, Input, LinkWithIcon, Modal, Select } from "@dockstat/ui"
 import { repo } from "@dockstat/utils"
+import { eden } from "@dockstat/utils/react"
 import { Link } from "lucide-react"
 import { useMemo, useState } from "react"
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
-import { useEdenQuery } from "@/hooks/useEdenQuery"
+import { usePluginMutations } from "@/hooks/mutations"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
 
@@ -36,40 +36,22 @@ export default function PluginBrowser() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedPlugin, setSelectedPlugin] = useState<AvailablePlugin | null>(null)
 
-  const { data: allPlugins } = useEdenQuery({
+  const { data: allPlugins } = eden.useEdenQuery({
     queryKey: ["fetchAllPlugins"],
     route: api.plugins.all.get,
   })
 
-  const { data: allRepos } = useEdenQuery({
+  const { data: allRepos } = eden.useEdenQuery({
     queryKey: ["fetchAllRepositories"],
     route: api.repositories.all.get,
   })
 
-  const { data: allManifests } = useEdenQuery({
+  const { data: allManifests } = eden.useEdenQuery({
     queryKey: ["fetchAllManifests"],
     route: api.repositories["all-manifests"].get,
   })
 
-  const installPluginMutation = useEdenMutation({
-    route: api.plugins.install.post,
-    mutationKey: ["installPlugin"],
-    invalidateQueries: [["fetchAllPlugins"], ["fetchFrontendPluginRoutes"]],
-    toast: {
-      errorTitle: (plugin) => `Failed to install ${plugin.name}`,
-      successTitle: (plugin) => `Installed ${plugin.name}`,
-    },
-  })
-
-  const deletePluginMutation = useEdenMutation({
-    route: api.plugins.delete.post,
-    mutationKey: ["deletePlugin"],
-    invalidateQueries: [["fetchAllPlugins"], ["fetchFrontendPluginRoutes"]],
-    toast: {
-      errorTitle: (p) => `Error while uninstalling PluginID: ${p.pluginId}`,
-      successTitle: (p) => `Uninstalled PluginID: ${p.pluginId}`,
-    },
-  })
+  const { installPluginMutation, deletePluginMutation } = usePluginMutations()
 
   const availablePlugins = useMemo(() => {
     if (!allManifests) return []
@@ -111,7 +93,10 @@ export default function PluginBrowser() {
         <Select
           className="max-w-[50%]"
           options={[
-            ...(allRepos || []).map((repo) => ({ value: repo.source, label: repo.name })),
+            ...(allRepos || []).map((repo) => ({
+              value: repo.source,
+              label: repo.name,
+            })),
             { label: "All", value: "all" },
           ]}
           value={selectedRepo}
@@ -175,7 +160,10 @@ export default function PluginBrowser() {
                 </Button>
                 <Button
                   onClick={() =>
-                    installPluginMutation.mutateAsync({ ...plugin, id: plugin.installedId || null })
+                    installPluginMutation.mutateAsync({
+                      ...plugin,
+                      id: plugin.installedId || null,
+                    })
                   }
                   disabled={plugin.isInstalled || installPluginMutation.isPending}
                   className="flex-1"
@@ -187,8 +175,10 @@ export default function PluginBrowser() {
                     className="flex-1"
                     variant="danger"
                     onClick={() =>
-                      // biome-ignore lint/style/noNonNullAssertion: checked if an ID exists
-                      deletePluginMutation.mutateAsync({ pluginId: plugin.installedId! })
+                      deletePluginMutation.mutateAsync({
+                        // biome-ignore lint/style/noNonNullAssertion: checked if an ID exists
+                        pluginId: plugin.installedId!,
+                      })
                     }
                   >
                     Delete

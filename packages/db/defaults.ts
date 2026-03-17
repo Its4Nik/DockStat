@@ -26,6 +26,7 @@ export const defaultConfig: DockStatConfigTableType = {
   keys: { web: null, docker: null, docknode: null },
   additionalSettings: {
     showBackendRamUsageInNavbar: true,
+    defaultDashboard: undefined,
   },
 }
 
