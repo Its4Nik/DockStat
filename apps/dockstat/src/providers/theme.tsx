@@ -4,10 +4,10 @@ import {
   saveThemePreference,
   type ThemeContextData,
 } from "@dockstat/theme-handler/client"
+import { eden } from "@dockstat/utils/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { type ThemeListItem, ThemeProviderContext, type ThemeProviderData } from "@/contexts/theme"
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
-import { useEdenQuery } from "@/hooks/useEdenQuery"
+import { useThemeMutations } from "@/hooks/mutations"
 import { api } from "@/lib/api"
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -17,12 +17,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [isModifiedTheme, setIsModifiedTheme] = useState<boolean>(false)
   const hasLoadedSavedTheme = useRef(false)
 
-  const { data: ThemesRes } = useEdenQuery({
+  const { data: ThemesRes } = eden.useEdenQuery({
     route: api.themes.get,
     queryKey: ["fetchAllThemes"],
   })
 
   const themesList: ThemeListItem[] | null = ThemesRes?.data ?? null
+
+  const { createThemeMutation: createNewThemeFromCurrent } = useThemeMutations()
 
   const applyThemeEffect = useCallback((themeData: ThemeContextData) => {
     console.log("Applying theme:", themeData)
@@ -51,29 +53,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     [applyThemeEffect]
   )
 
-  const createNewThemeFromCurrent = useEdenMutation({
-    mutationKey: ["createNewThemeFromCurrent"],
-    route: api.themes.post,
-    invalidateQueries: [],
-    toast: {
-      errorTitle: () => {
-        setIsModifiedTheme(true)
-        return "Could not create new Theme"
-      },
-      successTitle: () => {
-        setIsModifiedTheme(false)
-        return "Created new Theme"
-      },
-    },
-  })
-
   const applyTheme = useCallback(
     async (themeName: string) => {
       setIsLoading(true)
       setError(null)
 
       try {
-        const { data, error: fetchError } = await api.themes["by-name"]({ name: themeName }).get()
+        const { data, error: fetchError } = await api.themes["by-name"]({
+          name: themeName,
+        }).get()
 
         if (fetchError || !data) {
           throw new Error(`Failed to fetch theme "${themeName}"`)
@@ -105,7 +93,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setError(null)
 
       try {
-        const { data, error: fetchError } = await api.themes["by-id"]({ id: themeId }).get()
+        const { data, error: fetchError } = await api.themes["by-id"]({
+          id: themeId,
+        }).get()
 
         if (fetchError || !data) {
           throw new Error(`Failed to fetch theme with id ${themeId}`)
@@ -142,6 +132,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [applyThemeById])
 
+  const handleCreateNewTheme = async (
+    input: Parameters<typeof createNewThemeFromCurrent.mutateAsync>[0]
+  ) => {
+    try {
+      const result = await createNewThemeFromCurrent.mutateAsync(input)
+      setIsModifiedTheme(false)
+      return result
+    } catch (err) {
+      setIsModifiedTheme(true)
+      throw err
+    }
+  }
+
   type input = Parameters<typeof createNewThemeFromCurrent.mutateAsync>[0]
   type routeType = Awaited<ReturnType<typeof api.themes.post>>["data"]
 
@@ -154,7 +157,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     isModifiedTheme,
     themesList,
     adjustCurrentTheme,
-    createNewThemeFromCurrent,
+    createNewThemeFromCurrent: {
+      ...createNewThemeFromCurrent,
+      mutateAsync: handleCreateNewTheme,
+    },
   }
 
   return <ThemeProviderContext value={providerValue}>{children}</ThemeProviderContext>

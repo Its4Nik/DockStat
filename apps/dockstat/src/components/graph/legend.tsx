@@ -21,5 +21,5 @@ export function Legend() {
         </div>
       </div>
     </div>
-  );
+  )
 }

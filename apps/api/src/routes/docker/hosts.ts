@@ -1,7 +1,7 @@
-import { extractErrorMessage } from "@dockstat/utils";
-import Elysia, { t } from "elysia";
-import DCM from "../../docker";
-import { DockerModel } from "../../models/docker";
+import { extractErrorMessage } from "@dockstat/utils"
+import Elysia, { t } from "elysia"
+import DCM from "../../docker"
+import { DockerModel } from "../../models/docker"
 
 export const DockerHostElysia = new Elysia({
   prefix: "/hosts",
@@ -12,15 +12,11 @@ export const DockerHostElysia = new Elysia({
   .get("/", async ({ status }) => status(200, await DCM.getAllHosts()), {
     response: { 200: DockerModel.allHosts },
   })
-  .get(
-    "/:clientId",
-    async ({ params: { clientId } }) => await DCM.getAllHostMetrics(clientId),
-    {
-      params: t.Object({
-        clientId: t.Number(),
-      }),
-    },
-  )
+  .get("/:clientId", async ({ params: { clientId } }) => await DCM.getAllHostMetrics(clientId), {
+    params: t.Object({
+      clientId: t.Number(),
+    }),
+  })
   .post(
     "/",
     async ({ body, status }) => {
@@ -30,19 +26,19 @@ export const DockerHostElysia = new Elysia({
           body.hostname,
           body.name,
           body.secure,
-          body.port,
-        );
+          body.port
+        )
         return status(200, {
           success: true as const,
           message: `Host "${body.name}" added successfully`,
           data: host,
-        });
+        })
       } catch (err) {
-        const errorMessage = extractErrorMessage(err, "Failed to add host");
+        const errorMessage = extractErrorMessage(err, "Failed to add host")
         return status(500, {
           success: false as const,
           error: errorMessage,
-        });
+        })
       }
     },
     {
@@ -58,7 +54,7 @@ export const DockerHostElysia = new Elysia({
           error: t.String(),
         }),
       },
-    },
+    }
   )
   .patch(
     "/",
@@ -67,18 +63,18 @@ export const DockerHostElysia = new Elysia({
         const updatedHost = await DCM.updateHost(clientId, {
           ...host,
           docker_client_id: clientId,
-        });
+        })
         return status(200, {
           success: true as const,
           message: `Host "${host.name}" updated successfully`,
           data: updatedHost,
-        });
+        })
       } catch (err) {
-        const errorMessage = extractErrorMessage(err, "Failed to update host");
+        const errorMessage = extractErrorMessage(err, "Failed to update host")
         return status(500, {
           success: false as const,
           error: errorMessage,
-        });
+        })
       }
     },
     {
@@ -94,23 +90,23 @@ export const DockerHostElysia = new Elysia({
           error: t.String(),
         }),
       },
-    },
+    }
   )
   .delete(
     "/",
     async ({ body: { clientId, hostId }, status }) => {
       try {
-        await DCM.removeHost(clientId, hostId);
+        await DCM.removeHost(clientId, hostId)
         return status(200, {
           success: true as const,
           message: `Host with id "${hostId}" on Client "${clientId}" deleted successfully`,
-        });
+        })
       } catch (err) {
-        const errorMessage = extractErrorMessage(err, "Failed to delete host");
+        const errorMessage = extractErrorMessage(err, "Failed to delete host")
         return status(500, {
           success: false as const,
           error: errorMessage,
-        });
+        })
       }
     },
     {
@@ -128,5 +124,5 @@ export const DockerHostElysia = new Elysia({
           error: t.String(),
         }),
       },
-    },
-  );
+    }
+  )

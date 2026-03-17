@@ -1,11 +1,11 @@
-export { useLayout } from "./hooks/useLayout";
+export { useLayout } from "./hooks/useLayout"
 
-import { Navbar, ThemeSidebar } from "@dockstat/ui";
-import { useContext } from "react";
-import { Toaster } from "sonner";
-import { PageHeadingContext } from "@/contexts/pageHeadingContext";
-import { toast } from "@/lib/toast";
-import { useLayout } from "./hooks/useLayout";
+import { Navbar, ThemeSidebar } from "@dockstat/ui"
+import { useContext } from "react"
+import { Toaster } from "sonner"
+import { PageHeadingContext } from "@/contexts/pageHeadingContext"
+import { toast } from "@/lib/toast"
+import { useLayout } from "./hooks/useLayout"
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const {
@@ -28,9 +28,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
     deleteTheme,
     createNewThemeFromTheme,
     theme,
-  } = useLayout();
+  } = useLayout()
 
-  const heading = useContext(PageHeadingContext).heading;
+  const heading = useContext(PageHeadingContext).heading
 
   return (
     <div className="bg-main-bg min-h-screen w-screen p-4">
@@ -51,11 +51,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         isBusy={isBusy}
         navLinks={config?.navLinks || []}
         pluginLinks={frontendPluginRoutes || []}
-        ramUsage={
-          config.additionalSettings?.showBackendRamUsageInNavbar
-            ? ramUsage
-            : undefined
-        }
+        ramUsage={config.additionalSettings?.showBackendRamUsageInNavbar ? ramUsage : undefined}
         logEntries={logMessagesArr}
         heading={heading}
         mutationFn={{
@@ -64,28 +60,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
               title: `Pinned "${input.slug}"!`,
               description: (
                 <span>
-                  Added a new pinned link: "{input.slug}" -{" "}
-                  <pre>{input.path}</pre>
+                  Added a new pinned link: "{input.slug}" - <pre>{input.path}</pre>
                 </span>
               ),
               variant: "success",
-            });
+            })
 
-            return pinMutation.mutateAsync(input);
+            return pinMutation.mutateAsync(input)
           },
           unpin: (input: { path: string; slug: string }) => {
             toast({
               title: `Unpinned "${input.slug}"!`,
               description: (
                 <span>
-                  Added a new pinned link: "{input.slug}" -{" "}
-                  <pre>{input.path}</pre>
+                  Added a new pinned link: "{input.slug}" - <pre>{input.path}</pre>
                 </span>
               ),
               variant: "success",
-            });
+            })
 
-            return unPinMutation.mutateAsync(input);
+            return unPinMutation.mutateAsync(input)
           },
           isBusy: isBusy,
         }}
@@ -104,9 +98,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         allColors={currentThemeColors || []}
         currentTheme={currentThemeName || "Undefined"}
         onClose={() => {
-          setIsThemeSidebarOpen(false);
+          setIsThemeSidebarOpen(false)
         }}
       />
     </div>
-  );
+  )
 }

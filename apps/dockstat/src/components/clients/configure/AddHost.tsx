@@ -1,37 +1,33 @@
-import { Button, Card, CardBody, Input, Toggle } from "@dockstat/ui";
-import { useState } from "react";
-import { useDockerHostMutations } from "@/hooks/mutations";
+import { Button, Card, CardBody, Input, Toggle } from "@dockstat/ui"
+import { useState } from "react"
+import { useDockerHostMutations } from "@/hooks/mutations"
 
 type hostToAdd = {
-  secure: boolean;
-  name: string;
-  hostname: string;
-  clientId: number;
-  port: number;
-};
+  secure: boolean
+  name: string
+  hostname: string
+  clientId: number
+  port: number
+}
 
-export function AddHost({
-  registeredClients,
-}: {
-  registeredClients: number[];
-}) {
-  const { createHostMutation } = useDockerHostMutations();
+export function AddHost({ registeredClients }: { registeredClients: number[] }) {
+  const { createHostMutation } = useDockerHostMutations()
   const [formData, setFormData] = useState<hostToAdd>({
     secure: false,
     name: "",
     hostname: "",
     clientId: registeredClients[0] || 0,
     port: 2375,
-  });
+  })
 
   const handleAddHost = async () => {
-    if (!formData.name || !formData.hostname) return;
-    await createHostMutation.mutateAsync(formData);
-  };
+    if (!formData.name || !formData.hostname) return
+    await createHostMutation.mutateAsync(formData)
+  }
 
   const updateField = (field: keyof hostToAdd, value: unknown) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
 
   return (
     <div className="mx-auto max-w-6xl py-4">
@@ -95,12 +91,7 @@ export function AddHost({
                   <select
                     className="w-full rounded-md border border-accent/20 bg-background p-2 text-sm"
                     value={formData.clientId}
-                    onChange={(e) =>
-                      updateField(
-                        "clientId",
-                        Number.parseInt(e.target.value, 10),
-                      )
-                    }
+                    onChange={(e) => updateField("clientId", Number.parseInt(e.target.value, 10))}
                   >
                     {registeredClients.map((id) => (
                       <option key={id} value={id}>
@@ -113,8 +104,8 @@ export function AddHost({
                   </select>
                 </div>
                 <p className="text-xs text-muted-text">
-                  This host will be managed by the selected Docker client.
-                  Ensure the client can reach the host over the network.
+                  This host will be managed by the selected Docker client. Ensure the client can
+                  reach the host over the network.
                 </p>
               </CardBody>
             </Card>
@@ -132,13 +123,11 @@ export function AddHost({
                 registeredClients.length === 0
               }
             >
-              {createHostMutation.isPending
-                ? "Connecting..."
-                : "Add Remote Host"}
+              {createHostMutation.isPending ? "Connecting..." : "Add Remote Host"}
             </Button>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }

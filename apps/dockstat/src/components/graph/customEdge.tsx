@@ -1,14 +1,14 @@
+import { Card } from "@dockstat/ui"
 import {
   BaseEdge,
-  type EdgeProps,
   type Edge,
-  getBezierPath,
   EdgeLabelRenderer, // Import this
-} from "@xyflow/react";
-import { Card } from "@dockstat/ui";
+  type EdgeProps,
+  getBezierPath,
+} from "@xyflow/react"
 
-type CustomEdgeData = { value: number };
-type CustomEdge = Edge<CustomEdgeData, "custom">;
+type CustomEdgeData = { value: number }
+type CustomEdge = Edge<CustomEdgeData, "custom">
 
 export default function DockStatLabelEdge({
   id,
@@ -29,7 +29,7 @@ export default function DockStatLabelEdge({
     targetY,
     sourcePosition,
     targetPosition,
-  });
+  })
 
   return (
     <>
@@ -51,5 +51,5 @@ export default function DockStatLabelEdge({
         </EdgeLabelRenderer>
       )}
     </>
-  );
+  )
 }

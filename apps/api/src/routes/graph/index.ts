@@ -92,7 +92,7 @@ export const GraphElysia = new Elysia({
   })
   .post(
     "/regions",
-    async ({ body }) => {
+    async () => {
       return {
         success: true as const,
         message: "Region creation not yet implemented",

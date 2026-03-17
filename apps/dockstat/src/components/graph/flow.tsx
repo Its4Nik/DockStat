@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Divider, nodeTypes } from "@dockstat/ui";
+import { Badge, Button, Card, Divider, nodeTypes } from "@dockstat/ui"
 import {
   Background,
   BackgroundVariant,
@@ -14,58 +14,55 @@ import {
   useEdgesState,
   useNodesState,
   useReactFlow,
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
-import { MapPin, Maximize2, RefreshCw, Route, Server } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { useEdenQuery } from "@/hooks/useEdenQuery";
-import { api } from "@/lib/api";
-import { Legend } from "./legend";
-import { NodeDetailsPanel } from "./nodeDetails";
-import { StatsDisplay } from "./statsDisplay";
-import DockStatLabelEdge from "./customEdge";
+} from "@xyflow/react"
+import "@xyflow/react/dist/style.css"
+import { MapPin, Maximize2, RefreshCw, Route, Server } from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
+import { useEdenQuery } from "@/hooks/useEdenQuery"
+import { api } from "@/lib/api"
+import DockStatLabelEdge from "./customEdge"
+import { Legend } from "./legend"
+import { NodeDetailsPanel } from "./nodeDetails"
+import { StatsDisplay } from "./statsDisplay"
 
 export function GraphFlow() {
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const { fitView } = useReactFlow();
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  const { fitView } = useReactFlow()
 
   const { data, isLoading, error, refetch } = useEdenQuery({
     queryKey: ["graphData"],
     route: api.graph.get,
-  });
+  })
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
 
   useEffect(() => {
     if (data && !("success" in data && data.success === false)) {
-      setNodes(data.nodes || []);
-      setEdges(data.edges || []);
+      setNodes(data.nodes || [])
+      setEdges(data.edges || [])
     }
-  }, [data, setNodes, setEdges]);
+  }, [data, setNodes, setEdges])
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
-    setSelectedNode(node);
-  }, []);
+    setSelectedNode(node)
+  }, [])
 
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
         <Card variant="elevated" className="p-6">
           <div className="text-center">
-            <div className="text-destructive text-lg font-semibold mb-2">
-              Error Loading Graph
-            </div>
+            <div className="text-destructive text-lg font-semibold mb-2">Error Loading Graph</div>
             <div className="text-muted-text mb-4">{String(error)}</div>
             <Button onClick={() => refetch()}>Retry</Button>
           </div>
         </Card>
       </div>
-    );
+    )
   }
 
-  const hasNoData =
-    !data || (data && "nodes" in data && data.nodes?.length === 0);
+  const hasNoData = !data || (data && "nodes" in data && data.nodes?.length === 0)
 
   return (
     <div className="h-[calc(100vh-140px)] w-full flex gap-4">
@@ -82,9 +79,7 @@ export function GraphFlow() {
           <div className="p-3 flex-1">
             <div className="space-y-3">
               <div>
-                <h3 className="text-xs font-semibold text-muted-text mb-2">
-                  Actions
-                </h3>
+                <h3 className="text-xs font-semibold text-muted-text mb-2">Actions</h3>
                 <div className="space-y-1">
                   <Button
                     variant="outline"
@@ -111,9 +106,7 @@ export function GraphFlow() {
 
               {/* Tunnel Placeholder */}
               <div>
-                <h3 className="text-xs font-semibold text-muted-text mb-2">
-                  Tunnels
-                </h3>
+                <h3 className="text-xs font-semibold text-muted-text mb-2">Tunnels</h3>
                 <Button
                   variant="outline"
                   size="sm"
@@ -124,8 +117,7 @@ export function GraphFlow() {
                   Create Tunnel
                 </Button>
                 <p className="text-xs text-muted-text mt-2">
-                  Create secure tunnels between clients for direct
-                  communication.
+                  Create secure tunnels between clients for direct communication.
                 </p>
                 <Badge variant="secondary" className="mt-1 text-xs">
                   Coming Soon
@@ -151,12 +143,9 @@ export function GraphFlow() {
           <div className="absolute inset-0 flex items-center justify-center">
             <Card variant="elevated" className="p-6 text-center">
               <Server className="h-12 w-12 text-muted-text mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">
-                No Infrastructure Data
-              </h3>
+              <h3 className="text-lg font-semibold mb-2">No Infrastructure Data</h3>
               <p className="text-muted-text mb-4">
-                Add Clients, Hosts, or DockNodes to visualize your
-                infrastructure.
+                Add Clients, Hosts, or DockNodes to visualize your infrastructure.
               </p>
             </Card>
           </div>
@@ -200,13 +189,10 @@ export function GraphFlow() {
         {/* Node Details Panel */}
         {selectedNode && (
           <div className="absolute top-4 right-4 z-10">
-            <NodeDetailsPanel
-              node={selectedNode}
-              onClose={() => setSelectedNode(null)}
-            />
+            <NodeDetailsPanel node={selectedNode} onClose={() => setSelectedNode(null)} />
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }

@@ -7,13 +7,13 @@
 * https://discord.com/channels/771389069270712320/786621351263207454/1483188414793646152
 */
 .react-flow__attribution {
-    background: var(--color-card-default-bg);
-    border-radius: 15px;
-    padding: 5px;
+  padding: 5px;
+  background: var(--color-card-default-bg);
+  border-radius: 15px;
 }
 
 .react-flow__attribution a {
-    color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 /*
@@ -24,30 +24,30 @@
 
 /* Fonts */
 @font-face {
-    font-family: "Geist";
-    src: url("/fonts/Geist-Regular.woff2") format("woff2");
-    font-weight: 200;
-    font-style: normal;
-    font-display: swap;
+  font-family: "Geist";
+  src: url("/fonts/Geist-Regular.woff2") format("woff2");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
-    font-family: "Geist Mono";
-    src: url("/fonts/GeistMono-Regular.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
+  font-family: "Geist Mono";
+  src: url("/fonts/GeistMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
-    font-family: "Geist Pixel";
-    src: url("/fonts/GeistPixel-Square.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
+  font-family: "Geist Pixel";
+  src: url("/fonts/GeistPixel-Square.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
 @theme inline {
-    --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
-    --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
 }

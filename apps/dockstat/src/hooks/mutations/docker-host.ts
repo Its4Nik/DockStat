@@ -1,5 +1,5 @@
-import { api } from "@/lib/api";
-import { eden } from "@dockstat/utils/react";
+import { eden } from "@dockstat/utils/react"
+import { api } from "@/lib/api"
 
 export const useDockerHostMutations = () => {
   const createHostMutation = eden.useEdenMutation({
@@ -10,7 +10,7 @@ export const useDockerHostMutations = () => {
       successTitle: (h) => `Added Host: ${h.name}`,
       errorTitle: (h) => `Could not add Host: ${h.name}`,
     },
-  });
+  })
 
   const updateHostMutation = eden.useEdenMutation({
     mutationKey: ["updateHost"],
@@ -18,10 +18,9 @@ export const useDockerHostMutations = () => {
     invalidateQueries: [["fetchHosts"]],
     toast: {
       successTitle: (h) => `Updated Host: ${h.host.id} (Client: ${h.clientId})`,
-      errorTitle: (h) =>
-        `Could not update Host: ${h.host.id} (Client: ${h.clientId})`,
+      errorTitle: (h) => `Could not update Host: ${h.host.id} (Client: ${h.clientId})`,
     },
-  });
+  })
 
   const deleteHostMutation = eden.useEdenMutation({
     mutationKey: ["deleteHost"],
@@ -29,14 +28,13 @@ export const useDockerHostMutations = () => {
     invalidateQueries: [["fetchHosts"]],
     toast: {
       successTitle: (h) => `Deleted Host: ${h.hostId} (Client: ${h.clientId})`,
-      errorTitle: (h) =>
-        `Could not delete Host: ${h.hostId} (Client: ${h.clientId})`,
+      errorTitle: (h) => `Could not delete Host: ${h.hostId} (Client: ${h.clientId})`,
     },
-  });
+  })
 
   return {
     createHostMutation,
     updateHostMutation,
     deleteHostMutation,
-  };
-};
+  }
+}

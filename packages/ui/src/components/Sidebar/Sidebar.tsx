@@ -1,67 +1,64 @@
-import type { LogEntry } from "@dockstat/logger";
-import type { UpdateResult } from "@dockstat/sqlite-wrapper";
-import { formatDate } from "@dockstat/utils";
-import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons";
-import type { UseMutateAsyncFunction } from "@tanstack/react-query";
-import { AnimatePresence, motion } from "framer-motion";
-import { BookMarkedIcon, Paintbrush, Palette, Terminal, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { Badge } from "../Badge/Badge";
-import { Button } from "../Button/Button";
-import { Card } from "../Card/Card";
-import { Divider } from "../Divider/Divider";
-import { LinkWithIcon } from "../Link/Link";
-import { Modal } from "../Modal/Modal";
-import { backdropVariants, slideInVariants } from "../Navbar/animations";
-import { SidebarPaths } from "../Navbar/consts";
-import DockStatLogo from "../Navbar/DockStat2-06.png";
-import { usePinnedPaths } from "../Navbar/usePinnedPaths";
-import { Table } from "../Table/Table";
-import {
-  ThemeBrowser,
-  type ThemeBrowserItem,
-} from "../ThemeBrowser/ThemeBrowser";
-import { SidebarAnimatedItem, SidebarAnimatedNav } from "./SidebarAnimatedNav";
-import { SidebarItem } from "./SidebarItem";
+import type { LogEntry } from "@dockstat/logger"
+import type { UpdateResult } from "@dockstat/sqlite-wrapper"
+import { formatDate } from "@dockstat/utils"
+import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons"
+import type { UseMutateAsyncFunction } from "@tanstack/react-query"
+import { AnimatePresence, motion } from "framer-motion"
+import { BookMarkedIcon, Paintbrush, Palette, Terminal, X } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { Badge } from "../Badge/Badge"
+import { Button } from "../Button/Button"
+import { Card } from "../Card/Card"
+import { Divider } from "../Divider/Divider"
+import { LinkWithIcon } from "../Link/Link"
+import { Modal } from "../Modal/Modal"
+import { backdropVariants, slideInVariants } from "../Navbar/animations"
+import { SidebarPaths } from "../Navbar/consts"
+import DockStatLogo from "../Navbar/DockStat2-06.png"
+import { usePinnedPaths } from "../Navbar/usePinnedPaths"
+import { Table } from "../Table/Table"
+import { ThemeBrowser, type ThemeBrowserItem } from "../ThemeBrowser/ThemeBrowser"
+import { SidebarAnimatedItem, SidebarAnimatedNav } from "./SidebarAnimatedNav"
+import { SidebarItem } from "./SidebarItem"
 
 type PinLinkMutation = UseMutateAsyncFunction<
   UpdateResult & {
-    message: string;
+    message: string
   },
   Error,
   {
-    path: string;
-    slug: string;
+    path: string
+    slug: string
   },
   unknown
->;
+>
 
 type PathItem = {
-  slug: string;
-  path: string;
-  isPinned?: boolean;
-  children?: PathItem[];
-};
+  slug: string
+  path: string
+  isPinned?: boolean
+  children?: PathItem[]
+}
 
 export type SidebarProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  isBusy: boolean;
-  logEntries: LogEntry[];
-  mutationFn: { pin: PinLinkMutation; unpin: PinLinkMutation; isBusy: boolean };
-  pins: { path: string; slug: string }[];
+  isOpen: boolean
+  onClose: () => void
+  isBusy: boolean
+  logEntries: LogEntry[]
+  mutationFn: { pin: PinLinkMutation; unpin: PinLinkMutation; isBusy: boolean }
+  pins: { path: string; slug: string }[]
   pluginLinks: {
-    pluginName: string;
-    paths: { fullPath: string; metaTitle: string }[];
-  }[];
-  deleteTheme: (themeId: number) => Promise<void>;
-  themes: ThemeBrowserItem[];
-  currentThemeId: number | null;
-  setIsThemeSidebarOpen: (bool: boolean) => void;
-  onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>;
-  toastSuccess: (themeName: string) => void;
-  onColorChange: (color: string, colorName: string) => void;
-};
+    pluginName: string
+    paths: { fullPath: string; metaTitle: string }[]
+  }[]
+  deleteTheme: (themeId: number) => Promise<void>
+  themes: ThemeBrowserItem[]
+  currentThemeId: number | null
+  setIsThemeSidebarOpen: (bool: boolean) => void
+  onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
+  toastSuccess: (themeName: string) => void
+  onColorChange: (color: string, colorName: string) => void
+}
 
 export function Sidebar({
   isOpen,
@@ -77,33 +74,33 @@ export function Sidebar({
   toastSuccess,
   deleteTheme,
 }: SidebarProps) {
-  const [logModalOpen, setLogModalOpen] = useState<boolean>(false);
-  const [themeModalOpen, setThemeModalOpen] = useState<boolean>(false);
-  const [showPluginRoutes, setShowPluginRoutes] = useState<boolean>(false);
+  const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
+  const [themeModalOpen, setThemeModalOpen] = useState<boolean>(false)
+  const [showPluginRoutes, setShowPluginRoutes] = useState<boolean>(false)
 
-  const pinnedPaths = useMemo(() => new Set(pins.map((p) => p.path)), [pins]);
+  const pinnedPaths = useMemo(() => new Set(pins.map((p) => p.path)), [pins])
 
-  const isPinned = (path: string) => pinnedPaths.has(path);
+  const isPinned = (path: string) => pinnedPaths.has(path)
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [isOpen, onClose]);
+      if (e.key === "Escape") onClose()
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [isOpen, onClose])
 
   const handleTogglePin = (item: PathItem) => {
-    const payload = { slug: item.slug, path: item.path };
+    const payload = { slug: item.slug, path: item.path }
     if (item.isPinned) {
-      mutationFn.unpin(payload);
+      mutationFn.unpin(payload)
     } else {
-      mutationFn.pin(payload);
+      mutationFn.pin(payload)
     }
-  };
+  }
 
-  const pathsWithPinStatus = usePinnedPaths([...SidebarPaths], pins);
+  const pathsWithPinStatus = usePinnedPaths([...SidebarPaths], pins)
 
   return (
     <AnimatePresence>
@@ -131,12 +128,7 @@ export function Sidebar({
                   <img src={DockStatLogo} alt="DockStat Logo" className="w-8" />
                   <p className="text-lg font-bold tracking-tight">DockStat</p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={onClose}
-                >
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={onClose}>
                   <X size={16} />
                 </Button>
               </div>
@@ -259,7 +251,7 @@ export function Sidebar({
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setThemeModalOpen(true);
+                      setThemeModalOpen(true)
                     }}
                     className="flex-1"
                   >
@@ -292,9 +284,7 @@ export function Sidebar({
                       title: "Logger Name",
                       align: "center",
                       render: (loggerName) =>
-                        loggerName && (
-                          <Badge rounded>{String(loggerName)}</Badge>
-                        ),
+                        loggerName && <Badge rounded>{String(loggerName)}</Badge>,
                     },
                     {
                       key: "level",
@@ -314,17 +304,14 @@ export function Sidebar({
                       key: "requestId",
                       title: "RequestID",
                       align: "center",
-                      render: (reqId) =>
-                        reqId && <Badge unique>{String(reqId)}</Badge>,
+                      render: (reqId) => reqId && <Badge unique>{String(reqId)}</Badge>,
                     },
                     { key: "caller", title: "Caller", align: "center" },
                     { key: "parents", title: "Parents" },
                     {
                       key: "timestamp",
                       title: "Timestamp",
-                      render: (date) => (
-                        <span>{formatDate(date as Date, "log")}</span>
-                      ),
+                      render: (date) => <span>{formatDate(date as Date, "log")}</span>,
                     },
                   ]}
                   data={logEntries}
@@ -353,5 +340,5 @@ export function Sidebar({
         </>
       )}
     </AnimatePresence>
-  );
+  )
 }

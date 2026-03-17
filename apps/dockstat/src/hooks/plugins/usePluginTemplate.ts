@@ -1,11 +1,10 @@
 import { useEffect, useMemo } from "react"
-import { api } from "@/lib/api"
+import { usePluginTemplateMutation } from "@/hooks/mutations"
 import {
   buildFragmentMap,
   normalizePluginPageData,
   parsePageTemplate,
 } from "@/utils/normalizePluginPageData"
-import { useEdenMutation } from "../eden/useEdenMutation"
 
 export function usePluginTemplate(pluginId: number, routePath: string) {
   const {
@@ -14,10 +13,7 @@ export function usePluginTemplate(pluginId: number, routePath: string) {
     isPending: isLoading,
     mutate,
     mutateAsync,
-  } = useEdenMutation({
-    mutationKey: ["plugin-template", String(pluginId), routePath],
-    route: api.plugins.frontend({ pluginId }).template.post,
-  })
+  } = usePluginTemplateMutation(pluginId)
 
   useEffect(() => {
     mutate({ path: routePath })

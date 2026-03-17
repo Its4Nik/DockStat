@@ -40,7 +40,6 @@ export const LinkWithIcon: React.FC<LinkWithIconProps> = ({
         {isRight && <span className="ml-1">{icon}</span>}
       </NavLink>
     )
-    end
   }
 
   return (
