@@ -10,7 +10,11 @@ type hostToAdd = {
   port: number
 }
 
-export function AddHost({ registeredClients }: { registeredClients: {clientName: string, clientId: number}[] }) {
+export function AddHost({
+  registeredClients,
+}: {
+  registeredClients: { clientName: string; clientId: number }[]
+}) {
   const { createHostMutation } = useDockerHostMutations()
   const [formData, setFormData] = useState<hostToAdd>({
     secure: false,
