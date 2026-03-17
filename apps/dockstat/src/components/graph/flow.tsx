@@ -67,7 +67,7 @@ export function GraphFlow() {
     !data ||
     (("success" in data ? data.success : true) &&
       "nodes" in data &&
-      Array.isArray((data ).nodes) &&
+      Array.isArray(data.nodes) &&
       data.nodes.length === 0)
 
   return (
