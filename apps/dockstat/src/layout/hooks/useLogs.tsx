@@ -25,7 +25,7 @@ export function useLogs() {
         title: (
           <div>
             <p>A server error occurred!</p>
-            <span className="text-accent">{logMessage.name}</span>]
+            <span className="text-accent">{logMessage.name}</span>
           </div>
         ),
         description: logMessage.message,

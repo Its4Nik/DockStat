@@ -23,6 +23,9 @@ export namespace GraphModel {
       image: t.Optional(t.String()),
       clientId: t.Optional(t.Number()),
       hostId: t.Optional(t.Number()),
+      dockNodeId: t.Optional(t.Number()),
+      state: t.Optional(t.String()),
+      containerId: t.Optional(t.Number()),
     }),
   })
 
@@ -36,6 +39,9 @@ export namespace GraphModel {
         stroke: t.Optional(t.String()),
       })
     ),
+    label: t.Optional(t.String()),
+    type: t.Optional(t.String()),
+    edgesReconnectable: t.Optional(t.Boolean()),
   })
 
   export const GraphDataSchema = t.Object({

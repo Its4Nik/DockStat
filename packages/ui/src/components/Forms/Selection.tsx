@@ -15,7 +15,7 @@ export interface SelectProps {
   disabled?: boolean
   placeholder?: string
   value?: string
-  rawOnChange?: (e: React.ChangeEvent<HTMLSelectElement, HTMLSelectElement>) => void
+  rawOnChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void
   onChange?: (value: string) => void
   className?: string
   error?: boolean

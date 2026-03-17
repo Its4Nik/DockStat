@@ -421,7 +421,6 @@ export class DockerClientManagerCore {
     >()
 
     for (const w of this.workers.values()) {
-      this.sendRequest(w.clientId, { type: "ping" })
       liveMap.set(Number(w.clientId), {
         id: Number(w.clientId),
         name: w.clientName ?? String(w.clientId),

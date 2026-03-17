@@ -63,7 +63,12 @@ export function GraphFlow() {
     )
   }
 
-  const hasNoData = !data || (data && "nodes" in data && data.nodes?.length === 0)
+  const hasNoData =
+      !data ||
+      (("success" in data ? data.success : true) &&
+        "nodes" in data &&
+        Array.isArray((data as any).nodes) &&
+        data.nodes.length === 0)
 
   return (
     <div className="h-[calc(100vh-140px)] w-full flex gap-4">

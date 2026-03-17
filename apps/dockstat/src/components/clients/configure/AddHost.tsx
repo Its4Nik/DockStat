@@ -20,7 +20,7 @@ export function AddHost({
     secure: false,
     name: "",
     hostname: "",
-    clientId: registeredClients[0].clientId || 0,
+    clientId: registeredClients[0]?.clientId ?? 0,
     port: 2375,
   })
 

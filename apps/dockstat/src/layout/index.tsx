@@ -73,7 +73,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               title: `Unpinned "${input.slug}"!`,
               description: (
                 <span>
-                  Added a new pinned link: "{input.slug}" - <pre>{input.path}</pre>
+                  Removed pinned link: "{input.slug}" - <pre>{input.path}</pre>
                 </span>
               ),
               variant: "success",
