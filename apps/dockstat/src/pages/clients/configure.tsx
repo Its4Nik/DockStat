@@ -45,7 +45,7 @@ export default function ConfigureClientsPage() {
       >
         {{
           "Add Client": <AddClient />,
-          "Add Host": <AddHost registeredClients={(clientsData || []).flatMap((c) => c.id)} />,
+          "Add Host": <AddHost registeredClients={(clientsData || []).flatMap((c) => {return {clientId: c.id, clientName: c.name}})} />,
         }}
       </Slides>
 

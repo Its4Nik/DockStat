@@ -3,7 +3,6 @@ import { Route, Routes } from "react-router"
 import IndexPage from "./pages"
 import ConfigureClientsPage from "./pages/clients/configure"
 import ClientsPage from "./pages/clients/index"
-import DashboardsPage from "./pages/dashboards"
 import ExtensionsIndex from "./pages/extensions"
 import PluginBrowser from "./pages/extensions/plugins"
 import GraphPage from "./pages/graph"
@@ -16,7 +15,6 @@ export default function DockStatRouter() {
   return (
     <Routes>
       <Route path="/" index element={<IndexPage />} />
-      <Route path="/dashboards" element={<DashboardsPage />} />
       <Route path="/graph" element={<GraphPage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/node" element={<DockNodePage />} />

@@ -10,13 +10,13 @@ type hostToAdd = {
   port: number
 }
 
-export function AddHost({ registeredClients }: { registeredClients: number[] }) {
+export function AddHost({ registeredClients }: { registeredClients: {clientName: string, clientId: number}[] }) {
   const { createHostMutation } = useDockerHostMutations()
   const [formData, setFormData] = useState<hostToAdd>({
     secure: false,
     name: "",
     hostname: "",
-    clientId: registeredClients[0] || 0,
+    clientId: registeredClients[0].clientId || 0,
     port: 2375,
   })
 
@@ -93,9 +93,9 @@ export function AddHost({ registeredClients }: { registeredClients: number[] }) 
                     value={formData.clientId}
                     onChange={(e) => updateField("clientId", Number.parseInt(e.target.value, 10))}
                   >
-                    {registeredClients.map((id) => (
-                      <option key={id} value={id}>
-                        Client ID: {id}
+                    {registeredClients.map((c) => (
+                      <option key={c.clientId} value={c.clientId}>
+                        Client: {c.clientName} ({c.clientId})
                       </option>
                     ))}
                     {registeredClients.length === 0 && (
