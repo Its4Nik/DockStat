@@ -1,5 +1,5 @@
-import { DashboardHandler } from "../dashboard";
+import { DashboardHandler } from "../dashboard"
 
-const DashboardRoutes = DashboardHandler.getRoutes();
+const DashboardRoutes = DashboardHandler.getRoutes()
 
-export default DashboardRoutes;
+export default DashboardRoutes

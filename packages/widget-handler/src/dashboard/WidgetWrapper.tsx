@@ -4,6 +4,7 @@
  * Wraps widgets with common functionality like selection, drag handle, etc.
  */
 
+import { Button } from "@dockstat/ui"
 import { motion } from "framer-motion"
 import { Copy, RefreshCw, Settings, Trash2 } from "lucide-react"
 import { useDashboard, useWidgetDataState } from "../context"
@@ -70,57 +71,54 @@ export function WidgetWrapper({ widget, children }: WidgetWrapperProps) {
           className="absolute top-2 right-2 flex items-center gap-1"
         >
           {/* Refresh Button */}
-          <button
-            type="button"
+          <Button
+            size="sm"
             onClick={(e) => {
               e.stopPropagation()
               refreshWidget(widget.id)
             }}
             className="p-1.5 rounded bg-card-default-bg/80 hover:bg-hover-bg transition-colors shadow-sm"
-            title="Refresh"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-muted-text" />
-          </button>
+            <RefreshCw size={18} />
+          </Button>
 
           {/* Copy Button */}
-          <button
-            type="button"
+          <Button
+            size="sm"
             onClick={(e) => {
               e.stopPropagation()
               copyWidget(widget.id)
             }}
             className="p-1.5 rounded bg-card-default-bg/80 hover:bg-hover-bg transition-colors shadow-sm"
-            title="Copy"
           >
-            <Copy className="w-3.5 h-3.5 text-muted-text" />
-          </button>
+            <Copy size={18} />
+          </Button>
 
           {/* Settings Button */}
-          <button
-            type="button"
+          <Button
+            size="sm"
             onClick={(e) => {
               e.stopPropagation()
               selectWidget(widget.id)
               // TODO: Open settings modal
             }}
             className="p-1.5 rounded bg-card-default-bg/80 hover:bg-hover-bg transition-colors shadow-sm"
-            title="Settings"
           >
-            <Settings className="w-3.5 h-3.5 text-muted-text" />
-          </button>
+            <Settings size={18} />
+          </Button>
 
           {/* Delete Button */}
-          <button
-            type="button"
+          <Button
+            size="sm"
             onClick={(e) => {
               e.stopPropagation()
               removeWidget(widget.id)
             }}
             className="p-1.5 rounded bg-card-default-bg/80 hover:bg-error/20 transition-colors shadow-sm"
-            title="Delete"
+            variant="danger"
           >
-            <Trash2 className="w-3.5 h-3.5 text-error" />
-          </button>
+            <Trash2 size={18} />
+          </Button>
         </motion.div>
       )}
 

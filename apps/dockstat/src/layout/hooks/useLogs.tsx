@@ -17,13 +17,16 @@ export function useLogs() {
       arrayUtils.pushWithLimit<LogEntry>(next, logMessage)
       return next
     })
+
     if (logMessage.level === "error") {
+      console.error(logMessage)
       toast({
         variant: "error",
         title: (
-          <p>
-            A server error occurred! [<span className="text-accent">{logMessage.name}</span>]
-          </p>
+          <div>
+            <p>A server error occurred!</p>
+            <span className="text-accent">{logMessage.name}</span>]
+          </div>
         ),
         description: logMessage.message,
       })

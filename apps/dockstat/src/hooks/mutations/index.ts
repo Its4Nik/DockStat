@@ -1,4 +1,5 @@
 export * from "./config"
+export * from "./dashboard"
 export * from "./docker-client"
 export * from "./docker-host"
 export * from "./node"
