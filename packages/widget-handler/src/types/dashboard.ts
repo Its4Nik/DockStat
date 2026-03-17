@@ -162,6 +162,7 @@ export type DashboardAction =
   | { type: "REDO" }
   | { type: "LOAD_DASHBOARD"; payload: DashboardConfig }
   | { type: "RESET_DASHBOARD" }
+  | { type: "SAVE_DASHBOARD" }
 
 /**
  * Dashboard export format

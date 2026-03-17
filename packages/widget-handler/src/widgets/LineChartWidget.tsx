@@ -5,6 +5,7 @@
  */
 
 import { Card, CardBody, CardHeader } from "@dockstat/ui"
+import { TrendingUp } from "lucide-react"
 import type { WidgetComponentProps, WidgetDefinition } from "../types"
 
 /**
@@ -186,7 +187,7 @@ export const lineChartWidget: WidgetDefinition<LineChartWidgetConfig, LineChartW
   type: "line-chart",
   name: "Line Chart",
   description: "Display time series data as a line chart",
-  icon: "📈",
+  icon: <TrendingUp className="w-6 h-6" />,
   category: "Charts",
   tags: ["chart", "time-series", "graph"],
   defaultConfig: {

@@ -5,6 +5,7 @@
  */
 
 import { Card, CardBody } from "@dockstat/ui"
+import { Activity } from "lucide-react"
 import type { WidgetComponentProps, WidgetDefinition } from "../types"
 
 /**
@@ -135,7 +136,7 @@ export const gaugeWidget: WidgetDefinition<GaugeWidgetConfig, GaugeWidgetData> =
   type: "gauge",
   name: "Gauge",
   description: "Display a value as a gauge/arc meter",
-  icon: "🎯",
+  icon: <Activity className="w-6 h-6" />,
   category: "Display",
   tags: ["meter", "gauge", "progress", "arc"],
   defaultConfig: {

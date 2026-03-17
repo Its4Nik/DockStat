@@ -6,6 +6,7 @@
  */
 
 import type { ComponentType, ReactNode } from "react"
+import type { DataParserConfig } from "./data-source"
 
 /**
  * Layout position for a widget in the grid
@@ -105,6 +106,8 @@ export interface WidgetInstance<TConfig = Record<string, unknown>> {
   layout: WidgetLayout
   /** Data source override */
   dataSource?: DataSourceConfig
+  /** Data parser configuration */
+  dataParser?: DataParserConfig
   /** Custom title override */
   title?: string
   /** Visibility state */

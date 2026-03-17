@@ -31,7 +31,7 @@ function WidgetCard({ widget }: { widget: WidgetDefinition }) {
     >
       <Card className="hover:ring-2 hover:ring-primary/50 transition-all" hoverable size="sm">
         <div className="flex flex-col items-center gap-2 text-center">
-          <span className="text-2xl">{widget.icon}</span>
+          <div className="flex items-center justify-center text-primary">{widget.icon}</div>
           <span className="text-sm font-medium text-primary-text">{widget.name}</span>
           <span className="text-xs text-muted-text line-clamp-2">{widget.description}</span>
         </div>

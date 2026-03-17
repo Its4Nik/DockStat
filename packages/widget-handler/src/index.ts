@@ -19,6 +19,7 @@ export {
   Dashboard,
   DashboardGrid,
   DashboardToolbar,
+  WidgetConfigModal,
   WidgetDrawer,
   WidgetWrapper,
 } from "./dashboard"

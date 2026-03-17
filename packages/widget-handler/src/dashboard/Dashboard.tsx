@@ -67,6 +67,8 @@ interface DashboardProps {
   initialConfig?: DashboardConfig
   /** Callback when dashboard configuration changes */
   onConfigChange?: (config: DashboardConfig) => void
+  /** Callback when the Save button is clicked */
+  onSave?: (config: DashboardConfig) => void
   /** Additional CSS class */
   className?: string
 }
@@ -74,10 +76,10 @@ interface DashboardProps {
 /**
  * Dashboard Component
  */
-export function Dashboard({ initialConfig, onConfigChange, className }: DashboardProps) {
+export function Dashboard({ initialConfig, onConfigChange, onSave, className }: DashboardProps) {
   return (
     <div className={`flex h-screen w-full flex-col overflow-hidden ${className ?? ""}`}>
-      <DashboardProvider initialConfig={initialConfig} onConfigChange={onConfigChange}>
+      <DashboardProvider initialConfig={initialConfig} onConfigChange={onConfigChange} onSave={onSave}>
         <DashboardInner />
       </DashboardProvider>
     </div>

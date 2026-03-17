@@ -5,7 +5,7 @@
  */
 
 import { Card, CardBody } from "@dockstat/ui"
-import { Minus, TrendingDown, TrendingUp } from "lucide-react"
+import { BarChart2, Minus, TrendingDown, TrendingUp } from "lucide-react"
 import type { WidgetComponentProps, WidgetDefinition } from "../types"
 
 /**
@@ -115,7 +115,7 @@ export const statsWidget: WidgetDefinition<StatsWidgetConfig, StatsWidgetData> =
   type: "stats",
   name: "Stats",
   description: "Display a key metric with optional trend indicator",
-  icon: "📊",
+  icon: <BarChart2 className="w-6 h-6" />,
   category: "Display",
   tags: ["metric", "value", "kpi"],
   defaultConfig: {

@@ -5,5 +5,6 @@
 export { Dashboard } from "./Dashboard"
 export { DashboardGrid } from "./DashboardGrid"
 export { DashboardToolbar } from "./DashboardToolbar"
+export { WidgetConfigModal } from "./WidgetConfigModal"
 export { WidgetDrawer } from "./WidgetDrawer"
 export { WidgetWrapper } from "./WidgetWrapper"

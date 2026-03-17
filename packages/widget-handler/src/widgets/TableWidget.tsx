@@ -5,6 +5,7 @@
  */
 
 import { Card, CardBody, CardHeader } from "@dockstat/ui"
+import { Rows3 } from "lucide-react"
 import type { WidgetComponentProps, WidgetDefinition } from "../types"
 
 /**
@@ -144,7 +145,7 @@ export const tableWidget: WidgetDefinition<TableWidgetConfig, TableWidgetData> =
   type: "table",
   name: "Table",
   description: "Display data in a tabular format",
-  icon: "📋",
+  icon: <Rows3 className="w-6 h-6" />,
   category: "Data",
   tags: ["table", "grid", "data", "list"],
   defaultConfig: {

@@ -285,6 +285,12 @@ function dashboardReducer(state: DashboardState, action: DashboardAction): Dashb
     case "RESET_DASHBOARD":
       return createInitialState()
 
+    case "SAVE_DASHBOARD":
+      return {
+        ...state,
+        isDirty: false,
+      }
+
     default:
       return state
   }
@@ -311,6 +317,7 @@ interface DashboardContextValue {
   refreshWidget: (id: string) => void
   exportDashboard: () => string
   importDashboard: (json: string) => void
+  saveDashboard: () => void
 }
 
 const DashboardContext = createContext<DashboardContextValue | null>(null)
@@ -322,6 +329,7 @@ interface DashboardProviderProps {
   children: ReactNode
   initialConfig?: DashboardConfig
   onConfigChange?: (config: DashboardConfig) => void
+  onSave?: (config: DashboardConfig) => void
 }
 
 /**
@@ -331,6 +339,7 @@ export function DashboardProvider({
   children,
   initialConfig,
   onConfigChange,
+  onSave,
 }: DashboardProviderProps) {
   const [state, dispatch] = useReducer(dashboardReducer, createInitialState(initialConfig))
 
@@ -491,6 +500,11 @@ export function DashboardProvider({
     [loadDashboard]
   )
 
+  const saveDashboard = useCallback(() => {
+    onSave?.(state.config)
+    dispatch({ type: "SAVE_DASHBOARD" })
+  }, [onSave, state.config])
+
   const value: DashboardContextValue = {
     state,
     addWidget,
@@ -509,6 +523,7 @@ export function DashboardProvider({
     refreshWidget,
     exportDashboard,
     importDashboard,
+    saveDashboard,
   }
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>

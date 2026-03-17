@@ -5,6 +5,7 @@
  */
 
 import { Card, CardBody } from "@dockstat/ui"
+import { FileText } from "lucide-react"
 import type { WidgetComponentProps, WidgetDefinition } from "../types"
 
 /**
@@ -75,7 +76,7 @@ export const textWidget: WidgetDefinition<TextWidgetConfig, TextWidgetData> = {
   type: "text",
   name: "Text",
   description: "Display formatted text content",
-  icon: "📝",
+  icon: <FileText className="w-6 h-6" />,
   category: "Display",
   tags: ["text", "markdown", "content", "label"],
   defaultConfig: {

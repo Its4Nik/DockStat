@@ -14,6 +14,7 @@ import {
   FileText,
   Plus,
   Redo,
+  Save,
   Trash2,
   Undo,
   Upload,
@@ -35,6 +36,7 @@ export function DashboardToolbar() {
     resetDashboard,
     exportDashboard,
     importDashboard,
+    saveDashboard,
   } = useDashboard()
 
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -197,6 +199,19 @@ export function DashboardToolbar() {
             </motion.div>
           )}
         </div>
+
+        <Divider orientation="vertical" />
+
+        {/* Save */}
+        <Button
+          variant={isDirty ? "primary" : "ghost"}
+          size="sm"
+          onClick={saveDashboard}
+          disabled={!isDirty}
+        >
+          <Save className="w-4 h-4 mr-1" />
+          Save
+        </Button>
 
         <Divider orientation="vertical" />
 

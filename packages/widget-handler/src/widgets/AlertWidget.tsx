@@ -138,7 +138,7 @@ export const alertWidget: WidgetDefinition<AlertWidgetConfig, AlertWidgetData> =
   type: "alert",
   name: "Alert",
   description: "Display an alert/notification message",
-  icon: "⚠️",
+  icon: <AlertTriangle className="w-6 h-6" />,
   category: "Feedback",
   tags: ["alert", "notification", "warning", "error", "message"],
   defaultConfig: {
