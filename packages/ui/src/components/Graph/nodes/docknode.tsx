@@ -68,11 +68,13 @@ export const DockNode = memo(
 
         <Handle
           type="target"
+          isConnectable={false}
           position={Position.Left}
           className="w-3! h-3! bg-graph-docknode-card-border! border-2! border-graph-docknode-text-primary/40!"
         />
         <Handle
           type="source"
+          isConnectable={false}
           position={Position.Right}
           className="w-3! h-3! bg-graph-docknode-card-border! border-2! border-graph-docknode-text-primary/40!"
         />

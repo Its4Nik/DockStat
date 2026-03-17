@@ -1,12 +1,25 @@
-import type { DockerAdapterOptionsSchema, MonitoringOptions } from "@dockstat/typings"
-import { Button, Card, CardBody, Divider, Input, Slider, Toggle } from "@dockstat/ui"
-import { useState } from "react"
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
-import { api } from "@/lib/api"
+import type {
+  DockerAdapterOptionsSchema,
+  MonitoringOptions,
+} from "@dockstat/typings";
+import {
+  Button,
+  Card,
+  CardBody,
+  Divider,
+  Input,
+  Slider,
+  Toggle,
+} from "@dockstat/ui";
+import { useState } from "react";
+import { useDockerClientMutations } from "@/hooks/mutations";
 
 export function AddClient() {
-  const [clientName, setClientName] = useState("")
-  const [options, setOptions] = useState<typeof DockerAdapterOptionsSchema.static>({
+  const { createClientMutation } = useDockerClientMutations();
+  const [clientName, setClientName] = useState("");
+  const [options, setOptions] = useState<
+    typeof DockerAdapterOptionsSchema.static
+  >({
     defaultTimeout: 5000,
     retryAttempts: 3,
     retryDelay: 1000,
@@ -29,25 +42,15 @@ export function AddClient() {
       env: [],
       tty: false,
     },
-  })
-
-  const registerClientMutation = useEdenMutation({
-    mutationKey: ["createNewClient"],
-    route: api.docker.client.register.post,
-    invalidateQueries: [["fetchDockerClients"], ["fetchPoolStatus"]],
-    toast: {
-      successTitle: (c) => `Client ${c.clientName} created`,
-      errorTitle: (c) => `Could not create client ${c.clientName}`,
-    },
-  })
+  });
 
   const onSave = async () => {
-    if (!clientName.trim()) return
-    await registerClientMutation.mutateAsync({
+    if (!clientName.trim()) return;
+    await createClientMutation.mutateAsync({
       clientName,
       options,
-    })
-  }
+    });
+  };
 
   return (
     <div className="mx-auto max-w-6xl py-4">
@@ -71,7 +74,9 @@ export function AddClient() {
                 <Slider
                   label="Default Timeout"
                   value={(options.defaultTimeout ?? 5000) / 1000}
-                  onChange={(v) => setOptions((p) => ({ ...p, defaultTimeout: v * 1000 }))}
+                  onChange={(v) =>
+                    setOptions((p) => ({ ...p, defaultTimeout: v * 1000 }))
+                  }
                   min={1}
                   max={30}
                   step={1}
@@ -80,14 +85,18 @@ export function AddClient() {
                   <Slider
                     label="Retries"
                     value={options.retryAttempts ?? 3}
-                    onChange={(v) => setOptions((p) => ({ ...p, retryAttempts: v }))}
+                    onChange={(v) =>
+                      setOptions((p) => ({ ...p, retryAttempts: v }))
+                    }
                     min={0}
                     max={10}
                   />
                   <Slider
                     label="Delay (s)"
                     value={(options.retryDelay ?? 1000) / 1000}
-                    onChange={(v) => setOptions((p) => ({ ...p, retryDelay: v * 1000 }))}
+                    onChange={(v) =>
+                      setOptions((p) => ({ ...p, retryDelay: v * 1000 }))
+                    }
                     min={0.1}
                     max={5}
                     step={0.1}
@@ -116,7 +125,9 @@ export function AddClient() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <span className="text-sm font-medium">Environment Variables</span>
+                  <span className="text-sm font-medium">
+                    Environment Variables
+                  </span>
                   <Input
                     value={options.execOptions?.env?.join(",") ?? ""}
                     onChange={(e) =>
@@ -157,13 +168,17 @@ export function AddClient() {
                     size="sm"
                     label="Global Monitoring"
                     checked={options.enableMonitoring ?? true}
-                    onChange={(c) => setOptions((p) => ({ ...p, enableMonitoring: c }))}
+                    onChange={(c) =>
+                      setOptions((p) => ({ ...p, enableMonitoring: c }))
+                    }
                   />
                   <Toggle
                     size="sm"
                     label="Event Streaming"
                     checked={options.enableEventEmitter ?? true}
-                    onChange={(c) => setOptions((p) => ({ ...p, enableEventEmitter: c }))}
+                    onChange={(c) =>
+                      setOptions((p) => ({ ...p, enableEventEmitter: c }))
+                    }
                   />
                 </div>
 
@@ -181,11 +196,18 @@ export function AddClient() {
                           size="sm"
                           key={key}
                           label={label}
-                          checked={!!options.monitoringOptions?.[key as keyof MonitoringOptions]}
+                          checked={
+                            !!options.monitoringOptions?.[
+                              key as keyof MonitoringOptions
+                            ]
+                          }
                           onChange={(c) =>
                             setOptions((p) => ({
                               ...p,
-                              monitoringOptions: { ...p.monitoringOptions, [key]: c },
+                              monitoringOptions: {
+                                ...p.monitoringOptions,
+                                [key]: c,
+                              },
                             }))
                           }
                         />
@@ -194,7 +216,10 @@ export function AddClient() {
                     <div className="space-y-4 pt-2">
                       <Slider
                         label="Health Interval (s)"
-                        value={(options.monitoringOptions?.healthCheckInterval ?? 30000) / 1000}
+                        value={
+                          (options.monitoringOptions?.healthCheckInterval ??
+                            30000) / 1000
+                        }
                         onChange={(v) =>
                           setOptions((p) => ({
                             ...p,
@@ -210,7 +235,8 @@ export function AddClient() {
                       <Slider
                         label="Metrics Polling (s)"
                         value={
-                          (options.monitoringOptions?.containerMetricsInterval ?? 10000) / 1000
+                          (options.monitoringOptions
+                            ?.containerMetricsInterval ?? 10000) / 1000
                         }
                         onChange={(v) =>
                           setOptions((p) => ({
@@ -236,9 +262,11 @@ export function AddClient() {
               size="lg"
               className="w-full"
               onClick={onSave}
-              disabled={!clientName.trim() || registerClientMutation.isPending}
+              disabled={!clientName.trim() || createClientMutation.isPending}
             >
-              {registerClientMutation.isPending ? "Creating..." : "Register Docker Client"}
+              {createClientMutation.isPending
+                ? "Creating..."
+                : "Register Docker Client"}
             </Button>
             <p className="text-center text-xs text-muted-text">
               Settings can be modified later in the client dashboard.
@@ -247,5 +275,5 @@ export function AddClient() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -68,6 +68,7 @@ export const ClientNode = memo(
 
         <Handle
           type="source"
+          isConnectable={false}
           position={Position.Right}
           className="w-3! h-3! bg-graph-client-card-border! border-2! border-graph-client-text-primary/40!"
         />

@@ -22,10 +22,11 @@
 */
 @source "../../../packages/ui/src/**/*.{js,jsx,ts,tsx}";
 
+/* Fonts */
 @font-face {
     font-family: "Geist";
     src: url("/fonts/Geist-Regular.woff2") format("woff2");
-    font-weight: 400;
+    font-weight: 200;
     font-style: normal;
     font-display: swap;
 }

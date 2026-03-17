@@ -67,11 +67,13 @@ export const HostNode = memo(
 
         <Handle
           type="target"
+          isConnectable={false}
           position={Position.Left}
           className="w-3! h-3! bg-graph-host-card-border! border-2! border-graph-host-text-primary/40!"
         />
         <Handle
           type="source"
+          isConnectable={false}
           position={Position.Right}
           className="w-3! h-3! bg-graph-host-card-border! border-2! border-graph-host-text-primary/40!"
         />

@@ -2,10 +2,15 @@ import { Badge, Button, Card, Divider, nodeTypes } from "@dockstat/ui";
 import {
   Background,
   BackgroundVariant,
+  BezierEdge,
   type Edge,
   type Node,
   Panel,
   ReactFlow,
+  SimpleBezierEdge,
+  SmoothStepEdge,
+  StepEdge,
+  StraightEdge,
   useEdgesState,
   useNodesState,
   useReactFlow,
@@ -18,6 +23,7 @@ import { api } from "@/lib/api";
 import { Legend } from "./legend";
 import { NodeDetailsPanel } from "./nodeDetails";
 import { StatsDisplay } from "./statsDisplay";
+import DockStatLabelEdge from "./customEdge";
 
 export function GraphFlow() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -156,8 +162,17 @@ export function GraphFlow() {
           </div>
         ) : (
           <ReactFlow
+            edgesReconnectable={false}
             nodes={nodes}
             edges={edges}
+            edgeTypes={{
+              default: BezierEdge,
+              straight: StraightEdge,
+              step: StepEdge,
+              smoothstep: SmoothStepEdge,
+              simplebezier: SimpleBezierEdge,
+              dockstat: DockStatLabelEdge,
+            }}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onNodeClick={onNodeClick}
@@ -166,7 +181,6 @@ export function GraphFlow() {
             minZoom={0.2}
             maxZoom={2}
             autoPanOnNodeFocus
-            snapToGrid
           >
             <Background gap={40} size={1} variant={BackgroundVariant.Dots} />
 
