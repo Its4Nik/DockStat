@@ -60,7 +60,13 @@ export {
 } from "./HoverBubble/HoverBubble"
 export { LinkWithIcon, type LinkWithIconProps } from "./Link/Link"
 export { Modal, type ModalProps, type ModalSize } from "./Modal/Modal"
-export { Navbar, type PathItem, SidebarPaths } from "./Navbar/Navbar"
+export {
+  Navbar,
+  type PathItem,
+  type PinLinkMutation,
+  SidebarPaths,
+  type SidebarProps,
+} from "./Navbar/Navbar"
 export { PluginsPage } from "./Plugins/Plugins"
 export { RepoIcons } from "./Repo/RepoIcon"
 export { Slider, type SliderProps } from "./Slider/Slider"
