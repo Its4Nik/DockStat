@@ -203,6 +203,7 @@ class DB {
       JSON: parser.JSON || [],
       MODULE: parser.MODULE || {},
       BOOLEAN: parser.BOOLEAN || [],
+      DATE: parser.DATE || [],
     }
 
     this.tableLog.debug(`Creating QueryBuilder for: ${tableName}`)
@@ -291,7 +292,7 @@ class DB {
             migrationLog: this.migrationLog,
             newColumns: columns,
             tableConstraints,
-            options: (pOpts || {}) as TableOptions<Record<string, unknown>>,
+            options: (pOpts || {}) as TableOptions<_T>,
           })
 
           /*
@@ -346,9 +347,10 @@ class DB {
     columns: Record<keyof _T, unknown>,
     options?: TableOptions<_T>
   ): QueryBuilder<_T> {
-    // Auto-detect JSON and BOOLEAN columns from schema
+    // Auto-detect JSON, BOOLEAN, and DATE columns from schema
     const autoDetectedJson: Array<keyof _T> = []
     const autoDetectedBoolean: Array<keyof _T> = []
+    const autoDetectedDate: Array<keyof _T> = []
 
     if (isTableSchema(columns)) {
       for (const [colName, colDef] of Object.entries(columns)) {
@@ -358,22 +360,28 @@ class DB {
         if (colDef.type === "BOOLEAN") {
           autoDetectedBoolean.push(colName as keyof _T)
         }
+        if (colDef.type === "DATE" || colDef.type === "DATETIME" || colDef.type === "TIMESTAMP") {
+          autoDetectedDate.push(colName as keyof _T)
+        }
       }
     }
 
     // Merge auto-detected columns with user-provided parser options
     const userJson = options?.parser?.JSON || []
     const userBoolean = options?.parser?.BOOLEAN || []
+    const userDate = options?.parser?.DATE || []
     const userModule = options?.parser?.MODULE || {}
 
     // Combine and deduplicate
     const mergedJson = [...new Set([...autoDetectedJson, ...userJson])] as Array<keyof _T>
     const mergedBoolean = [...new Set([...autoDetectedBoolean, ...userBoolean])] as Array<keyof _T>
+    const mergedDate = [...new Set([...autoDetectedDate, ...userDate])] as Array<keyof _T>
 
     const pObj = {
       JSON: mergedJson,
       MODULE: userModule,
       BOOLEAN: mergedBoolean,
+      DATE: mergedDate,
     }
 
     this.tableLog.debug(`Parser config: ${JSON.stringify(pObj)}`)
