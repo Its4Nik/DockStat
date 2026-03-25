@@ -28,6 +28,7 @@ export const LinkWithIcon: React.FC<LinkWithIconProps> = ({
   if (typeof navLinkActive === "function") {
     return (
       <NavLink
+        end
         to={href}
         target={external ? "_blank" : undefined}
         rel={external ? "noopener noreferrer" : undefined}

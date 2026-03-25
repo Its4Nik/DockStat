@@ -11,6 +11,7 @@ export default class MonitoringManager {
   private logger: Logger
   private options: Required<DOCKER.MonitoringOptions>
   private isMonitoring = false
+  private clientId: number
 
   private healthCheckMonitor: HealthCheckMonitor
   private containerEventMonitor: ContainerEventMonitor
@@ -21,11 +22,13 @@ export default class MonitoringManager {
   private hosts: DATABASE.DB_target_host[]
 
   constructor(
+    clientId: number,
     baseLogger: Logger,
     dockerInstances: Map<number, Dockerode>,
     hosts: DATABASE.DB_target_host[],
     options: DOCKER.MonitoringOptions = {}
   ) {
+    this.clientId = clientId
     this.dockerInstances = dockerInstances
     this.hosts = hosts
     this.logger = baseLogger.spawn("MM")
@@ -59,6 +62,7 @@ export default class MonitoringManager {
     )
 
     this.containerEventMonitor = new ContainerEventMonitor(
+      this.clientId,
       this.logger,
       this.dockerInstances,
       this.hosts,
@@ -79,6 +83,7 @@ export default class MonitoringManager {
     )
 
     this.containerMetricsMonitor = new ContainerMetricsMonitor(
+      this.clientId,
       this.logger,
       this.dockerInstances,
       this.hosts,
@@ -89,6 +94,7 @@ export default class MonitoringManager {
     )
 
     this.dockerEventStreamManager = new DockerEventStreamManager(
+      this.clientId,
       this.logger,
       this.dockerInstances,
       this.hosts,

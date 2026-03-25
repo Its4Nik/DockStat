@@ -2,10 +2,8 @@ import { Button, Card } from "@dockstat/ui"
 import { Save } from "lucide-react"
 import { useContext, useEffect, useState } from "react"
 import { ConfigProviderContext } from "@/contexts/config"
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
-import { api } from "@/lib/api"
+import { useConfigMutations } from "@/hooks/mutations"
 
-// Helper to determine if shift is active based on string value (e.g. "shift+s")
 const hasShift = (val: string) => val.toLowerCase().includes("shift+")
 const stripShift = (val: string) => val.replace(/shift\+/i, "")
 
@@ -18,15 +16,7 @@ export function HotkeysSlide() {
     setLocalHotkeys(hotkeys ?? {})
   }, [hotkeys])
 
-  const editHotkeyMutation = useEdenMutation({
-    mutationKey: ["editHotkey"],
-    route: api.db.config.hotkey.post,
-    invalidateQueries: [["fetchAdditionalSettings"]],
-    toast: {
-      errorTitle: "Failed to update hotkey",
-      successTitle: "Hotkey updated successfully",
-    },
-  })
+  const { editHotkeyMutation } = useConfigMutations()
 
   const handleSave = async () => {
     await editHotkeyMutation.mutateAsync({ hotkeys: localHotkeys })
@@ -88,7 +78,10 @@ export function HotkeysSlide() {
                 type="button"
                 onClick={() => {
                   const newVal = isShiftActive ? charCode : `shift+${charCode}`
-                  setLocalHotkeys((prev) => ({ ...prev, [actionName]: newVal }))
+                  setLocalHotkeys((prev) => ({
+                    ...prev,
+                    [actionName]: newVal,
+                  }))
                 }}
                 className={`
                   flex py-2 min-w-12 cursor-pointer items-center justify-center rounded border-b-2 px-2 transition-all active:mt-0.5 active:border-b-0
@@ -118,7 +111,10 @@ export function HotkeysSlide() {
                   onChange={(e) => {
                     const char = e.target.value.toLowerCase()
                     const newVal = isShiftActive ? `shift+${char}` : char
-                    setLocalHotkeys((prev) => ({ ...prev, [actionName]: newVal }))
+                    setLocalHotkeys((prev) => ({
+                      ...prev,
+                      [actionName]: newVal,
+                    }))
                   }}
                 />
               </div>

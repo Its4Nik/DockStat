@@ -1,8 +1,8 @@
 import type { ActionConfig, PageTemplate } from "@dockstat/template-renderer"
+import { eden } from "@dockstat/utils/react"
 import { useCallback, useRef } from "react"
 import type { ResolvedAction } from "@/components/plugins/id/types"
 import { api } from "@/lib/api"
-import { useEdenRouteMutation } from "../eden/useEdenRouteMutation"
 import { getValueByPath } from "./utils"
 
 type ActionResult = {
@@ -38,8 +38,7 @@ export function usePluginActions({
     new Map()
   )
 
-  // Correct route builder
-  const actionMutation = useEdenRouteMutation({
+  const actionMutation = eden.useEdenRouteMutation({
     mutationKey: ["executeAction", String(pluginId)],
     routeBuilder: ({ actionId }: { actionId: string }) =>
       api.plugins.frontend({ pluginId }).actions({ actionId }).execute.post,

@@ -14,7 +14,7 @@ export const DockerClientElysia = new Elysia({
   },
 })
   .post(
-    "/register",
+    "/",
     async ({ status, body }) => {
       try {
         const res = (await DCM.registerClient(
@@ -52,8 +52,8 @@ export const DockerClientElysia = new Elysia({
       },
     }
   )
-  .post(
-    "/update",
+  .patch(
+    "/",
     async ({ status, body }) => {
       try {
         const res = (await DCM.updateClient(
@@ -93,7 +93,7 @@ export const DockerClientElysia = new Elysia({
     }
   )
   .delete(
-    "/delete",
+    "/",
     async ({ body, status }) => {
       try {
         const result = await DCM.removeClient(body.clientId)

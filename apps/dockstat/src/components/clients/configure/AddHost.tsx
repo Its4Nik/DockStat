@@ -1,7 +1,6 @@
 import { Button, Card, CardBody, Input, Toggle } from "@dockstat/ui"
 import { useState } from "react"
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
-import { api } from "@/lib/api"
+import { useDockerHostMutations } from "@/hooks/mutations"
 
 type hostToAdd = {
   secure: boolean
@@ -11,28 +10,23 @@ type hostToAdd = {
   port: number
 }
 
-export function AddHost({ registeredClients }: { registeredClients: number[] }) {
+export function AddHost({
+  registeredClients,
+}: {
+  registeredClients: { clientName: string; clientId: number }[]
+}) {
+  const { createHostMutation } = useDockerHostMutations()
   const [formData, setFormData] = useState<hostToAdd>({
     secure: false,
     name: "",
     hostname: "",
-    clientId: registeredClients[0] || 0,
+    clientId: registeredClients[0]?.clientId ?? 0,
     port: 2375,
-  })
-
-  const addHostMutation = useEdenMutation({
-    mutationKey: ["addHost"],
-    route: api.docker.hosts.add.post,
-    invalidateQueries: [["fetchHosts"]],
-    toast: {
-      successTitle: (h) => `Added Host: ${h.name}`,
-      errorTitle: (h) => `Could not add Host: ${h.name}`,
-    },
   })
 
   const handleAddHost = async () => {
     if (!formData.name || !formData.hostname) return
-    await addHostMutation.mutateAsync(formData)
+    await createHostMutation.mutateAsync(formData)
   }
 
   const updateField = (field: keyof hostToAdd, value: unknown) => {
@@ -103,9 +97,9 @@ export function AddHost({ registeredClients }: { registeredClients: number[] }) 
                     value={formData.clientId}
                     onChange={(e) => updateField("clientId", Number.parseInt(e.target.value, 10))}
                   >
-                    {registeredClients.map((id) => (
-                      <option key={id} value={id}>
-                        Client ID: {id}
+                    {registeredClients.map((c) => (
+                      <option key={c.clientId} value={c.clientId}>
+                        Client: {c.clientName} ({c.clientId})
                       </option>
                     ))}
                     {registeredClients.length === 0 && (
@@ -129,11 +123,11 @@ export function AddHost({ registeredClients }: { registeredClients: number[] }) 
               disabled={
                 !formData.name ||
                 !formData.hostname ||
-                addHostMutation.isPending ||
+                createHostMutation.isPending ||
                 registeredClients.length === 0
               }
             >
-              {addHostMutation.isPending ? "Connecting..." : "Add Remote Host"}
+              {createHostMutation.isPending ? "Connecting..." : "Add Remote Host"}
             </Button>
           </div>
         </div>

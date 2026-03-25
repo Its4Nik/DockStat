@@ -26,3 +26,5 @@ export function useEdenMutation<TRoute extends EdenRoute>(
     toast: options.toast,
   })
 }
+
+export const edenMutation = useEdenMutation

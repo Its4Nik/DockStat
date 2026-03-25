@@ -1,12 +1,11 @@
 import Elysia from "elysia"
-import { DockStatDB } from "../../database"
-import DockNodeHandler from "../../docknode"
-import BaseLogger from "../../logger"
+import { DNH } from "../../docker/docknode"
 import { DockNodeModel } from "../../models/docknode"
 
-const DNH = new DockNodeHandler(DockStatDB._sqliteWrapper, BaseLogger)
-
-export const DockNodeElyisa = new Elysia({ prefix: "/node", detail: { tags: ["DockNode"] } })
+export const DockNodeElyisa = new Elysia({
+  prefix: "/node",
+  detail: { tags: ["DockNode"] },
+})
   .get("/", async ({ status }) => {
     return status(200, await DNH.getAllNodes())
   })
@@ -17,4 +16,6 @@ export const DockNodeElyisa = new Elysia({ prefix: "/node", detail: { tags: ["Do
     },
     { body: DockNodeModel.createBody }
   )
-  .delete("/", ({ body }) => DNH.delteNode(body.id), { body: DockNodeModel.deleteBody })
+  .delete("/", ({ body }) => DNH.delteNode(body.id), {
+    body: DockNodeModel.deleteBody,
+  })
