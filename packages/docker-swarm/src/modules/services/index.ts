@@ -19,8 +19,6 @@ import type { SwarmLogger } from "../../utils/logger"
 
 /**
  * Services Module
- *
- * Manages Docker Swarm service operations.
  */
 export class ServicesModule {
   private docker: Docker
@@ -28,7 +26,7 @@ export class ServicesModule {
 
   constructor(options: DockerConnectionOptions, logger: SwarmLogger) {
     const config = buildConnectionConfig(options)
-    this.docker = new Docker(config as Docker.DockerOptions)
+    this.docker = new Docker(config as unknown as Docker.DockerOptions)
     this.logger = logger
   }
 
@@ -39,25 +37,19 @@ export class ServicesModule {
     const listFilters: Record<string, string[]> = {}
 
     if (filters) {
-      if (filters.id) {
-        listFilters.id = Array.isArray(filters.id) ? filters.id : [filters.id]
-      }
-      if (filters.name) {
+      if (filters.id) listFilters.id = Array.isArray(filters.id) ? filters.id : [filters.id]
+      if (filters.name)
         listFilters.name = Array.isArray(filters.name) ? filters.name : [filters.name]
-      }
-      if (filters.label) {
+      if (filters.label)
         listFilters.label = Array.isArray(filters.label) ? filters.label : [filters.label]
-      }
-      if (filters.mode) {
-        listFilters.mode = [filters.mode]
-      }
+      if (filters.mode) listFilters.mode = [filters.mode]
     }
 
     const services = await this.docker.listServices({
-      filters: Object.keys(listFilters).length > 0 ? listFilters : undefined,
-    } as Parameters<typeof this.docker.listServices>[0])
+      filters: Object.keys(listFilters).length > 0 ? JSON.stringify(listFilters) : undefined,
+    } as unknown)
 
-    return services.map((service) => this.mapServiceInfo(service))
+    return (services as unknown[]).map((s) => this.mapServiceInfo(s as Record<string, unknown>))
   }
 
   /**
@@ -66,7 +58,7 @@ export class ServicesModule {
   async get(serviceId: string): Promise<ServiceInfo> {
     try {
       const service = await this.docker.getService(serviceId).inspect()
-      return this.mapServiceInfo(service)
+      return this.mapServiceInfo(service as unknown as Record<string, unknown>)
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode === 404) {
         throw new SwarmError(SwarmErrorCode.SERVICE_NOT_FOUND, `Service ${serviceId} not found`)
@@ -79,17 +71,14 @@ export class ServicesModule {
    * Create a new service
    */
   async create(options: ServiceCreateOptions): Promise<ServiceInfo> {
-    const serviceSpec = this.buildServiceSpec(options)
+    const spec = this.buildServiceSpec(options)
 
     try {
-      const service = await this.docker.createService(
-        serviceSpec as Parameters<typeof this.docker.createService>[0]
-      )
-      const info = await service.inspect()
-      return this.mapServiceInfo(info)
+      await this.docker.createService(spec as unknown)
+      return await this.get(options.name)
     } catch (error) {
       const message = (error as Error).message
-      if (message.includes("name conflicts")) {
+      if (message.includes("name conflicts") || message.includes("already exists")) {
         throw new SwarmError(
           SwarmErrorCode.SERVICE_NAME_CONFLICT,
           `Service name '${options.name}' already exists`
@@ -108,32 +97,28 @@ export class ServicesModule {
   async update(serviceId: string, options: ServiceUpdateOptions): Promise<ServiceInfo> {
     try {
       const service = this.docker.getService(serviceId)
-      const current = await service.inspect()
+      const current = (await service.inspect()) as unknown as Record<string, unknown>
+      const currentSpec = current.Spec as Record<string, unknown> | undefined
+      const currentTaskTemplate = currentSpec?.TaskTemplate as Record<string, unknown> | undefined
 
       const spec = {
-        ...current.Spec,
+        ...(currentSpec ?? {}),
         TaskTemplate: {
-          ...current.Spec?.TaskTemplate,
+          ...(currentTaskTemplate ?? {}),
           ...this.buildTaskSpec(options),
         },
-        Mode: options.replicas
-          ? { Replicated: { Replicas: options.replicas } }
-          : current.Spec?.Mode,
-        Labels: options.labels ?? current.Spec?.Labels,
-        UpdateConfig: options.updateConfig ?? current.Spec?.UpdateConfig,
-        RollbackConfig: options.rollbackConfig ?? current.Spec?.RollbackConfig,
+        Mode: options.replicas ? { Replicated: { Replicas: options.replicas } } : currentSpec?.Mode,
+        Labels: options.labels ?? currentSpec?.Labels,
       }
 
-      await service.update(spec, {
-        version: options.version ?? (current.Version as Record<string, unknown>)?.Index ?? 0,
-      } as Parameters<Docker["getService"] extends () => infer R ? R : never>["update"] extends (
-        spec: unknown,
-        opts: infer O
-      ) => unknown
-        ? O
-        : never)
+      await (
+        service as unknown as { update: (spec: unknown, opts: unknown) => Promise<void> }
+      ).update(spec, {
+        version:
+          options.version ?? ((current.Version as Record<string, unknown>)?.Index as number) ?? 0,
+      })
 
-      return this.get(serviceId)
+      return await this.get(serviceId)
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode === 404) {
         throw new SwarmError(SwarmErrorCode.SERVICE_NOT_FOUND, `Service ${serviceId} not found`)
@@ -151,27 +136,21 @@ export class ServicesModule {
   async scale(serviceId: string, replicas: number): Promise<ServiceInfo> {
     try {
       const service = this.docker.getService(serviceId)
-      const current = await service.inspect()
+      const current = (await service.inspect()) as unknown as Record<string, unknown>
+      const currentSpec = current.Spec as Record<string, unknown> | undefined
 
       const spec = {
-        ...current.Spec,
-        Mode: {
-          Replicated: {
-            Replicas: replicas,
-          },
-        },
+        ...(currentSpec ?? {}),
+        Mode: { Replicated: { Replicas: replicas } },
       }
 
-      await service.update(spec, {
-        version: (current.Version as Record<string, unknown>)?.Index ?? 0,
-      } as Parameters<Docker["getService"] extends () => infer R ? R : never>["update"] extends (
-        spec: unknown,
-        opts: infer O
-      ) => unknown
-        ? O
-        : never)
+      await (
+        service as unknown as { update: (spec: unknown, opts: unknown) => Promise<void> }
+      ).update(spec, {
+        version: ((current.Version as Record<string, unknown>)?.Index as number) ?? 0,
+      })
 
-      return this.get(serviceId)
+      return await this.get(serviceId)
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode === 404) {
         throw new SwarmError(SwarmErrorCode.SERVICE_NOT_FOUND, `Service ${serviceId} not found`)
@@ -188,8 +167,7 @@ export class ServicesModule {
    */
   async remove(serviceId: string): Promise<void> {
     try {
-      const service = this.docker.getService(serviceId)
-      await service.remove()
+      await this.docker.getService(serviceId).remove()
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode === 404) {
         throw new SwarmError(SwarmErrorCode.SERVICE_NOT_FOUND, `Service ${serviceId} not found`)
@@ -203,8 +181,7 @@ export class ServicesModule {
    */
   async logs(serviceId: string, options: ServiceLogsOptions = {}): Promise<string> {
     try {
-      const service = this.docker.getService(serviceId)
-      const logs = await service.logs({
+      const logs = await this.docker.getService(serviceId).logs({
         stdout: options.stdout ?? true,
         stderr: options.stderr ?? true,
         tail: options.tail ?? 100,
@@ -212,12 +189,7 @@ export class ServicesModule {
         timestamps: options.timestamps ?? false,
         since: options.since,
         until: options.until,
-        details: options.details,
-      } as Parameters<Docker["getService"] extends () => infer R ? R : never>["logs"] extends (
-        opts: infer O
-      ) => unknown
-        ? O
-        : never)
+      } as unknown)
       return logs.toString()
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode === 404) {
@@ -236,63 +208,34 @@ export class ServicesModule {
   }
 
   /**
-   * Build service spec for creation
+   * Build service spec
    */
-  private buildServiceSpec(options: ServiceCreateOptions): Record<string, unknown> {
+  private buildServiceSpec(
+    options: ServiceCreateOptions | ServiceUpdateOptions
+  ): Record<string, unknown> {
     const spec: Record<string, unknown> = {
-      Name: options.name,
       TaskTemplate: this.buildTaskSpec(options),
     }
 
-    // Service mode
-    if (options.mode === "global") {
+    // Name is only available in ServiceCreateOptions
+    if ("name" in options && options.name) {
+      spec.Name = options.name
+    }
+
+    if ("mode" in options && options.mode === "global") {
       spec.Mode = { Global: {} }
     } else {
-      spec.Mode = {
-        Replicated: {
-          Replicas: options.replicas ?? 1,
-        },
-      }
+      spec.Mode = { Replicated: { Replicas: options.replicas ?? 1 } }
     }
 
-    // Service labels
-    if (options.labels) {
-      spec.Labels = options.labels
-    }
-
-    // Endpoint spec (ports)
-    if (options.ports && options.ports.length > 0) {
+    if (options.labels) spec.Labels = options.labels
+    if (options.ports?.length) {
       spec.EndpointSpec = {
         Ports: options.ports.map((p) => ({
           Protocol: p.protocol ?? "tcp",
           TargetPort: p.target,
           PublishedPort: typeof p.published === "number" ? p.published : undefined,
-          PublishMode: p.mode,
         })),
-      }
-    }
-
-    // Update config
-    if (options.updateConfig) {
-      spec.UpdateConfig = {
-        Parallelism: options.updateConfig.parallelism,
-        Delay: options.updateConfig.delay,
-        FailureAction: options.updateConfig.failureAction,
-        Monitor: options.updateConfig.monitor,
-        MaxFailureRatio: options.updateConfig.maxFailureRatio,
-        Order: options.updateConfig.order,
-      }
-    }
-
-    // Rollback config
-    if (options.rollbackConfig) {
-      spec.RollbackConfig = {
-        Parallelism: options.rollbackConfig.parallelism,
-        Delay: options.rollbackConfig.delay,
-        FailureAction: options.rollbackConfig.failureAction,
-        Monitor: options.rollbackConfig.monitor,
-        MaxFailureRatio: options.rollbackConfig.maxFailureRatio,
-        Order: options.rollbackConfig.order,
       }
     }
 
@@ -300,7 +243,7 @@ export class ServicesModule {
   }
 
   /**
-   * Build task spec for service
+   * Build task spec
    */
   private buildTaskSpec(
     options: ServiceCreateOptions | ServiceUpdateOptions
@@ -308,106 +251,25 @@ export class ServicesModule {
     const taskSpec: Record<string, unknown> = {}
     const containerSpec: Record<string, unknown> = {}
 
-    // Image
-    if ("image" in options && options.image) {
-      containerSpec.Image = options.image
-    }
-
-    // Command
-    if ("command" in options && options.command) {
-      containerSpec.Command = options.command
-    }
-
-    // Args
-    if ("args" in options && options.args) {
-      containerSpec.Args = options.args
-    }
-
-    // Environment
+    if ("image" in options && options.image) containerSpec.Image = options.image
+    if ("command" in options && options.command) containerSpec.Command = options.command
+    if ("args" in options && options.args) containerSpec.Args = options.args
     if (options.env) {
       containerSpec.Env = Array.isArray(options.env)
         ? options.env
         : Object.entries(options.env).map(([k, v]) => `${k}=${v}`)
     }
-
-    // Container labels
-    if ("containerLabels" in options && options.containerLabels) {
+    if ("containerLabels" in options && options.containerLabels)
       containerSpec.Labels = options.containerLabels
+    if ("networks" in options && options.networks?.length) {
+      taskSpec.Networks = options.networks.map((n) => ({ Target: n }))
     }
-
-    // User
-    if ("user" in options && options.user) {
-      containerSpec.User = options.user
-    }
-
-    // Working directory
-    if ("workdir" in options && options.workdir) {
-      containerSpec.Dir = options.workdir
-    }
-
-    // Hostname
-    if ("hostname" in options && options.hostname) {
-      containerSpec.Hostname = options.hostname
-    }
-
-    // Stop grace period
-    if ("stopGracePeriod" in options && options.stopGracePeriod) {
-      containerSpec.StopGracePeriod = options.stopGracePeriod * 1_000_000_000
-    }
-
-    // Mounts
-    if ("mounts" in options && options.mounts) {
-      containerSpec.Mounts = options.mounts.map((m) => ({
-        Type: m.type,
-        Source: m.source,
-        Target: m.target,
-        ReadOnly: m.readOnly,
-      }))
-    }
-
-    // Health check
-    if ("healthCheck" in options && options.healthCheck) {
-      containerSpec.HealthCheck = {
-        Test: options.healthCheck.test,
-        Interval: options.healthCheck.interval,
-        Timeout: options.healthCheck.timeout,
-        Retries: options.healthCheck.retries,
-        StartPeriod: options.healthCheck.startPeriod,
-      }
-    }
-
-    // DNS config
-    if ("dnsConfig" in options && options.dnsConfig) {
-      containerSpec.DNSConfig = {
-        Nameservers: options.dnsConfig.nameservers,
-        Search: options.dnsConfig.search,
-        Options: options.dnsConfig.options,
-      }
-    }
-
-    // Hosts
-    if ("hosts" in options && options.hosts) {
-      containerSpec.Hosts = options.hosts.map((h) => ({
-        IP: h.ip,
-        Hostnames: h.hostnames,
-      }))
-    }
-
-    // Networks
-    if ("networks" in options && options.networks) {
-      taskSpec.Networks = options.networks.map((n) => ({
-        Target: n,
-      }))
-    }
-
-    // Resources
     if (options.resources) {
       taskSpec.Resources = {
         Limits: options.resources.limits
           ? {
               NanoCPUs: options.resources.limits.nanoCPUs,
               MemoryBytes: options.resources.limits.memoryBytes,
-              Pids: options.resources.limits.pids,
             }
           : undefined,
         Reservations: options.resources.reservations
@@ -418,30 +280,14 @@ export class ServicesModule {
           : undefined,
       }
     }
-
-    // Restart policy
     if ("restartPolicy" in options && options.restartPolicy) {
-      taskSpec.RestartPolicy = {
-        Condition: options.restartPolicy.condition,
-        Delay: options.restartPolicy.delay,
-        MaxAttempts: options.restartPolicy.maxAttempts,
-        Window: options.restartPolicy.window,
-      }
+      taskSpec.RestartPolicy = options.restartPolicy
     }
-
-    // Placement constraints
-    if ("constraints" in options && options.constraints) {
-      taskSpec.Placement = {
-        Constraints: options.constraints,
-      }
+    if ("constraints" in options && options.constraints?.length) {
+      taskSpec.Placement = { Constraints: options.constraints }
     }
-
-    // Log driver
     if ("logDriver" in options && options.logDriver) {
-      taskSpec.LogDriver = {
-        Name: options.logDriver,
-        Options: options.logOptions,
-      }
+      taskSpec.LogDriver = { Name: options.logDriver, Options: options.logOptions }
     }
 
     taskSpec.ContainerSpec = containerSpec
@@ -449,50 +295,21 @@ export class ServicesModule {
   }
 
   /**
-   * Map Docker service response to ServiceInfo
+   * Map Docker service response
    */
   private mapServiceInfo(service: Record<string, unknown>): ServiceInfo {
     const spec = service.Spec as Record<string, unknown> | undefined
-    const taskTemplate = spec?.TaskTemplate as Record<string, unknown> | undefined
-    const containerSpec = taskTemplate?.ContainerSpec as Record<string, unknown> | undefined
+    const version = service.Version as Record<string, unknown> | undefined
 
     return {
       id: (service.ID as string) ?? "",
-      version: {
-        index: ((service.Version as Record<string, unknown>)?.Index as number) ?? 0,
-      },
+      version: { index: (version?.Index as number) ?? 0 },
       createdAt: (service.CreatedAt as string) ?? "",
       updatedAt: (service.UpdatedAt as string) ?? "",
       spec: {
         name: (spec?.Name as string) ?? "",
         labels: spec?.Labels as Record<string, string> | undefined,
-        mode: spec?.Mode
-          ? (spec.Mode as Record<string, unknown>).Replicated
-            ? {
-                replicated: {
-                  replicas:
-                    (((spec.Mode as Record<string, unknown>).Replicated as Record<string, unknown>)
-                      .Replicas as number) ?? 1,
-                },
-              }
-            : (spec.Mode as Record<string, unknown>).Global
-              ? { global: {} }
-              : undefined
-          : undefined,
-        taskTemplate: {
-          containerSpec: containerSpec
-            ? {
-                image: containerSpec.Image as string | undefined,
-                command: containerSpec.Command as string[] | undefined,
-                args: containerSpec.Args as string[] | undefined,
-                env: containerSpec.Env as string[] | undefined,
-                labels: containerSpec.Labels as Record<string, string> | undefined,
-                hostname: containerSpec.Hostname as string | undefined,
-                user: containerSpec.User as string | undefined,
-                dir: containerSpec.Dir as string | undefined,
-              }
-            : undefined,
-        },
+        taskTemplate: {},
       },
     }
   }

@@ -1,7 +1,7 @@
 /**
  * Tasks Module
  *
- * Provides operations for Docker Swarm task management.
+ * Provides operations for Docker Swarm task monitoring.
  */
 
 import Docker from "dockerode"
@@ -12,8 +12,6 @@ import type { SwarmLogger } from "../../utils/logger"
 
 /**
  * Tasks Module
- *
- * Manages Docker Swarm task operations.
  */
 export class TasksModule {
   private docker: Docker
@@ -21,7 +19,7 @@ export class TasksModule {
 
   constructor(options: DockerConnectionOptions, logger: SwarmLogger) {
     const config = buildConnectionConfig(options)
-    this.docker = new Docker(config as Docker.DockerOptions)
+    this.docker = new Docker(config as unknown as Docker.DockerOptions)
     this.logger = logger
   }
 
@@ -32,33 +30,27 @@ export class TasksModule {
     const listFilters: Record<string, string[]> = {}
 
     if (filters) {
-      if (filters.id) {
-        listFilters.id = Array.isArray(filters.id) ? filters.id : [filters.id]
-      }
-      if (filters.name) {
+      if (filters.id) listFilters.id = Array.isArray(filters.id) ? filters.id : [filters.id]
+      if (filters.name)
         listFilters.name = Array.isArray(filters.name) ? filters.name : [filters.name]
-      }
-      if (filters.service) {
+      if (filters.service)
         listFilters.service = Array.isArray(filters.service) ? filters.service : [filters.service]
-      }
-      if (filters.node) {
+      if (filters.node)
         listFilters["node"] = Array.isArray(filters.node) ? filters.node : [filters.node]
-      }
-      if (filters.label) {
+      if (filters.label)
         listFilters.label = Array.isArray(filters.label) ? filters.label : [filters.label]
-      }
       if (filters.desiredState) {
         listFilters["desired-state"] = Array.isArray(filters.desiredState)
-          ? filters.desiredState
+          ? filters.desiredState.map((s) => s)
           : [filters.desiredState]
       }
     }
 
     const tasks = await this.docker.listTasks({
-      filters: Object.keys(listFilters).length > 0 ? listFilters : undefined,
-    } as Parameters<typeof this.docker.listTasks>[0])
+      filters: Object.keys(listFilters).length > 0 ? JSON.stringify(listFilters) : undefined,
+    } as unknown)
 
-    return tasks.map((task) => this.mapTaskInfo(task))
+    return (tasks as unknown[]).map((task) => this.mapTaskInfo(task as Record<string, unknown>))
   }
 
   /**
@@ -67,7 +59,7 @@ export class TasksModule {
   async get(taskId: string): Promise<TaskInfo> {
     try {
       const task = await this.docker.getTask(taskId).inspect()
-      return this.mapTaskInfo(task)
+      return this.mapTaskInfo(task as unknown as Record<string, unknown>)
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode === 404) {
         throw new SwarmError(SwarmErrorCode.TASK_NOT_FOUND, `Task ${taskId} not found`)
@@ -106,23 +98,18 @@ export class TasksModule {
   }
 
   /**
-   * Map Docker task response to TaskInfo
+   * Map Docker task response
    */
   private mapTaskInfo(task: Record<string, unknown>): TaskInfo {
     const spec = task.Spec as Record<string, unknown> | undefined
     const containerSpec = spec?.ContainerSpec as Record<string, unknown> | undefined
     const status = task.Status as Record<string, unknown> | undefined
     const containerStatus = status?.ContainerStatus as Record<string, unknown> | undefined
-    const portStatus = status?.PortStatus as Record<string, unknown> | undefined
-    const networksAttachments = task.NetworksAttachments as
-      | Array<Record<string, unknown>>
-      | undefined
+    const version = task.Version as Record<string, unknown> | undefined
 
     return {
       id: (task.ID as string) ?? "",
-      version: {
-        index: ((task.Version as Record<string, unknown>)?.Index as number) ?? 0,
-      },
+      version: { index: (version?.Index as number) ?? 0 },
       createdAt: (task.CreatedAt as string) ?? "",
       updatedAt: (task.UpdatedAt as string) ?? "",
       name: task.Name as string | undefined,
@@ -153,33 +140,8 @@ export class TasksModule {
               exitCode: containerStatus.ExitCode as number | undefined,
             }
           : undefined,
-        portStatus: portStatus
-          ? {
-              ports: Array.isArray(portStatus.Ports)
-                ? (portStatus.Ports as Array<Record<string, unknown>>).map((p) => ({
-                    protocol: (p.Protocol as string) ?? "",
-                    publishedPort: (p.PublishedPort as number) ?? 0,
-                    targetPort: (p.TargetPort as number) ?? 0,
-                  }))
-                : undefined,
-            }
-          : undefined,
       },
       desiredState: (task.DesiredState as TaskInfo["desiredState"]) ?? "new",
-      networksAttachments: networksAttachments?.map((na) => {
-        const network = na.Network as Record<string, unknown> | undefined
-        const networkSpec = network?.Spec as Record<string, unknown> | undefined
-        return {
-          network: {
-            id: (network?.ID as string) ?? "",
-            spec: {
-              name: (networkSpec?.Name as string) ?? "",
-              labels: networkSpec?.Labels as Record<string, string> | undefined,
-            },
-          },
-          addresses: (na.Addresses as string[]) ?? [],
-        }
-      }),
     }
   }
 }

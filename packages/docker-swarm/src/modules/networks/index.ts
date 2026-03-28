@@ -16,8 +16,6 @@ import type { SwarmLogger } from "../../utils/logger"
 
 /**
  * Networks Module
- *
- * Manages Docker Swarm network operations.
  */
 export class NetworksModule {
   private docker: Docker
@@ -25,41 +23,24 @@ export class NetworksModule {
 
   constructor(options: DockerConnectionOptions, logger: SwarmLogger) {
     const config = buildConnectionConfig(options)
-    this.docker = new Docker(config as Docker.DockerOptions)
+    this.docker = new Docker(config as unknown as Docker.DockerOptions)
     this.logger = logger
   }
 
-  /**
-   * List all networks
-   */
   async list(scope?: "local" | "swarm"): Promise<SwarmNetworkInfo[]> {
-    const filters: Record<string, string[]> = {}
-
-    if (scope) {
-      filters.scope = [scope]
-    }
+    const filters: Record<string, string[]> = scope ? { scope: [scope] } : {}
 
     const networks = await this.docker.listNetworks({
-      filters: Object.keys(filters).length > 0 ? filters : undefined,
-    })
+      filters: Object.keys(filters).length > 0 ? JSON.stringify(filters) : undefined,
+    } as unknown)
 
-    return networks.map((network) => this.mapNetworkInfo(network))
+    return (networks as unknown[]).map((n) => this.mapNetworkInfo(n as Record<string, unknown>))
   }
 
-  /**
-   * List swarm networks only
-   */
-  async listSwarmNetworks(): Promise<SwarmNetworkInfo[]> {
-    return this.list("swarm")
-  }
-
-  /**
-   * Get a specific network by ID
-   */
   async get(networkId: string): Promise<SwarmNetworkInfo> {
     try {
       const network = await this.docker.getNetwork(networkId).inspect()
-      return this.mapNetworkInfo(network)
+      return this.mapNetworkInfo(network as unknown as Record<string, unknown>)
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode === 404) {
         throw new SwarmError(SwarmErrorCode.NETWORK_NOT_FOUND, `Network ${networkId} not found`)
@@ -68,18 +49,20 @@ export class NetworksModule {
     }
   }
 
-  /**
-   * Create a new swarm network (overlay)
-   */
   async create(options: SwarmNetworkCreateOptions): Promise<SwarmNetworkInfo> {
     try {
-      const network = await this.docker.createNetwork({
+      await (
+        this.docker as unknown as { createNetwork: (opts: unknown) => Promise<unknown> }
+      ).createNetwork({
         Name: options.name,
         Driver: options.driver ?? "overlay",
+        CheckDuplicate: options.checkDuplicate ?? true,
+        Internal: options.internal,
         Attachable: options.attachable,
         Ingress: options.ingress,
-        Internal: options.internal,
         EnableIPv6: options.enableIPv6,
+        Labels: options.labels,
+        Options: options.options,
         IPAM: options.ipam
           ? {
               Driver: options.ipam.driver,
@@ -88,104 +71,69 @@ export class NetworksModule {
                 IPRange: c.ipRange,
                 Gateway: c.gateway,
               })),
-              Options: options.ipam.options,
             }
           : undefined,
-        Options: options.options,
-        Labels: options.labels,
-        CheckDuplicate: options.checkDuplicate,
-      })
+      } as unknown)
 
-      // Inspect to get full info
-      const created = await network.inspect()
-      return this.mapNetworkInfo(created)
+      const networks = await this.list()
+      const found = networks.find((n) => n.name === options.name)
+      if (!found) throw new Error("Created network not found")
+      return found
     } catch (error) {
       const message = (error as Error).message
       if (message.includes("already exists")) {
         throw new SwarmError(
           SwarmErrorCode.NETWORK_NAME_CONFLICT,
-          `Network name '${options.name}' already exists`
+          `Network '${options.name}' already exists`
         )
       }
       throw error
     }
   }
 
-  /**
-   * Remove a network
-   */
   async remove(networkId: string): Promise<void> {
     try {
-      const network = this.docker.getNetwork(networkId)
-      await network.remove()
+      await this.docker.getNetwork(networkId).remove()
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode === 404) {
         throw new SwarmError(SwarmErrorCode.NETWORK_NOT_FOUND, `Network ${networkId} not found`)
       }
       const message = (error as Error).message
       if (message.includes("has active endpoints")) {
-        throw new SwarmError(
-          SwarmErrorCode.NETWORK_IN_USE,
-          `Network ${networkId} is in use and cannot be removed`
-        )
+        throw new SwarmError(SwarmErrorCode.NETWORK_IN_USE, `Network ${networkId} is in use`)
       }
       throw error
     }
   }
 
-  /**
-   * Get network by name
-   */
   async getByName(name: string): Promise<SwarmNetworkInfo | undefined> {
     const networks = await this.docker.listNetworks({
-      filters: { name: [name] },
-    })
-    const network = networks[0]
-    return network ? this.mapNetworkInfo(network) : undefined
+      filters: JSON.stringify({ name: [name] }),
+    } as unknown)
+    const network = (networks as unknown[])[0]
+    return network ? this.mapNetworkInfo(network as Record<string, unknown>) : undefined
   }
 
-  /**
-   * Create an overlay network for swarm
-   */
   async createOverlay(
     name: string,
     options: Partial<SwarmNetworkCreateOptions> = {}
   ): Promise<SwarmNetworkInfo> {
-    return this.create({
-      name,
-      driver: "overlay",
-      attachable: true,
-      ...options,
-    })
+    return this.create({ name, driver: "overlay", attachable: true, ...options })
   }
 
-  /**
-   * Connect a service to a network
-   *
-   * Note: This is typically done via service update, but this method
-   * provides a direct network connection API.
-   */
   async connect(
     networkId: string,
     containerId: string,
-    options?: {
-      aliases?: string[]
-      ip?: string
-    }
+    options?: { aliases?: string[]; ip?: string }
   ): Promise<void> {
     try {
-      const network = this.docker.getNetwork(networkId)
-      await network.connect({
+      await this.docker.getNetwork(networkId).connect({
         Container: containerId,
         EndpointConfig: {
           Aliases: options?.aliases,
-          IPAMConfig: options?.ip
-            ? {
-                IPv4Address: options.ip,
-              }
-            : undefined,
+          IPAMConfig: options?.ip ? { IPv4Address: options.ip } : undefined,
         },
-      })
+      } as unknown)
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode === 404) {
         throw new SwarmError(SwarmErrorCode.NETWORK_NOT_FOUND, `Network ${networkId} not found`)
@@ -194,16 +142,12 @@ export class NetworksModule {
     }
   }
 
-  /**
-   * Disconnect a container from a network
-   */
   async disconnect(networkId: string, containerId: string, force = false): Promise<void> {
     try {
-      const network = this.docker.getNetwork(networkId)
-      await network.disconnect({
+      await this.docker.getNetwork(networkId).disconnect({
         Container: containerId,
         Force: force,
-      })
+      } as unknown)
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode === 404) {
         throw new SwarmError(SwarmErrorCode.NETWORK_NOT_FOUND, `Network ${networkId} not found`)
@@ -212,33 +156,33 @@ export class NetworksModule {
     }
   }
 
-  /**
-   * Map Docker network response to SwarmNetworkInfo
-   */
-  private mapNetworkInfo(network: Docker.NetworkInfo): SwarmNetworkInfo {
+  private mapNetworkInfo(network: Record<string, unknown>): SwarmNetworkInfo {
+    const ipam = network.IPAM as Record<string, unknown> | undefined
+    const ipamConfig = ipam?.Config as Array<Record<string, unknown>> | undefined
+
     return {
-      name: network.Name ?? "",
-      id: network.Id ?? "",
-      created: network.Created ?? "",
+      name: (network.Name as string) ?? "",
+      id: (network.Id as string) ?? (network.ID as string) ?? "",
+      created: (network.Created as string) ?? "",
       scope: (network.Scope as "local" | "swarm") ?? "local",
       driver: (network.Driver as SwarmNetworkInfo["driver"]) ?? "bridge",
-      attachable: network.Attachable,
-      ingress: network.Ingress,
-      internal: network.Internal,
-      enableIPv6: network.EnableIPv6,
-      ipam: network.IPAM
+      attachable: network.Attachable as boolean | undefined,
+      ingress: network.Ingress as boolean | undefined,
+      internal: network.Internal as boolean | undefined,
+      enableIPv6: network.EnableIPv6 as boolean | undefined,
+      ipam: ipam
         ? {
-            driver: network.IPAM.Driver,
-            config: network.IPAM.Config?.map((c) => ({
-              subnet: c.Subnet,
-              ipRange: c.IPRange,
-              gateway: c.Gateway,
+            driver: ipam.Driver as string | undefined,
+            config: ipamConfig?.map((c) => ({
+              subnet: c.Subnet as string | undefined,
+              ipRange: c.IPRange as string | undefined,
+              gateway: c.Gateway as string | undefined,
             })),
-            options: network.IPAM.Options,
+            options: ipam.Options as Record<string, string> | undefined,
           }
         : undefined,
-      labels: network.Labels,
-      options: network.Options,
+      labels: network.Labels as Record<string, string> | undefined,
+      options: network.Options as Record<string, string> | undefined,
     }
   }
 }

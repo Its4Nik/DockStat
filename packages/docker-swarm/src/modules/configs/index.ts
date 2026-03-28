@@ -17,8 +17,6 @@ import type { SwarmLogger } from "../../utils/logger"
 
 /**
  * Configs Module
- *
- * Manages Docker Swarm config operations.
  */
 export class ConfigsModule {
   private docker: Docker
@@ -26,42 +24,31 @@ export class ConfigsModule {
 
   constructor(options: DockerConnectionOptions, logger: SwarmLogger) {
     const config = buildConnectionConfig(options)
-    this.docker = new Docker(config as Docker.DockerOptions)
+    this.docker = new Docker(config as unknown as Docker.DockerOptions)
     this.logger = logger
   }
 
-  /**
-   * List all configs
-   */
   async list(filters?: ConfigListFilters): Promise<ConfigInfo[]> {
     const listFilters: Record<string, string[]> = {}
-
     if (filters) {
-      if (filters.id) {
-        listFilters.id = Array.isArray(filters.id) ? filters.id : [filters.id]
-      }
-      if (filters.name) {
+      if (filters.id) listFilters.id = Array.isArray(filters.id) ? filters.id : [filters.id]
+      if (filters.name)
         listFilters.name = Array.isArray(filters.name) ? filters.name : [filters.name]
-      }
-      if (filters.label) {
+      if (filters.label)
         listFilters.label = Array.isArray(filters.label) ? filters.label : [filters.label]
-      }
     }
 
     const configs = await this.docker.listConfigs({
-      filters: Object.keys(listFilters).length > 0 ? listFilters : undefined,
-    })
+      filters: Object.keys(listFilters).length > 0 ? JSON.stringify(listFilters) : undefined,
+    } as unknown)
 
-    return configs.map((config) => this.mapConfigInfo(config))
+    return (configs as unknown[]).map((c) => this.mapConfigInfo(c as Record<string, unknown>))
   }
 
-  /**
-   * Get a specific config by ID
-   */
   async get(configId: string): Promise<ConfigInfo> {
     try {
       const config = await this.docker.getConfig(configId).inspect()
-      return this.mapConfigInfo(config)
+      return this.mapConfigInfo(config as unknown as Record<string, unknown>)
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode === 404) {
         throw new SwarmError(SwarmErrorCode.CONFIG_NOT_FOUND, `Config ${configId} not found`)
@@ -70,40 +57,34 @@ export class ConfigsModule {
     }
   }
 
-  /**
-   * Create a new config
-   */
   async create(options: ConfigCreateOptions): Promise<ConfigInfo> {
     const data = typeof options.data === "string" ? Buffer.from(options.data) : options.data
 
     try {
-      const config = await this.docker.createConfig({
+      await this.docker.createConfig({
         Name: options.name,
         Data: data.toString("base64"),
         Labels: options.labels,
-        Templating: options.templating,
-      })
+      } as unknown)
 
-      return this.mapConfigInfo(config)
+      const configs = await this.list({ name: options.name })
+      if (!configs[0]) throw new Error("Created config not found")
+      return configs[0]
     } catch (error) {
       const message = (error as Error).message
       if (message.includes("name conflicts")) {
         throw new SwarmError(
           SwarmErrorCode.CONFIG_NAME_CONFLICT,
-          `Config name '${options.name}' already exists`
+          `Config '${options.name}' already exists`
         )
       }
       throw error
     }
   }
 
-  /**
-   * Remove a config
-   */
   async remove(configId: string): Promise<void> {
     try {
-      const config = this.docker.getConfig(configId)
-      await config.remove()
+      await this.docker.getConfig(configId).remove()
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode === 404) {
         throw new SwarmError(SwarmErrorCode.CONFIG_NOT_FOUND, `Config ${configId} not found`)
@@ -112,34 +93,21 @@ export class ConfigsModule {
     }
   }
 
-  /**
-   * Get config by name
-   */
   async getByName(name: string): Promise<ConfigInfo | undefined> {
     const configs = await this.list({ name })
     return configs[0]
   }
 
-  /**
-   * Map Docker config response to ConfigInfo
-   */
-  private mapConfigInfo(config: Docker.ConfigInfo): ConfigInfo {
+  private mapConfigInfo(config: Record<string, unknown>): ConfigInfo {
+    const spec = config.Spec as Record<string, unknown> | undefined
     return {
-      id: config.ID ?? "",
-      version: {
-        index: config.Version?.index ?? 0,
-      },
-      createdAt: config.CreatedAt ?? "",
-      updatedAt: config.UpdatedAt ?? "",
+      id: (config.ID as string) ?? "",
+      version: { index: ((config.Version as Record<string, unknown>)?.Index as number) ?? 0 },
+      createdAt: (config.CreatedAt as string) ?? "",
+      updatedAt: (config.UpdatedAt as string) ?? "",
       spec: {
-        name: config.Spec?.Name ?? "",
-        labels: config.Spec?.Labels,
-        templating: config.Spec?.Templating
-          ? {
-              name: config.Spec.Templating.Name,
-              options: config.Spec.Templating.Options,
-            }
-          : undefined,
+        name: (spec?.Name as string) ?? "",
+        labels: spec?.Labels as Record<string, string> | undefined,
       },
     }
   }

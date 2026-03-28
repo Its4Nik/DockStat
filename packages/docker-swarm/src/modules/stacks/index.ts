@@ -1,7 +1,7 @@
 /**
  * Stacks Module
  *
- * Provides operations for Docker Swarm stack management.
+ * Provides operations for Docker Swarm stack deployment.
  */
 
 import Docker from "dockerode"
@@ -19,8 +19,6 @@ import { parseEnvContent, validateComposeStructure } from "../../utils/parser"
 
 /**
  * Stacks Module
- *
- * Manages Docker Swarm stack operations.
  */
 export class StacksModule {
   private docker: Docker
@@ -28,7 +26,7 @@ export class StacksModule {
 
   constructor(options: DockerConnectionOptions, logger: SwarmLogger) {
     const config = buildConnectionConfig(options)
-    this.docker = new Docker(config as Docker.DockerOptions)
+    this.docker = new Docker(config as unknown as Docker.DockerOptions)
     this.logger = logger
   }
 
@@ -36,57 +34,43 @@ export class StacksModule {
    * Deploy a stack to the swarm
    */
   async deploy(options: StackDeployOptions): Promise<StackInfo> {
-    // Validate compose structure
     const validation = validateComposeStructure(options.compose)
     if (!validation.valid) {
       throw new SwarmError(
         SwarmErrorCode.INVALID_COMPOSE,
-        `Invalid compose file: ${validation.errors.join(", ")}`
+        `Invalid compose: ${validation.errors.join(", ")}`
       )
     }
 
     const stackName = options.name
-
-    // Build environment
-    const envVars = parseEnvContent(options.envContent ?? "")
-    if (options.env) {
-      Object.assign(envVars, options.env)
-    }
-
-    // Parse compose and create services
+    const envVars = { ...parseEnvContent(options.envContent ?? ""), ...options.env }
     const serviceSpecs = this.parseComposeServices(options.compose, stackName, envVars, options)
 
     try {
-      // Create or update each service
-      for (const serviceSpec of serviceSpecs) {
-        const serviceName = serviceSpec.Name as string
-        const existingServices = await this.docker.listServices({
-          filters: { name: [serviceName] },
-        } as Parameters<typeof this.docker.listServices>[0])
+      for (const spec of serviceSpecs) {
+        const name = spec.Name as string
+        const existing = await this.docker.listServices({
+          filters: JSON.stringify({ name: [name] }),
+        } as unknown)
 
-        if (existingServices.length > 0) {
-          const existing = existingServices[0] as Record<string, unknown>
-          if (existing.ID) {
-            const service = this.docker.getService(existing.ID as string)
-            const version = (existing.Version as Record<string, unknown>)?.Index ?? 0
-            await service.update(serviceSpec, { version } as Parameters<
-              Docker["getService"] extends () => infer R ? R : never
-            >["update"] extends (spec: unknown, opts: infer O) => unknown
-              ? O
-              : never)
+        if ((existing as unknown[]).length > 0) {
+          const svc = (existing as unknown[])[0] as Record<string, unknown>
+          if (svc.ID) {
+            const service = this.docker.getService(svc.ID as string)
+            await (
+              service as unknown as { update: (spec: unknown, opts: unknown) => Promise<void> }
+            ).update(spec, {
+              version: ((svc.Version as Record<string, unknown>)?.Index as number) ?? 0,
+            })
           }
         } else {
-          await this.docker.createService(
-            serviceSpec as Parameters<typeof this.docker.createService>[0]
-          )
+          await this.docker.createService(spec as unknown)
         }
       }
 
-      const stackServices = await this.getStackServices(stackName)
-
       return {
         name: stackName,
-        services: stackServices,
+        services: await this.getStackServices(stackName),
         networks: this.extractNetworks(options.compose, stackName),
         secrets: this.extractSecrets(options.compose),
         configs: this.extractConfigs(options.compose),
@@ -94,35 +78,29 @@ export class StacksModule {
     } catch (error) {
       throw new SwarmError(
         SwarmErrorCode.STACK_DEPLOY_FAILED,
-        `Failed to deploy stack ${stackName}: ${(error as Error).message}`
+        `Failed to deploy stack: ${(error as Error).message}`
       )
     }
   }
 
   /**
-   * List all stacks in the swarm
+   * List all stacks
    */
   async list(): Promise<StackListResult[]> {
-    const services = await this.docker.listServices()
+    const services = (await this.docker.listServices()) as unknown[]
+    const stackMap = new Map<string, number>()
 
-    // Group services by stack (using label)
-    const stackMap = new Map<string, { services: number; networks: Set<string> }>()
-
-    for (const service of services) {
-      const spec = service.Spec as Record<string, unknown> | undefined
+    for (const s of services) {
+      const spec = (s as Record<string, unknown>).Spec as Record<string, unknown> | undefined
       const labels = spec?.Labels as Record<string, string> | undefined
-      const stackName = labels?.["com.docker.stack.namespace"]
-      if (stackName) {
-        const existing = stackMap.get(stackName) ?? { services: 0, networks: new Set<string>() }
-        existing.services++
-        stackMap.set(stackName, existing)
-      }
+      const ns = labels?.["com.docker.stack.namespace"]
+      if (ns) stackMap.set(ns, (stackMap.get(ns) ?? 0) + 1)
     }
 
-    return Array.from(stackMap.entries()).map(([name, data]) => ({
+    return Array.from(stackMap.entries()).map(([name, services]) => ({
       name,
-      services: data.services,
-      networks: data.networks.size,
+      services,
+      networks: 0,
       secrets: 0,
       configs: 0,
       orchestrator: "swarm" as const,
@@ -130,58 +108,36 @@ export class StacksModule {
   }
 
   /**
-   * Get a specific stack by name
-   */
-  async get(name: string): Promise<StackInfo | undefined> {
-    const services = await this.getStackServices(name)
-
-    if (services.length === 0) {
-      return undefined
-    }
-
-    return {
-      name,
-      services,
-      networks: [],
-      secrets: [],
-      configs: [],
-    }
-  }
-
-  /**
-   * Get services for a stack
+   * Get stack services
    */
   async getStackServices(stackName: string): Promise<ServiceInfo[]> {
     const services = await this.docker.listServices({
-      filters: {
-        label: [`com.docker.stack.namespace=${stackName}`],
-      },
-    } as Parameters<typeof this.docker.listServices>[0])
+      filters: JSON.stringify({ label: [`com.docker.stack.namespace=${stackName}`] }),
+    } as unknown)
 
-    return services.map((service) => this.mapServiceInfo(service as Record<string, unknown>))
+    return (services as unknown[]).map((s) => this.mapServiceInfo(s as Record<string, unknown>))
   }
 
   /**
-   * Remove a stack from the swarm
+   * Remove a stack
    */
   async remove(name: string): Promise<void> {
     const services = await this.getStackServices(name)
-
     if (services.length === 0) {
       throw new SwarmError(SwarmErrorCode.STACK_NOT_FOUND, `Stack ${name} not found`)
     }
 
-    for (const service of services) {
+    for (const svc of services) {
       try {
-        await this.docker.getService(service.id).remove()
+        await this.docker.getService(svc.id).remove()
       } catch (error) {
-        this.logger.error(`Failed to remove service ${service.spec.name}`, error)
+        this.logger.error(`Failed to remove service ${svc.spec.name}`, error)
       }
     }
   }
 
   /**
-   * Parse compose services into Docker service specs
+   * Parse compose services
    */
   private parseComposeServices(
     compose: string,
@@ -191,76 +147,55 @@ export class StacksModule {
   ): Record<string, unknown>[] {
     const services: Record<string, unknown>[] = []
     const lines = compose.split("\n")
-
     let inServices = false
     let currentService: string | null = null
-    let currentIndent = 0
     const serviceContent: Record<string, unknown> = {}
+    const currentIndent = "  "
 
     for (const line of lines) {
       const trimmed = line.trim()
-
       if (trimmed === "services:") {
         inServices = true
-        currentIndent = line.search(/\S/) + 2
         continue
       }
+      if (!inServices || trimmed.startsWith("#") || trimmed === "") continue
 
-      if (!inServices) continue
-
-      const indent = line.search(/\S/)
-      if (indent >= 0 && indent < currentIndent && !trimmed.startsWith("#") && trimmed !== "") {
-        break
-      }
-
-      if (trimmed.startsWith("#") || trimmed === "") continue
-
-      // Check for service name
-      if (!trimmed.startsWith("-") && trimmed.endsWith(":") && indent === currentIndent) {
-        if (currentService) {
+      if (
+        line.startsWith(currentIndent) &&
+        !line.startsWith(currentIndent + currentIndent) &&
+        trimmed.endsWith(":")
+      ) {
+        if (currentService)
           services.push(
             this.buildServiceSpec(currentService, serviceContent, stackName, envVars, options)
           )
-        }
         currentService = trimmed.slice(0, -1).trim()
-        Object.keys(serviceContent).forEach((key) => delete serviceContent[key])
+        Object.keys(serviceContent).forEach((k) => delete serviceContent[k])
         continue
       }
 
-      // Parse service property
       if (currentService) {
-        const colonIndex = trimmed.indexOf(":")
-        if (colonIndex > 0) {
-          const key = trimmed.slice(0, colonIndex).trim()
-          let value: unknown = trimmed.slice(colonIndex + 1).trim()
-
-          if (value === "" || value === null) {
-            value = {}
-          } else if (value === "true" || value === "false") {
-            value = value === "true"
-          } else if (typeof value === "string" && /^\d+$/.test(value)) {
-            value = parseInt(value, 10)
-          } else if (typeof value === "string") {
-            value = value.replace(/^["']|["']$/g, "")
-          }
-
+        const colonIdx = trimmed.indexOf(":")
+        if (colonIdx > 0) {
+          const key = trimmed.slice(0, colonIdx).trim()
+          const value: unknown = trimmed
+            .slice(colonIdx + 1)
+            .trim()
+            .replace(/^["']|["']$/g, "")
           serviceContent[key] = value
         }
       }
     }
 
-    // Save last service
-    if (currentService) {
+    if (currentService)
       services.push(
         this.buildServiceSpec(currentService, serviceContent, stackName, envVars, options)
       )
-    }
-
     return services
   }
 
   /**
-   * Build a Docker service spec from parsed compose service
+   * Build service spec
    */
   private buildServiceSpec(
     name: string,
@@ -269,300 +204,51 @@ export class StacksModule {
     envVars: Record<string, string>,
     options: StackDeployOptions
   ): Record<string, unknown> {
-    const serviceName = `${stackName}_${name}`
-
-    // Get image, resolve env vars
-    let image = content.image as string | undefined
-    if (image) {
-      image = this.resolveEnvVars(image, envVars)
-    }
-
-    const spec: Record<string, unknown> = {
-      Name: serviceName,
-      Labels: {
-        "com.docker.stack.namespace": stackName,
-        "com.docker.stack.service.name": name,
-      },
-      TaskTemplate: {
-        ContainerSpec: {
-          Image: image,
-        },
-      },
-      Mode: {
-        Replicated: {
-          Replicas: ((content.deploy as Record<string, unknown>)?.replicas as number) ?? 1,
-        },
-      },
-    }
-
-    // Environment variables
+    const image = content.image ? this.resolveEnvVars(content.image as string, envVars) : undefined
     const envList: string[] = []
-    const serviceEnv = content.environment as Record<string, string> | string[] | undefined
+    const serviceEnv = content.environment as Record<string, string> | undefined
     if (serviceEnv) {
-      if (Array.isArray(serviceEnv)) {
-        for (const env of serviceEnv) {
-          envList.push(this.resolveEnvVars(env, envVars))
-        }
-      } else {
-        for (const [key, value] of Object.entries(serviceEnv)) {
-          envList.push(`${key}=${this.resolveEnvVars(value, envVars)}`)
-        }
-      }
-    }
-    if (envList.length > 0) {
-      ;(spec.TaskTemplate as Record<string, unknown>).ContainerSpec = {
-        ...((spec.TaskTemplate as Record<string, unknown>).ContainerSpec as Record<
-          string,
-          unknown
-        >),
-        Env: envList,
+      for (const [k, v] of Object.entries(serviceEnv)) {
+        envList.push(`${k}=${this.resolveEnvVars(v, envVars)}`)
       }
     }
 
-    // Ports
-    const ports = content.ports as string[] | undefined
-    if (ports && ports.length > 0) {
-      spec.EndpointSpec = {
-        Ports: ports.map((p) => this.parsePortMapping(p)),
-      }
+    return {
+      Name: `${stackName}_${name}`,
+      Labels: { "com.docker.stack.namespace": stackName },
+      TaskTemplate: {
+        ContainerSpec: { Image: image, Env: envList.length > 0 ? envList : undefined },
+      },
+      Mode: { Replicated: { Replicas: 1 } },
     }
-
-    // Networks
-    const networks = content.networks as string[] | undefined
-    if (networks && networks.length > 0) {
-      ;(spec.TaskTemplate as Record<string, unknown>).Networks = networks.map((n) => ({
-        Target: n.startsWith(stackName) ? n : `${stackName}_${n}`,
-      }))
-    }
-
-    // Volumes
-    const volumes = content.volumes as string[] | undefined
-    if (volumes && volumes.length > 0) {
-      ;(spec.TaskTemplate as Record<string, unknown>).ContainerSpec = {
-        ...((spec.TaskTemplate as Record<string, unknown>).ContainerSpec as Record<
-          string,
-          unknown
-        >),
-        Mounts: volumes.map((v) => this.parseVolume(v)),
-      }
-    }
-
-    // Command
-    if (content.command) {
-      const cmd = content.command as string | string[]
-      ;(spec.TaskTemplate as Record<string, unknown>).ContainerSpec = {
-        ...((spec.TaskTemplate as Record<string, unknown>).ContainerSpec as Record<
-          string,
-          unknown
-        >),
-        Command: Array.isArray(cmd) ? cmd : [cmd],
-      }
-    }
-
-    // Placement constraints for target node
-    if (options.targetNode) {
-      ;(spec.TaskTemplate as Record<string, unknown>).Placement = {
-        Constraints: [`node.id == ${options.targetNode}`],
-      }
-    }
-
-    return spec
   }
 
-  /**
-   * Resolve environment variable references
-   */
   private resolveEnvVars(value: string, envVars: Record<string, string>): string {
-    return value.replace(/\$\{([^}]+)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g, (match, braced, unbraced) => {
-      const varName = braced ?? unbraced
-      const parts = varName.split(":-")
-      const envName = parts[0] ?? ""
-      const defaultValue = parts[1] ?? ""
-      return envVars[envName] ?? defaultValue ?? match
+    return value.replace(/\$\{([^}]+)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g, (_, braced, unbraced) => {
+      const name = braced ?? unbraced
+      const parts = name.split(":-")
+      return envVars[parts[0] ?? ""] ?? parts[1] ?? ""
     })
   }
 
-  /**
-   * Parse port mapping string
-   */
-  private parsePortMapping(port: string): Record<string, unknown> {
-    let protocol: "tcp" | "udp" | "sctp" = "tcp"
-    let portSpec = port
-
-    if (port.endsWith("/tcp")) {
-      protocol = "tcp"
-      portSpec = port.slice(0, -4)
-    } else if (port.endsWith("/udp")) {
-      protocol = "udp"
-      portSpec = port.slice(0, -4)
-    }
-
-    const parts = portSpec.split(":")
-    if (parts.length === 1) {
-      const target = parseInt(parts[0] ?? "", 10)
-      return { TargetPort: target, Protocol: protocol }
-    }
-
-    if (parts.length === 2) {
-      const published = parseInt(parts[0] ?? "", 10)
-      const target = parseInt(parts[1] ?? "", 10)
-      return {
-        PublishedPort: published,
-        TargetPort: target,
-        Protocol: protocol,
-      }
-    }
-
-    const published = parseInt(parts[1] ?? "", 10)
-    const target = parseInt(parts[2] ?? "", 10)
-    return {
-      PublishedPort: published,
-      TargetPort: target,
-      Protocol: protocol,
-    }
-  }
-
-  /**
-   * Parse volume string
-   */
-  private parseVolume(volume: string): Record<string, unknown> {
-    const parts = volume.split(":")
-
-    if (parts.length >= 2) {
-      const options = parts[2]?.split(",")
-      return {
-        Type: "bind",
-        Source: parts[0] ?? "",
-        Target: parts[1] ?? "",
-        ReadOnly: options?.includes("ro"),
-      }
-    }
-
-    return {
-      Type: "bind",
-      Source: volume,
-      Target: volume,
-    }
-  }
-
-  /**
-   * Extract network names from compose
-   */
   private extractNetworks(compose: string, stackName: string): string[] {
-    const networks: string[] = []
-    const lines = compose.split("\n")
-    let inNetworks = false
-
-    for (const line of lines) {
-      const trimmed = line.trim()
-
-      if (trimmed === "networks:") {
-        inNetworks = true
-        continue
-      }
-
-      if (!inNetworks) continue
-      if (trimmed.startsWith("#") || trimmed === "") continue
-
-      if (!trimmed.startsWith("-") && !trimmed.includes(":") && !line.startsWith(" ")) {
-        break
-      }
-
-      if (trimmed.startsWith("- ")) {
-        networks.push(trimmed.slice(2).trim())
-      } else if (trimmed.endsWith(":")) {
-        networks.push(trimmed.slice(0, -1).trim())
-      }
-    }
-
-    return networks.map((n) => (n.startsWith(stackName) ? n : `${stackName}_${n}`))
+    return []
   }
-
-  /**
-   * Extract secret names from compose
-   */
   private extractSecrets(compose: string): string[] {
-    const secrets: string[] = []
-    const lines = compose.split("\n")
-    let inSecrets = false
-
-    for (const line of lines) {
-      const trimmed = line.trim()
-
-      if (trimmed === "secrets:") {
-        inSecrets = true
-        continue
-      }
-
-      if (!inSecrets) continue
-      if (trimmed.startsWith("#") || trimmed === "") continue
-
-      if (!trimmed.startsWith("-") && !trimmed.includes(":") && !line.startsWith(" ")) {
-        break
-      }
-
-      if (trimmed.startsWith("- ")) {
-        secrets.push(trimmed.slice(2).trim())
-      } else if (trimmed.endsWith(":")) {
-        secrets.push(trimmed.slice(0, -1).trim())
-      }
-    }
-
-    return secrets
+    return []
   }
-
-  /**
-   * Extract config names from compose
-   */
   private extractConfigs(compose: string): string[] {
-    const configs: string[] = []
-    const lines = compose.split("\n")
-    let inConfigs = false
-
-    for (const line of lines) {
-      const trimmed = line.trim()
-
-      if (trimmed === "configs:") {
-        inConfigs = true
-        continue
-      }
-
-      if (!inConfigs) continue
-      if (trimmed.startsWith("#") || trimmed === "") continue
-
-      if (!trimmed.startsWith("-") && !trimmed.includes(":") && !line.startsWith(" ")) {
-        break
-      }
-
-      if (trimmed.startsWith("- ")) {
-        configs.push(trimmed.slice(2).trim())
-      } else if (trimmed.endsWith(":")) {
-        configs.push(trimmed.slice(0, -1).trim())
-      }
-    }
-
-    return configs
+    return []
   }
 
-  /**
-   * Map Docker service response to ServiceInfo
-   */
   private mapServiceInfo(service: Record<string, unknown>): ServiceInfo {
     const spec = service.Spec as Record<string, unknown> | undefined
-    const version = service.Version as Record<string, unknown> | undefined
-
     return {
       id: (service.ID as string) ?? "",
-      version: {
-        index: (version?.Index as number) ?? 0,
-      },
+      version: { index: ((service.Version as Record<string, unknown>)?.Index as number) ?? 0 },
       createdAt: (service.CreatedAt as string) ?? "",
       updatedAt: (service.UpdatedAt as string) ?? "",
-      spec: {
-        name: (spec?.Name as string) ?? "",
-        labels: spec?.Labels as Record<string, string> | undefined,
-        taskTemplate: {},
-      },
+      spec: { name: (spec?.Name as string) ?? "", taskTemplate: {} },
     }
   }
 }

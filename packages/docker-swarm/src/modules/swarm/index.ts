@@ -116,7 +116,14 @@ export class SwarmModule {
    * Update swarm configuration
    */
   async update(options: SwarmUpdateOptions): Promise<void> {
-    await this.docker.swarmUpdate(options.spec as unknown, options.version)
+    await (
+      this.docker as unknown as Record<string, (opts: unknown, cb?: unknown) => Promise<void>>
+    ).swarmUpdate({
+      spec: options.spec,
+      version: options.version,
+      rotateWorkerToken: options.rotateWorkerToken,
+      rotateManagerToken: options.rotateManagerToken,
+    })
   }
 
   /**

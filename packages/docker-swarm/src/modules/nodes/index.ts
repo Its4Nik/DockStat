@@ -26,7 +26,7 @@ export class NodesModule {
 
   constructor(options: DockerConnectionOptions, logger: SwarmLogger) {
     const config = buildConnectionConfig(options)
-    this.docker = new Docker(config as Docker.DockerOptions)
+    this.docker = new Docker(config as unknown as Docker.DockerOptions)
     this.logger = logger
   }
 
@@ -44,7 +44,7 @@ export class NodesModule {
         listFilters.name = Array.isArray(filters.name) ? filters.name : [filters.name]
       }
       if (filters.role) {
-        listFilters.role = Array.isArray(filters.role) ? filters.role : [filters.role]
+        listFilters.role = Array.isArray(filters.role) ? filters.role.map((r) => r) : [filters.role]
       }
       if (filters.membership) {
         listFilters.membership = [filters.membership]
@@ -52,10 +52,10 @@ export class NodesModule {
     }
 
     const nodes = await this.docker.listNodes({
-      filters: Object.keys(listFilters).length > 0 ? listFilters : undefined,
-    } as Parameters<typeof this.docker.listNodes>[0])
+      filters: Object.keys(listFilters).length > 0 ? JSON.stringify(listFilters) : undefined,
+    } as unknown)
 
-    return nodes.map((node) => this.mapNodeInfo(node))
+    return (nodes as unknown[]).map((node) => this.mapNodeInfo(node as Record<string, unknown>))
   }
 
   /**
@@ -64,7 +64,7 @@ export class NodesModule {
   async get(nodeId: string): Promise<NodeInfo> {
     try {
       const node = await this.docker.getNode(nodeId).inspect()
-      return this.mapNodeInfo(node)
+      return this.mapNodeInfo(node as unknown as Record<string, unknown>)
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode === 404) {
         throw new SwarmError(SwarmErrorCode.NODE_NOT_FOUND, `Node ${nodeId} not found`)
@@ -79,26 +79,21 @@ export class NodesModule {
   async update(nodeId: string, options: NodeUpdateOptions): Promise<void> {
     try {
       const node = this.docker.getNode(nodeId)
-      const current = await node.inspect()
+      const current = (await node.inspect()) as unknown as Record<string, unknown>
+      const currentSpec = current.Spec as Record<string, unknown> | undefined
+      const version = ((current.Version as Record<string, unknown>)?.Index as number) ?? 0
 
       const spec = {
-        ...current.Spec,
-        ...(options.name !== undefined && { Name: options.name }),
-        ...(options.role !== undefined && { Role: options.role }),
-        ...(options.availability !== undefined && {
-          Availability: options.availability,
-        }),
-        ...(options.labels !== undefined && { Labels: options.labels }),
+        ...currentSpec,
+        Name: options.name ?? currentSpec?.Name,
+        Labels: options.labels ?? currentSpec?.Labels,
+        Role: options.role ?? currentSpec?.Role,
+        Availability: options.availability ?? currentSpec?.Availability,
       }
 
-      await node.update(spec, {
-        version: current.Version?.Index ?? 0,
-      } as Parameters<Docker["getNode"] extends () => infer R ? R : never>["update"] extends (
-        spec: unknown,
-        opts: infer O
-      ) => unknown
-        ? O
-        : never)
+      await (
+        node as unknown as { update: (spec: unknown, version: unknown) => Promise<void> }
+      ).update(spec, version)
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode === 404) {
         throw new SwarmError(SwarmErrorCode.NODE_NOT_FOUND, `Node ${nodeId} not found`)
