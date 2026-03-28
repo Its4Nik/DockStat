@@ -1,7 +1,7 @@
-export { ClientNode } from "./nodes/client"
-export { ContainerNode } from "./nodes/container"
-export { DockNode } from "./nodes/docknode"
-export { HostNode } from "./nodes/host"
+export * from "./nodes/client"
+export * from "./nodes/container"
+export * from "./nodes/docknode"
+export * from "./nodes/host"
 
 import { ClientNode } from "./nodes/client"
 import { ContainerNode } from "./nodes/container"

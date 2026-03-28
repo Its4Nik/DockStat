@@ -6,6 +6,6 @@
     "composite": true,
     "strict": true
   },
-  "include": ["index.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

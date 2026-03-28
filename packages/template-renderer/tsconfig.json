@@ -22,6 +22,6 @@
       "@dockstat/ui": ["../ui/src/components/index.ts"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "global.d.ts", "../ui/src/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

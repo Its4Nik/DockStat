@@ -3,6 +3,7 @@ import { badgesCommand } from "./commands/badges"
 import { bundleCommand } from "./commands/bundle"
 import { initCommand } from "./commands/init"
 import { serveCommand } from "./commands/serve"
+import { stacksCommand } from "./commands/stacks"
 
 const program = new Command()
 
@@ -16,5 +17,6 @@ program.addCommand(initCommand)
 program.addCommand(bundleCommand)
 program.addCommand(badgesCommand)
 program.addCommand(serveCommand)
+program.addCommand(stacksCommand)
 
 program.parse()

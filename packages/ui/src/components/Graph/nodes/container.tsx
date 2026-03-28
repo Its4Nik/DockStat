@@ -4,7 +4,7 @@ import { Container } from "lucide-react"
 import { memo } from "react"
 import { Badge } from "../../Badge/Badge"
 
-interface ContainerNodeData extends Record<string, unknown> {
+export interface ContainerNodeData extends Record<string, unknown> {
   label: string
   status: string
   image?: string

@@ -15,17 +15,47 @@ const progressLogger = logger.spawn("Progress")
 
 const STACK_ROOT = "./stacks"
 
-const getStackOptions = (id: number): IDockerComposeOptions => ({
-  cwd: `${STACK_ROOT}/${id}`,
-  executable: { executablePath: DOCKER_BIN },
-  env: {
-    DOCKER_HOST: DOCKER_SOCKET_PATH
-  },
-  log: false,
-  callback: (chunk: Buffer) => {
-    progressLogger.debug(chunk.toString())
-  },
-})
+/** Result wrapper for docker-compose commands with detailed output */
+interface CommandResult<T = unknown> {
+  success: boolean
+  data?: T
+  stdout: string
+  stderr: string
+  error?: string
+}
+
+/** Load environment variables from .env file */
+const loadEnvFile = async (id: number): Promise<Record<string, string>> => {
+  const envPath = `${STACK_ROOT}/${id}/.env`
+  try {
+    const file = Bun.file(envPath)
+    if (!(await file.exists())) {
+      return {}
+    }
+    const content = await file.text()
+    return parseEnv(content) as Record<string, string>
+  } catch {
+    return {}
+  }
+}
+
+const getStackOptions = async (id: number): Promise<IDockerComposeOptions> => {
+  // Load env from .env file
+  const envFromFile = await loadEnvFile(id)
+
+  return {
+    cwd: `${STACK_ROOT}/${id}`,
+    executable: { executablePath: DOCKER_BIN },
+    env: {
+      DOCKER_HOST: DOCKER_SOCKET_PATH,
+      ...envFromFile, // Include env vars from .env file
+    },
+    log: false,
+    callback: (chunk: Buffer) => {
+      progressLogger.debug(chunk.toString())
+    },
+  }
+}
 
 const serializeEnv = (env: EnvMap): string =>
   Object.entries(env)
@@ -70,6 +100,7 @@ class StackHandler {
       version: column.text(),
       yaml: column.text(),
       env: column.json(),
+      dockNodeId: column.integer({ default: 0 }),
     },
     {
       ifNotExists: true,
@@ -88,13 +119,38 @@ class StackHandler {
 
   // ---- Docker Compose Wrapper
 
+  /** Execute docker-compose command with proper error handling */
   private async execDC<T>(
     action: string,
     id: number,
     fn: (options: IDockerComposeOptions) => Promise<T>
-  ): Promise<T> {
+  ): Promise<CommandResult<T>> {
     this.log(action, { id })
-    return fn(getStackOptions(id))
+    try {
+      const options = await getStackOptions(id)
+      const result = await fn(options)
+
+      // Extract stdout/stderr from docker-compose result
+      const dcResult = result as { out?: string; err?: string; data?: unknown }
+      return {
+        success: true,
+        data: result,
+        stdout: dcResult.out ?? "",
+        stderr: dcResult.err ?? "",
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      this.log(`${action}:error`, { id, error: errorMessage })
+
+      // Try to extract stdout/stderr from error
+      const errorObj = error as { stdout?: string; stderr?: string; out?: string; err?: string }
+      return {
+        success: false,
+        stdout: errorObj.stdout ?? errorObj.out ?? "",
+        stderr: errorObj.stderr ?? errorObj.err ?? "",
+        error: errorMessage,
+      }
+    }
   }
 
   // ---- Metadata
@@ -215,6 +271,7 @@ return false
       version: input.version,
       yaml: YAML.stringify(this.checkEnv(YAML.parse(input.yaml)as ComposeSpecification), null, 2),
       env: input.env,
+      dockNodeId: input.dockNodeId ?? 0,
     })
 
     const isErrored = (healthy: boolean) => {
@@ -439,7 +496,8 @@ return false
   }
 
   async version() {
-    const dat = omit(getStackOptions(0) as unknown as Record<PropertyKey, unknown>, ["cwd"])
+    const options = await getStackOptions(0)
+    const dat = omit(options as unknown as Record<PropertyKey, unknown>, ["cwd"])
     return DC.version({...dat, commandOptions: ["--short"] })
   }
 }

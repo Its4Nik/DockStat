@@ -3,7 +3,7 @@ import { Handle, type Node, type NodeProps, Position } from "@xyflow/react"
 import { Server } from "lucide-react"
 import { memo } from "react"
 
-interface HostNodeData extends Record<string, unknown> {
+export interface HostNodeData extends Record<string, unknown> {
   label: string
   status: string
   ipAddress?: string

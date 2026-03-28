@@ -153,7 +153,7 @@ function extractColumnNamesFromCreateTable(sql: string): string[] {
   let current = ""
   let depth = 0
 
-  for (const char of body) {
+  for (const char of body ?? "") {
     if (char === "(") depth++
     if (char === ")") depth--
 
@@ -186,7 +186,7 @@ function extractColumnNamesFromCreateTable(sql: string): string[] {
     // first token = column name
     const firstToken = part.trim().split(/\s+/)[0]
 
-    const name = firstToken.replace(/^["`[]/, "").replace(/["`\]]$/, "")
+    const name = (firstToken ?? "").replace(/^["`[]/, "").replace(/["`\]]$/, "")
 
     columnNames.push(name)
   }

@@ -5,6 +5,8 @@ import { SlidesHeader } from "./SlidesHeader"
 import type { SlidesProps } from "./types"
 import { useSlidesState } from "./useSlideState"
 
+export type { ButtonRowPosition, SlidesProps, SlideVariant } from "./types"
+
 export function Slides({
   children,
   header,

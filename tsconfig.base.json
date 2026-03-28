@@ -5,7 +5,7 @@
     "module": "ESNext",
     "target": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
 
     /* ---- Strictness & Type Safety ---- */
     "strict": true,

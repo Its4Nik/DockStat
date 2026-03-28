@@ -25,7 +25,7 @@ export namespace GraphModel {
       hostId: t.Optional(t.Number()),
       dockNodeId: t.Optional(t.Number()),
       state: t.Optional(t.String()),
-      containerId: t.Optional(t.Number()),
+      containerId: t.Optional(t.String()),
     }),
   })
 
