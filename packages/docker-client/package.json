@@ -42,10 +42,10 @@
     "bun": ">=1.0.0"
   },
   "peerDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "catalog:testing"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "bun-types": "latest"
   },
   "dependencies": {
     "@dockstat/sqlite-wrapper": "workspace:*",
@@ -53,7 +53,7 @@
     "@dockstat/typings": "workspace:*",
     "@dockstat/plugin-handler": "workspace:*",
     "@dockstat/logger": "workspace:*",
-    "@types/dockerode": "^3.3.44",
-    "dockerode": "^4.0.9"
+    "@types/dockerode": "catalog:docker",
+    "dockerode": "catalog:docker"
   }
 }

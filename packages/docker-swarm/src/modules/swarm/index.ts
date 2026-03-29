@@ -5,6 +5,7 @@
  * initialization, joining, leaving, and configuration.
  */
 
+import type { Logger } from "@dockstat/logger"
 import Docker from "dockerode"
 import type {
   DockerConnectionOptions,
@@ -15,7 +16,6 @@ import type {
   SwarmUpdateOptions,
 } from "../../types"
 import { buildConnectionConfig } from "../../utils/docker-socket"
-import type { SwarmLogger } from "../../utils/logger"
 
 /**
  * Swarm Module
@@ -24,9 +24,9 @@ import type { SwarmLogger } from "../../utils/logger"
  */
 export class SwarmModule {
   private docker: Docker
-  private logger: SwarmLogger
+  private logger: Logger
 
-  constructor(options: DockerConnectionOptions, logger: SwarmLogger) {
+  constructor(options: DockerConnectionOptions, logger: Logger) {
     const config = buildConnectionConfig(options)
     this.docker = new Docker(config as unknown as Docker.DockerOptions)
     this.logger = logger

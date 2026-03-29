@@ -13,19 +13,16 @@ import type {
 } from "../../types"
 import { SwarmError, SwarmErrorCode } from "../../types"
 import { buildConnectionConfig } from "../../utils/docker-socket"
-import type { SwarmLogger } from "../../utils/logger"
 
 /**
  * Secrets Module
  */
 export class SecretsModule {
   private docker: Docker
-  private logger: SwarmLogger
 
-  constructor(options: DockerConnectionOptions, logger: SwarmLogger) {
+  constructor(options: DockerConnectionOptions) {
     const config = buildConnectionConfig(options)
     this.docker = new Docker(config as unknown as Docker.DockerOptions)
-    this.logger = logger
   }
 
   async list(filters?: SecretListFilters): Promise<SecretInfo[]> {

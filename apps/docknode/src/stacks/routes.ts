@@ -324,15 +324,15 @@ export const SwarmRoutes = new Elysia({ prefix: "/swarm" })
     }),
   })
 
-  .post("/leave", ({ query }) => SwarmHandler.leaveSwarm(query.force === "true"), {
-    query: t.Object({ force: t.Optional(t.String()) }),
+  .post("/leave", ({ body }) => SwarmHandler.leaveSwarm(body?.force ?? false), {
+    body: t.Optional(t.Object({ force: t.Optional(t.Boolean()) })),
   })
 
   // ---- Swarm Stack Operations
   .get("/stacks", () => SwarmHandler.listStacks())
 
-  .get("/stacks/:name", ({ params }) => SwarmHandler.getStack(params.name), {
-    params: t.Object({ name: t.String() }),
+  .post("/stacks/get", ({ body }) => SwarmHandler.getStack(body.name), {
+    body: t.Object({ name: t.String() }),
   })
 
   .post("/stacks/deploy", ({ body }) => SwarmHandler.deployStack(body), {
@@ -346,19 +346,21 @@ export const SwarmRoutes = new Elysia({ prefix: "/swarm" })
     }),
   })
 
-  .delete("/stacks/:name", ({ params, query }) =>
-    SwarmHandler.removeStack({ name: params.name, prune: query.prune === "true" }),
+  .post("/stacks/remove", ({ body }) =>
+    SwarmHandler.removeStack({ name: body.name, prune: body.prune ?? false }),
     {
-      params: t.Object({ name: t.String() }),
-      query: t.Object({ prune: t.Optional(t.String()) }),
+      body: t.Object({
+        name: t.String(),
+        prune: t.Optional(t.Boolean()),
+      }),
     }
   )
 
   // ---- Swarm Service Operations
   .get("/services", () => SwarmHandler.listServices())
 
-  .get("/services/:id", ({ params }) => SwarmHandler.getService(params.id), {
-    params: t.Object({ id: t.String() }),
+  .post("/services/get", ({ body }) => SwarmHandler.getService(body.id), {
+    body: t.Object({ id: t.String() }),
   })
 
   .post("/services", ({ body }) => SwarmHandler.createService(body), {
@@ -375,8 +377,8 @@ export const SwarmRoutes = new Elysia({ prefix: "/swarm" })
           t.Object({
             publishedPort: t.Number(),
             targetPort: t.Number(),
-            protocol: t.Optional(t.Union([t.Literal("tcp"), t.Literal("udp"), t.Literal("sctp")])),
-            mode: t.Optional(t.Union([t.Literal("ingress"), t.Literal("host")])),
+            protocol: t.Union([t.Literal("tcp"), t.Literal("udp"), t.Literal("sctp")]),
+            mode: t.Union([t.Literal("ingress"), t.Literal("host")]),
           })
         )
       ),
@@ -426,9 +428,12 @@ export const SwarmRoutes = new Elysia({ prefix: "/swarm" })
     }),
   })
 
-  .patch("/services/:id", ({ params, body }) => SwarmHandler.updateService({ serviceId: params.id, ...body }), {
-    params: t.Object({ id: t.String() }),
+  .post("/services/update", ({ body }) => {
+    if (!body) throw new Error("Request body is required")
+    return SwarmHandler.updateService(body)
+  }, {
     body: t.Object({
+      serviceId: t.String(),
       image: t.Optional(t.String()),
       env: t.Optional(t.Record(t.String(), t.Union([t.String(), t.Number(), t.Boolean(), t.Null()]))),
       replicas: t.Optional(t.Number()),
@@ -461,50 +466,56 @@ export const SwarmRoutes = new Elysia({ prefix: "/swarm" })
     }),
   })
 
-  .post("/services/:id/scale", ({ params, body }) =>
-    SwarmHandler.scaleService(params.id, body.replicas),
+  .post("/services/scale", ({ body }) =>
+    SwarmHandler.scaleService(body.serviceId, body.replicas),
     {
-      params: t.Object({ id: t.String() }),
-      body: t.Object({ replicas: t.Number() }),
+      body: t.Object({ serviceId: t.String(), replicas: t.Number() }),
     }
   )
 
-  .delete("/services/:id", ({ params }) => SwarmHandler.removeService(params.id), {
-    params: t.Object({ id: t.String() }),
+  .post("/services/remove", ({ body }) => SwarmHandler.removeService(body.serviceId), {
+    body: t.Object({ serviceId: t.String() }),
   })
 
   // ---- Swarm Node Operations
   .get("/nodes", () => SwarmHandler.listNodes())
 
-  .get("/nodes/:id", ({ params }) => SwarmHandler.getNode(params.id), {
-    params: t.Object({ id: t.String() }),
+  .post("/nodes/get", ({ body }) => SwarmHandler.getNode(body.id), {
+    body: t.Object({ id: t.String() }),
   })
 
-  .patch("/nodes/:id", ({ params, body }) =>
-    SwarmHandler.updateNode(params.id, {
+  .post("/nodes/update", ({ body }) => {
+    if (!body) throw new Error("Request body is required")
+    return SwarmHandler.updateNode(body.id, {
       availability: body.availability,
       labels: body.labels,
-    }),
+    })
+  },
     {
-      params: t.Object({ id: t.String() }),
       body: t.Object({
+        id: t.String(),
         availability: t.Optional(t.Union([t.Literal("active"), t.Literal("pause"), t.Literal("drain")])),
         labels: t.Optional(t.Record(t.String(), t.String())),
       }),
     }
   )
 
-  .delete("/nodes/:id", ({ params, query }) =>
-    SwarmHandler.removeNode(params.id, query.force === "true"),
+  .post("/nodes/remove", ({ body }) =>
+    SwarmHandler.removeNode(body.id, body.force ?? false),
     {
-      params: t.Object({ id: t.String() }),
-      query: t.Object({ force: t.Optional(t.String()) }),
+      body: t.Object({
+        id: t.String(),
+        force: t.Optional(t.Boolean()),
+      }),
     }
   )
 
   // ---- Swarm Task Operations
-  .get("/tasks", ({ query }) => SwarmHandler.listTasks(query.serviceId), {
-    query: t.Object({ serviceId: t.Optional(t.String()) }),
+  .post("/tasks/list", ({ body }) => {
+    if (!body) return SwarmHandler.listTasks()
+    return SwarmHandler.listTasks(body.serviceId)
+  }, {
+    body: t.Optional(t.Object({ serviceId: t.Optional(t.String()) })),
   })
 
   // ---- Swarm Network Operations
@@ -520,6 +531,6 @@ export const SwarmRoutes = new Elysia({ prefix: "/swarm" })
     }),
   })
 
-  .delete("/networks/:id", ({ params }) => SwarmHandler.removeNetwork(params.id), {
-    params: t.Object({ id: t.String() }),
+  .post("/networks/remove", ({ body }) => SwarmHandler.removeNetwork(body.id), {
+    body: t.Object({ id: t.String() }),
   })

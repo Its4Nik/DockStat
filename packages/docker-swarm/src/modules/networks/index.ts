@@ -19,12 +19,10 @@ import type { SwarmLogger } from "../../utils/logger"
  */
 export class NetworksModule {
   private docker: Docker
-  private logger: SwarmLogger
 
-  constructor(options: DockerConnectionOptions, logger: SwarmLogger) {
+  constructor(options: DockerConnectionOptions, _logger: SwarmLogger) {
     const config = buildConnectionConfig(options)
     this.docker = new Docker(config as unknown as Docker.DockerOptions)
-    this.logger = logger
   }
 
   async list(scope?: "local" | "swarm"): Promise<SwarmNetworkInfo[]> {

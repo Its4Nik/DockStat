@@ -20,14 +20,14 @@
   },
   "dependencies": {
     "@dockstat/typings": "workspace:*",
-    "bun-plugin-dts": "^0.3.0"
+    "bun-plugin-dts": "catalog:build-tools"
   },
   "peerDependencies": {
-    "typescript": "^5.9.3",
-    "@dockstat/sqlite-wrapper": "latest",
-    "@dockstat/logger": "latest"
+    "typescript": "catalog:testing",
+    "@dockstat/sqlite-wrapper": "workspace:*",
+    "@dockstat/logger": "workspace:*"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "bun-types": "latest"
   }
 }

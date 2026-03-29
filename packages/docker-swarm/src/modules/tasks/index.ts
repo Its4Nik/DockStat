@@ -15,12 +15,10 @@ import type { SwarmLogger } from "../../utils/logger"
  */
 export class TasksModule {
   private docker: Docker
-  private logger: SwarmLogger
 
-  constructor(options: DockerConnectionOptions, logger: SwarmLogger) {
+  constructor(options: DockerConnectionOptions, _logger: SwarmLogger) {
     const config = buildConnectionConfig(options)
     this.docker = new Docker(config as unknown as Docker.DockerOptions)
-    this.logger = logger
   }
 
   /**
@@ -36,7 +34,7 @@ export class TasksModule {
       if (filters.service)
         listFilters.service = Array.isArray(filters.service) ? filters.service : [filters.service]
       if (filters.node)
-        listFilters["node"] = Array.isArray(filters.node) ? filters.node : [filters.node]
+        listFilters.node = Array.isArray(filters.node) ? filters.node : [filters.node]
       if (filters.label)
         listFilters.label = Array.isArray(filters.label) ? filters.label : [filters.label]
       if (filters.desiredState) {

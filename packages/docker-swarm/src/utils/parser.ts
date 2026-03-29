@@ -293,13 +293,11 @@ export function validateComposeStructure(compose: string): {
 
   // Check for valid YAML-like structure
   const lines = compose.split("\n")
-  let hasValidIndentation = true
 
   for (const line of lines) {
     if (line.trim() && !line.trim().startsWith("#")) {
       // Check for tabs (should be spaces)
       if (line.includes("\t")) {
-        hasValidIndentation = false
         errors.push("Use spaces instead of tabs for indentation")
         break
       }

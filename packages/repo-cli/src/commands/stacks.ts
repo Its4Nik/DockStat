@@ -1,10 +1,10 @@
+import { existsSync } from "node:fs"
+import { mkdir, writeFile } from "node:fs/promises"
+import path from "node:path"
 import { Command } from "@commander-js/extra-typings"
 import type { ComposeSpecification } from "@dockstat/typings/"
 import { extractErrorMessage } from "@dockstat/utils"
 import { Glob, YAML } from "bun"
-import { existsSync } from "fs"
-import { mkdir, writeFile } from "fs/promises"
-import path from "path"
 import type {
   StackBuildResult,
   StackDownloadOptions,
@@ -236,7 +236,7 @@ async function downloadStack(
 
     // Apply environment values if provided
     if (options.envValues) {
-      for (const [serviceName, service] of Object.entries(compose.services || {})) {
+      for (const [_serviceName, service] of Object.entries(compose.services || {})) {
         if (service.environment) {
           const envMap = Array.isArray(service.environment)
             ? Object.fromEntries(service.environment.map((e) => e.split("=") as [string, string]))
@@ -365,7 +365,11 @@ export const stackBundleCommand = new Command("bundle")
     }
 
     // Update repo file
-    const successfulStacks = results.filter((r) => r.success && r.meta).map((r) => r.meta!)
+    const successfulStacks = results
+      .filter(
+        (r): r is StackBuildResult & { meta: StackMetaType } => r.success && r.meta !== undefined
+      )
+      .map((r) => r.meta)
     repoData.content.stacks = successfulStacks
     await saveRepo(globalOptions.root, repoData)
     log("📋", `Updated ${globalOptions.root}`, `${successfulStacks.length} stack(s)`)

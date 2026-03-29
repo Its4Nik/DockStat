@@ -113,6 +113,6 @@ export class SwarmLogger {
 /**
  * Create a child logger for a specific module
  */
-export function createModuleLogger(parent: SwarmLogger, module: string): SwarmLogger {
+export function createModuleLogger(_parent: SwarmLogger, module: string): SwarmLogger {
   return new SwarmLogger(undefined, false, `[docker-swarm:${module}]`)
 }

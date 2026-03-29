@@ -4,6 +4,7 @@
  * Provides a unified interface for all Docker Swarm operations.
  */
 
+import { Logger } from "@dockstat/logger"
 import Docker from "dockerode"
 import { ConfigsModule } from "../modules/configs"
 import { NetworksModule } from "../modules/networks"
@@ -14,8 +15,8 @@ import { StacksModule } from "../modules/stacks"
 import { SwarmModule } from "../modules/swarm"
 import { TasksModule } from "../modules/tasks"
 import type { DockerConnectionOptions, SwarmClientOptions } from "../types"
-import type { Logger } from "../utils/logger"
-import { SwarmLogger } from "../utils/logger"
+
+export type { SwarmClientOptions }
 
 /**
  * SwarmClient
@@ -52,18 +53,22 @@ export class SwarmClient {
   readonly networks: NetworksModule
 
   /** Logger instance */
-  readonly logger: SwarmLogger
+  readonly logger: Logger
 
   /** Client options */
   readonly options: SwarmClientOptions
 
   constructor(options: SwarmClientOptions = {}) {
     this.options = options
-    this.logger = new SwarmLogger(
-      options.logger as Logger | undefined,
-      options.debug,
-      "[docker-swarm]"
-    )
+
+    // Initialize logger with optional parent logger
+    const parentLogger = options.logger
+    this.logger = parentLogger?.spawn("docker-swarm") ?? new Logger("docker-swarm")
+
+    // Set debug mode if enabled
+    if (options.debug) {
+      this.logger.setDisabled(false)
+    }
 
     // Initialize Docker instance
     const socketPath = options.socketPath ?? "/var/run/docker.sock"
@@ -89,16 +94,16 @@ export class SwarmClient {
         : undefined,
     } as Docker.DockerOptions)
 
-    // Initialize modules
+    // Initialize modules with logger chaining
     const connOptions: DockerConnectionOptions = options
-    this.swarm = new SwarmModule(connOptions, this.logger)
-    this.nodes = new NodesModule(connOptions, this.logger)
-    this.services = new ServicesModule(connOptions, this.logger)
-    this.tasks = new TasksModule(connOptions, this.logger)
-    this.stacks = new StacksModule(connOptions, this.logger)
-    this.secrets = new SecretsModule(connOptions, this.logger)
-    this.configs = new ConfigsModule(connOptions, this.logger)
-    this.networks = new NetworksModule(connOptions, this.logger)
+    this.swarm = new SwarmModule(connOptions, this.logger.spawn("swarm"))
+    this.nodes = new NodesModule(connOptions, this.logger.spawn("nodes"))
+    this.services = new ServicesModule(connOptions, this.logger.spawn("services"))
+    this.tasks = new TasksModule(connOptions, this.logger.spawn("tasks"))
+    this.stacks = new StacksModule(connOptions, this.logger.spawn("stacks"))
+    this.secrets = new SecretsModule(connOptions, this.logger.spawn("secrets"))
+    this.configs = new ConfigsModule(connOptions, this.logger.spawn("configs"))
+    this.networks = new NetworksModule(connOptions, this.logger.spawn("networks"))
   }
 
   /**
@@ -199,4 +204,4 @@ export class SwarmClient {
   }
 }
 
-export * from "./types"
+export { Logger } from "@dockstat/logger"

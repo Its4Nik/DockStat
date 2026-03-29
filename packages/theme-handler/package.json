@@ -14,7 +14,7 @@
     "./themes": "./src/default-themes/index.ts"
   },
   "dependencies": {
-    "react": "^19.2.3",
+    "react": "catalog:",
     "elysia": "catalog:",
     "@elysiajs/eden": "catalog:",
     "@dockstat/sqlite-wrapper": "workspace:*",
@@ -22,9 +22,9 @@
     "@dockstat/ui": "workspace:*"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "bun-types": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "catalog:testing"
   }
 }

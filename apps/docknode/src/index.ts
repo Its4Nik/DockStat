@@ -41,10 +41,10 @@ const DockNode = new Elysia({ prefix: "/api" })
       nodeName: t.Optional(t.String()),
       level: t.UnionEnum(["info", "warn", "error", "debug"]),
     }),
-    open(ws) {
+    open(_ws) {
       DockNodeLogger.info(`WebSocket client connected for logs`)
     },
-    close(ws) {
+    close(_ws) {
       DockNodeLogger.info(`WebSocket client disconnected from logs`)
     },
     async message(ws, body) {

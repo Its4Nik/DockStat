@@ -172,7 +172,7 @@ function StackFormModal({ open, onClose, onSubmit, initialData }: StackFormModal
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Environment Variables</label>
+          <div className="block text-sm font-medium mb-1">Environment Variables</div>
           <div className="flex gap-2 mb-2">
             <Input value={envKey} onChange={setEnvKey} placeholder="KEY" className="flex-1" />
             <Input value={envValue} onChange={setEnvValue} placeholder="value" className="flex-1" />

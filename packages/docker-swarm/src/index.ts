@@ -19,6 +19,7 @@ export { TasksModule } from "./modules/tasks"
 
 // Types
 export * from "./types"
+
 export {
   buildApiUrl,
   buildConnectionConfig,
@@ -29,9 +30,6 @@ export {
   isSocketAvailable,
   parseDockerVersion,
 } from "./utils/docker-socket"
-export type { LogContext, LogLevel } from "./utils/logger"
-
-export { createModuleLogger, SwarmLogger } from "./utils/logger"
 // Utilities
 export {
   envArrayToRecord,

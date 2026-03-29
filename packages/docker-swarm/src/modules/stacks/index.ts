@@ -4,6 +4,7 @@
  * Provides operations for Docker Swarm stack deployment.
  */
 
+import type { Logger } from "@dockstat/logger"
 import Docker from "dockerode"
 import type {
   DockerConnectionOptions,
@@ -14,7 +15,6 @@ import type {
 } from "../../types"
 import { SwarmError, SwarmErrorCode } from "../../types"
 import { buildConnectionConfig } from "../../utils/docker-socket"
-import type { SwarmLogger } from "../../utils/logger"
 import { parseEnvContent, validateComposeStructure } from "../../utils/parser"
 
 /**
@@ -22,9 +22,9 @@ import { parseEnvContent, validateComposeStructure } from "../../utils/parser"
  */
 export class StacksModule {
   private docker: Docker
-  private logger: SwarmLogger
+  private logger: Logger
 
-  constructor(options: DockerConnectionOptions, logger: SwarmLogger) {
+  constructor(options: DockerConnectionOptions, logger: Logger) {
     const config = buildConnectionConfig(options)
     this.docker = new Docker(config as unknown as Docker.DockerOptions)
     this.logger = logger
@@ -170,7 +170,9 @@ export class StacksModule {
             this.buildServiceSpec(currentService, serviceContent, stackName, envVars, options)
           )
         currentService = trimmed.slice(0, -1).trim()
-        Object.keys(serviceContent).forEach((k) => delete serviceContent[k])
+        for (const k of Object.keys(serviceContent)) {
+          delete serviceContent[k]
+        }
         continue
       }
 
@@ -202,7 +204,7 @@ export class StacksModule {
     content: Record<string, unknown>,
     stackName: string,
     envVars: Record<string, string>,
-    options: StackDeployOptions
+    _options: StackDeployOptions
   ): Record<string, unknown> {
     const image = content.image ? this.resolveEnvVars(content.image as string, envVars) : undefined
     const envList: string[] = []
@@ -231,13 +233,13 @@ export class StacksModule {
     })
   }
 
-  private extractNetworks(compose: string, stackName: string): string[] {
+  private extractNetworks(_compose: string, _stackName: string): string[] {
     return []
   }
-  private extractSecrets(compose: string): string[] {
+  private extractSecrets(_compose: string): string[] {
     return []
   }
-  private extractConfigs(compose: string): string[] {
+  private extractConfigs(_compose: string): string[] {
     return []
   }
 

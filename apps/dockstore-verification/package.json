@@ -13,19 +13,19 @@
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "bun-types": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "catalog:testing"
   },
   "dependencies": {
     "@dockstat/logger": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*",
     "@dockstat/utils": "workspace:*",
     "@dockstat/typings": "workspace:*",
-    "@elysiajs/html": "^1.1.1",
-    "@elysiajs/openapi": "^1.4.11",
-    "@elysiajs/static": "^1.1.1",
+    "@elysiajs/html": "catalog:",
+    "@elysiajs/openapi": "catalog:",
+    "@elysiajs/static": "catalog:",
     "@kitajs/html": "^4.2.5",
     "elysia": "catalog:"
   }

@@ -53,6 +53,7 @@
     "@types/dockerode": "^3.3.44"
   },
   "dependencies": {
-    "dockerode": "^4.0.9"
+    "dockerode": "^4.0.9",
+    "@dockstat/logger": "workspace:"
   }
 }

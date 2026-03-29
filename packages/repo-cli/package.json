@@ -20,11 +20,11 @@
     "publish": "bun run build && bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
   "devDependencies": {
-    "@types/bun": "latest",
+    "bun-types": "latest",
     "@dockstat/typings": "workspace:*"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "catalog:testing"
   },
   "dependencies": {
     "@dockstat/utils": "workspace:*",

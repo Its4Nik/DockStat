@@ -22,11 +22,12 @@
     "outDir": "dist",
 
     /* ---- Emission ---- */
-    "noEmit": false
+    "noEmit": false,
   },
   "include": [],
   "exclude": ["node_modules", "dist", "build"],
   "references": [
+    { "path": "./packages/docker-swarm" },
     { "path": "./packages/docker-client" },
     { "path": "./packages/plugin-handler" },
     { "path": "./packages/sqlite-wrapper" },
@@ -34,6 +35,6 @@
     { "path": "./packages/logger" },
     { "path": "./packages/utils" },
     { "path": "./packages/db" },
-    { "path": "./packages/ui" }
-  ]
+    { "path": "./packages/ui" },
+  ],
 }

@@ -5,6 +5,8 @@
  * These types are designed to be strict with no `any` usage.
  */
 
+import type { Logger } from "@dockstat/logger"
+
 // ============================================
 // Common Types
 // ============================================
@@ -1135,8 +1137,8 @@ export interface DockerConnectionOptions {
 
 /** Swarm client options */
 export interface SwarmClientOptions extends DockerConnectionOptions {
-  /** Logger instance */
-  logger?: unknown
+  /** Logger instance from @dockstat/logger */
+  logger?: Logger
   /** Enable debug mode */
   debug?: boolean
 }
