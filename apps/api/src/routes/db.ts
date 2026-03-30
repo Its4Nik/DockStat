@@ -535,7 +535,6 @@ const DBRoutes = new Elysia({
         description:
           "Retrieves detailed information about a specific repository, including its configuration, paths to plugins/themes/stacks, and policy settings.",
 
-
         responses: {
           200: {
             description: "Successfully retrieved repository details",

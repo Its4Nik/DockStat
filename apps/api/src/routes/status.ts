@@ -13,10 +13,10 @@ export interface ServiceStatus {
 const StatusRoutes = new Elysia({
   detail: {
     tags: ["System Status"],
-    description: "System health and status monitoring endpoints for checking the operational state of DockStat services including database, Docker client manager, plugins, and logger.",
+    description:
+      "System health and status monitoring endpoints for checking the operational state of DockStat services including database, Docker client manager, plugins, and logger.",
   },
-})
-.get(
+}).get(
   "/status",
   async () => {
     const services: ServiceStatus[] = []
@@ -68,16 +68,17 @@ const StatusRoutes = new Elysia({
     }
   },
   {
-  detail: {
-    summary: "Get System Status",
-    description: "Retrieves to health and initialization status of all core DockStat services. This endpoint provides a comprehensive overview of system health including database connectivity, Docker client manager status, plugin system state, and logger availability. Use this endpoint for health checks and monitoring dashboard displays.",
-    responses: {
-      200: {
-        description: "Successfully retrieved system status",
+    detail: {
+      summary: "Get System Status",
+      description:
+        "Retrieves to health and initialization status of all core DockStat services. This endpoint provides a comprehensive overview of system health including database connectivity, Docker client manager status, plugin system state, and logger availability. Use this endpoint for health checks and monitoring dashboard displays.",
+      responses: {
+        200: {
+          description: "Successfully retrieved system status",
+        },
       },
     },
-  },
-  response: {
+    response: {
       200: t.Object({
         status: t.String({
           description: "Overall system status",
@@ -98,14 +99,18 @@ const StatusRoutes = new Elysia({
               examples: [true, false],
             }),
             details: t.Optional(
-              t.Record(t.String(), t.Any({
-                description: "Additional service-specific details and metrics",
-              }))
+              t.Record(
+                t.String(),
+                t.Any({
+                  description: "Additional service-specific details and metrics",
+                })
+              )
             ),
           })
         ),
-      })
-    }
-})
+      }),
+    },
+  }
+)
 
 export default StatusRoutes
