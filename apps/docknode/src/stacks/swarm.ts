@@ -1,4 +1,3 @@
-// @ts-nocheck - Module has compilation errors, using type assertions to work around
 import { SwarmClient } from "@dockstat/docker-swarm"
 import { DockNodeLogger } from "../utils/logger"
 import {
