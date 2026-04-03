@@ -1,23 +1,16 @@
-import { SocketHandler } from "./socket"
-import {
-  API_KEYS as API_KEYS_ENV,
-  API_PORT as API_PORT_ENV,
-  CA_FILE as CA_FILE_ENV,
-  CERT_FILE as CERT_FILE_ENV,
-  DOCKER_SOCKET as DOCKER_SOCKET_ENV,
-  ENABLE_API as ENABLE_API_ENV,
-  KEY_FILE as KEY_FILE_ENV,
-} from "./utils/env"
+import { Docker } from "./docker";
+import { getConnectionConfig } from "./utils/env";
 
-export namespace BunDocker {
-  export const DOCKER_SOCKET = DOCKER_SOCKET_ENV
-  export const API_KEYS = API_KEYS_ENV
-  export const API_PORT = API_PORT_ENV
-  export const ENABLE_API = ENABLE_API_ENV
-  export const CA_FILE = CA_FILE_ENV
-  export const CERT_FILE = CERT_FILE_ENV
-  export const KEY_FILE = KEY_FILE_ENV
-  export const TLS_ACTIVE = Boolean(CERT_FILE && KEY_FILE)
+export const createDockerFromEnv = () => {
+  const config = getConnectionConfig();
+  return new Docker(config);
+};
 
-  export const Docker = SocketHandler
-}
+export { Docker };
+export type { ImagesModule } from "./modules/images";
+
+
+
+const t = new Docker({mode: "unix", socketPath: "/var/run/docker.sock"})
+
+console.log((await t.images.list()))
