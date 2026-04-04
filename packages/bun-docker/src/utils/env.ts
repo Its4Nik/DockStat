@@ -1,48 +1,48 @@
-import { env } from "node:process";
-import { type ConnectionConfig } from "../modules/base/types";
+import { env } from "node:process"
+import type { ConnectionConfig } from "../modules/base/types"
 
 const loadTls = () => {
-  const hasCerts = env.CERT_FILE && env.KEY_FILE;
-  if (!hasCerts) return undefined;
+  const hasCerts = env.CERT_FILE && env.KEY_FILE
+  if (!hasCerts) return undefined
 
   return {
     ca: env.CA_FILE ? Bun.file(env.CA_FILE) : undefined,
-    cert: env.CERT_FILE ? Bun.file(env.CERT_FILE): undefined,
-    key:  env.KEY_FILE ? Bun.file(env.KEY_FILE): undefined,
-  };
-};
+    cert: env.CERT_FILE ? Bun.file(env.CERT_FILE) : undefined,
+    key: env.KEY_FILE ? Bun.file(env.KEY_FILE) : undefined,
+  }
+}
 
 export const getConnectionConfig = (): ConnectionConfig => {
-  const rawHost = env.DOCKER_SOCKET || "/var/run/docker.sock";
-  const tls = loadTls();
+  const rawHost = env.DOCKER_SOCKET || "/var/run/docker.sock"
+  const tls = loadTls()
 
   if (rawHost.startsWith("unix://")) {
     return {
-      mode: 'unix',
+      mode: "unix",
       socketPath: rawHost.replace("unix://", ""),
-      tls
-    };
+      tls,
+    }
   }
 
   if (rawHost.startsWith("tcp://") || rawHost.startsWith("http://")) {
-    let protocol = "http://";
+    let protocol = "http://"
 
     if (tls) {
-      protocol = "https://";
+      protocol = "https://"
     }
 
-    const cleanHost = rawHost.replace(/^tcp:\/\/|^http:\/\//, "");
+    const cleanHost = rawHost.replace(/^tcp:\/\/|^http:\/\//, "")
 
     return {
-      mode: 'tcp',
+      mode: "tcp",
       baseUrl: `${protocol}${cleanHost}`,
-      tls
-    };
+      tls,
+    }
   }
 
   return {
-    mode: 'unix',
+    mode: "unix",
     socketPath: rawHost,
-    tls
-  };
-};
+    tls,
+  }
+}

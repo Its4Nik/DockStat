@@ -1,15 +1,15 @@
-import { BaseModule } from "../base";
+import { BaseModule } from "../base"
 import type {
-  NetworkSummary,
-  NetworkInspect,
-  NetworkCreateResponse,
   CreateNetworkOptions,
   ListNetworksOptions,
   NetworkConnectRequest,
+  NetworkCreateResponse,
   NetworkDisconnectRequest,
+  NetworkInspect,
   NetworkPruneResponse,
+  NetworkSummary,
   PruneNetworksOptions,
-} from "./types";
+} from "./types"
 
 /**
  * Networks module for managing Docker networks
@@ -21,16 +21,16 @@ export class NetworksModule extends BaseModule {
    * @returns Array of network summaries
    */
   async list(options?: ListNetworksOptions): Promise<NetworkSummary[]> {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams()
 
     if (options?.filters) {
-      params.append("filters", JSON.stringify(options.filters));
+      params.append("filters", JSON.stringify(options.filters))
     }
 
-    const query = params.toString();
-    const path = `/networks${query ? `?${query}` : ""}`;
-    const res = await this.request(path, "GET");
-    return await res.json() as NetworkSummary[];
+    const query = params.toString()
+    const path = `/networks${query ? `?${query}` : ""}`
+    const res = await this.request(path, "GET")
+    return (await res.json()) as NetworkSummary[]
   }
 
   /**
@@ -39,8 +39,8 @@ export class NetworksModule extends BaseModule {
    * @returns Network create response with ID and warnings
    */
   async create(config: CreateNetworkOptions): Promise<NetworkCreateResponse> {
-    const res = await this.request("/networks/create", "POST", config);
-    return await res.json() as NetworkCreateResponse;
+    const res = await this.request("/networks/create", "POST", config)
+    return (await res.json()) as NetworkCreateResponse
   }
 
   /**
@@ -49,16 +49,19 @@ export class NetworksModule extends BaseModule {
    * @param options - Inspect options
    * @returns Detailed network information
    */
-  async inspect(id: string, options?: { verbose?: boolean; scope?: string }): Promise<NetworkInspect> {
-    const params = new URLSearchParams();
+  async inspect(
+    id: string,
+    options?: { verbose?: boolean; scope?: string }
+  ): Promise<NetworkInspect> {
+    const params = new URLSearchParams()
 
-    if (options?.verbose) params.append("verbose", "true");
-    if (options?.scope) params.append("scope", options.scope);
+    if (options?.verbose) params.append("verbose", "true")
+    if (options?.scope) params.append("scope", options.scope)
 
-    const query = params.toString();
-    const path = `/networks/${id}${query ? `?${query}` : ""}`;
-    const res = await this.request(path, "GET");
-    return await res.json() as NetworkInspect;
+    const query = params.toString()
+    const path = `/networks/${id}${query ? `?${query}` : ""}`
+    const res = await this.request(path, "GET")
+    return (await res.json()) as NetworkInspect
   }
 
   /**
@@ -66,7 +69,7 @@ export class NetworksModule extends BaseModule {
    * @param id - Network ID or name
    */
   async remove(id: string): Promise<void> {
-    await this.request(`/networks/${id}`, "DELETE");
+    await this.request(`/networks/${id}`, "DELETE")
   }
 
   /**
@@ -75,7 +78,7 @@ export class NetworksModule extends BaseModule {
    * @param request - Connection request with container and endpoint config
    */
   async connect(id: string, request: NetworkConnectRequest): Promise<void> {
-    await this.request(`/networks/${id}/connect`, "POST", request);
+    await this.request(`/networks/${id}/connect`, "POST", request)
   }
 
   /**
@@ -84,7 +87,7 @@ export class NetworksModule extends BaseModule {
    * @param request - Disconnection request with container and force option
    */
   async disconnect(id: string, request: NetworkDisconnectRequest): Promise<void> {
-    await this.request(`/networks/${id}/disconnect`, "POST", request);
+    await this.request(`/networks/${id}/disconnect`, "POST", request)
   }
 
   /**
@@ -93,15 +96,15 @@ export class NetworksModule extends BaseModule {
    * @returns Prune response with deleted networks
    */
   async prune(options?: PruneNetworksOptions): Promise<NetworkPruneResponse> {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams()
 
     if (options?.filters) {
-      params.append("filters", JSON.stringify(options.filters));
+      params.append("filters", JSON.stringify(options.filters))
     }
 
-    const query = params.toString();
-    const path = `/networks/prune${query ? `?${query}` : ""}`;
-    const res = await this.request(path, "POST");
-    return await res.json() as NetworkPruneResponse;
+    const query = params.toString()
+    const path = `/networks/prune${query ? `?${query}` : ""}`
+    const res = await this.request(path, "POST")
+    return (await res.json()) as NetworkPruneResponse
   }
 }
