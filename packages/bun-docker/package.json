@@ -6,18 +6,24 @@
     "name": "ItsNik",
     "url": "https://itsnik.de"
   },
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "require": "./src/index.ts",
+      "types": "./dist/types.d.ts"
+    }
+  },
   "keywords": [
     "docker",
     "bun"
   ],
-  "version": "0.1.0",
+  "version": "0.1.3",
   "license": "MPL-2.0",
   "repository": {
     "directory": "packages/bun-docker",
     "type": "git",
     "url": "https://github.com/its4nik/dockstat"
   },
-  "private": "false",
   "module": "src/index.ts",
   "type": "module",
   "devDependencies": {
@@ -26,5 +32,15 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "build": "bun build --target=bun --production --outdir=dist src/index.ts",
+    "typegen": "bunx dts-bundle-generator --sort --export-referenced-types false -o dist/types.d.ts src/index.ts",
+    "publish": "bun run build && bun run typegen && bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   }
 }

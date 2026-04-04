@@ -4,7 +4,7 @@ export async function handleDockerResponse(
   response: Response,
   path: string,
   apiVersion: string,
-  params: Record<string, unknown> | undefined
+  params: object | undefined
 ): Promise<Response> {
   if (!response.ok) {
     let text = await response.text()

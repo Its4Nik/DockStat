@@ -1,9 +1,10 @@
 import type { BodyInit } from "bun"
+import type { DockerWebSocket } from "../_socket"
 import { BaseModule } from "../base"
-import type { DockerWebSocket } from "../socket"
 import type {
   ArchiveInfo,
   AttachOptions,
+  ContainerConfig,
   ContainerCreateResponse,
   ContainerInspectResponse,
   ContainerPruneResponse,
@@ -47,7 +48,10 @@ export class ContainerModule extends BaseModule {
    * @param options - Create options
    * @returns Container create response with ID
    */
-  async create(config: TODO, options?: CreateContainerOptions): Promise<ContainerCreateResponse> {
+  async create(
+    config: ContainerConfig,
+    options?: CreateContainerOptions
+  ): Promise<ContainerCreateResponse> {
     const path = `/containers/create`
     const res = await this.request(path, "POST", config, undefined, options)
     return (await res.json()) as ContainerCreateResponse
@@ -170,8 +174,8 @@ export class ContainerModule extends BaseModule {
    * @returns Top processes response
    */
   async top(id: string, ps_args?: string): Promise<ContainerTopResponse> {
-    const res = await this.request(`/containers/${id}/top${query}`, "GET", undefined, undefined, {
-      ps_args: encodeURIComponent(ps_args),
+    const res = await this.request(`/containers/${id}/top`, "GET", undefined, undefined, {
+      ps_args: encodeURIComponent(ps_args || ""),
     })
     return (await res.json()) as ContainerTopResponse
   }
@@ -322,7 +326,7 @@ export class ContainerModule extends BaseModule {
     noOverwriteDirNonDir: boolean = false,
     copyUIDGID: boolean = false
   ): Promise<void> {
-    await this.request(`/containers/${id}/archive`, "PUT", archive, undefined, undefined, {
+    await this.request(`/containers/${id}/archive`, "PUT", archive, undefined, {
       path: path,
       noOverwriteDirNonDir: noOverwriteDirNonDir,
       copyUIDGID: copyUIDGID,
@@ -347,7 +351,7 @@ export class ContainerModule extends BaseModule {
    * @returns Exec stream
    */
   async execStart(id: string, options?: ExecStartOptions): Promise<Response> {
-    const res = await this.request(`/exec/${id}/start`, "POST", options || {})
+    const res = await this.request(`/exec/${id}/start`, "POST", undefined, undefined, options)
     return res
   }
 

@@ -13,9 +13,9 @@ export class BaseModule {
   async request(
     path: string,
     method: HttpMethod = "GET",
-    body?: BodyInit | Record<string, unknown>,
+    body?: BodyInit | object,
     headers?: HeadersInit,
-    params?: Record<string, string | boolean | number | unknown>
+    params?: object
   ) {
     const dockerApiVersion = this.config.dockerAPIVersion || "1.54"
     const query = buildQueryString(params)

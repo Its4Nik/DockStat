@@ -2,14 +2,14 @@ export class DockerError extends Error {
   status: number
   path: string
   version: string
-  params: Record<string, unknown>
+  params: object | string
 
   constructor(
     message: string,
     status: number,
     path: string,
     version: string,
-    params: Record<string, unknown> | string
+    params: object | string
   ) {
     super(message)
     this.name = "DockerError"

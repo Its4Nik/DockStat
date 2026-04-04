@@ -1,10 +1,10 @@
-import type { ConnectionConfig } from "../types"
+import type { ConnectionConfig } from "../modules/base/types"
 
 /**
  * Converts an object of parameters into a URL query string.
  * Handles strings, numbers, booleans, and JSON serializable objects.
  */
-export function buildQueryString(params?: Record<string, unknown>): string | undefined {
+export function buildQueryString(params?: object): string | undefined {
   if (!params) return undefined
 
   const urlParams = new URLSearchParams()

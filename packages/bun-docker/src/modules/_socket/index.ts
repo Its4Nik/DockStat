@@ -15,7 +15,7 @@ export class DockerWebSocket {
 
   private readyStateValue: number = DockerWebSocket.CONNECTING
   private listeners: Map<string, Array<(event: unknown) => void>> = new Map()
-  private reader: ReadableStreamDefaultReader = null
+  private reader: ReadableStreamDefaultReader | null = null
 
   addEventListener(type: string, listener: (event: unknown) => void) {
     if (!this.listeners.has(type)) {

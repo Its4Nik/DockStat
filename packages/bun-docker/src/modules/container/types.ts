@@ -88,14 +88,14 @@ export interface ContainerConfig {
   AttachStdin: boolean
   AttachStdout: boolean
   AttachStderr: boolean
-  ExposedPorts?: Record<string, object>
+  ExposedPorts?: Record<string, object> | null
   Tty: boolean
   OpenStdin: boolean
   StdinOnce: boolean
   Env?: string[]
   Cmd?: string[]
   Healthcheck?: HealthConfig
-  ArgsEscaped: boolean
+  ArgsEscaped: boolean | null
   Image: string
   Volumes?: Record<string, object>
   WorkingDir: string
