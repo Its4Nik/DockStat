@@ -29,13 +29,7 @@ export class PluginsModule extends BaseModule {
    * @returns Array of plugin privileges
    */
   async privileges(remote: string): Promise<PluginPrivilege[]> {
-    const res = await this.request(
-      `/plugins/privileges`,
-      "GET",
-      undefined,
-      undefined,
-      { remote }
-    )
+    const res = await this.request(`/plugins/privileges`, "GET", undefined, undefined, { remote })
     return (await res.json()) as PluginPrivilege[]
   }
 
@@ -45,13 +39,7 @@ export class PluginsModule extends BaseModule {
    * @returns Plugin configuration
    */
   async pull(options: PullPluginOptions): Promise<PluginConfig> {
-    const res = await this.request(
-      `/plugins/pull`,
-      "POST",
-      undefined,
-      undefined,
-      options
-    )
+    const res = await this.request(`/plugins/pull`, "POST", undefined, undefined, options)
     return (await res.json()) as PluginConfig
   }
 
@@ -115,13 +103,9 @@ export class PluginsModule extends BaseModule {
    * @returns Plugin configuration
    */
   async create(options: CreatePluginOptions): Promise<PluginConfig> {
-    const res = await this.request(
-      `/plugins/create`,
-      "POST",
-      options.path,
-      undefined,
-      { name: options.name }
-    )
+    const res = await this.request(`/plugins/create`, "POST", options.path, undefined, {
+      name: options.name,
+    })
     return (await res.json()) as PluginConfig
   }
 

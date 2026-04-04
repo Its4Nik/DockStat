@@ -1,6 +1,5 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test"
+import { beforeAll, describe, expect, test } from "bun:test"
 import { SwarmModule } from "../src/modules/swarm"
-import { SwarmError, SwarmErrorCode } from "../src/types"
 import { TestLogger } from "./.logger"
 
 /**

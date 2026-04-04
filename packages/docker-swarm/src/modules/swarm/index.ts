@@ -24,7 +24,6 @@ import { buildConnectionConfig } from "../../utils/docker-socket"
  */
 export class SwarmModule {
   private docker: Docker
-  private logger: Logger
 
   constructor(options: DockerConnectionOptions, logger: Logger) {
     const config = buildConnectionConfig(options)

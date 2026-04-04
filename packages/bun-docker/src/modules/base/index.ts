@@ -1,9 +1,9 @@
 import type { BodyInit, HeadersInit } from "bun"
-import { DockerWebSocket } from "../_socket"
-import type { ConnectionConfig, HttpMethod } from "./types"
-import { buildDockerUrl, buildQueryString } from "../../utils/url"
 import { prepareRequestOptions } from "../../utils/request-options"
 import { handleDockerResponse } from "../../utils/response"
+import { buildDockerUrl, buildQueryString } from "../../utils/url"
+import { DockerWebSocket } from "../_socket"
+import type { ConnectionConfig, HttpMethod } from "./types"
 
 export class BaseModule {
   constructor(private config: ConnectionConfig) {}

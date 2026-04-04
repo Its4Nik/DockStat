@@ -159,7 +159,13 @@ export class ImagesModule extends BaseModule {
    * @returns Load response
    */
   async load(options: LoadImageOptions): Promise<unknown> {
-    const res = await this.request(`/images/load`, "POST", options.imagesTarball, undefined, options)
+    const res = await this.request(
+      `/images/load`,
+      "POST",
+      options.imagesTarball,
+      undefined,
+      options
+    )
     return await res.json()
   }
 

@@ -9,16 +9,16 @@ export type ImageInformationResponse = {
     platform: {
       architecture: string
       os: string
-      ["os.version"]?: string
-      ["os.features"]?: string[]
+      "os.version"?: string
+      "os.features"?: string[]
     } | null
     artifactType: string | null
   }
   Platforms: Array<{
     architecture: string
     os: string
-    ["os.version"]?: string
-    ["os.features"]?: string[]
+    "os.version"?: string
+    "os.features"?: string[]
     variant?: string
   }>
 }

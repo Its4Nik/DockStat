@@ -19,7 +19,7 @@ export class DockerWebSocket {
     if (!this.listeners.has(type)) {
       this.listeners.set(type, [])
     }
-    this.listeners.get(type)!.push(listener)
+    this.listeners.get(type)?.push(listener)
   }
 
   removeEventListener(type: string, listener: (event: any) => void) {

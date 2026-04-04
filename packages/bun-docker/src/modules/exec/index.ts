@@ -52,6 +52,9 @@ export class ExecModule extends BaseModule {
    * @param width - Width of TTY session in characters
    */
   async resize(execId: string, height: number, width: number): Promise<void> {
-    await this.request(`/exec/${execId}/resize`, "POST", undefined, undefined, { h: height, w: width })
+    await this.request(`/exec/${execId}/resize`, "POST", undefined, undefined, {
+      h: height,
+      w: width,
+    })
   }
 }

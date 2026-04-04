@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test"
+import { beforeAll, describe, expect, test } from "bun:test"
 import { SwarmClient } from "../src/client"
 import type { SwarmClientOptions } from "../src/types"
 import type { Logger } from "../src/utils/logger"
