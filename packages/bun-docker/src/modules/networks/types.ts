@@ -62,7 +62,9 @@ export interface NetworkTaskInfo {
   Name?: string
   EndpointID?: string
   EndpointIP?: string
-  Info?: Record<string, any>
+  MacAddress?: string
+  IPv4Address?: string
+  IPv6Address?: string
 }
 
 /**

@@ -6,7 +6,7 @@ export interface Volume {
   Driver: string
   Mountpoint: string
   CreatedAt?: string
-  Status?: Record<string, any>
+  Status?: Record<string, string>
   Labels: Record<string, string>
   Scope: "local" | "global"
   ClusterVolume?: ClusterVolume
@@ -114,7 +114,7 @@ export interface ClusterVolumeMountVolume {
  * Cluster volume block volume options
  */
 export interface ClusterVolumeBlockVolume {
-  [key: string]: any
+  [key: string]: string
 }
 
 /**

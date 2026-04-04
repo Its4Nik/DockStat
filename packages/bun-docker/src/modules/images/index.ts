@@ -3,7 +3,8 @@ import { BaseModule } from "../base"
 import type {
   BuildCacheDiskUsage,
   BuildImageOptions,
-  BuildInfo,
+  CommitBody,
+  CommitParams,
   CreateImageInfo,
   ExportAllImagesOptions,
   ExportImageOptions,
@@ -170,11 +171,21 @@ export class ImagesModule extends BaseModule {
   }
 
   /**
-   * Build an image
+   * Build an image from a tar archive with a Dockerfile in it.
+   * The Dockerfile specifies how the image is built from the tar archive.
+   * It is typically in the archive's root,
+   * but can be at a different path or have a different name by specifying the dockerfile parameter.
+   * See the Dockerfile reference for more information.
+   *
+   * The Docker daemon performs a preliminary validation of the Dockerfile before starting the build,
+   * and returns an error if the syntax is incorrect.
+   * After that, each instruction is run one-by-one until the ID of the new image is output.
+   *
+   * The build is canceled if the client drops the connection by quitting or being killed.
    * @param options - Build options
    * @returns Build info
    */
-  async build(options: BuildImageOptions): Promise<BuildInfo[]> {
+  async build(options: BuildImageOptions): Promise<boolean> {
     const headers: HeadersInit = {
       "Content-Type": "application/x-tar",
     }
@@ -182,8 +193,8 @@ export class ImagesModule extends BaseModule {
       headers["X-Registry-Config"] = options.authConfig
     }
 
-    const res = await this.request(`/build`, "POST", options.inputStream, headers, options)
-    return (await res.json()) as BuildInfo[]
+    await this.request(`/build`, "POST", options.inputStream, headers, options)
+    return true
   }
 
   /**
@@ -202,20 +213,8 @@ export class ImagesModule extends BaseModule {
    * @param options - Commit options
    * @returns Image ID
    */
-  async commit(
-    container: string,
-    options?: {
-      repo?: string
-      tag?: string
-      comment?: string
-      author?: string
-      changes?: string[]
-      pause?: boolean
-      config?: any
-    }
-  ): Promise<ImageID> {
-    const body = options?.config ? { container, config: options.config } : { container }
-    const res = await this.request(`/commit`, "POST", body, undefined, options)
+  async commit(containerConfig: CommitBody, options: CommitParams): Promise<ImageID> {
+    const res = await this.request(`/commit`, "POST", containerConfig, undefined, options)
     return (await res.json()) as ImageID
   }
 }

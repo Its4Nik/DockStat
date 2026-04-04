@@ -1,3 +1,5 @@
+import type { ReadableStreamDefaultReader } from "node:stream/web"
+
 /**
  * WebSocket-like interface for Docker container attach
  * Uses the attach endpoint with stream wrapping for compatibility with Unix sockets
@@ -12,17 +14,17 @@ export class DockerWebSocket {
   private static readonly CLOSED = 3
 
   private readyStateValue: number = DockerWebSocket.CONNECTING
-  private listeners: Map<string, Array<(event: any) => void>> = new Map()
-  private reader: any = null
+  private listeners: Map<string, Array<(event: unknown) => void>> = new Map()
+  private reader: ReadableStreamDefaultReader = null
 
-  addEventListener(type: string, listener: (event: any) => void) {
+  addEventListener(type: string, listener: (event: unknown) => void) {
     if (!this.listeners.has(type)) {
       this.listeners.set(type, [])
     }
     this.listeners.get(type)?.push(listener)
   }
 
-  removeEventListener(type: string, listener: (event: any) => void) {
+  removeEventListener(type: string, listener: (event: unknown) => void) {
     const typeListeners = this.listeners.get(type)
     if (typeListeners) {
       const index = typeListeners.indexOf(listener)
@@ -93,7 +95,7 @@ export class DockerWebSocket {
     return this.readyStateValue
   }
 
-  private emit(type: string, event: any) {
+  private emit(type: string, event: unknown) {
     const listeners = this.listeners.get(type)
     if (listeners) {
       for (const listener of listeners) {
