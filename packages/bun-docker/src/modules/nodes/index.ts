@@ -8,11 +8,7 @@ export class NodesModule extends BaseModule {
    * @returns NodeResponse[]
    */
   async list(options?: ListNodesOptions) {
-    const params = new URLSearchParams()
-    params.append("filters", JSON.stringify(options))
-
-    const path = `/nodes${options ? `${params}` : ""}`
-    const res = await this.request(path, "GET")
+    const res = await this.request(`/nodes`, "GET", undefined, undefined, options)
     return (await res.json()) as NodeResponse[]
   }
 
@@ -21,8 +17,7 @@ export class NodesModule extends BaseModule {
    * @param id The ID or name of the node
    */
   async inspect(id: string) {
-    const path = `/nodes/${id}`
-    const res = await this.request(path, "GET")
+    const res = await this.request(`/nodes/${id}`, "GET")
     return (await res.json()) as NodeResponse
   }
 
@@ -33,13 +28,7 @@ export class NodesModule extends BaseModule {
    * @returns `true` or throws an DockerError
    */
   async delete(id: string, force: boolean = false) {
-    const params = new URLSearchParams()
-    params.append("force", `${force}`)
-
-    const query = params.toString()
-    const path = `/nodes/${id}?${query}`
-
-    await this.request(path, "DELETE")
+    await this.request(`/nodes/${id}`, "DELETE", undefined, undefined, { force })
     // No thrown error = sucess
     return true
   }
@@ -52,13 +41,7 @@ export class NodesModule extends BaseModule {
    * @returns
    */
   async update(id: string, version: number, options: NodeUpdateOptions) {
-    const params = new URLSearchParams()
-    params.append("version", version.toString())
-
-    const query = params.toString()
-    const path = `/nodes/${id}/update?${query}`
-
-    await this.request(path, "POST", options)
+    await this.request(`/nodes/${id}/update`, "POST", options, undefined, { version })
     // No thrown error = sucess
     return true
   }

@@ -21,15 +21,7 @@ export class NetworksModule extends BaseModule {
    * @returns Array of network summaries
    */
   async list(options?: ListNetworksOptions): Promise<NetworkSummary[]> {
-    const params = new URLSearchParams()
-
-    if (options?.filters) {
-      params.append("filters", JSON.stringify(options.filters))
-    }
-
-    const query = params.toString()
-    const path = `/networks${query ? `?${query}` : ""}`
-    const res = await this.request(path, "GET")
+    const res = await this.request(`/networks`, "GET", undefined, undefined, options)
     return (await res.json()) as NetworkSummary[]
   }
 
@@ -53,14 +45,7 @@ export class NetworksModule extends BaseModule {
     id: string,
     options?: { verbose?: boolean; scope?: string }
   ): Promise<NetworkInspect> {
-    const params = new URLSearchParams()
-
-    if (options?.verbose) params.append("verbose", "true")
-    if (options?.scope) params.append("scope", options.scope)
-
-    const query = params.toString()
-    const path = `/networks/${id}${query ? `?${query}` : ""}`
-    const res = await this.request(path, "GET")
+    const res = await this.request(`/networks/${id}`, "GET", undefined, undefined, options)
     return (await res.json()) as NetworkInspect
   }
 
@@ -96,15 +81,7 @@ export class NetworksModule extends BaseModule {
    * @returns Prune response with deleted networks
    */
   async prune(options?: PruneNetworksOptions): Promise<NetworkPruneResponse> {
-    const params = new URLSearchParams()
-
-    if (options?.filters) {
-      params.append("filters", JSON.stringify(options.filters))
-    }
-
-    const query = params.toString()
-    const path = `/networks/prune${query ? `?${query}` : ""}`
-    const res = await this.request(path, "POST")
+    const res = await this.request(`/networks/prune`, "POST", undefined, undefined, options)
     return (await res.json()) as NetworkPruneResponse
   }
 }

@@ -52,12 +52,6 @@ export class ExecModule extends BaseModule {
    * @param width - Width of TTY session in characters
    */
   async resize(execId: string, height: number, width: number): Promise<void> {
-    const params = new URLSearchParams()
-    params.append("h", height.toString())
-    params.append("w", width.toString())
-
-    const query = params.toString()
-    const path = `/exec/${execId}/resize${query ? `?${query}` : ""}`
-    await this.request(path, "POST")
+    await this.request(`/exec/${execId}/resize`, "POST", undefined, undefined, { h: height, w: width })
   }
 }

@@ -279,6 +279,7 @@ export class ContainerModule extends BaseModule {
    * @param path - Resource path in the container
    * @returns Archive stream
    */
+
   async getArchive(id: string, path: string): Promise<Response> {
     return await this.request(`/containers/${id}/archive`, "GET", undefined, undefined, {
       path: path,

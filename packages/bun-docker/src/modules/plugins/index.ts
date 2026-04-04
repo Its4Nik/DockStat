@@ -19,15 +19,7 @@ export class PluginsModule extends BaseModule {
    * @returns Array of plugin configurations
    */
   async list(options?: ListPluginsOptions): Promise<PluginConfig[]> {
-    const params = new URLSearchParams()
-    if (options?.filters) {
-      params.append("filters", JSON.stringify(options.filters))
-    }
-
-    const query = params.toString()
-    const path = `/plugins${query ? `?${query}` : ""}`
-
-    const res = await this.request(path, "GET")
+    const res = await this.request(`/plugins`, "GET", undefined, undefined, options)
     return (await res.json()) as PluginConfig[]
   }
 
@@ -37,9 +29,13 @@ export class PluginsModule extends BaseModule {
    * @returns Array of plugin privileges
    */
   async privileges(remote: string): Promise<PluginPrivilege[]> {
-    const query = `remote=${encodeURIComponent(remote)}`
-    const path = `/plugins/privileges?${query}`
-    const res = await this.request(path, "GET")
+    const res = await this.request(
+      `/plugins/privileges`,
+      "GET",
+      undefined,
+      undefined,
+      { remote }
+    )
     return (await res.json()) as PluginPrivilege[]
   }
 
@@ -49,18 +45,13 @@ export class PluginsModule extends BaseModule {
    * @returns Plugin configuration
    */
   async pull(options: PullPluginOptions): Promise<PluginConfig> {
-    const params = new URLSearchParams()
-    params.append("remote", options.remote)
-    if (options.name) {
-      params.append("name", options.name)
-    }
-    if (options.privileges) {
-      params.append("privileges", JSON.stringify(options.privileges))
-    }
-
-    const query = params.toString()
-    const path = `/plugins/pull?${query}`
-    const res = await this.request(path, "POST")
+    const res = await this.request(
+      `/plugins/pull`,
+      "POST",
+      undefined,
+      undefined,
+      options
+    )
     return (await res.json()) as PluginConfig
   }
 
@@ -80,14 +71,7 @@ export class PluginsModule extends BaseModule {
    * @param options - Remove options
    */
   async remove(name: string, options?: RemovePluginOptions): Promise<void> {
-    const params = new URLSearchParams()
-    if (options?.force) {
-      params.append("force", "true")
-    }
-
-    const query = params.toString()
-    const path = `/plugins/${name}${query ? `?${query}` : ""}`
-    await this.request(path, "DELETE")
+    await this.request(`/plugins/${name}`, "DELETE", undefined, undefined, options)
   }
 
   /**
@@ -96,14 +80,7 @@ export class PluginsModule extends BaseModule {
    * @param options - Enable options
    */
   async enable(name: string, options?: EnablePluginOptions): Promise<void> {
-    const params = new URLSearchParams()
-    if (options?.timeout) {
-      params.append("timeout", options.timeout.toString())
-    }
-
-    const query = params.toString()
-    const path = `/plugins/${name}/enable${query ? `?${query}` : ""}`
-    await this.request(path, "POST")
+    await this.request(`/plugins/${name}/enable`, "POST", undefined, undefined, options)
   }
 
   /**
@@ -112,14 +89,7 @@ export class PluginsModule extends BaseModule {
    * @param options - Disable options
    */
   async disable(name: string, options?: DisablePluginOptions): Promise<void> {
-    const params = new URLSearchParams()
-    if (options?.timeout) {
-      params.append("timeout", options.timeout.toString())
-    }
-
-    const query = params.toString()
-    const path = `/plugins/${name}/disable${query ? `?${query}` : ""}`
-    await this.request(path, "POST")
+    await this.request(`/plugins/${name}/disable`, "POST", undefined, undefined, options)
   }
 
   /**
@@ -129,15 +99,13 @@ export class PluginsModule extends BaseModule {
    * @returns Plugin configuration
    */
   async upgrade(name: string, options: UpgradePluginOptions): Promise<PluginConfig> {
-    const params = new URLSearchParams()
-    params.append("remote", options.remote)
-    if (options.privileges) {
-      params.append("privileges", JSON.stringify(options.privileges))
-    }
-
-    const query = params.toString()
-    const path = `/plugins/${name}/upgrade?${query}`
-    const res = await this.request(path, "POST")
+    const res = await this.request(
+      `/plugins/${name}/upgrade`,
+      "POST",
+      undefined,
+      undefined,
+      options
+    )
     return (await res.json()) as PluginConfig
   }
 
@@ -147,12 +115,13 @@ export class PluginsModule extends BaseModule {
    * @returns Plugin configuration
    */
   async create(options: CreatePluginOptions): Promise<PluginConfig> {
-    const params = new URLSearchParams()
-    params.append("name", options.name)
-
-    const query = params.toString()
-    const path = `/plugins/create?${query}`
-    const res = await this.request(path, "POST", options.path)
+    const res = await this.request(
+      `/plugins/create`,
+      "POST",
+      options.path,
+      undefined,
+      { name: options.name }
+    )
     return (await res.json()) as PluginConfig
   }
 
@@ -161,8 +130,7 @@ export class PluginsModule extends BaseModule {
    * @param name - Plugin name
    */
   async push(name: string): Promise<void> {
-    const path = `/plugins/${name}/push`
-    await this.request(path, "POST")
+    await this.request(`/plugins/${name}/push`, "POST")
   }
 
   /**
@@ -171,7 +139,6 @@ export class PluginsModule extends BaseModule {
    * @param options - Set options
    */
   async set(name: string, options: SetPluginOptions): Promise<void> {
-    const path = `/plugins/${name}/set`
-    await this.request(path, "POST", JSON.stringify(options.settings))
+    await this.request(`/plugins/${name}/set`, "POST", JSON.stringify(options.settings))
   }
 }
