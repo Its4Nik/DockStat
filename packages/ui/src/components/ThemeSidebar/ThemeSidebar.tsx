@@ -72,13 +72,17 @@ export function ThemeSidebar({
 
   return (
     <>
-      <Modal onClose={() => setShowSaveModal(false)} open={showSaveModal} transparent>
+      <Modal
+        onClose={() => setShowSaveModal(false)}
+        open={showSaveModal}
+        transparent
+      >
         <div className="flex flex-col items-center justify-center space-y-4 p-4">
           <Input
-            type="text"
-            placeholder="Theme Name"
             className="w-full"
             onChange={(value) => setNewThemeName(value)}
+            placeholder="Theme Name"
+            type="text"
           />
           <Button
             onClick={async () => {
@@ -98,44 +102,49 @@ export function ThemeSidebar({
         {isOpen && (
           <>
             <motion.div
-              className="fixed inset-0 z-40"
-              variants={backdropVariants}
-              initial="closed"
               animate="open"
+              className="fixed inset-0 z-40"
               exit="closed"
-              transition={{ duration: 0.2 }}
+              initial="closed"
               onClick={onClose}
+              transition={{ duration: 0.2 }}
+              variants={backdropVariants}
             />
             <motion.div
-              className="fixed right-0 top-0 z-50 h-full w-90 overflow-y-auto p-4"
-              variants={reverseSlideInVariants}
-              initial="closed"
               animate="open"
+              className="fixed right-0 top-0 z-50 h-full w-90 overflow-y-auto p-4"
               exit="closed"
+              initial="closed"
+              variants={reverseSlideInVariants}
             >
               <Card className="flex h-full flex-col shadow-xl">
                 <div className="flex items-center justify-between p-1">
                   <p className="text-lg font-bold tracking-tight">Theme Editor</p>
-                  <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={onClose}>
+                  <Button
+                    className="h-8 w-8 p-0"
+                    onClick={onClose}
+                    size="sm"
+                    variant="outline"
+                  >
                     <X size={16} />
                   </Button>
                 </div>
 
                 <div className="mt-2">
                   <Input
+                    className="w-full"
+                    onChange={(e) => setSearchTerm(e)}
                     placeholder="Search components..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e)}
-                    className="w-full"
                   />
                 </div>
 
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Button
+                    noFocusRing
+                    onClick={() => setSelectedComponent(null)}
                     size="xs"
                     variant={!selectedComponent ? "primary" : "outline"}
-                    onClick={() => setSelectedComponent(null)}
-                    noFocusRing
                   >
                     All Colors
                   </Button>
@@ -143,9 +152,9 @@ export function ThemeSidebar({
                     <Button
                       key={component}
                       noFocusRing
+                      onClick={() => setSelectedComponent(component)}
                       size="xs"
                       variant={selectedComponent === component ? "primary" : "outline"}
-                      onClick={() => setSelectedComponent(component)}
                     >
                       {component}
                     </Button>
@@ -155,12 +164,12 @@ export function ThemeSidebar({
                 {isModified === true ? (
                   <div className="mt-2">
                     <Button
-                      variant="primary"
                       fullWidth
-                      size="sm"
                       onClick={() => {
                         setShowSaveModal(true)
                       }}
+                      size="sm"
+                      variant="primary"
                     >
                       Save new theme
                     </Button>
@@ -169,12 +178,12 @@ export function ThemeSidebar({
 
                 <div className="mt-4 flex-1 overflow-y-auto">
                   <ThemeEditor
+                    allColors={getColorsForComponent}
                     currentTheme={currentTheme}
                     onColorChange={(color, colorName) => {
                       setIsModified(true)
                       onColorChange(color, colorName)
                     }}
-                    allColors={getColorsForComponent}
                   />
                 </div>
               </Card>

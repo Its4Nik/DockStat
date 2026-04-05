@@ -7,10 +7,10 @@ import { DockerHostElysia } from "./hosts"
 import { DockerManager } from "./manager"
 
 const DockerRoutes = new Elysia({
-  prefix: "/docker",
   detail: {
     tags: ["Docker"],
   },
+  prefix: "/docker",
 })
   .get("/status", async ({ status }) => {
     try {
@@ -19,9 +19,9 @@ const DockerRoutes = new Elysia({
     } catch (error) {
       const errorMessage = extractErrorMessage(error, "Could not get Docker Status")
       return status(400, {
-        success: false as const,
         error: errorMessage,
         message: errorMessage,
+        success: false as const,
       })
     }
   })
@@ -47,9 +47,9 @@ const DockerRoutes = new Elysia({
     } catch (error) {
       const errorMessage = extractErrorMessage(error, "Could not ping Docker")
       return status(400, {
-        success: false as const,
         error: errorMessage,
         message: errorMessage,
+        success: false as const,
       })
     }
   })
@@ -81,9 +81,9 @@ const DockerRoutes = new Elysia({
       } catch (error) {
         const errorMessage = extractErrorMessage(error, "Could not ping Docker")
         return status(400, {
-          success: false as const,
           error: errorMessage,
           message: errorMessage,
+          success: false as const,
         })
       }
     },

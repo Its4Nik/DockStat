@@ -27,17 +27,17 @@ export function calculateNodeLayout(input: GraphInput): {
 
   const g = new dagre.graphlib.Graph()
   g.setGraph({
-    rankdir: "LR",
-    nodesep: 20,
-    ranksep: 50,
     marginx: 50,
     marginy: 50,
+    nodesep: 20,
+    rankdir: "LR",
+    ranksep: 50,
   })
   g.setDefaultEdgeLabel(() => ({}))
 
   const addNodeToGraph = (id: string, type: "Client" | "Host" | "Container" | "DockNode") => {
     logger.debug(`Registering node in Dagre: [${type}] ${id}`)
-    g.setNode(id, { width: 250, height: 80 })
+    g.setNode(id, { height: 80, width: 250 })
   }
 
   logger.info("Registering nodes...")
@@ -83,14 +83,14 @@ export function calculateNodeLayout(input: GraphInput): {
     }
 
     nodes.push({
-      id: nodeId,
-      type: "client",
-      position: calculatePosition(dagreNode),
       data: {
+        clientId: client.id,
         label: client.name || `Client ${client.id}`,
         status: client.initialized ? "online" : "offline",
-        clientId: client.id,
       },
+      id: nodeId,
+      position: calculatePosition(dagreNode),
+      type: "client",
     })
   })
 
@@ -104,17 +104,17 @@ export function calculateNodeLayout(input: GraphInput): {
     }
 
     nodes.push({
-      id: nodeId,
-      type: "host",
-      position: calculatePosition(dagreNode),
       data: {
-        label: host.name || `Host ${host.id}`,
-        status: host.reachable ? "online" : "offline",
-        ipAddress: host.host,
-        port: host.port,
         clientId: host.clientId,
         hostId: host.id,
+        ipAddress: host.host,
+        label: host.name || `Host ${host.id}`,
+        port: host.port,
+        status: host.reachable ? "online" : "offline",
       },
+      id: nodeId,
+      position: calculatePosition(dagreNode),
+      type: "host",
     })
 
     edges.push(
@@ -139,17 +139,17 @@ export function calculateNodeLayout(input: GraphInput): {
     const isRunning = container.state === "running"
 
     nodes.push({
-      id: nodeId,
-      type: "container",
-      position: calculatePosition(dagreNode),
       data: {
-        label: container.name.replace(/^\//, ""),
-        status: isRunning ? "online" : "offline",
-        image: container.image,
-        state: container.state,
-        hostId: container.hostId,
         containerId: container.id,
+        hostId: container.hostId,
+        image: container.image,
+        label: container.name.replace(/^\//, ""),
+        state: container.state,
+        status: isRunning ? "online" : "offline",
       },
+      id: nodeId,
+      position: calculatePosition(dagreNode),
+      type: "container",
     })
 
     const hostNodeId = getHostId(container.clientId, container.hostId)
@@ -179,20 +179,20 @@ export function calculateNodeLayout(input: GraphInput): {
     const isOnline = dockNode.reachable === "OK"
 
     nodes.push({
-      id: nodeId,
-      type: "docknode",
-      position: calculatePosition(dagreNode),
       data: {
-        label: dockNode.name || `DockNode ${dockNode.id}`,
-        status: isOnline ? "online" : "offline",
-        ipAddress: dockNode.hostname,
-        port: dockNode.port,
         dockNodeId: dockNode.id,
+        ipAddress: dockNode.hostname,
+        label: dockNode.name || `DockNode ${dockNode.id}`,
+        port: dockNode.port,
+        status: isOnline ? "online" : "offline",
       },
+      id: nodeId,
+      position: calculatePosition(dagreNode),
+      type: "docknode",
     })
   })
 
   logger.info(`Graph layout finished. Generated ${nodes.length} nodes and ${edges.length} edges.`)
 
-  return { nodes, edges }
+  return { edges, nodes }
 }

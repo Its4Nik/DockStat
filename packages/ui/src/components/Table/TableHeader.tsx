@@ -13,12 +13,12 @@ function TableHeaderInner<T>({ columns, size }: TableHeaderProps<T>): React.Reac
       <tr>
         {columns.map((column) => (
           <th
-            key={String(column.key)}
             className={`${SIZE_CLASSES[size]} font-semibold text-table-head-text whitespace-nowrap`}
+            key={String(column.key)}
             style={{
-              width: column.width,
               minWidth: column.minWidth ?? 100,
               textAlign: column.align ?? "left",
+              width: column.width,
             }}
           >
             {column.title}

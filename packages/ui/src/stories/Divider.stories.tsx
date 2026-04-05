@@ -2,16 +2,16 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { Divider } from "../components/Divider/Divider"
 
 const meta: Meta<typeof Divider> = {
-  title: "Layout/Divider",
-  component: Divider,
   argTypes: {
+    label: { control: "text" },
     variant: {
       control: "radio",
-      options: ["solid", "dashed", "dotted"],
       defaultValue: "solid",
+      options: ["solid", "dashed", "dotted"],
     },
-    label: { control: "text" },
   },
+  component: Divider,
+  title: "Layout/Divider",
 }
 
 export default meta

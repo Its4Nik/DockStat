@@ -39,7 +39,6 @@ export function ThemeEditor({
 
             return (
               <div
-                key={c.colorName}
                 className={
                   multiColumn
                     ? `
@@ -56,6 +55,7 @@ export function ThemeEditor({
                       transition-colors
                     `
                 }
+                key={c.colorName}
               >
                 {/* LEFT: readable info */}
                 <div className="flex-1 min-w-0">
@@ -71,10 +71,10 @@ export function ThemeEditor({
                 {/* RIGHT: control */}
                 <div className="shrink-0">
                   <SimpleColorPicker
-                    showName={false}
                     color={c.color}
                     colorName={c.colorName}
                     displayName={c.displayName}
+                    showName={false}
                     updateThemeColor={onColorChange}
                   />
                 </div>

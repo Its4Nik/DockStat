@@ -256,10 +256,12 @@ export interface DockerClientEvents {
 
   "container:started": (ctx: ContainerInfoCtx) => void
   "container:stopped": (ctx: ContainerInfoCtx) => void
+  "container:paused": (ctx: ContainerInfoCtx) => void
+  "container:unpaused": (ctx: ContainerInfoCtx) => void
   "container:removed": (ctx: ContainerBaseCtx) => void
   "container:destroyed": (ctx: ContainerBaseCtx) => void
   "container:created": (ctx: ContainerInfoCtx) => void
-  "container:died": (ctx: ContainerBaseCtx) => void
+  "container:died": (ctx: ContainerInfoCtx) => void
 
   "stream:started": (ctx: BaseStreamCtx) => void
   "stream:stopped": (ctx: BaseStreamCtx) => void

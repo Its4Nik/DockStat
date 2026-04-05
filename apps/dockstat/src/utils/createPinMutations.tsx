@@ -38,7 +38,17 @@ export function createPinMutationHandlers({
       slug: string
     }
   >
-  unPinMutation: PinLinkMutation
+  unPinMutation: MutationResult<
+    {
+      changes: number
+    } & UpdateResult & {
+        message: string
+      },
+    {
+      path: string
+      slug: string
+    }
+  >
   isBusy: boolean
 }): {
   pin: PinLinkMutation

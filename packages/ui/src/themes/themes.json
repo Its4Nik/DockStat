@@ -1,8 +1,8 @@
 {
-  "defaultTheme": "light",
   "attributeName": "data-mode",
+  "defaultTheme": "light",
   "themes": {
-    "light": "light",
-    "dark": "dark"
+    "dark": "dark",
+    "light": "light"
   }
 }

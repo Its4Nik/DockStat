@@ -8,12 +8,12 @@ type ClientOperationResult =
   | { success: false; error: unknown; message: string }
 
 export const DockerClientElysia = new Elysia({
-  prefix: "/client",
   detail: {
-    tags: ["Docker Client Management"],
     description:
       "Docker client management endpoints for registering, updating, and controlling Docker daemon connections. Each client represents a logical grouping of Docker hosts that can be monitored and managed together.",
+    tags: ["Docker Client Management"],
   },
+  prefix: "/client",
 })
   .post(
     "/",
@@ -26,48 +26,48 @@ export const DockerClientElysia = new Elysia({
         if (!res.success) {
           const errorStr = extractErrorMessage(res.error, "Registration failed")
           return status(400, {
-            success: false as const,
             error: errorStr,
             message: res.message || "Failed to register client",
+            success: false as const,
           })
         }
         return status(200, {
-          success: true as const,
           clientId: Number(res.clientId),
           message: res.message || "Client registered successfully",
+          success: true as const,
         })
       } catch (err) {
         const errorMessage = extractErrorMessage(err, "Failed to register client")
         return status(500, {
-          success: false as const,
           error: errorMessage,
           message: errorMessage,
+          success: false as const,
         })
       }
     },
     {
+      body: DockerModel.registerClientBody,
       detail: {
-        summary: "Register Docker Client",
         description:
           "Creates a new Docker client instance for managing Docker daemon connections. A client can manage multiple Docker hosts and provides a unified interface for monitoring and controlling containers across those hosts. Options include Docker daemon configuration, connection timeouts, and TLS settings.",
         requestBody: {
-          description: "Client registration configuration",
-          required: true,
           content: {
             "application/json": {
-              schema: DockerModel.registerClientBody,
               example: {
                 clientName: "production",
                 options: {
-                  host: "docker.example.com",
-                  port: 2376,
                   ca: "/path/to/ca.pem",
                   cert: "/path/to/cert.pem",
+                  host: "docker.example.com",
                   key: "/path/to/key.pem",
+                  port: 2376,
                 },
               },
+              schema: DockerModel.registerClientBody,
             },
           },
+          description: "Client registration configuration",
+          required: true,
         },
         responses: {
           200: {
@@ -80,8 +80,8 @@ export const DockerClientElysia = new Elysia({
             description: "Server error during client registration",
           },
         },
+        summary: "Register Docker Client",
       },
-      body: DockerModel.registerClientBody,
       response: {
         200: DockerModel.registerClientSuccess,
         400: DockerModel.error,
@@ -101,36 +101,33 @@ export const DockerClientElysia = new Elysia({
         if (!res.success) {
           const errorStr = extractErrorMessage(res.error, "Update failed")
           return status(400, {
-            success: false as const,
             error: errorStr,
             message: res.message || "Failed to update client",
+            success: false as const,
           })
         }
         return status(200, {
-          success: true as const,
           clientId: Number(res.clientId),
           message: res.message || "Client updated successfully",
+          success: true as const,
         })
       } catch (err) {
         const errorMessage = extractErrorMessage(err, "Failed to update client")
         return status(500, {
-          success: false as const,
           error: errorMessage,
           message: errorMessage,
+          success: false as const,
         })
       }
     },
     {
+      body: DockerModel.updateClientBody,
       detail: {
-        summary: "Update Docker Client",
         description:
           "Updates configuration for an existing Docker client. This can include changing the client name, Docker daemon connection settings, TLS certificates, or other adapter options. The client must exist for this operation to succeed.",
         requestBody: {
-          description: "Client update configuration",
-          required: true,
           content: {
             "application/json": {
-              schema: DockerModel.updateClientBody,
               example: {
                 clientId: 1,
                 clientName: "production-updated",
@@ -140,8 +137,11 @@ export const DockerClientElysia = new Elysia({
                   timeout: 30000,
                 },
               },
+              schema: DockerModel.updateClientBody,
             },
           },
+          description: "Client update configuration",
+          required: true,
         },
         responses: {
           200: {
@@ -154,8 +154,8 @@ export const DockerClientElysia = new Elysia({
             description: "Server error during client update",
           },
         },
+        summary: "Update Docker Client",
       },
-      body: DockerModel.updateClientBody,
       response: {
         200: DockerModel.updateClientSuccess,
         400: DockerModel.error,
@@ -169,34 +169,39 @@ export const DockerClientElysia = new Elysia({
       try {
         const result = await DCM.removeClient(body.clientId)
         return status(200, {
-          success: true as const,
-          message: `Client ${body.clientId} deleted successfully`,
           data: result,
+          message: `Client ${body.clientId} deleted successfully`,
+          success: true as const,
         })
       } catch (err) {
         const errorMessage = extractErrorMessage(err, "Failed to delete client")
         return status(500, {
-          success: false as const,
           error: errorMessage,
+          success: false as const,
         })
       }
     },
     {
+      body: t.Object({
+        clientId: t.Number({
+          description: "The unique identifier of the Docker client to delete",
+          examples: [1, 2, 3],
+        }),
+      }),
       detail: {
-        summary: "Delete Docker Client",
         description:
           "Removes a Docker client from the system, including all its associated hosts, monitoring connections, and resources. This is a destructive operation that cannot be undone. Ensure you have appropriate backups before deleting clients.",
         requestBody: {
-          description: "Client identifier to delete",
-          required: true,
           content: {
             "application/json": {
-              schema: t.Object({ clientId: t.Number() }),
               example: {
                 clientId: 1,
               },
+              schema: t.Object({ clientId: t.Number() }),
             },
           },
+          description: "Client identifier to delete",
+          required: true,
         },
         responses: {
           200: {
@@ -206,41 +211,35 @@ export const DockerClientElysia = new Elysia({
             description: "Server error during client deletion",
           },
         },
+        summary: "Delete Docker Client",
       },
-      body: t.Object({
-        clientId: t.Number({
-          description: "The unique identifier of the Docker client to delete",
-          examples: [1, 2, 3],
-        }),
-      }),
       response: {
         200: t.Object({
-          success: t.Literal(true),
+          data: t.Any(),
           message: t.String({
             examples: ["Client 1 deleted successfully", "Client 2 deleted successfully"],
           }),
-          data: t.Any(),
+          success: t.Literal(true),
         }),
         500: t.Object({
-          success: t.Literal(false),
           error: t.String({
             examples: ["Client not found", "Failed to remove hosts", "Failed to stop monitoring"],
           }),
+          success: t.Literal(false),
         }),
       },
     }
   )
   .get("/all/:stored", ({ params }) => DCM.getAllClients(params.stored), {
     detail: {
-      summary: "List All Docker Clients",
       description:
         "Retrieves all registered Docker clients. The `stored` parameter controls whether to return all registered clients from database or only currently active clients in memory. Useful for monitoring system state and managing client lifecycle.",
       parameters: {
         stored: {
+          default: false,
           description:
             "If true, returns all clients from database. If false, returns only currently active clients.",
           type: "boolean",
-          default: false,
         },
       },
       responses: {
@@ -248,6 +247,7 @@ export const DockerClientElysia = new Elysia({
           description: "Successfully retrieved list of Docker clients",
         },
       },
+      summary: "List All Docker Clients",
     },
     params: t.Object({
       stored: t.Boolean({
@@ -263,20 +263,19 @@ export const DockerClientElysia = new Elysia({
       try {
         await DCM.startMonitoring(params.clientId)
         return status(200, {
-          success: true as const,
           message: "Monitoring started",
+          success: true as const,
         })
       } catch (err) {
         const errorMessage = extractErrorMessage(err, "Failed to start monitoring")
         return status(500, {
-          success: false as const,
           error: errorMessage,
+          success: false as const,
         })
       }
     },
     {
       detail: {
-        summary: "Start Client Monitoring",
         description:
           "Starts real-time monitoring for a Docker client and all its associated hosts. This enables container statistics streaming, event notifications, and health checks. Monitoring runs in background worker threads and updates continuously.",
         parameters: {
@@ -293,6 +292,7 @@ export const DockerClientElysia = new Elysia({
             description: "Failed to start monitoring due to server error",
           },
         },
+        summary: "Start Client Monitoring",
       },
       params: t.Object({
         clientId: t.Number({
@@ -302,13 +302,12 @@ export const DockerClientElysia = new Elysia({
       }),
       response: {
         200: t.Object({
-          success: t.Literal(true),
           message: t.String({
             examples: ["Monitoring started", "Monitoring activated"],
           }),
+          success: t.Literal(true),
         }),
         500: t.Object({
-          success: t.Literal(false),
           error: t.String({
             examples: [
               "Client not found",
@@ -316,6 +315,7 @@ export const DockerClientElysia = new Elysia({
               "Failed to initialize workers",
             ],
           }),
+          success: t.Literal(false),
         }),
       },
     }
@@ -326,20 +326,19 @@ export const DockerClientElysia = new Elysia({
       try {
         await DCM.stopMonitoring(params.clientId)
         return status(200, {
-          success: true as const,
           message: "Monitoring stopped",
+          success: true as const,
         })
       } catch (err) {
         const errorMessage = extractErrorMessage(err, "Failed to stop monitoring")
         return status(500, {
-          success: false as const,
           error: errorMessage,
+          success: false as const,
         })
       }
     },
     {
       detail: {
-        summary: "Stop Client Monitoring",
         description:
           "Stops real-time monitoring for a Docker client. This halts container statistics streaming, event notifications, and health checks. Worker threads for monitoring will be terminated and resources will be released. This operation does not remove the client or its hosts.",
         parameters: {
@@ -356,6 +355,7 @@ export const DockerClientElysia = new Elysia({
             description: "Failed to stop monitoring due to server error",
           },
         },
+        summary: "Stop Client Monitoring",
       },
       params: t.Object({
         clientId: t.Number({
@@ -365,16 +365,16 @@ export const DockerClientElysia = new Elysia({
       }),
       response: {
         200: t.Object({
-          success: t.Literal(true),
           message: t.String({
             examples: ["Monitoring stopped", "Monitoring deactivated"],
           }),
+          success: t.Literal(true),
         }),
         500: t.Object({
-          success: t.Literal(false),
           error: t.String({
             examples: ["Client not found", "Monitoring not active", "Failed to terminate workers"],
           }),
+          success: t.Literal(false),
         }),
       },
     }
@@ -387,28 +387,27 @@ export const DockerClientElysia = new Elysia({
         if (isMonitoring) {
           await DCM.stopMonitoring(params.clientId)
           return status(200, {
-            success: true as const,
-            message: "Monitoring stopped",
             isMonitoring: false,
+            message: "Monitoring stopped",
+            success: true as const,
           })
         }
         await DCM.startMonitoring(params.clientId)
         return status(200, {
-          success: true as const,
-          message: "Monitoring started",
           isMonitoring: true,
+          message: "Monitoring started",
+          success: true as const,
         })
       } catch (err) {
         const errorMessage = extractErrorMessage(err, "Failed to toggle monitoring")
         return status(500, {
-          success: false as const,
           error: errorMessage,
+          success: false as const,
         })
       }
     },
     {
       detail: {
-        summary: "Toggle Client Monitoring",
         description:
           "Toggles monitoring state for a Docker client. If monitoring is active, it will be stopped. If monitoring is inactive, it will be started. Returns the new monitoring state in the response. Useful for quick enable/disable of monitoring without needing to check current state first.",
         parameters: {
@@ -425,6 +424,7 @@ export const DockerClientElysia = new Elysia({
             description: "Failed to toggle monitoring due to server error",
           },
         },
+        summary: "Toggle Client Monitoring",
       },
       params: t.Object({
         clientId: t.Number({
@@ -434,17 +434,16 @@ export const DockerClientElysia = new Elysia({
       }),
       response: {
         200: t.Object({
-          success: t.Literal(true),
-          message: t.String({
-            examples: ["Monitoring started", "Monitoring stopped"],
-          }),
           isMonitoring: t.Boolean({
             description: "The new monitoring state after toggle",
             examples: [true, false],
           }),
+          message: t.String({
+            examples: ["Monitoring started", "Monitoring stopped"],
+          }),
+          success: t.Literal(true),
         }),
         500: t.Object({
-          success: t.Literal(false),
           error: t.String({
             examples: [
               "Client not found",
@@ -452,6 +451,7 @@ export const DockerClientElysia = new Elysia({
               "Failed to stop monitoring",
             ],
           }),
+          success: t.Literal(false),
         }),
       },
     }
@@ -462,20 +462,19 @@ export const DockerClientElysia = new Elysia({
       try {
         await DCM.createMonitoringManager(params.clientId)
         return status(200, {
-          success: true as const,
           message: "Monitoring manager created",
+          success: true as const,
         })
       } catch (err) {
         const errorMessage = extractErrorMessage(err, "Failed to create monitoring manager")
         return status(500, {
-          success: false as const,
           error: errorMessage,
+          success: false as const,
         })
       }
     },
     {
       detail: {
-        summary: "Create Monitoring Manager",
         description:
           "Creates a monitoring manager instance for a Docker client. The monitoring manager handles the lifecycle of monitoring tasks, coordinates worker threads, and manages resource allocation for real-time data collection. Use this endpoint to initialize monitoring infrastructure for a client before starting actual monitoring.",
         parameters: {
@@ -492,6 +491,7 @@ export const DockerClientElysia = new Elysia({
             description: "Failed to create monitoring manager due to server error",
           },
         },
+        summary: "Create Monitoring Manager",
       },
       params: t.Object({
         clientId: t.Number({
@@ -502,13 +502,12 @@ export const DockerClientElysia = new Elysia({
       }),
       response: {
         200: t.Object({
-          success: t.Literal(true),
           message: t.String({
             examples: ["Monitoring manager created", "Manager initialized"],
           }),
+          success: t.Literal(true),
         }),
         500: t.Object({
-          success: t.Literal(false),
           error: t.String({
             examples: [
               "Client not found",
@@ -516,6 +515,7 @@ export const DockerClientElysia = new Elysia({
               "Failed to initialize manager",
             ],
           }),
+          success: t.Literal(false),
         }),
       },
     }

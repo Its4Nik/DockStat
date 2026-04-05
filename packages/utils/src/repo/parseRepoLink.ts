@@ -12,7 +12,7 @@ function parseRepoParts(source: string) {
   const branch = parts[0]
   const path = parts.slice(1).join("/")
 
-  return { ownerRepo, branch, path }
+  return { branch, ownerRepo, path }
 }
 
 export function parseFromDBToRepoLink(
@@ -69,17 +69,17 @@ export function parseRawToDB(rawUrl: string): {
     !url.hostname.includes("gitlab") &&
     !url.pathname.includes("/raw/")
   ) {
-    return { type: "http", source: rawUrl }
+    return { source: rawUrl, type: "http" }
   }
 
   // GitHub
   if (url.hostname === "raw.githubusercontent.com") {
     const [, owner, repo, , , branch, ...pathParts] = url.pathname.split("/")
-    console.log({ owner, repo, branch, ...pathParts })
+    console.log({ branch, owner, repo, ...pathParts })
     const path = pathParts.slice(0, -1).join("/")
     return {
-      type: "github",
       source: `${owner}/${repo}:${branch}/${path}`,
+      type: "github",
     }
   }
 
@@ -91,8 +91,8 @@ export function parseRawToDB(rawUrl: string): {
     const domain = url.hostname === "gitlab.com" ? "" : `${url.hostname}/`
 
     return {
-      type: "gitlab",
       source: `gitlab://${domain}${ownerRepo}:${branch}/${path}`,
+      type: "gitlab",
     }
   }
 
@@ -104,8 +104,8 @@ export function parseRawToDB(rawUrl: string): {
     const domain = url.hostname === "gitea.com" ? "" : `${url.hostname}/`
 
     return {
-      type: "gitea",
       source: `gitea://${domain}${ownerRepo}:${branch}/${path}`,
+      type: "gitea",
     }
   }
 

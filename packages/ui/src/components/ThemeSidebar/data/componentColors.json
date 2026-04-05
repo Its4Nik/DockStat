@@ -1,16 +1,6 @@
 {
-  "general": {
-    "colors": [
-      { "colorName": "--color-main-bg", "displayName": "Main Background" },
-      { "colorName": "--color-primary-text", "displayName": "Primary Text" },
-      { "colorName": "--color-secondary-text", "displayName": "Secondary Text" },
-      { "colorName": "--color-muted-text", "displayName": "Muted Text" },
-      { "colorName": "--color-accent", "displayName": "Accent" }
-    ]
-  },
   "components": {
     "Badge": {
-      "name": "Badge",
       "colors": [
         { "colorName": "--color-badge-primary-bg", "displayName": "Primary Background" },
         { "colorName": "--color-badge-primary-text", "displayName": "Primary Text" },
@@ -59,10 +49,10 @@
           "colorName": "--color-badge-error-outlined-border",
           "displayName": "Error Outlined Border"
         }
-      ]
+      ],
+      "name": "Badge"
     },
     "Button": {
-      "name": "Button",
       "colors": [
         { "colorName": "--color-button-primary-text", "displayName": "Primary Text" },
         { "colorName": "--color-button-primary-bg", "displayName": "Primary Background" },
@@ -102,10 +92,10 @@
         { "colorName": "--color-button-danger-hover-text", "displayName": "Danger Hover Text" },
         { "colorName": "--color-button-danger-hover-bg", "displayName": "Danger Hover Background" },
         { "colorName": "--color-button-danger-hover-ring", "displayName": "Danger Hover Ring" }
-      ]
+      ],
+      "name": "Button"
     },
     "Card": {
-      "name": "Card",
       "colors": [
         { "colorName": "--color-card-default-bg", "displayName": "Default Background" },
         { "colorName": "--color-card-default-border", "displayName": "Default Border" },
@@ -114,17 +104,17 @@
         { "colorName": "--color-card-flat-bg", "displayName": "Flat Background" },
         { "colorName": "--color-card-footer-border", "displayName": "Footer Border" },
         { "colorName": "--color-card-header-border", "displayName": "Header Border" }
-      ]
+      ],
+      "name": "Card"
     },
     "Divider": {
-      "name": "Divider",
       "colors": [
         { "colorName": "--color-divider-color", "displayName": "Divider Color" },
         { "colorName": "--color-divider-text", "displayName": "Divider Text" }
-      ]
+      ],
+      "name": "Divider"
     },
     "Forms": {
-      "name": "Forms",
       "colors": [
         { "colorName": "--color-checkbox-border", "displayName": "Checkbox Border" },
         { "colorName": "--color-checkbox-text", "displayName": "Checkbox Text" },
@@ -184,37 +174,37 @@
         { "colorName": "--color-toggle-true", "displayName": "Toggle True" },
         { "colorName": "--color-toggle-false", "displayName": "Toggle False" },
         { "colorName": "--color-toggle-dot", "displayName": "Toggle Dot" }
-      ]
+      ],
+      "name": "Forms"
     },
     "HoverBubble": {
-      "name": "HoverBubble",
       "colors": [
         { "colorName": "--color-hover-bubble-bg", "displayName": "Background" },
         { "colorName": "--color-hover-bubble-text", "displayName": "Text" }
-      ]
+      ],
+      "name": "HoverBubble"
     },
     "Link": {
-      "name": "Link",
       "colors": [
         { "colorName": "--color-icon-link-text", "displayName": "Icon Link Text" },
         { "colorName": "--color-icon-link-text-hover", "displayName": "Icon Link Text Hover" }
-      ]
+      ],
+      "name": "Link"
     },
     "Modal": {
-      "name": "Modal",
-      "colors": [{ "colorName": "--color-modal-bg", "displayName": "Background" }]
+      "colors": [{ "colorName": "--color-modal-bg", "displayName": "Background" }],
+      "name": "Modal"
     },
     "Slider": {
-      "name": "Slider",
       "colors": [
         { "colorName": "--color-slider-base-bg", "displayName": "Slider Base Background" },
         { "colorName": "--color-slider-gradient-from", "displayName": "Slider Gradient From" },
         { "colorName": "--color-slider-gradient-to", "displayName": "Slider Gradient To" },
         { "colorName": "--color-slider-solid-bg", "displayName": "Slider Solid Background" }
-      ]
+      ],
+      "name": "Slider"
     },
     "Table": {
-      "name": "Table",
       "colors": [
         { "colorName": "--color-table-border", "displayName": "Border" },
         { "colorName": "--color-table-head-divide", "displayName": "Head Divide" },
@@ -225,7 +215,17 @@
         { "colorName": "--color-table-body-divide", "displayName": "Body Divide" },
         { "colorName": "--color-table-body-hover", "displayName": "Body Hover" },
         { "colorName": "--color-table-body-stripe", "displayName": "Body Stripe" }
-      ]
+      ],
+      "name": "Table"
     }
+  },
+  "general": {
+    "colors": [
+      { "colorName": "--color-main-bg", "displayName": "Main Background" },
+      { "colorName": "--color-primary-text", "displayName": "Primary Text" },
+      { "colorName": "--color-secondary-text", "displayName": "Secondary Text" },
+      { "colorName": "--color-muted-text", "displayName": "Muted Text" },
+      { "colorName": "--color-accent", "displayName": "Accent" }
+    ]
   }
 }

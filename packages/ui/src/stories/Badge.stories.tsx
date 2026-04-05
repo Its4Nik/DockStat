@@ -4,8 +4,8 @@ import { Badge } from "../components/Badge/Badge"
 type Story = StoryObj<typeof Badge>
 
 const meta: Meta<typeof Badge> = {
-  title: "Components/Badge",
   component: Badge,
+  title: "Components/Badge",
 }
 
 export default meta
@@ -21,23 +21,38 @@ export const AllBadges: Story = {
         <Badge variant="error"> Error </Badge>
       </div>
       <div className="space-x-2">
-        <Badge variant="primary" outlined>
+        <Badge
+          outlined
+          variant="primary"
+        >
           {" "}
           Primary{" "}
         </Badge>
-        <Badge variant="secondary" outlined>
+        <Badge
+          outlined
+          variant="secondary"
+        >
           {" "}
           Secondary{" "}
         </Badge>
-        <Badge variant="success" outlined>
+        <Badge
+          outlined
+          variant="success"
+        >
           {" "}
           Success{" "}
         </Badge>
-        <Badge variant="warning" outlined>
+        <Badge
+          outlined
+          variant="warning"
+        >
           {" "}
           Warning{" "}
         </Badge>
-        <Badge variant="error" outlined>
+        <Badge
+          outlined
+          variant="error"
+        >
           {" "}
           Error{" "}
         </Badge>

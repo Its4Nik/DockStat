@@ -13,9 +13,9 @@ const PrometheusMetricsRoute = new Elysia({ prefix: "/metrics" }).get(
     } catch (error) {
       const errorMessage = extractErrorMessage(error, "Could not get Prometheus metrics!")
       return status(400, {
-        success: false as const,
         error: errorMessage,
         message: errorMessage,
+        success: false as const,
       })
     }
   },

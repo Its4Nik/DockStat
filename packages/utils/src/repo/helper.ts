@@ -16,7 +16,7 @@ function parseRepoParts(source: string): ParsedRepo {
   const branch = parts[0] || "main"
   const path = parts.slice(1).join("/")
 
-  return { ownerRepo, branch, path }
+  return { branch, ownerRepo, path }
 }
 
 function splitDomain(source: string, fallback: string) {

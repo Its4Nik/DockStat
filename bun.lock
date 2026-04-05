@@ -167,6 +167,7 @@
       "name": "@dockstat/docker-client",
       "version": "2.0.1",
       "dependencies": {
+        "@dockstat/docker": "workspace:*",
         "@dockstat/logger": "workspace:*",
         "@dockstat/plugin-handler": "workspace:*",
         "@dockstat/sqlite-wrapper": "workspace:*",

@@ -1,6 +1,6 @@
+import type { Docker } from "@dockstat/docker"
 import type Logger from "@dockstat/logger"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
-import type Dockerode from "dockerode"
 import DockerEventStreamManager from "./eventStreamMonitor"
 import ContainerEventMonitor from "./monitors/ContainerEvents"
 import ContainerMetricsMonitor from "./monitors/ContainerMetrics"
@@ -18,13 +18,13 @@ export default class MonitoringManager {
   private hostMetricsMonitor: HostMetricsMonitor
   private containerMetricsMonitor: ContainerMetricsMonitor
   private dockerEventStreamManager: DockerEventStreamManager
-  private dockerInstances: Map<number, Dockerode>
+  private dockerInstances: Map<number, Docker>
   private hosts: DATABASE.DB_target_host[]
 
   constructor(
     clientId: number,
     baseLogger: Logger,
-    dockerInstances: Map<number, Dockerode>,
+    dockerInstances: Map<number, Docker>,
     hosts: DATABASE.DB_target_host[],
     options: DOCKER.MonitoringOptions = {}
   ) {
@@ -162,7 +162,7 @@ export default class MonitoringManager {
     }
   }
 
-  public updateDockerInstances(instances: Map<number, Dockerode>): void {
+  public updateDockerInstances(instances: Map<number, Docker>): void {
     this.dockerInstances = instances
     this.healthCheckMonitor.updateDockerInstances(instances)
     this.containerEventMonitor.updateDockerInstances(instances)
@@ -197,7 +197,7 @@ export default class MonitoringManager {
       throw new Error(`Docker instance or host not found for ID ${hostId}`)
     }
 
-    const [info, version] = await Promise.all([docker.info(), docker.version()])
+    const [info, version] = await Promise.all([docker.system.info(), docker.system.version()])
 
     return {
       hostId,

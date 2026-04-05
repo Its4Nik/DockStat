@@ -3,15 +3,15 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { CheckboxGroup } from "../components/Forms/CheckboxGroup"
 
 const meta: Meta<typeof CheckboxGroup> = {
-  title: "Inputs/CheckboxGroup",
-  component: CheckboxGroup,
   argTypes: {
     direction: {
       control: "radio",
-      options: ["horizontal", "vertical"],
       defaultValue: "vertical",
+      options: ["horizontal", "vertical"],
     },
   },
+  component: CheckboxGroup,
+  title: "Inputs/CheckboxGroup",
 }
 
 export default meta
@@ -19,10 +19,10 @@ export default meta
 type Story = StoryObj<typeof CheckboxGroup>
 
 const sampleOptions = [
-  { value: "apple", label: "Apple" },
-  { value: "orange", label: "Orange" },
-  { value: "banana", label: "Banana" },
-  { value: "grape", label: "Grape", disabled: true },
+  { label: "Apple", value: "apple" },
+  { label: "Orange", value: "orange" },
+  { label: "Banana", value: "banana" },
+  { disabled: true, label: "Grape", value: "grape" },
 ]
 
 /**
@@ -30,9 +30,9 @@ const sampleOptions = [
  */
 export const Vertical: Story = {
   args: {
+    direction: "vertical",
     options: sampleOptions,
     selectedValues: ["apple"],
-    direction: "vertical",
   },
   render: (args) => {
     // eslint-disable-next-line
@@ -42,7 +42,13 @@ export const Vertical: Story = {
       updateArgs({ selectedValues: values })
     }
 
-    return <CheckboxGroup direction="vertical" {...args} onChange={handleChange} />
+    return (
+      <CheckboxGroup
+        direction="vertical"
+        {...args}
+        onChange={handleChange}
+      />
+    )
   },
 }
 
@@ -51,14 +57,19 @@ export const Vertical: Story = {
  */
 export const Horizontal: Story = {
   args: {
+    direction: "horizontal",
     options: sampleOptions,
     selectedValues: ["orange", "banana"],
-    direction: "horizontal",
   },
   render: (args) => {
     // eslint-disable-next-line
     const [, updateArgs] = useArgs()
-    return <CheckboxGroup {...args} onChange={(v) => updateArgs({ selectedValues: v })} />
+    return (
+      <CheckboxGroup
+        {...args}
+        onChange={(v) => updateArgs({ selectedValues: v })}
+      />
+    )
   },
 }
 
@@ -73,6 +84,11 @@ export const WithDisabled: Story = {
   render: (args) => {
     // eslint-disable-next-line
     const [, updateArgs] = useArgs()
-    return <CheckboxGroup {...args} onChange={(v) => updateArgs({ selectedValues: v })} />
+    return (
+      <CheckboxGroup
+        {...args}
+        onChange={(v) => updateArgs({ selectedValues: v })}
+      />
+    )
   },
 }

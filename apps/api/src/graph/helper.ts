@@ -27,13 +27,13 @@ export const createEdge = (
   const edgeId = `edge-${source}-${target}`
   logger.debug(`Generated edge: ${edgeId}`)
   return {
-    id: edgeId,
-    source,
-    edgesReconnectable: false,
-    target,
     animated: isAnimated,
-    style: { stroke: strokeColor },
+    edgesReconnectable: false,
+    id: edgeId,
     label,
+    source,
+    style: { stroke: strokeColor },
+    target,
   }
 }
 

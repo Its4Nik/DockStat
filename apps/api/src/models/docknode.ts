@@ -2,13 +2,13 @@ import { t } from "elysia"
 
 export namespace DockNodeModel {
   export const dockNode_registryTable = t.Object({
-    id: t.Integer(),
-    name: t.String({ minLength: 5 }),
     host: t.String({ minLength: 5 }),
-    port: t.Number(),
-    useSSL: t.Boolean(),
-    timeout: t.Number(),
+    id: t.Integer(),
     keys: t.Unknown(),
+    name: t.String({ minLength: 5 }),
+    port: t.Number(),
+    timeout: t.Number(),
+    useSSL: t.Boolean(),
   })
 
   export const createBody = t.Omit(

@@ -1,43 +1,42 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on",
+        "useSortedAttributes": "on",
+        "useSortedKeys": "on",
+        "useSortedProperties": "on"
+      }
+    },
+    "enabled": true
+  },
+  "css": {
+    "formatter": {
+      "enabled": true
+    },
+    "parser": {
+      "tailwindDirectives": true
+    }
   },
   "files": {
     "ignoreUnknown": false,
     "includes": ["**", "!!**/bundle/*", "!!**/dist/*", "!!**/node_modules/*", "!!*.lock"]
   },
   "formatter": {
+    "attributePosition": "multiline",
+    "bracketSpacing": true,
     "enabled": true,
+    "formatWithErrors": true,
     "indentStyle": "space",
     "lineWidth": 100
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "correctness": {
-        "noUnusedVariables": "error",
-        "noUnreachable": "error"
-      },
-      "suspicious": {
-        "noExplicitAny": "warn",
-        "noDebugger": "error"
-      },
-      "style": {
-        "useConst": "error",
-        "recommended": true
-      }
-    }
   },
   "javascript": {
     "formatter": {
       "enabled": true,
       "quoteStyle": "double",
-      "trailingCommas": "es5",
-      "semicolons": "asNeeded"
+      "semicolons": "asNeeded",
+      "trailingCommas": "es5"
     }
   },
   "json": {
@@ -45,21 +44,27 @@
       "enabled": true
     }
   },
-  "css": {
-    "parser": {
-      "tailwindDirectives": true
-    },
-    "formatter": {
-      "enabled": true
-    }
-  },
-  "assist": {
+  "linter": {
     "enabled": true,
-    "actions": {
-      "source": {
-        "organizeImports": "on",
-        "useSortedProperties": "on"
+    "rules": {
+      "correctness": {
+        "noUnreachable": "error",
+        "noUnusedVariables": "error"
+      },
+      "recommended": true,
+      "style": {
+        "recommended": true,
+        "useConst": "error"
+      },
+      "suspicious": {
+        "noDebugger": "error",
+        "noExplicitAny": "warn"
       }
     }
+  },
+  "vcs": {
+    "clientKind": "git",
+    "enabled": true,
+    "useIgnoreFile": true
   }
 }

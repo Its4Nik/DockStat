@@ -34,28 +34,34 @@ function ThemePreviewCard({
 
   return (
     <Card
-      variant={isSelected ? "outlined" : "default"}
-      size="sm"
+      className={`relative flex-1 cursor-pointer transition-all m-1 ${isSelected ? "ring-2 ring-accent" : ""}`}
       hoverable
       onClick={onSelect}
-      className={`relative flex-1 cursor-pointer transition-all m-1 ${isSelected ? "ring-2 ring-accent" : ""}`}
+      size="sm"
+      variant={isSelected ? "outlined" : "default"}
     >
       <div className="absolute top-2 right-2">
         {isSelected && (
-          <Badge variant="success" size="sm">
-            <Check size={12} className="mr-1" />
+          <Badge
+            size="sm"
+            variant="success"
+          >
+            <Check
+              className="mr-1"
+              size={12}
+            />
             Active
           </Badge>
         )}
         {!(theme.id < 0) ? (
           <Button
             className="mt-1"
-            variant="danger"
-            size="xs"
             onClick={async (e) => {
               e.stopPropagation()
               await deleteTheme(theme.id)
             }}
+            size="xs"
+            variant="danger"
           >
             <Trash size={12} />
           </Button>
@@ -67,7 +73,10 @@ function ThemePreviewCard({
 
         <div className="mx-4 flex h-10 gap-1 overflow-visible">
           {colorEntries.map(([name, color]) => (
-            <div key={name} className="flex-1 relative group overflow-visible">
+            <div
+              className="flex-1 relative group overflow-visible"
+              key={name}
+            >
               <div
                 className="w-full h-full transform -skew-x-12 transition-transform duration-300 ease-in-out group-hover:-translate-y-2 group-hover:scale-125 rounded-md"
                 style={{ backgroundColor: color }}
@@ -79,7 +88,10 @@ function ThemePreviewCard({
         {/* Color Labels */}
         <div className="flex mt-3 mx-4">
           {colorEntries.map(([name]) => (
-            <div key={name} className="flex-1 text-center">
+            <div
+              className="flex-1 text-center"
+              key={name}
+            >
               <div className="text-xs font-medium capitalize">
                 {name.replaceAll("--color-", "")}
               </div>
@@ -116,13 +128,13 @@ export function ThemeBrowser({
         {themes.map((theme) => (
           <ThemePreviewCard
             deleteTheme={deleteTheme}
-            key={theme.id}
-            theme={theme}
             isSelected={currentThemeId === theme.id}
+            key={theme.id}
             onSelect={async () => {
               await onSelectTheme(theme)
               toastSuccess(theme.name)
             }}
+            theme={theme}
           />
         ))}
       </div>

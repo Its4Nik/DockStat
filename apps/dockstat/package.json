@@ -1,14 +1,4 @@
 {
-  "name": "@dockstat/frontend",
-  "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "bunx --bun vite",
-    "build": "NODE_ENV=production bunx --bun vite build",
-    "lint": "biome check",
-    "preview": "vite preview"
-  },
   "dependencies": {
     "@dockstat/docker-client": "workspace:*",
     "@dockstat/template-renderer": "workspace:*",
@@ -32,14 +22,24 @@
     "tailwindcss": "catalog:react-ui"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "@dockstat/sqlite-wrapper": "workspace:*",
+    "@dockstat/api": "workspace:*",
     "@dockstat/logger": "workspace:*",
+    "@dockstat/sqlite-wrapper": "workspace:*",
+    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:build-tools",
-    "@dockstat/api": "workspace:*",
-    "vite": "catalog:build-tools",
-    "elysia": "catalog:"
-  }
+    "elysia": "catalog:",
+    "vite": "catalog:build-tools"
+  },
+  "name": "@dockstat/frontend",
+  "private": true,
+  "scripts": {
+    "build": "NODE_ENV=production bunx --bun vite build",
+    "dev": "bunx --bun vite",
+    "lint": "biome check",
+    "preview": "vite preview"
+  },
+  "type": "module",
+  "version": "1.0.0"
 }

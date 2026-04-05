@@ -1,11 +1,18 @@
 {
-  "name": "@dockstat/plugin-builder",
-  "version": "1.0.8",
+  "author": {
+    "email": "dockstat@itsnik.de",
+    "name": "Its4Nik",
+    "url": "https://itsnik.de"
+  },
+  "dependencies": {
+    "@dockstat/sqlite-wrapper": "workspace:^",
+    "@dockstat/typings": "workspace:^"
+  },
   "description": "Type-safe plugin builder utilities for DockStat plugins",
-  "type": "module",
-  "main": "src/index.ts",
-  "module": "src/index.ts",
-  "types": "src/index.ts",
+  "devDependencies": {
+    "bun-types": "latest",
+    "typescript": "catalog:testing"
+  },
   "exports": {
     ".": {
       "import": "./src/index.ts",
@@ -16,10 +23,6 @@
     "src/index.ts",
     "README.md"
   ],
-  "scripts": {
-    "format": "biome format --write",
-    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
-  },
   "keywords": [
     "dockstat",
     "plugin",
@@ -27,25 +30,10 @@
     "typescript",
     "type-safe"
   ],
-  "author": {
-    "name": "Its4Nik",
-    "email": "dockstat@itsnik.de",
-    "url": "https://itsnik.de"
-  },
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Its4Nik/DockStat",
-    "directory": "packages/plugin-builder"
-  },
-  "dependencies": {
-    "@dockstat/sqlite-wrapper": "workspace:^",
-    "@dockstat/typings": "workspace:^"
-  },
-  "devDependencies": {
-    "bun-types": "latest",
-    "typescript": "catalog:testing"
-  },
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "name": "@dockstat/plugin-builder",
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
@@ -53,5 +41,17 @@
     "typescript": {
       "optional": true
     }
-  }
+  },
+  "repository": {
+    "directory": "packages/plugin-builder",
+    "type": "git",
+    "url": "https://github.com/Its4Nik/DockStat"
+  },
+  "scripts": {
+    "format": "biome format --write",
+    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
+  },
+  "type": "module",
+  "types": "src/index.ts",
+  "version": "1.0.8"
 }

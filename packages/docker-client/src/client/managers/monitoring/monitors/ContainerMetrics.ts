@@ -1,15 +1,15 @@
+import type { Docker } from "@dockstat/docker"
 import type Logger from "@dockstat/logger"
-import type { DATABASE, DOCKER } from "@dockstat/typings"
+import type { DATABASE } from "@dockstat/typings"
 import { retry } from "@dockstat/utils"
-import type Dockerode from "dockerode"
 import { proxyEvent } from "../../../../events/workerEventProxy"
 import { withRetry } from "../../../../utils/retry"
-import { mapContainerInfo } from "../../../utils/mapContainerInfo"
+import type { ExtendedContainerStats } from "../../../mixins/containers/index.ts"
 
 class ContainerMetricsMonitor {
   private intervalId?: ReturnType<typeof setInterval>
   private logger: Logger
-  private dockerInstances: Map<number, Dockerode>
+  private dockerInstances: Map<number, Docker>
   private hosts: DATABASE.DB_target_host[]
   private clientId: number
   private options: {
@@ -21,7 +21,7 @@ class ContainerMetricsMonitor {
   constructor(
     clientId: number,
     baseLogger: Logger,
-    dockerInstances: Map<number, Dockerode>,
+    dockerInstances: Map<number, Docker>,
     hosts: DATABASE.DB_target_host[],
     options: {
       interval: number
@@ -59,7 +59,7 @@ class ContainerMetricsMonitor {
     this.hosts = hosts
   }
 
-  updateDockerInstances(instances: Map<number, Dockerode>): void {
+  updateDockerInstances(instances: Map<number, Docker>): void {
     this.dockerInstances = instances
   }
 
@@ -88,7 +88,7 @@ class ContainerMetricsMonitor {
 
     // Get all running containers for this host
     const containers = await withRetry(
-      () => docker.listContainers({ all: false }), // Only running containers have stats
+      () => docker.containers.list({ all: false }), // Only running containers have stats
       this.options.retryAttempts,
       this.options.retryDelay
     )
@@ -98,25 +98,47 @@ class ContainerMetricsMonitor {
     // Collect stats for each container
     const statsPromises = containers.map(async (containerInfo) => {
       try {
-        const container = docker.getContainer(containerInfo.Id)
         const stats = await retry(
           () =>
-            container.stats({
+            docker.containers.stats(containerInfo.Id, {
               stream: false,
-            }) as Promise<Dockerode.ContainerStats>,
+            }) as Promise<ExtendedContainerStats>,
           {
             attempts: this.options.retryAttempts,
             delay: this.options.retryDelay,
           }
         )
 
-        const containerStatsInfo = this.mapContainerStats(containerInfo, stats, hostId)
+        // Extend with hostId and client info
+        const extendedStats: ExtendedContainerStats = {
+          ...stats,
+          hostId,
+          clientId: this.clientId,
+          containerId: containerInfo.Id || "",
+          containerName: containerInfo.Names?.[0]?.replace(/^\//, "") || "unknown",
+        }
+
+        // Calculate derived metrics
+        const cpuUsage = this.calculateCpuUsage(extendedStats)
+        const memoryUsage = extendedStats.memory_stats?.usage || 0
+        const memoryLimit = extendedStats.memory_stats?.limit || 0
+        const { rx: networkRx, tx: networkTx } = this.calculateNetworkIO(extendedStats)
+        const { read: blockRead, write: blockWrite } = this.calculateBlockIO(extendedStats)
 
         proxyEvent("container:metrics", {
           hostId,
           docker_client_id: host.docker_client_id,
           containerId: containerInfo.Id,
-          stats: containerStatsInfo,
+          stats: {
+            ...extendedStats,
+            cpuUsage: Math.round(cpuUsage * 100) / 100,
+            memoryUsage,
+            memoryLimit,
+            networkRx,
+            networkTx,
+            blockRead,
+            blockWrite,
+          },
         })
       } catch (error) {
         this.logger.warn(
@@ -129,55 +151,30 @@ class ContainerMetricsMonitor {
     await Promise.allSettled(statsPromises)
   }
 
-  private mapContainerStats(
-    containerInfo: Dockerode.ContainerInfo,
-    stats: Dockerode.ContainerStats,
-    hostId: number
-  ): DOCKER.ContainerStatsInfo {
-    const baseInfo = mapContainerInfo(containerInfo, hostId, this.clientId)
+  private calculateCpuUsage(stats: ExtendedContainerStats): number {
+    const { cpu_stats, precpu_stats } = stats;
 
-    // Calculate CPU usage percentage
-    const cpuUsage = this.calculateCpuUsage(stats)
+    const cpuTotal = cpu_stats?.cpu_usage?.total_usage;
+    const preCpuTotal = precpu_stats?.cpu_usage?.total_usage;
 
-    // Calculate memory usage
-    const memoryUsage = stats.memory_stats.usage || 0
-    const memoryLimit = stats.memory_stats.limit || 0
-
-    // Calculate network I/O
-    const { rx: networkRx, tx: networkTx } = this.calculateNetworkIO(stats)
-
-    // Calculate block I/O
-    const { read: blockRead, write: blockWrite } = this.calculateBlockIO(stats)
-
-    return {
-      ...baseInfo,
-      stats,
-      cpuUsage,
-      memoryUsage,
-      memoryLimit,
-      networkRx,
-      networkTx,
-      blockRead,
-      blockWrite,
-    }
-  }
-
-  private calculateCpuUsage(stats: Dockerode.ContainerStats): number {
-    const cpuDelta =
-      stats.cpu_stats.cpu_usage.total_usage - stats.precpu_stats.cpu_usage.total_usage
-    const systemCpuDelta =
-      (stats.cpu_stats.system_cpu_usage || 0) - (stats.precpu_stats.system_cpu_usage || 0)
-    const cpuCount =
-      stats.cpu_stats.online_cpus || stats.cpu_stats.cpu_usage.percpu_usage?.length || 1
-
-    if (systemCpuDelta > 0 && cpuDelta > 0) {
-      return (cpuDelta / systemCpuDelta) * cpuCount * 100
+    if (cpuTotal == null || preCpuTotal == null) {
+      return 0;
     }
 
-    return 0
+    const cpuDelta = cpuTotal - preCpuTotal;
+    const systemCpuDelta = (cpu_stats?.system_cpu_usage ?? 0) - (precpu_stats?.system_cpu_usage ?? 0);
+
+    // Validate calculation prerequisites
+    if (systemCpuDelta <= 0 || cpuDelta <= 0) {
+      return 0;
+    }
+
+    const cpuCount = cpu_stats?.online_cpus ?? cpu_stats?.cpu_usage?.percpu_usage?.length ?? 1;
+
+    return (cpuDelta / systemCpuDelta) * cpuCount * 100;
   }
 
-  private calculateNetworkIO(stats: Dockerode.ContainerStats): {
+  private calculateNetworkIO(stats: ExtendedContainerStats): {
     rx: number
     tx: number
   } {
@@ -185,8 +182,8 @@ class ContainerMetricsMonitor {
     let tx = 0
 
     if (stats.networks) {
-      for (const network of Object.values(stats.networks)) {
-        rx += network.rx_bytes || 0
+      for (const network of Object.values(stats.)) {
+        rx += network. || 0
         tx += network.tx_bytes || 0
       }
     }
@@ -194,7 +191,7 @@ class ContainerMetricsMonitor {
     return { rx, tx }
   }
 
-  private calculateBlockIO(stats: Dockerode.ContainerStats): {
+  private calculateBlockIO(stats: ExtendedContainerStats): {
     read: number
     write: number
   } {
@@ -203,10 +200,11 @@ class ContainerMetricsMonitor {
 
     if (stats.blkio_stats?.io_service_bytes_recursive) {
       for (const entry of stats.blkio_stats.io_service_bytes_recursive) {
+        if(entry === null) continue
         if (entry.op === "read" || entry.op === "Read") {
-          read += entry.value
+          if(entry.value !== undefined) read += entry.value
         } else if (entry.op === "write" || entry.op === "Write") {
-          write += entry.value
+          if(entry.value !== undefined) write += entry.value
         }
       }
     }

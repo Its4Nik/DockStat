@@ -1,37 +1,37 @@
 {
-  "name": "@dockstat/typings",
-  "private": false,
   "author": {
-    "name": "Its4Nik",
     "email": "dockstat@itsnik.de",
+    "name": "Its4Nik",
     "url": "https://itsnik.de"
   },
-  "version": "1.1.2",
+  "dependencies": {
+    "elysia": "catalog:",
+    "js-yaml": "catalog:utils"
+  },
+  "devDependencies": {
+    "@dockstat/logger": "workspace:*",
+    "@dockstat/sqlite-wrapper": "workspace:*",
+    "@types/dockerode": "catalog:docker",
+    "bun-types": "latest"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./schemas": "./src/typebox/_schemas.ts",
     "./types": "./src/typebox/_types.ts",
     "./v2": "./src/v2/index.ts"
   },
-  "scripts": {
-    "lint": "biome lint .",
-    "lint:fix": "biome lint --write .",
-    "lint:gh": "turbo run lint -- --reporter=github",
-    "check-types": "tsc --noEmit",
-    "clean": "rm -rf dist",
-    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
-  },
+  "name": "@dockstat/typings",
   "peerDependencies": {
     "typescript": "catalog:testing"
   },
-  "devDependencies": {
-    "bun-types": "latest",
-    "@types/dockerode": "catalog:docker",
-    "@dockstat/sqlite-wrapper": "workspace:*",
-    "@dockstat/logger": "workspace:*"
+  "private": false,
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "lint:gh": "turbo run lint -- --reporter=github",
+    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
-  "dependencies": {
-    "elysia": "catalog:",
-    "js-yaml": "catalog:utils"
-  }
+  "version": "1.1.2"
 }

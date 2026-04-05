@@ -8,6 +8,7 @@ import { ImagesModule } from "./modules/images"
 import { NetworksModule } from "./modules/networks"
 import { NodesModule } from "./modules/nodes"
 import { ServicesModule } from "./modules/services"
+import { SystemModule } from "./modules/system"
 import { VolumeModule } from "./modules/volumes"
 
 export class Docker {
@@ -49,6 +50,11 @@ export class Docker {
    * Swarm mode must be enabled for these endpoints to work.
    */
   public readonly services: ServicesModule
+  /**
+   * System operations for Docker engine.
+   * Includes operations like info, version, events, etc.
+   */
+  public readonly system: SystemModule
 
   constructor(private config: ConnectionConfig) {
     this.containers = new ContainerModule(config)
@@ -60,6 +66,7 @@ export class Docker {
     this.nodes = new NodesModule(config)
     this.configs = new ConfigsModule(config)
     this.services = new ServicesModule(config)
+    this.system = new SystemModule(config)
   }
 
   async ping(): Promise<boolean> {

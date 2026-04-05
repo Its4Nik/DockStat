@@ -1,24 +1,50 @@
-import type { DOCKER } from "@dockstat/typings"
+import type { paths } from "@dockstat/docker/spec"
 import { retry } from "@dockstat/utils"
-import type Dockerode from "dockerode"
 import { DockerClientBase } from "../../mixins/core/base"
-import {
-  mapContainerInfo,
-  mapContainerInfoFromInspect,
-  mapContainerStats,
-} from "../../utils/mapContainerInfo"
+
+// Type aliases for @bun-docker OpenAPI types
+type BunDockerContainerList =
+  paths["/containers/json"]["get"]["responses"]["200"]["content"]["application/json"]
+type BunDockerContainerInspect =
+  paths["/containers/{id}/json"]["get"]["responses"]["200"]["content"]["application/json"]
+type BunDockerContainerStats =
+  paths["/containers/{id}/stats"]["get"]["responses"]["200"]["content"]["application/json"]
+type BunDockerContainerLogsRoute = paths["/containers/{id}/logs"]["get"]
+type BunDockerContainerExecRoute = paths["/containers/{id}/exec"]["post"]
+type BunDockerExecStartRoute = paths["/exec/{id}/start"]["post"]
+type BunDockerExecInspectRoute = paths["/exec/{id}/json"]["get"]
 
 /**
- * Containers mixin: adds container listing, inspection, stats and lifecycle operations.
+ * Extended container info type that includes hostId and clientId
+ * These fields are not part of the Docker API but are needed by the application
+ */
+export type ExtendedContainerInfo = BunDockerContainerList[number] & {
+  hostId: number
+  clientId: number
+}
+
+/**
+ * Extended container stats type that includes hostId and clientId
+ */
+export type ExtendedContainerStats = BunDockerContainerStats & {
+  hostId: number
+  clientId: number
+  containerId: string
+  containerName: string
+}
+
+/**
+ * Containers mixin: adds container listing, inspection, stats and lifecycle operations using @bun-docker.
  *
  * Usage: compose with DockerClientBase via applyMixins alongside other mixins.
  */
 export class Containers extends DockerClientBase {
-  // ---------- Helpers ----------
-
   // ---------- Queries ----------
 
-  public async getAllContainers(): Promise<DOCKER.ContainerInfo[]> {
+  /**
+   * Get all containers from all hosts
+   */
+  public async getAllContainers(): Promise<ExtendedContainerInfo[]> {
     this.checkDisposed()
 
     const hosts = this.hostHandler.getHosts()
@@ -29,7 +55,7 @@ export class Containers extends DockerClientBase {
       return []
     }
 
-    const all: DOCKER.ContainerInfo[] = []
+    const all: ExtendedContainerInfo[] = []
     const results = await Promise.allSettled(
       hosts.map(async (host) => {
         const containers = await this.getContainersForHost(Number(host.id))
@@ -48,37 +74,54 @@ export class Containers extends DockerClientBase {
     return all
   }
 
-  public async getContainersForHost(hostId: number): Promise<DOCKER.ContainerInfo[]> {
+  /**
+   * Get containers for a specific host
+   */
+  public async getContainersForHost(hostId: number): Promise<ExtendedContainerInfo[]> {
     this.checkDisposed()
 
     const docker = this.getDockerInstance(hostId)
-    const containers = await retry(() => docker.listContainers({ all: true }), {
+    const containers = await retry(() => docker.containers.list({ all: true }), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
 
-    return containers.map((c) => mapContainerInfo(c, hostId, this.id))
+    // Extend each container with hostId and clientId
+    return containers.map((c) => ({
+      ...c,
+      hostId,
+      clientId: this.id,
+    }))
   }
 
-  public async getContainer(hostId: number, containerId: string): Promise<DOCKER.ContainerInfo> {
+  /**
+   * Get detailed information for a specific container
+   */
+  public async getContainer(hostId: number, containerId: string): Promise<ExtendedContainerInfo> {
     this.checkDisposed()
 
     const docker = this.getDockerInstance(hostId)
-    const container = docker.getContainer(containerId)
-
-    const info = await retry(() => container.inspect(), {
+    const info = await retry(() => docker.containers.inspect(containerId), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
 
-    return mapContainerInfoFromInspect(info, hostId, this.id)
+    // Extend with hostId and clientId
+    return {
+      ...info,
+      hostId,
+      clientId: this.id,
+    } as ExtendedContainerInfo
   }
 
-  public async getAllContainerStats(): Promise<DOCKER.ContainerStatsInfo[]> {
+  /**
+   * Get container stats for all containers across all hosts
+   */
+  public async getAllContainerStats(): Promise<ExtendedContainerStats[]> {
     this.checkDisposed()
 
     const hosts = this.hostHandler.getHosts()
-    const allStats: DOCKER.ContainerStatsInfo[] = []
+    const allStats: ExtendedContainerStats[] = []
 
     const results = await Promise.allSettled(
       hosts.map(async (host) => {
@@ -98,17 +141,20 @@ export class Containers extends DockerClientBase {
     return allStats
   }
 
-  public async getContainerStatsForHost(hostId: number): Promise<DOCKER.ContainerStatsInfo[]> {
+  /**
+   * Get container stats for all containers on a specific host
+   */
+  public async getContainerStatsForHost(hostId: number): Promise<ExtendedContainerStats[]> {
     this.checkDisposed()
 
     const containers = await this.getContainersForHost(hostId)
-    const running = containers.filter((c) => c.state === "running")
+    const running = containers.filter((c) => c.State === "running")
 
     const results = await Promise.allSettled(
-      running.map((c) => this.getContainerStats(hostId, c.id))
+      running.map((c) => this.getContainerStats(hostId, c.Id || ""))
     )
 
-    const ok: DOCKER.ContainerStatsInfo[] = []
+    const ok: ExtendedContainerStats[] = []
     for (const r of results) {
       if (r.status === "fulfilled") {
         ok.push(r.value)
@@ -124,45 +170,42 @@ export class Containers extends DockerClientBase {
     return ok
   }
 
+  /**
+   * Get stats for a specific container
+   */
   public async getContainerStats(
     hostId: number,
     containerId: string
-  ): Promise<DOCKER.ContainerStatsInfo> {
+  ): Promise<ExtendedContainerStats> {
     this.checkDisposed()
 
     const docker = this.getDockerInstance(hostId)
-    const container = docker.getContainer(containerId)
+    const container = await this.getContainer(hostId, containerId)
 
-    const [inspectInfo, stats] = await Promise.all([
-      retry(() => container.inspect(), {
+    const stats = await retry(
+      () =>
+        docker.containers.stats(containerId, { stream: false }) as Promise<BunDockerContainerStats>,
+      {
         attempts: this.options.retryAttempts,
         delay: this.options.retryDelay,
-      }),
-      retry(
-        () =>
-          container.stats({
-            stream: false,
-          }) as Promise<Dockerode.ContainerStats>,
-        {
-          attempts: this.options.retryAttempts,
-          delay: this.options.retryDelay,
-        }
-      ),
-    ])
+      }
+    )
 
-    const mappedInfo = mapContainerInfoFromInspect(inspectInfo, hostId, this.id)
-    return mapContainerStats(mappedInfo, stats)
+    return {
+      ...stats,
+      hostId,
+      clientId: this.id,
+      containerId,
+      containerName: container.Names?.[0]?.replace(/^\//, "") || "unknown",
+    }
   }
 
   // ---------- Lifecycle control ----------
 
   public async startContainer(hostId: number, containerId: string): Promise<void> {
     this.checkDisposed()
-
     const docker = this.getDockerInstance(hostId)
-    const container = docker.getContainer(containerId)
-
-    await retry(() => container.start(), {
+    await retry(() => docker.containers.start(containerId), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
@@ -170,11 +213,8 @@ export class Containers extends DockerClientBase {
 
   public async stopContainer(hostId: number, containerId: string): Promise<void> {
     this.checkDisposed()
-
     const docker = this.getDockerInstance(hostId)
-    const container = docker.getContainer(containerId)
-
-    await retry(() => container.stop(), {
+    await retry(() => docker.containers.stop(containerId, {}), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
@@ -182,11 +222,8 @@ export class Containers extends DockerClientBase {
 
   public async restartContainer(hostId: number, containerId: string): Promise<void> {
     this.checkDisposed()
-
     const docker = this.getDockerInstance(hostId)
-    const container = docker.getContainer(containerId)
-
-    await retry(() => container.restart(), {
+    await retry(() => docker.containers.restart(containerId, {}), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
@@ -194,11 +231,8 @@ export class Containers extends DockerClientBase {
 
   public async removeContainer(hostId: number, containerId: string, force = false): Promise<void> {
     this.checkDisposed()
-
     const docker = this.getDockerInstance(hostId)
-    const container = docker.getContainer(containerId)
-
-    await retry(() => container.remove({ force }), {
+    await retry(() => docker.containers.remove(containerId, false, force, false), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
@@ -206,11 +240,8 @@ export class Containers extends DockerClientBase {
 
   public async pauseContainer(hostId: number, containerId: string): Promise<void> {
     this.checkDisposed()
-
     const docker = this.getDockerInstance(hostId)
-    const container = docker.getContainer(containerId)
-
-    await retry(() => container.pause(), {
+    await retry(() => docker.containers.pause(containerId), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
@@ -218,11 +249,8 @@ export class Containers extends DockerClientBase {
 
   public async unpauseContainer(hostId: number, containerId: string): Promise<void> {
     this.checkDisposed()
-
     const docker = this.getDockerInstance(hostId)
-    const container = docker.getContainer(containerId)
-
-    await retry(() => container.unpause(), {
+    await retry(() => docker.containers.unpause(containerId), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
@@ -234,11 +262,8 @@ export class Containers extends DockerClientBase {
     signal = "SIGKILL"
   ): Promise<void> {
     this.checkDisposed()
-
     const docker = this.getDockerInstance(hostId)
-    const container = docker.getContainer(containerId)
-
-    await retry(() => container.kill({ signal }), {
+    await retry(() => docker.containers.kill(containerId, signal), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
@@ -250,11 +275,8 @@ export class Containers extends DockerClientBase {
     newName: string
   ): Promise<void> {
     this.checkDisposed()
-
     const docker = this.getDockerInstance(hostId)
-    const container = docker.getContainer(containerId)
-
-    await retry(() => container.rename({ name: newName }), {
+    await retry(() => docker.containers.rename(containerId, newName), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
@@ -275,23 +297,33 @@ export class Containers extends DockerClientBase {
     } = {}
   ): Promise<string> {
     this.checkDisposed()
-
     const docker = this.getDockerInstance(hostId)
-    const container = docker.getContainer(containerId)
 
-    const logOptions = {
+    // Convert string dates to Unix timestamps if provided
+    let since: number | undefined
+    let until: number | undefined
+    if (options.since) {
+      since = Math.floor(new Date(options.since).getTime() / 1000)
+    }
+    if (options.until) {
+      until = Math.floor(new Date(options.until).getTime() / 1000)
+    }
+
+    const logOptions: BunDockerContainerLogsRoute["parameters"]["query"] = {
       stdout: options.stdout ?? true,
       stderr: options.stderr ?? true,
       timestamps: options.timestamps ?? false,
-      tail: options.tail ?? 100,
-      ...options,
+      tail: options.tail ? String(options.tail) : undefined,
+      since,
+      until,
     }
 
-    const logStream = await retry(() => container.logs(logOptions), {
+    const response = await retry(() => docker.containers.logs(containerId, logOptions), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
-    return logStream.toString()
+    const text = await response.text()
+    return text
   }
 
   public async execInContainer(
@@ -307,11 +339,9 @@ export class Containers extends DockerClientBase {
     } = {}
   ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
     this.checkDisposed()
-
     const docker = this.getDockerInstance(hostId)
-    const container = docker.getContainer(containerId)
 
-    const execOptions = {
+    const execOptions: BunDockerContainerExecRoute["requestBody"]["content"]["application/json"] = {
       Cmd: command,
       AttachStdout: options.attachStdout ?? true,
       AttachStderr: options.attachStderr ?? true,
@@ -320,76 +350,62 @@ export class Containers extends DockerClientBase {
       WorkingDir: options.workingDir,
     }
 
-    const exec = await retry(() => container.exec(execOptions), {
+    const execResult = await retry(() => docker.containers.execCreate(containerId, execOptions), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
 
-    const stream = await retry(
-      () =>
-        exec.start({
-          Detach: false,
-          Tty: options.tty ?? false,
-        }),
-      {
-        attempts: this.options.retryAttempts,
-        delay: this.options.retryDelay,
-      }
-    )
+    const startOptions: NonNullable<
+      BunDockerExecStartRoute["requestBody"]
+    >["content"]["application/json"] = {
+      Detach: false,
+      Tty: options.tty ?? false,
+    }
 
-    return new Promise((resolve, reject) => {
-      const chunks: Buffer[] = []
-
-      stream.on("data", (chunk: Buffer) => {
-        chunks.push(chunk)
-      })
-
-      stream.on("end", async () => {
-        try {
-          const combinedBuffer = Buffer.concat(chunks)
-          let stdout = ""
-          let stderr = ""
-
-          if (options.tty) {
-            // When TTY is enabled, Docker multiplexing headers are not included
-            stdout = combinedBuffer.toString()
-          } else {
-            // Demultiplex the Docker stream: 8-byte header per frame
-            let offset = 0
-            while (offset + 8 <= combinedBuffer.length) {
-              const streamType = combinedBuffer.readUInt8(offset)
-              const frameSize = combinedBuffer.readUInt32BE(offset + 4)
-
-              if (offset + 8 + frameSize > combinedBuffer.length) break
-
-              const frameData = combinedBuffer.subarray(offset + 8, offset + 8 + frameSize)
-
-              if (streamType === 1) {
-                stdout += frameData.toString()
-              } else if (streamType === 2) {
-                stderr += frameData.toString()
-              }
-
-              offset += 8 + frameSize
-            }
-          }
-
-          const inspectResult = await exec.inspect()
-          resolve({
-            stdout: stdout.trim(),
-            stderr: stderr.trim(),
-            exitCode: inspectResult.ExitCode ?? 0,
-          })
-        } catch (error) {
-          reject(error)
-        }
-      })
-
-      stream.on("error", reject)
-
-      // Failsafe timeout to avoid a hung stream
-      setTimeout(() => reject(new Error("Exec operation timed out")), 30000)
+    const response = await retry(() => docker.containers.execStart(execResult.Id, startOptions), {
+      attempts: this.options.retryAttempts,
+      delay: this.options.retryDelay,
     })
+
+    // Read the response body as ArrayBuffer
+    const arrayBuffer = await response.arrayBuffer()
+    const combinedBuffer = Buffer.from(arrayBuffer)
+
+    let stdout = ""
+    let stderr = ""
+
+    if (options.tty) {
+      // When TTY is enabled, Docker multiplexing headers are not included
+      stdout = combinedBuffer.toString()
+    } else {
+      // Demultiplex the Docker stream: 8-byte header per frame
+      let offset = 0
+      while (offset + 8 <= combinedBuffer.length) {
+        const streamType = combinedBuffer.readUInt8(offset)
+        const frameSize = combinedBuffer.readUInt32BE(offset + 4)
+
+        if (offset + 8 + frameSize > combinedBuffer.length) break
+
+        const frameData = combinedBuffer.subarray(offset + 8, offset + 8 + frameSize)
+
+        if (streamType === 1) {
+          stdout += frameData.toString()
+        } else if (streamType === 2) {
+          stderr += frameData.toString()
+        }
+
+        offset += 8 + frameSize
+      }
+    }
+
+    // Get the exit code from inspect
+    const inspectResult = await docker.containers.execInspect(execResult.Id)
+
+    return {
+      stdout: stdout.trim(),
+      stderr: stderr.trim(),
+      exitCode: inspectResult.ExitCode ?? 0,
+    }
   }
 }
 

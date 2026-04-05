@@ -27,8 +27,8 @@ export function SimpleColorPicker({
     <div className="flex flex-col items-center space-y-1">
       {showName ? (
         <div
-          title={name}
           className="text-xs font-medium text-center mb-1 truncate w-full capitalize text-primary-text"
+          title={name}
         >
           {name}
         </div>
@@ -39,10 +39,10 @@ export function SimpleColorPicker({
           style={{ backgroundColor: currentColor }}
         />
         <Input
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          onChange={onChange}
           type="color"
           value={currentColor}
-          onChange={onChange}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
       </div>
     </div>
