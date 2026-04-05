@@ -15,7 +15,7 @@ type AvailablePlugin = {
   description: string
   version: string
   repository: string
-  repoType: "local" | "http" | "github" | "gitlab" | "gitea" | "default"
+  repoType: "local" | "http" | "github" | "gitlab" | "gitea"
   manifest: string
   author: {
     name: string
@@ -75,7 +75,7 @@ export default function PluginBrowser() {
     if (!allManifests) return []
 
     const plugins = Object.entries(allManifests).flatMap(([_, manifest]) =>
-      manifest.data.plugins.map((plugin) => {
+      (manifest.data.plugins || []).map((plugin) => {
         const installedPlugin = allPlugins?.find(
           (p) => p.repository === plugin.repository && p.manifest === plugin.manifest
         )

@@ -1,6 +1,6 @@
 {
   "name": "@dockstat/sqlite-wrapper",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "A TypeScript wrapper around bun:sqlite with type-safe query building",
   "type": "module",
   "main": "./index.ts",
@@ -23,6 +23,7 @@
     "lint:fix": "biome lint --write .",
     "lint:gh": "turbo run lint -- --reporter=github",
     "check-types": "bunx tsc --noEmit",
+    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist",
     "test": "DOCKSTAT_LOGGER_IGNORE_MESSAGES='Logger Status: active - ignoring messages:' bun test"
   },
   "keywords": [

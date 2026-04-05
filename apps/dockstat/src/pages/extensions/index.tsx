@@ -1,5 +1,4 @@
-import type { RepoType } from "@dockstat/typings/types"
-import { Button, Card, Input, Select, Toggle } from "@dockstat/ui"
+import { Button, Card, Input } from "@dockstat/ui"
 import { Plus } from "lucide-react"
 import { useState } from "react"
 import { RepoCard } from "@/components/extensions/RepoCard"
@@ -8,18 +7,10 @@ import { useEdenQuery } from "@/hooks/useEdenQuery"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
 
-type RepoWithoutID = Omit<RepoType, "id">
-
 export default function ExtensionsIndex() {
   usePageHeading("Repositories")
 
-  const [formData, setFormData] = useState<RepoWithoutID>({
-    name: "",
-    policy: "relaxed",
-    source: "",
-    type: "github",
-    verification_api: null,
-  })
+  const [repoLink, setRepoLink] = useState("")
 
   const { data } = useEdenQuery({
     queryKey: ["fetchAllRepositories"],
@@ -31,33 +22,22 @@ export default function ExtensionsIndex() {
     mutationKey: ["addRepo"],
     invalidateQueries: [["fetchAllRepositories"]],
     toast: {
-      errorTitle: (repo) => `Could not add ${repo.name}`,
-      successTitle: (repo) => `Added ${repo.name}`,
+      errorTitle: () => "Could not add repository",
+      successTitle: () => "Repository added",
     },
   })
 
   const handleRepoAdd = async () => {
-    if (formData.name && formData.source) {
-      await addRepoMutation.mutateAsync({
-        ...formData,
-        verification_api:
-          (formData?.verification_api || "").length > 5 ? formData.verification_api : null,
-      })
-      setFormData({
-        name: "",
-        policy: "relaxed",
-        source: "",
-        type: "github",
-        verification_api: null,
-      })
-    }
+    if (!repoLink.trim()) return
+
+    await addRepoMutation.mutateAsync({
+      link_to_manifest: repoLink.trim(),
+    })
+
+    setRepoLink("")
   }
 
-  const updateField = (field: keyof RepoWithoutID, value: RepoWithoutID[keyof RepoWithoutID]) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const isFormValid = formData.name.trim() && formData.source.trim()
+  const isFormValid = repoLink.trim().length > 0
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -89,51 +69,17 @@ export default function ExtensionsIndex() {
           <div className="flex flex-col gap-3 flex-1">
             <Input
               size="md"
-              variant="underline"
-              value={formData.name}
-              onChange={(value) => updateField("name", value)}
-              type="text"
-              placeholder="Repository Name"
-            />
-
-            <Input
-              size="sm"
               variant="filled"
-              value={formData.source}
-              onChange={(value) => updateField("source", value)}
-              type="text"
-              placeholder="Source (e.g., user/repo:branch/path)"
-            />
-
-            <Input
-              size="sm"
-              variant="filled"
-              value={formData.verification_api || undefined}
-              onChange={(value) => updateField("verification_api", value)}
+              value={repoLink}
+              onChange={setRepoLink}
               type="url"
-              placeholder="Verification API (optional)"
+              placeholder="Raw manifest or repository link"
             />
 
-            <Select
-              options={[
-                { label: "GitHub", value: "github" },
-                { label: "GitLab", value: "gitlab" },
-                { label: "Local", value: "local" },
-                { label: "HTTP/S", value: "http" },
-              ]}
-              value={formData.type}
-              placeholder="Select repository type"
-              variant="filled"
-              onChange={(value) => updateField("type", value)}
-            />
-
-            <Toggle
-              label={formData.policy === "strict" ? "Strict Policy" : "Relaxed Policy"}
-              checked={formData.policy === "strict"}
-              onChange={() => {
-                updateField("policy", formData.policy === "relaxed" ? "strict" : "relaxed")
-              }}
-            />
+            <p className="text-xs text-muted-foreground">
+              Paste a direct link to the repository or raw manifest. Dockstat will automatically
+              resolve the configuration.
+            </p>
           </div>
 
           <Button

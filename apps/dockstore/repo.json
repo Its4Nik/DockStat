@@ -1,0 +1,23 @@
+{
+  "config": {
+    "name": "DockStore",
+    "policy": "strict",
+    "type": "github",
+    "verification_api": "https://dva.dockstore.itsnik.de",
+    "themes": {
+      "dir": "./themes"
+    },
+    "plugins": {
+      "dir": "./plugins",
+      "bundle": "bundle"
+    },
+    "stacks": {
+      "dir": "./stacks"
+    }
+  },
+  "content": {
+    "plugins": [],
+    "themes": [],
+    "stacks": []
+  }
+}

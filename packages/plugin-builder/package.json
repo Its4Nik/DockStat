@@ -1,6 +1,6 @@
 {
   "name": "@dockstat/plugin-builder",
-  "version": "1.0.3",
+  "version": "1.0.8",
   "description": "Type-safe plugin builder utilities for DockStat plugins",
   "type": "module",
   "main": "src/index.ts",
@@ -17,7 +17,8 @@
     "README.md"
   ],
   "scripts": {
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
   "keywords": [
     "dockstat",
@@ -38,8 +39,8 @@
     "directory": "packages/plugin-builder"
   },
   "dependencies": {
-    "@dockstat/sqlite-wrapper": "workspace:*",
-    "@dockstat/typings": "workspace:*"
+    "@dockstat/sqlite-wrapper": "workspace:^",
+    "@dockstat/typings": "workspace:^"
   },
   "devDependencies": {
     "@types/bun": "latest",
