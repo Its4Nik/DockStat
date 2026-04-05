@@ -128,11 +128,11 @@ export type ContainerSpec = {
       NoCopy: boolean
       Labels: Record<string, string>
       DriverConfig: {
-        Name: string,
+        Name: string
         Options: Record<string, string>
       }
-        /** Source path inside the volume. Must be relative without any back traversals. */
-        Subpath: string
+      /** Source path inside the volume. Must be relative without any back traversals. */
+      Subpath: string
     }
     ImageOptions: {
       /** Source path inside the image. Must be relative without any back traversals. */
@@ -175,21 +175,19 @@ export type ContainerSpec = {
      */
     Options: string[]
   }
-  Secrets: Array<
-    {
-      File: File
-      /**
-       * SecretID represents the ID of the specific secret that we're referencing
-       */
-      SecretID: string
-      /**
-       * SecretName is the name of the secret that this references,
-       * but this is just provided for lookup/display purposes.
-       * The secret in the reference will be identified by its ID.
-       */
-      SecretName: string
-    }
-  >
+  Secrets: Array<{
+    File: File
+    /**
+     * SecretID represents the ID of the specific secret that we're referencing
+     */
+    SecretID: string
+    /**
+     * SecretName is the name of the secret that this references,
+     * but this is just provided for lookup/display purposes.
+     * The secret in the reference will be identified by its ID.
+     */
+    SecretName: string
+  }>
   /**
    * An integer value containing the score given to the container in order to tune OOM killer preferences.
    */
@@ -228,11 +226,11 @@ export type ContainerSpec = {
   CapabilityAdd: string[]
   /** A list of kernel capabilities to drop from the default set for the container. */
   CapabilityDrop: string[]
-  ULimits: Array<{Name: string, Soft: number,Hard: number}>
+  ULimits: Array<{ Name: string; Soft: number; Hard: number }>
 }
 
 export type ServiceDefinition = {
-  ID: string,
+  ID: string
   Version: {
     Index: number
   }
@@ -254,7 +252,9 @@ export type ServiceDefinition = {
         Remote: string
         Disabled: boolean
         PluginPrivilege: Array<{
-          Name: string, Description: string, Value: string[]
+          Name: string
+          Description: string
+          Value: string[]
         }>
       }
       /**
@@ -350,10 +350,10 @@ export type ServiceDefinition = {
          * @note `engine.labels` apply to Docker Engine labels like operating system, drivers, etc.
          * Swarm administrators add `node.labels` for operational purposes via the node update endpoint.
          */
-        Constraints: string[];
+        Constraints: string[]
         Preferences: Array<{
           Spread: {
-          SpreadDescriptor: string
+            SpreadDescriptor: string
           }
         }>
         /**
@@ -387,7 +387,7 @@ export type ServiceDefinition = {
       }>
       LogDriver: {
         Name: string
-        Options: Record<string,string>
+        Options: Record<string, string>
       }
     }
     Mode: {
@@ -411,7 +411,7 @@ export type ServiceDefinition = {
          * The total number of replicas desired to reach the Completed state.
          * If unset, will default to the value of MaxConcurrent
          */
-        TotalCompletions:number
+        TotalCompletions: number
       }
       /**
        * The mode used for services which run a task to the completed state on each valid node.

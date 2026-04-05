@@ -1,5 +1,5 @@
-import { BaseModule } from "../base";
-import type { Config, ListConfigsOptions, ConfigResponse } from "./types";
+import { BaseModule } from "../base"
+import type { Config, ConfigResponse, ListConfigsOptions } from "./types"
 
 export class ConfigsModule extends BaseModule {
   async list(options: ListConfigsOptions) {
@@ -9,7 +9,7 @@ export class ConfigsModule extends BaseModule {
 
   async create(config: Config) {
     const res = await this.request("/configs/create", "POST", config)
-    return (await res.json()) as {Id: string}
+    return (await res.json()) as { Id: string }
   }
 
   async inspect(id: string) {
@@ -31,7 +31,7 @@ export class ConfigsModule extends BaseModule {
    */
   async update(id: string, version: number, config: Config) {
     const path = `/configs/${id}/update`
-    await this.request(path, "POST", config, undefined, {version: version})
+    await this.request(path, "POST", config, undefined, { version: version })
     return true
   }
 }
