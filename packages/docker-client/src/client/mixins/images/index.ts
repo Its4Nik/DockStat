@@ -11,11 +11,11 @@ export class Images extends DockerClientBase {
   /**
    * List images available on the specified host.
    */
-  public async getImages(hostId: number): Promise<Dockerode.ImageInfo[]> {
+  public async getImages(hostId: number) {
     this.checkDisposed()
 
     const docker = this.getDockerInstance(hostId)
-    return await retry(() => docker.listImages(), {
+    return await retry(() => docker.images.list(), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
@@ -32,22 +32,7 @@ export class Images extends DockerClientBase {
     }
 
     const docker = this.getDockerInstance(hostId)
-    const stream = await docker.pull(imageName)
-
-    return new Promise((resolve, reject) => {
-      docker.modem.followProgress(
-        stream,
-        (err: unknown) => {
-          if (err) {
-            reject(err instanceof Error ? err : new Error(String(err)))
-          } else {
-            resolve()
-          }
-        },
-        // Optional progress handler: noop for now. Could emit events later.
-        () => {}
-      )
-    })
+    await docker.images.create(imageName)
   }
 }
 

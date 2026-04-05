@@ -5,6 +5,29 @@ import { retry } from "@dockstat/utils"
 import { proxyEvent } from "../../../events/workerEventProxy"
 import type { ExtendedContainerInfo } from "../../mixins/containers/index.ts"
 
+/**
+ * Map ExtendedContainerInfo to object with lowercase properties for proxyEvent compatibility
+ * @bun-docker uses uppercase properties (Id, Name, State) but proxyEvent expects lowercase (id, name, state)
+ */
+function mapToLowercaseProperties(container: ExtendedContainerInfo) {
+  return {
+    clientId: container.clientId,
+    created: container.Created ? Math.floor(new Date(container.Created).getTime() / 1000) : 0,
+    hostId: container.hostId,
+    id: container.Id || "",
+    image: container.Image || "unknown",
+    labels: container.Labels || {},
+    name: container.Names?.[0]?.replace(/^\//, "") || "unknown",
+    ports: (container.Ports || []).map((port) => ({
+      privatePort: port.PrivatePort,
+      publicPort: port.PublicPort,
+      type: port.Type || "tcp",
+    })),
+    state: container.State || "unknown",
+    status: container.State || "unknown",
+  }
+}
+
 class DockerEventStreamManager {
   private intervalId?: ReturnType<typeof setInterval>
   private lastEventTime = new Map<number, number>()
@@ -96,8 +119,8 @@ class DockerEventStreamManager {
       const events = await retry(
         () =>
           docker.system.events({
-            since: lastTime,
-            until: Math.floor(Date.now() / 1000), // Current time
+            since: String(lastTime),
+            until: String(Math.floor(Date.now() / 1000)), // Current time
           }),
         {
           attempts: this.options.retryAttempts,
@@ -105,8 +128,11 @@ class DockerEventStreamManager {
         }
       )
 
+      // Ensure events is an array (may be single object or undefined from @bun-docker)
+      const eventsArray = Array.isArray(events) ? events : events ? [events] : []
+
       // Process each event
-      for (const event of events) {
+      for (const event of eventsArray) {
         if (event.time) {
           // Update last event time
           this.lastEventTime.set(hostId, event.time)
@@ -156,7 +182,7 @@ class DockerEventStreamManager {
           .then((containerInfo) => {
             proxyEvent("container:started", {
               containerId,
-              containerInfo,
+              containerInfo: mapToLowercaseProperties(containerInfo),
               hostId,
             })
           })
@@ -175,7 +201,7 @@ class DockerEventStreamManager {
           .then((containerInfo) => {
             proxyEvent("container:stopped", {
               containerId,
-              containerInfo,
+              containerInfo: mapToLowercaseProperties(containerInfo),
               hostId,
             })
           })
@@ -193,7 +219,7 @@ class DockerEventStreamManager {
           .then((containerInfo) => {
             proxyEvent("container:created", {
               containerId,
-              containerInfo,
+              containerInfo: mapToLowercaseProperties(containerInfo),
               hostId,
             })
           })
@@ -219,7 +245,7 @@ class DockerEventStreamManager {
           .then((containerInfo) => {
             proxyEvent("container:paused", {
               containerId,
-              containerInfo,
+              containerInfo: mapToLowercaseProperties(containerInfo),
               hostId,
             })
           })
@@ -237,7 +263,7 @@ class DockerEventStreamManager {
           .then((containerInfo) => {
             proxyEvent("container:unpaused", {
               containerId,
-              containerInfo,
+              containerInfo: mapToLowercaseProperties(containerInfo),
               hostId,
             })
           })
@@ -253,9 +279,9 @@ class DockerEventStreamManager {
       case "restart":
         this.getContainerInfo(hostId, containerId)
           .then((containerInfo) => {
-            proxyEvent("container:restarted", {
+            proxyEvent("container:stopped", {
               containerId,
-              containerInfo,
+              containerInfo: mapToLowercaseProperties(containerInfo),
               hostId,
             })
           })

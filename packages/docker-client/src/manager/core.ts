@@ -17,6 +17,7 @@ import type {
 import { isInitCompleteMessage, looksLikeEventMessage } from "./types"
 import { tryBuildFromProxy } from "./utils/buildFromProxy"
 import { sendWorkerMessage } from "./utils/sendWorkerMessage"
+import { DockerError } from "@dockstat/docker"
 
 export class DockerClientManagerCore {
   readonly table: DockerClientTableQuery
@@ -389,6 +390,10 @@ export class DockerClientManagerCore {
       wrapper.errorCount += 1
       throw new Error(errorMessage)
     } catch (err) {
+      if (err instanceof DockerError) {
+        throw new DockerError(err.name, err.status,err.path,err.version,err.params)
+      }
+
       const errorMessage = err instanceof Error ? err.message : String(err)
       wrapper.lastError = errorMessage
       wrapper.errorCount += 1

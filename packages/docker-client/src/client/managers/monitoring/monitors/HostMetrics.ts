@@ -101,10 +101,21 @@ class HostMetricsMonitor {
     this.logger.debug(`Collected Host Metrics for ${JSON.stringify({ hostId })}`)
 
     return {
-      ...info,
-      ...version,
       hostId,
       hostName: host.name,
+      dockerVersion: version.Version || "unknown",
+      apiVersion: version.ApiVersion || "unknown",
+      os: info.OperatingSystem || "unknown",
+      architecture: info.Architecture || "unknown",
+      totalMemory: info.MemTotal || 0,
+      totalCPU: info.NCPU || 0,
+      kernelVersion: info.KernelVersion || "unknown",
+      containers: info.Containers || 0,
+      containersRunning: info.ContainersRunning || 0,
+      containersStopped: info.ContainersStopped || 0,
+      containersPaused: info.ContainersPaused || 0,
+      images: info.Images || 0,
+      systemTime: info.SystemTime || new Date().toISOString(),
     }
   }
 }

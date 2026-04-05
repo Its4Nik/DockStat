@@ -100,7 +100,7 @@ class ContainerMetricsMonitor {
       try {
         const stats = await retry(
           () =>
-            docker.containers.stats(containerInfo.Id, {
+            docker.containers.stats(containerInfo.Id || "", {
               stream: false,
             }) as Promise<ExtendedContainerStats>,
           {
@@ -118,6 +118,27 @@ class ContainerMetricsMonitor {
           hostId,
         }
 
+        // Get container info for the additional ContainerInfo properties
+        const containerInfoForStats = {
+          clientId: this.clientId,
+          hostId,
+          id: containerInfo.Id || "",
+          name: containerInfo.Names?.[0]?.replace(/^\//, "") || "unknown",
+          image: containerInfo.Image || "unknown",
+          status: containerInfo.Status || "unknown",
+          state: containerInfo.State || "unknown",
+          created: containerInfo.Created ? Math.floor(new Date(containerInfo.Created).getTime() / 1000) : 0,
+          ports: (containerInfo.Ports || []).map((port) => ({
+            privatePort: port.PrivatePort,
+            publicPort: port.PublicPort,
+            type: port.Type || "tcp",
+          })),
+          labels: containerInfo.Labels || {},
+          networkSettings: containerInfo.NetworkSettings ? {
+            networks: containerInfo.NetworkSettings.Networks,
+          } : undefined,
+        }
+
         // Calculate derived metrics
         const cpuUsage = this.calculateCpuUsage(extendedStats)
         const memoryUsage = extendedStats.memory_stats?.usage || 0
@@ -126,11 +147,12 @@ class ContainerMetricsMonitor {
         const { read: blockRead, write: blockWrite } = this.calculateBlockIO(extendedStats)
 
         proxyEvent("container:metrics", {
-          containerId: containerInfo.Id,
+          containerId: containerInfo.Id || "",
           docker_client_id: host.docker_client_id,
           hostId,
           stats: {
-            ...extendedStats,
+            ...containerInfoForStats,
+            stats: extendedStats as any,
             blockRead,
             blockWrite,
             cpuUsage: Math.round(cpuUsage * 100) / 100,
@@ -183,9 +205,12 @@ class ContainerMetricsMonitor {
     let tx = 0
 
     if (stats.networks) {
-      for (const network of Object.values(stats.)) {
-        rx += network. || 0
-        tx += network.tx_bytes || 0
+      for (const network of Object.values(stats.networks)) {
+        if (network) {
+          const net = network as { rx_bytes?: number; tx_bytes?: number }
+          rx += net.rx_bytes || 0
+          tx += net.tx_bytes || 0
+        }
       }
     }
 
