@@ -1,4 +1,3 @@
-import type { ColumnDefinition } from "@dockstat/sqlite-wrapper"
 import { t } from "elysia"
 import type { EVENTS, PluginActions, PluginConfig } from ".."
 import { Repo } from "./db"
@@ -44,7 +43,7 @@ export const DBPluginShema = t.Object({
 
 export type DBPluginShemaT = typeof DBPluginShema.static
 
-export interface DBPlugin<Columns = Record<string, ColumnDefinition>>
+export interface DBPlugin<Columns = Record<string, unknown>>
   extends WrappedPluginMetaType,
     Record<string, unknown> {
   id?: number

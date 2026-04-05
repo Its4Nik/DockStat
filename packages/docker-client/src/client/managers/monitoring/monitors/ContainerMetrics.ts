@@ -11,6 +11,7 @@ class ContainerMetricsMonitor {
   private logger: Logger
   private dockerInstances: Map<number, Dockerode>
   private hosts: DATABASE.DB_target_host[]
+  private clientId: number
   private options: {
     interval: number
     retryAttempts: number
@@ -18,6 +19,7 @@ class ContainerMetricsMonitor {
   }
 
   constructor(
+    clientId: number,
     baseLogger: Logger,
     dockerInstances: Map<number, Dockerode>,
     hosts: DATABASE.DB_target_host[],
@@ -27,6 +29,7 @@ class ContainerMetricsMonitor {
       retryDelay: number
     }
   ) {
+    this.clientId = clientId
     this.logger = baseLogger.spawn("CMM")
     this.dockerInstances = dockerInstances
     this.hosts = hosts
@@ -38,7 +41,9 @@ class ContainerMetricsMonitor {
     this.intervalId = setInterval(() => this.collectMetrics(), this.options.interval)
     this.collectMetrics().catch((error) => {
       this.logger.error(`Initial Container metrics monitoring failed! - ${error}`)
-      proxyEvent("error", error, { message: "Initial Container metrics monitoring failed!" })
+      proxyEvent("error", error, {
+        message: "Initial Container metrics monitoring failed!",
+      })
     })
   }
 
@@ -95,8 +100,14 @@ class ContainerMetricsMonitor {
       try {
         const container = docker.getContainer(containerInfo.Id)
         const stats = await retry(
-          () => container.stats({ stream: false }) as Promise<Dockerode.ContainerStats>,
-          { attempts: this.options.retryAttempts, delay: this.options.retryDelay }
+          () =>
+            container.stats({
+              stream: false,
+            }) as Promise<Dockerode.ContainerStats>,
+          {
+            attempts: this.options.retryAttempts,
+            delay: this.options.retryDelay,
+          }
         )
 
         const containerStatsInfo = this.mapContainerStats(containerInfo, stats, hostId)
@@ -123,7 +134,7 @@ class ContainerMetricsMonitor {
     stats: Dockerode.ContainerStats,
     hostId: number
   ): DOCKER.ContainerStatsInfo {
-    const baseInfo = mapContainerInfo(containerInfo, hostId)
+    const baseInfo = mapContainerInfo(containerInfo, hostId, this.clientId)
 
     // Calculate CPU usage percentage
     const cpuUsage = this.calculateCpuUsage(stats)
@@ -166,7 +177,10 @@ class ContainerMetricsMonitor {
     return 0
   }
 
-  private calculateNetworkIO(stats: Dockerode.ContainerStats): { rx: number; tx: number } {
+  private calculateNetworkIO(stats: Dockerode.ContainerStats): {
+    rx: number
+    tx: number
+  } {
     let rx = 0
     let tx = 0
 
@@ -180,7 +194,10 @@ class ContainerMetricsMonitor {
     return { rx, tx }
   }
 
-  private calculateBlockIO(stats: Dockerode.ContainerStats): { read: number; write: number } {
+  private calculateBlockIO(stats: Dockerode.ContainerStats): {
+    read: number
+    write: number
+  } {
     let read = 0
     let write = 0
 

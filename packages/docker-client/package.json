@@ -1,17 +1,18 @@
 {
   "name": "@dockstat/docker-client",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A docker-client library powered by Dockerode for DockStat",
   "type": "module",
   "main": "./src/manager/index.ts",
   "types": "./src/manager/index.ts",
   "exports": {
     ".": "./src/manager/index.ts",
+    "./client": "./src/client/index.ts",
     "./types": "./src/types.ts"
   },
   "files": [
     "index.ts",
-    "src/**/*",
+    "src",
     "README.md"
   ],
   "scripts": {

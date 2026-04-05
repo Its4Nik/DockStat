@@ -1,5 +1,15 @@
 import { t } from "elysia"
 
+export const HotkeyAction = t.Union([
+  t.Literal("open:sidebar"),
+  t.Literal("close:sidebar"),
+  t.Literal("toggle:sidebar"),
+  t.Literal("open:quicklinks"),
+  t.Literal("toggle:themeEditor"),
+  t.Literal("open:themeEditor"),
+  t.Literal("close:themeEditor"),
+])
+
 // Hash entry for plugin verification
 const PluginHashEntry = t.Object({
   version: t.String(),
@@ -113,7 +123,7 @@ const DockStatConfigTable = t.Object({
               /keys
                 ${containerName}.key
   */
-  tls_certs_and_keys: t.Object({
+  keys: t.Object({
     web: t.Nullable(
       t.Object({
         key: t.String(),
@@ -129,6 +139,12 @@ const DockStatConfigTable = t.Object({
         })
       )
     ),
+    docknode: t.Nullable(
+      t.Record(
+        t.Number(),
+        t.String() // API KEY
+      )
+    ),
   }),
   nav_links: t.Array(
     t.Object({
@@ -137,11 +153,12 @@ const DockStatConfigTable = t.Object({
     })
   ),
 
-  addtionalSettings: t.Object({
+  additionalSettings: t.Object({
     showBackendRamUsageInNavbar: t.Optional(t.Boolean()),
+    defaultDashboard: t.Optional(t.String()),
   }),
 
-  hotkeys: t.Record(t.String(), t.UnionEnum(["open:nav", "close:nav", "toggle:nav"])),
+  hotkeys: t.Partial(t.Record(HotkeyAction, t.String())),
 
   autostart_handlers_monitoring: t.Boolean(),
 })

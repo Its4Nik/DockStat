@@ -12,13 +12,17 @@
   "dependencies": {
     "@dockstat/docker-client": "workspace:*",
     "@dockstat/template-renderer": "workspace:*",
+    "@dockstat/theme-handler": "workspace:*",
     "@dockstat/typings": "workspace:*",
     "@dockstat/ui": "workspace:*",
     "@dockstat/utils": "workspace:*",
-    "@elysiajs/eden": "^1.4.6",
+    "@elysiajs/eden": "catalog:",
+    "@sglara/cn": "^1.0.0",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.90.12",
+    "@xyflow/react": "^12.10.1",
     "framer-motion": "^12.24.0",
+    "geist": "^1.7.0",
     "lucide-react": "^0.562.0",
     "react": "^19.2.3",
     "react-devtools": "^7.0.1",
@@ -28,6 +32,7 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
+    "@dockstat/sqlite-wrapper": "workspace:*",
     "@types/node": "^24.10.1",
     "@dockstat/logger": "workspace:*",
     "@types/react": "^19.2.7",

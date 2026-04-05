@@ -8,6 +8,7 @@
     "moduleResolution": "Node",
 
     /* ---- Strictness & Type Safety ---- */
+    "types": ["bun"],
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -19,7 +20,6 @@
     "isolatedModules": true,
 
     /* ---- Project Structure ---- */
-    "baseUrl": ".",
     "outDir": "dist",
 
     /* ---- Emission ---- */

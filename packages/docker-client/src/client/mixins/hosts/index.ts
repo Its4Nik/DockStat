@@ -102,7 +102,9 @@ export class Hosts extends DockerClientBase {
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error)
       this.logger.error(`Failed to create Docker instance for host ${host.name}: ${errMsg}`)
-      throw new Error(`Failed to create Docker instance: ${errMsg}`, { cause: error as Error })
+      throw new Error(`Failed to create Docker instance: ${errMsg}`, {
+        cause: error as Error,
+      })
     }
   }
 
@@ -166,7 +168,9 @@ export class Hosts extends DockerClientBase {
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error)
       this.logger.error(`Failed to remove host ${hostId}: ${errMsg}`)
-      throw new Error(`Failed to remove host: ${errMsg}`, { cause: error as Error })
+      throw new Error(`Failed to remove host: ${errMsg}`, {
+        cause: error as Error,
+      })
     }
   }
 
@@ -246,7 +250,9 @@ export class Hosts extends DockerClientBase {
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error)
       this.logger.error(`Failed to update host ${hostId}: ${errMsg}`)
-      throw new Error(`Failed to update host: ${errMsg}`, { cause: error as Error })
+      throw new Error(`Failed to update host: ${errMsg}`, {
+        cause: error as Error,
+      })
     }
   }
 
@@ -309,6 +315,32 @@ export class Hosts extends DockerClientBase {
     }
 
     return { reachableInstances, unreachableInstances }
+  }
+
+  /**
+   * Ping only one host of this Docker Instance.
+   * Returns true or false.
+   */
+  public async pingHost(hostId: number) {
+    this.checkDisposed()
+    this.logger.info(`Pinging host: ${hostId}`)
+    const hasHost = this.dockerInstances.has(hostId)
+
+    if (!hasHost) {
+      this.logger.info(`No instance with ${hostId} found`)
+      return false
+    }
+
+    try {
+      const docker = this.getDockerInstance(hostId)
+      this.logger.debug(`Pinging: ID: ${hostId}`)
+      await docker.ping()
+      return true
+    } catch (err) {
+      const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
+      this.logger.warn(`Ping failed for instance ${hostId}: ${msg}`)
+      return false
+    }
   }
 
   /**

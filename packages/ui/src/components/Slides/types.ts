@@ -4,7 +4,7 @@ export type SlideVariant = "default" | "minimal"
 export interface SlidesProps {
   children: Record<string, React.ReactNode>
   header?: string
-  description?: string
+  description?: string | React.ReactNode
   buttonPosition?: ButtonRowPosition
   connected?: boolean
   defaultSlide?: string

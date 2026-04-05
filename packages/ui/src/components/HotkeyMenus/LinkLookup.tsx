@@ -1,6 +1,7 @@
+import { useHotkey } from "@dockstat/utils/react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Link, Pin, Puzzle } from "lucide-react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useNavigate } from "react-router"
 import { Badge } from "../Badge/Badge"
 import { Card } from "../Card/Card"
@@ -15,6 +16,7 @@ export function LinkLookup({
   pins,
   pluginLinks,
   sidebarLinks = SidebarPaths,
+  hotkey,
 }: {
   pins: { path: string; slug: string }[]
   pluginLinks: {
@@ -22,6 +24,7 @@ export function LinkLookup({
     paths: { fullPath: string; metaTitle: string }[]
   }[]
   sidebarLinks?: typeof SidebarPaths
+  hotkey?: string
 }) {
   const navigate = useNavigate()
 
@@ -109,26 +112,20 @@ export function LinkLookup({
     )
   }, [searchQuery, allResults])
 
-  // Hotkey handler
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        e.preventDefault()
-        setModalOpen(true)
-        setTimeout(() => {
-          const input = document.querySelector<HTMLInputElement>("#search-input")
-          input?.focus()
-        }, 100)
-      }
+  useHotkey({
+    open: () => {
+      setModalOpen(true)
 
-      if (e.key === "Escape" && modalOpen) {
-        setModalOpen(false)
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [modalOpen])
+      setTimeout(() => {
+        document.querySelector<HTMLInputElement>("#search-input")?.focus()
+      }, 100)
+    },
+    close: () => setModalOpen(false),
+    openKey: hotkey,
+    closeKey: "Escape",
+    isOpen: modalOpen,
+    requireModifier: true,
+  })
 
   const handleResultClick = useCallback(
     (result: SearchResult) => {
@@ -159,7 +156,7 @@ export function LinkLookup({
           autoFocus
         />
         <motion.div
-          className="mt-2 text-sm text-gray-400"
+          className="mt-2 text-sm text-secondary-text"
           key={filteredResults.length}
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
@@ -190,8 +187,10 @@ export function LinkLookup({
                   whileHover="hover"
                   whileTap="tap"
                   className="flex-1"
+                  tabIndex={-1}
                 >
                   <Card
+                    tabIndex={0}
                     variant="outlined"
                     className="cursor-pointer w-full transition-colors min-w-40"
                     size="sm"
@@ -259,14 +258,14 @@ export function LinkLookup({
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
               className="text-center py-12"
             >
-              <div className="text-gray-400 mb-2">No results found</div>
-              <p className="text-sm text-gray-500">Try searching with different keywords</p>
+              <div className="text-primary-text mb-2">No results found</div>
+              <p className="text-sm text-muted-text">Try searching with different keywords</p>
             </motion.div>
           ) : (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-8 text-gray-500"
+              className="text-center py-8 text-primary-text"
             >
               Start typing to search...
             </motion.div>

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion"
-import { collapseVariants, slideVariants } from "./animations"
+import { slideVariants } from "./animations"
 import type { UseSlideReturn } from "./useSlideState"
 
 export const SlideContent = ({
@@ -19,10 +19,12 @@ export const SlideContent = ({
     <AnimatePresence initial={false}>
       {show && (
         <motion.div
-          initial="collapsed"
-          animate="expanded"
-          exit="collapsed"
-          variants={collapseVariants(state.contentHeight)}
+          // Animate height and opacity directly from the measured contentHeight.
+          // Using numeric heights ensures updates to `state.contentHeight` trigger animations
+          // when dynamic content resizes (ResizeObserver updates the value).
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: show ? state.contentHeight : 0, opacity: show ? 1 : 0 }}
+          exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
           className="overflow-hidden"
         >
@@ -37,7 +39,7 @@ export const SlideContent = ({
                   animate="center"
                   exit="exit"
                   transition={{
-                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    x: { duration: 0.3, type: "tween" },
                   }}
                 >
                   <div

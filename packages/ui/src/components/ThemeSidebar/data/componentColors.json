@@ -1,0 +1,231 @@
+{
+  "general": {
+    "colors": [
+      { "colorName": "--color-main-bg", "displayName": "Main Background" },
+      { "colorName": "--color-primary-text", "displayName": "Primary Text" },
+      { "colorName": "--color-secondary-text", "displayName": "Secondary Text" },
+      { "colorName": "--color-muted-text", "displayName": "Muted Text" },
+      { "colorName": "--color-accent", "displayName": "Accent" }
+    ]
+  },
+  "components": {
+    "Badge": {
+      "name": "Badge",
+      "colors": [
+        { "colorName": "--color-badge-primary-bg", "displayName": "Primary Background" },
+        { "colorName": "--color-badge-primary-text", "displayName": "Primary Text" },
+        {
+          "colorName": "--color-badge-primary-outlined-text",
+          "displayName": "Primary Outlined Text"
+        },
+        {
+          "colorName": "--color-badge-primary-outlined-border",
+          "displayName": "Primary Outlined Border"
+        },
+        { "colorName": "--color-badge-secondary-bg", "displayName": "Secondary Background" },
+        { "colorName": "--color-badge-secondary-text", "displayName": "Secondary Text" },
+        {
+          "colorName": "--color-badge-secondary-outlined-text",
+          "displayName": "Secondary Outlined Text"
+        },
+        {
+          "colorName": "--color-badge-secondary-outlined-border",
+          "displayName": "Secondary Outlined Border"
+        },
+        { "colorName": "--color-badge-success-bg", "displayName": "Success Background" },
+        { "colorName": "--color-badge-success-text", "displayName": "Success Text" },
+        {
+          "colorName": "--color-badge-success-outlined-text",
+          "displayName": "Success Outlined Text"
+        },
+        {
+          "colorName": "--color-badge-success-outlined-border",
+          "displayName": "Success Outlined Border"
+        },
+        { "colorName": "--color-badge-warning-bg", "displayName": "Warning Background" },
+        { "colorName": "--color-badge-warning-text", "displayName": "Warning Text" },
+        {
+          "colorName": "--color-badge-warning-outlined-text",
+          "displayName": "Warning Outlined Text"
+        },
+        {
+          "colorName": "--color-badge-warning-outlined-border",
+          "displayName": "Warning Outlined Border"
+        },
+        { "colorName": "--color-badge-error-bg", "displayName": "Error Background" },
+        { "colorName": "--color-badge-error-text", "displayName": "Error Text" },
+        { "colorName": "--color-badge-error-outlined-text", "displayName": "Error Outlined Text" },
+        {
+          "colorName": "--color-badge-error-outlined-border",
+          "displayName": "Error Outlined Border"
+        }
+      ]
+    },
+    "Button": {
+      "name": "Button",
+      "colors": [
+        { "colorName": "--color-button-primary-text", "displayName": "Primary Text" },
+        { "colorName": "--color-button-primary-bg", "displayName": "Primary Background" },
+        { "colorName": "--color-button-primary-hover-text", "displayName": "Primary Hover Text" },
+        {
+          "colorName": "--color-button-primary-hover-bg",
+          "displayName": "Primary Hover Background"
+        },
+        { "colorName": "--color-button-primary-hover-ring", "displayName": "Primary Hover Ring" },
+        { "colorName": "--color-button-secondary-text", "displayName": "Secondary Text" },
+        { "colorName": "--color-button-secondary-bg", "displayName": "Secondary Background" },
+        {
+          "colorName": "--color-button-secondary-hover-text",
+          "displayName": "Secondary Hover Text"
+        },
+        {
+          "colorName": "--color-button-secondary-hover-bg",
+          "displayName": "Secondary Hover Background"
+        },
+        {
+          "colorName": "--color-button-secondary-hover-ring",
+          "displayName": "Secondary Hover Ring"
+        },
+        { "colorName": "--color-button-outline-text", "displayName": "Outline Text" },
+        { "colorName": "--color-button-outline-border", "displayName": "Outline Border" },
+        {
+          "colorName": "--color-button-outline-hover-bg",
+          "displayName": "Outline Hover Background"
+        },
+        { "colorName": "--color-button-outline-hover-ring", "displayName": "Outline Hover Ring" },
+        { "colorName": "--color-button-ghost-text", "displayName": "Ghost Text" },
+        { "colorName": "--color-button-ghost-hover-text", "displayName": "Ghost Hover Text" },
+        { "colorName": "--color-button-ghost-hover-bg", "displayName": "Ghost Hover Background" },
+        { "colorName": "--color-button-ghost-hover-ring", "displayName": "Ghost Hover Ring" },
+        { "colorName": "--color-button-danger-text", "displayName": "Danger Text" },
+        { "colorName": "--color-button-danger-bg", "displayName": "Danger Background" },
+        { "colorName": "--color-button-danger-hover-text", "displayName": "Danger Hover Text" },
+        { "colorName": "--color-button-danger-hover-bg", "displayName": "Danger Hover Background" },
+        { "colorName": "--color-button-danger-hover-ring", "displayName": "Danger Hover Ring" }
+      ]
+    },
+    "Card": {
+      "name": "Card",
+      "colors": [
+        { "colorName": "--color-card-default-bg", "displayName": "Default Background" },
+        { "colorName": "--color-card-default-border", "displayName": "Default Border" },
+        { "colorName": "--color-card-outlined-border", "displayName": "Outlined Border" },
+        { "colorName": "--color-card-elevated-bg", "displayName": "Elevated Background" },
+        { "colorName": "--color-card-flat-bg", "displayName": "Flat Background" },
+        { "colorName": "--color-card-footer-border", "displayName": "Footer Border" },
+        { "colorName": "--color-card-header-border", "displayName": "Header Border" }
+      ]
+    },
+    "Divider": {
+      "name": "Divider",
+      "colors": [
+        { "colorName": "--color-divider-color", "displayName": "Divider Color" },
+        { "colorName": "--color-divider-text", "displayName": "Divider Text" }
+      ]
+    },
+    "Forms": {
+      "name": "Forms",
+      "colors": [
+        { "colorName": "--color-checkbox-border", "displayName": "Checkbox Border" },
+        { "colorName": "--color-checkbox-text", "displayName": "Checkbox Text" },
+        { "colorName": "--color-checkbox-ring", "displayName": "Checkbox Ring" },
+        { "colorName": "--color-input-default-border", "displayName": "Input Default Border" },
+        { "colorName": "--color-input-default-text", "displayName": "Input Default Text" },
+        {
+          "colorName": "--color-input-default-focus-border",
+          "displayName": "Input Default Focus Border"
+        },
+        {
+          "colorName": "--color-input-default-focus-ring",
+          "displayName": "Input Default Focus Ring"
+        },
+        { "colorName": "--color-input-filled-bg", "displayName": "Input Filled Background" },
+        { "colorName": "--color-input-filled-text", "displayName": "Input Filled Text" },
+        {
+          "colorName": "--color-input-filled-focus-bg",
+          "displayName": "Input Filled Focus Background"
+        },
+        {
+          "colorName": "--color-input-filled-focus-ring",
+          "displayName": "Input Filled Focus Ring"
+        },
+        { "colorName": "--color-input-underline-text", "displayName": "Input Underline Text" },
+        { "colorName": "--color-input-underline-color", "displayName": "Input Underline Color" },
+        {
+          "colorName": "--color-input-underline-focus-color",
+          "displayName": "Input Underline Focus Color"
+        },
+        { "colorName": "--color-select-default-border", "displayName": "Select Default Border" },
+        { "colorName": "--color-select-default-text", "displayName": "Select Default Text" },
+        {
+          "colorName": "--color-select-default-focus-border",
+          "displayName": "Select Default Focus Border"
+        },
+        {
+          "colorName": "--color-select-default-focus-ring",
+          "displayName": "Select Default Focus Ring"
+        },
+        { "colorName": "--color-select-filled-bg", "displayName": "Select Filled Background" },
+        { "colorName": "--color-select-filled-text", "displayName": "Select Filled Text" },
+        {
+          "colorName": "--color-select-filled-focus-bg",
+          "displayName": "Select Filled Focus Background"
+        },
+        {
+          "colorName": "--color-select-filled-focus-ring",
+          "displayName": "Select Filled Focus Ring"
+        },
+        { "colorName": "--color-select-underline-text", "displayName": "Select Underline Text" },
+        { "colorName": "--color-select-underline-color", "displayName": "Select Underline Color" },
+        {
+          "colorName": "--color-select-underline-focus-color",
+          "displayName": "Select Underline Focus Color"
+        },
+        { "colorName": "--color-toggle-true", "displayName": "Toggle True" },
+        { "colorName": "--color-toggle-false", "displayName": "Toggle False" },
+        { "colorName": "--color-toggle-dot", "displayName": "Toggle Dot" }
+      ]
+    },
+    "HoverBubble": {
+      "name": "HoverBubble",
+      "colors": [
+        { "colorName": "--color-hover-bubble-bg", "displayName": "Background" },
+        { "colorName": "--color-hover-bubble-text", "displayName": "Text" }
+      ]
+    },
+    "Link": {
+      "name": "Link",
+      "colors": [
+        { "colorName": "--color-icon-link-text", "displayName": "Icon Link Text" },
+        { "colorName": "--color-icon-link-text-hover", "displayName": "Icon Link Text Hover" }
+      ]
+    },
+    "Modal": {
+      "name": "Modal",
+      "colors": [{ "colorName": "--color-modal-bg", "displayName": "Background" }]
+    },
+    "Slider": {
+      "name": "Slider",
+      "colors": [
+        { "colorName": "--color-slider-base-bg", "displayName": "Slider Base Background" },
+        { "colorName": "--color-slider-gradient-from", "displayName": "Slider Gradient From" },
+        { "colorName": "--color-slider-gradient-to", "displayName": "Slider Gradient To" },
+        { "colorName": "--color-slider-solid-bg", "displayName": "Slider Solid Background" }
+      ]
+    },
+    "Table": {
+      "name": "Table",
+      "colors": [
+        { "colorName": "--color-table-border", "displayName": "Border" },
+        { "colorName": "--color-table-head-divide", "displayName": "Head Divide" },
+        { "colorName": "--color-table-head-text", "displayName": "Head Text" },
+        { "colorName": "--color-table-head-bg", "displayName": "Head Background" },
+        { "colorName": "--color-table-body-bg", "displayName": "Body Background" },
+        { "colorName": "--color-table-body-text", "displayName": "Body Text" },
+        { "colorName": "--color-table-body-divide", "displayName": "Body Divide" },
+        { "colorName": "--color-table-body-hover", "displayName": "Body Hover" },
+        { "colorName": "--color-table-body-stripe", "displayName": "Body Stripe" }
+      ]
+    }
+  }
+}

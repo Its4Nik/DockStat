@@ -11,6 +11,7 @@ class ContainerEventMonitor {
   private dockerInstances: Map<number, Dockerode>
   private lastContainerStates = new Map<string, DOCKER.ContainerInfo[]>()
   private hosts: DATABASE.DB_target_host[]
+  private clientId: number
   private options: {
     interval: number
     retryAttempts: number
@@ -18,6 +19,7 @@ class ContainerEventMonitor {
   }
 
   constructor(
+    clientId: number,
     baseLogger: Logger,
     dockerInstances: Map<number, Dockerode>,
     hosts: DATABASE.DB_target_host[],
@@ -27,6 +29,7 @@ class ContainerEventMonitor {
       retryDelay: number
     }
   ) {
+    this.clientId = clientId
     this.logger = baseLogger.spawn("CEM")
     this.dockerInstances = dockerInstances
     this.hosts = hosts
@@ -150,7 +153,7 @@ class ContainerEventMonitor {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
-    return containers.map((c) => mapContainerInfo(c, hostId))
+    return containers.map((c) => mapContainerInfo(c, hostId, this.clientId))
   }
 }
 

@@ -7,4 +7,5 @@ export const DockNodeDB = new DB("docknode.db", {
     compress: true,
     maxBackups: 12,
   },
+  pragmas: [["journal_mode", "WAL"]],
 })

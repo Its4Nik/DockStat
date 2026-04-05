@@ -1,26 +1,26 @@
 import { Card, CardBody, Divider, Slides } from "@dockstat/ui"
+import { eden } from "@dockstat/utils/react"
 import { Plus, Split } from "lucide-react"
 import { ClientCard, HostsList } from "@/components/clients"
 import { AddClient } from "@/components/clients/configure/AddClient"
 import { AddHost } from "@/components/clients/configure/AddHost"
-import { useEdenQuery } from "@/hooks/useEdenQuery"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
 
 export default function ConfigureClientsPage() {
   usePageHeading("Configure Clients & Hosts")
 
-  const { data: clientsData } = useEdenQuery({
+  const { data: clientsData } = eden.useEdenQuery({
     route: api.docker.client.all({ stored: "true" }).get,
     queryKey: ["fetchDockerClients"],
   })
 
-  const { data: poolStatus } = useEdenQuery({
+  const { data: poolStatus } = eden.useEdenQuery({
     route: api.docker.manager["pool-stats"].get,
     queryKey: ["fetchPoolStatus"],
   })
 
-  const { data: hosts } = useEdenQuery({
+  const { data: hosts } = eden.useEdenQuery({
     route: api.docker.hosts.get,
     queryKey: ["fetchHosts"],
   })
@@ -45,7 +45,13 @@ export default function ConfigureClientsPage() {
       >
         {{
           "Add Client": <AddClient />,
-          "Add Host": <AddHost registeredClients={(clientsData || []).flatMap((c) => c.id)} />,
+          "Add Host": (
+            <AddHost
+              registeredClients={(clientsData || []).flatMap((c) => {
+                return { clientId: c.id, clientName: c.name }
+              })}
+            />
+          ),
         }}
       </Slides>
 

@@ -1,6 +1,5 @@
-import { QueryClientProvider as BaseQueryClientProvider, QueryClient } from "@tanstack/react-query"
-
-const queryClient = new QueryClient()
+import { QueryClientProvider as BaseQueryClientProvider } from "@tanstack/react-query"
+import { queryClient } from "@/contexts/queryClient"
 
 export function QueryClientProvider({ children }: { children: React.ReactNode }) {
   return <BaseQueryClientProvider client={queryClient}>{children}</BaseQueryClientProvider>

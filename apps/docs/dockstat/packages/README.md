@@ -49,17 +49,17 @@ graph TD
 ## Package List
 
 | Package | Version | Description | Public |
-|----|----|----|----|
-| `@dockstat/sqlite-wrapper` | 1.2.8 | Type-safe SQLite query builder for Bun | Yes |
-| `@dockstat/logger` | 1.0.1 | Colorized logging utility with source maps | Yes |
-| `@dockstat/typings` | 1.1.0 | Shared TypeScript types and Typebox schemas | Yes |
-| `@dockstat/outline-sync` | 1.2.4 | Markdown sync tool for Outline Wiki | Yes |
-| `@dockstat/create-rr-elysia` | 1.0.2 | React Router + Elysia project template | Yes |
-| `@dockstat/db` | 1.0.0 | Database layer with theme management | No |
-| `@dockstat/docker-client` | 1.0.2 | Docker operations via Dockerode | No |
-| `@dockstat/plugin-handler` | — | Plugin lifecycle management | No |
-| `@dockstat/ui` | 1.0.0 | Shared React UI components | No |
-| `@dockstat/utils` | — | Common utilities | No |
+|---------|---------|-------------|--------|
+| `@dockstat/sqlite-wrapper` | 1.2.8   | Type-safe SQLite query builder for Bun | Yes    |
+| `@dockstat/logger` | 1.0.1   | Colorized logging utility with source maps | Yes    |
+| `@dockstat/typings` | 1.1.0   | Shared TypeScript types and Typebox schemas | Yes    |
+| `@dockstat/outline-sync` | 1.2.4   | Markdown sync tool for Outline Wiki | Yes    |
+| `@dockstat/create-rr-elysia` | 1.0.2   | React Router + Elysia project template | Yes    |
+| `@dockstat/db` | 1.0.0   | Database layer with theme management | No     |
+| `@dockstat/docker-client` | 1.0.2   | Docker operations via Dockerode | No     |
+| `@dockstat/plugin-handler` | —       | Plugin lifecycle management | No     |
+| `@dockstat/ui` | 1.0.0   | Shared React UI components | No     |
+| `@dockstat/utils` | —       | Common utilities | No     |
 
 ## Core Packages
 

@@ -13,7 +13,7 @@ const RequestLogger = new Elysia()
     request.headers.append("x-dockstatapi-reqid", reqId)
   })
   .onAfterResponse(({ headers, request }) => {
-    const reqId = headers["x-dockstatapi-reqid"]
+    const reqId = headers?.["x-dockstatapi-reqid"]
 
     logger.info(`[${request.method}] ${request.url} completed`, reqId)
   })

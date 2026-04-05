@@ -3,10 +3,12 @@ import type Dockerode from "dockerode"
 
 export function mapContainerInfo(
   container: Dockerode.ContainerInfo,
-  hostId: number
+  hostId: number,
+  clientId: number
 ): DOCKER.ContainerInfo {
   return {
     id: container.Id,
+    clientId: clientId,
     hostId,
     name: container.Names[0]?.replace("/", "") || "unknown",
     image: container.Image,
@@ -27,10 +29,12 @@ export function mapContainerInfo(
 
 export function mapContainerInfoFromInspect(
   containerInfo: Dockerode.ContainerInspectInfo,
-  hostId: number
+  hostId: number,
+  clientId: number
 ): DOCKER.ContainerInfo {
   return {
     id: containerInfo.Id,
+    clientId,
     hostId,
     name: containerInfo.Name.replace("/", ""),
     image: containerInfo.Config.Image,

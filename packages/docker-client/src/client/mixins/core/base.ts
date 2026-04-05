@@ -30,7 +30,7 @@ export class DockerClientBase {
     id: number,
     name: string,
     DB: DB,
-    options: DOCKER.DockerAdapterOptions = {},
+    options: DOCKER.DockerAdapterOptions,
     logger: Logger
   ) {
     // Validate required parameters
@@ -65,6 +65,7 @@ export class DockerClientBase {
     // Initialize optional managers
     if (this.options.enableMonitoring) {
       this.monitoringManager = new MonitoringManager(
+        this.id,
         this.logger,
         this.dockerInstances,
         this.hostHandler.getHosts(),

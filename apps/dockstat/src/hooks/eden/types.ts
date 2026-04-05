@@ -9,6 +9,19 @@ export type EdenBody<T extends EdenRoute> = Parameters<T> extends []
       void
     : Parameters<T>[0]
 
+export type EdenParams<TRoute extends EdenRoute> = Parameters<TRoute> extends []
+  ? undefined
+  : Parameters<TRoute>[0]
+
+export type SmartMutationInput<TRoute extends EdenRoute> = EdenParams<TRoute> extends undefined
+  ? EdenBody<TRoute> extends undefined
+    ? // biome-ignore lint/suspicious/noConfusingVoidType: must be used for correct type propagation
+      void
+    : EdenBody<TRoute>
+  : EdenBody<TRoute> extends undefined
+    ? { params: EdenParams<TRoute> }
+    : { params: EdenParams<TRoute>; body: EdenBody<TRoute> }
+
 export type ToastConfig<TData, TInput> = {
   successTitle: string | ((input: TInput, response: TData) => string)
   errorTitle: string | ((input: TInput, error: Error) => string)
@@ -44,4 +57,21 @@ export type MutationResult<TData, TInput> = {
   isPending: boolean
   isSuccess: boolean
   isError: boolean
+}
+
+export type EdenQueryRoute = (options?: {
+  fetch?: RequestInit
+  headers?: Record<string, unknown>
+  query?: Record<string, unknown>
+}) => Promise<{ data: unknown; error: unknown }>
+
+export type EdenQueryData<T extends EdenQueryRoute> = Awaited<ReturnType<T>>["data"]
+
+export type UseEdenQueryOptions<TRoute extends EdenQueryRoute> = {
+  route: TRoute
+  queryKey: readonly unknown[]
+  enabled?: boolean
+  staleTime?: number
+  refetchInterval?: number | false
+  refetchOnWindowFocus?: boolean
 }

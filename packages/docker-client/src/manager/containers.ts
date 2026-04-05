@@ -66,7 +66,19 @@ export class Containers extends DockerClientManagerCore {
 
   // Stats
 
-  public async getAllContainerStats(clientId: number): Promise<DOCKER.ContainerStatsInfo[]> {
+  public async getAllContainerStats(): Promise<DOCKER.ContainerStatsInfo[]> {
+    const clients = this.getAllClients().filter((c) => c.initialized === true)
+
+    const results = await Promise.all(
+      clients.map((client) => this.getAllContainerStatsForClient(client.id))
+    )
+
+    return results.flat()
+  }
+
+  public async getAllContainerStatsForClient(
+    clientId: number
+  ): Promise<DOCKER.ContainerStatsInfo[]> {
     return this.sendRequest(clientId, {
       type: "getAllContainerStats",
     })

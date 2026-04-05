@@ -53,15 +53,29 @@ export {
   type ToggleProps,
   type ToggleSize,
 } from "./Forms/Toggle"
+export { ContainerNode, nodeTypes } from "./Graph/index"
 export {
   HoverBubble,
   type HoverBubbleProps,
 } from "./HoverBubble/HoverBubble"
 export { LinkWithIcon, type LinkWithIconProps } from "./Link/Link"
 export { Modal, type ModalProps, type ModalSize } from "./Modal/Modal"
-export { Navbar } from "./Navbar/Navbar"
+export {
+  Navbar,
+  type PathItem,
+  type PinLinkMutation,
+  SidebarPaths,
+  type SidebarProps,
+} from "./Navbar/Navbar"
 export { PluginsPage } from "./Plugins/Plugins"
 export { RepoIcons } from "./Repo/RepoIcon"
 export { Slider, type SliderProps } from "./Slider/Slider"
 export { Slides } from "./Slides/Slides"
 export { type Column, Table } from "./Table/Table"
+export {
+  ThemeBrowser,
+  type ThemeBrowserItem,
+  type ThemeBrowserProps,
+} from "./ThemeBrowser/ThemeBrowser"
+export { ThemeEditor } from "./ThemeEditor/ThemeEditor"
+export { ThemeSidebar } from "./ThemeSidebar/ThemeSidebar"

@@ -24,12 +24,11 @@ export interface BuildResult {
   error?: string
 }
 
-// cli/types.ts (add or update)
 export interface BadgeOptions {
   label: string
   message: string
   color: string
   labelColor?: string
   style?: "flat" | "flat-square"
-  icon?: IconName
+  icon?: string
 }

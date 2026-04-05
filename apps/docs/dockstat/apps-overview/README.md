@@ -45,12 +45,12 @@ graph TB
 ## Application Summary
 
 | Application | Type | Port | Purpose |
-|----|----|----|----|
-| `dockstat` | Frontend | 5173 (dev) / 3000 (prod) | Main user interface |
-| `api` | Backend | 3000 | REST API and Docker management |
-| `docknode` | Agent | 4000 | Remote Docker host management |
-| `dockstore` | Registry | — | Plugin and template repository |
-| `docs` | Documentation | — | Documentation and wiki sync |
+|-------------|------|------|---------|
+| `dockstat`  | Frontend | 5173 (dev) / 3000 (prod) | Main user interface |
+| `api`       | Backend | 3000 | REST API and Docker management |
+| `docknode`  | Agent | 4000 | Remote Docker host management |
+| `dockstore` | Registry | —    | Plugin and template repository |
+| `docs`      | Documentation | —    | Documentation and wiki sync |
 
 ## dockstat (Frontend)
 
@@ -222,11 +222,11 @@ apps/api/
 All API routes are prefixed with `/api/v2`:
 
 | Route Group | Prefix | Purpose |
-|----|----|----|
-| Docker | `/api/v2/docker` | Container and host management |
-| Plugins | `/api/v2/plugins` | Plugin administration |
-| Metrics | `/api/v2/metrics` | Prometheus metrics endpoint |
-| Database | `/api/v2/db` | Configuration management |
+|-------------|--------|---------|
+| Docker      | `/api/v2/docker` | Container and host management |
+| Plugins     | `/api/v2/plugins` | Plugin administration |
+| Metrics     | `/api/v2/metrics` | Prometheus metrics endpoint |
+| Database    | `/api/v2/db` | Configuration management |
 
 ### Configuration
 
@@ -311,11 +311,11 @@ apps/docknode/
 ### API Endpoints
 
 | Method | Endpoint | Description |
-|----|----|----|
-| GET | `/api/status` | Health check |
-| POST | `/api/dockstack/deploy` | Deploy a Docker Compose stack |
+|--------|----------|-------------|
+| GET    | `/api/status` | Health check |
+| POST   | `/api/dockstack/deploy` | Deploy a Docker Compose stack |
 | DELETE | `/api/dockstack/delete` | Delete a deployed stack |
-| GET | `/api/docs` | OpenAPI documentation |
+| GET    | `/api/docs` | OpenAPI documentation |
 
 ### Stack Deployment
 
@@ -417,7 +417,7 @@ apps/dockstore/
 ### Available Plugins
 
 | Plugin | Description | Tags |
-|----|----|----|
+|--------|-------------|------|
 | `docknode-plugin` | DockNode connection handler | DockNode, Remote, fs |
 
 ### Plugin Manifest Format
@@ -560,13 +560,13 @@ sequenceDiagram
 
 ### Communication Protocols
 
-| From | To | Protocol | Purpose |
-|----|----|----|----|
+| From | To  | Protocol | Purpose |
+|------|-----|----------|---------|
 | Browser | dockstat | HTTP/HTTPS | UI serving |
 | dockstat | api | HTTP (Eden) | API calls |
-| api | Docker | Unix socket / TCP | Docker operations |
-| api | docknode | HTTP | Remote management |
-| api | dockstore | HTTP | Plugin fetching |
+| api  | Docker | Unix socket / TCP | Docker operations |
+| api  | docknode | HTTP     | Remote management |
+| api  | dockstore | HTTP     | Plugin fetching |
 
 
 ---
@@ -629,7 +629,7 @@ cd apps/api && bun run test
 ## Related Documentation
 
 | Section | Description |
-|----|----|
+|---------|-------------|
 | [Architecture](/doc/d56ca448-563a-4206-9585-c45f8f6be5cf) | System design and component relationships |
 | [API Reference](/doc/b174143d-f906-4f8d-8cb5-9fc96512e575) | Complete API endpoint documentation |
 | [Configuration](/doc/dec1cb2c-9a13-4e67-a31c-d3a685391208) | Environment variables and settings |

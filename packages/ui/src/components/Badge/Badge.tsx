@@ -1,7 +1,7 @@
 import type React from "react"
 
 export type BadgeVariant = "primary" | "secondary" | "success" | "warning" | "error"
-export type BadgeSize = "sm" | "md" | "lg"
+export type BadgeSize = "xs" | "sm" | "md" | "lg"
 
 export interface BadgeProps {
   children: React.ReactNode
@@ -53,6 +53,7 @@ export const Badge: React.FC<BadgeProps> = ({
   }
 
   const sizeClasses = {
+    xs: "px-1 py-0.5 text-xs",
     sm: "px-2 py-0.5 text-xs",
     md: "px-2.5 py-0.5 text-sm",
     lg: "px-3 py-1 text-base",

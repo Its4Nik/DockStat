@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { column, DB } from "../index"
+import { column, DB } from "../src/index"
 
 /**
  * Tests for UPDATE operations including:

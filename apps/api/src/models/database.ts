@@ -33,11 +33,39 @@ export namespace DatabaseModel {
     200: configRes,
     400: error,
   })
+
+  export const hotkeyRes = t.Object({
+    success: t.Literal(true),
+    message: t.String(),
+    data: t.Array(
+      t.Object({
+        action: t.String(),
+        key: t.String(),
+      })
+    ),
+  })
+
+  export const hotkeyBody = t.Pick(updateBody, t.Literal("hotkeys"))
+
+  export const additionalSettingsBody = t.Pick(updateBody, t.Literal("additionalSettings"))
+
+  export const additionalSettingsRes = t.Object({
+    success: t.Boolean(),
+    message: t.String(),
+    data: t.Optional(
+      t.Object({
+        showBackendRamUsageInNavbar: t.Optional(t.Boolean()),
+        defaultDashboard: t.Optional(t.String()),
+      })
+    ),
+  })
 }
 
 export namespace RepositoryModel {
   // Request body schemas
-  export const createBody = t.Object({ link_to_manifest: t.String({ format: "uri" }) })
+  export const createBody = t.Object({
+    link_to_manifest: t.String({ format: "uri" }),
+  })
   export const updateBody = UpdateRepo
 
   // Response schemas
