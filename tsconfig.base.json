@@ -8,6 +8,7 @@
     "moduleResolution": "bundler",
 
     /* ---- Strictness & Type Safety ---- */
+    "types": ["bun"],
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,

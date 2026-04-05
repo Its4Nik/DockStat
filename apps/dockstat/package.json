@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@dockstat/sqlite-wrapper": "workspace:*",
     "@dockstat/logger": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

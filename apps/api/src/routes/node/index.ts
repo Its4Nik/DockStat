@@ -6,7 +6,6 @@ export const DockNodeElyisa = new Elysia({
   prefix: "/node",
   detail: { tags: ["DockNode"] },
 })
-  // ---- Node Management
   .get("/", async ({ status }) => {
     return status(200, await DNH.getAllNodes())
   })

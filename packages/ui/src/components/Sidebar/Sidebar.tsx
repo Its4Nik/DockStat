@@ -21,7 +21,7 @@ import { ThemeBrowser, type ThemeBrowserItem } from "../ThemeBrowser/ThemeBrowse
 import { SidebarAnimatedItem, SidebarAnimatedNav } from "./SidebarAnimatedNav"
 import { SidebarItem } from "./SidebarItem"
 
-type PinLinkMutation = UseMutateAsyncFunction<
+export type PinLinkMutation = UseMutateAsyncFunction<
   UpdateResult & {
     message: string
   },

@@ -14,6 +14,7 @@ import type { ThemeBrowserItem } from "../ThemeBrowser/ThemeBrowser"
 import { floatVariants } from "./consts"
 import DockStatLogo from "./DockStat2-06.png"
 
+export type { PinLinkMutation, SidebarProps } from "../Sidebar/Sidebar"
 export { type PathItem, SidebarPaths } from "./consts"
 
 type NavbarProps = {

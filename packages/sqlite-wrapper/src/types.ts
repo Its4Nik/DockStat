@@ -267,6 +267,7 @@ export interface TableOptions<T> {
 export interface Parser<T> extends ModuleParser<T> {
   JSON?: ArrayKey<T>
   BOOLEAN?: ArrayKey<T>
+  DATE?: ArrayKey<T>
 }
 
 interface ModuleParser<T> {

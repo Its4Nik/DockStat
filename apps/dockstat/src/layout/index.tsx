@@ -4,7 +4,7 @@ import { Navbar, ThemeSidebar } from "@dockstat/ui"
 import { useContext } from "react"
 import { Toaster } from "sonner"
 import { PageHeadingContext } from "@/contexts/pageHeadingContext"
-import { toast } from "@/lib/toast"
+import { createPinMutationHandlers } from "@/utils/createPinMutations"
 import { useLayout } from "./hooks/useLayout"
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -54,37 +54,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         ramUsage={config.additionalSettings?.showBackendRamUsageInNavbar ? ramUsage : undefined}
         logEntries={logMessagesArr}
         heading={heading}
-        mutationFn={{
-          pin: (input: { path: string; slug: string }) => {
-            toast({
-              title: `Pinned "${input.slug}"!`,
-              description: (
-                <span>
-                  Added a new pinned link: "{input.slug}" - <pre>{input.path}</pre>
-                </span>
-              ),
-              variant: "success",
-            })
-
-            return pinMutation.mutateAsync(input)
-          },
-          unpin: (input: { path: string; slug: string }) => {
-            toast({
-              title: `Unpinned "${input.slug}"!`,
-              description: (
-                <span>
-                  Removed pinned link: "{input.slug}" - <pre>{input.path}</pre>
-                </span>
-              ),
-              variant: "success",
-            })
-
-            return unPinMutation.mutateAsync(input)
-          },
-          isBusy: isBusy,
-        }}
+        mutationFn={createPinMutationHandlers({ pinMutation, unPinMutation, isBusy })}
         openQuickLinksModalHotkey={config?.hotkeys?.["open:quicklinks"]}
       />
+
       <div className="px-4">{children}</div>
 
       <ThemeSidebar

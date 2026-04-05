@@ -110,10 +110,6 @@ class DockNodeHandler {
     return this.table.where({ id: id }).delete()
   }
 
-  // ============================================
-  // Stack Proxy Methods
-  // ============================================
-
   /** List all stacks on a node */
   async listStacks(nodeId: number) {
     this.logger.info(`Listing stacks on node ${nodeId}`)

@@ -1,6 +1,6 @@
 export * from "./plugin-base"
 
-import type { ColumnDefinition, Parser } from "@dockstat/sqlite-wrapper/types"
+import type { Parser } from "@dockstat/sqlite-wrapper/types"
 import type { PluginActions } from "./plugin-base"
 
 /* PluginRoute defines the API route configuration for a plugin action */
@@ -213,7 +213,7 @@ export type PluginConfig<T extends Record<string, unknown>, A extends PluginActi
   table?: {
     name: string
     parser: Parser<T>
-    columns: Record<string, ColumnDefinition>
+    columns: Record<string, unknown>
   }
   apiRoutes?: Record<string, PluginRoute<T, A>>
   actions?: A
