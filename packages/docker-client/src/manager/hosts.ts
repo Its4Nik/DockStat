@@ -67,6 +67,8 @@ export class Hosts extends DockerClientManagerCore {
         id: Number(c.id),
         clientId: Number(client.id),
         reachable: pRes.reachableInstances.includes(Number(c.id)),
+        host: c.host,
+        port: c.port,
       }))
 
       this.logger.debug(`Clients Hosts for ${client.name}: ${JSON.stringify(mappedHosts)}`)

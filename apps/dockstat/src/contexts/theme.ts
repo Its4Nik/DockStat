@@ -1,6 +1,8 @@
 import type { ThemeContextData } from "@dockstat/theme-handler/client"
+import type { eden } from "@dockstat/utils/react"
 import { createContext } from "react"
-import type { MutationResult } from "@/hooks/eden/types"
+
+type MutationResult<TData, TInput> = eden.MutationResult<TData, TInput>
 
 /**
  * Full theme data including name, for use in theme browser/listing.

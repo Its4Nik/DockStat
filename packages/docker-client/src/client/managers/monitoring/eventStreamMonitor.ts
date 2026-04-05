@@ -10,9 +10,11 @@ class DockerEventStreamManager {
   private logger: Logger
   private dockerInstances: Map<number, Dockerode>
   private hosts: DATABASE.DB_target_host[]
+  private clientId: number
   private options: { retryAttempts: number; retryDelay: number }
 
   constructor(
+    clientId: number,
     baseLogger: Logger,
     dockerInstances: Map<number, Dockerode>,
     hosts: DATABASE.DB_target_host[],
@@ -21,6 +23,7 @@ class DockerEventStreamManager {
       retryDelay: number
     }
   ) {
+    this.clientId = clientId
     this.logger = baseLogger.spawn("DESM")
     this.dockerInstances = dockerInstances
     this.hosts = hosts
@@ -205,7 +208,7 @@ class DockerEventStreamManager {
       () => container.inspect(),
       { attempts: this.options.retryAttempts, delay: this.options.retryDelay }
     )
-    return mapContainerInfoFromInspect(info, hostId)
+    return mapContainerInfoFromInspect(info, hostId, this.clientId)
   }
 }
 

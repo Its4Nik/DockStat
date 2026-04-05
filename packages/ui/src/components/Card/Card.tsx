@@ -9,6 +9,7 @@ export type CardVariant =
   | "dark"
   | "error"
   | "success"
+  | "custom"
 
 export type CardSize = "xs" | "sm" | "md" | "lg"
 
@@ -43,6 +44,7 @@ export const Card: React.FC<CardProps> = ({
     dark: "border border-card-outlined-border/20 bg-main-bg text-secondary-text",
     error: "border border-error bg-main-bg text-secondary-text",
     success: "border border-success bg-main-bg text-secondary-text",
+    custom: "",
   }
 
   const glassVariantClasses: Record<CardVariant, string> = {
@@ -55,6 +57,7 @@ export const Card: React.FC<CardProps> = ({
     dark: "border border-card-outlined-border/20 bg-main-bg/20 backdrop-blur-lg text-secondary-text",
     error: "border border-error bg-main-bg/20 backdrop-blur-lg text-secondary-text",
     success: "border border-success bg-main-bg/20 backdrop-blur-lg text-secondary-text",
+    custom: "",
   }
 
   const sizeClasses: Record<CardSize, string> = {

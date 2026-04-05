@@ -18,7 +18,7 @@ export const DockerHostElysia = new Elysia({
     }),
   })
   .post(
-    "/add",
+    "/",
     async ({ body, status }) => {
       try {
         const host = await DCM.addHost(
@@ -56,8 +56,8 @@ export const DockerHostElysia = new Elysia({
       },
     }
   )
-  .post(
-    "/update",
+  .patch(
+    "/",
     async ({ body: { clientId, host }, status }) => {
       try {
         const updatedHost = await DCM.updateHost(clientId, {
@@ -92,8 +92,8 @@ export const DockerHostElysia = new Elysia({
       },
     }
   )
-  .post(
-    "/delete",
+  .delete(
+    "/",
     async ({ body: { clientId, hostId }, status }) => {
       try {
         await DCM.removeHost(clientId, hostId)

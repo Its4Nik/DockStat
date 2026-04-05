@@ -25,10 +25,16 @@ export interface TransformOptions<T> {
 }
 
 /**
+ * Transformed row data type (allows any value types for deserialized data)
+ */
+type TransformedRowData = Record<string, unknown>
+
+/**
  * Transform a row FROM the database (deserialization)
  *
  * - JSON columns: Parse JSON strings back to objects
  * - BOOLEAN columns: Convert 0/1 to true/false
+ * - DATE columns: Creates a Date object out of Date-ISO strings
  * - MODULE columns: Transpile and create importable URLs
  */
 export function transformFromDb<T extends Record<string, unknown>>(
@@ -44,8 +50,8 @@ export function transformFromDb<T extends Record<string, unknown>>(
     return row as T
   }
 
-  const logger = options?.logger?.spawn("Transformer") || defaultLogger.spawn("Transformer")
-  const transformed = { ...row } as RowData
+  const logger = options?.logger || defaultLogger
+  const transformed = { ...row } as TransformedRowData
   const transformedColumns: string[] = []
 
   // Transform JSON columns
@@ -109,6 +115,24 @@ export function transformFromDb<T extends Record<string, unknown>>(
     }
   }
 
+  // Transform DATE columns
+  if (parser.DATE && parser.DATE.length > 0) {
+    for (const column of parser.DATE) {
+      const columnKey = String(column)
+      const value = transformed[columnKey]
+
+      if (value !== null && value !== undefined && typeof value === "string") {
+        try {
+          transformed[columnKey] = new Date(value)
+          transformedColumns.push(`DATE:${columnKey}`)
+        } catch {
+          // Keep original value if DATE parsing fails
+          logger.warn(`Failed to parse DATE column: ${columnKey}`)
+        }
+      }
+    }
+  }
+
   // Transform MODULE columns
   if (parser.MODULE && Object.keys(parser.MODULE).length > 0) {
     for (const [funcKey, options] of Object.entries(parser.MODULE)) {
@@ -153,14 +177,13 @@ export function transformRowsFromDb<T extends Record<string, unknown>>(
  * Transform a row TO the database (serialization)
  *
  * - JSON columns: Stringify objects to JSON strings
+ * - DATE columns: Stringify Date objects to ISO Strings
  * - MODULE columns: Stringify functions
  */
 export function transformToDb<T extends Record<string, unknown>>(
   row: Partial<T>,
   options?: TransformOptions<T>
 ): RowData {
-  const logger = options?.logger?.spawn("Transformer") || defaultLogger.spawn("Transformer")
-
   if (!row || typeof row !== "object") {
     return row as RowData
   }
@@ -170,6 +193,7 @@ export function transformToDb<T extends Record<string, unknown>>(
     return row as RowData
   }
 
+  const logger = options?.logger || defaultLogger
   const transformed = { ...row } as RowData
   const transformedColumns: string[] = []
 
@@ -182,6 +206,19 @@ export function transformToDb<T extends Record<string, unknown>>(
       if (value !== undefined && value !== null && typeof value === "object") {
         transformed[columnKey] = JSON.stringify(value)
         transformedColumns.push(`JSON:${columnKey}`)
+      }
+    }
+  }
+
+  // Serialize DATE columns
+  if (parser.DATE && parser.DATE.length > 0) {
+    for (const column of parser.DATE) {
+      const columnKey = String(column)
+      const value = transformed[columnKey]
+
+      if (value !== undefined && value !== null && value instanceof Date) {
+        transformed[columnKey] = value.toISOString()
+        transformedColumns.push(`DATE:${columnKey}`)
       }
     }
   }
@@ -234,8 +271,9 @@ export function hasTransformations<T>(parser?: Parser<T>): boolean {
   const hasJson = !!(parser.JSON && parser.JSON.length > 0)
   const hasBoolean = !!(parser.BOOLEAN && parser.BOOLEAN.length > 0)
   const hasModule = !!(parser.MODULE && Object.keys(parser.MODULE).length > 0)
+  const hasDate = !!(parser.DATE && parser.DATE.length > 0)
 
-  return hasJson || hasBoolean || hasModule
+  return hasJson || hasBoolean || hasModule || hasDate
 }
 
 /**
@@ -251,6 +289,9 @@ export function getParserSummary<T>(parser?: Parser<T>): string {
   }
   if (parser.BOOLEAN && parser.BOOLEAN.length > 0) {
     parts.push(`BOOL(${parser.BOOLEAN.length})`)
+  }
+  if (parser.DATE && parser.DATE.length > 0) {
+    parts.push(`DATE(${parser.DATE.length})`)
   }
   if (parser.MODULE && Object.keys(parser.MODULE).length > 0) {
     parts.push(`MODULE(${Object.keys(parser.MODULE).length})`)

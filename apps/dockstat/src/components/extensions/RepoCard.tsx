@@ -2,8 +2,7 @@ import type { RepoType } from "@dockstat/typings/types"
 import { Badge, Button, Card, CardHeader, Divider, LinkWithIcon, RepoIcons } from "@dockstat/ui"
 import { repo } from "@dockstat/utils"
 import { ExternalLink, ShieldAlert, ShieldCheck, ShieldX, Trash2 } from "lucide-react"
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
-import { api } from "@/lib/api"
+import { useDeleteRepoMutation } from "@/hooks/mutations"
 
 export function RepoCard({
   id,
@@ -13,15 +12,7 @@ export function RepoCard({
   type,
   verification_api,
 }: Omit<RepoType, "paths">) {
-  const deleteRepoMutation = useEdenMutation({
-    route: api.db.repositories({ id: id }).delete,
-    mutationKey: ["deleteRepo"],
-    invalidateQueries: [["fetchAllRepositories"]],
-    toast: {
-      errorTitle: "Could not delete repository",
-      successTitle: `Deleted ${name}`,
-    },
-  })
+  const deleteRepoMutation = useDeleteRepoMutation(id, name)
 
   const handleDelete = () => deleteRepoMutation.mutateAsync()
 

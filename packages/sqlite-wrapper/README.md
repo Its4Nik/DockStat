@@ -5,35 +5,43 @@
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 
 **A fast, type-safe TypeScript wrapper for Bun's `bun:sqlite`.**
-Schema-first table helpers, an expressive chainable QueryBuilder, safe defaults (WHERE required for destructive ops), JSON + Boolean auto-detection, automatic backups with retention, and production-minded pragmas & transactions.
+Schema-first table helpers, an expressive chainable QueryBuilder, safe defaults (WHERE required for destructive ops), JSON + Boolean + DATE auto-detection, automatic backups with retention, and production-minded pragmas & transactions.
 
 ---
 
-## 🆕 What's New in v1.3.5 (last major update)
+## 🆕 What's New in v1.4.0
 
 ### New Features
 
+- **DATE Column Support with Auto-detection** — DATE, DATETIME, and TIMESTAMP columns are now fully supported with automatic serialization/deserialization! JavaScript `Date` objects are automatically converted to/from ISO strings in the database
+- **Automatic DATE Parser Detection** — Columns using `column.date()`, `column.datetime()`, or `column.timestamp()` are automatically detected and parsed without manual configuration
+
+### Previous Features (v1.3.x)
+
 - **Automatic Schema Migration** — Tables automatically migrate when schema changes are detected! Add/remove columns, change constraints, and preserve data without manual intervention
-- **Auto-detection of JSON & Boolean columns** — No more manual parser configuration! Columns using `column.json()` or `column.boolean()` are automatically detected from schema
+- **Auto-detection of JSON & Boolean columns** — Columns using `column.json()` or `column.boolean()` are automatically detected from schema
 - **Automatic backups with retention** — Configure `autoBackup` to create periodic backups with automatic cleanup of old files
-- **Backup & Restore API** — New `backup()`, `restore()`, and `listBackups()` methods
+- **Backup & Restore API** — `backup()`, `restore()`, and `listBackups()` methods
 - **`getPath()` method** — Get the database file path
 
 ### Bug Fixes
 
-- **Fixed Boolean parsing** — Boolean columns now correctly convert SQLite's `0`/`1` to JavaScript `true`/`false`
-- **Fixed incorrect packaging** — Before the `publish` script was added, workspace dependencies were not correctly propagated
-
-### Architecture Improvements
-
-- **New `utils/` module** — Reusable utilities for SQL building, logging, and row transformation
-- **Structured logging** — Cleaner, more consistent log output with dedicated loggers per component
-- **Reduced code duplication** — Extracted common patterns into shared utilities
-- **Better maintainability** — Clearer separation of concerns across modules
+- **Fixed type errors** — Improved type handling in transformer and table creation
 
 ### Breaking Changes
 
-- None! v1.4 is fully backward compatible with v1.3.x
+- **DATE Column Behavior** — If you have existing tables with DATE, DATETIME, or TIMESTAMP columns, you must now insert/update using JavaScript `Date` objects instead of ISO strings. Previously, you might have done `createdAt: new Date().toISOString()` - now you must use `createdAt: new Date()`. The library automatically handles conversion to/from ISO strings in the database.
+
+**Migration Guide:**
+```typescript
+// ❌ Before (v1.3.x) - manual ISO string conversion
+table.insert({ createdAt: new Date().toISOString() })
+
+// ✅ After (v1.4.0) - use Date objects directly
+table.insert({ createdAt: new Date() })
+```
+
+If you need to opt-out of automatic DATE parsing for specific columns, you can remove them from the parser configuration or use `column.text()` instead of `column.date()`.
 
 ---
 
@@ -99,7 +107,7 @@ const users = userTable
 - 🧭 Full SQLite feature support: JSON, generated columns, foreign keys, indexes
 - 🛡️ Safety-first defaults — prevents accidental full-table updates/deletes
 - 🚀 Designed for production workflows: WAL, pragmatic PRAGMAs, bulk ops, transactions
-- 🔄 **Automatic JSON/Boolean detection** — no manual parser configuration needed
+- 🔄 **Automatic JSON/Boolean/DATE detection** — no manual parser configuration needed
 - 💾 **Built-in backup & restore** — with automatic retention policies
 - 🔀 **Automatic Schema Migration** — seamlessly migrate tables when schemas change
 
@@ -137,6 +145,7 @@ const users = userTable
 - **Foreign key constraints** with cascade options
 - **JSON columns** with automatic serialization/deserialization
 - **Boolean columns** with automatic conversion (SQLite stores as 0/1)
+- **DATE columns** with automatic Date object conversion (SQLite stores as ISO strings)
 - **Full-text search** preparation
 - **Custom functions** and extensions support
 
@@ -144,30 +153,34 @@ const users = userTable
 
 ## Automatic Type Detection
 
-When using `column.json()` or `column.boolean()`, the wrapper **automatically detects** these columns and handles serialization/deserialization for you. No manual parser configuration required!
+When using `column.json()`, `column.boolean()`, `column.date()`, `column.datetime()`, or `column.timestamp()`, the wrapper **automatically detects** these columns and handles serialization/deserialization for you. No manual parser configuration required!
 
 ```typescript
-// JSON and Boolean columns are auto-detected from schema
+// JSON, Boolean, and Date columns are auto-detected from schema
 const table = db.createTable<{
   id: number;
   settings: object;
   isActive: boolean;
+  createdAt: Date;
 }>("config", {
   id: column.id(),
   settings: column.json(), // Auto-detected ✨
   isActive: column.boolean(), // Auto-detected ✨
+  createdAt: column.date(), // Auto-detected ✨
 });
 
-// Insert - objects are automatically JSON.stringify'd, booleans work natively
+// Insert - objects are automatically JSON.stringify'd, booleans and dates work natively
 table.insert({
   settings: { theme: "dark", notifications: true },
   isActive: true,
+  createdAt: new Date(),
 });
 
-// Select - JSON is automatically parsed, 0/1 converted to true/false
+// Select - JSON is automatically parsed, 0/1 converted to true/false, ISO strings to Date
 const row = table.select(["*"]).where({ id: 1 }).first();
 console.log(row.settings.theme); // "dark" (not a string!)
 console.log(row.isActive); // true (not 1!)
+console.log(row.createdAt instanceof Date); // true (not a string!)
 ```
 
 ### Manual Parser Override
@@ -182,6 +195,7 @@ const table = db.createTable<MyType>(
     parser: {
       JSON: ["customJsonColumn"],
       BOOLEAN: ["customBoolColumn"],
+      DATE: ["customDateColumn"],
     },
   }
 );

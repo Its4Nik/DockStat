@@ -155,6 +155,7 @@ const DockStatConfigTable = t.Object({
 
   additionalSettings: t.Object({
     showBackendRamUsageInNavbar: t.Optional(t.Boolean()),
+    defaultDashboard: t.Optional(t.String()),
   }),
 
   hotkeys: t.Partial(t.Record(HotkeyAction, t.String())),
