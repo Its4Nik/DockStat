@@ -39,15 +39,74 @@
     "catalog": {
       "elysia": "1.4.18",
       "@elysiajs/eden": "1.4.6",
+      "@elysiajs/cors": "^1.4.0",
+      "@elysiajs/openapi": "^1.4.11",
+      "@elysiajs/server-timing": "^1.4.0",
+      "@elysiajs/html": "^1.4.0",
+      "@elysiajs/static": "^1.4.7",
       "react": "^19.2.3",
-      "react-dom": "^19.2.3"
+      "react-dom": "^19.2.3",
+      "@types/react": "^19.2.14",
+      "@types/react-dom": "^19.2.3",
+      "bun-types": "^1.3.10",
+      "@types/node": "^24.10.13",
+      "@types/js-yaml": "^4.0.9",
+      "@types/dagre": "^0.7.54"
+    },
+    "catalogs": {
+      "react-ui": {
+        "@tailwindcss/vite": "^4.2.1",
+        "@tanstack/react-query": "^5.90.12",
+        "@xyflow/react": "^12.10.1",
+        "framer-motion": "^12.34.3",
+        "geist": "^1.7.0",
+        "lucide-react": "^0.562.0",
+        "react-router": "^7.13.1",
+        "react-router-dom": "^7.13.1",
+        "sonner": "^2.0.7",
+        "tailwindcss": "^4.2.1"
+      },
+      "build-tools": {
+        "@vitejs/plugin-react": "^5.1.4",
+        "vite": "^7.3.0",
+        "bun-plugin-dts": "^0.3.0"
+      },
+      "docker": {
+        "dagre": "^0.8.5",
+        "@types/dagre": "^0.7.54",
+        "@types/dockerode": "^4.0.1",
+        "dockerode": "^4.0.9",
+        "docker-compose": "^1.3.0"
+      },
+      "utils": {
+        "js-yaml": "^4.1.1",
+        "@sglara/cn": "^1.0.0",
+        "@icons-pack/react-simple-icons": "^13.11.2"
+      },
+      "testing": {
+        "typescript": "^5.9.3"
+      }
     }
   },
   "dependencies": {
-    "@types/bun": "^1.3.11",
-    "@types/js-yaml": "^4.0.9",
-    "@types/react": "^19.2.14",
-    "bun-plugin-dts": "^0.3.0",
-    "js-yaml": "^4.1.1"
+    "@dockstat/frontend": "workspace:*",
+    "@dockstat/api": "workspace:*",
+    "@dockstat/db": "workspace:*",
+    "@dockstat/ui": "workspace:*",
+    "@dockstat/utils": "workspace:*",
+    "@dockstat/typings": "workspace:*",
+    "@dockstat/logger": "workspace:*",
+    "@dockstat/sqlite-wrapper": "workspace:*",
+    "@dockstat/docker-client": "workspace:*",
+    "@dockstat/docknode": "workspace:*",
+    "@dockstat/plugin-handler": "workspace:*",
+    "@dockstat/plugin-builder": "workspace:*",
+    "@dockstat/repo-cli": "workspace:*",
+    "@dockstat/theme-handler": "workspace:*",
+    "@dockstat/template-renderer": "workspace:*",
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
   }
 }

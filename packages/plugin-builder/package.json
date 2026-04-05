@@ -43,8 +43,8 @@
     "@dockstat/typings": "workspace:^"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "typescript": "^5.9.3"
+    "bun-types": "latest",
+    "typescript": "catalog:testing"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

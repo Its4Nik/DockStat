@@ -5,7 +5,7 @@
     "module": "ESNext",
     "target": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
 
     /* ---- Strictness & Type Safety ---- */
     "types": ["bun"],
@@ -28,6 +28,7 @@
   "include": [],
   "exclude": ["node_modules", "dist", "build"],
   "references": [
+    { "path": "./packages/docker-swarm" },
     { "path": "./packages/docker-client" },
     { "path": "./packages/plugin-handler" },
     { "path": "./packages/sqlite-wrapper" },

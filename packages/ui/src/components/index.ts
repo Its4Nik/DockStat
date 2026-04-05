@@ -70,7 +70,12 @@ export {
 export { PluginsPage } from "./Plugins/Plugins"
 export { RepoIcons } from "./Repo/RepoIcon"
 export { Slider, type SliderProps } from "./Slider/Slider"
-export { Slides } from "./Slides/Slides"
+export {
+  type ButtonRowPosition,
+  Slides,
+  type SlidesProps,
+  type SlideVariant,
+} from "./Slides/Slides"
 export { type Column, Table } from "./Table/Table"
 export {
   ThemeBrowser,

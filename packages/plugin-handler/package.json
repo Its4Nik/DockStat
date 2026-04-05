@@ -17,9 +17,9 @@
     "@dockstat/sqlite-wrapper": "workspace:*"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "bun-types": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "catalog:testing"
   }
 }

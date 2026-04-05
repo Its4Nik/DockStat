@@ -5,16 +5,30 @@
     "": {
       "name": "dockstat",
       "dependencies": {
-        "@types/bun": "^1.3.11",
-        "@types/js-yaml": "^4.0.9",
-        "@types/react": "^19.2.14",
-        "bun-plugin-dts": "^0.3.0",
-        "js-yaml": "^4.1.1",
+        "@dockstat/api": "workspace:*",
+        "@dockstat/db": "workspace:*",
+        "@dockstat/docker-client": "workspace:*",
+        "@dockstat/docknode": "workspace:*",
+        "@dockstat/frontend": "workspace:*",
+        "@dockstat/logger": "workspace:*",
+        "@dockstat/plugin-builder": "workspace:*",
+        "@dockstat/plugin-handler": "workspace:*",
+        "@dockstat/repo-cli": "workspace:*",
+        "@dockstat/sqlite-wrapper": "workspace:*",
+        "@dockstat/template-renderer": "workspace:*",
+        "@dockstat/theme-handler": "workspace:*",
+        "@dockstat/typings": "workspace:*",
+        "@dockstat/ui": "workspace:*",
+        "@dockstat/utils": "workspace:*",
+        "bun-types": "latest",
       },
       "devDependencies": {
         "@biomejs/biome": "2.3.3",
         "turbo": "^2.8.16",
         "typescript": "5.9.3",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
       },
     },
     "apps/api": {
@@ -32,12 +46,12 @@
         "@dockstat/typings": "workspace:*",
         "@dockstat/ui": "workspace:*",
         "@dockstat/utils": "workspace:*",
-        "@elysiajs/cors": "^1.4.0",
+        "@elysiajs/cors": "catalog:",
         "@elysiajs/eden": "catalog:",
-        "@elysiajs/openapi": "^1.4.11",
-        "@elysiajs/server-timing": "^1.4.0",
-        "@types/dagre": "^0.7.54",
-        "dagre": "^0.8.5",
+        "@elysiajs/openapi": "catalog:",
+        "@elysiajs/server-timing": "catalog:",
+        "@types/dagre": "catalog:docker",
+        "dagre": "catalog:docker",
         "elysia": "catalog:",
       },
       "devDependencies": {
@@ -49,11 +63,12 @@
       "version": "1.0.0",
       "dependencies": {
         "@dockstat/docker-client": "workspace:*",
+        "@dockstat/docker-swarm": "workspace:*",
         "@dockstat/logger": "workspace:*",
         "@dockstat/sqlite-wrapper": "workspace:*",
         "@dockstat/typings": "workspace:*",
         "@dockstat/utils": "workspace:*",
-        "@elysiajs/openapi": "^1.4.11",
+        "@elysiajs/openapi": "catalog:",
         "@types/dockerode": "^4.0.1",
         "better-auth": "^1.4.18",
         "docker-compose": "^1.3.0",
@@ -75,30 +90,30 @@
         "@dockstat/ui": "workspace:*",
         "@dockstat/utils": "workspace:*",
         "@elysiajs/eden": "catalog:",
-        "@sglara/cn": "^1.0.0",
-        "@tailwindcss/vite": "^4.1.18",
-        "@tanstack/react-query": "^5.90.12",
-        "@xyflow/react": "^12.10.1",
-        "framer-motion": "^12.24.0",
-        "geist": "^1.7.0",
-        "lucide-react": "^0.562.0",
-        "react": "^19.2.3",
+        "@sglara/cn": "catalog:utils",
+        "@tailwindcss/vite": "catalog:react-ui",
+        "@tanstack/react-query": "catalog:react-ui",
+        "@xyflow/react": "catalog:react-ui",
+        "framer-motion": "catalog:react-ui",
+        "geist": "catalog:react-ui",
+        "lucide-react": "catalog:react-ui",
+        "react": "catalog:",
         "react-devtools": "^7.0.1",
-        "react-dom": "^19.2.3",
-        "react-router": "^7.11.0",
-        "sonner": "^2.0.7",
-        "tailwindcss": "^4.1.18",
+        "react-dom": "catalog:",
+        "react-router": "catalog:react-ui",
+        "sonner": "catalog:react-ui",
+        "tailwindcss": "catalog:react-ui",
       },
       "devDependencies": {
         "@dockstat/api": "workspace:*",
         "@dockstat/logger": "workspace:*",
         "@dockstat/sqlite-wrapper": "workspace:*",
-        "@types/node": "^24.10.1",
-        "@types/react": "^19.2.7",
-        "@types/react-dom": "^19.2.3",
-        "@vitejs/plugin-react": "^5.1.2",
+        "@types/node": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "@vitejs/plugin-react": "catalog:build-tools",
         "elysia": "catalog:",
-        "vite": "^7.3.0",
+        "vite": "catalog:build-tools",
       },
     },
     "apps/dockstore-verification": {
@@ -108,14 +123,25 @@
         "@dockstat/sqlite-wrapper": "workspace:*",
         "@dockstat/typings": "workspace:*",
         "@dockstat/utils": "workspace:*",
-        "@elysiajs/html": "^1.1.1",
-        "@elysiajs/openapi": "^1.4.11",
-        "@elysiajs/static": "^1.1.1",
+        "@elysiajs/html": "catalog:",
+        "@elysiajs/openapi": "catalog:",
+        "@elysiajs/static": "catalog:",
         "@kitajs/html": "^4.2.5",
         "elysia": "catalog:",
       },
       "devDependencies": {
+        "bun-types": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "catalog:testing",
+      },
+    },
+    "packages/bun-docker": {
+      "name": "@dockstat/docker",
+      "version": "0.1.4",
+      "devDependencies": {
         "@types/bun": "latest",
+        "@types/node": "^25.5.0",
       },
       "peerDependencies": {
         "typescript": "^5",
@@ -126,15 +152,15 @@
       "version": "1.0.0",
       "dependencies": {
         "@dockstat/typings": "workspace:*",
-        "bun-plugin-dts": "^0.3.0",
+        "bun-plugin-dts": "catalog:build-tools",
       },
       "devDependencies": {
-        "@types/bun": "latest",
+        "bun-types": "latest",
       },
       "peerDependencies": {
-        "@dockstat/logger": "latest",
-        "@dockstat/sqlite-wrapper": "latest",
-        "typescript": "^5.9.3",
+        "@dockstat/logger": "workspace:*",
+        "@dockstat/sqlite-wrapper": "workspace:*",
+        "typescript": "catalog:testing",
       },
     },
     "packages/docker-client": {
@@ -146,11 +172,26 @@
         "@dockstat/sqlite-wrapper": "workspace:*",
         "@dockstat/typings": "workspace:*",
         "@dockstat/utils": "workspace:*",
-        "@types/dockerode": "^3.3.44",
+        "@types/dockerode": "catalog:docker",
+        "dockerode": "catalog:docker",
+      },
+      "devDependencies": {
+        "bun-types": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "catalog:testing",
+      },
+    },
+    "packages/docker-swarm": {
+      "name": "@dockstat/docker-swarm",
+      "version": "1.0.0",
+      "dependencies": {
+        "@dockstat/logger": "workspace:",
         "dockerode": "^4.0.9",
       },
       "devDependencies": {
         "@types/bun": "latest",
+        "@types/dockerode": "^3.3.44",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",
@@ -197,8 +238,8 @@
         "@dockstat/typings": "workspace:^",
       },
       "devDependencies": {
-        "@types/bun": "latest",
-        "typescript": "^5.9.3",
+        "bun-types": "latest",
+        "typescript": "catalog:testing",
       },
       "peerDependencies": {
         "typescript": "^5.0.0",
@@ -216,10 +257,10 @@
         "@dockstat/utils": "workspace:*",
       },
       "devDependencies": {
-        "@types/bun": "latest",
+        "bun-types": "latest",
       },
       "peerDependencies": {
-        "typescript": "^5.9.3",
+        "typescript": "catalog:testing",
       },
     },
     "packages/repo-cli": {
@@ -237,10 +278,10 @@
       },
       "devDependencies": {
         "@dockstat/typings": "workspace:*",
-        "@types/bun": "latest",
+        "bun-types": "latest",
       },
       "peerDependencies": {
-        "typescript": "^5",
+        "typescript": "catalog:testing",
       },
     },
     "packages/sqlite-wrapper": {
@@ -250,11 +291,11 @@
         "@dockstat/logger": "workspace:*",
       },
       "devDependencies": {
-        "@types/bun": "latest",
-        "@types/dockerode": "^3.3.44",
+        "@types/dockerode": "catalog:docker",
+        "bun-types": "latest",
       },
       "peerDependencies": {
-        "typescript": "^5.9.3",
+        "typescript": "catalog:testing",
       },
     },
     "packages/template-renderer": {
@@ -262,16 +303,16 @@
       "version": "1.0.0",
       "dependencies": {
         "@dockstat/ui": "workspace:*",
-        "react": "^19.1.1",
-        "react-dom": "^19.1.1",
+        "react": "catalog:",
+        "react-dom": "catalog:",
       },
       "devDependencies": {
-        "@types/bun": "latest",
-        "@types/react": "^19.1.16",
-        "@types/react-dom": "^19.1.9",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "bun-types": "latest",
       },
       "peerDependencies": {
-        "typescript": "^5.9.3",
+        "typescript": "catalog:testing",
       },
     },
     "packages/theme-handler": {
@@ -283,13 +324,13 @@
         "@dockstat/ui": "workspace:*",
         "@elysiajs/eden": "catalog:",
         "elysia": "catalog:",
-        "react": "^19.2.3",
+        "react": "catalog:",
       },
       "devDependencies": {
-        "@types/bun": "latest",
+        "bun-types": "latest",
       },
       "peerDependencies": {
-        "typescript": "^5",
+        "typescript": "catalog:testing",
       },
     },
     "packages/typings": {
@@ -297,16 +338,16 @@
       "version": "1.1.2",
       "dependencies": {
         "elysia": "catalog:",
-        "js-yaml": "^4.1.0",
+        "js-yaml": "catalog:utils",
       },
       "devDependencies": {
         "@dockstat/logger": "workspace:*",
         "@dockstat/sqlite-wrapper": "workspace:*",
-        "@types/bun": "latest",
-        "@types/dockerode": "^3.3.44",
+        "@types/dockerode": "catalog:docker",
+        "bun-types": "latest",
       },
       "peerDependencies": {
-        "typescript": "^5.9.3",
+        "typescript": "catalog:testing",
       },
     },
     "packages/ui": {
@@ -315,13 +356,13 @@
       "dependencies": {
         "@dockstat/typings": "workspace:*",
         "@dockstat/utils": "workspace:*",
-        "@icons-pack/react-simple-icons": "^13.11.2",
-        "@sglara/cn": "latest",
+        "@icons-pack/react-simple-icons": "catalog:utils",
+        "@sglara/cn": "catalog:utils",
         "@storybook/client-api": "latest",
         "@storybook/react-vite": "^10.2.11",
-        "@tailwindcss/vite": "^4.2.1",
-        "@tanstack/react-query": "^5.90.21",
-        "@xyflow/react": "^12.10.1",
+        "@tailwindcss/vite": "catalog:react-ui",
+        "@tanstack/react-query": "catalog:react-ui",
+        "@xyflow/react": "catalog:react-ui",
         "eslint-plugin-storybook": "^10.2.11",
         "framer-motion": "^12.34.3",
         "lucide-react": "^0.552.0",
@@ -355,23 +396,68 @@
       "name": "@dockstat/utils",
       "version": "1.0.1",
       "dependencies": {
-        "@tanstack/react-query": "^5.90.12",
+        "@tanstack/react-query": "catalog:react-ui",
       },
       "devDependencies": {
         "@dockstat/logger": "workspace:*",
         "@dockstat/typings": "workspace:*",
-        "@types/bun": "latest",
+        "bun-types": "latest",
       },
       "peerDependencies": {
-        "typescript": "^5",
+        "typescript": "catalog:testing",
       },
     },
   },
   "catalog": {
+    "@elysiajs/cors": "^1.4.0",
     "@elysiajs/eden": "1.4.6",
+    "@elysiajs/html": "^1.4.0",
+    "@elysiajs/openapi": "^1.4.11",
+    "@elysiajs/server-timing": "^1.4.0",
+    "@elysiajs/static": "^1.4.7",
+    "@types/dagre": "^0.7.54",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^24.10.13",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "bun-types": "^1.3.10",
     "elysia": "1.4.18",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
+  },
+  "catalogs": {
+    "build-tools": {
+      "@vitejs/plugin-react": "^5.1.4",
+      "bun-plugin-dts": "^0.3.0",
+      "vite": "^7.3.0",
+    },
+    "docker": {
+      "@types/dagre": "^0.7.54",
+      "@types/dockerode": "^4.0.1",
+      "dagre": "^0.8.5",
+      "docker-compose": "^1.3.0",
+      "dockerode": "^4.0.9",
+    },
+    "react-ui": {
+      "@tailwindcss/vite": "^4.2.1",
+      "@tanstack/react-query": "^5.90.12",
+      "@xyflow/react": "^12.10.1",
+      "framer-motion": "^12.34.3",
+      "geist": "^1.7.0",
+      "lucide-react": "^0.562.0",
+      "react-router": "^7.13.1",
+      "react-router-dom": "^7.13.1",
+      "sonner": "^2.0.7",
+      "tailwindcss": "^4.2.1",
+    },
+    "testing": {
+      "typescript": "^5.9.3",
+    },
+    "utils": {
+      "@icons-pack/react-simple-icons": "^13.11.2",
+      "@sglara/cn": "^1.0.0",
+      "js-yaml": "^4.1.1",
+    },
   },
   "packages": {
     "@adobe/css-tools": ["@adobe/css-tools@4.4.4", "", {}, "sha512-Elp+iwUx5rN5+Y8xLt5/GRoG20WGoDCQ/1Fb+1LiGtvwbDavuSk0jhD/eZdckHAuzcDzccnkv+rEjyWfRx18gg=="],
@@ -462,7 +548,11 @@
 
     "@dockstat/db": ["@dockstat/db@workspace:packages/db"],
 
+    "@dockstat/docker": ["@dockstat/docker@workspace:packages/bun-docker"],
+
     "@dockstat/docker-client": ["@dockstat/docker-client@workspace:packages/docker-client"],
+
+    "@dockstat/docker-swarm": ["@dockstat/docker-swarm@workspace:packages/docker-swarm"],
 
     "@dockstat/docknode": ["@dockstat/docknode@workspace:apps/docknode"],
 
@@ -898,7 +988,7 @@
 
     "@types/docker-modem": ["@types/docker-modem@3.0.6", "", { "dependencies": { "@types/node": "*", "@types/ssh2": "*" } }, "sha512-yKpAGEuKRSS8wwx0joknWxsmLha78wNMe9R2S3UNsVOkZded8UqOrV8KoeDXoXsjndxwyF3eIhyClGbO1SEhEg=="],
 
-    "@types/dockerode": ["@types/dockerode@3.3.47", "", { "dependencies": { "@types/docker-modem": "*", "@types/node": "*", "@types/ssh2": "*" } }, "sha512-ShM1mz7rCjdssXt7Xz0u1/R2BJC7piWa3SJpUBiVjCf2A3XNn4cP6pUVaD8bLanpPVVn4IKzJuw3dOvkJ8IbYw=="],
+    "@types/dockerode": ["@types/dockerode@4.0.1", "", { "dependencies": { "@types/docker-modem": "*", "@types/node": "*", "@types/ssh2": "*" } }, "sha512-cmUpB+dPN955PxBEuXE3f6lKO1hHiIGYJA46IVF3BJpNsZGvtBDcRnlrHYHtOH/B6vtDOyl2kZ2ShAu3mgc27Q=="],
 
     "@types/doctrine": ["@types/doctrine@0.0.9", "", {}, "sha512-eOIHzCUSH7SMfonMG1LsC2f8vxBFtho6NGBznK41R84YzPuvSBzrhEps33IsQiOW9+VL6NQ9DbjQJznk/S4uRA=="],
 
@@ -912,15 +1002,13 @@
 
     "@types/http-errors": ["@types/http-errors@2.0.5", "", {}, "sha512-r8Tayk8HJnX0FztbZN7oVqGccWgw98T/0neJphO91KkmOzug1KkofZURD4UaD5uH8AqcFLfdPErnBod0u71/qg=="],
 
-    "@types/js-yaml": ["@types/js-yaml@4.0.9", "", {}, "sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg=="],
-
     "@types/json-schema": ["@types/json-schema@7.0.15", "", {}, "sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA=="],
 
     "@types/keyv": ["@types/keyv@3.1.4", "", { "dependencies": { "@types/node": "*" } }, "sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg=="],
 
     "@types/mime": ["@types/mime@1.3.5", "", {}, "sha512-/pyBZWSLD2n0dcHE3hq8s8ZvcETHtEuF+3E7XVt0Ig2nvsVQXdghHVcEkIWjy9A0wKfTn97a/PSDYohKIlnP/w=="],
 
-    "@types/node": ["@types/node@24.12.2", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-A1sre26ke7HDIuY/M23nd9gfB+nrmhtYyMINbjI1zHJxYteKR6qSMX56FsmjMcDb3SMcjJg5BiRRgOCC/yBD0g=="],
+    "@types/node": ["@types/node@25.5.2", "", { "dependencies": { "undici-types": "~7.18.0" } }, "sha512-tO4ZIRKNC+MDWV4qKVZe3Ql/woTnmHDr5JD8UI5hn2pwBrHEwOEMZK7WlNb5RKB6EoJ02gwmQS9OrjuFnZYdpg=="],
 
     "@types/qs": ["@types/qs@6.15.0", "", {}, "sha512-JawvT8iBVWpzTrz3EGw9BTQFg3BQNmwERdKE22vlTxawwtbyUSlMppvZYKLZzB5zgACXdXxbD3m1bXaMqP/9ow=="],
 
@@ -934,7 +1022,7 @@
 
     "@types/responselike": ["@types/responselike@1.0.3", "", { "dependencies": { "@types/node": "*" } }, "sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw=="],
 
-    "@types/send": ["@types/send@1.2.1", "", { "dependencies": { "@types/node": "*" } }, "sha512-arsCikDvlU99zl1g69TcAB3mzZPpxgw0UQnaHeC1Nwb015xp8bknZv5rIfri9xTOcMuaVgvabfIRA7PSZVuZIQ=="],
+    "@types/send": ["@types/send@0.17.6", "", { "dependencies": { "@types/mime": "^1", "@types/node": "*" } }, "sha512-Uqt8rPBE8SY0RK8JB1EzVOIZ32uqy8HwdxCnoCOsYrvnswqmFZ/k+9Ikidlk/ImhsdvBsloHbAlewb2IEBV/Og=="],
 
     "@types/serve-static": ["@types/serve-static@1.15.10", "", { "dependencies": { "@types/http-errors": "*", "@types/node": "*", "@types/send": "<1" } }, "sha512-tRs1dB+g8Itk72rlSI2ZrW6vZg0YrLI81iQSTkMmOqnqCaNr/8Ek4VwWcN5vZgCYWbg/JJSGBlUaYGAOP73qBw=="],
 
@@ -1766,7 +1854,7 @@
 
     "uint8array-extras": ["uint8array-extras@1.5.0", "", {}, "sha512-rvKSBiC5zqCCiDZ9kAOszZcDvdAHwwIKJG33Ykj43OKcWsnmcBRL09YTU4nOeHZ8Y2a7l1MgTd08SBe9A8Qj6A=="],
 
-    "undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
+    "undici-types": ["undici-types@7.18.2", "", {}, "sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w=="],
 
     "unique-string": ["unique-string@1.0.0", "", { "dependencies": { "crypto-random-string": "^1.0.0" } }, "sha512-ODgiYu03y5g76A1I9Gt0/chLCzQjvzDy7DsZGsLOE/1MrF6wriEskSncj1+/C58Xk/kPZDppSctDybCwOSaGAg=="],
 
@@ -1838,11 +1926,15 @@
 
     "@commander-js/extra-typings/commander": ["commander@14.0.3", "", {}, "sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw=="],
 
-    "@dockstat/docknode/@types/dockerode": ["@types/dockerode@4.0.1", "", { "dependencies": { "@types/docker-modem": "*", "@types/node": "*", "@types/ssh2": "*" } }, "sha512-cmUpB+dPN955PxBEuXE3f6lKO1hHiIGYJA46IVF3BJpNsZGvtBDcRnlrHYHtOH/B6vtDOyl2kZ2ShAu3mgc27Q=="],
+    "@dockstat/docker-swarm/@types/dockerode": ["@types/dockerode@3.3.47", "", { "dependencies": { "@types/docker-modem": "*", "@types/node": "*", "@types/ssh2": "*" } }, "sha512-ShM1mz7rCjdssXt7Xz0u1/R2BJC7piWa3SJpUBiVjCf2A3XNn4cP6pUVaD8bLanpPVVn4IKzJuw3dOvkJ8IbYw=="],
+
+    "@dockstat/frontend/@types/node": ["@types/node@24.12.2", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-A1sre26ke7HDIuY/M23nd9gfB+nrmhtYyMINbjI1zHJxYteKR6qSMX56FsmjMcDb3SMcjJg5BiRRgOCC/yBD0g=="],
 
     "@dockstat/outline-sync/@types/node": ["@types/node@20.19.39", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-orrrD74MBUyK8jOAD/r0+lfa1I2MO6I+vAkmAWzMYbCcgrN4lCrmK52gRFQq/JRxfYPfonkr4b0jcY7Olqdqbw=="],
 
     "@dockstat/repo-cli/commander": ["commander@14.0.3", "", {}, "sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw=="],
+
+    "@dockstat/ui/@types/node": ["@types/node@24.12.2", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-A1sre26ke7HDIuY/M23nd9gfB+nrmhtYyMINbjI1zHJxYteKR6qSMX56FsmjMcDb3SMcjJg5BiRRgOCC/yBD0g=="],
 
     "@dockstat/ui/lucide-react": ["lucide-react@0.552.0", "", { "peerDependencies": { "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-g9WCjmfwqbexSnZE+2cl21PCfXOcqnGeWeMTNAOGEfpPbm/ZF4YIq77Z8qWrxbu660EKuLB4nSLggoKnCb+isw=="],
 
@@ -1873,8 +1965,6 @@
     "@testing-library/dom/aria-query": ["aria-query@5.3.0", "", { "dependencies": { "dequal": "^2.0.3" } }, "sha512-b0P0sZPKtyu8HkeRAfCq0IfURZK+SuwMjY1UXGBU27wpAiTwQAIlq56IbIO+ytk/JjS1fMR14ee5WBBfKi5J6A=="],
 
     "@testing-library/dom/dom-accessibility-api": ["dom-accessibility-api@0.5.16", "", {}, "sha512-X7BJ2yElsnOJ30pZF4uIIDfBEVgF4XEBxL9Bxhy6dnrm5hkzqmsWHGTiHqRiITNhMyFLyAiWndIJP7Z1NTteDg=="],
-
-    "@types/serve-static/@types/send": ["@types/send@0.17.6", "", { "dependencies": { "@types/mime": "^1", "@types/node": "*" } }, "sha512-Uqt8rPBE8SY0RK8JB1EzVOIZ32uqy8HwdxCnoCOsYrvnswqmFZ/k+9Ikidlk/ImhsdvBsloHbAlewb2IEBV/Og=="],
 
     "@types/ssh2/@types/node": ["@types/node@18.19.130", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg=="],
 
@@ -1942,7 +2032,11 @@
 
     "@babel/helper-compilation-targets/lru-cache/yallist": ["yallist@3.1.1", "", {}, "sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g=="],
 
+    "@dockstat/frontend/@types/node/undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
+
     "@dockstat/outline-sync/@types/node/undici-types": ["undici-types@6.21.0", "", {}, "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="],
+
+    "@dockstat/ui/@types/node/undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
 
     "@eslint/eslintrc/ajv/json-schema-traverse": ["json-schema-traverse@0.4.1", "", {}, "sha512-xbbCH5dCYU5T8LcEhhuh7HJ88HXuW3qsI3Y0zOZFKfZEHcpWiHU/Jxzk629Brsab/mMiHQti9wMP+845RPe3Vg=="],
 

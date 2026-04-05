@@ -50,10 +50,10 @@
     "@dockstat/logger": "workspace:*"
   },
   "peerDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "catalog:testing"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "@types/dockerode": "^3.3.44"
+    "bun-types": "latest",
+    "@types/dockerode": "catalog:docker"
   }
 }

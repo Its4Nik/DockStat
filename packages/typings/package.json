@@ -22,16 +22,16 @@
     "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
   "peerDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "catalog:testing"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "@types/dockerode": "^3.3.44",
+    "bun-types": "latest",
+    "@types/dockerode": "catalog:docker",
     "@dockstat/sqlite-wrapper": "workspace:*",
     "@dockstat/logger": "workspace:*"
   },
   "dependencies": {
     "elysia": "catalog:",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "catalog:utils"
   }
 }

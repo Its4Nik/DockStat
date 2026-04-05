@@ -109,7 +109,9 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     this.updateLog.info(`"UPDATE (regex): Query: ${updateQuery}`)
 
     let totalChanges = 0
-    const updateValues = columns.map((col) => transformedData[col])
+    const updateValues: SQLQueryBindings[] = columns.map(
+      (col) => (transformedData[col] ?? null) as SQLQueryBindings
+    )
 
     for (const row of matchingRows) {
       const result = stmt.run(...updateValues, row._rowid_ as SQLQueryBindings)

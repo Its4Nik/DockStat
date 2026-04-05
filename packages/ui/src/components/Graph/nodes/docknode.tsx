@@ -3,7 +3,7 @@ import { Handle, type Node, type NodeProps, Position } from "@xyflow/react"
 import { HardDrive } from "lucide-react"
 import { memo } from "react"
 
-interface DockNodeData extends Record<string, unknown> {
+export interface DockNodeData extends Record<string, unknown> {
   label: string
   status: string
   hostname?: string

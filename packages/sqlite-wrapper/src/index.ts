@@ -292,19 +292,8 @@ class DB {
             migrationLog: this.migrationLog,
             newColumns: columns,
             tableConstraints,
-            options: (pOpts || {}) as TableOptions<_T>,
+            options: pOpts || {},
           })
-
-          /*
-          this.db,
-          tableName,
-          columns,
-          this.migrationLog,
-          currentSchema,
-          tableConstraints
-          pOpts,
-
-          */
 
           if (migrated) {
             return this._setupTableParser<_T>(tableName, columns, options)

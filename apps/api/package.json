@@ -19,12 +19,12 @@
     "@dockstat/repo-cli": "workspace:*",
     "@dockstat/ui": "workspace:*",
     "@dockstat/utils": "workspace:*",
-    "@elysiajs/cors": "^1.4.0",
+    "@elysiajs/cors": "catalog:",
     "@elysiajs/eden": "catalog:",
-    "@elysiajs/openapi": "^1.4.11",
-    "@elysiajs/server-timing": "^1.4.0",
-    "@types/dagre": "^0.7.54",
-    "dagre": "^0.8.5",
+    "@elysiajs/openapi": "catalog:",
+    "@elysiajs/server-timing": "catalog:",
+    "@types/dagre": "catalog:docker",
+    "dagre": "catalog:docker",
     "elysia": "catalog:"
   },
   "devDependencies": {

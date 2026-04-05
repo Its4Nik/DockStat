@@ -1,11 +1,13 @@
+import type { Database } from "bun:sqlite"
+import type Logger from "@dockstat/logger"
 import type { AutoBackupOptions } from "../../index"
 import { backup } from "./backup"
 import { applyRetentionPolicy } from "./applyRetentionPolicy"
 
 export function setupAutoBackup(
   dbPath: string,
-  db: any,
-  backupLog: any,
+  db: Database,
+  backupLog: Logger,
   options: AutoBackupOptions
 ): { timer: ReturnType<typeof setInterval> | null; autoBackupOptions: AutoBackupOptions } {
   if (dbPath === ":memory:") {
@@ -22,7 +24,6 @@ export function setupAutoBackup(
   }
 
   const fs = require("node:fs")
-  const path = require("node:path")
 
   if (!fs.existsSync(autoBackupOptions.directory)) {
     fs.mkdirSync(autoBackupOptions.directory, { recursive: true })
@@ -39,7 +40,7 @@ export function setupAutoBackup(
   // Setup interval for periodic backups
   const timer = setInterval(() => {
     try {
-      const p = backup(dbPath, db, backupLog, autoBackupOptions)
+      backup(dbPath, db, backupLog, autoBackupOptions)
       // applyRetentionPolicy already invoked inside backup, but keep safety
       applyRetentionPolicy(backupLog, autoBackupOptions)
     } catch (err) {

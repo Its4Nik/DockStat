@@ -14,7 +14,7 @@ const defaultLogger = new Logger("Transformer")
 /**
  * Generic row data type
  */
-export type RowData = Record<string, SQLQueryBindings>
+export type RowData = Record<string, SQLQueryBindings | Date>
 
 /**
  * Transform options
@@ -23,11 +23,6 @@ export interface TransformOptions<T> {
   parser?: Parser<T>
   logger?: Logger
 }
-
-/**
- * Transformed row data type (allows any value types for deserialized data)
- */
-type TransformedRowData = Record<string, unknown>
 
 /**
  * Transform a row FROM the database (deserialization)
@@ -50,8 +45,8 @@ export function transformFromDb<T extends Record<string, unknown>>(
     return row as T
   }
 
-  const logger = options?.logger || defaultLogger
-  const transformed = { ...row } as TransformedRowData
+  const logger = options?.logger?.spawn("Transformer") || defaultLogger.spawn("Transformer")
+  const transformed = { ...row } as RowData
   const transformedColumns: string[] = []
 
   // Transform JSON columns
@@ -184,6 +179,8 @@ export function transformToDb<T extends Record<string, unknown>>(
   row: Partial<T>,
   options?: TransformOptions<T>
 ): RowData {
+  const logger = options?.logger?.spawn("Transformer") || defaultLogger.spawn("Transformer")
+
   if (!row || typeof row !== "object") {
     return row as RowData
   }
@@ -193,7 +190,6 @@ export function transformToDb<T extends Record<string, unknown>>(
     return row as RowData
   }
 
-  const logger = options?.logger || defaultLogger
   const transformed = { ...row } as RowData
   const transformedColumns: string[] = []
 

@@ -23,15 +23,15 @@
   },
   "dependencies": {
     "@dockstat/ui": "workspace:*",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "@types/react": "^19.1.16",
-    "@types/react-dom": "^19.1.9"
+    "bun-types": "latest",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:"
   },
   "peerDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "catalog:testing"
   }
 }
