@@ -31,5 +31,5 @@ export interface BadgeOptions {
   color: string
   labelColor?: string
   style?: "flat" | "flat-square"
-  icon?: string
+  icon?: IconName
 }
