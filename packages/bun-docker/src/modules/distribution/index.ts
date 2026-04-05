@@ -1,5 +1,5 @@
 import { BaseModule } from "../base"
-import type { ImageInformationResponse } from "./types"
+import type { DistributionRoute } from "./types"
 
 export class DistributionModule extends BaseModule {
   /**
@@ -9,6 +9,6 @@ export class DistributionModule extends BaseModule {
   async getImageInfo(image: string) {
     const path = `/distribution/${image}/json`
     const res = await this.request(path, "GET")
-    return (await res.json()) as ImageInformationResponse
+    return (await res.json()) as DistributionRoute["responses"]["200"]["content"]["application/json"]
   }
 }

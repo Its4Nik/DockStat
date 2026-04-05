@@ -1,15 +1,18 @@
 import { BaseModule } from "../base"
-import type { ListNodesOptions, NodeResponse, NodeUpdateOptions } from "./types"
+import type { DeleteNodeRoute, ListNodesRoute, NodeInspectRoute, UpdateNodeRoute } from "./types"
 
+/**
+ * Node module for Docker API
+ */
 export class NodesModule extends BaseModule {
   /**
    * List nodes
    * @param options Filters to process on the nodes list, encoded as JSON (a Record<string, string[]>).
-   * @returns NodeResponse[]
+   * @returns NodeListResponse
    */
-  async list(options?: ListNodesOptions) {
+  async list(options?: ListNodesRoute["parameters"]["query"]) {
     const res = await this.request(`/nodes`, "GET", undefined, undefined, options)
-    return (await res.json()) as NodeResponse[]
+    return (await res.json()) as ListNodesRoute["responses"]["200"]["content"]["application/json"]
   }
 
   /**
@@ -18,7 +21,7 @@ export class NodesModule extends BaseModule {
    */
   async inspect(id: string) {
     const res = await this.request(`/nodes/${id}`, "GET")
-    return (await res.json()) as NodeResponse
+    return (await res.json()) as NodeInspectRoute["responses"]["200"]["content"]["application/json"]
   }
 
   /**
@@ -27,9 +30,9 @@ export class NodesModule extends BaseModule {
    * @param force Force remove a node from the swarm (Default: false)
    * @returns `true` or throws an DockerError
    */
-  async delete(id: string, force: boolean = false) {
-    await this.request(`/nodes/${id}`, "DELETE", undefined, undefined, { force })
-    // No thrown error = sucess
+  async delete(id: string, options?: DeleteNodeRoute["parameters"]["query"]) {
+    await this.request(`/nodes/${id}`, "DELETE", undefined, undefined, options)
+    // No thrown error = success
     return true
   }
 
@@ -40,9 +43,13 @@ export class NodesModule extends BaseModule {
    * @param options What to update
    * @returns
    */
-  async update(id: string, version: number, options: NodeUpdateOptions) {
-    await this.request(`/nodes/${id}/update`, "POST", options, undefined, { version })
-    // No thrown error = sucess
+  async update(
+    id: string,
+    update: NonNullable<UpdateNodeRoute["requestBody"]>["content"]["application/json"],
+    options: UpdateNodeRoute["parameters"]["query"]
+  ): Promise<boolean> {
+    await this.request(`/nodes/${id}/update`, "POST", update, undefined, options)
+    // No thrown error = success
     return true
   }
 }

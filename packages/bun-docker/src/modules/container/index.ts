@@ -2,31 +2,29 @@ import type { BodyInit } from "bun"
 import type { DockerWebSocket } from "../_socket"
 import { BaseModule } from "../base"
 import type {
-  ArchiveInfo,
-  AttachOptions,
-  ContainerConfig,
-  ContainerCreateResponse,
-  ContainerInspectResponse,
-  ContainerPruneResponse,
-  ContainerStatsResponse,
-  ContainerSummary,
-  ContainerTopResponse,
-  ContainerUpdateResponse,
-  ContainerWaitResponse,
-  CreateContainerOptions,
-  ExecCreateOptions,
-  ExecCreateResponse,
-  ExecInspectResponse,
-  ExecStartOptions,
-  FilesystemChange,
-  ListContainersOptions,
-  LogsOptions,
-  PruneContainersOptions,
-  StatsOptions,
-  UpdateContainerOptions,
-  WaitCondition,
+  ContainerArchiveGetRoute,
+  ContainerArchiveHeadRoute,
+  ContainerArchivePutRoute,
+  ContainerAttachRoute,
+  ContainerChangesRoute,
+  ContainerCreateRoute,
+  ContainerExecRoute,
+  ContainerInspectRoute,
+  ContainerListRoute,
+  ContainerLogsRoute,
+  ContainerPruneRoute,
+  ContainerResizeRoute,
+  ContainerRestartRoute,
+  ContainerStartRoute,
+  ContainerStatsRoute,
+  ContainerStopRoute,
+  ContainerTopRoute,
+  ContainerUpdateRoute,
+  ContainerWaitRoute,
+  ExecInspectRoute,
+  ExecResizeRoute,
+  ExecStartRoute,
 } from "./types"
-import type { paths } from "../../v1.54"
 
 /**
  * Container Module - handles all Docker container operations
@@ -37,10 +35,12 @@ export class ContainerModule extends BaseModule {
    * @param options - List options
    * @returns Array of container summaries
    */
-  async list(options?: ListContainersOptions): Promise<paths["/containers/json"]["get"]["responses"]["200"]["content"]["application/json"]> {
+  async list(
+    options?: ContainerListRoute["parameters"]["query"]
+  ): Promise<ContainerListRoute["responses"]["200"]["content"]["application/json"]> {
     const path = `/containers/json`
     const res = await this.request(path, "GET", undefined, undefined, options)
-    return (await res.json()) as paths["/containers/json"]["get"]["responses"]["200"]["content"]["application/json"]
+    return (await res.json()) as ContainerListRoute["responses"]["200"]["content"]["application/json"]
   }
 
   /**
@@ -50,12 +50,12 @@ export class ContainerModule extends BaseModule {
    * @returns Container create response with ID
    */
   async create(
-    config: paths["/containers/create"]["post"]["requestBody"]["content"]["application/json"],
-    options?: paths["/containers/create"]["post"]["parameters"]["query"]
-  ): Promise<paths["/containers/create"]["post"]["responses"]["201"]["content"]["application/json"]> {
+    config: ContainerCreateRoute["requestBody"]["content"]["application/json"],
+    options?: ContainerCreateRoute["parameters"]["query"]
+  ): Promise<ContainerCreateRoute["responses"]["201"]["content"]["application/json"]> {
     const path = `/containers/create`
     const res = await this.request(path, "POST", config, undefined, options)
-    return (await res.json()) as paths["/containers/create"]["post"]["responses"]["201"]["content"]["application/json"]
+    return (await res.json()) as ContainerCreateRoute["responses"]["201"]["content"]["application/json"]
   }
 
   /**
@@ -64,11 +64,14 @@ export class ContainerModule extends BaseModule {
    * @param size - Return container size information
    * @returns Detailed container information
    */
-  async inspect(id: string, size: boolean = false): Promise<paths["/containers/{id}/json"]["get"]["responses"]["200"]["content"]["application/json"]> {
+  async inspect(
+    id: string,
+    size: boolean = false
+  ): Promise<ContainerInspectRoute["responses"]["200"]["content"]["application/json"]> {
     const res = await this.request(`/containers/${id}/json`, "GET", undefined, undefined, {
       size: size,
     })
-    return (await res.json()) as paths["/containers/{id}/json"]["get"]["responses"]["200"]["content"]["application/json"]
+    return (await res.json()) as ContainerInspectRoute["responses"]["200"]["content"]["application/json"]
   }
 
   /**
@@ -76,7 +79,10 @@ export class ContainerModule extends BaseModule {
    * @param id - Container ID or name
    * @param detachKeys - Override the key sequence for detaching
    */
-  async start(id: string, detachKeys?: string): Promise<paths["/containers/{id}/start"]["post"]["responses"]["204"]["content"]> {
+  async start(
+    id: string,
+    detachKeys?: string
+  ): Promise<ContainerStartRoute["responses"]["204"]["content"]> {
     await this.request(`/containers/${id}/start`, "POST", undefined, undefined, {
       detachKeys: detachKeys,
     })
@@ -87,7 +93,10 @@ export class ContainerModule extends BaseModule {
    * @param id - Container ID or name
    * @param t - Number of seconds to wait before killing the container
    */
-  async stop(id: string, options: paths["/containers/{id}/stop"]["post"]["parameters"]["query"]): Promise<paths["/containers/{id}/stop"]["post"]["responses"]["204"]["content"]> {
+  async stop(
+    id: string,
+    options: ContainerStopRoute["parameters"]["query"]
+  ): Promise<ContainerStopRoute["responses"]["204"]["content"]> {
     await this.request(`/containers/${id}/stop`, "POST", undefined, undefined, options)
   }
 
@@ -96,7 +105,10 @@ export class ContainerModule extends BaseModule {
    * @param id - Container ID or name
    * @param t - Number of seconds to wait before killing the container
    */
-  async restart(id: string, options: paths["/containers/{id}/restart"]["post"]["parameters"]["query"]): Promise<paths["/containers/{id}/restart"]["post"]["responses"]["204"]["content"]> {
+  async restart(
+    id: string,
+    options: ContainerRestartRoute["parameters"]["query"]
+  ): Promise<ContainerRestartRoute["responses"]["204"]["content"]> {
     await this.request(`/containers/${id}/restart`, "POST", undefined, undefined, options)
   }
 
@@ -158,27 +170,29 @@ export class ContainerModule extends BaseModule {
   /**
    * Wait for a container
    * @param id - Container ID or name
-   * @param condition - Wait until condition is met
+   * @param options - Wait options
    * @returns Container wait response with exit status
    */
-  async wait(id: string, condition?: WaitCondition): Promise<ContainerWaitResponse> {
-    const res = await this.request(`/containers/${id}/wait`, "POST", undefined, undefined, {
-      condition: condition,
-    })
-    return (await res.json()) as ContainerWaitResponse
+  async wait(
+    id: string,
+    options?: ContainerWaitRoute["parameters"]["query"]
+  ): Promise<ContainerWaitRoute["responses"]["200"]["content"]["application/json"]> {
+    const res = await this.request(`/containers/${id}/wait`, "POST", undefined, undefined, options)
+    return (await res.json()) as ContainerWaitRoute["responses"]["200"]["content"]["application/json"]
   }
 
   /**
    * List processes running inside a container
    * @param id - Container ID or name
-   * @param ps_args - Arguments for ps command
+   * @param options - Top options
    * @returns Top processes response
    */
-  async top(id: string, ps_args?: string): Promise<ContainerTopResponse> {
-    const res = await this.request(`/containers/${id}/top`, "GET", undefined, undefined, {
-      ps_args: encodeURIComponent(ps_args || ""),
-    })
-    return (await res.json()) as ContainerTopResponse
+  async top(
+    id: string,
+    options?: ContainerTopRoute["parameters"]["query"]
+  ): Promise<ContainerTopRoute["responses"]["200"]["content"]["application/json"]> {
+    const res = await this.request(`/containers/${id}/top`, "GET", undefined, undefined, options)
+    return (await res.json()) as ContainerTopRoute["responses"]["200"]["content"]["application/json"]
   }
 
   /**
@@ -187,7 +201,7 @@ export class ContainerModule extends BaseModule {
    * @param options - Log options
    * @returns Log stream
    */
-  async logs(id: string, options?: LogsOptions): Promise<Response> {
+  async logs(id: string, options?: ContainerLogsRoute["parameters"]["query"]): Promise<Response> {
     return await this.request(`/containers/${id}/logs`, "GET", undefined, undefined, options)
   }
 
@@ -197,14 +211,17 @@ export class ContainerModule extends BaseModule {
    * @param options - Stats options
    * @returns Container stats response
    */
-  async stats(id: string, options?: StatsOptions): Promise<ContainerStatsResponse | Response> {
+  async stats(
+    id: string,
+    options?: ContainerStatsRoute["parameters"]["query"]
+  ): Promise<ContainerStatsRoute["responses"]["200"]["content"]["application/json"] | Response> {
     const res = await this.request(`/containers/${id}/stats`, "GET", undefined, undefined, options)
 
     if (options?.stream) {
       return res
     }
 
-    return (await res.json()) as ContainerStatsResponse
+    return (await res.json()) as ContainerStatsRoute["responses"]["200"]["content"]["application/json"]
   }
 
   /**
@@ -212,9 +229,11 @@ export class ContainerModule extends BaseModule {
    * @param id - Container ID or name
    * @returns Array of filesystem changes
    */
-  async changes(id: string): Promise<FilesystemChange[]> {
+  async changes(
+    id: string
+  ): Promise<ContainerChangesRoute["responses"]["200"]["content"]["application/json"]> {
     const res = await this.request(`/containers/${id}/changes`, "GET")
-    return (await res.json()) as FilesystemChange[]
+    return (await res.json()) as ContainerChangesRoute["responses"]["200"]["content"]["application/json"]
   }
 
   /**
@@ -232,19 +251,21 @@ export class ContainerModule extends BaseModule {
    * @param options - Update options
    * @returns Update response with warnings
    */
-  async update(id: string, options: UpdateContainerOptions): Promise<ContainerUpdateResponse> {
+  async update(
+    id: string,
+    options: ContainerUpdateRoute["requestBody"]["content"]["application/json"]
+  ): Promise<ContainerUpdateRoute["responses"]["200"]["content"]["application/json"]> {
     const res = await this.request(`/containers/${id}/update`, "POST", options)
-    return res.json() as ContainerUpdateResponse
+    return res.json() as ContainerUpdateRoute["responses"]["200"]["content"]["application/json"]
   }
 
   /**
    * Resize container TTY
    * @param id - Container ID or name
-   * @param h - Height of the TTY session
-   * @param w - Width of the TTY session
+   * @param options - Resize options
    */
-  async resize(id: string, h: number, w: number): Promise<void> {
-    await this.request(`/containers/${id}/resize`, "POST", undefined, undefined, { h: h, w: w })
+  async resize(id: string, options: ContainerResizeRoute["parameters"]["query"]): Promise<void> {
+    await this.request(`/containers/${id}/resize`, "POST", undefined, undefined, options)
   }
 
   /**
@@ -253,7 +274,10 @@ export class ContainerModule extends BaseModule {
    * @param options - Attach options
    * @returns Attach connection
    */
-  async attach(id: string, options?: AttachOptions): Promise<Response> {
+  async attach(
+    id: string,
+    options?: ContainerAttachRoute["parameters"]["query"]
+  ): Promise<Response> {
     return await this.request(`/containers/${id}/attach`, "POST", undefined, undefined, options)
   }
 
@@ -264,7 +288,10 @@ export class ContainerModule extends BaseModule {
    * @returns WebSocket-like connection
    * @note Uses the attach endpoint with stream wrapping for compatibility with Unix sockets
    */
-  async attachWebSocket(id: string, options?: AttachOptions): Promise<DockerWebSocket> {
+  async attachWebSocket(
+    id: string,
+    options?: ContainerAttachRoute["parameters"]["query"]
+  ): Promise<DockerWebSocket> {
     const response = await this.request(
       `/containers/${id}/attach`,
       "POST",
@@ -281,26 +308,36 @@ export class ContainerModule extends BaseModule {
   /**
    * Get an archive of a filesystem resource in a container
    * @param id - Container ID or name
-   * @param path - Resource path in the container
+   * @param options - Archive options
    * @returns Archive stream
    */
 
-  async getArchive(id: string, path: string): Promise<Response> {
-    return await this.request(`/containers/${id}/archive`, "GET", undefined, undefined, {
-      path: path,
-    })
+  async getArchive(
+    id: string,
+    options: ContainerArchiveGetRoute["parameters"]["query"]
+  ): Promise<Response> {
+    return await this.request(`/containers/${id}/archive`, "GET", undefined, undefined, options)
   }
 
   /**
    * Check if a file exists in a container
    * @param id - Container ID or name
-   * @param path - Resource path in the container
+   * @param options - Archive info options
    * @returns Archive info or null
    */
-  async archiveInfo(id: string, path: string): Promise<ArchiveInfo | null> {
-    const res = await this.request(`/containers/${id}/archive`, "HEAD", undefined, undefined, {
-      path: path,
-    })
+  async archiveInfo(
+    id: string,
+    options: ContainerArchiveHeadRoute["parameters"]["query"]
+  ): Promise<
+    ContainerArchiveHeadRoute["responses"]["200"]["headers"]["X-Docker-Container-Path-Stat"] | null
+  > {
+    const res = await this.request(
+      `/containers/${id}/archive`,
+      "HEAD",
+      undefined,
+      undefined,
+      options
+    )
 
     const dockerContentType = res.headers.get("X-Docker-Container-Path-Stat")
     if (!dockerContentType) return null
@@ -315,23 +352,15 @@ export class ContainerModule extends BaseModule {
   /**
    * Extract an archive of files or folders to a directory in the container
    * @param id - Container ID or name
-   * @param path - Path to extract to
+   * @param options - Put archive options
    * @param archive - Archive to extract
-   * @param noOverwriteDirNonDir - If true, will not overwrite a dir with a non-dir
-   * @param copyUIDGID - If set to true, copy ownership from archive to target
    */
   async putArchive(
     id: string,
-    path: string,
-    archive: BodyInit,
-    noOverwriteDirNonDir: boolean = false,
-    copyUIDGID: boolean = false
+    options: ContainerArchivePutRoute["parameters"]["query"],
+    archive: BodyInit
   ): Promise<void> {
-    await this.request(`/containers/${id}/archive`, "PUT", archive, undefined, {
-      path: path,
-      noOverwriteDirNonDir: noOverwriteDirNonDir,
-      copyUIDGID: copyUIDGID,
-    })
+    await this.request(`/containers/${id}/archive`, "PUT", archive, undefined, options)
   }
 
   /**
@@ -340,9 +369,12 @@ export class ContainerModule extends BaseModule {
    * @param options - Exec create options
    * @returns Exec create response with exec ID
    */
-  async execCreate(id: string, options: ExecCreateOptions): Promise<ExecCreateResponse> {
+  async execCreate(
+    id: string,
+    options: ContainerExecRoute["requestBody"]["content"]["application/json"]
+  ): Promise<ContainerExecRoute["responses"]["201"]["content"]["application/json"]> {
     const res = await this.request(`/containers/${id}/exec`, "POST", options)
-    return (await res.json()) as ExecCreateResponse
+    return (await res.json()) as ContainerExecRoute["responses"]["201"]["content"]["application/json"]
   }
 
   /**
@@ -351,7 +383,10 @@ export class ContainerModule extends BaseModule {
    * @param options - Exec start options
    * @returns Exec stream
    */
-  async execStart(id: string, options?: ExecStartOptions): Promise<Response> {
+  async execStart(
+    id: string,
+    options?: NonNullable<ExecStartRoute["requestBody"]>["content"]["application/json"]
+  ): Promise<Response> {
     const res = await this.request(`/exec/${id}/start`, "POST", undefined, undefined, options)
     return res
   }
@@ -361,19 +396,20 @@ export class ContainerModule extends BaseModule {
    * @param id - Exec ID
    * @returns Exec inspect response
    */
-  async execInspect(id: string): Promise<ExecInspectResponse> {
+  async execInspect(
+    id: string
+  ): Promise<ExecInspectRoute["responses"]["200"]["content"]["application/json"]> {
     const res = await this.request(`/exec/${id}/json`, "GET")
-    return (await res.json()) as ExecInspectResponse
+    return (await res.json()) as ExecInspectRoute["responses"]["200"]["content"]["application/json"]
   }
 
   /**
    * Resize an exec TTY
    * @param id - Exec ID
-   * @param h - Height of the TTY session
-   * @param w - Width of the TTY session
+   * @param options - Resize options
    */
-  async execResize(id: string, h: number, w: number): Promise<void> {
-    await this.request(`/exec/${id}/resize`, "POST", undefined, undefined, { h: h, w: w })
+  async execResize(id: string, options: ExecResizeRoute["parameters"]["query"]): Promise<void> {
+    await this.request(`/exec/${id}/resize`, "POST", undefined, undefined, options)
   }
 
   /**
@@ -381,8 +417,10 @@ export class ContainerModule extends BaseModule {
    * @param options - Prune options
    * @returns Prune response with deleted containers and reclaimed space
    */
-  async prune(options?: PruneContainersOptions): Promise<ContainerPruneResponse> {
+  async prune(
+    options?: ContainerPruneRoute["parameters"]["query"]
+  ): Promise<ContainerPruneRoute["responses"]["200"]["content"]["application/json"]> {
     const res = await this.request(`/containers/prune`, "POST", undefined, undefined, options)
-    return (await res.json()) as ContainerPruneResponse
+    return (await res.json()) as ContainerPruneRoute["responses"]["200"]["content"]["application/json"]
   }
 }

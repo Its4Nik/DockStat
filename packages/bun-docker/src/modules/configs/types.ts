@@ -1,26 +1,35 @@
-export type ListConfigsOptions = {
-  filters: {
-    id: string[]
-    /** label=<key> or label=<key>=value */
-    label: string[]
-    name: string[]
-    names: string[]
-  }
-}
+import type { paths } from "../../v1.54"
 
-export type Config = {
-  Name: string
-  Labels: Record<string, string>
-  Data: string
-  Templating?: Record<string, Record<string, string>>
-}
+// ============================================================================
+// Route Type Aliases from v1.54.d.ts
+// ============================================================================
 
-export type ConfigResponse = {
-  ID: string
-  Version: {
-    Index: number
-  }
-  CreatedAt: string
-  UpdatedAt: string
-  Spec: Config
-}
+/**
+ * List configs route
+ * GET /configs
+ */
+export type ConfigListRoute = paths["/configs"]["get"]
+
+/**
+ * Create config route
+ * POST /configs/create
+ */
+export type ConfigCreateRoute = paths["/configs/create"]["post"]
+
+/**
+ * Inspect config route
+ * GET /configs/{id}
+ */
+export type ConfigInspectRoute = paths["/configs/{id}"]["get"]
+
+/**
+ * Delete config route
+ * DELETE /configs/{id}
+ */
+export type ConfigDeleteRoute = paths["/configs/{id}"]["delete"]
+
+/**
+ * Update config route
+ * POST /configs/{id}/update
+ */
+export type ConfigUpdateRoute = paths["/configs/{id}/update"]["post"]

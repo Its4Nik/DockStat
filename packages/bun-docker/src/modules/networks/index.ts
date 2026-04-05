@@ -1,14 +1,11 @@
 import { BaseModule } from "../base"
 import type {
-  CreateNetworkOptions,
-  ListNetworksOptions,
-  NetworkConnectRequest,
-  NetworkCreateResponse,
-  NetworkDisconnectRequest,
-  NetworkInspect,
-  NetworkPruneResponse,
-  NetworkSummary,
-  PruneNetworksOptions,
+  NetworkConnectRoute,
+  NetworkCreateRoute,
+  NetworkDisconnectRoute,
+  NetworkInspectRoute,
+  NetworkListRoute,
+  NetworkPruneRoute,
 } from "./types"
 
 /**
@@ -20,9 +17,9 @@ export class NetworksModule extends BaseModule {
    * @param options - List options including filters
    * @returns Array of network summaries
    */
-  async list(options?: ListNetworksOptions): Promise<NetworkSummary[]> {
+  async list(options?: NetworkListRoute["parameters"]["query"]) {
     const res = await this.request(`/networks`, "GET", undefined, undefined, options)
-    return (await res.json()) as NetworkSummary[]
+    return (await res.json()) as NetworkListRoute["responses"]["200"]["content"]["application/json"]
   }
 
   /**
@@ -30,9 +27,9 @@ export class NetworksModule extends BaseModule {
    * @param config - Network configuration
    * @returns Network create response with ID and warnings
    */
-  async create(config: CreateNetworkOptions): Promise<NetworkCreateResponse> {
+  async create(config: NetworkCreateRoute["requestBody"]["content"]["application/json"]) {
     const res = await this.request("/networks/create", "POST", config)
-    return (await res.json()) as NetworkCreateResponse
+    return (await res.json()) as NetworkCreateRoute["responses"]["201"]
   }
 
   /**
@@ -41,12 +38,9 @@ export class NetworksModule extends BaseModule {
    * @param options - Inspect options
    * @returns Detailed network information
    */
-  async inspect(
-    id: string,
-    options?: { verbose?: boolean; scope?: string }
-  ): Promise<NetworkInspect> {
+  async inspect(id: string, options?: NetworkInspectRoute["parameters"]["query"]) {
     const res = await this.request(`/networks/${id}`, "GET", undefined, undefined, options)
-    return (await res.json()) as NetworkInspect
+    return (await res.json()) as NetworkInspectRoute["responses"]["200"]["content"]["application/json"]
   }
 
   /**
@@ -62,7 +56,10 @@ export class NetworksModule extends BaseModule {
    * @param id - Network ID or name
    * @param request - Connection request with container and endpoint config
    */
-  async connect(id: string, request: NetworkConnectRequest): Promise<void> {
+  async connect(
+    id: string,
+    request: NetworkConnectRoute["requestBody"]["content"]["application/json"]
+  ) {
     await this.request(`/networks/${id}/connect`, "POST", request)
   }
 
@@ -71,7 +68,10 @@ export class NetworksModule extends BaseModule {
    * @param id - Network ID or name
    * @param request - Disconnection request with container and force option
    */
-  async disconnect(id: string, request: NetworkDisconnectRequest): Promise<void> {
+  async disconnect(
+    id: string,
+    request: NetworkDisconnectRoute["requestBody"]["content"]["application/json"]
+  ) {
     await this.request(`/networks/${id}/disconnect`, "POST", request)
   }
 
@@ -80,8 +80,8 @@ export class NetworksModule extends BaseModule {
    * @param options - Prune options including filters
    * @returns Prune response with deleted networks
    */
-  async prune(options?: PruneNetworksOptions): Promise<NetworkPruneResponse> {
+  async prune(options?: NetworkPruneRoute["parameters"]["query"]) {
     const res = await this.request(`/networks/prune`, "POST", undefined, undefined, options)
-    return (await res.json()) as NetworkPruneResponse
+    return (await res.json()) as NetworkPruneRoute["responses"]["200"]["content"]["application/json"]
   }
 }

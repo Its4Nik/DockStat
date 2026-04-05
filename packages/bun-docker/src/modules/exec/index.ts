@@ -1,10 +1,5 @@
 import { BaseModule } from "../base"
-import type {
-  ExecCreateOptions,
-  ExecCreateResponse,
-  ExecInspectResponse,
-  ExecStartOptions,
-} from "./types"
+import type { CreateExecRoute, InspectExecRoute, ResizeExecRoute, StartExecRoute } from "./types"
 
 /**
  * Exec Module - handles all Docker exec operations
@@ -16,10 +11,13 @@ export class ExecModule extends BaseModule {
    * @param options - Exec configuration
    * @returns Exec create response with ID
    */
-  async create(containerId: string, options: ExecCreateOptions): Promise<ExecCreateResponse> {
+  async create(
+    containerId: string,
+    options: CreateExecRoute["requestBody"]["content"]["application/json"]
+  ) {
     const path = `/containers/${containerId}/exec`
     const res = await this.request(path, "POST", options)
-    return (await res.json()) as ExecCreateResponse
+    return (await res.json()) as CreateExecRoute["responses"]["201"]["content"]["application/json"]
   }
 
   /**
@@ -28,7 +26,10 @@ export class ExecModule extends BaseModule {
    * @param options - Start configuration
    * @returns Response object (for streaming)
    */
-  async start(execId: string, options?: ExecStartOptions): Promise<Response> {
+  async start(
+    execId: string,
+    options?: NonNullable<StartExecRoute["requestBody"]>["content"]["application/json"]
+  ): Promise<Response> {
     const path = `/exec/${execId}/start`
     const res = await this.request(path, "POST", options)
     return res
@@ -39,10 +40,10 @@ export class ExecModule extends BaseModule {
    * @param execId - Exec instance ID
    * @returns Detailed exec instance information
    */
-  async inspect(execId: string): Promise<ExecInspectResponse> {
+  async inspect(execId: string) {
     const path = `/exec/${execId}/json`
     const res = await this.request(path, "GET")
-    return (await res.json()) as ExecInspectResponse
+    return (await res.json()) as InspectExecRoute["responses"]["200"]["content"]["application/json"]
   }
 
   /**
@@ -51,10 +52,7 @@ export class ExecModule extends BaseModule {
    * @param height - Height of TTY session in characters
    * @param width - Width of TTY session in characters
    */
-  async resize(execId: string, height: number, width: number): Promise<void> {
-    await this.request(`/exec/${execId}/resize`, "POST", undefined, undefined, {
-      h: height,
-      w: width,
-    })
+  async resize(execId: string, options: ResizeExecRoute["parameters"]["query"]) {
+    await this.request(`/exec/${execId}/resize`, "POST", undefined, undefined, options)
   }
 }
