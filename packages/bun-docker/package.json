@@ -41,6 +41,7 @@
   "scripts": {
     "build": "bun build --target=bun --production --outdir=dist src/index.ts",
     "typegen": "bunx dts-bundle-generator --sort --export-referenced-types false -o dist/types.d.ts src/index.ts",
-    "publish": "bun run build && bun run typegen && bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
+    "publish": "bun run build && bun run typegen && bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist",
+    "openapi": "bunx openapi-typescript ./.openapi-spec/v1.54.yaml -o ./.openapi-spec/v1.54.d.ts"
   }
 }

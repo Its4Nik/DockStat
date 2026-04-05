@@ -1,3 +1,5 @@
+import type { Resources } from "../../types"
+
 type NodeFilters = {
   id?: string[]
   label?: string[]
@@ -33,10 +35,7 @@ export type NodeResponse = {
     Resources: {
       NanoCPUs: number
       MemoryBytes: number
-      GenericResources: Array<
-        | { DiscreteResourceSpec: { Kind: string; Value: number } }
-        | { NamedResourceSpec: { Kind: string; Value: string } }
-      >
+      GenericResources: Resources
     }
     Engine: {
       EngineVersion: string
