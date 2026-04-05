@@ -270,8 +270,15 @@ const DBRoutes = new Elysia({
     ({ params, status }) => {
       try {
         const repo = DockStatDB.repositoriesTable
+    "repositories",
+    async ({ body, status }) => {
+      try {
+        const repoFile = (await (await fetch(body.link_to_manifest)).json()) as RepoFile
+
+        // Check if repository with same name already exists
+        const existing = DockStatDB.repositoriesTable
           .select(["*"])
-          .where({ id: Number(params.id) })
+          .where({ name: repoFile.config.name })
           .get()
 
         if (!repo) {

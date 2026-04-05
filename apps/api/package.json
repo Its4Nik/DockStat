@@ -17,6 +17,7 @@
     "@dockstat/sqlite-wrapper": "workspace:*",
     "@dockstat/theme-handler": "workspace:*",
     "@dockstat/typings": "workspace:*",
+    "@dockstat/repo-cli": "workspace:*",
     "@dockstat/ui": "workspace:*",
     "@dockstat/utils": "workspace:*",
     "@elysiajs/cors": "^1.4.0",
