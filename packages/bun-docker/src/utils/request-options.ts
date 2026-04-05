@@ -46,7 +46,8 @@ export function prepareRequestOptions(
   if (config.mode !== "unix" && url) {
     try {
       const urlObj = new URL(url)
-      baseHeaders.Host = urlObj.host
+      // biome-ignore lint: Needed for dts-bundle-generator
+      baseHeaders["Host"] = urlObj.host
     } catch (_) {
       // Ignore URL parsing errors, keep default Host
     }

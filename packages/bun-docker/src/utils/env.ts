@@ -2,18 +2,23 @@ import { env } from "node:process"
 import type { ConnectionConfig } from "../modules/base/types"
 
 const loadTls = () => {
-  const hasCerts = env.CERT_FILE && env.KEY_FILE
+  // biome-ignore lint: Needed for dts-bundle-generator
+  const hasCerts = env["CERT_FILE"] && env["KEY_FILE"]
   if (!hasCerts) return undefined
 
   return {
-    ca: env.CA_FILE ? Bun.file(env.CA_FILE) : undefined,
-    cert: env.CERT_FILE ? Bun.file(env.CERT_FILE) : undefined,
-    key: env.KEY_FILE ? Bun.file(env.KEY_FILE) : undefined,
+    // biome-ignore lint: Needed for dts-bundle-generator
+    ca: env["CA_FILE"] ? Bun.file(env["CA_FILE"]) : undefined,
+    // biome-ignore lint: Needed for dts-bundle-generator
+    cert: env["CERT_FILE"] ? Bun.file(env["CERT_FILE"]) : undefined,
+    // biome-ignore lint: Needed for dts-bundle-generator
+    key: env["KEY_FILE"] ? Bun.file(env["KEY_FILE"]) : undefined,
   }
 }
 
 export const getConnectionConfig = (): ConnectionConfig => {
-  const rawHost = env.DOCKER_SOCKET || "/var/run/docker.sock"
+  // biome-ignore lint: Needed for dts-bundle-generator
+  const rawHost = env["DOCKER_SOCKET"] || "/var/run/docker.sock"
   const tls = loadTls()
 
   if (rawHost.startsWith("unix://")) {
