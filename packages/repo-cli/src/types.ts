@@ -24,7 +24,6 @@ export interface BuildResult {
   error?: string
 }
 
-// cli/types.ts (add or update)
 export interface BadgeOptions {
   label: string
   message: string

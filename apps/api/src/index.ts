@@ -6,6 +6,7 @@ import BaseLogger from "./logger"
 import MetricsMiddleware from "./middleware/metrics"
 import DBRoutes from "./routes/db"
 import DockerRoutes from "./routes/docker"
+import GraphRoutes from "./routes/graph"
 import DockStatMiscRoutes from "./routes/misc"
 import { DockNodeElyisa } from "./routes/node"
 import PluginRoutes from "./routes/plugins"
@@ -30,6 +31,7 @@ export const DockStatAPI = new Elysia({ prefix: "/api/v2" })
   .use(ThemeRoutes)
   .use(DockStatWebsockets)
   .use(DockNodeElyisa)
+  .use(GraphRoutes)
   .listen(PORT)
 
 const hostnameAndPort = `${DockStatAPI.server?.hostname}:${DockStatAPI.server?.port}`

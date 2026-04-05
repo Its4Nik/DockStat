@@ -1,18 +1,7 @@
-import { useEdenMutation } from "@/hooks/eden/useEdenMutation"
-import { api } from "@/lib/api"
+import { useConfigMutations } from "@/hooks/mutations"
 
 export function usePinMutations() {
-  const pinMutation = useEdenMutation({
-    mutationKey: ["pinNavLink"],
-    route: api.db.config.pinItem.post,
-    invalidateQueries: [["fetchAdditionalSettings"]],
-  })
+  const { pinLinkMutation, unpinLinkMutation } = useConfigMutations()
 
-  const unPinMutation = useEdenMutation({
-    mutationKey: ["unPinNavLink"],
-    route: api.db.config.unpinItem.post,
-    invalidateQueries: [["fetchAdditionalSettings"]],
-  })
-
-  return { pinMutation, unPinMutation }
+  return { pinMutation: pinLinkMutation, unPinMutation: unpinLinkMutation }
 }

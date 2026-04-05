@@ -65,6 +65,7 @@ export class DockerClientBase {
     // Initialize optional managers
     if (this.options.enableMonitoring) {
       this.monitoringManager = new MonitoringManager(
+        this.id,
         this.logger,
         this.dockerInstances,
         this.hostHandler.getHosts(),

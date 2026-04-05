@@ -36,7 +36,7 @@ export default class HostHandler {
 
   public getHosts() {
     this.logger.debug("Fetching all hosts")
-    return this.hostTable.all()
+    return this.hostTable.select(["*"]).all()
   }
 
   public removeHost(hostId: number) {

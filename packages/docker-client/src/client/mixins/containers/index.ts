@@ -57,7 +57,7 @@ export class Containers extends DockerClientBase {
       delay: this.options.retryDelay,
     })
 
-    return containers.map((c) => mapContainerInfo(c, hostId))
+    return containers.map((c) => mapContainerInfo(c, hostId, this.id))
   }
 
   public async getContainer(hostId: number, containerId: string): Promise<DOCKER.ContainerInfo> {
@@ -71,7 +71,7 @@ export class Containers extends DockerClientBase {
       delay: this.options.retryDelay,
     })
 
-    return mapContainerInfoFromInspect(info, hostId)
+    return mapContainerInfoFromInspect(info, hostId, this.id)
   }
 
   public async getAllContainerStats(): Promise<DOCKER.ContainerStatsInfo[]> {
@@ -138,13 +138,19 @@ export class Containers extends DockerClientBase {
         attempts: this.options.retryAttempts,
         delay: this.options.retryDelay,
       }),
-      retry(() => container.stats({ stream: false }) as Promise<Dockerode.ContainerStats>, {
-        attempts: this.options.retryAttempts,
-        delay: this.options.retryDelay,
-      }),
+      retry(
+        () =>
+          container.stats({
+            stream: false,
+          }) as Promise<Dockerode.ContainerStats>,
+        {
+          attempts: this.options.retryAttempts,
+          delay: this.options.retryDelay,
+        }
+      ),
     ])
 
-    const mappedInfo = mapContainerInfoFromInspect(inspectInfo, hostId)
+    const mappedInfo = mapContainerInfoFromInspect(inspectInfo, hostId, this.id)
     return mapContainerStats(mappedInfo, stats)
   }
 

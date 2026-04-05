@@ -197,6 +197,46 @@ const DBRoutes = new Elysia({
       },
     }
   )
+  .post(
+    "/config/defaultDashboard",
+    ({ body, status }) => {
+      try {
+        const currentConfig = DockStatDB.configTable.select(["additionalSettings", "id"]).all()[0]
+
+        const newAdditionalSettings = {
+          showBackendRamUsageInNavbar:
+            currentConfig.additionalSettings?.showBackendRamUsageInNavbar,
+          defaultDashboard: body.dashboardId ?? undefined,
+        }
+
+        DockStatDB.configTable
+          .where({ id: 0 })
+          .update({ additionalSettings: newAdditionalSettings })
+
+        return status(200, {
+          success: true,
+          message: "Default dashboard updated successfully",
+          data: newAdditionalSettings,
+        })
+      } catch (error) {
+        const errorMessage = extractErrorMessage(error, "Error while updating default dashboard")
+        return status(400, {
+          success: false,
+          error: String(error),
+          message: errorMessage,
+        })
+      }
+    },
+    {
+      body: t.Object({
+        dashboardId: t.Nullable(t.String()),
+      }),
+      response: {
+        200: DatabaseModel.additionalSettingsRes,
+        400: DatabaseModel.error,
+      },
+    }
+  )
 
   // ==================== Repository Routes ====================
   .get(
@@ -230,8 +270,15 @@ const DBRoutes = new Elysia({
     ({ params, status }) => {
       try {
         const repo = DockStatDB.repositoriesTable
+    "repositories",
+    async ({ body, status }) => {
+      try {
+        const repoFile = (await (await fetch(body.link_to_manifest)).json()) as RepoFile
+
+        // Check if repository with same name already exists
+        const existing = DockStatDB.repositoriesTable
           .select(["*"])
-          .where({ id: Number(params.id) })
+          .where({ name: repoFile.config.name })
           .get()
 
         if (!repo) {
