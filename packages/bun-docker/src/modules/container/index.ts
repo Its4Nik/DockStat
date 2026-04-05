@@ -26,6 +26,7 @@ import type {
   UpdateContainerOptions,
   WaitCondition,
 } from "./types"
+import type { paths } from "../../v1.54"
 
 /**
  * Container Module - handles all Docker container operations
@@ -36,10 +37,10 @@ export class ContainerModule extends BaseModule {
    * @param options - List options
    * @returns Array of container summaries
    */
-  async list(options?: ListContainersOptions): Promise<ContainerSummary[]> {
+  async list(options?: ListContainersOptions): Promise<paths["/containers/json"]["get"]["responses"]["200"]["content"]["application/json"]> {
     const path = `/containers/json`
     const res = await this.request(path, "GET", undefined, undefined, options)
-    return (await res.json()) as ContainerSummary[]
+    return (await res.json()) as paths["/containers/json"]["get"]["responses"]["200"]["content"]["application/json"]
   }
 
   /**
@@ -49,12 +50,12 @@ export class ContainerModule extends BaseModule {
    * @returns Container create response with ID
    */
   async create(
-    config: ContainerConfig,
-    options?: CreateContainerOptions
-  ): Promise<ContainerCreateResponse> {
+    config: paths["/containers/create"]["post"]["requestBody"]["content"]["application/json"],
+    options?: paths["/containers/create"]["post"]["parameters"]["query"]
+  ): Promise<paths["/containers/create"]["post"]["responses"]["201"]["content"]["application/json"]> {
     const path = `/containers/create`
     const res = await this.request(path, "POST", config, undefined, options)
-    return (await res.json()) as ContainerCreateResponse
+    return (await res.json()) as paths["/containers/create"]["post"]["responses"]["201"]["content"]["application/json"]
   }
 
   /**
@@ -63,11 +64,11 @@ export class ContainerModule extends BaseModule {
    * @param size - Return container size information
    * @returns Detailed container information
    */
-  async inspect(id: string, size: boolean = false): Promise<ContainerInspectResponse> {
+  async inspect(id: string, size: boolean = false): Promise<paths["/containers/{id}/json"]["get"]["responses"]["200"]["content"]["application/json"]> {
     const res = await this.request(`/containers/${id}/json`, "GET", undefined, undefined, {
       size: size,
     })
-    return (await res.json()) as ContainerInspectResponse
+    return (await res.json()) as paths["/containers/{id}/json"]["get"]["responses"]["200"]["content"]["application/json"]
   }
 
   /**
@@ -75,7 +76,7 @@ export class ContainerModule extends BaseModule {
    * @param id - Container ID or name
    * @param detachKeys - Override the key sequence for detaching
    */
-  async start(id: string, detachKeys?: string): Promise<void> {
+  async start(id: string, detachKeys?: string): Promise<paths["/containers/{id}/start"]["post"]["responses"]["204"]["content"]> {
     await this.request(`/containers/${id}/start`, "POST", undefined, undefined, {
       detachKeys: detachKeys,
     })
@@ -86,8 +87,8 @@ export class ContainerModule extends BaseModule {
    * @param id - Container ID or name
    * @param t - Number of seconds to wait before killing the container
    */
-  async stop(id: string, t?: number): Promise<void> {
-    await this.request(`/containers/${id}/stop`, "POST", undefined, undefined, { t: t })
+  async stop(id: string, options: paths["/containers/{id}/stop"]["post"]["parameters"]["query"]): Promise<paths["/containers/{id}/stop"]["post"]["responses"]["204"]["content"]> {
+    await this.request(`/containers/${id}/stop`, "POST", undefined, undefined, options)
   }
 
   /**
@@ -95,8 +96,8 @@ export class ContainerModule extends BaseModule {
    * @param id - Container ID or name
    * @param t - Number of seconds to wait before killing the container
    */
-  async restart(id: string, t?: number): Promise<void> {
-    await this.request(`/containers/${id}/restart`, "POST", undefined, undefined, { t: t })
+  async restart(id: string, options: paths["/containers/{id}/restart"]["post"]["parameters"]["query"]): Promise<paths["/containers/{id}/restart"]["post"]["responses"]["204"]["content"]> {
+    await this.request(`/containers/${id}/restart`, "POST", undefined, undefined, options)
   }
 
   /**
