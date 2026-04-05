@@ -29,11 +29,11 @@ export function usePluginState(
   }, [])
 
   return {
-    state,
     externalData,
-    setState,
-    setExternalData,
     handleStateChange,
+    setExternalData,
+    setState,
+    state,
     updateExternalData,
   }
 }

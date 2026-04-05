@@ -96,31 +96,31 @@ export interface DockerAdapterOptions {
 export const DockerAdapterOptionsSchema = t.Partial(
   t.Object({
     defaultTimeout: t.Number(),
-    retryAttempts: t.Number(),
-    retryDelay: t.Number(),
-    enableMonitoring: t.Boolean(),
     enableEventEmitter: t.Boolean(),
+    enableMonitoring: t.Boolean(),
+    execOptions: t.Partial(
+      t.Object({
+        env: t.Array(t.String()),
+        tty: t.Boolean(),
+        workingDir: t.String(),
+      })
+    ),
     monitoringOptions: t.Partial(
       t.Object({
-        healthCheckInterval: t.Number(),
         containerEventPollingInterval: t.Number(),
-        hostMetricsInterval: t.Number(),
         containerMetricsInterval: t.Number(),
         enableContainerEvents: t.Boolean(),
-        enableHostMetrics: t.Boolean(),
         enableContainerMetrics: t.Boolean(),
         enableHealthChecks: t.Boolean(),
+        enableHostMetrics: t.Boolean(),
+        healthCheckInterval: t.Number(),
+        hostMetricsInterval: t.Number(),
         retryAttempts: t.Number(),
         retryDelay: t.Number(),
       })
     ),
-    execOptions: t.Partial(
-      t.Object({
-        workingDir: t.String(),
-        env: t.Array(t.String()),
-        tty: t.Boolean(),
-      })
-    ),
+    retryAttempts: t.Number(),
+    retryDelay: t.Number(),
   })
 )
 

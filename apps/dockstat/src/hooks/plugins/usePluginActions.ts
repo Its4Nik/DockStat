@@ -47,8 +47,8 @@ export function usePluginActions({
   const executeApiAction = useCallback(
     async (action: ResolvedAction, payload?: unknown) => {
       const res = await actionMutation.mutateAsync({
-        params: { actionId: action.id },
         body: { path: routePath, payload, state },
+        params: { actionId: action.id },
       })
 
       const result = (res as { result?: ActionResult }).result
@@ -128,7 +128,7 @@ export function usePluginActions({
 
   return {
     handleAction,
-    registerCustomHandler,
     isExecutingAction: actionMutation.isPending,
+    registerCustomHandler,
   }
 }

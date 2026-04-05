@@ -23,7 +23,7 @@ describe("Schema Migration", () => {
   afterEach(() => {
     db.close()
     if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true, force: true })
+      rmSync(testDir, { force: true, recursive: true })
     }
   })
 
@@ -40,9 +40,9 @@ describe("Schema Migration", () => {
         return s.name === "users"
       })!
       const newColumns: Record<string, ColumnDefinition> = {
+        email: column.text({ unique: true }),
         id: column.id(),
         name: column.text({ notNull: true }),
-        email: column.text({ unique: true }),
       }
 
       const needsMigration = schemasAreDifferent(currentSchema, newColumns, {}, migrationLog)
@@ -51,9 +51,9 @@ describe("Schema Migration", () => {
 
     test("Detect when migration is needed - column removed", () => {
       db.createTable("users", {
+        email: column.text(),
         id: column.id(),
         name: column.text({ notNull: true }),
-        email: column.text(),
       })
 
       // biome-ignore lint/style/noNonNullAssertion: unit test
@@ -140,13 +140,13 @@ describe("Schema Migration", () => {
     test("Migrate table with removed column", () => {
       // Create initial table with data
       const table = db.createTable("products", {
+        deprecated: column.text(),
         id: column.id(),
         name: column.text({ notNull: true }),
-        deprecated: column.text(),
       })
 
-      table.insert({ name: "Product 1", deprecated: "old-value" })
-      table.insert({ name: "Product 2", deprecated: "old-value-2" })
+      table.insert({ deprecated: "old-value", name: "Product 1" })
+      table.insert({ deprecated: "old-value-2", name: "Product 2" })
 
       // Create table again without deprecated column
       const migratedTable = db.createTable("products", {
@@ -177,9 +177,9 @@ describe("Schema Migration", () => {
       const existingTable = db.createTable(
         "users",
         {
+          email: column.text(),
           id: column.id(),
           name: column.text({ notNull: true }),
-          email: column.text(),
         },
         { migrate: { enabled: false } }
       )
@@ -198,38 +198,38 @@ describe("Schema Migration", () => {
         settings: column.json(),
       })
 
-      table.insert({ settings: { theme: "dark", lang: "en" } })
+      table.insert({ settings: { lang: "en", theme: "dark" } })
 
       // Migrate with additional columns
       const migratedTable = db.createTable("config", {
         id: column.id(),
-        settings: column.json(),
         metadata: column.json(),
+        settings: column.json(),
       })
 
       // Verify JSON data is preserved
       const rows = migratedTable.select(["*"]).all()
       expect(rows).toHaveLength(1)
-      expect(rows[0].settings).toEqual({ theme: "dark", lang: "en" })
+      expect(rows[0].settings).toEqual({ lang: "en", theme: "dark" })
       expect(rows[0].metadata).toBeNull()
     })
 
     test("Migration with Boolean columns", () => {
       // Create initial table with boolean
       const table = db.createTable("users", {
+        active: column.boolean({ default: true }),
         id: column.id(),
         name: column.text(),
-        active: column.boolean({ default: true }),
       })
 
-      table.insert({ name: "User 1", active: true })
-      table.insert({ name: "User 2", active: false })
+      table.insert({ active: true, name: "User 1" })
+      table.insert({ active: false, name: "User 2" })
 
       // Migrate with additional boolean column
       const migratedTable = db.createTable("users", {
+        active: column.boolean({ default: true }),
         id: column.id(),
         name: column.text(),
-        active: column.boolean({ default: true }),
         verified: column.boolean({ default: false }),
       })
 
@@ -245,16 +245,16 @@ describe("Schema Migration", () => {
     test("Migration preserves indexes", () => {
       // Create table with index
       db.createTable("users", {
-        id: column.id(),
         email: column.text({ notNull: true }),
+        id: column.id(),
       })
 
       db.createIndex("idx_email", "users", ["email"], { unique: true })
 
       // Migrate table
       db.createTable("users", {
-        id: column.id(),
         email: column.text({ notNull: true }),
+        id: column.id(),
         name: column.text(),
       })
 
@@ -277,20 +277,20 @@ describe("Schema Migration", () => {
 
       // Create child table with foreign key
       db.createTable("employees", {
+        dept_id: column.foreignKey("departments", "id"),
         id: column.id(),
         name: column.text({ notNull: true }),
-        dept_id: column.foreignKey("departments", "id"),
       })
 
       const empTable = db.table("employees")
-      empTable.insert({ name: "Alice", dept_id: deptResult.insertId })
+      empTable.insert({ dept_id: deptResult.insertId, name: "Alice" })
 
       // Migrate child table
       db.createTable("employees", {
+        dept_id: column.foreignKey("departments", "id"),
+        email: column.text(),
         id: column.id(),
         name: column.text({ notNull: true }),
-        email: column.text(),
-        dept_id: column.foreignKey("departments", "id"),
       })
 
       // Verify data and foreign key relationship preserved
@@ -303,8 +303,8 @@ describe("Schema Migration", () => {
     test("Migration with onConflict option", () => {
       // Create table with unique constraint
       const table = db.createTable("users", {
-        id: column.id(),
         email: column.text({ unique: true }),
+        id: column.id(),
       })
       table.insert({ email: "user1@example.com" })
       table.insert({ email: "user2@example.com" })
@@ -312,8 +312,8 @@ describe("Schema Migration", () => {
       const migratedTable = db.createTable(
         "users",
         {
+          email: column.text({ notNull: true, unique: true }),
           id: column.id(),
-          email: column.text({ unique: true, notNull: true }),
         },
         {
           migrate: {
@@ -329,23 +329,23 @@ describe("Schema Migration", () => {
     test("Migration with onConflict option", () => {
       // Create table without unique constraint
       const table = db.createTable("users", {
+        active: column.boolean({ default: true }),
         id: column.id(),
         name: column.text(),
-        active: column.boolean({ default: true }),
       })
 
-      table.insert({ name: "User 1", active: true })
-      table.insert({ name: "User 2", active: false })
+      table.insert({ active: true, name: "User 1" })
+      table.insert({ active: false, name: "User 2" })
 
       // Migrate with an additional column and a new UNIQUE constraint on `name`,
       // using onConflict: "ignore" so that conflicting rows are skipped.
       const migratedTable = db.createTable(
         "users",
         {
-          id: column.id(),
-          name: column.text({ unique: true }),
           active: column.boolean({ default: true }),
           email: column.text({ notNull: false }),
+          id: column.id(),
+          name: column.text({ unique: true }),
         },
         { migrate: { onConflict: "ignore" } }
       )
@@ -353,11 +353,11 @@ describe("Schema Migration", () => {
       const rows = migratedTable.select(["id", "name", "active", "email"]).orderBy("id").all()
 
       expect(rows).toHaveLength(2)
-      expect(rows[0]).toMatchObject({ name: "User 1", active: true })
-      expect(rows[1]).toMatchObject({ name: "User 2", active: false })
+      expect(rows[0]).toMatchObject({ active: true, name: "User 1" })
+      expect(rows[1]).toMatchObject({ active: false, name: "User 2" })
 
       // Ensure we can still insert a new row that respects the unique constraint
-      migratedTable.insert({ name: "User 3", active: true })
+      migratedTable.insert({ active: true, name: "User 3" })
 
       const rowsAfterInsert = migratedTable.select(["name"]).orderBy("id").all()
       expect(rowsAfterInsert.map((r) => r.name)).toEqual(["User 1", "User 2", "User 3"])
@@ -366,23 +366,23 @@ describe("Schema Migration", () => {
     test("Migration with onConflict replace option", () => {
       // Original table without a unique constraint on `name`
       const table = db.createTable("users", {
+        active: column.boolean({ default: true }),
         id: column.id(),
         name: column.text(),
-        active: column.boolean({ default: true }),
       })
 
       // Two rows that will conflict once we add a UNIQUE constraint on `name`
-      table.insert({ name: "Duplicate", active: true })
-      table.insert({ name: "Duplicate", active: false })
+      table.insert({ active: true, name: "Duplicate" })
+      table.insert({ active: false, name: "Duplicate" })
 
       // Migrate to a schema that adds a UNIQUE constraint on `name`,
       // using onConflict: "replace" so that later rows replace earlier ones.
       const migratedTable = db.createTable(
         "users",
         {
+          active: column.boolean({ default: true }),
           id: column.id(),
           name: column.text({ unique: true }),
-          active: column.boolean({ default: true }),
         },
         { migrate: { onConflict: "replace" } }
       )
@@ -391,14 +391,14 @@ describe("Schema Migration", () => {
 
       // With REPLACE, we expect only one row to survive, corresponding to the last inserted row
       expect(rows).toHaveLength(1)
-      expect(rows[0]).toMatchObject({ name: "Duplicate", active: false })
+      expect(rows[0]).toMatchObject({ active: false, name: "Duplicate" })
     })
 
     test("Migration fails with default onConflict when constraints are violated", () => {
       // Create a table without constraints and insert data that will violate a stricter constraint
       const table = db.createTable("users_fail", {
-        id: column.id(),
         email: column.text(),
+        id: column.id(),
       })
       table.insert({ email: null })
       // Attempt to migrate by adding a NOT NULL constraint with default onConflict (fail)
@@ -406,8 +406,8 @@ describe("Schema Migration", () => {
         db.createTable(
           "users_fail",
           {
-            id: column.id(),
             email: column.text({ notNull: true }),
+            id: column.id(),
           },
           {
             migrate: {},
@@ -438,22 +438,22 @@ describe("Schema Migration", () => {
       // Verify data is preserved and interpreted as JSON
       const rows = migratedTable.select(["*"]).all()
       expect(rows).toHaveLength(1)
-      expect(rows[0].settings).toEqual({ theme: "dark", lang: "en" })
+      expect(rows[0].settings).toEqual({ lang: "en", theme: "dark" })
     })
 
     test("does not migrate when switching from INTEGER to BOOLEAN alias", () => {
       // Create table using the underlying INTEGER storage type
       const table = db.createTable("int_to_bool", {
-        id: column.id(),
         enabled: column.integer(),
+        id: column.id(),
       })
 
       table.insert({ enabled: 1 })
 
       // Recreate table using the BOOLEAN alias
       const migratedTable = db.createTable("int_to_bool", {
-        id: column.id(),
         enabled: column.boolean(),
+        id: column.id(),
       })
 
       // Verify data is preserved and interpreted as a boolean
@@ -474,9 +474,9 @@ describe("Schema Migration", () => {
       db.createTable(
         "users",
         {
+          created_at: column.createdAt(),
           id: column.id(),
           name: column.text(),
-          created_at: column.createdAt(),
         },
         {
           migrate: {
@@ -504,9 +504,9 @@ describe("Schema Migration", () => {
       const migratedTable = db.createTable(
         "users",
         {
+          email: column.text(),
           id: column.id(),
           name: column.text(),
-          email: column.text(),
         },
         {
           migrate: {
@@ -523,39 +523,39 @@ describe("Schema Migration", () => {
     test("Complex migration scenario", () => {
       // Create initial complex table
       const table = db.createTable("orders", {
-        id: column.id(),
         customer_name: column.text({ notNull: true }),
-        total: column.real({ notNull: true }),
-        status: column.text({ default: "pending" }),
-        metadata: column.json(),
+        id: column.id(),
         is_paid: column.boolean({ default: false }),
+        metadata: column.json(),
+        status: column.text({ default: "pending" }),
+        total: column.real({ notNull: true }),
       })
 
       table.insert({
         customer_name: "John Doe",
-        total: 99.99,
-        status: "completed",
-        metadata: { notes: "Rush delivery" },
         is_paid: true,
+        metadata: { notes: "Rush delivery" },
+        status: "completed",
+        total: 99.99,
       })
 
       table.insert({
         customer_name: "Jane Smith",
-        total: 149.5,
-        metadata: { discount: 10 },
         is_paid: false,
+        metadata: { discount: 10 },
+        total: 149.5,
       })
 
       // Complex migration: add columns, remove status, change types
       const migratedTable = db.createTable("orders", {
-        id: column.id(),
-        customer_name: column.text({ notNull: true }),
+        created_at: column.createdAt(), // New column
         customer_email: column.text(), // New column
-        total: column.real({ notNull: true }),
+        customer_name: column.text({ notNull: true }),
+        id: column.id(),
+        is_paid: column.boolean({ default: false }),
         // status removed
         metadata: column.json(),
-        is_paid: column.boolean({ default: false }),
-        created_at: column.createdAt(), // New column
+        total: column.real({ notNull: true }),
         updated_at: column.updatedAt(), // New column
       })
 
@@ -639,9 +639,9 @@ describe("Schema Migration", () => {
 
     test("getTableColumns function", () => {
       db.createTable("users", {
+        email: column.text({ unique: true }),
         id: column.id(),
         name: column.text({ notNull: true }),
-        email: column.text({ unique: true }),
       })
 
       const columns = getTableColumns(db.getDb(), "users")

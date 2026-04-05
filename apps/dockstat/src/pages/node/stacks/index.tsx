@@ -122,13 +122,13 @@ function StackFormModal({ open, onClose, onSubmit, initialData }: StackFormModal
 
   const handleSubmit = async () => {
     if (!name.trim() || !yaml.trim()) {
-      toast({ variant: "error", title: "Name and YAML are required" })
+      toast({ title: "Name and YAML are required", variant: "error" })
       return
     }
 
     setLoading(true)
     try {
-      await onSubmit({ name, yaml, env })
+      await onSubmit({ env, name, yaml })
       onClose()
     } catch (error) {
       console.error(error)
@@ -139,58 +139,81 @@ function StackFormModal({ open, onClose, onSubmit, initialData }: StackFormModal
 
   return (
     <Modal
-      open={open}
       onClose={onClose}
-      title={initialData ? "Edit Stack" : "Create Stack"}
+      open={open}
       size="lg"
+      title={initialData ? "Edit Stack" : "Create Stack"}
     >
       <div className="space-y-4">
         <div>
-          <label htmlFor="stack-name" className="block text-sm font-medium mb-1">
+          <label
+            className="block text-sm font-medium mb-1"
+            htmlFor="stack-name"
+          >
             Stack Name
           </label>
           <Input
+            disabled={!!initialData}
             id="stack-name"
-            value={name}
             onChange={setName}
             placeholder="my-stack"
-            disabled={!!initialData}
+            value={name}
           />
         </div>
 
         <div>
-          <label htmlFor="compose-yaml" className="block text-sm font-medium mb-1">
+          <label
+            className="block text-sm font-medium mb-1"
+            htmlFor="compose-yaml"
+          >
             Docker Compose YAML
           </label>
           <textarea
-            id="compose-yaml"
             className="w-full h-64 px-3 py-2 font-mono text-sm bg-main-bg border border-input-default-border rounded-md focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
-            value={yaml}
+            id="compose-yaml"
             onChange={(e) => setYaml(e.target.value)}
             placeholder="version: '3.8'&#10;services:&#10;  web:&#10;    image: nginx"
+            value={yaml}
           />
         </div>
 
         <div>
           <div className="block text-sm font-medium mb-1">Environment Variables</div>
           <div className="flex gap-2 mb-2">
-            <Input value={envKey} onChange={setEnvKey} placeholder="KEY" className="flex-1" />
-            <Input value={envValue} onChange={setEnvValue} placeholder="value" className="flex-1" />
-            <Button variant="outline" onClick={handleAddEnv}>
+            <Input
+              className="flex-1"
+              onChange={setEnvKey}
+              placeholder="KEY"
+              value={envKey}
+            />
+            <Input
+              className="flex-1"
+              onChange={setEnvValue}
+              placeholder="value"
+              value={envValue}
+            />
+            <Button
+              onClick={handleAddEnv}
+              variant="outline"
+            >
               Add
             </Button>
           </div>
           <div className="space-y-1 max-h-32 overflow-y-auto">
             {Object.entries(env).map(([key, value]) => (
               <div
-                key={key}
                 className="flex items-center justify-between bg-main-bg/50 p-2 rounded"
+                key={key}
               >
                 <span className="font-mono text-sm">
                   <span className="text-accent">{key}</span>=
                   <span className="text-muted-text">{value}</span>
                 </span>
-                <Button variant="ghost" size="xs" onClick={() => handleRemoveEnv(key)}>
+                <Button
+                  onClick={() => handleRemoveEnv(key)}
+                  size="xs"
+                  variant="ghost"
+                >
                   ×
                 </Button>
               </div>
@@ -199,10 +222,16 @@ function StackFormModal({ open, onClose, onSubmit, initialData }: StackFormModal
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button
+            onClick={onClose}
+            variant="outline"
+          >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} loading={loading}>
+          <Button
+            loading={loading}
+            onClick={handleSubmit}
+          >
             {initialData ? "Update" : "Create"}
           </Button>
         </div>
@@ -246,13 +275,13 @@ function StackLogsModal({ open, onClose, nodeId, stackId, stackName }: StackLogs
         const logLines = logText.split("\n").filter(Boolean)
         setLogs(
           logLines.map((line) => ({
-            timestamp: new Date().toISOString(),
-            message: line,
             level: line.toLowerCase().includes("error")
               ? "error"
               : line.toLowerCase().includes("warn")
                 ? "warn"
                 : "info",
+            message: line,
+            timestamp: new Date().toISOString(),
           }))
         )
       }
@@ -270,27 +299,39 @@ function StackLogsModal({ open, onClose, nodeId, stackId, stackName }: StackLogs
   }, [open, stackId, fetchLogs])
 
   const levelColors = {
+    debug: "text-muted-text",
+    error: "text-error",
     info: "text-primary-text",
     warn: "text-yellow-400",
-    error: "text-error",
-    debug: "text-muted-text",
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={`Logs: ${stackName}`} size="xl">
+    <Modal
+      onClose={onClose}
+      open={open}
+      size="xl"
+      title={`Logs: ${stackName}`}
+    >
       <div className="space-y-4">
         <div className="flex items-center gap-4">
-          <label htmlFor="log-lines" className="text-sm">
+          <label
+            className="text-sm"
+            htmlFor="log-lines"
+          >
             Lines:
           </label>
           <Input
+            className="w-24"
             id="log-lines"
+            onChange={(v) => setTail(Number(v) || 100)}
             type="number"
             value={String(tail)}
-            onChange={(v) => setTail(Number(v) || 100)}
-            className="w-24"
           />
-          <Button variant="outline" onClick={fetchLogs} loading={loading}>
+          <Button
+            loading={loading}
+            onClick={fetchLogs}
+            variant="outline"
+          >
             Refresh
           </Button>
         </div>
@@ -301,8 +342,8 @@ function StackLogsModal({ open, onClose, nodeId, stackId, stackName }: StackLogs
           ) : (
             logs.map((log, i) => (
               <div
-                key={`log-${i}-${log.timestamp}`}
                 className={`${levelColors[log.level]} whitespace-pre-wrap`}
+                key={`log-${i}-${log.timestamp}`}
               >
                 <span className="text-muted-text mr-2">
                   [{new Date(log.timestamp).toLocaleTimeString()}]
@@ -314,7 +355,10 @@ function StackLogsModal({ open, onClose, nodeId, stackId, stackName }: StackLogs
         </div>
 
         <div className="flex justify-end">
-          <Button variant="outline" onClick={onClose}>
+          <Button
+            onClick={onClose}
+            variant="outline"
+          >
             Close
           </Button>
         </div>
@@ -346,33 +390,41 @@ function SwarmInitModal({ open, onClose, nodeId, onSuccess }: SwarmInitModalProp
         advertiseAddr: advertiseAddr || undefined,
         listenAddr: listenAddr || undefined,
       })
-      toast({ variant: "success", title: "Swarm initialized successfully" })
+      toast({ title: "Swarm initialized successfully", variant: "success" })
       onSuccess()
       onClose()
     } catch (error) {
       console.error(error)
-      toast({ variant: "error", title: "Failed to initialize swarm" })
+      toast({ title: "Failed to initialize swarm", variant: "error" })
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Initialize Swarm" size="md">
+    <Modal
+      onClose={onClose}
+      open={open}
+      size="md"
+      title="Initialize Swarm"
+    >
       <div className="space-y-4">
         <p className="text-muted-text text-sm">
           Initialize a new Docker Swarm cluster. This node will become the first manager.
         </p>
 
         <div>
-          <label htmlFor="advertise-addr" className="block text-sm font-medium mb-1">
+          <label
+            className="block text-sm font-medium mb-1"
+            htmlFor="advertise-addr"
+          >
             Advertise Address (optional)
           </label>
           <Input
             id="advertise-addr"
-            value={advertiseAddr}
             onChange={setAdvertiseAddr}
             placeholder="e.g., 192.168.1.100"
+            value={advertiseAddr}
           />
           <p className="text-xs text-muted-text mt-1">
             The IP address that other nodes will use to join the swarm.
@@ -380,14 +432,17 @@ function SwarmInitModal({ open, onClose, nodeId, onSuccess }: SwarmInitModalProp
         </div>
 
         <div>
-          <label htmlFor="listen-addr" className="block text-sm font-medium mb-1">
+          <label
+            className="block text-sm font-medium mb-1"
+            htmlFor="listen-addr"
+          >
             Listen Address
           </label>
           <Input
             id="listen-addr"
-            value={listenAddr}
             onChange={setListenAddr}
             placeholder="0.0.0.0:2377"
+            value={listenAddr}
           />
           <p className="text-xs text-muted-text mt-1">
             The address to listen for inbound cluster management traffic.
@@ -395,10 +450,16 @@ function SwarmInitModal({ open, onClose, nodeId, onSuccess }: SwarmInitModalProp
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button
+            onClick={onClose}
+            variant="outline"
+          >
             Cancel
           </Button>
-          <Button onClick={handleInit} loading={loading}>
+          <Button
+            loading={loading}
+            onClick={handleInit}
+          >
             Initialize Swarm
           </Button>
         </div>
@@ -425,7 +486,7 @@ function SwarmJoinModal({ open, onClose, nodeId, onSuccess }: SwarmJoinModalProp
 
   const handleJoin = async () => {
     if (!joinToken.trim() || !remoteAddr.trim()) {
-      toast({ variant: "error", title: "Join token and remote address are required" })
+      toast({ title: "Join token and remote address are required", variant: "error" })
       return
     }
 
@@ -435,33 +496,41 @@ function SwarmJoinModal({ open, onClose, nodeId, onSuccess }: SwarmJoinModalProp
         joinToken,
         remoteAddrs: [remoteAddr],
       })
-      toast({ variant: "success", title: "Joined swarm successfully" })
+      toast({ title: "Joined swarm successfully", variant: "success" })
       onSuccess()
       onClose()
     } catch (error) {
       console.error(error)
-      toast({ variant: "error", title: "Failed to join swarm" })
+      toast({ title: "Failed to join swarm", variant: "error" })
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Join Swarm" size="md">
+    <Modal
+      onClose={onClose}
+      open={open}
+      size="md"
+      title="Join Swarm"
+    >
       <div className="space-y-4">
         <p className="text-muted-text text-sm">
           Join an existing Docker Swarm cluster as a worker or manager.
         </p>
 
         <div>
-          <label htmlFor="join-token" className="block text-sm font-medium mb-1">
+          <label
+            className="block text-sm font-medium mb-1"
+            htmlFor="join-token"
+          >
             Join Token *
           </label>
           <Input
             id="join-token"
-            value={joinToken}
             onChange={setJoinToken}
             placeholder="SWMTKN-1-..."
+            value={joinToken}
           />
           <p className="text-xs text-muted-text mt-1">
             The join token from an existing swarm manager. Use the worker token to join as a worker,
@@ -470,23 +539,32 @@ function SwarmJoinModal({ open, onClose, nodeId, onSuccess }: SwarmJoinModalProp
         </div>
 
         <div>
-          <label htmlFor="remote-addr" className="block text-sm font-medium mb-1">
+          <label
+            className="block text-sm font-medium mb-1"
+            htmlFor="remote-addr"
+          >
             Remote Address *
           </label>
           <Input
             id="remote-addr"
-            value={remoteAddr}
             onChange={setRemoteAddr}
             placeholder="192.168.1.100:2377"
+            value={remoteAddr}
           />
           <p className="text-xs text-muted-text mt-1">Address of an existing swarm manager node.</p>
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button
+            onClick={onClose}
+            variant="outline"
+          >
             Cancel
           </Button>
-          <Button onClick={handleJoin} loading={loading}>
+          <Button
+            loading={loading}
+            onClick={handleJoin}
+          >
             Join Swarm
           </Button>
         </div>
@@ -514,78 +592,98 @@ function SwarmStackDeployModal({ open, onClose, nodeId, onSuccess }: SwarmStackD
 
   const handleDeploy = async () => {
     if (!name.trim() || !composeFile.trim()) {
-      toast({ variant: "error", title: "Stack name and compose file are required" })
+      toast({ title: "Stack name and compose file are required", variant: "error" })
       return
     }
 
     setLoading(true)
     try {
       await api.node({ nodeId }).swarm.stacks.deploy.post({
-        name,
         composeFile,
+        name,
         withRegistryAuth,
       })
-      toast({ variant: "success", title: "Swarm stack deployed successfully" })
+      toast({ title: "Swarm stack deployed successfully", variant: "success" })
       onSuccess()
       onClose()
     } catch (error) {
       console.error(error)
-      toast({ variant: "error", title: "Failed to deploy swarm stack" })
+      toast({ title: "Failed to deploy swarm stack", variant: "error" })
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Deploy Swarm Stack" size="lg">
+    <Modal
+      onClose={onClose}
+      open={open}
+      size="lg"
+      title="Deploy Swarm Stack"
+    >
       <div className="space-y-4">
         <p className="text-muted-text text-sm">
           Deploy a stack to the Docker Swarm cluster using a compose file.
         </p>
 
         <div>
-          <label htmlFor="swarm-stack-name" className="block text-sm font-medium mb-1">
+          <label
+            className="block text-sm font-medium mb-1"
+            htmlFor="swarm-stack-name"
+          >
             Stack Name *
           </label>
           <Input
             id="swarm-stack-name"
-            value={name}
             onChange={setName}
             placeholder="my-swarm-stack"
+            value={name}
           />
         </div>
 
         <div>
-          <label htmlFor="swarm-compose-yaml" className="block text-sm font-medium mb-1">
+          <label
+            className="block text-sm font-medium mb-1"
+            htmlFor="swarm-compose-yaml"
+          >
             Docker Compose YAML *
           </label>
           <textarea
-            id="swarm-compose-yaml"
             className="w-full h-64 px-3 py-2 font-mono text-sm bg-main-bg border border-input-default-border rounded-md focus:border-input-default-focus-border focus:ring-1 focus:ring-input-default-focus-ring"
-            value={composeFile}
+            id="swarm-compose-yaml"
             onChange={(e) => setComposeFile(e.target.value)}
             placeholder="version: '3.8'&#10;services:&#10;  web:&#10;    image: nginx&#10;    deploy:&#10;      replicas: 3"
+            value={composeFile}
           />
         </div>
 
         <div className="flex items-center gap-2">
           <input
-            type="checkbox"
-            id="withRegistryAuth"
             checked={withRegistryAuth}
-            onChange={(e) => setWithRegistryAuth(e.target.checked)}
             className="rounded border-input-default-border"
+            id="withRegistryAuth"
+            onChange={(e) => setWithRegistryAuth(e.target.checked)}
+            type="checkbox"
           />
-          <label htmlFor="withRegistryAuth" className="text-sm">
+          <label
+            className="text-sm"
+            htmlFor="withRegistryAuth"
+          >
             Send registry authentication details
           </label>
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button
+            onClick={onClose}
+            variant="outline"
+          >
             Cancel
           </Button>
-          <Button onClick={handleDeploy} loading={loading}>
+          <Button
+            loading={loading}
+            onClick={handleDeploy}
+          >
             Deploy Stack
           </Button>
         </div>
@@ -612,44 +710,52 @@ function DockStoreStackModal({ open, onClose, nodeId, onSuccess }: DockStoreStac
 
   const handleDeploy = async () => {
     if (!repoUrl.trim() || !stackName.trim()) {
-      toast({ variant: "error", title: "Repository URL and stack name are required" })
+      toast({ title: "Repository URL and stack name are required", variant: "error" })
       return
     }
 
     setLoading(true)
     try {
       await api.node({ nodeId }).stacks.fromStore.post({
+        nodeId: Number(nodeId),
         repoUrl,
         stackName,
-        nodeId: Number(nodeId),
       })
-      toast({ variant: "success", title: "Stack deployed from DockStore successfully" })
+      toast({ title: "Stack deployed from DockStore successfully", variant: "success" })
       onSuccess()
       onClose()
     } catch (error) {
       console.error(error)
-      toast({ variant: "error", title: "Failed to deploy stack from DockStore" })
+      toast({ title: "Failed to deploy stack from DockStore", variant: "error" })
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Deploy from DockStore" size="md">
+    <Modal
+      onClose={onClose}
+      open={open}
+      size="md"
+      title="Deploy from DockStore"
+    >
       <div className="space-y-4">
         <p className="text-muted-text text-sm">
           Deploy a stack from a DockStore repository containing pre-built stack templates.
         </p>
 
         <div>
-          <label htmlFor="repo-url" className="block text-sm font-medium mb-1">
+          <label
+            className="block text-sm font-medium mb-1"
+            htmlFor="repo-url"
+          >
             Repository URL *
           </label>
           <Input
             id="repo-url"
-            value={repoUrl}
             onChange={setRepoUrl}
             placeholder="https://github.com/user/dockstore-repo"
+            value={repoUrl}
           />
           <p className="text-xs text-muted-text mt-1">
             URL of a DockStore repository containing stack templates.
@@ -657,14 +763,17 @@ function DockStoreStackModal({ open, onClose, nodeId, onSuccess }: DockStoreStac
         </div>
 
         <div>
-          <label htmlFor="dockstore-stack-name" className="block text-sm font-medium mb-1">
+          <label
+            className="block text-sm font-medium mb-1"
+            htmlFor="dockstore-stack-name"
+          >
             Stack Name *
           </label>
           <Input
             id="dockstore-stack-name"
-            value={stackName}
             onChange={setStackName}
             placeholder="nginx-stack"
+            value={stackName}
           />
           <p className="text-xs text-muted-text mt-1">
             Name of the stack folder in the repository&apos;s stacks directory.
@@ -672,10 +781,16 @@ function DockStoreStackModal({ open, onClose, nodeId, onSuccess }: DockStoreStac
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button
+            onClick={onClose}
+            variant="outline"
+          >
             Cancel
           </Button>
-          <Button onClick={handleDeploy} loading={loading}>
+          <Button
+            loading={loading}
+            onClick={handleDeploy}
+          >
             Deploy Stack
           </Button>
         </div>
@@ -701,10 +816,17 @@ function SwarmTokens({ swarmStatus, onLeave }: SwarmTokensProps) {
   }
 
   return (
-    <Card variant="outlined" className="p-4 mt-4">
+    <Card
+      className="p-4 mt-4"
+      variant="outlined"
+    >
       <div className="flex items-center justify-between mb-2">
         <h3 className="font-semibold">Join Tokens</h3>
-        <Button variant="ghost" size="xs" onClick={() => setShowTokens(!showTokens)}>
+        <Button
+          onClick={() => setShowTokens(!showTokens)}
+          size="xs"
+          variant="ghost"
+        >
           {showTokens ? "Hide" : "Show"}
         </Button>
       </div>
@@ -723,7 +845,11 @@ function SwarmTokens({ swarmStatus, onLeave }: SwarmTokensProps) {
             </code>
           </div>
           <div className="mt-4 pt-2 border-t border-card-outlined-border">
-            <Button variant="outline" size="sm" onClick={onLeave}>
+            <Button
+              onClick={onLeave}
+              size="sm"
+              variant="outline"
+            >
               Leave Swarm
             </Button>
           </div>
@@ -789,7 +915,7 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
       }
     } catch (error) {
       console.error("Failed to fetch stacks:", error)
-      toast({ variant: "error", title: "Failed to fetch stacks" })
+      toast({ title: "Failed to fetch stacks", variant: "error" })
     } finally {
       setLoading(false)
     }
@@ -807,15 +933,15 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
   }) => {
     try {
       await api.node({ nodeId: effectiveNodeId }).stacks.post({
-        name: data.name,
-        yaml: data.yaml,
-        repository: "local",
-        repoName: data.name,
-        version: "1.0.0",
-        env: data.env,
         dockNodeId: Number(effectiveNodeId),
+        env: data.env,
+        name: data.name,
+        repoName: data.name,
+        repository: "local",
+        version: "1.0.0",
+        yaml: data.yaml,
       })
-      toast({ variant: "success", title: "Stack created successfully" })
+      toast({ title: "Stack created successfully", variant: "success" })
       fetchData()
     } catch (error) {
       console.error(error)
@@ -834,10 +960,10 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
         .node({ nodeId: effectiveNodeId })
         .stacks({ stackId: String(selectedStack.id) })
         .patch({
-          yaml: data.yaml,
           env: data.env,
+          yaml: data.yaml,
         })
-      toast({ variant: "success", title: "Stack updated successfully" })
+      toast({ title: "Stack updated successfully", variant: "success" })
       fetchData()
     } catch (error) {
       console.error(error)
@@ -852,11 +978,11 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
         .node({ nodeId: effectiveNodeId })
         .stacks({ stackId: String(stackId) })
         .delete()
-      toast({ variant: "success", title: "Stack deleted successfully" })
+      toast({ title: "Stack deleted successfully", variant: "success" })
       fetchData()
     } catch (error) {
       console.error(error)
-      toast({ variant: "error", title: "Failed to delete stack" })
+      toast({ title: "Failed to delete stack", variant: "error" })
     }
   }
 
@@ -873,17 +999,17 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
         | undefined
       if (resultData && !resultData.success) {
         toast({
-          variant: "error",
-          title: `Stack ${action} failed`,
           description: resultData.error || resultData.stderr || "Unknown error",
+          title: `Stack ${action} failed`,
+          variant: "error",
         })
       } else {
-        toast({ variant: "success", title: `Stack ${action} initiated` })
+        toast({ title: `Stack ${action} initiated`, variant: "success" })
       }
       fetchData()
     } catch (error) {
       console.error(error)
-      toast({ variant: "error", title: `Failed to ${action} stack` })
+      toast({ title: `Failed to ${action} stack`, variant: "error" })
     }
   }
 
@@ -898,107 +1024,134 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
       return
     try {
       await api.node({ nodeId: effectiveNodeId }).swarm.leave.post({ query: { force: "true" } })
-      toast({ variant: "success", title: "Left swarm successfully" })
+      toast({ title: "Left swarm successfully", variant: "success" })
       fetchData()
     } catch (error) {
       console.error(error)
-      toast({ variant: "error", title: "Failed to leave swarm" })
+      toast({ title: "Failed to leave swarm", variant: "error" })
     }
   }
 
   // Table columns
   const composeColumns: Column<Stack>[] = [
-    { key: "id", header: "ID", width: "60px" },
-    { key: "name", header: "Name", width: "200px" },
-    { key: "version", header: "Version", width: "100px" },
+    { header: "ID", key: "id", width: "60px" },
+    { header: "Name", key: "name", width: "200px" },
+    { header: "Version", key: "version", width: "100px" },
     {
-      key: "repository",
       header: "Repository",
-      width: "200px",
+      key: "repository",
       render: (value) => (
-        <span className="truncate block" title={String(value)}>
+        <span
+          className="truncate block"
+          title={String(value)}
+        >
           {String(value)}
         </span>
       ),
+      width: "200px",
     },
     {
-      key: "actions",
       header: "Actions",
-      width: "300px",
+      key: "actions",
       render: (_, row) => (
         <div className="flex gap-1 flex-wrap">
-          <Button variant="ghost" size="xs" onClick={() => handleStackAction(row.id, "up")}>
+          <Button
+            onClick={() => handleStackAction(row.id, "up")}
+            size="xs"
+            variant="ghost"
+          >
             Up
           </Button>
-          <Button variant="ghost" size="xs" onClick={() => handleStackAction(row.id, "down")}>
+          <Button
+            onClick={() => handleStackAction(row.id, "down")}
+            size="xs"
+            variant="ghost"
+          >
             Down
           </Button>
-          <Button variant="ghost" size="xs" onClick={() => handleStackAction(row.id, "restart")}>
+          <Button
+            onClick={() => handleStackAction(row.id, "restart")}
+            size="xs"
+            variant="ghost"
+          >
             Restart
           </Button>
-          <Button variant="ghost" size="xs" onClick={() => handleViewLogs(row.id, row.name)}>
+          <Button
+            onClick={() => handleViewLogs(row.id, row.name)}
+            size="xs"
+            variant="ghost"
+          >
             Logs
           </Button>
           <Button
-            variant="ghost"
-            size="xs"
             onClick={() => {
               setSelectedStack(row)
               setShowEditModal(true)
             }}
+            size="xs"
+            variant="ghost"
           >
             Edit
           </Button>
-          <Button variant="ghost" size="xs" onClick={() => handleDeleteStack(row.id)}>
+          <Button
+            onClick={() => handleDeleteStack(row.id)}
+            size="xs"
+            variant="ghost"
+          >
             Delete
           </Button>
         </div>
       ),
+      width: "300px",
     },
   ]
 
   const swarmColumns: Column<SwarmStack>[] = [
-    { key: "name", header: "Stack Name", width: "200px" },
+    { header: "Stack Name", key: "name", width: "200px" },
     {
-      key: "services",
       header: "Services",
-      width: "300px",
+      key: "services",
       render: (services) => (
         <div className="flex flex-wrap gap-1">
           {(services as SwarmService[]).map((s) => (
-            <Badge key={s.id} variant="default" size="sm">
+            <Badge
+              key={s.id}
+              size="sm"
+              variant="default"
+            >
               {s.name} ({s.replicas.running}/{s.replicas.desired})
             </Badge>
           ))}
         </div>
       ),
+      width: "300px",
     },
     {
-      key: "actions",
       header: "Actions",
-      width: "150px",
+      key: "actions",
       render: (_, row) => (
         <div className="flex gap-1">
           <Button
-            variant="ghost"
-            size="xs"
             onClick={async () => {
               try {
                 await api
                   .node({ nodeId: effectiveNodeId })
                   .swarm.stacks({ name: row.name })
                   .delete()
-                toast({ variant: "success", title: "Stack removed" })
+                toast({ title: "Stack removed", variant: "success" })
                 fetchData()
               } catch {
-                toast({ variant: "error", title: "Failed to remove stack" })
+                toast({ title: "Failed to remove stack", variant: "error" })
               }
             }}
+            size="xs"
+            variant="ghost"
           >
             Remove
           </Button>
         </div>
       ),
+      width: "150px",
     },
   ]
 
@@ -1021,7 +1174,10 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
             <Badge variant="outline">Standalone Mode</Badge>
           )}
           <Button onClick={() => setShowCreateModal(true)}>Create Stack</Button>
-          <Button variant="outline" onClick={() => setShowDockStoreModal(true)}>
+          <Button
+            onClick={() => setShowDockStoreModal(true)}
+            variant="outline"
+          >
             From DockStore
           </Button>
         </div>
@@ -1029,7 +1185,10 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
 
       {/* Swarm Actions (when not in swarm) */}
       {!isInSwarm && (
-        <Card variant="outlined" className="p-4">
+        <Card
+          className="p-4"
+          variant="outlined"
+        >
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold">Docker Swarm</h3>
@@ -1039,7 +1198,10 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
             </div>
             <div className="flex gap-2">
               <Button onClick={() => setShowSwarmInitModal(true)}>Initialize Swarm</Button>
-              <Button variant="outline" onClick={() => setShowSwarmJoinModal(true)}>
+              <Button
+                onClick={() => setShowSwarmJoinModal(true)}
+                variant="outline"
+              >
                 Join Swarm
               </Button>
             </div>
@@ -1049,21 +1211,24 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
 
       {/* Swarm Tokens (when manager) */}
       {swarmStatus?.isSwarmManager && (
-        <SwarmTokens swarmStatus={swarmStatus} onLeave={handleLeaveSwarm} />
+        <SwarmTokens
+          onLeave={handleLeaveSwarm}
+          swarmStatus={swarmStatus}
+        />
       )}
 
       {/* Tabs */}
       <div className="flex gap-2 border-b border-card-outlined-border pb-2">
         <Button
-          variant={activeTab === "compose" ? "primary" : "ghost"}
           onClick={() => setActiveTab("compose")}
+          variant={activeTab === "compose" ? "primary" : "ghost"}
         >
           Compose Stacks
         </Button>
         {swarmStatus?.isSwarmManager && (
           <Button
-            variant={activeTab === "swarm" ? "primary" : "ghost"}
             onClick={() => setActiveTab("swarm")}
+            variant={activeTab === "swarm" ? "primary" : "ghost"}
           >
             Swarm Stacks
           </Button>
@@ -1079,24 +1244,33 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
 
       {/* Content */}
       {loading ? (
-        <Card variant="outlined" className="p-8 text-center text-muted-text">
+        <Card
+          className="p-8 text-center text-muted-text"
+          variant="outlined"
+        >
           Loading stacks...
         </Card>
       ) : activeTab === "compose" ? (
-        <Card variant="outlined" size="sm">
+        <Card
+          size="sm"
+          variant="outlined"
+        >
           <Table
-            data={stacks}
             columns={composeColumns}
+            data={stacks}
             rowKey="id"
             searchable
             searchPlaceholder="Search stacks..."
           />
         </Card>
       ) : (
-        <Card variant="outlined" size="sm">
+        <Card
+          size="sm"
+          variant="outlined"
+        >
           <Table
-            data={swarmStacks}
             columns={swarmColumns}
+            data={swarmStacks}
             rowKey="name"
             searchable
             searchPlaceholder="Search swarm stacks..."
@@ -1106,55 +1280,55 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
 
       {/* Modals */}
       <StackFormModal
-        open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateStack}
+        open={showCreateModal}
       />
 
       <StackFormModal
-        open={showEditModal}
+        initialData={selectedStack}
         onClose={() => {
           setShowEditModal(false)
           setSelectedStack(null)
         }}
         onSubmit={handleUpdateStack}
-        initialData={selectedStack}
+        open={showEditModal}
       />
 
       <StackLogsModal
-        open={showLogsModal}
-        onClose={() => setShowLogsModal(false)}
         nodeId={effectiveNodeId}
+        onClose={() => setShowLogsModal(false)}
+        open={showLogsModal}
         stackId={logsStackId}
         stackName={logsStackName}
       />
 
       <SwarmInitModal
-        open={showSwarmInitModal}
-        onClose={() => setShowSwarmInitModal(false)}
         nodeId={effectiveNodeId}
+        onClose={() => setShowSwarmInitModal(false)}
         onSuccess={fetchData}
+        open={showSwarmInitModal}
       />
 
       <SwarmJoinModal
-        open={showSwarmJoinModal}
-        onClose={() => setShowSwarmJoinModal(false)}
         nodeId={effectiveNodeId}
+        onClose={() => setShowSwarmJoinModal(false)}
         onSuccess={fetchData}
+        open={showSwarmJoinModal}
       />
 
       <SwarmStackDeployModal
-        open={showSwarmStackDeployModal}
-        onClose={() => setShowSwarmStackDeployModal(false)}
         nodeId={effectiveNodeId}
+        onClose={() => setShowSwarmStackDeployModal(false)}
         onSuccess={fetchData}
+        open={showSwarmStackDeployModal}
       />
 
       <DockStoreStackModal
-        open={showDockStoreModal}
-        onClose={() => setShowDockStoreModal(false)}
         nodeId={effectiveNodeId}
+        onClose={() => setShowDockStoreModal(false)}
         onSuccess={fetchData}
+        open={showDockStoreModal}
       />
     </div>
   )

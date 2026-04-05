@@ -68,9 +68,9 @@ export function PluginCard({ plugin, showActions = true }: PluginCardProps) {
           <span class="ml-2 text-gray-300">{plugin.author_name}</span>
           {plugin.author_website && (
             <a
+              class="ml-1 text-blue-400 hover:text-blue-300"
               href={plugin.author_website}
               target="_blank"
-              class="ml-1 text-blue-400 hover:text-blue-300"
             >
               ↗
             </a>
@@ -105,11 +105,15 @@ export function PluginCard({ plugin, showActions = true }: PluginCardProps) {
       {plugin.verified && plugin.verified_by && (
         <div class="bg-green-900/20 border border-green-700/30 rounded-lg p-3 mb-4">
           <div class="flex items-center gap-2 text-sm">
-            <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+            <svg
+              class="w-4 h-4 text-green-400"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
               <path
-                fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                 clip-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                fill-rule="evenodd"
               />
               <title>SVG</title>
             </svg>
@@ -129,63 +133,66 @@ export function PluginCard({ plugin, showActions = true }: PluginCardProps) {
         <div class="flex items-center gap-2 pt-4 border-t border-gray-700">
           {!plugin.verified && (
             <a
-              href={`/verify?plugin=${plugin.plugin_id}&version=${encodeURIComponent(plugin.version)}`}
               class="btn btn-primary text-sm"
+              href={`/verify?plugin=${plugin.plugin_id}&version=${encodeURIComponent(plugin.version)}`}
             >
               <svg
+                aria-label="Verify"
                 class="w-4 h-4 mr-1"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                aria-label="Verify"
               >
                 <title>SVG</title>
                 <path
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
               Verify
             </a>
           )}
-          <a href={`/plugins/${plugin.plugin_id}`} class="btn btn-secondary text-sm">
+          <a
+            class="btn btn-secondary text-sm"
+            href={`/plugins/${plugin.plugin_id}`}
+          >
             <svg
+              aria-label="View details"
               class="w-4 h-4 mr-1"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
-              aria-label="View details"
             >
               <title>SVG</title>
 
               <path
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
               />
               <path
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
               />
             </svg>
             Details
           </a>
           <a
-            href={getViewableRepositoryUrl(plugin.repository_url, plugin.repo_type)}
-            target="_blank"
-            rel="noopener noreferrer"
             class="btn btn-secondary text-sm"
+            href={getViewableRepositoryUrl(plugin.repository_url, plugin.repo_type)}
+            rel="noopener noreferrer"
+            target="_blank"
           >
             <svg
+              aria-label="View source"
               class="w-4 h-4 mr-1"
               fill="currentColor"
               viewBox="0 0 24 24"
-              aria-label="View source"
             >
               <title>SVG</title>
 

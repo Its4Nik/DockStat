@@ -33,8 +33,8 @@ export default function DockNodePage() {
     options.name.trim().length >= 3 && options.host.trim().length >= 5 && options.port > 0
 
   const { data: docknodes, isLoading } = eden.useEdenQuery({
-    route: api.node.get,
     queryKey: ["getAllDockNodes"],
+    route: api.node.get,
   })
 
   const { createDockNodeMutation, deleteDockNodeMutation } = useDockNodeMutations()
@@ -56,16 +56,30 @@ export default function DockNodePage() {
     <div className="space-y-6">
       {/* Header / Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card size="sm" variant="flat" className="flex items-center gap-3">
-          <Server size={20} className="text-accent" />
+        <Card
+          className="flex items-center gap-3"
+          size="sm"
+          variant="flat"
+        >
+          <Server
+            className="text-accent"
+            size={20}
+          />
           <div>
             <div className="text-lg font-semibold">{docknodes?.length ?? 0}</div>
             <div className="text-sm text-muted-text">Total Nodes</div>
           </div>
         </Card>
 
-        <Card size="sm" variant="flat" className="flex items-center gap-3">
-          <Activity size={20} className="text-accent" />
+        <Card
+          className="flex items-center gap-3"
+          size="sm"
+          variant="flat"
+        >
+          <Activity
+            className="text-accent"
+            size={20}
+          />
           <div>
             <div className="text-lg font-semibold">
               {docknodes?.filter((n) => n.isReachable === "OK").length ?? 0}
@@ -74,8 +88,15 @@ export default function DockNodePage() {
           </div>
         </Card>
 
-        <Card size="sm" variant="flat" className="flex items-center gap-3">
-          <Shield size={20} className="text-accent" />
+        <Card
+          className="flex items-center gap-3"
+          size="sm"
+          variant="flat"
+        >
+          <Shield
+            className="text-accent"
+            size={20}
+          />
           <div>
             <div className="text-lg font-semibold">
               {docknodes?.filter((n) => n.useSSL).length ?? 0}
@@ -89,35 +110,25 @@ export default function DockNodePage() {
 
       {/* Create Node / Nodes List */}
       <div>
-        <Card size="sm" variant="flat" className="flex items-center gap-2 mb-4">
-          <Server size={20} className="text-accent" />
+        <Card
+          className="flex items-center gap-2 mb-4"
+          size="sm"
+          variant="flat"
+        >
+          <Server
+            className="text-accent"
+            size={20}
+          />
           <h2 className="text-2xl font-semibold text-muted-text">DockNodes</h2>
         </Card>
 
         {/* Inline Create Form (moved into Slides) */}
-        <Slides buttonPosition="right" connected defaultSlide="Nodes">
+        <Slides
+          buttonPosition="right"
+          connected
+          defaultSlide="Nodes"
+        >
           {{
-            Nodes: isLoading ? (
-              <div className="text-center py-12 text-muted-text">Loading dock nodes...</div>
-            ) : !docknodes || docknodes.length === 0 ? (
-              <Card className="text-center py-12 text-muted-text text-xl">
-                No DockNodes configured yet. Use "
-                <span className="text-accent">Create a new Node</span>" to create one.
-              </Card>
-            ) : (
-              <Card variant="dark" className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {docknodes.map((dn) => (
-                    <DockNodeCard
-                      key={dn.id ?? dn.name}
-                      dn={dn}
-                      isDisabled={busy || deleteDockNodeMutation.isPending}
-                      deleteNode={deleteDockNode}
-                    />
-                  ))}
-                </div>
-              </Card>
-            ),
             "Create a new Node": (
               <Card variant="elevated">
                 <CardHeader className="font-semibold text-lg p-4">Create New DockNode</CardHeader>
@@ -128,10 +139,10 @@ export default function DockNodePage() {
                       <div>
                         <p className="text-sm font-medium block mb-1">Node Name</p>
                         <Input
-                          variant="underline"
-                          value={options.name}
                           onChange={(v) => setOptions((o) => ({ ...o, name: v }))}
                           placeholder="production-node-01"
+                          value={options.name}
+                          variant="underline"
                         />
                         <p className="text-xs mt-1 text-muted-text">Minimum 5 characters</p>
                       </div>
@@ -139,10 +150,10 @@ export default function DockNodePage() {
                       <div>
                         <p className="text-sm font-medium block mb-1">Host</p>
                         <Input
-                          size="sm"
-                          value={options.host}
                           onChange={(v) => setOptions((o) => ({ ...o, host: v }))}
                           placeholder="node.example.com"
+                          size="sm"
+                          value={options.host}
                         />
                       </div>
                     </div>
@@ -150,31 +161,55 @@ export default function DockNodePage() {
                     <div className="flex-2">
                       <p className="text-sm font-medium block mb-1">Port</p>
                       <Input
-                        type="number"
-                        value={String(options.port)}
                         onChange={(v) => setOptions((o) => ({ ...o, port: Number(v) }))}
                         placeholder="4040"
+                        type="number"
+                        value={String(options.port)}
                       />
                     </div>
 
                     <div className="flex-1 items-center m-4 my-auto">
                       <Toggle
                         checked={options.useSSL}
-                        onChange={(v) => setOptions((o) => ({ ...o, useSSL: !!v }))}
                         label="Enable SSL"
+                        onChange={(v) => setOptions((o) => ({ ...o, useSSL: !!v }))}
                       />
                     </div>
                   </div>
 
                   <div className="flex justify-end">
                     <Button
-                      onClick={createDockNode}
                       disabled={!isValid || busy || createDockNodeMutation.isPending}
+                      onClick={createDockNode}
                     >
                       {createDockNodeMutation.isPending ? "Creating..." : "Create Node"}
                     </Button>
                   </div>
                 </CardBody>
+              </Card>
+            ),
+            Nodes: isLoading ? (
+              <div className="text-center py-12 text-muted-text">Loading dock nodes...</div>
+            ) : !docknodes || docknodes.length === 0 ? (
+              <Card className="text-center py-12 text-muted-text text-xl">
+                No DockNodes configured yet. Use "
+                <span className="text-accent">Create a new Node</span>" to create one.
+              </Card>
+            ) : (
+              <Card
+                className="p-4"
+                variant="dark"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {docknodes.map((dn) => (
+                    <DockNodeCard
+                      deleteNode={deleteDockNode}
+                      dn={dn}
+                      isDisabled={busy || deleteDockNodeMutation.isPending}
+                      key={dn.id ?? dn.name}
+                    />
+                  ))}
+                </div>
               </Card>
             ),
           }}

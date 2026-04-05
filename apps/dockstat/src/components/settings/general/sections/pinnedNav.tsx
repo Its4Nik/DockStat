@@ -11,29 +11,45 @@ export function PinnedNavSection({ pinnedLinks, unpinLink }: PinnedNavSectionPro
   const busy = useGlobalBusy()
   return (
     <div>
-      <Card size="sm" variant="flat" className="flex gap-2 mb-4">
+      <Card
+        className="flex gap-2 mb-4"
+        size="sm"
+        variant="flat"
+      >
         <div className="mx-auto gap-2">
           <div className="flex items-center gap-2">
-            <Pin size={24} className="text-accent rotate-45" />
+            <Pin
+              className="text-accent rotate-45"
+              size={24}
+            />
             <h2 className="text-2xl font-semibold text-muted-text">Pinned Links</h2>
           </div>
         </div>
       </Card>
 
       {pinnedLinks.length === 0 ? (
-        <Card variant="dark" className="text-center py-12 text-muted-text">
+        <Card
+          className="text-center py-12 text-muted-text"
+          variant="dark"
+        >
           No pinned links. Pin frequently used pages for quick access in the navbar.
         </Card>
       ) : (
-        <Card variant="dark" className="grid gap-3 p-4 h-48 resize-y overflow-y-scroll">
+        <Card
+          className="grid gap-3 p-4 h-48 resize-y overflow-y-scroll"
+          variant="dark"
+        >
           {pinnedLinks.map((link) => (
             <div
-              key={`${link.slug}-${link.path}`}
               className="flex items-center justify-between gap-4 p-3 rounded-lg bg-muted/5 hover:bg-muted/10 transition-colors"
+              key={`${link.slug}-${link.path}`}
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="p-2 rounded-lg bg-accent/10">
-                  <LinkIcon size={18} className="text-accent" />
+                  <LinkIcon
+                    className="text-accent"
+                    size={18}
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-primary-text">{link.slug}</div>
@@ -42,11 +58,11 @@ export function PinnedNavSection({ pinnedLinks, unpinLink }: PinnedNavSectionPro
               </div>
 
               <Button
+                className="flex items-center"
+                disabled={busy}
+                onClick={() => unpinLink(link.slug, link.path)}
                 size="sm"
                 variant="danger"
-                onClick={() => unpinLink(link.slug, link.path)}
-                disabled={busy}
-                className="flex items-center"
               >
                 <X size={16} />
                 Unpin

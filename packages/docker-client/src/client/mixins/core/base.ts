@@ -88,12 +88,12 @@ export class DockerClientBase {
   ): Required<DOCKER.DockerAdapterOptions> {
     const baseOptions = {
       defaultTimeout: options.defaultTimeout ?? 5000,
+      enableEventEmitter: options.enableEventEmitter ?? true,
+      enableMonitoring: options.enableMonitoring ?? true,
+      execOptions: options.execOptions ?? {},
+      monitoringOptions: options.monitoringOptions ?? {},
       retryAttempts: options.retryAttempts ?? 3,
       retryDelay: options.retryDelay ?? 1000,
-      enableMonitoring: options.enableMonitoring ?? true,
-      enableEventEmitter: options.enableEventEmitter ?? true,
-      monitoringOptions: options.monitoringOptions ?? {},
-      execOptions: options.execOptions ?? {},
     }
 
     // Validate timeout
@@ -120,9 +120,9 @@ export class DockerClientBase {
     baseOptions.monitoringOptions = {
       containerEventPollingInterval:
         options.monitoringOptions?.containerEventPollingInterval ?? 30000,
-      enableContainerMetrics: options.monitoringOptions?.enableContainerMetrics ?? false,
       containerMetricsInterval: options.monitoringOptions?.containerMetricsInterval ?? 60000,
       enableContainerEvents: options.monitoringOptions?.enableContainerEvents ?? false,
+      enableContainerMetrics: options.monitoringOptions?.enableContainerMetrics ?? false,
       enableHealthChecks: options.monitoringOptions?.enableHealthChecks ?? true,
       enableHostMetrics: options.monitoringOptions?.enableHostMetrics ?? false,
       healthCheckInterval: options.monitoringOptions?.healthCheckInterval ?? 60000,
@@ -170,12 +170,12 @@ export class DockerClientBase {
    */
   public getMetrics() {
     return {
+      activeStreams: this.activeStreams.size,
+      disposed: this.disposed,
+      hostsManaged: this.dockerInstances.size,
       id: this.id,
       name: this.name,
-      hostsManaged: this.dockerInstances.size,
-      activeStreams: this.activeStreams.size,
       uptime: Date.now() - this.startTime,
-      disposed: this.disposed,
     }
   }
 

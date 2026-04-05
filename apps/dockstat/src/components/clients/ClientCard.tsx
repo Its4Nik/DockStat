@@ -22,18 +22,35 @@ interface ClientCardProps {
 
 export function ClientCard({ client, workerInfo, variant = "outlined" }: ClientCardProps) {
   return (
-    <Card size="sm" variant={variant} hoverable className="min-w-70 max-w-80">
-      <CardHeader size="sm" className="flex items-center justify-between pb-2">
+    <Card
+      className="min-w-70 max-w-80"
+      hoverable
+      size="sm"
+      variant={variant}
+    >
+      <CardHeader
+        className="flex items-center justify-between pb-2"
+        size="sm"
+      >
         <div className="flex items-center gap-2">
           <span className="font-semibold text-lg truncate">{client.name}</span>
           {workerInfo?.initialized ? (
-            <CheckCircle size={16} className="text-green-500 shrink-0" />
+            <CheckCircle
+              className="text-green-500 shrink-0"
+              size={16}
+            />
           ) : (
-            <XCircle size={16} className="text-red-500 shrink-0" />
+            <XCircle
+              className="text-red-500 shrink-0"
+              size={16}
+            />
           )}
         </div>
         {client.id && (
-          <Badge variant="secondary" size="sm">
+          <Badge
+            size="sm"
+            variant="secondary"
+          >
             ID: {client.id}
           </Badge>
         )}
@@ -45,28 +62,40 @@ export function ClientCard({ client, workerInfo, variant = "outlined" }: ClientC
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-text">Worker ID:</span>
-              <Badge variant="primary" size="sm">
+              <Badge
+                size="sm"
+                variant="primary"
+              >
                 {workerInfo.workerId}
               </Badge>
             </div>
 
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-text">Hosts:</span>
-              <Badge variant="secondary" size="sm">
+              <Badge
+                size="sm"
+                variant="secondary"
+              >
                 {workerInfo.hostsManaged}
               </Badge>
             </div>
 
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-text">Active Streams:</span>
-              <Badge variant={workerInfo.activeStreams > 0 ? "success" : "secondary"} size="sm">
+              <Badge
+                size="sm"
+                variant={workerInfo.activeStreams > 0 ? "success" : "secondary"}
+              >
                 {workerInfo.activeStreams}
               </Badge>
             </div>
 
             {workerInfo.isMonitoring && (
               <div className="flex items-center gap-2 text-sm">
-                <Activity size={14} className="text-success" />
+                <Activity
+                  className="text-success"
+                  size={14}
+                />
                 <span className="text-success font-medium">Monitoring Active</span>
               </div>
             )}
@@ -90,7 +119,10 @@ export function ClientCard({ client, workerInfo, variant = "outlined" }: ClientC
           {client.options.defaultTimeout && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-text">Timeout:</span>
-              <Badge variant="secondary" size="sm">
+              <Badge
+                size="sm"
+                variant="secondary"
+              >
                 {formatDuration(client.options.defaultTimeout)}
               </Badge>
             </div>
@@ -99,7 +131,10 @@ export function ClientCard({ client, workerInfo, variant = "outlined" }: ClientC
           {client.options.enableMonitoring !== undefined && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-text">Monitoring Manager:</span>
-              <Badge variant={client.options.enableMonitoring ? "success" : "secondary"} size="sm">
+              <Badge
+                size="sm"
+                variant={client.options.enableMonitoring ? "success" : "secondary"}
+              >
                 {client.options.enableMonitoring ? "Enabled" : "Disabled"}
               </Badge>
             </div>
@@ -108,7 +143,10 @@ export function ClientCard({ client, workerInfo, variant = "outlined" }: ClientC
           {client.options.retryAttempts && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-text">Retry Attempts:</span>
-              <Badge variant="secondary" size="sm">
+              <Badge
+                size="sm"
+                variant="secondary"
+              >
                 {client.options.retryAttempts}
               </Badge>
             </div>

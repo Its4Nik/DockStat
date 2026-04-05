@@ -40,29 +40,29 @@ export class SwarmModule {
 
       if (!info.Swarm?.NodeID) {
         return {
-          nodeID: undefined,
           isManager: false,
+          nodeID: undefined,
         }
       }
 
       const swarm = await this.docker.swarmInspect()
 
       return {
-        id: swarm.ID,
-        version: swarm.Version ? { index: swarm.Version.Index ?? 0 } : undefined,
         createdAt: swarm.CreatedAt,
-        updatedAt: swarm.UpdatedAt,
-        spec: swarm.Spec as unknown as SwarmStatus["spec"],
-        joinTokens: swarm.JoinTokens,
-        nodeID: info.Swarm.NodeID,
-        nodeAddr: info.Swarm.NodeAddr,
+        id: swarm.ID,
         isManager: info.Swarm.ControlAvailable ?? false,
+        joinTokens: swarm.JoinTokens,
+        nodeAddr: info.Swarm.NodeAddr,
+        nodeID: info.Swarm.NodeID,
+        spec: swarm.Spec as unknown as SwarmStatus["spec"],
+        updatedAt: swarm.UpdatedAt,
+        version: swarm.Version ? { index: swarm.Version.Index ?? 0 } : undefined,
       }
     } catch (error) {
       if ((error as { statusCode?: number }).statusCode === 503) {
         return {
-          nodeID: undefined,
           isManager: false,
+          nodeID: undefined,
         }
       }
       throw error
@@ -77,16 +77,16 @@ export class SwarmModule {
   ): Promise<{ workerToken: string; managerToken: string }> {
     await this.docker.swarmInit({
       AdvertiseAddr: options.advertiseAddr,
-      ListenAddr: options.listenAddr ?? "0.0.0.0:2377",
       ForceNewCluster: options.forceNewCluster,
+      ListenAddr: options.listenAddr ?? "0.0.0.0:2377",
       Spec: options.spec as unknown,
     } as unknown)
 
     const swarm = await this.docker.swarmInspect()
 
     return {
-      workerToken: swarm.JoinTokens?.Worker ?? "",
       managerToken: swarm.JoinTokens?.Manager ?? "",
+      workerToken: swarm.JoinTokens?.Worker ?? "",
     }
   }
 
@@ -95,10 +95,10 @@ export class SwarmModule {
    */
   async join(options: SwarmJoinOptions): Promise<void> {
     await this.docker.swarmJoin({
-      JoinToken: options.joinToken,
-      RemoteAddrs: options.remoteAddrs,
-      ListenAddr: options.listenAddr ?? "0.0.0.0:2377",
       AdvertiseAddr: options.advertiseAddr,
+      JoinToken: options.joinToken,
+      ListenAddr: options.listenAddr ?? "0.0.0.0:2377",
+      RemoteAddrs: options.remoteAddrs,
     } as unknown)
   }
 
@@ -118,10 +118,10 @@ export class SwarmModule {
     await (
       this.docker as unknown as Record<string, (opts: unknown, cb?: unknown) => Promise<void>>
     ).swarmUpdate({
+      rotateManagerToken: options.rotateManagerToken,
+      rotateWorkerToken: options.rotateWorkerToken,
       spec: options.spec,
       version: options.version,
-      rotateWorkerToken: options.rotateWorkerToken,
-      rotateManagerToken: options.rotateManagerToken,
     })
   }
 
@@ -132,8 +132,8 @@ export class SwarmModule {
     const swarm = await this.docker.swarmInspect()
 
     return {
-      worker: swarm.JoinTokens?.Worker ?? "",
       manager: swarm.JoinTokens?.Manager ?? "",
+      worker: swarm.JoinTokens?.Worker ?? "",
     }
   }
 
@@ -145,10 +145,10 @@ export class SwarmModule {
     const version = swarm.Version?.Index ?? 0
 
     await this.update({
+      rotateManagerToken: true,
+      rotateWorkerToken: true,
       spec: swarm.Spec ?? {},
       version,
-      rotateWorkerToken: true,
-      rotateManagerToken: true,
     })
 
     return this.getJoinTokens()

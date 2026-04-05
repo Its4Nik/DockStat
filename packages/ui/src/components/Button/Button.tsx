@@ -42,50 +42,50 @@ export const Button: React.FC<ButtonProps> = ({
   const focusCommonClasses = "focus:outline-none focus:ring-2 focus:ring-offset-2"
 
   const variantClasses: Record<ButtonVariant, string> = {
+    danger: "bg-button-danger-bg text-button-danger-text hover:bg-button-danger-hover-bg",
+    ghost: "bg-transparent text-button-ghost-text hover:bg-button-ghost-hover-bg",
+    outline:
+      "border border-button-outline-border bg-transparent text-button-outline-text hover:bg-button-outline-hover-bg",
     primary: "bg-button-primary-bg text-button-primary-text hover:bg-button-primary-hover-bg",
     secondary:
       "bg-button-secondary-bg text-button-secondary-text hover:bg-button-secondary-hover-bg",
-    outline:
-      "border border-button-outline-border bg-transparent text-button-outline-text hover:bg-button-outline-hover-bg",
-    ghost: "bg-transparent text-button-ghost-text hover:bg-button-ghost-hover-bg",
-    danger: "bg-button-danger-bg text-button-danger-text hover:bg-button-danger-hover-bg",
   }
 
   const variantRingClasses: Record<ButtonVariant, string> = {
+    danger: "focus:ring-button-danger-hover-ring",
+    ghost: "focus:ring-button-ghost-hover-ring",
+    outline: "focus:ring-button-outline-border-hover-ring",
     primary: "focus:ring-button-primary-text-hover-ring",
     secondary: "focus:ring-button-secondary-text-hover-ring",
-    outline: "focus:ring-button-outline-border-hover-ring",
-    ghost: "focus:ring-button-ghost-hover-ring",
-    danger: "focus:ring-button-danger-hover-ring",
   }
 
   const sizeClasses = {
-    xs: "px-1 py-0.5 text-xs",
-    sm: "px-3 py-1.5 text-sm",
-    md: "px-4 py-2 text-base",
     lg: "px-6 py-3 text-lg",
+    md: "px-4 py-2 text-base",
+    sm: "px-3 py-1.5 text-sm",
+    xs: "px-1 py-0.5 text-xs",
   }
 
   const widthClass = fullWidth ? "w-full" : ""
 
   return (
     <motion.button
-      type={type}
+      animate={isInactive ? "inactive" : "active"}
+      className={`${baseClasses} ${!noFocusRing ? focusCommonClasses : ""} ${variantClasses[variant]} ${!noFocusRing ? variantRingClasses[variant] : ""} ${sizeClasses[size]} ${widthClass} ${className}`}
       disabled={isInactive}
       onClick={onClick}
-      className={`${baseClasses} ${!noFocusRing ? focusCommonClasses : ""} ${variantClasses[variant]} ${!noFocusRing ? variantRingClasses[variant] : ""} ${sizeClasses[size]} ${widthClass} ${className}`}
       /* --- STATE ANIMATION --- */
-      variants={buttonMotionVariants}
-      animate={isInactive ? "inactive" : "active"}
-      /* entry/exit smoothness */
-      transition={buttonTransition}
-      /* tactile press feedback */
-      whileTap={!isInactive ? { scale: 0.96 } : undefined}
-      /* prevents click while animating */
       style={{
         cursor: isInactive ? "not-allowed" : "pointer",
         pointerEvents: isInactive ? "none" : "auto",
       }}
+      transition={buttonTransition}
+      /* entry/exit smoothness */
+      type={type}
+      /* tactile press feedback */
+      variants={buttonMotionVariants}
+      /* prevents click while animating */
+      whileTap={!isInactive ? { scale: 0.96 } : undefined}
     >
       <span className="flex items-center justify-center">
         {/* Animated spinner space (no layout jump) */}

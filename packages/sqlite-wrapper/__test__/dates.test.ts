@@ -11,10 +11,10 @@ const testTable = testDb.createTable<{
 }>(
   "date_test_table",
   {
-    id: column.id(),
     createdAt: column.date({ notNull: false }),
-    updatedAt: column.date({ notNull: false }),
     eventDate: column.date({ notNull: false }),
+    id: column.id(),
+    updatedAt: column.date({ notNull: false }),
   },
   {
     parser: {
@@ -70,8 +70,8 @@ describe("DATE parsing tests", () => {
 
     const insertId = testTable.insert({
       createdAt: created,
-      updatedAt: updated,
       eventDate: event,
+      updatedAt: updated,
     }).insertId
 
     const result = testTable.select(["*"]).where({ id: insertId }).first()
@@ -140,8 +140,8 @@ describe("DATE update tests", () => {
     const insertId = testTable.insert({ createdAt: created }).insertId
 
     testTable.where({ id: insertId }).update({
-      updatedAt: updated,
       eventDate: updated,
+      updatedAt: updated,
     })
 
     const result = testTable.select(["*"]).where({ id: insertId }).first()
@@ -273,8 +273,8 @@ describe("DATE automatic parser detection", () => {
     }>(
       "auto_date_table",
       {
-        id: column.id(),
         createdAt: column.date({ notNull: false }),
+        id: column.id(),
         updatedAt: column.date({ notNull: false }),
       }
       // No parser config provided - should auto-detect
@@ -297,9 +297,9 @@ describe("DATE automatic parser detection", () => {
     }>(
       "mixed_date_table",
       {
-        id: column.id(),
         createdAt: column.date({ notNull: false }), // Auto-detected
         customDate: column.text({ notNull: false }), // Explicitly added to parser
+        id: column.id(),
       },
       {
         parser: {
@@ -348,8 +348,8 @@ describe("DATE automatic parser detection", () => {
     }>(
       "timestamp_table",
       {
+        eventTime: column.timestamp({ asText: true, notNull: false }),
         id: column.id(),
-        eventTime: column.timestamp({ notNull: false, asText: true }),
       },
       {
         parser: {

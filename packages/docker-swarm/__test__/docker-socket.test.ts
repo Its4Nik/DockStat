@@ -78,8 +78,8 @@ describe("Connection configuration building", () => {
 
   test("buildConnectionConfig prioritizes socket path over host", () => {
     const options: DockerConnectionOptions = {
-      socketPath: "/custom/docker.sock",
       host: "http://localhost:2375",
+      socketPath: "/custom/docker.sock",
     }
     const config = buildConnectionConfig(options)
 
@@ -168,10 +168,10 @@ describe("Docker version parsing", () => {
     const version = parseDockerVersion("24.0.7")
 
     expect(version).toEqual({
+      build: undefined,
       major: 24,
       minor: 0,
       patch: 7,
-      build: undefined,
     })
   })
 
@@ -179,10 +179,10 @@ describe("Docker version parsing", () => {
     const version = parseDockerVersion("24.0.7-alpine")
 
     expect(version).toEqual({
+      build: "alpine",
       major: 24,
       minor: 0,
       patch: 7,
-      build: "alpine",
     })
   })
 
@@ -190,10 +190,10 @@ describe("Docker version parsing", () => {
     const version = parseDockerVersion("23.0.6-ce")
 
     expect(version).toEqual({
+      build: "ce",
       major: 23,
       minor: 0,
       patch: 6,
-      build: "ce",
     })
   })
 
@@ -201,10 +201,10 @@ describe("Docker version parsing", () => {
     const version = parseDockerVersion("20.10.24-12345")
 
     expect(version).toEqual({
+      build: "12345",
       major: 20,
       minor: 10,
       patch: 24,
-      build: "12345",
     })
   })
 
@@ -212,10 +212,10 @@ describe("Docker version parsing", () => {
     const version = parseDockerVersion("1.2.3")
 
     expect(version).toEqual({
+      build: undefined,
       major: 1,
       minor: 2,
       patch: 3,
-      build: undefined,
     })
   })
 
@@ -253,10 +253,10 @@ describe("Docker version parsing", () => {
     const version = parseDockerVersion("24.0.7-rc1")
 
     expect(version).toEqual({
+      build: "rc1",
       major: 24,
       minor: 0,
       patch: 7,
-      build: "rc1",
     })
   })
 })
@@ -455,10 +455,10 @@ describe("Version parsing edge cases", () => {
     const version = parseDockerVersion("1.0.0")
 
     expect(version).toEqual({
+      build: undefined,
       major: 1,
       minor: 0,
       patch: 0,
-      build: undefined,
     })
   })
 
@@ -466,10 +466,10 @@ describe("Version parsing edge cases", () => {
     const version = parseDockerVersion("999.999.999")
 
     expect(version).toEqual({
+      build: undefined,
       major: 999,
       minor: 999,
       patch: 999,
-      build: undefined,
     })
   })
 
@@ -477,10 +477,10 @@ describe("Version parsing edge cases", () => {
     const version = parseDockerVersion("24.0.7-ubuntu-22.04")
 
     expect(version).toEqual({
+      build: "ubuntu-22.04",
       major: 24,
       minor: 0,
       patch: 7,
-      build: "ubuntu-22.04",
     })
   })
 
@@ -494,10 +494,10 @@ describe("Version parsing edge cases", () => {
     const version = parseDockerVersion("24.0.7-rc1-beta")
 
     expect(version).toEqual({
+      build: "rc1-beta",
       major: 24,
       minor: 0,
       patch: 7,
-      build: "rc1-beta",
     })
   })
 })

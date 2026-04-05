@@ -41,29 +41,44 @@ export function RepoCard({
   const securityBadge = getSecurityBadge()
 
   return (
-    <Card variant="flat" className="h-full flex flex-col">
-      <CardHeader size="sm" className="pb-3">
+    <Card
+      className="h-full flex flex-col"
+      variant="flat"
+    >
+      <CardHeader
+        className="pb-3"
+        size="sm"
+      >
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <h3 className="text-xl font-semibold text-primary-text truncate mb-2">{name}</h3>
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant={securityBadge.variant} className="flex items-center gap-1">
+              <Badge
+                className="flex items-center gap-1"
+                variant={securityBadge.variant}
+              >
                 {securityBadge.icon}
                 <span className="text-xs">{securityBadge.label}</span>
               </Badge>
-              <Badge variant="primary" className="flex items-center gap-1">
-                <RepoIcons type={type} size={16} />
+              <Badge
+                className="flex items-center gap-1"
+                variant="primary"
+              >
+                <RepoIcons
+                  size={16}
+                  type={type}
+                />
                 <span className="text-xs capitalize">{type}</span>
               </Badge>
             </div>
           </div>
 
           <Button
-            variant="danger"
-            size="sm"
-            onClick={handleDelete}
-            disabled={deleteRepoMutation.isPending}
             className="shrink-0"
+            disabled={deleteRepoMutation.isPending}
+            onClick={handleDelete}
+            size="sm"
+            variant="danger"
           >
             <Trash2 size={16} />
           </Button>
@@ -89,8 +104,8 @@ export function RepoCard({
           <Divider className="my-4" />
 
           <LinkWithIcon
-            icon={<ExternalLink size={14} />}
             href={repo.parseFromDBToRepoLink(type, source, "README.md", false)}
+            icon={<ExternalLink size={14} />}
           >
             View Repository
           </LinkWithIcon>

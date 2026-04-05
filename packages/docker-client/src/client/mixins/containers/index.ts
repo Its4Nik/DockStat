@@ -89,8 +89,8 @@ export class Containers extends DockerClientBase {
     // Extend each container with hostId and clientId
     return containers.map((c) => ({
       ...c,
-      hostId,
       clientId: this.id,
+      hostId,
     }))
   }
 
@@ -109,8 +109,8 @@ export class Containers extends DockerClientBase {
     // Extend with hostId and clientId
     return {
       ...info,
-      hostId,
       clientId: this.id,
+      hostId,
     } as ExtendedContainerInfo
   }
 
@@ -193,10 +193,10 @@ export class Containers extends DockerClientBase {
 
     return {
       ...stats,
-      hostId,
       clientId: this.id,
       containerId,
       containerName: container.Names?.[0]?.replace(/^\//, "") || "unknown",
+      hostId,
     }
   }
 
@@ -310,11 +310,11 @@ export class Containers extends DockerClientBase {
     }
 
     const logOptions: BunDockerContainerLogsRoute["parameters"]["query"] = {
-      stdout: options.stdout ?? true,
-      stderr: options.stderr ?? true,
-      timestamps: options.timestamps ?? false,
-      tail: options.tail ? String(options.tail) : undefined,
       since,
+      stderr: options.stderr ?? true,
+      stdout: options.stdout ?? true,
+      tail: options.tail ? String(options.tail) : undefined,
+      timestamps: options.timestamps ?? false,
       until,
     }
 
@@ -342,11 +342,11 @@ export class Containers extends DockerClientBase {
     const docker = this.getDockerInstance(hostId)
 
     const execOptions: BunDockerContainerExecRoute["requestBody"]["content"]["application/json"] = {
-      Cmd: command,
-      AttachStdout: options.attachStdout ?? true,
       AttachStderr: options.attachStderr ?? true,
-      Tty: options.tty ?? false,
+      AttachStdout: options.attachStdout ?? true,
+      Cmd: command,
       Env: options.env,
+      Tty: options.tty ?? false,
       WorkingDir: options.workingDir,
     }
 
@@ -402,9 +402,9 @@ export class Containers extends DockerClientBase {
     const inspectResult = await docker.containers.execInspect(execResult.Id)
 
     return {
-      stdout: stdout.trim(),
-      stderr: stderr.trim(),
       exitCode: inspectResult.ExitCode ?? 0,
+      stderr: stderr.trim(),
+      stdout: stdout.trim(),
     }
   }
 }

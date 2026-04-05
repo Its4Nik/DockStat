@@ -20,21 +20,21 @@ export const Toggle: React.FC<ToggleProps> = ({
   className = "",
 }) => {
   const sizeClasses = {
-    sm: "w-8 h-4",
-    md: "w-12 h-6",
     lg: "w-16 h-8",
+    md: "w-12 h-6",
+    sm: "w-8 h-4",
   }
 
   const dotSizeClasses = {
-    sm: "w-3 h-3",
-    md: "w-5 h-5",
     lg: "w-7 h-7",
+    md: "w-5 h-5",
+    sm: "w-3 h-3",
   }
 
   const dotPositionClasses = {
-    sm: checked ? "translate-x-4" : "translate-x-1",
-    md: checked ? "translate-x-6" : "translate-x-1",
     lg: checked ? "translate-x-8" : "translate-x-1",
+    md: checked ? "translate-x-6" : "translate-x-1",
+    sm: checked ? "translate-x-4" : "translate-x-1",
   }
 
   return (
@@ -43,11 +43,11 @@ export const Toggle: React.FC<ToggleProps> = ({
     >
       <div className="relative">
         <input
-          type="checkbox"
-          className="sr-only"
           checked={checked}
-          onChange={(e) => onChange?.(e.target.checked)}
+          className="sr-only"
           disabled={disabled}
+          onChange={(e) => onChange?.(e.target.checked)}
+          type="checkbox"
         />
         <div
           className={`${sizeClasses[size]} rounded-full transition-colors ${

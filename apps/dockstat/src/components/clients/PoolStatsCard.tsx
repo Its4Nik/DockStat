@@ -17,9 +17,16 @@ export function PoolStatsCard({ poolStatus }: PoolStatsCardProps) {
   if (!poolStatus) {
     return (
       <>
-        <Card size="sm" variant="flat" className="w-full">
+        <Card
+          className="w-full"
+          size="sm"
+          variant="flat"
+        >
           <div className="flex items-center gap-2">
-            <Activity size={20} className="text-accent" />
+            <Activity
+              className="text-accent"
+              size={20}
+            />
             <span className="font-semibold text-2xl text-muted-text">Pool Status</span>
           </div>
         </Card>
@@ -32,10 +39,17 @@ export function PoolStatsCard({ poolStatus }: PoolStatsCardProps) {
 
   return (
     <>
-      <Card size="sm" variant="flat" className="w-full">
+      <Card
+        className="w-full"
+        size="sm"
+        variant="flat"
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Activity size={20} className="text-accent" />
+            <Activity
+              className="text-accent"
+              size={20}
+            />
             <span className="font-semibold text-2xl text-muted-text">Pool Status</span>
           </div>
         </div>
@@ -45,7 +59,10 @@ export function PoolStatsCard({ poolStatus }: PoolStatsCardProps) {
           {/* Total Workers */}
           <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-card-default-bg border border-card-default-border">
             <div className="flex items-center gap-2 mb-2">
-              <Cpu size={18} className="text-blue-500" />
+              <Cpu
+                className="text-blue-500"
+                size={18}
+              />
               <span className="text-xs text-muted-text uppercase font-semibold">Workers</span>
             </div>
             <div className="text-2xl font-bold text-primary-text">{poolStatus.totalWorkers}</div>
@@ -55,7 +72,10 @@ export function PoolStatsCard({ poolStatus }: PoolStatsCardProps) {
           {/* Total Clients */}
           <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-card-default-bg border border-card-default-border">
             <div className="flex items-center gap-2 mb-2">
-              <Users size={18} className="text-green-500" />
+              <Users
+                className="text-green-500"
+                size={18}
+              />
               <span className="text-xs text-muted-text uppercase font-semibold">Clients</span>
             </div>
             <div className="text-2xl font-bold text-primary-text">{poolStatus.totalClients}</div>
@@ -65,7 +85,10 @@ export function PoolStatsCard({ poolStatus }: PoolStatsCardProps) {
           {/* Total Hosts */}
           <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-card-default-bg border border-card-default-border">
             <div className="flex items-center gap-2 mb-2">
-              <Box size={18} className="text-purple-500" />
+              <Box
+                className="text-purple-500"
+                size={18}
+              />
               <span className="text-xs text-muted-text uppercase font-semibold">Hosts</span>
             </div>
             <div className="text-2xl font-bold text-primary-text">{poolStatus.totalHosts}</div>
@@ -75,7 +98,10 @@ export function PoolStatsCard({ poolStatus }: PoolStatsCardProps) {
           {/* Average Hosts per Worker */}
           <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-card-default-bg border border-card-default-border">
             <div className="flex items-center gap-2 mb-2">
-              <Activity size={18} className="text-orange-500" />
+              <Activity
+                className="text-orange-500"
+                size={18}
+              />
               <span className="text-xs text-muted-text uppercase font-semibold">Avg Load</span>
             </div>
             <div className="text-2xl font-bold text-primary-text">

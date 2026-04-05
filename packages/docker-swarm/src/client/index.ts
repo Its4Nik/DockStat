@@ -75,23 +75,23 @@ export class SwarmClient {
     const host = options.host
 
     this.docker = new Docker({
-      socketPath: host ? undefined : socketPath,
-      host: host ? new URL(host).hostname : undefined,
-      port: host ? new URL(host).port : undefined,
-      protocol: host ? (new URL(host).protocol.replace(":", "") as "http" | "https") : undefined,
-      timeout: options.timeout ?? 30000,
       ca: options.tls?.ca as Buffer | undefined,
       cert: options.tls?.cert as Buffer | undefined,
+      host: host ? new URL(host).hostname : undefined,
       key: options.tls?.key as Buffer | undefined,
+      port: host ? new URL(host).port : undefined,
+      protocol: host ? (new URL(host).protocol.replace(":", "") as "http" | "https") : undefined,
+      socketPath: host ? undefined : socketPath,
       sshOptions: options.ssh
         ? {
             host: options.ssh.host,
-            port: options.ssh.port ?? 22,
-            username: options.ssh.username,
-            privateKey: options.ssh.privateKey as Buffer | undefined,
             passphrase: options.ssh.passphrase,
+            port: options.ssh.port ?? 22,
+            privateKey: options.ssh.privateKey as Buffer | undefined,
+            username: options.ssh.username,
           }
         : undefined,
+      timeout: options.timeout ?? 30000,
     } as Docker.DockerOptions)
 
     // Initialize modules with logger chaining
@@ -186,12 +186,12 @@ export class SwarmClient {
   }> {
     const version = await this.docker.version()
     return {
-      version: version.Version ?? "",
       apiVersion: version.ApiVersion ?? "",
+      arch: version.Arch ?? "",
       gitCommit: version.GitCommit ?? "",
       goVersion: version.GoVersion ?? "",
       os: version.Os ?? "",
-      arch: version.Arch ?? "",
+      version: version.Version ?? "",
     }
   }
 

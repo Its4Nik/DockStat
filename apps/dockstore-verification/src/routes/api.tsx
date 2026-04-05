@@ -45,14 +45,14 @@ function getDashboardStats() {
   const totalRepositories = repositoriesTable.all().length
 
   return {
-    totalPlugins,
-    verifiedPlugins: verifiedPlugins?.count || 0,
-    totalVersions,
-    verifiedVersions,
-    safePlugins,
-    unsafePlugins,
     pendingReview,
+    safePlugins,
+    totalPlugins,
     totalRepositories,
+    totalVersions,
+    unsafePlugins,
+    verifiedPlugins: verifiedPlugins?.count || 0,
+    verifiedVersions,
   }
 }
 
@@ -149,7 +149,7 @@ async function syncRepository(repositoryId: number) {
   for (const fetchedPlugin of result.plugins) {
     // Check if plugin exists
     const existingPlugin = pluginsTable
-      .where({ repository_id: repositoryId, name: fetchedPlugin.meta.name })
+      .where({ name: fetchedPlugin.meta.name, repository_id: repositoryId })
       .first()
 
     let pluginId: number
@@ -157,30 +157,30 @@ async function syncRepository(repositoryId: number) {
     if (existingPlugin?.id) {
       // Update existing plugin
       pluginsTable.where({ id: existingPlugin.id }).update({
-        description: fetchedPlugin.meta.description,
-        author_name: fetchedPlugin.meta.author.name,
         author_email: fetchedPlugin.meta.author.email,
+        author_name: fetchedPlugin.meta.author.name,
         author_website: fetchedPlugin.meta.author.website,
+        description: fetchedPlugin.meta.description,
         license: fetchedPlugin.meta.author.license,
-        repository_url: fetchedPlugin.meta.repository,
-        repo_type: fetchedPlugin.meta.repoType as "github" | "gitlab" | "http",
         manifest_path: fetchedPlugin.meta.manifest,
+        repo_type: fetchedPlugin.meta.repoType as "github" | "gitlab" | "http",
+        repository_url: fetchedPlugin.meta.repository,
         updated_at: Math.floor(Date.now() / 1000),
       })
       pluginId = existingPlugin.id
     } else {
       // Insert new plugin
       const insertResult = pluginsTable.insert({
-        repository_id: repositoryId,
-        name: fetchedPlugin.meta.name,
-        description: fetchedPlugin.meta.description,
-        author_name: fetchedPlugin.meta.author.name,
         author_email: fetchedPlugin.meta.author.email,
+        author_name: fetchedPlugin.meta.author.name,
         author_website: fetchedPlugin.meta.author.website,
+        description: fetchedPlugin.meta.description,
         license: fetchedPlugin.meta.author.license,
-        repository_url: fetchedPlugin.meta.repository,
-        repo_type: fetchedPlugin.meta.repoType as "github" | "gitlab" | "http",
         manifest_path: fetchedPlugin.meta.manifest,
+        name: fetchedPlugin.meta.name,
+        repo_type: fetchedPlugin.meta.repoType as "github" | "gitlab" | "http",
+        repository_id: repositoryId,
+        repository_url: fetchedPlugin.meta.repository,
       })
       pluginId = insertResult.insertId
     }
@@ -193,11 +193,11 @@ async function syncRepository(repositoryId: number) {
     if (!existingVersion) {
       // Insert new version
       pluginVersionsTable.insert({
-        plugin_id: pluginId,
-        version: fetchedPlugin.meta.version,
-        hash: fetchedPlugin.sourceHash,
         bundle_hash: fetchedPlugin.bundleHash,
+        hash: fetchedPlugin.sourceHash,
+        plugin_id: pluginId,
         tags: fetchedPlugin.meta.tags,
+        version: fetchedPlugin.meta.version,
       })
     }
   }
@@ -238,9 +238,9 @@ const apiRoutes = new Elysia({ prefix: "/api" })
 
       // Insert new repository
       const result = repositoriesTable.insert({
+        enabled: (body.enabled || "on") === "on",
         name: body.name,
         url: body.url,
-        enabled: (body.enabled || "on") === "on",
       })
 
       // Trigger initial sync
@@ -252,13 +252,13 @@ const apiRoutes = new Elysia({ prefix: "/api" })
 
       // Redirect to repositories page
       set.headers["HX-Redirect"] = "/repositories"
-      return { success: true, id: result.insertId }
+      return { id: result.insertId, success: true }
     },
     {
       body: t.Object({
+        enabled: t.Optional(t.String()),
         name: t.String(),
         url: t.String(),
-        enabled: t.Optional(t.String()),
       }),
     }
   )
@@ -369,21 +369,21 @@ const apiRoutes = new Elysia({ prefix: "/api" })
       if (existingVerification) {
         // Update existing verification
         verificationsTable.where({ id: existingVerification.id }).update({
-          verified: true,
-          verified_by: body.verified_by,
-          verified_at: Math.floor(Date.now() / 1000),
           notes: body.notes,
           security_status: body.security_status,
+          verified: true,
+          verified_at: Math.floor(Date.now() / 1000),
+          verified_by: body.verified_by,
         })
       } else {
         // Create new verification
         verificationsTable.insert({
-          plugin_version_id: version.id,
-          verified: true,
-          verified_by: body.verified_by,
-          verified_at: Math.floor(Date.now() / 1000),
           notes: body.notes,
+          plugin_version_id: version.id,
           security_status: body.security_status,
+          verified: true,
+          verified_at: Math.floor(Date.now() / 1000),
+          verified_by: body.verified_by,
         })
       }
 
@@ -402,9 +402,9 @@ const apiRoutes = new Elysia({ prefix: "/api" })
     },
     {
       body: t.Object({
-        verified_by: t.String(),
         notes: t.Optional(t.String()),
         security_status: t.Union([t.Literal("safe"), t.Literal("unsafe"), t.Literal("unknown")]),
+        verified_by: t.String(),
       }),
     }
   )
@@ -419,7 +419,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
     const failed = results.filter((r) => r.status === "rejected").length
 
     set.headers["HX-Refresh"] = "true"
-    return { succeeded, failed, total: repos.length }
+    return { failed, succeeded, total: repos.length }
   })
 
   // Manual plugin addition
@@ -441,9 +441,9 @@ const apiRoutes = new Elysia({ prefix: "/api" })
         let manualRepo = repositoriesTable.where({ name: "Manual Entries" }).first()
         if (!manualRepo) {
           const repoResult = repositoriesTable.insertOrIgnore({
+            enabled: true,
             name: "Manual Entries",
             url: "manual://local",
-            enabled: true,
           })
           // Verify repository was created successfully
           manualRepo = repositoriesTable.where({ id: repoResult.insertId }).first()
@@ -454,7 +454,7 @@ const apiRoutes = new Elysia({ prefix: "/api" })
 
         // Check if plugin already exists
         const existingPlugin = pluginsTable
-          .where({ repository_id: manualRepo.id, name: body.name })
+          .where({ name: body.name, repository_id: manualRepo.id })
           .first()
 
         let pluginId: number
@@ -462,30 +462,30 @@ const apiRoutes = new Elysia({ prefix: "/api" })
         if (existingPlugin?.id) {
           // Update existing plugin
           pluginsTable.where({ id: existingPlugin.id }).update({
-            description: body.description,
-            author_name: body.author_name,
             author_email: body.author_email,
+            author_name: body.author_name,
             author_website: body.author_website,
+            description: body.description,
             license: body.license || "MIT",
-            repository_url: body.repository_url,
-            repo_type: body.repo_type || "http",
             manifest_path: body.manifest_path || "manual",
+            repo_type: body.repo_type || "http",
+            repository_url: body.repository_url,
             updated_at: Math.floor(Date.now() / 1000),
           })
           pluginId = existingPlugin.id
         } else {
           // Insert new plugin
           const insertResult = pluginsTable.insert({
-            repository_id: manualRepo.id,
-            name: body.name,
-            description: body.description,
-            author_name: body.author_name,
             author_email: body.author_email,
+            author_name: body.author_name,
             author_website: body.author_website,
+            description: body.description,
             license: body.license || "MIT",
-            repository_url: body.repository_url,
-            repo_type: body.repo_type || "http",
             manifest_path: body.manifest_path || "manual",
+            name: body.name,
+            repo_type: body.repo_type || "http",
+            repository_id: manualRepo.id,
+            repository_url: body.repository_url,
           })
           if (!insertResult.insertId) {
             throw new Error("Failed to insert plugin into database")
@@ -503,19 +503,19 @@ const apiRoutes = new Elysia({ prefix: "/api" })
         if (existingVersion?.id) {
           // Update existing version
           pluginVersionsTable.where({ id: existingVersion.id }).update({
-            hash: body.hash,
             bundle_hash: body.bundle_hash,
+            hash: body.hash,
             tags: tags,
           })
           versionId = existingVersion.id
         } else {
           // Insert new version
           const versionResult = pluginVersionsTable.insert({
-            plugin_id: pluginId,
-            version: body.version,
-            hash: body.hash,
             bundle_hash: body.bundle_hash,
+            hash: body.hash,
+            plugin_id: pluginId,
             tags: tags,
+            version: body.version,
           })
           if (!versionResult.insertId) {
             throw new Error("Failed to insert plugin version into database")
@@ -531,11 +531,11 @@ const apiRoutes = new Elysia({ prefix: "/api" })
 
           if (!existingVerification) {
             verificationsTable.insert({
+              notes: body.notes,
               plugin_version_id: versionId,
+              security_status: body.security_status || "unknown",
               verified: false,
               verified_by: body.verified_by || "manual",
-              security_status: body.security_status || "unknown",
-              notes: body.notes,
             })
           }
         }
@@ -552,10 +552,10 @@ const apiRoutes = new Elysia({ prefix: "/api" })
                 viewBox="0 0 24 24"
               >
                 <path
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
                 <title>Success</title>
               </svg>
@@ -565,7 +565,10 @@ const apiRoutes = new Elysia({ prefix: "/api" })
                   The plugin "<strong safe>{body.name}</strong>" version{" "}
                   <strong safe>{body.version}</strong> has been added to the verification database.
                 </p>
-                <a href="/plugins" class="text-blue-400 hover:text-blue-300 underline text-sm">
+                <a
+                  class="text-blue-400 hover:text-blue-300 underline text-sm"
+                  href="/plugins"
+                >
                   View in plugins list →
                 </a>
               </div>
@@ -585,10 +588,10 @@ const apiRoutes = new Elysia({ prefix: "/api" })
                 viewBox="0 0 24 24"
               >
                 <path
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
                 <title>Error</title>
               </svg>
@@ -605,31 +608,31 @@ const apiRoutes = new Elysia({ prefix: "/api" })
     },
     {
       body: t.Object({
-        name: t.String({ minLength: 1 }),
-        version: t.String({ minLength: 1 }),
-        hash: t.String({ pattern: "^[a-fA-F0-9]{64}$" }),
-        description: t.String({ minLength: 1 }),
-        author_name: t.String({ minLength: 1 }),
-        repository_url: t.String({ minLength: 1, format: "uri" }),
         author_email: t.Optional(t.String({ format: "email" })),
+        author_name: t.String({ minLength: 1 }),
         author_website: t.Optional(t.String({ format: "uri" })),
+        bundle_hash: t.Optional(t.String({ pattern: "^[a-fA-F0-9]{64}$" })),
+        description: t.String({ minLength: 1 }),
+        hash: t.String({ pattern: "^[a-fA-F0-9]{64}$" }),
         license: t.Optional(t.String()),
+        manifest_path: t.Optional(t.String()),
+        name: t.String({ minLength: 1 }),
+        notes: t.Optional(t.String()),
         repo_type: t.Optional(
           t.Union([t.Literal("github"), t.Literal("gitlab"), t.Literal("http")])
         ),
-        manifest_path: t.Optional(t.String()),
-        bundle_hash: t.Optional(t.String({ pattern: "^[a-fA-F0-9]{64}$" })),
-        tags: t.Optional(t.Union([t.String(), t.Array(t.String())])),
+        repository_url: t.String({ format: "uri", minLength: 1 }),
         security_status: t.Optional(
           t.Union([t.Literal("safe"), t.Literal("unsafe"), t.Literal("unknown")])
         ),
+        tags: t.Optional(t.Union([t.String(), t.Array(t.String())])),
         verified_by: t.Optional(t.String()),
-        notes: t.Optional(t.String()),
+        version: t.String({ minLength: 1 }),
       }),
       detail: {
-        summary: "Manually Add Plugin",
         description:
           "Manually add a plugin to the verification database without syncing from a repository. Creates or updates the plugin, version, and optionally initial verification status.",
+        summary: "Manually Add Plugin",
         tags: ["Plugins"],
       },
     }

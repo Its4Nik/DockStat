@@ -5,17 +5,28 @@ const _ = Html
 
 export function AddPluginManuallyView() {
   return (
-    <Layout title="Add Plugin Manually" currentPath="/plugins/add">
+    <Layout
+      currentPath="/plugins/add"
+      title="Add Plugin Manually"
+    >
       {/* Page Header */}
       <div class="mb-8">
         <div class="flex items-center mb-4">
-          <a href="/plugins" class="text-blue-400 hover:text-blue-300 mr-4">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <a
+            class="text-blue-400 hover:text-blue-300 mr-4"
+            href="/plugins"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
+                d="M15 19l-7-7 7-7"
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M15 19l-7-7 7-7"
               />
               <title>Back</title>
             </svg>
@@ -32,82 +43,97 @@ export function AddPluginManuallyView() {
       {/* Form */}
       <div class="card max-w-3xl">
         <form
-          hx-post="/api/plugins/manual"
-          hx-target="#result"
-          hx-swap="innerHTML"
           class="space-y-6"
+          hx-post="/api/plugins/manual"
+          hx-swap="innerHTML"
+          hx-target="#result"
         >
           {/* Plugin Information */}
           <div>
             <h3 class="text-lg font-semibold text-white mb-4">Plugin Information</h3>
             <div class="space-y-4">
               <div>
-                <label for="name" class="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-300 mb-2"
+                  for="name"
+                >
                   Plugin Name *
                 </label>
                 <input
-                  type="text"
+                  class="input w-full"
                   id="name"
                   name="name"
-                  required
-                  class="input w-full"
                   placeholder="e.g., my-awesome-plugin"
+                  required
+                  type="text"
                 />
               </div>
 
               <div>
-                <label for="version" class="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-300 mb-2"
+                  for="version"
+                >
                   Version *
                 </label>
                 <input
-                  type="text"
+                  class="input w-full"
                   id="version"
                   name="version"
-                  required
-                  class="input w-full"
                   placeholder="e.g., 1.0.0"
+                  required
+                  type="text"
                 />
               </div>
 
               <div>
-                <label for="description" class="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-300 mb-2"
+                  for="description"
+                >
                   Description *
                 </label>
                 <textarea
+                  class="input w-full"
                   id="description"
                   name="description"
+                  placeholder="Brief description of the plugin"
                   required
                   rows="3"
-                  class="input w-full"
-                  placeholder="Brief description of the plugin"
                 />
               </div>
 
               <div>
-                <label for="hash" class="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-300 mb-2"
+                  for="hash"
+                >
                   Source Hash (SHA-256) *
                 </label>
                 <input
-                  type="text"
+                  class="input w-full font-mono text-sm"
                   id="hash"
                   name="hash"
-                  required
-                  class="input w-full font-mono text-sm"
                   placeholder="e.g., a1b2c3d4e5f6..."
+                  required
+                  type="text"
                 />
                 <p class="text-xs text-gray-500 mt-1">SHA-256 hash of the plugin source code</p>
               </div>
 
               <div>
-                <label for="bundle_hash" class="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-300 mb-2"
+                  for="bundle_hash"
+                >
                   Bundle Hash (SHA-256)
                 </label>
                 <input
-                  type="text"
+                  class="input w-full font-mono text-sm"
                   id="bundle_hash"
                   name="bundle_hash"
-                  class="input w-full font-mono text-sm"
                   placeholder="Optional: Hash of the bundled plugin"
+                  type="text"
                 />
               </div>
             </div>
@@ -118,42 +144,51 @@ export function AddPluginManuallyView() {
             <h3 class="text-lg font-semibold text-white mb-4">Author Information</h3>
             <div class="space-y-4">
               <div>
-                <label for="author_name" class="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-300 mb-2"
+                  for="author_name"
+                >
                   Author Name *
                 </label>
                 <input
-                  type="text"
+                  class="input w-full"
                   id="author_name"
                   name="author_name"
-                  required
-                  class="input w-full"
                   placeholder="e.g., John Doe"
+                  required
+                  type="text"
                 />
               </div>
 
               <div>
-                <label for="author_email" class="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-300 mb-2"
+                  for="author_email"
+                >
                   Author Email
                 </label>
                 <input
-                  type="email"
+                  class="input w-full"
                   id="author_email"
                   name="author_email"
-                  class="input w-full"
                   placeholder="e.g., john@example.com"
+                  type="email"
                 />
               </div>
 
               <div>
-                <label for="author_website" class="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-300 mb-2"
+                  for="author_website"
+                >
                   Author Website
                 </label>
                 <input
-                  type="url"
+                  class="input w-full"
                   id="author_website"
                   name="author_website"
-                  class="input w-full"
                   placeholder="e.g., https://example.com"
+                  type="url"
                 />
               </div>
             </div>
@@ -164,24 +199,34 @@ export function AddPluginManuallyView() {
             <h3 class="text-lg font-semibold text-white mb-4">Repository Information</h3>
             <div class="space-y-4">
               <div>
-                <label for="repository_url" class="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-300 mb-2"
+                  for="repository_url"
+                >
                   Repository URL *
                 </label>
                 <input
-                  type="url"
+                  class="input w-full"
                   id="repository_url"
                   name="repository_url"
-                  required
-                  class="input w-full"
                   placeholder="e.g., https://github.com/user/plugin"
+                  required
+                  type="url"
                 />
               </div>
 
               <div>
-                <label for="repo_type" class="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-300 mb-2"
+                  for="repo_type"
+                >
                   Repository Type
                 </label>
-                <select id="repo_type" name="repo_type" class="input w-full">
+                <select
+                  class="input w-full"
+                  id="repo_type"
+                  name="repo_type"
+                >
                   <option value="github">GitHub</option>
                   <option value="gitlab">GitLab</option>
                   <option value="http">HTTP</option>
@@ -189,15 +234,18 @@ export function AddPluginManuallyView() {
               </div>
 
               <div>
-                <label for="license" class="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-300 mb-2"
+                  for="license"
+                >
                   License
                 </label>
                 <input
-                  type="text"
+                  class="input w-full"
                   id="license"
                   name="license"
-                  class="input w-full"
                   placeholder="e.g., MIT"
+                  type="text"
                   value="MIT"
                 />
               </div>
@@ -209,24 +257,34 @@ export function AddPluginManuallyView() {
             <h3 class="text-lg font-semibold text-white mb-4">Optional Metadata</h3>
             <div class="space-y-4">
               <div>
-                <label for="tags" class="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-300 mb-2"
+                  for="tags"
+                >
                   Tags (comma-separated)
                 </label>
                 <input
-                  type="text"
+                  class="input w-full"
                   id="tags"
                   name="tags"
-                  class="input w-full"
                   placeholder="e.g., utility, dashboard, monitoring"
+                  type="text"
                 />
                 <p class="text-xs text-gray-500 mt-1">Enter tags separated by commas</p>
               </div>
 
               <div>
-                <label for="security_status" class="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-300 mb-2"
+                  for="security_status"
+                >
                   Initial Security Status
                 </label>
-                <select id="security_status" name="security_status" class="input w-full">
+                <select
+                  class="input w-full"
+                  id="security_status"
+                  name="security_status"
+                >
                   <option value="unknown">Unknown</option>
                   <option value="safe">Safe</option>
                   <option value="unsafe">Unsafe</option>
@@ -234,15 +292,18 @@ export function AddPluginManuallyView() {
               </div>
 
               <div>
-                <label for="notes" class="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-300 mb-2"
+                  for="notes"
+                >
                   Notes
                 </label>
                 <textarea
+                  class="input w-full"
                   id="notes"
                   name="notes"
-                  rows="3"
-                  class="input w-full"
                   placeholder="Any additional notes about this plugin"
+                  rows="3"
                 />
               </div>
             </div>
@@ -253,19 +314,30 @@ export function AddPluginManuallyView() {
 
           {/* Submit Button */}
           <div class="flex gap-4">
-            <button type="submit" class="btn btn-primary">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button
+              class="btn btn-primary"
+              type="submit"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
+                  d="M12 4v16m8-8H4"
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M12 4v16m8-8H4"
                 />
                 <title>Add Plugin Icon</title>
               </svg>
               Add Plugin
             </button>
-            <a href="/plugins" class="btn btn-secondary">
+            <a
+              class="btn btn-secondary"
+              href="/plugins"
+            >
               Cancel
             </a>
           </div>
@@ -282,10 +354,10 @@ export function AddPluginManuallyView() {
             viewBox="0 0 24 24"
           >
             <path
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
             <title>Info</title>
           </svg>

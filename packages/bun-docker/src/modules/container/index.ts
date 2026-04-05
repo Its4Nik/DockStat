@@ -135,9 +135,9 @@ export class ContainerModule extends BaseModule {
     link: boolean = false
   ): Promise<void> {
     await this.request(`/containers/${id}`, "DELETE", undefined, undefined, {
-      v: v,
       force: force,
       link: link,
+      v: v,
     })
   }
 

@@ -45,28 +45,28 @@ export const badgesCommand = new Command("badges")
       getCount: () => number
     }[] = [
       {
-        optionKey: "plugins",
-        name: "plugins",
-        label: "plugins",
         color: COLORS.blue,
-        icon: "puzzle",
         getCount: () => content.plugins.length,
+        icon: "puzzle",
+        label: "plugins",
+        name: "plugins",
+        optionKey: "plugins",
       },
       {
-        optionKey: "themes",
-        name: "themes",
-        label: "themes",
         color: COLORS.purple,
-        icon: "palette",
         getCount: () => content.themes.length,
+        icon: "palette",
+        label: "themes",
+        name: "themes",
+        optionKey: "themes",
       },
       {
-        optionKey: "stacks",
-        name: "stacks",
-        label: "stacks",
         color: COLORS.teal,
-        icon: "layers",
         getCount: () => content.stacks.length,
+        icon: "layers",
+        label: "stacks",
+        name: "stacks",
+        optionKey: "stacks",
       },
     ]
 
@@ -76,10 +76,10 @@ export const badgesCommand = new Command("badges")
       badges.push({
         name: cfg.name,
         svg: createBadge({
-          label: cfg.label,
-          message: count.toString(),
           color: count > 0 ? cfg.color : COLORS.lightgrey,
           icon: cfg.icon,
+          label: cfg.label,
+          message: count.toString(),
           style,
         }),
       })
@@ -87,9 +87,9 @@ export const badgesCommand = new Command("badges")
 
     if (options.type) {
       const typeConfig: Record<string, { color: string; icon: IconName }> = {
+        gitea: { color: COLORS.green, icon: "server" },
         github: { color: COLORS.grey, icon: "github" },
         gitlab: { color: COLORS.orange, icon: "gitlab" },
-        gitea: { color: COLORS.green, icon: "server" },
         http: { color: COLORS.blue, icon: "globe" },
         local: { color: COLORS.lightgrey, icon: "folder" },
       }
@@ -100,10 +100,10 @@ export const badgesCommand = new Command("badges")
       badges.push({
         name: "type",
         svg: createBadge({
-          label: "repo",
-          message: config.type,
           color: cfg.color,
           icon: cfg.icon,
+          label: "repo",
+          message: config.type,
           style,
         }),
       })
@@ -114,10 +114,10 @@ export const badgesCommand = new Command("badges")
       badges.push({
         name: "policy",
         svg: createBadge({
-          label: "policy",
-          message: config.policy,
           color: isStrict ? COLORS.green : COLORS.yellow,
           icon: isStrict ? "shieldCheck" : "shield",
+          label: "policy",
+          message: config.policy,
           style,
         }),
       })

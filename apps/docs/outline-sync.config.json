@@ -1,9 +1,9 @@
 {
-  "url": "https://outline.itsnik.de",
-  "outputDir": "./",
-  "includeCollections": ["DockStat"],
   "customPaths": {
-    "aab7cefb-b84b-4be9-8840-a873b69c6850": "../../apps/dockstat/src/lib/websocketEffects/README.md",
-    "453740d4-b426-423d-98fc-b36f6dff7644": "../../packages/template-renderer/README.md"
-  }
+    "453740d4-b426-423d-98fc-b36f6dff7644": "../../packages/template-renderer/README.md",
+    "aab7cefb-b84b-4be9-8840-a873b69c6850": "../../apps/dockstat/src/lib/websocketEffects/README.md"
+  },
+  "includeCollections": ["DockStat"],
+  "outputDir": "./",
+  "url": "https://outline.itsnik.de"
 }

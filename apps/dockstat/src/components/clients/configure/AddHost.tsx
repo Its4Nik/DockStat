@@ -17,11 +17,11 @@ export function AddHost({
 }) {
   const { createHostMutation } = useDockerHostMutations()
   const [formData, setFormData] = useState<hostToAdd>({
-    secure: false,
-    name: "",
-    hostname: "",
     clientId: registeredClients[0]?.clientId ?? 0,
+    hostname: "",
+    name: "",
     port: 2375,
+    secure: false,
   })
 
   const handleAddHost = async () => {
@@ -47,32 +47,32 @@ export function AddHost({
                 <div className="space-y-1.5">
                   <span className="text-sm font-medium">Display Name</span>
                   <Input
-                    value={formData.name}
                     onChange={(v) => updateField("name", v)}
                     placeholder="e.g. Primary Node"
+                    value={formData.name}
                   />
                 </div>
                 <div className="space-y-1.5">
                   <span className="text-sm font-medium">Hostname / IP</span>
                   <Input
-                    value={formData.hostname}
                     onChange={(v) => updateField("hostname", v)}
                     placeholder="192.168.1.10"
+                    value={formData.hostname}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <span className="text-sm font-medium">Port</span>
                     <Input
+                      onChange={(v) => updateField("port", parseInt(v, 10))}
                       type="number"
                       value={formData.port.toString()}
-                      onChange={(v) => updateField("port", parseInt(v, 10))}
                     />
                   </div>
                   <div className="flex flex-col justify-end pb-1">
                     <Toggle
-                      label="Secure (TLS)"
                       checked={formData.secure}
+                      label="Secure (TLS)"
                       onChange={(v) => updateField("secure", v)}
                     />
                   </div>
@@ -94,11 +94,14 @@ export function AddHost({
                   <span className="text-sm font-medium">Target Client ID</span>
                   <select
                     className="w-full rounded-md border border-accent/20 bg-background p-2 text-sm"
-                    value={formData.clientId}
                     onChange={(e) => updateField("clientId", Number.parseInt(e.target.value, 10))}
+                    value={formData.clientId}
                   >
                     {registeredClients.map((c) => (
-                      <option key={c.clientId} value={c.clientId}>
+                      <option
+                        key={c.clientId}
+                        value={c.clientId}
+                      >
                         Client: {c.clientName} ({c.clientId})
                       </option>
                     ))}
@@ -117,15 +120,15 @@ export function AddHost({
 
           <div className="flex flex-col gap-3 pt-4">
             <Button
-              size="lg"
               className="w-full"
-              onClick={handleAddHost}
               disabled={
                 !formData.name ||
                 !formData.hostname ||
                 createHostMutation.isPending ||
                 registeredClients.length === 0
               }
+              onClick={handleAddHost}
+              size="lg"
             >
               {createHostMutation.isPending ? "Connecting..." : "Add Remote Host"}
             </Button>

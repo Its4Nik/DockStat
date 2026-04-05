@@ -42,11 +42,11 @@ export function proxyEvent<K extends keyof EVENTS>(
 
   // Send a normalized proxy envelope to the host
   self.postMessage({
-    type: "__event__",
     data: worker.buildMessage.buildMessageData(
       eventType,
       ctx as Parameters<EVENTS[K]>[0],
       additionalDockerClientCtx
     ),
+    type: "__event__",
   } satisfies ProxyEventMessage<K>)
 }

@@ -35,12 +35,12 @@ export const ButtonRow = ({
 
       return (
         <Button
+          className={getButtonClassNames(index, slideKeys.length, connected)}
           key={key}
-          variant={isActive ? "outline" : "primary"}
-          size="sm"
           noFocusRing
           onClick={() => onSlideChange(key)}
-          className={getButtonClassNames(index, slideKeys.length, connected)}
+          size="sm"
+          variant={isActive ? "outline" : "primary"}
         >
           {key}
         </Button>

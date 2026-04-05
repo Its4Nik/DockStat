@@ -3,49 +3,49 @@ import { api } from "@/lib/api"
 
 export const useConfigMutations = () => {
   const pinLinkMutation = eden.useEdenMutation({
+    invalidateQueries: [["fetchAdditionalSettings"]],
     mutationKey: ["pinNavLink"],
     route: api.db.config.pinItem.post,
-    invalidateQueries: [["fetchAdditionalSettings"]],
     toast: {
-      successTitle: "Link pinned successfully",
       errorTitle: "Failed to pin link",
+      successTitle: "Link pinned successfully",
     },
   })
 
   const unpinLinkMutation = eden.useEdenMutation({
+    invalidateQueries: [["fetchAdditionalSettings"]],
     mutationKey: ["unPinNavLink"],
     route: api.db.config.unpinItem.post,
-    invalidateQueries: [["fetchAdditionalSettings"]],
     toast: {
-      successTitle: "Link unpinned successfully",
       errorTitle: "Failed to unpin link",
+      successTitle: "Link unpinned successfully",
     },
   })
 
   const updateAdditionalSettingsMutation = eden.useEdenMutation({
+    invalidateQueries: [["fetchAdditionalSettings"]],
     mutationKey: ["updateAdditionalSettings"],
     route: api.db.config.additionalSettings.post,
-    invalidateQueries: [["fetchAdditionalSettings"]],
     toast: {
-      successTitle: "Additional settings updated",
       errorTitle: "Failed to update additional settings",
+      successTitle: "Additional settings updated",
     },
   })
 
   const editHotkeyMutation = eden.useEdenMutation({
+    invalidateQueries: [["fetchAdditionalSettings"]],
     mutationKey: ["editHotkey"],
     route: api.db.config.hotkey.post,
-    invalidateQueries: [["fetchAdditionalSettings"]],
     toast: {
-      successTitle: "Hotkey updated successfully",
       errorTitle: "Failed to update hotkey",
+      successTitle: "Hotkey updated successfully",
     },
   })
 
   return {
+    editHotkeyMutation,
     pinLinkMutation,
     unpinLinkMutation,
     updateAdditionalSettingsMutation,
-    editHotkeyMutation,
   }
 }

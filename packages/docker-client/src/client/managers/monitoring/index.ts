@@ -34,14 +34,14 @@ export default class MonitoringManager {
     this.logger = baseLogger.spawn("MM")
 
     this.options = {
-      healthCheckInterval: options.healthCheckInterval ?? 30000,
       containerEventPollingInterval: options.containerEventPollingInterval ?? 5000,
-      hostMetricsInterval: options.hostMetricsInterval ?? 10000,
       containerMetricsInterval: options.containerMetricsInterval ?? 10000,
-      enableContainerMetrics: options.enableContainerMetrics ?? true,
       enableContainerEvents: options.enableContainerEvents ?? true,
-      enableHostMetrics: options.enableHostMetrics ?? true,
+      enableContainerMetrics: options.enableContainerMetrics ?? true,
       enableHealthChecks: options.enableHealthChecks ?? true,
+      enableHostMetrics: options.enableHostMetrics ?? true,
+      healthCheckInterval: options.healthCheckInterval ?? 30000,
+      hostMetricsInterval: options.hostMetricsInterval ?? 10000,
       retryAttempts: options.retryAttempts ?? 3,
       retryDelay: options.retryDelay ?? 1000,
     }
@@ -182,10 +182,10 @@ export default class MonitoringManager {
     dockerEventStreams: Map<number, NodeJS.ReadableStream>
   } {
     return {
-      isMonitoring: this.isMonitoring,
-      lastHealthStatus: this.healthCheckMonitor.getLastHealthStatus(),
-      lastContainerStates: this.containerEventMonitor.getLastContainerStates(),
       dockerEventStreams: this.dockerEventStreamManager.getStreams(),
+      isMonitoring: this.isMonitoring,
+      lastContainerStates: this.containerEventMonitor.getLastContainerStates(),
+      lastHealthStatus: this.healthCheckMonitor.getLastHealthStatus(),
     }
   }
 
@@ -200,21 +200,21 @@ export default class MonitoringManager {
     const [info, version] = await Promise.all([docker.system.info(), docker.system.version()])
 
     return {
-      hostId,
-      hostName: host.name,
-      dockerVersion: version.Version,
       apiVersion: version.ApiVersion,
-      os: info.OperatingSystem,
       architecture: info.Architecture,
-      totalMemory: info.MemTotal,
-      totalCPU: info.NCPU,
-      kernelVersion: info.KernelVersion,
       containers: info.Containers,
+      containersPaused: info.ContainersPaused,
       containersRunning: info.ContainersRunning,
       containersStopped: info.ContainersStopped,
-      containersPaused: info.ContainersPaused,
+      dockerVersion: version.Version,
+      hostId,
+      hostName: host.name,
       images: info.Images,
+      kernelVersion: info.KernelVersion,
+      os: info.OperatingSystem,
       systemTime: info.SystemTime,
+      totalCPU: info.NCPU,
+      totalMemory: info.MemTotal,
     }
   }
 

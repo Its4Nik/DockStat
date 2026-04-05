@@ -11,20 +11,20 @@ import type { ExtendedContainerInfo } from "../../../mixins/containers/index.ts"
  */
 function mapToLowercaseProperties(container: ExtendedContainerInfo) {
   return {
-    id: container.Id || "",
-    name: container.Names?.[0]?.replace(/^\//, "") || "unknown",
-    image: container.Image || "unknown",
-    status: container.State || "unknown",
-    state: container.State || "unknown",
+    clientId: container.clientId,
     created: container.Created ? Math.floor(new Date(container.Created).getTime() / 1000) : 0,
+    hostId: container.hostId,
+    id: container.Id || "",
+    image: container.Image || "unknown",
+    labels: container.Labels || {},
+    name: container.Names?.[0]?.replace(/^\//, "") || "unknown",
     ports: (container.Ports || []).map((port) => ({
       privatePort: port.PrivatePort,
       publicPort: port.PublicPort,
       type: port.Type || "tcp",
     })),
-    labels: container.Labels || {},
-    clientId: container.clientId,
-    hostId: container.hostId,
+    state: container.State || "unknown",
+    status: container.State || "unknown",
   }
 }
 
@@ -195,8 +195,8 @@ class ContainerEventMonitor {
 
     return containers.map((c) => ({
       ...c,
-      hostId,
       clientId: this.clientId,
+      hostId,
     }))
   }
 }

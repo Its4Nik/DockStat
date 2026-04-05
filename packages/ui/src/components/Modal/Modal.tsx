@@ -19,11 +19,11 @@ export interface ModalProps {
 }
 
 const sizeClasses: Record<ModalSize, string> = {
-  sm: "max-w-sm",
-  md: "max-w-lg",
-  lg: "max-w-3xl",
-  xl: "max-w-5xl",
   full: "max-w-[90vw]",
+  lg: "max-w-3xl",
+  md: "max-w-lg",
+  sm: "max-w-sm",
+  xl: "max-w-5xl",
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -95,33 +95,33 @@ export const Modal: React.FC<ModalProps> = ({
     <AnimatePresence>
       {open && (
         <motion.div
-          key="modal-backdrop"
-          role="dialog"
-          aria-modal="true"
+          animate="visible"
           aria-labelledby={title ? "modal-title" : undefined}
+          aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center bg-modal-bg/50 cursor-default"
+          exit="exit"
+          initial="hidden"
+          key="modal-backdrop"
           onClick={handleBackdropClick}
           onKeyDown={handleBackdropKeyDown}
+          role="dialog"
           variants={backdropVariants}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
           // transition={{ duration: 0.2 }}
         >
           <motion.div
-            key="modal-content"
-            className={`${sizeClasses[size]} w-full max-h-[90vh] mx-4 rounded-lg`}
-            variants={transparent ? glassModalVariants : modalVariants}
-            initial="hidden"
             animate="visible"
+            className={`${sizeClasses[size]} w-full max-h-[90vh] mx-4 rounded-lg`}
             exit="exit"
+            initial="hidden"
+            key="modal-content"
             onClick={(e) => e.stopPropagation()}
             style={{ willChange: "opacity, transform" }}
+            variants={transparent ? glassModalVariants : modalVariants}
             //transition={{ duration: 0.2 }}
           >
             <Card
-              glass={transparent || false}
               className={`w-full shadow-lg cursor-default flex flex-col max-h-[90vh] overflow-hidden`}
+              glass={transparent || false}
             >
               {title && <CardHeader className="shrink-0">{title}</CardHeader>}
 

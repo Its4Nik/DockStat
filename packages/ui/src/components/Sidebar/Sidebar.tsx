@@ -92,7 +92,7 @@ export function Sidebar({
   }, [isOpen, onClose])
 
   const handleTogglePin = (item: PathItem) => {
-    const payload = { slug: item.slug, path: item.path }
+    const payload = { path: item.path, slug: item.slug }
     if (item.isPinned) {
       mutationFn.unpin(payload)
     } else {
@@ -107,28 +107,37 @@ export function Sidebar({
       {isOpen && (
         <>
           <motion.div
-            className="fixed inset-0 z-40 bg-main-bg/50 backdrop-blur-xs"
-            variants={backdropVariants}
-            initial="closed"
             animate="open"
+            className="fixed inset-0 z-40 bg-main-bg/50 backdrop-blur-xs"
             exit="closed"
-            transition={{ duration: 0.2 }}
+            initial="closed"
             onClick={onClose}
+            transition={{ duration: 0.2 }}
+            variants={backdropVariants}
           />
           <motion.div
-            className="fixed left-0 top-0 z-50 h-full w-80 overflow-y-auto p-4"
-            variants={slideInVariants}
-            initial="closed"
             animate="open"
+            className="fixed left-0 top-0 z-50 h-full w-80 overflow-y-auto p-4"
             exit="closed"
+            initial="closed"
+            variants={slideInVariants}
           >
             <Card className="flex h-full flex-col shadow-xl overflow-y-scroll">
               <div className="flex items-center justify-between p-1">
                 <div className="flex items-center gap-3">
-                  <img src={DockStatLogo} alt="DockStat Logo" className="w-8" />
+                  <img
+                    alt="DockStat Logo"
+                    className="w-8"
+                    src={DockStatLogo}
+                  />
                   <p className="text-lg font-bold tracking-tight">DockStat</p>
                 </div>
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={onClose}>
+                <Button
+                  className="h-8 w-8 p-0"
+                  onClick={onClose}
+                  size="sm"
+                  variant="outline"
+                >
                   <X size={16} />
                 </Button>
               </div>
@@ -136,51 +145,57 @@ export function Sidebar({
               <div className="mt-2">
                 <div className="flex transition-all duration-300 space-x-2">
                   <Button
-                    noFocusRing
                     className="flex-1 relative"
+                    disabled={!showPluginRoutes}
+                    noFocusRing
+                    onClick={() => setShowPluginRoutes(false)}
                     size="xs"
                     variant={!showPluginRoutes ? "outline" : "primary"}
-                    disabled={!showPluginRoutes}
-                    onClick={() => setShowPluginRoutes(false)}
                   >
                     Main routes
                   </Button>
                   {pluginLinks.length >= 1 ? (
                     <Button
-                      noFocusRing
                       className="flex-1 relative"
+                      disabled={showPluginRoutes}
+                      noFocusRing
+                      onClick={() => setShowPluginRoutes(true)}
                       size="xs"
                       variant={showPluginRoutes ? "outline" : "primary"}
-                      onClick={() => setShowPluginRoutes(true)}
-                      disabled={showPluginRoutes}
                     >
                       Plugin routes
                     </Button>
                   ) : null}
                 </div>
 
-                <AnimatePresence mode="wait" initial={false}>
+                <AnimatePresence
+                  initial={false}
+                  mode="wait"
+                >
                   {showPluginRoutes ? (
                     <SidebarAnimatedNav key="plugins">
                       {pluginLinks.map((plugin) => (
                         <div key={plugin.pluginName}>
-                          <Divider label={plugin.pluginName} className="mb-2" />
+                          <Divider
+                            className="mb-2"
+                            label={plugin.pluginName}
+                          />
                           <div className="flex flex-1 flex-col gap-1">
                             {plugin.paths.map((path) => (
                               <SidebarAnimatedItem key={path.fullPath}>
                                 <SidebarItem
                                   handleTogglePin={() =>
                                     handleTogglePin({
+                                      isPinned: isPinned(path.fullPath),
                                       path: path.fullPath,
                                       slug: path.metaTitle,
-                                      isPinned: isPinned(path.fullPath),
                                     })
                                   }
                                   isLoading={mutationFn.isBusy}
                                   item={{
+                                    isPinned: isPinned(path.fullPath),
                                     path: path.fullPath,
                                     slug: path.metaTitle,
-                                    isPinned: isPinned(path.fullPath),
                                   }}
                                 />
                               </SidebarAnimatedItem>
@@ -194,9 +209,9 @@ export function Sidebar({
                       {pathsWithPinStatus?.map((p) => (
                         <SidebarAnimatedItem key={p.slug}>
                           <SidebarItem
-                            item={p}
                             handleTogglePin={handleTogglePin}
                             isLoading={mutationFn.isBusy}
+                            item={p}
                           />
                         </SidebarAnimatedItem>
                       ))}
@@ -206,32 +221,35 @@ export function Sidebar({
               </div>
 
               <div className="mt-auto flex flex-col gap-4 pt-4">
-                <Divider label="More of DockStat" variant="dashed" />
+                <Divider
+                  label="More of DockStat"
+                  variant="dashed"
+                />
 
                 <div className="flex flex-col gap-3">
                   <LinkWithIcon
-                    href="https://github.com/its4nik/dockstat"
                     external
-                    iconPosition="left"
+                    href="https://github.com/its4nik/dockstat"
                     icon={<SiGithub size={18} />}
+                    iconPosition="left"
                   >
                     Visit Github
                   </LinkWithIcon>
 
                   <LinkWithIcon
-                    href="https://dockstat.itsnik.de"
                     external
-                    iconPosition="left"
+                    href="https://dockstat.itsnik.de"
                     icon={<BookMarkedIcon size={18} />}
+                    iconPosition="left"
                   >
                     Technical Documentation
                   </LinkWithIcon>
 
                   <LinkWithIcon
-                    href="https://www.npmjs.com/search?q=%40dockstat"
                     external
-                    iconPosition="left"
+                    href="https://www.npmjs.com/search?q=%40dockstat"
                     icon={<SiNpm size={18} />}
+                    iconPosition="left"
                   >
                     @dockstat packages
                   </LinkWithIcon>
@@ -241,55 +259,51 @@ export function Sidebar({
 
                 <div className="flex gap-2">
                   <Button
-                    variant="outline"
-                    onClick={() => setLogModalOpen(!logModalOpen)}
                     className="flex-1"
+                    onClick={() => setLogModalOpen(!logModalOpen)}
+                    variant="outline"
                   >
                     <Terminal size={18} />
                   </Button>
 
                   <Button
-                    variant="outline"
+                    className="flex-1"
                     onClick={() => {
                       setThemeModalOpen(true)
                     }}
-                    className="flex-1"
+                    variant="outline"
                   >
                     <Palette size={18} />
                   </Button>
 
                   <Button
-                    variant="outline"
                     className="flex-1"
                     onClick={() => setIsThemeSidebarOpen(true)}
+                    variant="outline"
                   >
                     <Paintbrush size={18} />
                   </Button>
                 </div>
               </div>
               <Modal
-                transparent
+                onClose={() => setLogModalOpen(false)}
+                open={logModalOpen}
                 size="full"
                 title={`${logEntries.length} Logs available`}
-                open={logModalOpen}
-                onClose={() => setLogModalOpen(false)}
+                transparent
               >
                 <Table
-                  striped
-                  hoverable
-                  searchable
                   columns={[
                     {
-                      key: "name",
-                      title: "Logger Name",
                       align: "center",
+                      key: "name",
                       render: (loggerName) =>
                         loggerName && <Badge rounded>{String(loggerName)}</Badge>,
+                      title: "Logger Name",
                     },
                     {
-                      key: "level",
                       align: "center",
-                      title: "Level",
+                      key: "level",
                       render: (level) =>
                         level && (
                           <span
@@ -298,38 +312,42 @@ export function Sidebar({
                             {String(level)}
                           </span>
                         ),
+                      title: "Level",
                     },
                     { key: "message", title: "Log Message" },
                     {
-                      key: "requestId",
-                      title: "RequestID",
                       align: "center",
+                      key: "requestId",
                       render: (reqId) => reqId && <Badge unique>{String(reqId)}</Badge>,
+                      title: "RequestID",
                     },
-                    { key: "caller", title: "Caller", align: "center" },
+                    { align: "center", key: "caller", title: "Caller" },
                     { key: "parents", title: "Parents" },
                     {
                       key: "timestamp",
-                      title: "Timestamp",
                       render: (date) => <span>{formatDate(date as Date, "log")}</span>,
+                      title: "Timestamp",
                     },
                   ]}
                   data={logEntries}
+                  hoverable
+                  searchable
+                  striped
                 />
               </Modal>
 
               <Modal
-                size="xl"
-                transparent
-                title="Theme Browser"
-                open={themeModalOpen}
                 onClose={() => setThemeModalOpen(false)}
+                open={themeModalOpen}
+                size="xl"
+                title="Theme Browser"
+                transparent
               >
                 <ThemeBrowser
-                  deleteTheme={deleteTheme}
-                  themes={themes}
                   currentThemeId={currentThemeId}
+                  deleteTheme={deleteTheme}
                   onSelectTheme={async (theme) => await onSelectTheme(theme)}
+                  themes={themes}
                   toastSuccess={toastSuccess}
                 />
               </Modal>

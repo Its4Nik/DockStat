@@ -24,14 +24,14 @@ export const initCommand = new Command("init")
     const data: RepoFile = {
       config: {
         name: options.name,
+        plugins: { bundle: options.pluginBundle, dir: options.pluginDir },
         policy: options.relaxed ? "relaxed" : "strict",
+        stacks: { dir: options.stackDir },
+        themes: { dir: options.themesDir },
         type: options.variant,
         verification_api: (options.verificationApi && String(options.verificationApi)) || null,
-        themes: { dir: options.themesDir },
-        plugins: { dir: options.pluginDir, bundle: options.pluginBundle },
-        stacks: { dir: options.stackDir },
       },
-      content: { plugins: [], themes: [], stacks: [] },
+      content: { plugins: [], stacks: [], themes: [] },
     }
 
     await Bun.write(globalOptions.root, JSON.stringify(data, null, 2))

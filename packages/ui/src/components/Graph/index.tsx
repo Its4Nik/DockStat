@@ -10,7 +10,7 @@ import { HostNode } from "./nodes/host"
 
 export const nodeTypes = {
   client: ClientNode,
-  host: HostNode,
-  docknode: DockNode,
   container: ContainerNode,
+  docknode: DockNode,
+  host: HostNode,
 }

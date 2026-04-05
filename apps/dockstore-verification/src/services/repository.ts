@@ -133,10 +133,10 @@ export async function fetchPluginSource(
       (metaString + plugin.version).replaceAll("\n", ":::").replaceAll(" ", "/x/")
     )
     return {
-      meta: plugin,
-      sourceHash,
       bundleHash: undefined,
       fetchedAt: Date.now(),
+      meta: plugin,
+      sourceHash,
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
@@ -165,21 +165,21 @@ export async function fetchRepository(repoUrl: string): Promise<RepositoryFetchR
     }
 
     return {
+      fetchedAt: Date.now(),
+      plugins,
       success: true,
       url: repoUrl,
-      plugins,
-      fetchedAt: Date.now(),
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     logger.error(`Failed to fetch repository: ${repoUrl}`, message)
 
     return {
-      success: false,
-      url: repoUrl,
-      plugins: [],
       error: message,
       fetchedAt: Date.now(),
+      plugins: [],
+      success: false,
+      url: repoUrl,
     }
   }
 }

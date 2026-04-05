@@ -70,9 +70,9 @@ export class Hosts extends DockerClientBase {
     this.logger.info(`Creating Docker instance: ${baseUrl}`)
     try {
       const dockerInstance = new Docker({
-        mode: "tcp",
         baseUrl,
         dockerAPIVersion: "1.54",
+        mode: "tcp",
       })
       const hostId = Number(host.id)
 
@@ -92,8 +92,8 @@ export class Hosts extends DockerClientBase {
 
       // Emit event
       proxyEvent("host:added", {
-        hostId,
         docker_client_id: Number(host.docker_client_id ?? 0),
+        hostId,
         hostName: String(host.name),
       })
 
@@ -222,9 +222,9 @@ export class Hosts extends DockerClientBase {
       this.logger.info(`Creating new Docker instance: ${baseUrl}`)
 
       const dockerInstance = new Docker({
-        mode: "tcp",
         baseUrl,
         dockerAPIVersion: "1.54",
+        mode: "tcp",
       })
       this.dockerInstances.set(hostId, dockerInstance)
 
@@ -288,7 +288,7 @@ export class Hosts extends DockerClientBase {
         } catch (err) {
           const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
           this.logger.warn(`Ping failed for instance ${id}: ${msg}`)
-          return { id, ok: false as const, error: msg }
+          return { error: msg, id, ok: false as const }
         }
       })
     )

@@ -18,8 +18,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const hasLoadedSavedTheme = useRef(false)
 
   const { data: ThemesRes } = eden.useEdenQuery({
-    route: api.themes.get,
     queryKey: ["fetchAllThemes"],
+    route: api.themes.get,
   })
 
   const themesList: ThemeListItem[] | null = ThemesRes?.data ?? null
@@ -72,8 +72,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         }
 
         const themeData = {
-          name: data.data.name,
           id: data.data.id,
+          name: data.data.name,
           vars: data.data.variables ?? {},
         }
         console.log("Theme data fetched:", themeData)
@@ -149,18 +149,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   type routeType = Awaited<ReturnType<typeof api.themes.post>>["data"]
 
   const providerValue: ThemeProviderData<routeType, input> = {
-    theme,
-    isLoading,
-    error,
+    adjustCurrentTheme,
     applyTheme,
     applyThemeById,
-    isModifiedTheme,
-    themesList,
-    adjustCurrentTheme,
     createNewThemeFromCurrent: {
       ...createNewThemeFromCurrent,
       mutateAsync: handleCreateNewTheme,
     },
+    error,
+    isLoading,
+    isModifiedTheme,
+    theme,
+    themesList,
   }
 
   return <ThemeProviderContext value={providerValue}>{children}</ThemeProviderContext>

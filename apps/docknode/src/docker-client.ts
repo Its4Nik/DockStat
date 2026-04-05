@@ -17,7 +17,7 @@ class Client {
         const id = c.Id
         this.logger.debug(`Getting Stats for container: ${truncate(id, 10)}`)
 
-        const stats = await this.d.getContainer(id).stats({ stream: false, "one-shot": true })
+        const stats = await this.d.getContainer(id).stats({ "one-shot": true, stream: false })
 
         const networks = stats.networks ?? {}
         const interfaces: Record<string, unknown> = {}

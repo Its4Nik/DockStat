@@ -62,7 +62,7 @@ export function buildTableSQL<_T extends Record<string, unknown>>(
   )} (${allDefinitions})${withoutRowId};`
 
   return {
-    sql,
     columnNames: Object.keys(columns),
+    sql,
   }
 }

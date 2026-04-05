@@ -28,12 +28,12 @@ export const db = new DB(
 db.createTable<Repository>(
   "repositories",
   {
+    created_at: column.createdAt(),
+    enabled: column.boolean({ default: 1, notNull: true }),
     id: column.id(),
     name: column.text({ notNull: true, unique: true }),
-    url: column.text({ notNull: true }),
-    enabled: column.boolean({ notNull: true, default: 1 }),
-    created_at: column.createdAt(),
     updated_at: column.updatedAt(),
+    url: column.text({ notNull: true }),
   },
   { ifNotExists: true }
 )
@@ -42,28 +42,28 @@ db.createTable<Repository>(
 db.createTable<Plugin>(
   "plugins",
   {
+    author_email: column.text(),
+    author_name: column.text({ notNull: true }),
+    author_website: column.text(),
+    created_at: column.createdAt(),
+    description: column.text({ notNull: true }),
     id: column.id(),
+    license: column.text({ default: "MIT", notNull: true }),
+    manifest_path: column.text({ notNull: true }),
+    name: column.text({ notNull: true }),
+    repo_type: column.enum(["github", "gitlab", "http"]),
     repository_id: column.foreignKey("repositories", "id", {
       notNull: true,
       onDelete: "CASCADE",
     }),
-    name: column.text({ notNull: true }),
-    description: column.text({ notNull: true }),
-    author_name: column.text({ notNull: true }),
-    author_email: column.text(),
-    author_website: column.text(),
-    license: column.text({ notNull: true, default: "MIT" }),
     repository_url: column.text({ notNull: true }),
-    repo_type: column.enum(["github", "gitlab", "http"]),
-    manifest_path: column.text({ notNull: true }),
-    created_at: column.createdAt(),
     updated_at: column.updatedAt(),
   },
   {
-    ifNotExists: true,
     constraints: {
       unique: [["repository_id", "name"]],
     },
+    ifNotExists: true,
   }
 )
 
@@ -71,22 +71,22 @@ db.createTable<Plugin>(
 db.createTable<PluginVersion>(
   "plugin_versions",
   {
+    bundle_hash: column.text(),
+    created_at: column.createdAt(),
+    hash: column.text({ notNull: true }),
     id: column.id(),
     plugin_id: column.foreignKey("plugins", "id", {
       notNull: true,
       onDelete: "CASCADE",
     }),
-    version: column.text({ notNull: true }),
-    hash: column.text({ notNull: true }),
-    bundle_hash: column.text(),
     tags: column.json(),
-    created_at: column.createdAt(),
+    version: column.text({ notNull: true }),
   },
   {
-    ifNotExists: true,
     constraints: {
       unique: ["plugin_id", "version"],
     },
+    ifNotExists: true,
   }
 )
 
@@ -95,19 +95,19 @@ db.createTable<Verification>(
   "verifications",
   {
     id: column.id(),
+    notes: column.text(),
     plugin_version_id: column.foreignKey("plugin_versions", "id", {
       notNull: true,
       onDelete: "CASCADE",
       unique: true,
     }),
-    verified: column.boolean({ notNull: true, default: 0 }),
-    verified_by: column.text({ notNull: true }),
-    verified_at: column.timestamp(),
-    notes: column.text(),
     security_status: column.enum(["safe", "unsafe", "unknown"], {
-      notNull: true,
       default: "unknown",
+      notNull: true,
     }),
+    verified: column.boolean({ default: 0, notNull: true }),
+    verified_at: column.timestamp(),
+    verified_by: column.text({ notNull: true }),
   },
   { ifNotExists: true }
 )

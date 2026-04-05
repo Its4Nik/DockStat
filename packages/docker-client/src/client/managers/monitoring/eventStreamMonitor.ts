@@ -290,8 +290,8 @@ class DockerEventStreamManager {
 
     return {
       ...info,
-      hostId,
       clientId: this.clientId,
+      hostId,
     } as ExtendedContainerInfo
   }
 }

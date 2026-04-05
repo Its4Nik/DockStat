@@ -42,15 +42,18 @@ export const ContainerNode = memo(({ data, selected }: NodeProps<Node<ContainerN
         </div>
       )}
 
-      <Badge size="xs" variant={data.status === "online" ? "success" : "error"}>
+      <Badge
+        size="xs"
+        variant={data.status === "online" ? "success" : "error"}
+      >
         {data.status}
       </Badge>
 
       <Handle
-        isConnectable={false}
-        type="target"
-        position={Position.Left}
         className="w-2.5! h-2.5! bg-graph-container-card-border! border-2! border-graph-container-text-primary/40!"
+        isConnectable={false}
+        position={Position.Left}
+        type="target"
       />
     </div>
   )

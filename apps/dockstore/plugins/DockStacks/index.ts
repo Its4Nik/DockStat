@@ -5,9 +5,9 @@ const DockStacks = pluginBuilder<StackConfig>()
   .name("DockStacks")
   .version("1.0.0")
   .author({
-    name: "Its4Nik",
     email: "dockstat@itsnik.de",
     license: "MIT",
+    name: "Its4Nik",
     website: "https://itsnik.de",
   })
   .description("Manage Docker container stacks from a centralized point")

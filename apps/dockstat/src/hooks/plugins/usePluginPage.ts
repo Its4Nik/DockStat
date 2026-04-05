@@ -39,41 +39,41 @@ export function usePluginPage() {
   )
 
   const { executeLoader, reloadLoaders, isExecutingLoader } = usePluginLoaders({
+    loaders: data?.loaders || [],
+    onExternalDataUpdate: updateExternalData,
+    onStateUpdate: (key, value) => setState((prev) => ({ ...prev, [key]: value })),
     pluginId,
     routePath,
-    loaders: data?.loaders || [],
     state,
-    onStateUpdate: (key, value) => setState((prev) => ({ ...prev, [key]: value })),
-    onExternalDataUpdate: updateExternalData,
   })
 
   const { handleAction, registerCustomHandler, isExecutingAction } = usePluginActions({
-    pluginId,
-    routePath,
     actions: data?.actions || [],
-    parsedTemplate: parsedTemplate || null,
-    state,
-    onStateChange: handleStateChange,
     onNavigate: handleNavigate,
+    onStateChange: handleStateChange,
+    parsedTemplate: parsedTemplate || null,
+    pluginId,
     reloadLoaders,
+    routePath,
+    state,
   })
 
   return {
     data,
-    isLoading,
-    pluginId,
-    routePath,
-    state,
+    executeLoader,
     externalData,
-    parsedTemplate,
-    parsedFragments,
-    handleStateChange,
     handleAction,
     handleNavigate,
-    executeLoader,
-    reloadLoaders,
-    registerCustomHandler,
+    handleStateChange,
     isExecutingAction,
     isExecutingLoader,
+    isLoading,
+    parsedFragments,
+    parsedTemplate,
+    pluginId,
+    registerCustomHandler,
+    reloadLoaders,
+    routePath,
+    state,
   }
 }

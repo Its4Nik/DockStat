@@ -52,25 +52,25 @@ export class NetworksModule {
       await (
         this.docker as unknown as { createNetwork: (opts: unknown) => Promise<unknown> }
       ).createNetwork({
-        Name: options.name,
-        Driver: options.driver ?? "overlay",
-        CheckDuplicate: options.checkDuplicate ?? true,
-        Internal: options.internal,
         Attachable: options.attachable,
-        Ingress: options.ingress,
+        CheckDuplicate: options.checkDuplicate ?? true,
+        Driver: options.driver ?? "overlay",
         EnableIPv6: options.enableIPv6,
-        Labels: options.labels,
-        Options: options.options,
+        Ingress: options.ingress,
+        Internal: options.internal,
         IPAM: options.ipam
           ? {
-              Driver: options.ipam.driver,
               Config: options.ipam.config?.map((c) => ({
-                Subnet: c.subnet,
-                IPRange: c.ipRange,
                 Gateway: c.gateway,
+                IPRange: c.ipRange,
+                Subnet: c.subnet,
               })),
+              Driver: options.ipam.driver,
             }
           : undefined,
+        Labels: options.labels,
+        Name: options.name,
+        Options: options.options,
       } as unknown)
 
       const networks = await this.list()
@@ -116,7 +116,7 @@ export class NetworksModule {
     name: string,
     options: Partial<SwarmNetworkCreateOptions> = {}
   ): Promise<SwarmNetworkInfo> {
-    return this.create({ name, driver: "overlay", attachable: true, ...options })
+    return this.create({ attachable: true, driver: "overlay", name, ...options })
   }
 
   async connect(
@@ -159,28 +159,28 @@ export class NetworksModule {
     const ipamConfig = ipam?.Config as Array<Record<string, unknown>> | undefined
 
     return {
-      name: (network.Name as string) ?? "",
-      id: (network.Id as string) ?? (network.ID as string) ?? "",
-      created: (network.Created as string) ?? "",
-      scope: (network.Scope as "local" | "swarm") ?? "local",
-      driver: (network.Driver as SwarmNetworkInfo["driver"]) ?? "bridge",
       attachable: network.Attachable as boolean | undefined,
+      created: (network.Created as string) ?? "",
+      driver: (network.Driver as SwarmNetworkInfo["driver"]) ?? "bridge",
+      enableIPv6: network.EnableIPv6 as boolean | undefined,
+      id: (network.Id as string) ?? (network.ID as string) ?? "",
       ingress: network.Ingress as boolean | undefined,
       internal: network.Internal as boolean | undefined,
-      enableIPv6: network.EnableIPv6 as boolean | undefined,
       ipam: ipam
         ? {
-            driver: ipam.Driver as string | undefined,
             config: ipamConfig?.map((c) => ({
-              subnet: c.Subnet as string | undefined,
-              ipRange: c.IPRange as string | undefined,
               gateway: c.Gateway as string | undefined,
+              ipRange: c.IPRange as string | undefined,
+              subnet: c.Subnet as string | undefined,
             })),
+            driver: ipam.Driver as string | undefined,
             options: ipam.Options as Record<string, string> | undefined,
           }
         : undefined,
       labels: network.Labels as Record<string, string> | undefined,
+      name: (network.Name as string) ?? "",
       options: network.Options as Record<string, string> | undefined,
+      scope: (network.Scope as "local" | "swarm") ?? "local",
     }
   }
 }

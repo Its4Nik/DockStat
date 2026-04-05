@@ -51,11 +51,11 @@ export class OutlineSync {
     this.verbose = Boolean(options?.verbose ?? config.verbose)
 
     this.trace("OutlineSync initialized", {
-      outputDir: this.outputDir,
-      customPathsCount: Object.keys(this.customPaths).length,
       customPaths: this.customPaths,
-      includeCollections: this.includeCollections,
+      customPathsCount: Object.keys(this.customPaths).length,
       excludeCollections: this.excludeCollections,
+      includeCollections: this.includeCollections,
+      outputDir: this.outputDir,
     })
   }
 
@@ -71,12 +71,12 @@ export class OutlineSync {
 
   private formatDate(date: Date): string {
     return date.toLocaleString("en-US", {
-      month: "short",
       day: "2-digit",
       hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
       hour12: false,
+      minute: "2-digit",
+      month: "short",
+      second: "2-digit",
     })
   }
 
@@ -132,7 +132,7 @@ export class OutlineSync {
     const roots: DocumentNode[] = []
 
     for (const doc of documents) {
-      docMap.set(doc.id, { document: doc, children: [] })
+      docMap.set(doc.id, { children: [], document: doc })
       this.trace(`buildDocumentTree: created node for "${doc.title}" (${doc.id})`, {
         parentDocumentId: doc.parentDocumentId,
       })
@@ -171,8 +171,8 @@ export class OutlineSync {
   ): { dirPath: string; filePath: string; isCustomPath: boolean } {
     this.trace(`getDocumentPath: resolving path for "${doc.title}" (${doc.id})`, {
       collectionName,
-      parentPath,
       hasCustomPath: doc.id in this.customPaths,
+      parentPath,
     })
 
     const customPath = this.customPaths[doc.id]
@@ -181,8 +181,8 @@ export class OutlineSync {
       const endsWithMd = customPath.toLowerCase().endsWith(".md")
       this.trace(`getDocumentPath: CUSTOM PATH found for "${doc.title}" (${doc.id})`, {
         customPath,
-        startsWithDotDot: customPath.startsWith(".."),
         endsWithMd,
+        startsWithDotDot: customPath.startsWith(".."),
       })
 
       let resolvedPath: string
@@ -205,8 +205,8 @@ export class OutlineSync {
       if (endsWithMd) {
         const dirPath = join(resolvedPath, "..")
         this.trace(`getDocumentPath: custom path is a file path`, {
-          filePath: resolvedPath,
           dirPath,
+          filePath: resolvedPath,
         })
         return { dirPath, filePath: resolvedPath, isCustomPath: true }
       }
@@ -224,8 +224,8 @@ export class OutlineSync {
     this.trace(`getDocumentPath: using standard path resolution`, {
       collectionPath,
       docPath,
-      parentPath,
       isRootLevel: !parentPath,
+      parentPath,
     })
 
     if (!parentPath) {
@@ -234,8 +234,8 @@ export class OutlineSync {
         this.trace(
           `getDocumentPath: root doc name matches collection name, avoiding duplicate folder`,
           {
-            docPath,
             collectionPath,
+            docPath,
             resolvedPath,
           }
         )
@@ -257,8 +257,8 @@ export class OutlineSync {
     } else {
       const resolvedPath = join(parentPath, docPath)
       this.trace(`getDocumentPath: nested doc -> child folder`, {
-        parentPath,
         docPath,
+        parentPath,
         resolvedPath,
       })
       return {
@@ -271,10 +271,10 @@ export class OutlineSync {
 
   private createFrontMatter(doc: Document): string {
     const metadata: DocumentMetadata = {
-      id: doc.id,
-      title: doc.title,
       collectionId: doc.collectionId,
+      id: doc.id,
       parentDocumentId: doc.parentDocumentId,
+      title: doc.title,
       // Normalize to ISO string to avoid parser/timezone differences
       updatedAt: new Date(doc.updatedAt).toISOString(),
       urlId: doc.urlId,
@@ -293,18 +293,18 @@ export class OutlineSync {
     const indent = "  ".repeat(depth)
 
     this.trace(`syncDocumentNode: starting sync for "${doc.title}" (${doc.id})`, {
-      collectionName,
-      parentPath,
-      depth,
       childrenCount: node.children.length,
+      collectionName,
+      depth,
+      parentPath,
     })
 
     this.trace(`syncDocumentNode: fetching full document content for "${doc.title}"`)
     const fullDoc = await this.client.getDocument(doc.id)
     this.trace(`syncDocumentNode: received document content`, {
       id: fullDoc.id,
-      title: fullDoc.title,
       textLength: fullDoc.text?.length ?? 0,
+      title: fullDoc.title,
       updatedAt: fullDoc.updatedAt,
     })
 
@@ -325,8 +325,8 @@ export class OutlineSync {
     await writeFile(filePath, content, "utf-8")
 
     this.trace(`syncDocumentNode: file written successfully`, {
-      filePath,
       contentLength: content.length,
+      filePath,
     })
 
     const remoteDate = parseToDate(fullDoc.updatedAt) || new Date()
@@ -336,15 +336,15 @@ export class OutlineSync {
       const fsStat = await stat(filePath)
       fileMtime = fsStat.mtime
     } catch (err) {
-      this.trace("syncDocumentNode: failed to stat written file", { filePath, error: String(err) })
+      this.trace("syncDocumentNode: failed to stat written file", { error: String(err), filePath })
     }
 
     // Record both the filesystem mtime and the frontmatter (remote) timestamp so it's explicit
     this.syncTableData.push({
-      Document: this.truncate(fullDoc.title, 30),
       Collection: this.truncate(collectionName, 15),
-      "Local mtime": this.formatDate(fileMtime),
+      Document: this.truncate(fullDoc.title, 30),
       Frontmatter: this.formatDate(remoteDate),
+      "Local mtime": this.formatDate(fileMtime),
       "Remote Date": this.formatDate(remoteDate),
       Status: "Pulled",
     })
@@ -352,17 +352,17 @@ export class OutlineSync {
     // Normalize key to absolute path to match later scans
     const normalizedPath = resolve(filePath)
     this.documentMap.set(normalizedPath, {
-      id: fullDoc.id,
-      title: fullDoc.title,
       collectionId: fullDoc.collectionId,
+      id: fullDoc.id,
       parentDocumentId: fullDoc.parentDocumentId,
+      title: fullDoc.title,
       updatedAt: fullDoc.updatedAt,
       urlId: fullDoc.urlId,
     })
 
     this.trace(`syncDocumentNode: added to documentMap`, {
-      filePath: normalizedPath,
       documentMapSize: this.documentMap.size,
+      filePath: normalizedPath,
     })
 
     console.log(`${indent}✓ ${fullDoc.title}`)
@@ -380,8 +380,8 @@ export class OutlineSync {
   async syncDown(): Promise<void> {
     console.log("📥 Syncing from Outline to local...")
     this.trace("syncDown: starting", {
-      outputDir: this.outputDir,
       customPathsCount: Object.keys(this.customPaths).length,
+      outputDir: this.outputDir,
     })
 
     this.syncTableData = []
@@ -404,9 +404,9 @@ export class OutlineSync {
     if (this.includeCollections || this.excludeCollections) {
       console.log(`Filtered to ${collections.length}/${allCollections.length} collections`)
       this.trace("syncDown: include/exclude filters applied", {
-        includeCollections: this.includeCollections,
         excludeCollections: this.excludeCollections,
         filteredCollections: collections.map((c) => c.name),
+        includeCollections: this.includeCollections,
       })
     } else {
       console.log(`Found ${collections.length} collections`)
@@ -424,8 +424,8 @@ export class OutlineSync {
       this.trace(`syncDown: received ${documents.length} documents for "${collection.name}"`, {
         documentIds: documents.map((d) => ({
           id: d.id,
-          title: d.title,
           parentDocumentId: d.parentDocumentId,
+          title: d.title,
         })),
       })
 
@@ -454,8 +454,8 @@ export class OutlineSync {
 
     const content = await readFile(filePath, "utf-8")
     this.trace("syncUp: read file content", {
-      filePath,
       contentLength: content.length,
+      filePath,
     })
 
     const parsed = fm<DocumentMetadata>(content)
@@ -467,8 +467,8 @@ export class OutlineSync {
     if (!parsed.attributes || !parsed.attributes.id) {
       console.warn(`⚠️  Skipping ${filePath} - no document ID in frontmatter`)
       this.trace("syncUp: skipping file - missing frontmatter id", {
-        filePath,
         attributes: parsed.attributes,
+        filePath,
       })
       return
     }
@@ -478,8 +478,8 @@ export class OutlineSync {
 
     this.trace("syncUp: updating document in Outline", {
       id,
-      title,
       textLength: text.length,
+      title,
     })
 
     await this.client.updateDocument(id, text, title)
@@ -497,8 +497,8 @@ export class OutlineSync {
     this.trace("watch: setting up file watcher", { pattern: watchPattern })
 
     const watcher = watch(watchPattern, {
-      persistent: true,
       ignoreInitial: true,
+      persistent: true,
     })
 
     watcher.on("change", async (path) => {
@@ -507,7 +507,7 @@ export class OutlineSync {
         await this.syncUp(path)
       } catch (error) {
         console.error(`Error syncing ${path}:`, error)
-        this.trace("watch: sync error", { path, error: String(error) })
+        this.trace("watch: sync error", { error: String(error), path })
       }
     })
 
@@ -567,8 +567,8 @@ export class OutlineSync {
     const files = await this.getAllMarkdownFiles(this.outputDir)
 
     this.trace("findChangedFilesWithTable: scanning files", {
-      totalFiles: files.length,
       documentMapSize: this.documentMap.size,
+      totalFiles: files.length,
     })
 
     for (const file of files) {
@@ -589,9 +589,9 @@ export class OutlineSync {
           file: normalized,
         })
         tableData.push({
+          "Cached Date": "⚠️  Not cached",
           Document: this.truncate(title, 30),
           "Local Date": "—",
-          "Cached Date": "⚠️  Not cached",
           Source: "—",
           Status: "❓ New",
         })
@@ -608,10 +608,10 @@ export class OutlineSync {
       const localSource = fileFrontUpdated ? "frontmatter" : "mtime"
 
       this.trace("findChangedFilesWithTable: comparing timestamps", {
-        file: normalized,
-        frontmatterUpdatedAt: fileFrontUpdated?.toISOString(),
-        fileMtime: fileMtime.toISOString(),
         cachedUpdatedAt: cachedTime.toISOString(),
+        file: normalized,
+        fileMtime: fileMtime.toISOString(),
+        frontmatterUpdatedAt: fileFrontUpdated?.toISOString(),
         usingFrontmatter: !!fileFrontUpdated,
       })
 
@@ -620,9 +620,9 @@ export class OutlineSync {
       const status = isNewer ? "⬆️  Push" : "✓ Synced"
 
       tableData.push({
+        "Cached Date": this.formatDate(cachedTime),
         Document: this.truncate(title, 30),
         "Local Date": this.formatDate(localTime),
-        "Cached Date": this.formatDate(cachedTime),
         Source: localSource,
         Status: status,
       })
@@ -639,8 +639,8 @@ export class OutlineSync {
     }
 
     this.trace("findChangedFilesWithTable: completed", {
-      totalScanned: files.length,
       changedCount: changed.length,
+      totalScanned: files.length,
     })
 
     return { changed, tableData }
@@ -699,8 +699,8 @@ export class OutlineSync {
       const title = parsed.attributes.title || normalized.split("/").pop() || normalized
 
       this.trace("findChangedFilesAgainstRemote: checking file against remote", {
-        file: normalized,
         documentId: id,
+        file: normalized,
       })
 
       try {
@@ -715,10 +715,10 @@ export class OutlineSync {
         const localSource = fileFrontUpdated ? "frontmatter" : "mtime"
 
         this.trace("findChangedFilesAgainstRemote: comparing timestamps", {
-          file: normalized,
           documentId: id,
-          frontmatterUpdatedAt: fileFrontUpdated?.toISOString(),
+          file: normalized,
           fileMtime: fileMtime.toISOString(),
+          frontmatterUpdatedAt: fileFrontUpdated?.toISOString(),
           remoteUpdatedAt: remoteTime.toISOString(),
           usingFrontmatter: !!fileFrontUpdated,
         })
@@ -738,25 +738,25 @@ export class OutlineSync {
           this.trace(
             "findChangedFilesAgainstRemote: file is newer than remote, marking as changed",
             {
-              file: normalized,
               documentId: id,
+              file: normalized,
               reason: fileFrontUpdated ? "frontmatter updatedAt is newer" : "file mtime is newer",
             }
           )
           changed.push(normalized)
         } else {
           this.trace("findChangedFilesAgainstRemote: file is not newer than remote, skipping", {
-            file: normalized,
             documentId: id,
+            file: normalized,
           })
         }
       } catch (err) {
         this.trace(
           "findChangedFilesAgainstRemote: failed to fetch remote, marking for inspection",
           {
-            file: normalized,
             documentId: id,
             error: String(err),
+            file: normalized,
           }
         )
 
@@ -777,9 +777,9 @@ export class OutlineSync {
     }
 
     this.trace("findChangedFilesAgainstRemote: completed", {
-      totalScanned: files.length,
       changedCount: changed.length,
       changedFiles: changed,
+      totalScanned: files.length,
     })
 
     return { changed, tableData }
@@ -794,7 +794,7 @@ export class OutlineSync {
           await this.syncUp(file)
         } catch (err) {
           console.error(`Error pushing ${file}:`, err)
-          this.trace("push(force): error pushing file", { file, error: String(err) })
+          this.trace("push(force): error pushing file", { error: String(err), file })
         }
       }
       console.log("\n✅ Force push complete!")
@@ -824,7 +824,7 @@ export class OutlineSync {
         await this.syncUp(file)
       } catch (error) {
         console.error(`Error pushing ${file}:`, error)
-        this.trace("push: error pushing file", { file, error: String(error) })
+        this.trace("push: error pushing file", { error: String(error), file })
       }
     }
 
@@ -879,11 +879,11 @@ export class OutlineSync {
       }
 
       customPathsTable.push({
-        "Document ID": this.truncate(docId, 20),
         "Config Path": this.truncate(configPath, 30),
-        "Resolved Path": this.truncate(finalPath, 45),
-        "Path Type": endsWithMd ? "File" : "Directory",
+        "Document ID": this.truncate(docId, 20),
         Exists: exists,
+        "Path Type": endsWithMd ? "File" : "Directory",
+        "Resolved Path": this.truncate(finalPath, 45),
       })
     }
 
@@ -912,19 +912,19 @@ export class OutlineSync {
             try {
               const fullDoc = await this.client.getDocument(doc.id)
               docDetailsTable.push({
-                "Document ID": this.truncate(doc.id, 20),
-                Title: this.truncate(fullDoc.title, 30),
                 Collection: this.truncate(collection.name, 15),
-                "Remote Updated": this.formatDate(parseToDate(fullDoc.updatedAt) || new Date()),
                 "Custom Path": this.truncate(customPath, 35),
+                "Document ID": this.truncate(doc.id, 20),
+                "Remote Updated": this.formatDate(parseToDate(fullDoc.updatedAt) || new Date()),
+                Title: this.truncate(fullDoc.title, 30),
               })
             } catch {
               docDetailsTable.push({
-                "Document ID": this.truncate(doc.id, 20),
-                Title: this.truncate(doc.title, 30),
                 Collection: this.truncate(collection.name, 15),
-                "Remote Updated": "⚠️ Fetch failed",
                 "Custom Path": this.truncate(customPath, 35),
+                "Document ID": this.truncate(doc.id, 20),
+                "Remote Updated": "⚠️ Fetch failed",
+                Title: this.truncate(doc.title, 30),
               })
             }
           }
@@ -936,11 +936,11 @@ export class OutlineSync {
         const truncatedId = this.truncate(docId, 20)
         if (!foundDocIds.has(truncatedId)) {
           docDetailsTable.push({
-            "Document ID": truncatedId,
-            Title: "⚠️ Not found in collections",
             Collection: "—",
-            "Remote Updated": "—",
             "Custom Path": this.truncate(this.customPaths[docId], 35),
+            "Document ID": truncatedId,
+            "Remote Updated": "—",
+            Title: "⚠️ Not found in collections",
           })
         }
       }

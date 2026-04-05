@@ -10,9 +10,9 @@ export interface HostNodeData extends Record<string, unknown> {
 }
 
 const statusStyleMap: Record<string, string> = {
+  offline: "text-badge-error-outlined-text border-badge-error-outlined-border bg-badge-error-bg/10",
   online:
     "text-badge-success-outlined-text border-badge-success-outlined-border bg-badge-success-bg/10",
-  offline: "text-badge-error-outlined-text border-badge-error-outlined-border bg-badge-error-bg/10",
 }
 
 const fallbackBadge =
@@ -59,16 +59,16 @@ export const HostNode = memo(({ data, selected }: NodeProps<Node<HostNodeData>>)
       </div>
 
       <Handle
-        type="target"
+        className="w-3! h-3! bg-graph-host-card-border! border-2! border-graph-host-text-primary/40!"
         isConnectable={false}
         position={Position.Left}
-        className="w-3! h-3! bg-graph-host-card-border! border-2! border-graph-host-text-primary/40!"
+        type="target"
       />
       <Handle
-        type="source"
+        className="w-3! h-3! bg-graph-host-card-border! border-2! border-graph-host-text-primary/40!"
         isConnectable={false}
         position={Position.Right}
-        className="w-3! h-3! bg-graph-host-card-border! border-2! border-graph-host-text-primary/40!"
+        type="source"
       />
     </div>
   )

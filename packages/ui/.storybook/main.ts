@@ -10,10 +10,10 @@ function getAbsolutePath(value: string) {
   return dirname(fileURLToPath(import.meta.resolve(`${value}/package.json`)))
 }
 const config: StorybookConfig = {
-  stories: ["../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
   framework: {
     name: getAbsolutePath("@storybook/react-vite"),
     options: {},
   },
+  stories: ["../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
 }
 export default config

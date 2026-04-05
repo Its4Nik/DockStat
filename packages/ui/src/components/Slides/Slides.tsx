@@ -26,9 +26,9 @@ export function Slides({
     return (
       <div className={`flex flex-col ${className}`}>
         <MinimalSlidesHeader
-          header={header}
-          description={description}
           connected={connected}
+          description={description}
+          header={header}
           state={state}
         />
         <SlideContent state={state}>{children}</SlideContent>
@@ -37,12 +37,15 @@ export function Slides({
   }
 
   return (
-    <Card variant="flat" className={className}>
+    <Card
+      className={className}
+      variant="flat"
+    >
       <SlidesHeader
-        header={header}
-        description={description}
         buttonPosition={buttonPosition}
         connected={connected}
+        description={description}
+        header={header}
         state={state}
       />
       <CardBody className="">

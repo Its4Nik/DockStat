@@ -39,8 +39,8 @@ export const getConnectionConfig = (): ConnectionConfig => {
     const cleanHost = rawHost.replace(/^tcp:\/\/|^http:\/\//, "")
 
     return {
-      mode: "tcp",
       baseUrl: `${protocol}${cleanHost}`,
+      mode: "tcp",
       tls,
     }
   }

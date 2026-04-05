@@ -11,8 +11,8 @@ export interface ClientNodeData extends Record<string, unknown> {
 }
 
 const statusStyleMap = {
-  online: "text-success border-badge-success-outlined-border bg-badge-success-bg/10",
   offline: "text-badge-error-outlined-text border-badge-error-outlined-border bg-badge-error-bg/10",
+  online: "text-success border-badge-success-outlined-border bg-badge-success-bg/10",
 }
 
 export const ClientNode = memo(({ data, selected }: NodeProps<Node<ClientNodeData>>) => {
@@ -58,10 +58,10 @@ export const ClientNode = memo(({ data, selected }: NodeProps<Node<ClientNodeDat
       </div>
 
       <Handle
-        type="source"
+        className="w-3! h-3! bg-graph-client-card-border! border-2! border-graph-client-text-primary/40!"
         isConnectable={false}
         position={Position.Right}
-        className="w-3! h-3! bg-graph-client-card-border! border-2! border-graph-client-text-primary/40!"
+        type="source"
       />
     </div>
   )

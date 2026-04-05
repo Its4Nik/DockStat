@@ -19,7 +19,7 @@ export type PluginLink = {
 
 function extractNameSlugs(items: PathItem[]): NavLink[] {
   return items.flatMap((item) => [
-    { slug: item.slug, path: item.path },
+    { path: item.path, slug: item.slug },
     ...(item.children ? extractNameSlugs(item.children) : []),
   ])
 }
@@ -45,12 +45,12 @@ export function useGeneralSettings() {
 
   const pinLink = (slug: string, path: string) => {
     if (!slug || !path) return
-    pinLinkMutation.mutate({ slug, path })
+    pinLinkMutation.mutate({ path, slug })
   }
 
   const unpinLink = (slug: string, path: string) => {
     if (!slug || !path) return
-    unpinLinkMutation.mutate({ slug, path })
+    unpinLinkMutation.mutate({ path, slug })
   }
 
   const showRamUsageInNavbar = (showRamUsageInNavbar: boolean) => {
@@ -91,8 +91,8 @@ export function useGeneralSettings() {
     pluginLinks.forEach((plugin) => {
       if (!pinnedPaths.has(plugin.route)) {
         available.push({
-          slug: plugin.name,
           path: plugin.route,
+          slug: plugin.name,
         })
       }
     })
@@ -103,17 +103,17 @@ export function useGeneralSettings() {
       }
     })
 
-    return { pinnedLinks: pinned, availableLinks: available }
+    return { availableLinks: available, pinnedLinks: pinned }
   }, [allNavLinks, pluginLinks])
 
   return {
-    pinnedLinks,
+    additionalSettings,
+    allNavLinks,
     availableLinks,
     pinLink,
-    unpinLink,
-    additionalSettings,
+    pinnedLinks,
     pluginLinks,
-    allNavLinks,
     showRamUsageInNavbar,
+    unpinLink,
   }
 }

@@ -10,8 +10,8 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
 
   const pDat: ConfigProviderData = {
     additionalSettings: data?.additionalSettings,
-    navLinks: data?.nav_links,
     hotkeys: data?.hotkeys,
+    navLinks: data?.nav_links,
   }
 
   return <ConfigProviderContext value={pDat || {}}>{children}</ConfigProviderContext>

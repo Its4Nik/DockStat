@@ -21,12 +21,12 @@ import {
 
 describe("transformFromDb - JSON parsing", () => {
   test("Parse JSON string to object", () => {
-    const row = { id: 1, data: '{"key":"value","count":42}' }
+    const row = { data: '{"key":"value","count":42}', id: 1 }
     const parser = { JSON: ["data" as const] }
 
     const result = transformFromDb<{ id: number; data: unknown }>(row, { parser })
 
-    expect(result.data).toEqual({ key: "value", count: 42 })
+    expect(result.data).toEqual({ count: 42, key: "value" })
   })
 
   test("Parse JSON array", () => {
@@ -48,7 +48,7 @@ describe("transformFromDb - JSON parsing", () => {
   })
 
   test("Keep null values as null", () => {
-    const row = { id: 1, data: null }
+    const row = { data: null, id: 1 }
     const parser = { JSON: ["data" as const] }
 
     const result = transformFromDb<{ id: number; data: unknown }>(row, { parser })
@@ -57,7 +57,7 @@ describe("transformFromDb - JSON parsing", () => {
   })
 
   test("Keep undefined values as undefined", () => {
-    const row = { id: 1, data: undefined }
+    const row = { data: undefined, id: 1 }
     const parser = { JSON: ["data" as const] }
 
     const result = transformFromDb<{ id: number; data: unknown }>(row, { parser })
@@ -66,7 +66,7 @@ describe("transformFromDb - JSON parsing", () => {
   })
 
   test("Keep original value on JSON parse failure", () => {
-    const row = { id: 1, data: "not valid json{" }
+    const row = { data: "not valid json{", id: 1 }
     const parser = { JSON: ["data" as const] }
 
     const result = transformFromDb<{ id: number; data: unknown }>(row, { parser })
@@ -76,8 +76,8 @@ describe("transformFromDb - JSON parsing", () => {
 
   test("Handle multiple JSON columns", () => {
     const row = {
-      id: 1,
       config: '{"theme":"dark"}',
+      id: 1,
       metadata: '{"version":1}',
     }
     const parser = { JSON: ["config" as const, "metadata" as const] }
@@ -93,7 +93,7 @@ describe("transformFromDb - JSON parsing", () => {
   })
 
   test("Non-string JSON column values are kept as-is", () => {
-    const row = { id: 1, data: 12345 }
+    const row = { data: 12345, id: 1 }
     const parser = { JSON: ["data" as const] }
 
     const result = transformFromDb<{ id: number; data: unknown }>(row, { parser })
@@ -104,7 +104,7 @@ describe("transformFromDb - JSON parsing", () => {
 
 describe("transformFromDb - Boolean parsing", () => {
   test("Convert 1 to true", () => {
-    const row = { id: 1, active: 1 }
+    const row = { active: 1, id: 1 }
     const parser = { BOOLEAN: ["active" as const] }
 
     const result = transformFromDb<{ id: number; active: boolean }>(row, { parser })
@@ -113,7 +113,7 @@ describe("transformFromDb - Boolean parsing", () => {
   })
 
   test("Convert 0 to false", () => {
-    const row = { id: 1, active: 0 }
+    const row = { active: 0, id: 1 }
     const parser = { BOOLEAN: ["active" as const] }
 
     const result = transformFromDb<{ id: number; active: boolean }>(row, { parser })
@@ -122,7 +122,7 @@ describe("transformFromDb - Boolean parsing", () => {
   })
 
   test("Keep null as null", () => {
-    const row = { id: 1, active: null }
+    const row = { active: null, id: 1 }
     const parser = { BOOLEAN: ["active" as const] }
 
     const result = transformFromDb<{ id: number; active: boolean | null }>(row, { parser })
@@ -131,7 +131,7 @@ describe("transformFromDb - Boolean parsing", () => {
   })
 
   test("Keep undefined as undefined", () => {
-    const row = { id: 1, active: undefined }
+    const row = { active: undefined, id: 1 }
     const parser = { BOOLEAN: ["active" as const] }
 
     const result = transformFromDb<{ id: number; active: boolean | undefined }>(row, { parser })
@@ -140,7 +140,7 @@ describe("transformFromDb - Boolean parsing", () => {
   })
 
   test("Keep existing boolean as-is", () => {
-    const row = { id: 1, active: true }
+    const row = { active: true, id: 1 }
     const parser = { BOOLEAN: ["active" as const] }
 
     const result = transformFromDb<{ id: number; active: boolean }>(row, { parser })
@@ -149,7 +149,7 @@ describe("transformFromDb - Boolean parsing", () => {
   })
 
   test("Convert string '1' to true", () => {
-    const row = { id: 1, active: "1" }
+    const row = { active: "1", id: 1 }
     const parser = { BOOLEAN: ["active" as const] }
 
     const result = transformFromDb<{ id: number; active: boolean }>(row, { parser })
@@ -158,7 +158,7 @@ describe("transformFromDb - Boolean parsing", () => {
   })
 
   test("Convert string '0' to false", () => {
-    const row = { id: 1, active: "0" }
+    const row = { active: "0", id: 1 }
     const parser = { BOOLEAN: ["active" as const] }
 
     const result = transformFromDb<{ id: number; active: boolean }>(row, { parser })
@@ -167,7 +167,7 @@ describe("transformFromDb - Boolean parsing", () => {
   })
 
   test("Convert string 'true' to true", () => {
-    const row = { id: 1, active: "true" }
+    const row = { active: "true", id: 1 }
     const parser = { BOOLEAN: ["active" as const] }
 
     const result = transformFromDb<{ id: number; active: boolean }>(row, { parser })
@@ -176,7 +176,7 @@ describe("transformFromDb - Boolean parsing", () => {
   })
 
   test("Convert string 'false' to false", () => {
-    const row = { id: 1, active: "false" }
+    const row = { active: "false", id: 1 }
     const parser = { BOOLEAN: ["active" as const] }
 
     const result = transformFromDb<{ id: number; active: boolean }>(row, { parser })
@@ -185,7 +185,7 @@ describe("transformFromDb - Boolean parsing", () => {
   })
 
   test("Convert string 'yes' to true", () => {
-    const row = { id: 1, active: "yes" }
+    const row = { active: "yes", id: 1 }
     const parser = { BOOLEAN: ["active" as const] }
 
     const result = transformFromDb<{ id: number; active: boolean }>(row, { parser })
@@ -194,7 +194,7 @@ describe("transformFromDb - Boolean parsing", () => {
   })
 
   test("Convert string 'no' to false", () => {
-    const row = { id: 1, active: "no" }
+    const row = { active: "no", id: 1 }
     const parser = { BOOLEAN: ["active" as const] }
 
     const result = transformFromDb<{ id: number; active: boolean }>(row, { parser })
@@ -203,7 +203,7 @@ describe("transformFromDb - Boolean parsing", () => {
   })
 
   test("Handle multiple boolean columns", () => {
-    const row = { id: 1, active: 1, verified: 0, premium: 1 }
+    const row = { active: 1, id: 1, premium: 1, verified: 0 }
     const parser = { BOOLEAN: ["active" as const, "verified" as const, "premium" as const] }
 
     const result = transformFromDb<{
@@ -222,13 +222,13 @@ describe("transformFromDb - Boolean parsing", () => {
 describe("transformFromDb - Combined JSON and Boolean", () => {
   test("Transform both JSON and Boolean columns", () => {
     const row = {
-      id: 1,
-      config: '{"theme":"dark"}',
       active: 1,
+      config: '{"theme":"dark"}',
+      id: 1,
     }
     const parser = {
-      JSON: ["config" as const],
       BOOLEAN: ["active" as const],
+      JSON: ["config" as const],
     }
 
     const result = transformFromDb<{
@@ -249,7 +249,7 @@ describe("transformFromDb - Edge cases", () => {
   })
 
   test("Return row unchanged when no parser provided", () => {
-    const row = { id: 1, data: '{"key":"value"}' }
+    const row = { data: '{"key":"value"}', id: 1 }
 
     const result = transformFromDb(row)
 
@@ -257,7 +257,7 @@ describe("transformFromDb - Edge cases", () => {
   })
 
   test("Return row unchanged when parser is empty", () => {
-    const row = { id: 1, data: '{"key":"value"}' }
+    const row = { data: '{"key":"value"}', id: 1 }
 
     const result = transformFromDb(row, { parser: {} })
 
@@ -265,7 +265,7 @@ describe("transformFromDb - Edge cases", () => {
   })
 
   test("Handle empty JSON arrays in parser", () => {
-    const row = { id: 1, data: '{"key":"value"}' }
+    const row = { data: '{"key":"value"}', id: 1 }
     const parser = { JSON: [] }
 
     const result = transformFromDb(row, { parser })
@@ -277,13 +277,13 @@ describe("transformFromDb - Edge cases", () => {
 describe("transformRowsFromDb - Batch transformation", () => {
   test("Transform multiple rows", () => {
     const rows = [
-      { id: 1, data: '{"a":1}', active: 1 },
-      { id: 2, data: '{"b":2}', active: 0 },
-      { id: 3, data: '{"c":3}', active: 1 },
+      { active: 1, data: '{"a":1}', id: 1 },
+      { active: 0, data: '{"b":2}', id: 2 },
+      { active: 1, data: '{"c":3}', id: 3 },
     ]
     const parser = {
-      JSON: ["data" as const],
       BOOLEAN: ["active" as const],
+      JSON: ["data" as const],
     }
 
     const results = transformRowsFromDb(rows, { parser })
@@ -309,7 +309,7 @@ describe("transformRowsFromDb - Batch transformation", () => {
 
 describe("transformToDb - Serialization", () => {
   test("Serialize object to JSON string", () => {
-    const row = { id: 1, data: { key: "value", count: 42 } }
+    const row = { data: { count: 42, key: "value" }, id: 1 }
     const parser = { JSON: ["data" as const] }
 
     const result = transformToDb(row, { parser })
@@ -327,7 +327,7 @@ describe("transformToDb - Serialization", () => {
   })
 
   test("Keep null values as null", () => {
-    const row = { id: 1, data: null }
+    const row = { data: null, id: 1 }
     const parser = { JSON: ["data" as const] }
 
     const result = transformToDb(row, { parser })
@@ -336,7 +336,7 @@ describe("transformToDb - Serialization", () => {
   })
 
   test("Keep undefined values as undefined", () => {
-    const row = { id: 1, data: undefined }
+    const row = { data: undefined, id: 1 }
     const parser = { JSON: ["data" as const] }
 
     const result = transformToDb(row, { parser })
@@ -345,7 +345,7 @@ describe("transformToDb - Serialization", () => {
   })
 
   test("Keep non-object JSON column values as-is", () => {
-    const row = { id: 1, data: "just a string" }
+    const row = { data: "just a string", id: 1 }
     const parser = { JSON: ["data" as const] }
 
     const result = transformToDb(row, { parser })
@@ -363,7 +363,7 @@ describe("transformToDb - Serialization", () => {
   })
 
   test("Return row unchanged when no parser", () => {
-    const row = { id: 1, data: { key: "value" } }
+    const row = { data: { key: "value" }, id: 1 }
 
     const result = transformToDb(row)
 
@@ -384,9 +384,9 @@ describe("transformRowsToDb - Batch serialization", () => {
     }
 
     const rows: Array<Row> = [
-      { id: 1, data: { a: 1 } },
-      { id: 2, data: { b: 2 } },
-      { id: 3, data: { c: 3 } },
+      { data: { a: 1 }, id: 1 },
+      { data: { b: 2 }, id: 2 },
+      { data: { c: 3 }, id: 3 },
     ]
     const parser = { JSON: ["data" as const] }
 
@@ -444,8 +444,8 @@ describe("hasTransformations", () => {
   test("Returns true with multiple transformation types", () => {
     expect(
       hasTransformations<{ data: unknown; active: boolean; fn: unknown }>({
-        JSON: ["data"],
         BOOLEAN: ["active"],
+        JSON: ["data"],
         MODULE: { fn: {} },
       })
     ).toBe(true)
@@ -480,8 +480,8 @@ describe("getParserSummary", () => {
       verified: boolean
       fn: unknown
     }>({
-      JSON: ["data"],
       BOOLEAN: ["active", "verified"],
+      JSON: ["data"],
       MODULE: { fn: {} },
     })
 
@@ -492,8 +492,8 @@ describe("getParserSummary", () => {
 
   test("Omits empty arrays from summary", () => {
     const summary = getParserSummary({
-      JSON: [],
       BOOLEAN: ["active"],
+      JSON: [],
       MODULE: {},
     })
 
@@ -513,10 +513,10 @@ describe("Integration: Transformer with actual database", () => {
     active: boolean
     verified: boolean
   }>("transform_test", {
-    id: column.id(),
-    config: column.json(),
-    metadata: column.json({ notNull: false }),
     active: column.boolean({ default: true }),
+    config: column.json(),
+    id: column.id(),
+    metadata: column.json({ notNull: false }),
     verified: column.boolean({ notNull: false }),
   })
 
@@ -526,9 +526,9 @@ describe("Integration: Transformer with actual database", () => {
 
   test("End-to-end: Insert and retrieve with transformations", () => {
     const insertData = {
-      config: { theme: "dark", fontSize: 14 },
-      metadata: { version: "1.0" },
       active: true,
+      config: { fontSize: 14, theme: "dark" },
+      metadata: { version: "1.0" },
       verified: false,
     }
 
@@ -538,7 +538,7 @@ describe("Integration: Transformer with actual database", () => {
     const retrieved = table.where({ id: result.insertId }).first()
 
     expect(retrieved).not.toBeNull()
-    expect(retrieved?.config).toEqual({ theme: "dark", fontSize: 14 })
+    expect(retrieved?.config).toEqual({ fontSize: 14, theme: "dark" })
     expect(retrieved?.metadata).toEqual({ version: "1.0" })
     expect(retrieved?.active).toBe(true)
     expect(retrieved?.verified).toBe(false)
@@ -546,24 +546,24 @@ describe("Integration: Transformer with actual database", () => {
 
   test("End-to-end: Update with JSON transformations", () => {
     const insertId = table.insert({
-      config: { initial: true },
       active: true,
+      config: { initial: true },
     }).insertId
 
     table.where({ id: insertId }).update({
-      config: { updated: true, newField: "value" },
+      config: { newField: "value", updated: true },
     })
 
     const updated = table.where({ id: insertId }).first()
 
-    expect(updated?.config).toEqual({ updated: true, newField: "value" })
+    expect(updated?.config).toEqual({ newField: "value", updated: true })
   })
 
   test("End-to-end: Handle null JSON and boolean values", () => {
     const insertId = table.insert({
+      active: true,
       config: {},
       metadata: null,
-      active: true,
       //@ts-expect-error
       verified: null,
     }).insertId
@@ -576,9 +576,9 @@ describe("Integration: Transformer with actual database", () => {
 
   test("End-to-end: Bulk insert with transformations", () => {
     const rows = [
-      { config: { item: 1 }, active: true, verified: true },
-      { config: { item: 2 }, active: false, verified: false },
-      { config: { item: 3 }, active: true, verified: null },
+      { active: true, config: { item: 1 }, verified: true },
+      { active: false, config: { item: 2 }, verified: false },
+      { active: true, config: { item: 3 }, verified: null },
     ]
 
     // @ts-expect-error

@@ -3,29 +3,29 @@ import { DockerClientManagerCore } from "./core"
 export class System extends DockerClientManagerCore {
   public async getSystemInfo(clientId: number, hostId: number) {
     return this.sendRequest(clientId, {
-      type: "getSystemInfo",
       hostId,
+      type: "getSystemInfo",
     })
   }
 
   public async getSystemVersion(clientId: number, hostId: number) {
     return this.sendRequest(clientId, {
-      type: "getSystemVersion",
       hostId,
+      type: "getSystemVersion",
     })
   }
 
   public async getDiskUsage(clientId: number, hostId: number) {
     return this.sendRequest(clientId, {
-      type: "getDiskUsage",
       hostId,
+      type: "getDiskUsage",
     })
   }
 
   public async pruneSystem(clientId: number, hostId: number) {
     return this.sendRequest(clientId, {
-      type: "pruneSystem",
       hostId,
+      type: "pruneSystem",
     })
   }
 }

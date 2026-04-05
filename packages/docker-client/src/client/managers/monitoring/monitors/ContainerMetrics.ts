@@ -112,10 +112,10 @@ class ContainerMetricsMonitor {
         // Extend with hostId and client info
         const extendedStats: ExtendedContainerStats = {
           ...stats,
-          hostId,
           clientId: this.clientId,
           containerId: containerInfo.Id || "",
           containerName: containerInfo.Names?.[0]?.replace(/^\//, "") || "unknown",
+          hostId,
         }
 
         // Calculate derived metrics
@@ -126,18 +126,18 @@ class ContainerMetricsMonitor {
         const { read: blockRead, write: blockWrite } = this.calculateBlockIO(extendedStats)
 
         proxyEvent("container:metrics", {
-          hostId,
-          docker_client_id: host.docker_client_id,
           containerId: containerInfo.Id,
+          docker_client_id: host.docker_client_id,
+          hostId,
           stats: {
             ...extendedStats,
-            cpuUsage: Math.round(cpuUsage * 100) / 100,
-            memoryUsage,
-            memoryLimit,
-            networkRx,
-            networkTx,
             blockRead,
             blockWrite,
+            cpuUsage: Math.round(cpuUsage * 100) / 100,
+            memoryLimit,
+            memoryUsage,
+            networkRx,
+            networkTx,
           },
         })
       } catch (error) {
@@ -152,26 +152,27 @@ class ContainerMetricsMonitor {
   }
 
   private calculateCpuUsage(stats: ExtendedContainerStats): number {
-    const { cpu_stats, precpu_stats } = stats;
+    const { cpu_stats, precpu_stats } = stats
 
-    const cpuTotal = cpu_stats?.cpu_usage?.total_usage;
-    const preCpuTotal = precpu_stats?.cpu_usage?.total_usage;
+    const cpuTotal = cpu_stats?.cpu_usage?.total_usage
+    const preCpuTotal = precpu_stats?.cpu_usage?.total_usage
 
     if (cpuTotal == null || preCpuTotal == null) {
-      return 0;
+      return 0
     }
 
-    const cpuDelta = cpuTotal - preCpuTotal;
-    const systemCpuDelta = (cpu_stats?.system_cpu_usage ?? 0) - (precpu_stats?.system_cpu_usage ?? 0);
+    const cpuDelta = cpuTotal - preCpuTotal
+    const systemCpuDelta =
+      (cpu_stats?.system_cpu_usage ?? 0) - (precpu_stats?.system_cpu_usage ?? 0)
 
     // Validate calculation prerequisites
     if (systemCpuDelta <= 0 || cpuDelta <= 0) {
-      return 0;
+      return 0
     }
 
-    const cpuCount = cpu_stats?.online_cpus ?? cpu_stats?.cpu_usage?.percpu_usage?.length ?? 1;
+    const cpuCount = cpu_stats?.online_cpus ?? cpu_stats?.cpu_usage?.percpu_usage?.length ?? 1
 
-    return (cpuDelta / systemCpuDelta) * cpuCount * 100;
+    return (cpuDelta / systemCpuDelta) * cpuCount * 100
   }
 
   private calculateNetworkIO(stats: ExtendedContainerStats): {
@@ -200,11 +201,11 @@ class ContainerMetricsMonitor {
 
     if (stats.blkio_stats?.io_service_bytes_recursive) {
       for (const entry of stats.blkio_stats.io_service_bytes_recursive) {
-        if(entry === null) continue
+        if (entry === null) continue
         if (entry.op === "read" || entry.op === "Read") {
-          if(entry.value !== undefined) read += entry.value
+          if (entry.value !== undefined) read += entry.value
         } else if (entry.op === "write" || entry.op === "Write") {
-          if(entry.value !== undefined) write += entry.value
+          if (entry.value !== undefined) write += entry.value
         }
       }
     }

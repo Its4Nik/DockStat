@@ -52,7 +52,10 @@ export function GraphFlow() {
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Card variant="elevated" className="p-6">
+        <Card
+          className="p-6"
+          variant="elevated"
+        >
           <div className="text-center">
             <div className="text-destructive text-lg font-semibold mb-2">Error Loading Graph</div>
             <div className="text-muted-text mb-4">{String(error)}</div>
@@ -74,7 +77,10 @@ export function GraphFlow() {
     <div className="h-[calc(100vh-140px)] w-full flex gap-4">
       {/* Sidebar */}
       <div className="w-64 shrink-0">
-        <Card variant="flat" className="h-full flex flex-col">
+        <Card
+          className="h-full flex flex-col"
+          variant="flat"
+        >
           <div className="p-3 border-b border-border">
             <h2 className="text-sm font-semibold flex items-center gap-2">
               <MapPin className="h-4 w-4" />
@@ -88,19 +94,19 @@ export function GraphFlow() {
                 <h3 className="text-xs font-semibold text-muted-text mb-2">Actions</h3>
                 <div className="space-y-1">
                   <Button
-                    variant="outline"
-                    size="sm"
                     className="w-full justify-start"
                     onClick={() => refetch()}
+                    size="sm"
+                    variant="outline"
                   >
                     <RefreshCw className="h-3.5 w-3.5 mr-2" />
                     Refresh
                   </Button>
                   <Button
-                    variant="outline"
-                    size="sm"
                     className="w-full justify-start"
                     onClick={() => fitView({ padding: 0.2 })}
+                    size="sm"
+                    variant="outline"
                   >
                     <Maximize2 className="h-3.5 w-3.5 mr-2" />
                     Fit View
@@ -114,10 +120,10 @@ export function GraphFlow() {
               <div>
                 <h3 className="text-xs font-semibold text-muted-text mb-2">Tunnels</h3>
                 <Button
-                  variant="outline"
-                  size="sm"
                   className="w-full justify-start opacity-50"
                   disabled
+                  size="sm"
+                  variant="outline"
                 >
                   <Route className="h-3.5 w-3.5 mr-2" />
                   Create Tunnel
@@ -125,7 +131,10 @@ export function GraphFlow() {
                 <p className="text-xs text-muted-text mt-2">
                   Create secure tunnels between clients for direct communication.
                 </p>
-                <Badge variant="secondary" className="mt-1 text-xs">
+                <Badge
+                  className="mt-1 text-xs"
+                  variant="secondary"
+                >
                   Coming Soon
                 </Badge>
               </div>
@@ -147,7 +156,10 @@ export function GraphFlow() {
           </div>
         ) : hasNoData ? (
           <div className="absolute inset-0 flex items-center justify-center">
-            <Card variant="elevated" className="p-6 text-center">
+            <Card
+              className="p-6 text-center"
+              variant="elevated"
+            >
               <Server className="h-12 w-12 text-muted-text mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Infrastructure Data</h3>
               <p className="text-muted-text mb-4">
@@ -157,35 +169,42 @@ export function GraphFlow() {
           </div>
         ) : (
           <ReactFlow
-            edgesReconnectable={false}
-            nodes={nodes}
+            autoPanOnNodeFocus
             edges={edges}
+            edgesReconnectable={false}
             edgeTypes={{
               default: BezierEdge,
-              straight: StraightEdge,
-              step: StepEdge,
-              smoothstep: SmoothStepEdge,
-              simplebezier: SimpleBezierEdge,
               dockstat: DockStatLabelEdge,
+              simplebezier: SimpleBezierEdge,
+              smoothstep: SmoothStepEdge,
+              step: StepEdge,
+              straight: StraightEdge,
             }}
-            onNodesChange={onNodesChange}
+            fitView
+            maxZoom={2}
+            minZoom={0.2}
+            nodes={nodes}
+            nodeTypes={nodeTypes}
             onEdgesChange={onEdgesChange}
             onNodeClick={onNodeClick}
-            nodeTypes={nodeTypes}
-            fitView
-            minZoom={0.2}
-            maxZoom={2}
-            autoPanOnNodeFocus
+            onNodesChange={onNodesChange}
           >
-            <Background gap={40} size={1} variant={BackgroundVariant.Dots} />
+            <Background
+              gap={40}
+              size={1}
+              variant={BackgroundVariant.Dots}
+            />
 
-            <Panel position="top-left" className="flex gap-2">
+            <Panel
+              className="flex gap-2"
+              position="top-left"
+            >
               {data && (
                 <StatsDisplay
-                  containers={data.containers || []}
                   clients={data.clients || []}
-                  hosts={data.hosts || []}
+                  containers={data.containers || []}
                   dockNodes={data.dockNodes || []}
+                  hosts={data.hosts || []}
                 />
               )}
             </Panel>
@@ -195,7 +214,10 @@ export function GraphFlow() {
         {/* Node Details Panel */}
         {selectedNode && (
           <div className="absolute top-4 right-4 z-10">
-            <NodeDetailsPanel node={selectedNode} onClose={() => setSelectedNode(null)} />
+            <NodeDetailsPanel
+              node={selectedNode}
+              onClose={() => setSelectedNode(null)}
+            />
           </div>
         )}
       </div>

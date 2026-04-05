@@ -171,7 +171,7 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const query = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${quoteIdentifier(String(deletedColumn))} = ?${whereClause}`
     const params = [deletedValue, ...whereParams] as SQLQueryBindings[]
 
-    this.deleteLog.info(`SOFT DELETE: ${JSON.stringify({ query, params })}`)
+    this.deleteLog.info(`SOFT DELETE: ${JSON.stringify({ params, query })}`)
 
     const result = this.getDb()
       .prepare(query)

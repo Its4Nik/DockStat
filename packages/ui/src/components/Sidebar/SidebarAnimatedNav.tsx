@@ -20,11 +20,11 @@ type SidebarAnimatedNavProps = {
 export function SidebarAnimatedNav({ children }: SidebarAnimatedNavProps) {
   return (
     <motion.nav
-      variants={listVariants}
-      initial="hidden"
       animate="visible"
-      exit="hidden"
       className="flex flex-1 flex-col gap-1 mt-4"
+      exit="hidden"
+      initial="hidden"
+      variants={listVariants}
     >
       {children}
     </motion.nav>
@@ -33,7 +33,10 @@ export function SidebarAnimatedNav({ children }: SidebarAnimatedNavProps) {
 
 export function SidebarAnimatedItem({ children }: { children: React.ReactNode }) {
   return (
-    <motion.div variants={itemVariants} transition={{ duration: 0.2 }}>
+    <motion.div
+      transition={{ duration: 0.2 }}
+      variants={itemVariants}
+    >
       {children}
     </motion.div>
   )

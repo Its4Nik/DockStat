@@ -37,11 +37,11 @@ export const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
     <div className={`${directionClass} ${className}`}>
       {options.map((option) => (
         <Checkbox
+          checked={selectedValues.includes(option.value)}
+          disabled={option.disabled}
           key={option.value}
           label={option.label}
-          checked={selectedValues.includes(option.value)}
           onChange={(checked) => handleCheckboxChange(option.value, checked)}
-          disabled={option.disabled}
         />
       ))}
     </div>

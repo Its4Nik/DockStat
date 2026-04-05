@@ -106,9 +106,9 @@ export class DockerClientManagerCore {
 
       this.logger.info(msg)
       return {
-        success: true,
-        message: msg,
         clientId,
+        message: msg,
+        success: true,
       }
     } catch (error: unknown) {
       const extra = dbStepDone
@@ -123,9 +123,9 @@ export class DockerClientManagerCore {
       }
 
       return {
-        success: false,
         error,
         message: msg,
+        success: false,
       }
     }
   }
@@ -173,18 +173,18 @@ export class DockerClientManagerCore {
       this.logger.info(msg)
 
       return {
-        success: true,
-        message: msg,
         clientId: id,
+        message: msg,
+        success: true,
       }
     } catch (error: unknown) {
       const msg = `Error while updating Client ${id} (${name}) - error: ${JSON.stringify(error)}`
       this.logger.error(msg)
 
       return {
-        success: false,
         error,
         message: msg,
+        success: false,
       }
     }
   }
@@ -209,17 +209,17 @@ export class DockerClientManagerCore {
 
       const now = Date.now()
       const wrapper: WorkerWrapper = {
-        worker,
+        busy: false,
         clientId,
         clientName,
-        hostIds: new Set(),
-        busy: false,
         createdAt: now,
-        lastUsed: now,
+        errorCount: 0,
+        hostIds: new Set(),
         initialized: false,
         lastError: null,
-        errorCount: 0,
+        lastUsed: now,
         serverHooks: this.serverHooks,
+        worker,
       }
 
       worker.addEventListener("error", (error: ErrorEvent) => {
@@ -327,11 +327,11 @@ export class DockerClientManagerCore {
       wrapper.worker.addEventListener("message", initHandler)
 
       wrapper.worker.postMessage({
-        type: "__init__",
         clientId,
         clientName,
         dbPath: this.dbPath,
         options,
+        type: "__init__",
       })
     })
   }
@@ -423,11 +423,11 @@ export class DockerClientManagerCore {
     for (const w of this.workers.values()) {
       liveMap.set(Number(w.clientId), {
         id: Number(w.clientId),
+        initialized: true,
         name: w.clientName ?? String(w.clientId),
         options:
           this.table.select(["options"]).where({ id: w.clientId }).first()?.options ??
           ({} as DOCKER.DockerAdapterOptions),
-        initialized: true,
       })
     }
 
@@ -452,9 +452,9 @@ export class DockerClientManagerCore {
       const live = liveMap.get(numId)
       resultMap.set(numId, {
         id: numId,
+        initialized: Boolean(live),
         name: live?.name ?? name,
         options: options,
-        initialized: Boolean(live),
       })
     }
 
@@ -556,8 +556,8 @@ export class DockerClientManagerCore {
           caller,
           name,
           parents,
-          timestamp,
           requestId,
+          timestamp,
         })
       }
     }
@@ -670,28 +670,28 @@ export class DockerClientManagerCore {
       }
 
       const workerMetrics: WorkerMetrics = {
-        workerId: clientId,
+        activeStreams: 0,
         clientId: wrapper.clientId,
         clientName: wrapper.clientName,
+        hasMonitoringManager,
         hostsManaged: wrapper.hostIds.size,
         initialized: wrapper.initialized,
-        activeStreams: 0,
-        hasMonitoringManager,
         isMonitoring,
-        options: this.table.select(["options"]).where({ id: wrapper.clientId }).first()?.options,
         memoryUsage: heapStats(),
+        options: this.table.select(["options"]).where({ id: wrapper.clientId }).first()?.options,
         uptime: Date.now() - wrapper.createdAt,
+        workerId: clientId,
       }
 
       workers.push(workerMetrics)
     }
 
     return {
-      totalWorkers: this.workers.size,
       activeWorkers: Array.from(this.workers.values()).filter((w) => !w.busy).length,
-      totalHosts,
-      totalClients: this.workers.size,
       averageHostsPerWorker: this.workers.size > 0 ? totalHosts / this.workers.size : 0,
+      totalClients: this.workers.size,
+      totalHosts,
+      totalWorkers: this.workers.size,
       workers,
     }
   }
@@ -723,16 +723,16 @@ export class DockerClientManagerCore {
     }
 
     return {
-      workerId: clientId,
+      activeStreams: 0,
       clientId: wrapper.clientId,
       clientName: wrapper.clientName,
+      hasMonitoringManager,
       hostsManaged: wrapper.hostIds.size,
       initialized: wrapper.initialized,
-      activeStreams: 0,
-      hasMonitoringManager,
       isMonitoring,
       memoryUsage: heapStats(),
       uptime: Date.now() - wrapper.createdAt,
+      workerId: clientId,
     }
   }
 

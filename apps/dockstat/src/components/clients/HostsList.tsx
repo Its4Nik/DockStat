@@ -26,15 +26,21 @@ export function HostsList({ hosts }: HostsListProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {hosts.map((host) => (
           <div
-            key={host.id}
             className="flex flex-col p-4 rounded-lg bg-card-default-bg border border-card-default-border hover:border-card-outlined-border transition-colors"
+            key={host.id}
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Globe size={18} className="text-blue-500 shrink-0" />
+                <Globe
+                  className="text-blue-500 shrink-0"
+                  size={18}
+                />
                 <span className="font-semibold text-base truncate">{host.name}</span>
               </div>
-              <Badge variant="secondary" size="sm">
+              <Badge
+                size="sm"
+                variant="secondary"
+              >
                 #{host.id}
               </Badge>
             </div>
@@ -42,7 +48,10 @@ export function HostsList({ hosts }: HostsListProps) {
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-text">Client ID:</span>
-                <Badge variant="primary" size="sm">
+                <Badge
+                  size="sm"
+                  variant="primary"
+                >
                   {host.clientId}
                 </Badge>
               </div>

@@ -106,40 +106,40 @@ export class TasksModule {
     const version = task.Version as Record<string, unknown> | undefined
 
     return {
-      id: (task.ID as string) ?? "",
-      version: { index: (version?.Index as number) ?? 0 },
       createdAt: (task.CreatedAt as string) ?? "",
-      updatedAt: (task.UpdatedAt as string) ?? "",
+      desiredState: (task.DesiredState as TaskInfo["desiredState"]) ?? "new",
+      id: (task.ID as string) ?? "",
       name: task.Name as string | undefined,
+      nodeId: task.NodeID as string | undefined,
+      serviceId: (task.ServiceID as string) ?? "",
+      slot: task.Slot as number | undefined,
       spec: {
         containerSpec: containerSpec
           ? {
-              image: containerSpec.Image as string | undefined,
-              command: containerSpec.Command as string[] | undefined,
               args: containerSpec.Args as string[] | undefined,
+              command: containerSpec.Command as string[] | undefined,
               env: containerSpec.Env as string[] | undefined,
-              labels: containerSpec.Labels as Record<string, string> | undefined,
               hostname: containerSpec.Hostname as string | undefined,
+              image: containerSpec.Image as string | undefined,
+              labels: containerSpec.Labels as Record<string, string> | undefined,
             }
           : undefined,
       },
-      serviceId: (task.ServiceID as string) ?? "",
-      slot: task.Slot as number | undefined,
-      nodeId: task.NodeID as string | undefined,
       status: {
-        timestamp: (status?.Timestamp as string) ?? "",
-        state: (status?.State as TaskInfo["status"]["state"]) ?? "new",
-        message: status?.Message as string | undefined,
-        err: status?.Err as string | undefined,
         containerStatus: containerStatus
           ? {
               containerId: containerStatus.ContainerID as string | undefined,
-              pid: containerStatus.PID as number | undefined,
               exitCode: containerStatus.ExitCode as number | undefined,
+              pid: containerStatus.PID as number | undefined,
             }
           : undefined,
+        err: status?.Err as string | undefined,
+        message: status?.Message as string | undefined,
+        state: (status?.State as TaskInfo["status"]["state"]) ?? "new",
+        timestamp: (status?.Timestamp as string) ?? "",
       },
-      desiredState: (task.DesiredState as TaskInfo["desiredState"]) ?? "new",
+      updatedAt: (task.UpdatedAt as string) ?? "",
+      version: { index: (version?.Index as number) ?? 0 },
     }
   }
 }

@@ -146,8 +146,8 @@ describe("Swarm initialization", () => {
   test("init with custom listen address", async () => {
     try {
       const result = await module.init({
-        listenAddr: "0.0.0.0:2377",
         advertiseAddr: "192.168.1.1:2377",
+        listenAddr: "0.0.0.0:2377",
       })
 
       expect(result.workerToken).toBeDefined()
@@ -168,8 +168,8 @@ describe("Swarm initialization", () => {
   test("init with force new cluster option", async () => {
     try {
       const result = await module.init({
-        listenAddr: "0.0.0.0:2377",
         forceNewCluster: true,
+        listenAddr: "0.0.0.0:2377",
       })
 
       expect(result.workerToken).toBeDefined()
@@ -211,8 +211,8 @@ describe("Swarm joining", () => {
     try {
       await module.join({
         joinToken: "SWMTKN-1-xxx",
-        remoteAddrs: ["192.168.1.1:2377"],
         listenAddr: "0.0.0.0:2377",
+        remoteAddrs: ["192.168.1.1:2377"],
       })
     } catch (error) {
       // Expected to fail with invalid token or connection
@@ -223,9 +223,9 @@ describe("Swarm joining", () => {
   test("join with advertise address", async () => {
     try {
       await module.join({
+        advertiseAddr: "192.168.1.2:2377",
         joinToken: "SWMTKN-1-xxx",
         remoteAddrs: ["192.168.1.1:2377"],
-        advertiseAddr: "192.168.1.2:2377",
       })
     } catch (error) {
       // Expected to fail with invalid token or connection
@@ -418,10 +418,10 @@ describe("Swarm update operations", () => {
     if (status.isManager && status.spec) {
       try {
         await module.update({
+          rotateManagerToken: true,
+          rotateWorkerToken: true,
           spec: status.spec,
           version: status.version?.index ?? 0,
-          rotateWorkerToken: true,
-          rotateManagerToken: true,
         })
       } catch (error) {
         // May fail depending on current state

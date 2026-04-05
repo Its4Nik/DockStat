@@ -215,11 +215,11 @@ describe("buildSelectSQL", () => {
 
   test("builds SELECT with all options", () => {
     const sql = buildSelectSQL("users", ["id", "name"], {
-      where: "active = 1",
-      orderBy: "name",
-      orderDirection: "ASC",
       limit: 10,
       offset: 5,
+      orderBy: "name",
+      orderDirection: "ASC",
+      where: "active = 1",
     })
     expect(sql).toBe(
       'SELECT "id", "name" FROM "users" WHERE active = 1 ORDER BY "name" ASC LIMIT 10 OFFSET 5'

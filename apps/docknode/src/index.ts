@@ -26,24 +26,12 @@ const DockNode = new Elysia({ prefix: "/api" })
   // ============================================
   .ws("/logs/stream", {
     body: t.Object({
-      serviceId: t.String(),
       follow: t.Optional(t.Boolean()),
-      tail: t.Optional(t.Number()),
+      serviceId: t.String(),
       since: t.Optional(t.Number()),
+      tail: t.Optional(t.Number()),
       timestamps: t.Optional(t.Boolean()),
     }),
-    response: t.Object({
-      timestamp: t.String(),
-      message: t.String(),
-      serviceId: t.Optional(t.String()),
-      serviceName: t.Optional(t.String()),
-      nodeId: t.Optional(t.String()),
-      nodeName: t.Optional(t.String()),
-      level: t.UnionEnum(["info", "warn", "error", "debug"]),
-    }),
-    open(_ws) {
-      DockNodeLogger.info(`WebSocket client connected for logs`)
-    },
     close(_ws) {
       DockNodeLogger.info(`WebSocket client disconnected from logs`)
     },
@@ -51,10 +39,10 @@ const DockNode = new Elysia({ prefix: "/api" })
       try {
         await SwarmHandler.getServiceLogs(
           {
-            serviceId: body.serviceId,
             follow: body.follow ?? false,
-            tail: body.tail ?? 100,
+            serviceId: body.serviceId,
             since: body.since,
+            tail: body.tail ?? 100,
             timestamps: body.timestamps ?? true,
           },
           (log) => {
@@ -63,13 +51,25 @@ const DockNode = new Elysia({ prefix: "/api" })
         )
       } catch (error) {
         ws.send({
-          timestamp: new Date().toISOString(),
+          level: "error",
           message: `Error fetching logs: ${error instanceof Error ? error.message : String(error)}`,
           serviceId: body.serviceId,
-          level: "error",
+          timestamp: new Date().toISOString(),
         })
       }
     },
+    open(_ws) {
+      DockNodeLogger.info(`WebSocket client connected for logs`)
+    },
+    response: t.Object({
+      level: t.UnionEnum(["info", "warn", "error", "debug"]),
+      message: t.String(),
+      nodeId: t.Optional(t.String()),
+      nodeName: t.Optional(t.String()),
+      serviceId: t.Optional(t.String()),
+      serviceName: t.Optional(t.String()),
+      timestamp: t.String(),
+    }),
   })
 
   .listen(4040, () => {

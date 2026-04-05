@@ -62,10 +62,10 @@ class HostMetricsMonitor {
       try {
         const metrics = await this.getHostMetrics(host.id || 0)
         proxyEvent("host:metrics", {
-          hostId: host.id || 0,
           docker_client_id: host.docker_client_id,
-          metrics,
+          hostId: host.id || 0,
           hostName: host.name,
+          metrics,
         })
       } catch (error) {
         proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {

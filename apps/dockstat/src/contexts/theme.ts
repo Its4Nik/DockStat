@@ -26,13 +26,13 @@ export type ThemeProviderData<TDat = undefined, TInput = ThemeContextData> = {
 }
 
 export const ThemeProviderContext = createContext<ThemeProviderData<unknown, ThemeContextData>>({
-  theme: null,
-  isLoading: false,
-  isModifiedTheme: false,
-  error: null,
+  adjustCurrentTheme: () => {},
   applyTheme: async () => {},
   applyThemeById: async () => {},
-  themesList: null,
-  adjustCurrentTheme: () => {},
   createNewThemeFromCurrent: {} as MutationResult<undefined, ThemeContextData>,
+  error: null,
+  isLoading: false,
+  isModifiedTheme: false,
+  theme: null,
+  themesList: null,
 })

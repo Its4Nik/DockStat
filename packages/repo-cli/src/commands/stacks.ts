@@ -35,24 +35,24 @@ async function parseStackFile(
 
     // Extract services
     const services = Object.entries(compose.services || {}).map(([name, service]) => ({
-      name,
-      image: typeof service.image === "string" ? service.image : "",
-      ports: service.ports
-        ?.filter((p) => typeof p === "number" || (typeof p === "object" && p.target))
-        .map((p) => (typeof p === "number" ? p : (p as { target: number }).target)),
-      envVars: service.environment
-        ? Array.isArray(service.environment)
-          ? service.environment.map((e) => e.split("=")[0])
-          : Object.keys(service.environment)
-        : undefined,
-      volumes: service.volumes
-        ?.map((v) => (typeof v === "string" ? v : v.source ? `${v.source}:${v.target}` : v.target))
-        .filter((v): v is string => v !== undefined),
       dependsOn: service.depends_on
         ? Array.isArray(service.depends_on)
           ? service.depends_on
           : Object.keys(service.depends_on)
         : undefined,
+      envVars: service.environment
+        ? Array.isArray(service.environment)
+          ? service.environment.map((e) => e.split("=")[0])
+          : Object.keys(service.environment)
+        : undefined,
+      image: typeof service.image === "string" ? service.image : "",
+      name,
+      ports: service.ports
+        ?.filter((p) => typeof p === "number" || (typeof p === "object" && p.target))
+        .map((p) => (typeof p === "number" ? p : (p as { target: number }).target)),
+      volumes: service.volumes
+        ?.map((v) => (typeof v === "string" ? v : v.source ? `${v.source}:${v.target}` : v.target))
+        .filter((v): v is string => v !== undefined),
     }))
 
     // Extract environment variables from services
@@ -71,26 +71,26 @@ async function parseStackFile(
       : (labels as Record<string, string> | undefined)
 
     const meta: StackMetaType = {
+      author: labelMap?.["com.dockstat.stack.author"],
+      description: labelMap?.["com.dockstat.stack.description"],
+      envSchema,
+      homepage: labelMap?.["com.dockstat.stack.homepage"],
       id:
         labelMap?.["com.dockstat.stack.id"] || stackName.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
-      name: labelMap?.["com.dockstat.stack.name"] || stackName,
-      description: labelMap?.["com.dockstat.stack.description"],
-      version: labelMap?.["com.dockstat.stack.version"] || "1.0.0",
-      author: labelMap?.["com.dockstat.stack.author"],
-      repository: labelMap?.["com.dockstat.stack.repository"],
-      tags: labelMap?.["com.dockstat.stack.tags"]?.split(","),
-      path: relativePath,
-      minDockerVersion: labelMap?.["com.dockstat.stack.minDockerVersion"],
-      swarmSupport,
-      envSchema,
-      services,
-      screenshots: labelMap?.["com.dockstat.stack.screenshots"]?.split(","),
-      homepage: labelMap?.["com.dockstat.stack.homepage"],
       license: labelMap?.["com.dockstat.stack.license"],
+      minDockerVersion: labelMap?.["com.dockstat.stack.minDockerVersion"],
+      name: labelMap?.["com.dockstat.stack.name"] || stackName,
+      path: relativePath,
+      repository: labelMap?.["com.dockstat.stack.repository"],
+      screenshots: labelMap?.["com.dockstat.stack.screenshots"]?.split(","),
+      services,
+      swarmSupport,
+      tags: labelMap?.["com.dockstat.stack.tags"]?.split(","),
       updatedAt: new Date().toISOString(),
+      version: labelMap?.["com.dockstat.stack.version"] || "1.0.0",
     }
 
-    return { meta, compose }
+    return { compose, meta }
   } catch (error) {
     log("❌", `Failed to parse stack file: ${filePath}`, extractErrorMessage(error))
     return null
@@ -120,15 +120,15 @@ function extractEnvSchema(compose: ComposeSpecification): StackMetaType["envSche
       const hasDefault = typeof value === "string" && value.includes(":-")
 
       envVars.push({
-        name,
-        description: `Environment variable for ${serviceName}`,
-        required: isVariable && !hasDefault,
         default: hasDefault ? value.match(/:-([^}]*)/)?.[1] : undefined,
+        description: `Environment variable for ${serviceName}`,
+        group: serviceName,
+        name,
+        required: isVariable && !hasDefault,
         secret:
           name.toLowerCase().includes("password") ||
           name.toLowerCase().includes("secret") ||
           name.toLowerCase().includes("key"),
-        group: serviceName,
       })
     }
   }
@@ -141,11 +141,11 @@ function extractEnvSchema(compose: ComposeSpecification): StackMetaType["envSche
  */
 async function validateStack(filePath: string): Promise<StackValidationResult> {
   const result: StackValidationResult = {
-    valid: true,
-    errors: [],
-    warnings: [],
-    services: [],
     envVars: [],
+    errors: [],
+    services: [],
+    valid: true,
+    warnings: [],
   }
 
   try {
@@ -205,7 +205,7 @@ async function downloadStack(
   try {
     const repoData = await loadRepo("repo.json")
     if (!repoData) {
-      return { success: false, message: "Repository file not found" }
+      return { message: "Repository file not found", success: false }
     }
 
     const stack = repoData.content.stacks.find(
@@ -213,7 +213,7 @@ async function downloadStack(
     )
 
     if (!stack) {
-      return { success: false, message: `Stack "${options.stack}" not found in repository` }
+      return { message: `Stack "${options.stack}" not found in repository`, success: false }
     }
 
     const stacksDir = repoData.config.stacks.dir
@@ -221,7 +221,7 @@ async function downloadStack(
 
     // Check if source exists
     if (!existsSync(sourcePath)) {
-      return { success: false, message: `Stack file not found: ${sourcePath}` }
+      return { message: `Stack file not found: ${sourcePath}`, success: false }
     }
 
     // Create output directory if needed
@@ -257,8 +257,8 @@ async function downloadStack(
     const targetComposePath = path.join(outputDir, "docker-compose.yaml")
     if (existsSync(targetComposePath) && !options.overwrite) {
       return {
-        success: false,
         message: "docker-compose.yaml already exists. Use --overwrite to replace.",
+        success: false,
       }
     }
 
@@ -286,11 +286,11 @@ async function downloadStack(
     }
 
     return {
-      success: true,
       message: `Stack "${stack.name}" downloaded to ${outputDir}`,
+      success: true,
     }
   } catch (error) {
-    return { success: false, message: extractErrorMessage(error) }
+    return { message: extractErrorMessage(error), success: false }
   }
 }
 
@@ -356,11 +356,11 @@ export const stackBundleCommand = new Command("bundle")
         }
 
         log("✅", name, stackPath)
-        results.push({ name, success: true, meta: parsed.meta })
+        results.push({ meta: parsed.meta, name, success: true })
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         console.error(`❌ ${name}: ${message.split("\n")[0]}`)
-        results.push({ name, success: false, error: message })
+        results.push({ error: message, name, success: false })
       }
     }
 
@@ -410,10 +410,10 @@ export const stackDownloadCommand = new Command("download")
     console.log("\n📥 Downloading stack...\n")
 
     const result = await downloadStack({
-      stack: stackId,
+      includeEnvExample: options.envExample,
       output: options.output,
       overwrite: options.overwrite,
-      includeEnvExample: options.envExample,
+      stack: stackId,
     })
 
     if (result.success) {

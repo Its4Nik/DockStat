@@ -12,18 +12,18 @@ export default function ClientsPage() {
   usePageHeading("Clients & Workers")
 
   const { data: clientsData, isLoading: clientsIsLoading } = eden.useEdenQuery({
-    route: api.docker.client.all({ stored: "true" }).get,
     queryKey: ["fetchDockerClients"],
+    route: api.docker.client.all({ stored: "true" }).get,
   })
 
   const { data: poolStatus, isLoading: poolLoading } = eden.useEdenQuery({
-    route: api.docker.manager["pool-stats"].get,
     queryKey: ["fetchPoolStatus"],
+    route: api.docker.manager["pool-stats"].get,
   })
 
   const { data: hosts, isLoading: hostsLoading } = eden.useEdenQuery({
-    route: api.docker.hosts.get,
     queryKey: ["fetchHosts"],
+    route: api.docker.hosts.get,
   })
 
   // Create a map of worker info by client ID for easy lookup
@@ -45,8 +45,15 @@ export default function ClientsPage() {
 
       {/* Clients Section */}
       <div>
-        <Card size="sm" variant="flat" className="flex items-center gap-2 mb-4">
-          <Split size={24} className="text-accent" />
+        <Card
+          className="flex items-center gap-2 mb-4"
+          size="sm"
+          variant="flat"
+        >
+          <Split
+            className="text-accent"
+            size={24}
+          />
           <h2 className="text-2xl font-semibold text-muted-text">Docker Clients</h2>
         </Card>
 
@@ -57,11 +64,14 @@ export default function ClientsPage() {
             No Docker clients configured. Add a client to get started.
           </div>
         ) : (
-          <Card variant="dark" className="flex flex-wrap gap-4">
+          <Card
+            className="flex flex-wrap gap-4"
+            variant="dark"
+          >
             {clientsData.map((client) => (
               <ClientCard
-                key={client.id}
                 client={client}
+                key={client.id}
                 workerInfo={client.id ? workersByClientId[client.id] : undefined}
               />
             ))}
@@ -74,8 +84,15 @@ export default function ClientsPage() {
 
       {/* Workers Section */}
       <div>
-        <Card size="sm" variant="flat" className="flex items-center gap-2 mb-4">
-          <Hammer size={24} className="text-accent" />
+        <Card
+          className="flex items-center gap-2 mb-4"
+          size="sm"
+          variant="flat"
+        >
+          <Hammer
+            className="text-accent"
+            size={24}
+          />
           <h2 className="text-2xl font-semibold text-muted-text">Worker Pool</h2>
         </Card>
 
@@ -96,13 +113,23 @@ export default function ClientsPage() {
 
       {/* Hosts Section */}
       <div>
-        <Card size="sm" variant="flat" className="flex justify-between justify-centergap-2 mb-4">
+        <Card
+          className="flex justify-between justify-centergap-2 mb-4"
+          size="sm"
+          variant="flat"
+        >
           <div className="flex items-center gap-2">
-            <Server size={24} className="text-accent" />
+            <Server
+              className="text-accent"
+              size={24}
+            />
             <h2 className="text-2xl font-semibold text-muted-text">Docker Hosts</h2>
           </div>
           {hosts && (
-            <Badge variant="primary" size="sm">
+            <Badge
+              size="sm"
+              variant="primary"
+            >
               {hosts.length} {hosts.length === 1 ? "Host" : "Hosts"}
             </Badge>
           )}

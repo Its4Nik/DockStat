@@ -25,24 +25,27 @@ export function Toast(props: ToastProps) {
 
   return (
     <motion.div
+      className="relative"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="relative"
       style={{ zIndex: isHovered ? 50 : 1 }}
     >
-      <Card variant={cardVariant} size="sm">
+      <Card
+        size="sm"
+        variant={cardVariant}
+      >
         <div className="flex items-start gap-4">
           <motion.div
-            className="min-w-0 flex-1"
-            initial={false}
             animate={{
               maxHeight: isHovered ? 1000 : 60,
             }}
+            className="min-w-0 flex-1"
+            initial={false}
+            style={{ overflow: "hidden" }}
             transition={{
               duration: 0.4,
               ease: [0.4, 0, 0.2, 1],
             }}
-            style={{ overflow: "hidden" }}
           >
             <p
               className="text-sm font-semibold leading-5 text-primary-text"
@@ -61,13 +64,13 @@ export function Toast(props: ToastProps) {
 
           <div className="my-auto shrink-0">
             <Button
-              size="xs"
               noFocusRing
-              variant={cardVariant === "error" ? "danger" : "secondary"}
               onClick={() => {
                 button?.onClick()
                 sonnerToast.dismiss(id)
               }}
+              size="xs"
+              variant={cardVariant === "error" ? "danger" : "secondary"}
             >
               {button?.label || <X size={10} />}
             </Button>

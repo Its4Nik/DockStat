@@ -37,34 +37,34 @@ export const Card: React.FC<CardProps> = ({
   const baseClasses = "shadow-xl rounded-lg transition-all duration-200"
 
   const variantClasses: Record<CardVariant, string> = {
-    default: "bg-card-default-bg border border-card-default-border text-primary-text",
-    outlined: "border border-card-outlined-border bg-main-bg text-secondary-text",
-    elevated: "bg-card-elevated-bg shadow-2xl text-primary-text",
-    flat: "bg-card-flat-bg border-none text-muted-text",
-    dark: "border border-card-outlined-border/20 bg-main-bg text-secondary-text",
-    error: "border border-error bg-main-bg text-secondary-text",
-    success: "border border-success bg-main-bg text-secondary-text",
     custom: "",
+    dark: "border border-card-outlined-border/20 bg-main-bg text-secondary-text",
+    default: "bg-card-default-bg border border-card-default-border text-primary-text",
+    elevated: "bg-card-elevated-bg shadow-2xl text-primary-text",
+    error: "border border-error bg-main-bg text-secondary-text",
+    flat: "bg-card-flat-bg border-none text-muted-text",
+    outlined: "border border-card-outlined-border bg-main-bg text-secondary-text",
+    success: "border border-success bg-main-bg text-secondary-text",
   }
 
   const glassVariantClasses: Record<CardVariant, string> = {
+    custom: "",
+    dark: "border border-card-outlined-border/20 bg-main-bg/20 backdrop-blur-lg text-secondary-text",
     default:
       "bg-card-default-bg/20 backdrop-blur-lg border border-card-default-border text-primary-text",
+    elevated: "bg-card-elevated-bg/20 backdrop-blur-lg shadow-2xl text-primary-text",
+    error: "border border-error bg-main-bg/20 backdrop-blur-lg text-secondary-text",
+    flat: "bg-card-flat-bg/20 backdrop-blur-lg border-none text-muted-text",
     outlined:
       "border border-card-outlined-border bg-main-bg/20 backdrop-blur-lg text-secondary-text",
-    elevated: "bg-card-elevated-bg/20 backdrop-blur-lg shadow-2xl text-primary-text",
-    flat: "bg-card-flat-bg/20 backdrop-blur-lg border-none text-muted-text",
-    dark: "border border-card-outlined-border/20 bg-main-bg/20 backdrop-blur-lg text-secondary-text",
-    error: "border border-error bg-main-bg/20 backdrop-blur-lg text-secondary-text",
     success: "border border-success bg-main-bg/20 backdrop-blur-lg text-secondary-text",
-    custom: "",
   }
 
   const sizeClasses: Record<CardSize, string> = {
-    xs: "p-1",
-    sm: "p-3",
-    md: "p-6",
     lg: "p-8",
+    md: "p-6",
+    sm: "p-3",
+    xs: "p-1",
   }
 
   const hoverClasses = hoverable
@@ -76,10 +76,10 @@ export const Card: React.FC<CardProps> = ({
   if (onClick) {
     return (
       <button
-        tabIndex={tabIndex}
-        type="button"
         className={`${classes} cursor-pointer hover:text-muted-text`}
         onClick={onClick}
+        tabIndex={tabIndex}
+        type="button"
       >
         {children}
       </button>
@@ -87,7 +87,10 @@ export const Card: React.FC<CardProps> = ({
   }
 
   return (
-    <div tabIndex={tabIndex} className={classes}>
+    <div
+      className={classes}
+      tabIndex={tabIndex}
+    >
       {children}
     </div>
   )
