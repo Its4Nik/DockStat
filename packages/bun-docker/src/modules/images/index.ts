@@ -18,7 +18,7 @@ import type {
   ImageTagRoute,
 } from "./types"
 
-export class Images extends BaseModule {
+export class ImagesModule extends BaseModule {
   async list(options?: ImageListRoute["parameters"]["query"]) {
     const res = await this.request("/images/json", "GET", undefined, undefined, options)
     return (await res.json()) as ImageListRoute["responses"]["200"]["content"]["application/json"]

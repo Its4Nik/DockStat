@@ -17,7 +17,7 @@
     "docker",
     "bun"
   ],
-  "version": "0.1.3",
+  "version": "0.1.4",
   "license": "MPL-2.0",
   "repository": {
     "directory": "packages/bun-docker",
