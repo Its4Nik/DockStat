@@ -32,6 +32,5 @@ const DockStatElysiaPlugins = new Elysia()
       },
     })
   )
-  .mount(auth.handler)
 
 export default DockStatElysiaPlugins

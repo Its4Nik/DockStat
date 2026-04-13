@@ -2,8 +2,9 @@ import { apiKey } from "@better-auth/api-key"
 import { betterAuth } from "better-auth"
 import { admin, openAPI } from "better-auth/plugins"
 import { DockStatDB } from "../database"
+import Elysia from "elysia"
 
-export const auth = betterAuth({
+const auth = betterAuth({
   account: { encryptOAuthTokens: true },
   advanced: { useSecureCookies: true },
   appName: "DockStat",
@@ -43,3 +44,18 @@ export const OpenAPI = {
       // biome-ignore lint/suspicious/noExplicitAny: from better auth example
     }) as Promise<any>,
 } as const
+
+export const betterAuthPlugin = new Elysia({ name: "better-auth" })
+  .mount(auth.handler)
+  .macro({
+    auth: {
+      async resolve({ status, request: { headers } }) {
+        const session = await auth.api.getSession({ headers });
+        if (!session) return status(401);
+        return {
+          user: session.user,
+          session: session.session,
+        };
+      },
+    },
+  });

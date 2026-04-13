@@ -15,6 +15,7 @@ import RepositoryRoutes from "./routes/repositories"
 import StatusRoutes from "./routes/status"
 import ThemeRoutes from "./routes/themes"
 import DockStatWebsockets from "./websockets"
+import { betterAuthPlugin } from "./auth"
 
 const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 
@@ -22,9 +23,10 @@ const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 setupBetterAuth()
 
 export const DockStatAPI = new Elysia({ precompile: false, prefix: "/api/v2" })
+  .use(betterAuthPlugin)
+  .use(DockStatElysiaPlugins)
   .use(RequestLogger)
   .use(MetricsMiddleware)
-  .use(DockStatElysiaPlugins)
   .use(errorHandler)
   .use(StatusRoutes)
   .use(DBRoutes)
