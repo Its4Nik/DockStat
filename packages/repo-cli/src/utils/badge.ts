@@ -1,5 +1,5 @@
 import type { BadgeOptions } from "../types"
-
+import Bun from "bun"
 function escapeXml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -47,7 +47,7 @@ export function createBadge(options: BadgeOptionsWithIcon): string {
   const height = 26
   const radius = style === "flat-square" ? 4 : 13
 
-  const uid = Math.random().toString(36).slice(2, 8)
+  const uid = Bun.randomUUIDv7()
 
   const iconSvg = icon
     ? `<g transform="translate(8, ${(height - iconSize) / 2})" color="#fff" opacity="0.9">
