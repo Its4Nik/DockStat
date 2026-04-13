@@ -2,8 +2,8 @@ import { logFeedEffect } from "@WSS"
 import type { LogEntry } from "@dockstat/logger"
 import { arrayUtils } from "@dockstat/utils"
 import { useContext, useEffect, useState } from "react"
-import { toast } from "@/lib/toast"
 import { ConfigProviderContext } from "@/contexts/config"
+import { toast } from "@/lib/toast"
 
 export function useLogs() {
   const settingsCtx = useContext(ConfigProviderContext)
@@ -21,7 +21,10 @@ export function useLogs() {
       return next
     })
 
-    if (logMessage.level === "error" && (settingsCtx.additionalSettings?.showBackendErrorLogs ?? true) === true) {
+    if (
+      logMessage.level === "error" &&
+      (settingsCtx.additionalSettings?.showBackendErrorLogs ?? true) === true
+    ) {
       console.error(logMessage)
       toast({
         description: logMessage.message,

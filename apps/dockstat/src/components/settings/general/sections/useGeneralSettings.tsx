@@ -51,7 +51,7 @@ export function useGeneralSettings() {
   const showBackendErrors = (show: boolean) => {
     updateAdditionalSettings({
       ...additionalSettings,
-      showBackendErrorLogs: show
+      showBackendErrorLogs: show,
     })
   }
 
@@ -121,8 +121,8 @@ export function useGeneralSettings() {
     pinLink,
     pinnedLinks,
     pluginLinks,
+    showBackendErrors,
     showRamUsageInNavbar,
     unpinLink,
-    showBackendErrors
   }
 }

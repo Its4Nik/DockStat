@@ -16,7 +16,7 @@ export const GeneralSettingsSlide = () => {
     pluginLinks,
     unpinLink,
     allNavLinks,
-    showBackendErrors
+    showBackendErrors,
   } = useGeneralSettings()
 
   return (
