@@ -1,0 +1,48 @@
+{
+  "author": {
+    "email": "info@itsnik.de",
+    "name": "ItsNik",
+    "url": "https://itsnik.de"
+  },
+  "description": "A bun native, typesafe wrapper for the docker API",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^25.5.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "require": "./src/index.ts",
+      "types": "./dist/types.d.ts"
+    },
+    "./spec": "./src/v1.54.d.ts"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "tsconfig.json"
+  ],
+  "keywords": [
+    "docker",
+    "bun"
+  ],
+  "license": "MPL-2.0",
+  "module": "src/index.ts",
+  "name": "@dockstat/docker",
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "repository": {
+    "directory": "packages/bun-docker",
+    "type": "git",
+    "url": "https://github.com/its4nik/dockstat"
+  },
+  "scripts": {
+    "build": "bun build --target=bun --production --outdir=dist src/index.ts",
+    "openapi": "bunx openapi-typescript ./.openapi-spec/v1.54.yaml -o ./.openapi-spec/v1.54.d.ts",
+    "publish": "bun run build && bun run typegen && bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist",
+    "typegen": "bunx dts-bundle-generator --sort --export-referenced-types false -o dist/types.d.ts src/index.ts"
+  },
+  "type": "module",
+  "version": "0.1.4"
+}

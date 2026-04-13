@@ -1,6 +1,6 @@
+import type { Docker } from "@dockstat/docker"
 import type Logger from "@dockstat/logger"
 import type { DATABASE, DOCKER } from "@dockstat/typings"
-import type Dockerode from "dockerode"
 import DockerEventStreamManager from "./eventStreamMonitor"
 import ContainerEventMonitor from "./monitors/ContainerEvents"
 import ContainerMetricsMonitor from "./monitors/ContainerMetrics"
@@ -11,34 +11,37 @@ export default class MonitoringManager {
   private logger: Logger
   private options: Required<DOCKER.MonitoringOptions>
   private isMonitoring = false
+  private clientId: number
 
   private healthCheckMonitor: HealthCheckMonitor
   private containerEventMonitor: ContainerEventMonitor
   private hostMetricsMonitor: HostMetricsMonitor
   private containerMetricsMonitor: ContainerMetricsMonitor
   private dockerEventStreamManager: DockerEventStreamManager
-  private dockerInstances: Map<number, Dockerode>
+  private dockerInstances: Map<number, Docker>
   private hosts: DATABASE.DB_target_host[]
 
   constructor(
+    clientId: number,
     baseLogger: Logger,
-    dockerInstances: Map<number, Dockerode>,
+    dockerInstances: Map<number, Docker>,
     hosts: DATABASE.DB_target_host[],
     options: DOCKER.MonitoringOptions = {}
   ) {
+    this.clientId = clientId
     this.dockerInstances = dockerInstances
     this.hosts = hosts
     this.logger = baseLogger.spawn("MM")
 
     this.options = {
-      healthCheckInterval: options.healthCheckInterval ?? 30000,
       containerEventPollingInterval: options.containerEventPollingInterval ?? 5000,
-      hostMetricsInterval: options.hostMetricsInterval ?? 10000,
       containerMetricsInterval: options.containerMetricsInterval ?? 10000,
-      enableContainerMetrics: options.enableContainerMetrics ?? true,
       enableContainerEvents: options.enableContainerEvents ?? true,
-      enableHostMetrics: options.enableHostMetrics ?? true,
+      enableContainerMetrics: options.enableContainerMetrics ?? true,
       enableHealthChecks: options.enableHealthChecks ?? true,
+      enableHostMetrics: options.enableHostMetrics ?? true,
+      healthCheckInterval: options.healthCheckInterval ?? 30000,
+      hostMetricsInterval: options.hostMetricsInterval ?? 10000,
       retryAttempts: options.retryAttempts ?? 3,
       retryDelay: options.retryDelay ?? 1000,
     }
@@ -59,6 +62,7 @@ export default class MonitoringManager {
     )
 
     this.containerEventMonitor = new ContainerEventMonitor(
+      this.clientId,
       this.logger,
       this.dockerInstances,
       this.hosts,
@@ -79,6 +83,7 @@ export default class MonitoringManager {
     )
 
     this.containerMetricsMonitor = new ContainerMetricsMonitor(
+      this.clientId,
       this.logger,
       this.dockerInstances,
       this.hosts,
@@ -89,6 +94,7 @@ export default class MonitoringManager {
     )
 
     this.dockerEventStreamManager = new DockerEventStreamManager(
+      this.clientId,
       this.logger,
       this.dockerInstances,
       this.hosts,
@@ -156,7 +162,7 @@ export default class MonitoringManager {
     }
   }
 
-  public updateDockerInstances(instances: Map<number, Dockerode>): void {
+  public updateDockerInstances(instances: Map<number, Docker>): void {
     this.dockerInstances = instances
     this.healthCheckMonitor.updateDockerInstances(instances)
     this.containerEventMonitor.updateDockerInstances(instances)
@@ -176,10 +182,10 @@ export default class MonitoringManager {
     dockerEventStreams: Map<number, NodeJS.ReadableStream>
   } {
     return {
-      isMonitoring: this.isMonitoring,
-      lastHealthStatus: this.healthCheckMonitor.getLastHealthStatus(),
-      lastContainerStates: this.containerEventMonitor.getLastContainerStates(),
       dockerEventStreams: this.dockerEventStreamManager.getStreams(),
+      isMonitoring: this.isMonitoring,
+      lastContainerStates: this.containerEventMonitor.getLastContainerStates(),
+      lastHealthStatus: this.healthCheckMonitor.getLastHealthStatus(),
     }
   }
 
@@ -191,24 +197,24 @@ export default class MonitoringManager {
       throw new Error(`Docker instance or host not found for ID ${hostId}`)
     }
 
-    const [info, version] = await Promise.all([docker.info(), docker.version()])
+    const [info, version] = await Promise.all([docker.system.info(), docker.system.version()])
 
     return {
-      hostId,
-      hostName: host.name,
-      dockerVersion: version.Version,
       apiVersion: version.ApiVersion,
-      os: info.OperatingSystem,
       architecture: info.Architecture,
-      totalMemory: info.MemTotal,
-      totalCPU: info.NCPU,
-      kernelVersion: info.KernelVersion,
       containers: info.Containers,
+      containersPaused: info.ContainersPaused,
       containersRunning: info.ContainersRunning,
       containersStopped: info.ContainersStopped,
-      containersPaused: info.ContainersPaused,
+      dockerVersion: version.Version,
+      hostId,
+      hostName: host.name,
       images: info.Images,
+      kernelVersion: info.KernelVersion,
+      os: info.OperatingSystem,
       systemTime: info.SystemTime,
+      totalCPU: info.NCPU,
+      totalMemory: info.MemTotal,
     }
   }
 

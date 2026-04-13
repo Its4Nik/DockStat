@@ -1,17 +1,99 @@
+import type { SQLQueryBindings } from "bun:sqlite"
+import type { RepoFile } from "@dockstat/repo-cli/types"
 import type { DockStatConfigTableType } from "@dockstat/typings/types"
-import { extractErrorMessage } from "@dockstat/utils"
+import { extractErrorMessage, repo } from "@dockstat/utils"
 import Elysia, { t } from "elysia"
 import { DockStatDB } from "../database"
 import { updateConfig } from "../database/utils"
 import { DatabaseModel, RepositoryModel } from "../models/database"
 
 const DBRoutes = new Elysia({
+  detail: {
+    description:
+      "Database configuration and management endpoints for managing DockStat system settings, repositories, themes, and application data",
+    tags: ["Database"],
+  },
   name: "DatabaseElysiaInstance",
   prefix: "/db",
-  detail: {
-    tags: ["DB"],
-  },
 })
+  .get(
+    "/details",
+    () => {
+      const schema = DockStatDB._sqliteWrapper.getSchema()
+      const integrity = DockStatDB._sqliteWrapper.integrityCheck()
+      const backups = DockStatDB._sqliteWrapper.listBackups()
+      const path = DockStatDB._dbPath
+
+      const info: Record<
+        string,
+        {
+          table: {
+            name: string
+            type: string
+            sql: string
+          }
+          info: {
+            cid: number
+            name: string
+            type: string
+            notnull: number
+            dflt_value: SQLQueryBindings
+            pk: number
+          }[]
+        }
+      > = {}
+
+      for (const table of schema) {
+        const i = DockStatDB._sqliteWrapper.getTableInfo(table.name)
+        info[table.name] = { info: i, table }
+      }
+
+      return {
+        backups,
+        info,
+        integrity,
+        path,
+      }
+    },
+    {
+      detail: {
+        description:
+          "Retrieves comprehensive information about the DockStat database including schema, table structures, integrity check results, and available backups. This endpoint is useful for database diagnostics and monitoring.",
+        responses: {
+          200: {
+            description: "Successfully retrieved database details",
+          },
+        },
+        summary: "Get Database Details",
+      },
+    }
+  )
+  .get(
+    "/details/:tableName/all",
+    ({ params }) => DockStatDB._sqliteWrapper.table(params.tableName).select(["*"]).all(),
+    {
+      detail: {
+        description:
+          "Retrieves all records from a specific database table. Use this endpoint to export data or perform bulk operations. Be careful with large tables as this may return many records.",
+        responses: {
+          200: {
+            description: "Successfully retrieved all records from table",
+          },
+          404: {
+            description: "Table not found",
+          },
+        },
+        summary: "Get All Records from Table",
+      },
+      params: t.Object({
+        tableName: t.String({
+          description: "The name of the database table to query",
+          examples: ["docker_clients", "hosts", "plugins", "config", "repositories"],
+        }),
+      }),
+    }
+  )
+
   // ==================== Config Routes ====================
   .post(
     "config",
@@ -22,33 +104,73 @@ const DBRoutes = new Elysia({
       } catch (error) {
         const errorMessage = extractErrorMessage(error, "Error while updating Database")
         return status(400, {
-          success: false as const,
-          message: errorMessage,
           error: errorMessage,
+          message: errorMessage,
+          success: false as const,
         })
       }
     },
     {
       body: DatabaseModel.updateBody,
+      detail: {
+        description:
+          "Updates the DockStat configuration stored in the database. This includes theme settings, hotkeys, navigation links, and other application preferences. Changes are applied immediately.",
+        requestBody: {
+          content: {
+            "application/json": {
+              description: "Partial configuration object with fields to update",
+            },
+          },
+          description: "Configuration updates to apply",
+          required: true,
+        },
+        responses: {
+          200: {
+            description: "Successfully updated configuration",
+          },
+          400: {
+            description: "Failed to update configuration due to invalid input or error",
+          },
+        },
+        summary: "Update Database Configuration",
+      },
       response: {
         200: DatabaseModel.updateRes,
         400: DatabaseModel.updateError,
       },
     }
   )
-  .get("config", ({ status }) => {
-    try {
-      const res = DockStatDB.configTable.select(["*"]).all()[0]
-      return status(200, res)
-    } catch (error) {
-      const errorMessage = extractErrorMessage(error, "Error while opening Database")
-      return status(400, {
-        success: false as const,
-        error: errorMessage,
-        message: errorMessage,
-      })
+  .get(
+    "config",
+    ({ status }) => {
+      try {
+        const res = DockStatDB.configTable.select(["*"]).all()[0]
+        return status(200, res)
+      } catch (error) {
+        const errorMessage = extractErrorMessage(error, "Error while opening Database")
+        return status(400, {
+          error: errorMessage,
+          message: errorMessage,
+          success: false as const,
+        })
+      }
+    },
+    {
+      detail: {
+        description:
+          "Retrieves the current DockStat configuration from the database. This includes all application settings such as theme, hotkeys, navigation links, and user preferences.",
+        responses: {
+          200: {
+            description: "Successfully retrieved configuration",
+          },
+          400: {
+            description: "Failed to retrieve configuration due to database error",
+          },
+        },
+        summary: "Get Database Configuration",
+      },
     }
-  })
+  )
   .post(
     "config/pinItem",
     ({ body, status }) => {
@@ -68,17 +190,52 @@ const DBRoutes = new Elysia({
       } catch (error) {
         const errorMessage = extractErrorMessage(error, "Error while updating Nav links")
         return status(400, {
-          success: false as const,
           error: errorMessage,
           message: errorMessage,
+          success: false as const,
         })
       }
     },
     {
       body: t.Object({
-        path: t.String(),
-        slug: t.String(),
+        path: t.String({
+          description: "URL path of the navigation item",
+          examples: ["/dashboard/containers", "/dashboard/images", "/settings"],
+        }),
+        slug: t.String({
+          description: "Display name/slug for the navigation item",
+          examples: ["Containers", "Images", "Settings"],
+        }),
       }),
+      detail: {
+        description:
+          "Adds a new navigation item to the pinned links list. Pinned items appear prominently in the navigation menu for quick access. Useful for frequently accessed pages or dashboards.",
+        requestBody: {
+          content: {
+            "application/json": {
+              example: {
+                path: "/dashboard/containers",
+                slug: "Containers",
+              },
+              schema: t.Object({
+                path: t.String(),
+                slug: t.String(),
+              }),
+            },
+          },
+          description: "Navigation item to pin",
+          required: true,
+        },
+        responses: {
+          200: {
+            description: "Successfully pinned navigation item",
+          },
+          400: {
+            description: "Failed to pin item due to invalid input or error",
+          },
+        },
+        summary: "Pin Navigation Item",
+      },
     }
   )
   .post(
@@ -99,17 +256,205 @@ const DBRoutes = new Elysia({
       } catch (error) {
         const errorMessage = extractErrorMessage(error, "Error while updating Nav links")
         return status(400, {
-          success: false as const,
           error: errorMessage,
           message: errorMessage,
+          success: false as const,
         })
       }
     },
     {
       body: t.Object({
-        path: t.String(),
-        slug: t.String(),
+        path: t.String({
+          description: "URL path of the navigation item to remove",
+          examples: ["/dashboard/containers", "/dashboard/images"],
+        }),
+        slug: t.String({
+          description: "Display name/slug of the navigation item to remove",
+          examples: ["Containers", "Images"],
+        }),
       }),
+      detail: {
+        description:
+          "Removes a navigation item from the pinned links list. The item will no longer appear in the prominent navigation menu section.",
+        requestBody: {
+          content: {
+            "application/json": {
+              example: {
+                path: "/dashboard/containers",
+                slug: "Containers",
+              },
+              schema: t.Object({
+                path: t.String(),
+                slug: t.String(),
+              }),
+            },
+          },
+          description: "Navigation item to unpin",
+          required: true,
+        },
+        responses: {
+          200: {
+            description: "Successfully unpinned navigation item",
+          },
+          400: {
+            description: "Failed to unpin item due to invalid input or error",
+          },
+        },
+        summary: "Unpin Navigation Item",
+      },
+    }
+  )
+
+  .post(
+    "/config/hotkey",
+    ({ body }) => DockStatDB.configTable.where({ id: 0 }).update({ hotkeys: body.hotkeys }),
+    {
+      body: DatabaseModel.hotkeyBody,
+      detail: {
+        description:
+          "Updates the keyboard shortcuts configuration for the DockStat UI. Hotkeys are defined as arrays of key combinations for various actions throughout the application.",
+        requestBody: {
+          content: {
+            "application/json": {
+              example: {
+                hotkeys: [
+                  { action: "toggleSidebar", key: "Ctrl+B" },
+                  { action: "refresh", key: "F5" },
+                  { action: "search", key: "Ctrl+F" },
+                ],
+              },
+              schema: DatabaseModel.hotkeyBody,
+            },
+          },
+          description: "Hotkey configuration with action-key mappings",
+          required: true,
+        },
+        responses: {
+          200: {
+            description: "Successfully updated hotkey configuration",
+          },
+          400: {
+            description: "Failed to update hotkeys due to invalid input",
+          },
+        },
+        summary: "Update Hotkey Configuration",
+      },
+    }
+  )
+
+  .post(
+    "/config/additionalSettings",
+    ({ body, status }) => {
+      try {
+        DockStatDB.configTable
+          .where({ id: 0 })
+          .update({ additionalSettings: body.additionalSettings })
+
+        return status(200, {
+          data: body.additionalSettings,
+          message: "Additional settings updated successfully",
+          success: true,
+        })
+      } catch (error) {
+        const errorMessage = extractErrorMessage(error, "Error while updating additional settings")
+        return status(400, {
+          message: errorMessage,
+          success: false,
+        })
+      }
+    },
+    {
+      body: DatabaseModel.additionalSettingsBody,
+      detail: {
+        description:
+          "Updates additional application settings such as default dashboard, backend RAM display in navbar, and other optional configuration options. These settings control application behavior and UI preferences.",
+        requestBody: {
+          content: {
+            "application/json": {
+              example: {
+                additionalSettings: {
+                  defaultDashboard: "dashboard-containers",
+                  showBackendRamUsageInNavbar: true,
+                },
+              },
+              schema: DatabaseModel.additionalSettingsBody,
+            },
+          },
+          description: "Additional settings object with key-value pairs",
+          required: true,
+        },
+        responses: {
+          200: {
+            description: "Successfully updated additional settings",
+          },
+          400: {
+            description: "Failed to update additional settings due to invalid input",
+          },
+        },
+        summary: "Update Additional Settings",
+      },
+      response: {
+        200: DatabaseModel.additionalSettingsRes,
+        400: DatabaseModel.additionalSettingsRes,
+      },
+    }
+  )
+  .post(
+    "/config/defaultDashboard",
+    ({ body, status }) => {
+      try {
+        const currentConfig = DockStatDB.configTable.select(["additionalSettings", "id"]).all()[0]
+
+        const newAdditionalSettings = {
+          defaultDashboard: body.dashboardId ?? undefined,
+          showBackendRamUsageInNavbar:
+            currentConfig.additionalSettings?.showBackendRamUsageInNavbar,
+        }
+
+        DockStatDB.configTable
+          .where({ id: 0 })
+          .update({ additionalSettings: newAdditionalSettings })
+
+        return status(200, {
+          data: newAdditionalSettings,
+          message: "Default dashboard updated successfully",
+          success: true,
+        })
+      } catch (error) {
+        const errorMessage = extractErrorMessage(error, "Error while updating default dashboard")
+        return status(400, {
+          error: String(error),
+          message: errorMessage,
+          success: false,
+        })
+      }
+    },
+    {
+      body: t.Object({
+        dashboardId: t.Nullable(
+          t.String({
+            description: "Identifier of the dashboard to set as default, or null to clear",
+            examples: ["dashboard-containers", "dashboard-images", "dashboard-networks", null],
+          })
+        ),
+      }),
+      detail: {
+        description:
+          "Sets the default dashboard to display when users first open the application or navigate to the home page. The dashboardId should match a valid dashboard identifier in the system.",
+        responses: {
+          200: {
+            description: "Successfully updated default dashboard",
+          },
+          400: {
+            description: "Failed to update default dashboard due to invalid input",
+          },
+        },
+        summary: "Update Default Dashboard",
+      },
+      response: {
+        200: DatabaseModel.additionalSettingsRes,
+        400: DatabaseModel.error,
+      },
     }
   )
 
@@ -120,20 +465,33 @@ const DBRoutes = new Elysia({
       try {
         const repos = DockStatDB.repositoriesTable.select(["*"]).all()
         return status(200, {
-          success: true,
-          message: `Found ${repos.length} repositories`,
           data: repos,
+          message: `Found ${repos.length} repositories`,
+          success: true,
         })
       } catch (error) {
         const errorMessage = extractErrorMessage(error, "Error fetching repositories")
         return status(400, {
-          success: false,
-          message: errorMessage,
           error: errorMessage,
+          message: errorMessage,
+          success: false,
         })
       }
     },
     {
+      detail: {
+        description:
+          "Retrieves all registered plugin/theme repositories. Repositories are external sources from which plugins, themes, and stacks can be installed. This includes information about repository sources, policies, and available paths.",
+        responses: {
+          200: {
+            description: "Successfully retrieved list of repositories",
+          },
+          400: {
+            description: "Failed to fetch repositories due to database error",
+          },
+        },
+        summary: "List All Repositories",
+      },
       response: {
         200: t.Any(),
         400: RepositoryModel.error,
@@ -151,29 +509,49 @@ const DBRoutes = new Elysia({
 
         if (!repo) {
           return status(404, {
-            success: false as const,
-            message: `Repository with id ${params.id} not found`,
             error: `Repository with id ${params.id} not found`,
+            message: `Repository with id ${params.id} not found`,
+            success: false as const,
           })
         }
 
         return status(200, {
-          success: true as const,
-          message: "Repository found",
           data: repo,
+          message: "Repository found",
+          success: true as const,
         })
       } catch (error) {
         const errorMessage = extractErrorMessage(error, "Error fetching repository")
         return status(400, {
-          success: false as const,
-          message: errorMessage,
           error: errorMessage,
+          message: errorMessage,
+          success: false as const,
         })
       }
     },
     {
+      detail: {
+        description:
+          "Retrieves detailed information about a specific repository, including its configuration, paths to plugins/themes/stacks, and policy settings.",
+
+        responses: {
+          200: {
+            description: "Successfully retrieved repository details",
+          },
+          400: {
+            description: "Failed to fetch repository due to error",
+          },
+          404: {
+            description: "Repository not found",
+          },
+        },
+        summary: "Get Repository by ID",
+      },
       params: t.Object({
-        id: t.String(),
+        id: t.String({
+          description: "The unique identifier of the repository",
+          examples: ["1", "2", "3"],
+        }),
       }),
       response: {
         200: t.Any(),
@@ -184,49 +562,96 @@ const DBRoutes = new Elysia({
   )
   .post(
     "repositories",
-    ({ body, status }) => {
+    async ({ body, status }) => {
       try {
+        const repoFile = (await (await fetch(body.link_to_manifest)).json()) as RepoFile
+
         // Check if repository with same name already exists
-        const existing = DockStatDB.repositoriesTable.select(["*"]).where({ name: body.name }).get()
+        const existing = DockStatDB.repositoriesTable
+          .select(["*"])
+          .where({ name: repoFile.config.name })
+          .get()
 
         if (existing) {
           return status(409, {
+            error: `Repository with name "${repoFile.config.name}" already exists`,
+            message: `Repository with name "${repoFile.config.name}" already exists`,
             success: false as const,
-            message: `Repository with name "${body.name}" already exists`,
-            error: `Repository with name "${body.name}" already exists`,
           })
         }
 
         // Insert the new repository
-        DockStatDB.repositoriesTable.insert(body)
+        DockStatDB.repositoriesTable.insert({
+          name: repoFile.config.name,
+          paths: {
+            plugins: repoFile.config.plugins,
+            stacks: repoFile.config.stacks,
+            themes: repoFile.config.themes,
+          },
+          policy: repoFile.config.policy,
+          source: repo.parseRawToDB(body.link_to_manifest).source,
+          type: repoFile.config.type,
+          verification_api: repoFile.config.verification_api,
+        })
 
         // Fetch the newly created repository
-        const newRepo = DockStatDB.repositoriesTable.select(["*"]).where({ name: body.name }).get()
+        const newRepo = DockStatDB.repositoriesTable
+          .select(["*"])
+          .where({ name: repoFile.config.name })
+          .get()
 
         if (!newRepo) {
           return status(400, {
-            success: false as const,
-            message: "Failed to retrieve created repository",
             error: "Failed to retrieve created repository",
+            message: "Failed to retrieve created repository",
+            success: false as const,
           })
         }
 
         return status(201, {
-          success: true as const,
-          message: `Repository "${body.name}" created successfully`,
           data: newRepo,
+          message: `Repository "${repoFile.config.name}" created successfully`,
+          success: true as const,
         })
       } catch (error) {
         const errorMessage = extractErrorMessage(error, "Error creating repository")
         return status(400, {
-          success: false as const,
-          message: errorMessage,
           error: errorMessage,
+          message: errorMessage,
+          success: false as const,
         })
       }
     },
     {
       body: RepositoryModel.createBody,
+      detail: {
+        description:
+          "Adds a new plugin/theme repository to the system. The repository is fetched from a manifest URL, validated, and stored in the database. Once added, plugins, themes, and stacks from the repository can be installed.",
+        requestBody: {
+          content: {
+            "application/json": {
+              example: {
+                link_to_manifest: "https://example.com/repository/manifest.json",
+              },
+              schema: RepositoryModel.createBody,
+            },
+          },
+          description: "Repository manifest URL",
+          required: true,
+        },
+        responses: {
+          201: {
+            description: "Successfully created repository",
+          },
+          400: {
+            description: "Failed to create repository due to invalid manifest or error",
+          },
+          409: {
+            description: "Repository with this name already exists",
+          },
+        },
+        summary: "Create Repository",
+      },
       response: {
         201: RepositoryModel.successResponse,
         400: RepositoryModel.error,
@@ -245,9 +670,9 @@ const DBRoutes = new Elysia({
 
         if (!existing) {
           return status(404, {
-            success: false as const,
-            message: `Repository with id ${repoId} not found`,
             error: `Repository with id ${repoId} not found`,
+            message: `Repository with id ${repoId} not found`,
+            success: false as const,
           })
         }
 
@@ -260,15 +685,15 @@ const DBRoutes = new Elysia({
 
           if (nameConflict) {
             return status(409, {
-              success: false as const,
-              message: `Repository with name "${body.name}" already exists`,
               error: `Repository with name "${body.name}" already exists`,
+              message: `Repository with name "${body.name}" already exists`,
+              success: false as const,
             })
           }
         }
 
         // Update the repository (exclude id from update body)
-        const { id: _id, ...updateData } = body
+        const { id: _id, ...updateData } = { ...body }
         DockStatDB.repositoriesTable.where({ id: repoId }).update(updateData)
 
         // Fetch the updated repository
@@ -276,31 +701,53 @@ const DBRoutes = new Elysia({
 
         if (!updatedRepo) {
           return status(400, {
-            success: false as const,
-            message: "Failed to retrieve updated repository",
             error: "Failed to retrieve updated repository",
+            message: "Failed to retrieve updated repository",
+            success: false as const,
           })
         }
 
         return status(200, {
-          success: true as const,
-          message: `Repository "${updatedRepo.name}" updated successfully`,
           data: updatedRepo,
+          message: `Repository "${updatedRepo.name}" updated successfully`,
+          success: true as const,
         })
       } catch (error) {
         const errorMessage = extractErrorMessage(error, "Error updating repository")
         return status(400, {
-          success: false as const,
-          message: errorMessage,
           error: errorMessage,
+          message: errorMessage,
+          success: false as const,
         })
       }
     },
     {
-      params: t.Object({
-        id: t.String(),
-      }),
       body: RepositoryModel.updateBody,
+      detail: {
+        description:
+          "Updates configuration for an existing repository. You can modify the repository name, policy, verification API, type, or paths. Changing the name requires that no other repository uses that name.",
+        responses: {
+          200: {
+            description: "Successfully updated repository",
+          },
+          400: {
+            description: "Failed to update repository due to error",
+          },
+          404: {
+            description: "Repository not found",
+          },
+          409: {
+            description: "Repository name conflict",
+          },
+        },
+        summary: "Update Repository",
+      },
+      params: t.Object({
+        id: t.String({
+          description: "The unique identifier of the repository to update",
+          examples: ["1", "2", "3"],
+        }),
+      }),
       response: {
         200: RepositoryModel.successResponse,
         400: RepositoryModel.error,
@@ -320,9 +767,9 @@ const DBRoutes = new Elysia({
 
         if (!existing) {
           return status(404, {
-            success: false as const,
-            message: `Repository with id ${repoId} not found`,
             error: `Repository with id ${repoId} not found`,
+            message: `Repository with id ${repoId} not found`,
+            success: false as const,
           })
         }
 
@@ -330,262 +777,40 @@ const DBRoutes = new Elysia({
         DockStatDB.repositoriesTable.where({ id: repoId }).delete()
 
         return status(200, {
-          success: true as const,
           message: `Repository "${existing.name}" deleted successfully`,
+          success: true as const,
         })
       } catch (error) {
         const errorMessage = extractErrorMessage(error, "Error deleting repository")
         return status(400, {
-          success: false as const,
-          message: errorMessage,
           error: errorMessage,
+          message: errorMessage,
+          success: false as const,
         })
       }
     },
     {
+      detail: {
+        description:
+          "Permanently removes a repository from the system. This is a destructive operation that cannot be undone. Any plugins, themes, or stacks from this repository that have been installed will remain, but updates will no longer be available from this source.",
+        responses: {
+          200: {
+            description: "Successfully deleted repository",
+          },
+          400: {
+            description: "Failed to delete repository due to error",
+          },
+          404: {
+            description: "Repository not found",
+          },
+        },
+        summary: "Delete Repository",
+      },
       params: t.Object({
-        id: t.String(),
-      }),
-      response: {
-        200: RepositoryModel.deleteResponse,
-        400: RepositoryModel.error,
-        404: RepositoryModel.error,
-      },
-    }
-  )
-
-  // ==================== Repository Routes ====================
-  .get(
-    "repositories",
-    ({ status }) => {
-      try {
-        const repos = DockStatDB.repositoriesTable.select(["*"]).all()
-        return status(200, {
-          success: true,
-          message: `Found ${repos.length} repositories`,
-          data: repos,
-        })
-      } catch (error) {
-        const errorMessage = extractErrorMessage(error, "Error fetching repositories")
-        return status(400, {
-          success: false,
-          message: errorMessage,
-          error: errorMessage,
-        })
-      }
-    },
-    {
-      response: {
-        200: t.Any(),
-        400: RepositoryModel.error,
-      },
-    }
-  )
-  .get(
-    "repositories/:id",
-    ({ params, status }) => {
-      try {
-        const repo = DockStatDB.repositoriesTable
-          .select(["*"])
-          .where({ id: Number(params.id) })
-          .get()
-
-        if (!repo) {
-          return status(404, {
-            success: false as const,
-            message: `Repository with id ${params.id} not found`,
-            error: `Repository with id ${params.id} not found`,
-          })
-        }
-
-        return status(200, {
-          success: true as const,
-          message: "Repository found",
-          data: repo,
-        })
-      } catch (error) {
-        const errorMessage = extractErrorMessage(error, "Error fetching repository")
-        return status(400, {
-          success: false as const,
-          message: errorMessage,
-          error: errorMessage,
-        })
-      }
-    },
-    {
-      params: t.Object({
-        id: t.String(),
-      }),
-      response: {
-        200: t.Any(),
-        400: RepositoryModel.error,
-        404: RepositoryModel.error,
-      },
-    }
-  )
-  .post(
-    "repositories",
-    ({ body, status }) => {
-      try {
-        // Check if repository with same name already exists
-        const existing = DockStatDB.repositoriesTable.select(["*"]).where({ name: body.name }).get()
-
-        if (existing) {
-          return status(409, {
-            success: false as const,
-            message: `Repository with name "${body.name}" already exists`,
-            error: `Repository with name "${body.name}" already exists`,
-          })
-        }
-
-        // Insert the new repository
-        DockStatDB.repositoriesTable.insert(body)
-
-        // Fetch the newly created repository
-        const newRepo = DockStatDB.repositoriesTable.select(["*"]).where({ name: body.name }).get()
-
-        if (!newRepo) {
-          return status(400, {
-            success: false as const,
-            message: "Failed to retrieve created repository",
-            error: "Failed to retrieve created repository",
-          })
-        }
-
-        return status(201, {
-          success: true as const,
-          message: `Repository "${body.name}" created successfully`,
-          data: newRepo,
-        })
-      } catch (error) {
-        const errorMessage = extractErrorMessage(error, "Error creating repository")
-        return status(400, {
-          success: false as const,
-          message: errorMessage,
-          error: errorMessage,
-        })
-      }
-    },
-    {
-      body: RepositoryModel.createBody,
-      response: {
-        201: RepositoryModel.successResponse,
-        400: RepositoryModel.error,
-        409: RepositoryModel.error,
-      },
-    }
-  )
-  .put(
-    "repositories/:id",
-    ({ params, body, status }) => {
-      try {
-        const repoId = Number(params.id)
-
-        // Check if repository exists
-        const existing = DockStatDB.repositoriesTable.select(["*"]).where({ id: repoId }).get()
-
-        if (!existing) {
-          return status(404, {
-            success: false as const,
-            message: `Repository with id ${repoId} not found`,
-            error: `Repository with id ${repoId} not found`,
-          })
-        }
-
-        // If name is being changed, check for conflicts
-        if (body.name && body.name !== existing.name) {
-          const nameConflict = DockStatDB.repositoriesTable
-            .select(["*"])
-            .where({ name: body.name })
-            .get()
-
-          if (nameConflict) {
-            return status(409, {
-              success: false as const,
-              message: `Repository with name "${body.name}" already exists`,
-              error: `Repository with name "${body.name}" already exists`,
-            })
-          }
-        }
-
-        // Update the repository (exclude id from update body)
-        const { id: _id, ...updateData } = body
-        DockStatDB.repositoriesTable.where({ id: repoId }).update(updateData)
-
-        // Fetch the updated repository
-        const updatedRepo = DockStatDB.repositoriesTable.select(["*"]).where({ id: repoId }).get()
-
-        if (!updatedRepo) {
-          return status(400, {
-            success: false as const,
-            message: "Failed to retrieve updated repository",
-            error: "Failed to retrieve updated repository",
-          })
-        }
-
-        return status(200, {
-          success: true as const,
-          message: `Repository "${updatedRepo.name}" updated successfully`,
-          data: updatedRepo,
-        })
-      } catch (error) {
-        const errorMessage = extractErrorMessage(error, "Error updating repository")
-        return status(400, {
-          success: false as const,
-          message: errorMessage,
-          error: errorMessage,
-        })
-      }
-    },
-    {
-      params: t.Object({
-        id: t.String(),
-      }),
-      body: RepositoryModel.updateBody,
-      response: {
-        200: RepositoryModel.successResponse,
-        400: RepositoryModel.error,
-        404: RepositoryModel.error,
-        409: RepositoryModel.error,
-      },
-    }
-  )
-  .delete(
-    "repositories/:id",
-    ({ params, status }) => {
-      try {
-        const repoId = Number(params.id)
-
-        // Check if repository exists
-        const existing = DockStatDB.repositoriesTable.select(["*"]).where({ id: repoId }).get()
-
-        if (!existing) {
-          return status(404, {
-            success: false as const,
-            message: `Repository with id ${repoId} not found`,
-            error: `Repository with id ${repoId} not found`,
-          })
-        }
-
-        // Delete the repository
-        DockStatDB.repositoriesTable.where({ id: repoId }).delete()
-
-        return status(200, {
-          success: true as const,
-          message: `Repository "${existing.name}" deleted successfully`,
-        })
-      } catch (error) {
-        const errorMessage = extractErrorMessage(error, "Error deleting repository")
-        return status(400, {
-          success: false as const,
-          message: errorMessage,
-          error: errorMessage,
-        })
-      }
-    },
-    {
-      params: t.Object({
-        id: t.String(),
+        id: t.String({
+          description: "The unique identifier of the repository to delete",
+          examples: ["1", "2", "3"],
+        }),
       }),
       response: {
         200: RepositoryModel.deleteResponse,

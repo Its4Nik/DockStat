@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, test } from "bun:test"
-import { column, DB } from "../index"
+import { column, DB } from "../src/index"
 
 const testDb = new DB(":memory:")
 
@@ -10,14 +10,14 @@ const testTable = testDb.createTable<{
 }>(
   "test_table",
   {
+    booleanCol: column.boolean({ notNull: false }),
     id: column.id(),
     jsonCol: column.json({ notNull: false }),
-    booleanCol: column.boolean({ notNull: false }),
   },
   {
     parser: {
-      JSON: ["jsonCol"],
       BOOLEAN: ["booleanCol"],
+      JSON: ["jsonCol"],
     },
   }
 )
@@ -29,16 +29,16 @@ afterAll(() => {
 describe("JSON parsing tests", () => {
   test("JSON parsing with nested objects", () => {
     const testData = {
+      array: ["item1", "item2"],
       nested: {
         data: "value",
       },
-      array: ["item1", "item2"],
     }
 
     const insertId = testTable.insert({ jsonCol: testData }).insertId
 
     const result = testTable.select(["*"]).where({ id: insertId }).first()
-    expect(result).toEqual({ id: insertId, jsonCol: testData, booleanCol: null })
+    expect(result).toEqual({ booleanCol: null, id: insertId, jsonCol: testData })
   })
 
   test("JSON parsing with arrays", () => {
@@ -47,14 +47,14 @@ describe("JSON parsing tests", () => {
     const insertId = testTable.insert({ jsonCol: testData }).insertId
 
     const result = testTable.select(["*"]).where({ id: insertId }).first()
-    expect(result).toEqual({ id: insertId, jsonCol: testData, booleanCol: null })
+    expect(result).toEqual({ booleanCol: null, id: insertId, jsonCol: testData })
   })
 
   test("JSON parsing with null value", () => {
     const insertId = testTable.insert({ jsonCol: null }).insertId
 
     const result = testTable.select(["*"]).where({ id: insertId }).first()
-    expect(result).toEqual({ id: insertId, jsonCol: null, booleanCol: null })
+    expect(result).toEqual({ booleanCol: null, id: insertId, jsonCol: null })
   })
 
   test("JSON parsing with empty object", () => {
@@ -63,7 +63,7 @@ describe("JSON parsing tests", () => {
     const insertId = testTable.insert({ jsonCol: testData }).insertId
 
     const result = testTable.select(["*"]).where({ id: insertId }).first()
-    expect(result).toEqual({ id: insertId, jsonCol: testData, booleanCol: null })
+    expect(result).toEqual({ booleanCol: null, id: insertId, jsonCol: testData })
   })
 
   test("JSON parsing with deeply nested structure", () => {
@@ -82,7 +82,7 @@ describe("JSON parsing tests", () => {
     const insertId = testTable.insert({ jsonCol: testData }).insertId
 
     const result = testTable.select(["*"]).where({ id: insertId }).first()
-    expect(result).toEqual({ id: insertId, jsonCol: testData, booleanCol: null })
+    expect(result).toEqual({ booleanCol: null, id: insertId, jsonCol: testData })
   })
 })
 
@@ -91,43 +91,43 @@ describe("Boolean parsing tests", () => {
     const insertId = testTable.insert({ booleanCol: true }).insertId
 
     const result = testTable.select(["*"]).where({ id: insertId }).first()
-    expect(result).toEqual({ id: insertId, booleanCol: true, jsonCol: null })
+    expect(result).toEqual({ booleanCol: true, id: insertId, jsonCol: null })
   })
 
   test("Boolean false value parsing", () => {
     const insertId = testTable.insert({ booleanCol: false }).insertId
 
     const result = testTable.select(["*"]).where({ id: insertId }).first()
-    expect(result).toEqual({ id: insertId, booleanCol: false, jsonCol: null })
+    expect(result).toEqual({ booleanCol: false, id: insertId, jsonCol: null })
   })
 
   test("Boolean null value parsing", () => {
     const insertId = testTable.insert({ booleanCol: null }).insertId
 
     const result = testTable.select(["*"]).where({ id: insertId }).first()
-    expect(result).toEqual({ id: insertId, booleanCol: null, jsonCol: null })
+    expect(result).toEqual({ booleanCol: null, id: insertId, jsonCol: null })
   })
 })
 
 describe("Combined JSON and Boolean parsing tests", () => {
   test("Both JSON and Boolean values in same row", () => {
-    const jsonData = { key: "value", count: 42 }
+    const jsonData = { count: 42, key: "value" }
 
-    const insertId = testTable.insert({ jsonCol: jsonData, booleanCol: true }).insertId
+    const insertId = testTable.insert({ booleanCol: true, jsonCol: jsonData }).insertId
 
     const result = testTable.select(["*"]).where({ id: insertId }).first()
-    expect(result).toEqual({ id: insertId, jsonCol: jsonData, booleanCol: true })
+    expect(result).toEqual({ booleanCol: true, id: insertId, jsonCol: jsonData })
   })
 
   test("Update JSON column preserves Boolean parsing", () => {
     const initialJson = { initial: true }
     const updatedJson = { updated: true }
 
-    const insertId = testTable.insert({ jsonCol: initialJson, booleanCol: false }).insertId
+    const insertId = testTable.insert({ booleanCol: false, jsonCol: initialJson }).insertId
 
     testTable.where({ id: insertId }).update({ jsonCol: updatedJson })
 
     const result = testTable.select(["*"]).where({ id: insertId }).first()
-    expect(result).toEqual({ id: insertId, jsonCol: updatedJson, booleanCol: false })
+    expect(result).toEqual({ booleanCol: false, id: insertId, jsonCol: updatedJson })
   })
 })

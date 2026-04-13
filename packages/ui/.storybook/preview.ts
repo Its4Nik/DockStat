@@ -2,11 +2,16 @@ import type { Preview } from "@storybook/react-vite"
 import "../src/App.css"
 
 const preview: Preview = {
+  initialGlobals: {
+    backgrounds: {
+      value: "main-bg",
+    },
+  },
   parameters: {
     backgrounds: {
       options: {
-        "main-bg": { name: "Tailwind --color-main-bg", value: "var(--color-main-bg)" },
         light: { name: "Light", value: "#F7F9F2" },
+        "main-bg": { name: "Tailwind --color-main-bg", value: "var(--color-main-bg)" },
       },
     },
     controls: {
@@ -14,11 +19,6 @@ const preview: Preview = {
         color: /(background|color)$/i,
         date: /Date$/i,
       },
-    },
-  },
-  initialGlobals: {
-    backgrounds: {
-      value: "main-bg",
     },
   },
 }

@@ -35,7 +35,7 @@ export class Containers extends DockerClientManagerCore {
           }
           // Add results for each host
           for (const [hostId, count] of hostCounts) {
-            perHost.push({ hostId, clientId, containerCount: count })
+            perHost.push({ clientId, containerCount: count, hostId })
           }
         } catch (error) {
           this.logger.error(`Failed to get containers for client ${clientId}: ${error}`)
@@ -49,7 +49,7 @@ export class Containers extends DockerClientManagerCore {
       `Returning container count across ${clients.length} clients: ${total} total, per-host: ${JSON.stringify(perHost)}`
     )
 
-    return { total, perHost }
+    return { perHost, total }
   }
 
   public async getContainer(
@@ -58,15 +58,27 @@ export class Containers extends DockerClientManagerCore {
     containerId: string
   ): Promise<DOCKER.ContainerInfo> {
     return this.sendRequest(clientId, {
-      type: "getContainer",
-      hostId,
       containerId,
+      hostId,
+      type: "getContainer",
     })
   }
 
   // Stats
 
-  public async getAllContainerStats(clientId: number): Promise<DOCKER.ContainerStatsInfo[]> {
+  public async getAllContainerStats(): Promise<DOCKER.ContainerStatsInfo[]> {
+    const clients = this.getAllClients().filter((c) => c.initialized === true)
+
+    const results = await Promise.all(
+      clients.map((client) => this.getAllContainerStatsForClient(client.id))
+    )
+
+    return results.flat()
+  }
+
+  public async getAllContainerStatsForClient(
+    clientId: number
+  ): Promise<DOCKER.ContainerStatsInfo[]> {
     return this.sendRequest(clientId, {
       type: "getAllContainerStats",
     })
@@ -77,8 +89,8 @@ export class Containers extends DockerClientManagerCore {
     hostId: number
   ): Promise<DOCKER.ContainerStatsInfo[]> {
     return this.sendRequest(clientId, {
-      type: "getContainerStatsForHost",
       hostId,
+      type: "getContainerStatsForHost",
     })
   }
 
@@ -88,9 +100,9 @@ export class Containers extends DockerClientManagerCore {
     containerId: string
   ): Promise<DOCKER.ContainerStatsInfo> {
     return this.sendRequest(clientId, {
-      type: "getContainerStats",
-      hostId,
       containerId,
+      hostId,
+      type: "getContainerStats",
     })
   }
 
@@ -102,17 +114,17 @@ export class Containers extends DockerClientManagerCore {
     containerId: string
   ): Promise<void> {
     return this.sendRequest(clientId, {
-      type: "startContainer",
-      hostId,
       containerId,
+      hostId,
+      type: "startContainer",
     })
   }
 
   public async stopContainer(clientId: number, hostId: number, containerId: string): Promise<void> {
     return this.sendRequest(clientId, {
-      type: "stopContainer",
-      hostId,
       containerId,
+      hostId,
+      type: "stopContainer",
     })
   }
 
@@ -122,9 +134,9 @@ export class Containers extends DockerClientManagerCore {
     containerId: string
   ): Promise<void> {
     return this.sendRequest(clientId, {
-      type: "restartContainer",
-      hostId,
       containerId,
+      hostId,
+      type: "restartContainer",
     })
   }
 
@@ -135,10 +147,10 @@ export class Containers extends DockerClientManagerCore {
     force?: boolean
   ): Promise<void> {
     return this.sendRequest(clientId, {
-      type: "removeContainer",
-      hostId,
       containerId,
       force,
+      hostId,
+      type: "removeContainer",
     })
   }
 
@@ -148,9 +160,9 @@ export class Containers extends DockerClientManagerCore {
     containerId: string
   ): Promise<void> {
     return this.sendRequest(clientId, {
-      type: "pauseContainer",
-      hostId,
       containerId,
+      hostId,
+      type: "pauseContainer",
     })
   }
 
@@ -160,9 +172,9 @@ export class Containers extends DockerClientManagerCore {
     containerId: string
   ): Promise<void> {
     return this.sendRequest(clientId, {
-      type: "unpauseContainer",
-      hostId,
       containerId,
+      hostId,
+      type: "unpauseContainer",
     })
   }
 
@@ -173,10 +185,10 @@ export class Containers extends DockerClientManagerCore {
     signal?: string
   ): Promise<void> {
     return this.sendRequest(clientId, {
-      type: "killContainer",
-      hostId,
       containerId,
+      hostId,
       signal,
+      type: "killContainer",
     })
   }
 
@@ -187,10 +199,10 @@ export class Containers extends DockerClientManagerCore {
     newName: string
   ): Promise<void> {
     return this.sendRequest(clientId, {
-      type: "renameContainer",
-      hostId,
       containerId,
+      hostId,
       newName,
+      type: "renameContainer",
     })
   }
 
@@ -208,10 +220,10 @@ export class Containers extends DockerClientManagerCore {
     }
   ): Promise<string> {
     return this.sendRequest(clientId, {
-      type: "getContainerLogs",
-      hostId,
       containerId,
+      hostId,
       options: options,
+      type: "getContainerLogs",
     })
   }
 
@@ -227,11 +239,11 @@ export class Containers extends DockerClientManagerCore {
     exitCode: number
   }> {
     return this.sendRequest(clientId, {
-      type: "execInContainer",
-      hostId,
-      containerId,
       command,
+      containerId,
+      hostId,
       options,
+      type: "execInContainer",
     })
   }
 }

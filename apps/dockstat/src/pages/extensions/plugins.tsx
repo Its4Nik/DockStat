@@ -1,12 +1,11 @@
-import { deletePlugin, installPlugin } from "@Actions"
-import { fetchAllManifests, fetchAllPlugins, fetchAllRepositories } from "@Queries"
-import { Badge, Button, Card, Divider, Input, LinkWithIcon, Modal } from "@dockstat/ui"
+import { Badge, Button, Card, Divider, Input, LinkWithIcon, Modal, Select } from "@dockstat/ui"
 import { repo } from "@dockstat/utils"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { eden } from "@dockstat/utils/react"
 import { Link } from "lucide-react"
 import { useMemo, useState } from "react"
+import { usePluginMutations } from "@/hooks/mutations"
 import { usePageHeading } from "@/hooks/useHeading"
-import { toast } from "@/lib/toast"
+import { api } from "@/lib/api"
 
 const parseRepoLink = repo.parseFromDBToRepoLink
 
@@ -16,7 +15,7 @@ type AvailablePlugin = {
   description: string
   version: string
   repository: string
-  repoType: "local" | "http" | "github" | "gitlab" | "gitea" | "default"
+  repoType: "local" | "http" | "github" | "gitlab" | "gitea"
   manifest: string
   author: {
     name: string
@@ -33,103 +32,47 @@ type AvailablePlugin = {
 export default function PluginBrowser() {
   usePageHeading("Plugin Browser")
 
-  const qc = useQueryClient()
   const [selectedRepo, setSelectedRepo] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedPlugin, setSelectedPlugin] = useState<AvailablePlugin | null>(null)
 
-  const { data: allPlugins } = useQuery({
-    queryFn: fetchAllPlugins,
+  const { data: allPlugins } = eden.useEdenQuery({
     queryKey: ["fetchAllPlugins"],
+    route: api.plugins.all.get,
   })
 
-  const { data: allRepos } = useQuery({
-    queryFn: fetchAllRepositories,
+  const { data: allRepos } = eden.useEdenQuery({
     queryKey: ["fetchAllRepositories"],
+    route: api.repositories.all.get,
   })
 
-  const { data: allManifests } = useQuery({
-    queryFn: fetchAllManifests,
+  const { data: allManifests } = eden.useEdenQuery({
     queryKey: ["fetchAllManifests"],
+    route: api.repositories["all-manifests"].get,
   })
 
-  const installPluginMutation = useMutation({
-    mutationFn: installPlugin,
-    mutationKey: ["installPlugin"],
-    onSuccess: async () => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["fetchAllPlugins"] }),
-        qc.invalidateQueries({ queryKey: ["fetchFrontendPluginRoutes"] }),
-      ])
-    },
-  })
-
-  const deletePluginMutation = useMutation({
-    mutationFn: deletePlugin,
-    mutationKey: ["deletePlugin"],
-    onSuccess: async () => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["fetchAllPlugins"] }),
-        qc.invalidateQueries({ queryKey: ["fetchFrontendPluginRoutes"] }),
-      ])
-    },
-  })
-
-  const handleDelete = async (id: number) => {
-    const res = await deletePluginMutation.mutateAsync(id)
-
-    toast({
-      description: res.message,
-      title: res.success
-        ? `Uninstalled PluginID: ${id}`
-        : `Error while uninstalling PluginID: ${id}`,
-      variant: res.success ? "success" : "error",
-    })
-  }
-
-  const handleInstall = async (plugin: AvailablePlugin) => {
-    const res = await installPluginMutation.mutateAsync({
-      id: plugin.isInstalled && plugin.installedId ? plugin.installedId : null,
-      plugin: "", // handled by backend
-      name: plugin.name,
-      description: plugin.description,
-      version: plugin.version,
-      repository: plugin.repository,
-      repoType: plugin.repoType,
-      manifest: plugin.manifest,
-      author: plugin.author,
-      tags: plugin.tags,
-    })
-
-    toast({
-      title: res.success ? `Installed ${plugin.name}` : `Failed to install ${plugin.name}`,
-      description: res.message,
-      variant: res.success ? "success" : "error",
-    })
-
-    return
-  }
+  const { installPluginMutation, deletePluginMutation } = usePluginMutations()
 
   const availablePlugins = useMemo(() => {
     if (!allManifests) return []
 
     const plugins = Object.entries(allManifests).flatMap(([_, manifest]) =>
-      manifest.data.plugins.map((plugin) => {
+      (manifest.data.plugins || []).map((plugin) => {
         const installedPlugin = allPlugins?.find(
           (p) => p.repository === plugin.repository && p.manifest === plugin.manifest
         )
         return {
           ...plugin,
-          repoSource: manifest.repoSource,
-          isInstalled: !!installedPlugin,
           installedId: installedPlugin?.id ?? null,
+          isInstalled: !!installedPlugin,
+          repoSource: manifest.repoSource,
         }
       })
     )
 
     return plugins.filter(
       (p) =>
-        (selectedRepo === "all" || p.repository === selectedRepo) &&
+        (selectedRepo === "all" || p.repository.toLowerCase() === selectedRepo) &&
         (searchQuery === "" ||
           p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -141,29 +84,32 @@ export default function PluginBrowser() {
     <div className="space-y-6">
       <div className="flex gap-4 items-center">
         <Input
-          type="text"
-          placeholder="Search plugins..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e)}
           className="flex-1 px-4 py-2 border rounded"
+          onChange={(e) => setSearchQuery(e)}
+          placeholder="Search plugins..."
+          type="text"
+          value={searchQuery}
         />
-        <select
+        <Select
+          className="max-w-[50%]"
+          onChange={(value) => setSelectedRepo(value.toLowerCase())}
+          options={[
+            ...(allRepos || []).map((repo) => ({
+              label: repo.name,
+              value: repo.source,
+            })),
+            { label: "All", value: "all" },
+          ]}
           value={selectedRepo}
-          onChange={(e) => setSelectedRepo(e.target.value)}
-          className="px-4 py-2 border rounded"
-        >
-          <option value="all">All Repositories</option>
-          {allRepos?.map((repo) => (
-            <option key={repo.id} value={repo.source}>
-              {repo.name}
-            </option>
-          ))}
-        </select>
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {availablePlugins.map((plugin, idx) => (
-          <Card variant="flat" key={`${plugin.repository}-${plugin.manifest}-${idx}`}>
+          <Card
+            key={`${plugin.repository}-${plugin.manifest}-${idx}`}
+            variant="flat"
+          >
             <div className="space-y-3">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -178,7 +124,10 @@ export default function PluginBrowser() {
               {plugin.tags && plugin.tags.length > 0 && (
                 <div className="flex gap-2 flex-wrap">
                   {plugin.tags.map((tag) => (
-                    <Badge key={tag} unique>
+                    <Badge
+                      key={`${plugin.name}-${plugin.repoSource}-${tag}`}
+                      unique
+                    >
                       {tag}
                     </Badge>
                   ))}
@@ -198,9 +147,9 @@ export default function PluginBrowser() {
                   Repository:{" "}
                   <LinkWithIcon
                     external
-                    iconPosition="right"
-                    icon={<Link size={12} />}
                     href={parseRepoLink(plugin.repoType, plugin.repoSource)}
+                    icon={<Link size={12} />}
+                    iconPosition="right"
                   >
                     {plugin.repository}
                   </LinkWithIcon>
@@ -209,25 +158,34 @@ export default function PluginBrowser() {
 
               <div className="flex gap-2">
                 <Button
+                  className="flex-1"
                   onClick={() => setSelectedPlugin(plugin)}
                   variant="secondary"
-                  className="flex-1"
                 >
                   Details
                 </Button>
                 <Button
-                  onClick={() => handleInstall(plugin)}
-                  disabled={plugin.isInstalled || installPluginMutation.isPending}
                   className="flex-1"
+                  disabled={plugin.isInstalled || installPluginMutation.isPending}
+                  onClick={() =>
+                    installPluginMutation.mutateAsync({
+                      ...plugin,
+                      id: plugin.installedId || null,
+                    })
+                  }
                 >
                   {plugin.isInstalled ? "Installed" : "Install"}
                 </Button>
                 {plugin.isInstalled && plugin.installedId && (
                   <Button
                     className="flex-1"
+                    onClick={() =>
+                      deletePluginMutation.mutateAsync({
+                        // biome-ignore lint/style/noNonNullAssertion: checked if an ID exists
+                        pluginId: plugin.installedId!,
+                      })
+                    }
                     variant="danger"
-                    // biome-ignore lint/style/noNonNullAssertion: checked if an ID exists
-                    onClick={() => handleDelete(plugin.installedId!)}
                   >
                     Delete
                   </Button>
@@ -243,14 +201,16 @@ export default function PluginBrowser() {
       )}
 
       <Modal
-        open={!!selectedPlugin}
         onClose={() => setSelectedPlugin(null)}
+        open={!!selectedPlugin}
         title={selectedPlugin?.name}
-        bodyClasses=""
       >
         {selectedPlugin && (
           <div className="space-y-4 w-60">
-            <Card size="sm" variant="outlined">
+            <Card
+              size="sm"
+              variant="outlined"
+            >
               <h4 className="font-semibold mb-1">Description</h4>
               <p className="text-secondary-text">{selectedPlugin.description}</p>
             </Card>
@@ -268,10 +228,10 @@ export default function PluginBrowser() {
               )}
               {selectedPlugin.author.website && (
                 <a
-                  href={selectedPlugin.author.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="text-sm text-blue-600 hover:underline"
+                  href={selectedPlugin.author.website}
+                  rel="noopener noreferrer"
+                  target="_blank"
                 >
                   Website
                 </a>
@@ -295,9 +255,14 @@ export default function PluginBrowser() {
             )}
 
             <Button
-              onClick={() => handleInstall(selectedPlugin)}
               disabled={selectedPlugin.isInstalled || installPluginMutation.isPending}
-              className="w-full"
+              fullWidth
+              onClick={() =>
+                installPluginMutation.mutateAsync({
+                  ...selectedPlugin,
+                  id: selectedPlugin.installedId || null,
+                })
+              }
             >
               {selectedPlugin.isInstalled ? "Already Installed" : "Install"}
             </Button>

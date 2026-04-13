@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, rmSync } from "node:fs"
 import { join } from "node:path"
-import { column, DB } from "../index"
+import { column, DB } from "../src/index"
 
 /**
  * Tests for backup functionality including:
@@ -46,7 +46,7 @@ describe("Manual backup tests", () => {
     // Clean up
     db.close()
     if (existsSync(testBackupDir)) {
-      rmSync(testBackupDir, { recursive: true, force: true })
+      rmSync(testBackupDir, { force: true, recursive: true })
     }
   })
 
@@ -125,7 +125,7 @@ describe("getPath tests", () => {
 
   afterAll(() => {
     if (existsSync(testDir)) {
-      rmSync(testDir, { recursive: true, force: true })
+      rmSync(testDir, { force: true, recursive: true })
     }
   })
 
@@ -154,7 +154,7 @@ describe("Auto-backup with retention tests", () => {
   beforeAll(() => {
     // Clean up any previous test artifacts
     if (existsSync(autoBackupDir)) {
-      rmSync(autoBackupDir, { recursive: true, force: true })
+      rmSync(autoBackupDir, { force: true, recursive: true })
     }
     mkdirSync(autoBackupDir, { recursive: true })
   })
@@ -164,7 +164,7 @@ describe("Auto-backup with retention tests", () => {
       db.close()
     }
     if (existsSync(autoBackupDir)) {
-      rmSync(autoBackupDir, { recursive: true, force: true })
+      rmSync(autoBackupDir, { force: true, recursive: true })
     }
   })
 
@@ -174,11 +174,11 @@ describe("Auto-backup with retention tests", () => {
 
     db = new DB(dbPath, {
       autoBackup: {
-        enabled: true,
         directory: backupSubDir,
+        enabled: true,
+        filenamePrefix: "auto_test",
         intervalMs: 60000, // 1 minute (we won't wait this long)
         maxBackups: 3,
-        filenamePrefix: "auto_test",
       },
     })
 
@@ -260,7 +260,7 @@ describe("Auto-backup configuration tests", () => {
 
   afterAll(() => {
     if (existsSync(configTestDir)) {
-      rmSync(configTestDir, { recursive: true, force: true })
+      rmSync(configTestDir, { force: true, recursive: true })
     }
   })
 
@@ -270,8 +270,8 @@ describe("Auto-backup configuration tests", () => {
 
     const db = new DB(dbPath, {
       autoBackup: {
-        enabled: true,
         directory: backupDir,
+        enabled: true,
         filenamePrefix: "my_custom_prefix",
         maxBackups: 5,
       },
@@ -290,13 +290,13 @@ describe("Auto-backup configuration tests", () => {
 
     // Ensure directory doesn't exist
     if (existsSync(backupDir)) {
-      rmSync(backupDir, { recursive: true, force: true })
+      rmSync(backupDir, { force: true, recursive: true })
     }
 
     const db = new DB(dbPath, {
       autoBackup: {
-        enabled: true,
         directory: backupDir,
+        enabled: true,
         maxBackups: 5,
       },
     })
@@ -310,8 +310,8 @@ describe("Auto-backup configuration tests", () => {
     // This should not throw, just log a warning
     const memDb = new DB(":memory:", {
       autoBackup: {
-        enabled: true,
         directory: configTestDir,
+        enabled: true,
         maxBackups: 5,
       },
     })
@@ -330,8 +330,8 @@ describe("Auto-backup configuration tests", () => {
 
     const db = new DB(dbPath, {
       autoBackup: {
-        enabled: true,
         directory: backupDir,
+        enabled: true,
         intervalMs: 1000, // 1 second
         maxBackups: 5,
       },

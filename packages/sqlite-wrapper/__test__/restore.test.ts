@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, rmSync } from "node:fs"
 import { join } from "node:path"
-import { column, DB } from "../index"
+import { column, DB } from "../src/index"
 
 /**
  * Tests for database restore functionality including:
@@ -22,7 +22,7 @@ describe("Restore to same database tests", () => {
 
   afterAll(() => {
     if (existsSync(restoreTestDir)) {
-      rmSync(restoreTestDir, { recursive: true, force: true })
+      rmSync(restoreTestDir, { force: true, recursive: true })
     }
   })
 
@@ -72,15 +72,15 @@ describe("Restore to same database tests", () => {
     const table = db.createTable<{ id: number; name: string; active: boolean }>(
       "users",
       {
+        active: column.boolean({ default: true }),
         id: column.id(),
         name: column.text({ notNull: true }),
-        active: column.boolean({ default: true }),
       },
       { ifNotExists: true }
     )
 
-    table.insert({ name: "Alice", active: true })
-    table.insert({ name: "Bob", active: false })
+    table.insert({ active: true, name: "Alice" })
+    table.insert({ active: false, name: "Bob" })
 
     // Backup
     const backupPath = join(restoreTestDir, "structure_backup.db")
@@ -88,7 +88,7 @@ describe("Restore to same database tests", () => {
 
     // Modify data
     table.where({ name: "Alice" }).update({ active: false })
-    table.insert({ name: "Charlie", active: true })
+    table.insert({ active: true, name: "Charlie" })
 
     // Restore
     db.restore(backupPath)
@@ -112,11 +112,11 @@ describe("Restore to same database tests", () => {
     const db = new DB(dbPath)
 
     const table = db.createTable<{ id: number; data: unknown }>("json_test", {
-      id: column.id(),
       data: column.json(),
+      id: column.id(),
     })
 
-    const originalData = { nested: { deep: { value: 42 } }, array: [1, 2, 3] }
+    const originalData = { array: [1, 2, 3], nested: { deep: { value: 42 } } }
     table.insert({ data: originalData })
 
     // Backup
@@ -153,7 +153,7 @@ describe("Restore to different path tests", () => {
 
   afterAll(() => {
     if (existsSync(restoreDiffDir)) {
-      rmSync(restoreDiffDir, { recursive: true, force: true })
+      rmSync(restoreDiffDir, { force: true, recursive: true })
     }
   })
 
@@ -248,7 +248,7 @@ describe("Restore error handling tests", () => {
 
   afterAll(() => {
     if (existsSync(errorTestDir)) {
-      rmSync(errorTestDir, { recursive: true, force: true })
+      rmSync(errorTestDir, { force: true, recursive: true })
     }
   })
 
@@ -292,7 +292,7 @@ describe("Restore with auto-backup integration tests", () => {
 
   afterAll(() => {
     if (existsSync(integrationTestDir)) {
-      rmSync(integrationTestDir, { recursive: true, force: true })
+      rmSync(integrationTestDir, { force: true, recursive: true })
     }
   })
 
@@ -302,10 +302,10 @@ describe("Restore with auto-backup integration tests", () => {
 
     const db = new DB(dbPath, {
       autoBackup: {
-        enabled: true,
         directory: backupDir,
-        maxBackups: 5,
+        enabled: true,
         filenamePrefix: "auto",
+        maxBackups: 5,
       },
     })
 
@@ -349,10 +349,10 @@ describe("Restore with auto-backup integration tests", () => {
 
     const db = new DB(dbPath, {
       autoBackup: {
-        enabled: true,
         directory: backupDir,
-        maxBackups: 5,
+        enabled: true,
         filenamePrefix: "listed",
+        maxBackups: 5,
       },
     })
 
@@ -360,8 +360,8 @@ describe("Restore with auto-backup integration tests", () => {
     const table = db.createTable<{ id: number; counter: number }>(
       "counters",
       {
-        id: column.id(),
         counter: column.integer({ default: 0 }),
+        id: column.id(),
       },
       { ifNotExists: true }
     )

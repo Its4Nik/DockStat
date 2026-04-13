@@ -58,21 +58,21 @@ function TableToolbarInner<T>({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-text" />
           <Input
-            type="text"
-            placeholder={searchPlaceholder}
-            value={searchValue}
-            onChange={onSearchChange}
             className="pl-10"
+            onChange={onSearchChange}
+            placeholder={searchPlaceholder}
+            type="text"
+            value={searchValue}
           />
         </div>
 
         <div className="relative">
           <Button
+            className="flex items-center gap-2"
             onClick={() => {
               setShowSortMenu((v) => !v)
               setShowFilterMenu(false)
             }}
-            className="flex items-center gap-2"
           >
             <ArrowUpDown className="w-4 h-4" />
             <span>Sort</span>
@@ -82,10 +82,10 @@ function TableToolbarInner<T>({
             <div className="absolute z-20 right-0 mt-1 w-48 bg-card-default-bg border border-card-default-border rounded-md shadow-lg">
               {sortableColumns.map((col) => (
                 <button
-                  type="button"
+                  className="w-full text-left px-4 py-2 text-primary-text hover:bg-main-bg/20 first:rounded-t-md last:rounded-b-md"
                   key={String(col.key)}
                   onClick={() => handleSortClick(col.key)}
-                  className="w-full text-left px-4 py-2 text-primary-text hover:bg-main-bg/20 first:rounded-t-md last:rounded-b-md"
+                  type="button"
                 >
                   {col.title}
                 </button>
@@ -96,12 +96,12 @@ function TableToolbarInner<T>({
 
         <div className="relative">
           <Button
-            variant="secondary"
+            className="flex items-center gap-2"
             onClick={() => {
               setShowFilterMenu((v) => !v)
               setShowSortMenu(false)
             }}
-            className="flex items-center gap-2"
+            variant="secondary"
           >
             <Filter className="w-4 h-4" />
             <span>Filter</span>
@@ -111,10 +111,10 @@ function TableToolbarInner<T>({
             <div className="absolute right-0 mt-1 w-48 bg-card-default-bg border border-card-default-border rounded-md shadow-lg z-20">
               {filterableColumns.map((col) => (
                 <button
-                  type="button"
+                  className="w-full text-left px-4 py-2 text-primary-text hover:bg-main-bg/20 first:rounded-t-md last:rounded-b-md"
                   key={String(col.key)}
                   onClick={() => handleFilterClick(col.key)}
-                  className="w-full text-left px-4 py-2 text-primary-text hover:bg-main-bg/20 first:rounded-t-md last:rounded-b-md"
+                  type="button"
                 >
                   {col.title}
                 </button>
@@ -130,14 +130,18 @@ function TableToolbarInner<T>({
             Filter by {columns.find((c) => c.key === filterColumn)?.title}:
           </span>
           <Input
-            type="text"
-            placeholder="Enter filter value..."
-            value={filterValue}
-            onChange={onFilterChange}
-            size="sm"
             className="max-w-xs"
+            onChange={onFilterChange}
+            placeholder="Enter filter value..."
+            size="sm"
+            type="text"
+            value={filterValue}
           />
-          <Button variant="danger" onClick={onClearFilter} size="sm">
+          <Button
+            onClick={onClearFilter}
+            size="sm"
+            variant="danger"
+          >
             <X className="w-4 h-4" />
           </Button>
         </div>

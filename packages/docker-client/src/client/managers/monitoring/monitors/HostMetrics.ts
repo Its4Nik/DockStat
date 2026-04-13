@@ -1,13 +1,13 @@
+import type { Docker } from "@dockstat/docker"
 import type Logger from "@dockstat/logger"
-import type { DATABASE, DOCKER } from "@dockstat/typings"
+import type { DATABASE } from "@dockstat/typings"
 import { retry } from "@dockstat/utils"
-import type Dockerode from "dockerode"
 import { proxyEvent } from "../../../../events/workerEventProxy"
 
 class HostMetricsMonitor {
   private intervalId?: ReturnType<typeof setInterval>
   private logger: Logger
-  private dockerInstances: Map<number, Dockerode>
+  private dockerInstances: Map<number, Docker>
   private hosts: DATABASE.DB_target_host[]
   private options: {
     interval: number
@@ -17,7 +17,7 @@ class HostMetricsMonitor {
 
   constructor(
     baseLogger: Logger,
-    dockerInstances: Map<number, Dockerode>,
+    dockerInstances: Map<number, Docker>,
     hosts: DATABASE.DB_target_host[],
     options: {
       interval: number
@@ -52,7 +52,7 @@ class HostMetricsMonitor {
     this.hosts = hosts
   }
 
-  updateDockerInstances(instances: Map<number, Dockerode>): void {
+  updateDockerInstances(instances: Map<number, Docker>): void {
     this.dockerInstances = instances
   }
 
@@ -62,10 +62,10 @@ class HostMetricsMonitor {
       try {
         const metrics = await this.getHostMetrics(host.id || 0)
         proxyEvent("host:metrics", {
-          hostId: host.id || 0,
           docker_client_id: host.docker_client_id,
-          metrics,
+          hostId: host.id || 0,
           hostName: host.name,
+          metrics,
         })
       } catch (error) {
         proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
@@ -77,7 +77,7 @@ class HostMetricsMonitor {
     await Promise.allSettled(promises)
   }
 
-  private async getHostMetrics(hostId: number): Promise<DOCKER.HostMetrics> {
+  private async getHostMetrics(hostId: number) {
     this.logger.debug(`Collecting Host Metrics for ${JSON.stringify({ hostId })}`)
     const docker = this.dockerInstances.get(hostId)
     const host = this.hosts.find((h) => h.id === hostId)
@@ -88,11 +88,11 @@ class HostMetricsMonitor {
     }
 
     const [info, version] = await Promise.all([
-      retry<DOCKER.DockerAPIResponse["systemInfo"]>(() => docker.info(), {
+      retry(() => docker.system.info(), {
         attempts: this.options.retryAttempts,
         delay: this.options.retryDelay,
       }),
-      retry<DOCKER.DockerAPIResponse["dockerVersion"]>(() => docker.version(), {
+      retry(() => docker.system.version(), {
         attempts: this.options.retryAttempts,
         delay: this.options.retryDelay,
       }),
@@ -101,21 +101,21 @@ class HostMetricsMonitor {
     this.logger.debug(`Collected Host Metrics for ${JSON.stringify({ hostId })}`)
 
     return {
+      apiVersion: version.ApiVersion || "unknown",
+      architecture: info.Architecture || "unknown",
+      containers: info.Containers || 0,
+      containersPaused: info.ContainersPaused || 0,
+      containersRunning: info.ContainersRunning || 0,
+      containersStopped: info.ContainersStopped || 0,
+      dockerVersion: version.Version || "unknown",
       hostId,
       hostName: host.name,
-      dockerVersion: version.Version,
-      apiVersion: version.ApiVersion,
-      os: info.OperatingSystem,
-      architecture: info.Architecture,
-      totalMemory: info.MemTotal,
-      totalCPU: info.NCPU,
-      kernelVersion: info.KernelVersion,
-      containers: info.Containers,
-      containersRunning: info.ContainersRunning,
-      containersStopped: info.ContainersStopped,
-      containersPaused: info.ContainersPaused,
-      images: info.Images,
-      systemTime: info.SystemTime,
+      images: info.Images || 0,
+      kernelVersion: info.KernelVersion || "unknown",
+      os: info.OperatingSystem || "unknown",
+      systemTime: info.SystemTime || new Date().toISOString(),
+      totalCPU: info.NCPU || 0,
+      totalMemory: info.MemTotal || 0,
     }
   }
 }

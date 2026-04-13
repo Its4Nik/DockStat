@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "@dockstat/plugin-builder": "1.0.8",
+    "@elysiajs/eden": "^1.4.6"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "module": "index.ts",
+  "name": "dockstacks",
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "private": true,
+  "type": "module"
+}

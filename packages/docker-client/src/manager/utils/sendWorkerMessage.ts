@@ -3,29 +3,51 @@ import type { Worker } from "bun"
 import type { WorkerRequest, WorkerResponse } from "../../shared/types"
 import { VALID_REQUEST_TYPES } from "./consts"
 
-export function sendWorkerMessage<T>(
+export function sendWorkerMessage(
   worker: Worker,
   request: Omit<WorkerRequest, "requestId">,
   timeout = 30000
-): Promise<WorkerResponse<T>> {
+): Promise<WorkerResponse> {
   const requestId = http.requestId.getRequestID()
   const message = { ...request, requestId } as WorkerRequest
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const timer = setTimeout(() => {
       worker.removeEventListener("message", handler)
-      reject(new Error(`Worker request timed out: ${request.type}`))
+      worker.removeEventListener("error", errorHandler)
+
+      resolve({
+        error: `Worker request timed out: ${request.type}`,
+        requestId,
+        success: false,
+      })
     }, timeout)
 
-    const handler = (event: MessageEvent<WorkerResponse<T>>) => {
+    const handler = (event: MessageEvent<WorkerResponse>) => {
       if (event.data.requestId === requestId) {
         clearTimeout(timer)
         worker.removeEventListener("message", handler)
+        worker.removeEventListener("error", errorHandler)
+
+        // Pass through the worker's response (whether success or error)
         resolve(event.data)
       }
     }
 
+    const errorHandler = (err: ErrorEvent) => {
+      clearTimeout(timer)
+      worker.removeEventListener("message", handler)
+      worker.removeEventListener("error", errorHandler)
+
+      resolve({
+        error: `Worker crashed: ${err.message}`,
+        requestId,
+        success: false,
+      })
+    }
+
     worker.addEventListener("message", handler)
+    worker.addEventListener("error", errorHandler)
     worker.postMessage(message)
   })
 }

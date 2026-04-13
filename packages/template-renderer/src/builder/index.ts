@@ -29,8 +29,8 @@ export class WidgetBuilder<T extends WidgetType> {
 
   constructor(type: T, props: WidgetRegistry[T]) {
     this.node = {
-      type,
       props,
+      type,
     } as WidgetNode
   }
 
@@ -104,22 +104,22 @@ export const widgets = {
   badge: (props: WidgetRegistry["badge"]) => widget("badge", props),
   button: (props: WidgetRegistry["button"]) => widget("button", props),
   card: (props: WidgetRegistry["card"]) => widget("card", props),
-  cardHeader: (props: WidgetRegistry["cardHeader"]) => widget("cardHeader", props),
   cardBody: (props: WidgetRegistry["cardBody"]) => widget("cardBody", props),
   cardFooter: (props: WidgetRegistry["cardFooter"]) => widget("cardFooter", props),
-  divider: (props: WidgetRegistry["divider"]) => widget("divider", props),
-  input: (props: WidgetRegistry["input"]) => widget("input", props),
+  cardHeader: (props: WidgetRegistry["cardHeader"]) => widget("cardHeader", props),
   checkbox: (props: WidgetRegistry["checkbox"]) => widget("checkbox", props),
   checkboxGroup: (props: WidgetRegistry["checkboxGroup"]) => widget("checkboxGroup", props),
-  toggle: (props: WidgetRegistry["toggle"]) => widget("toggle", props),
+  container: (props: WidgetRegistry["container"]) => widget("container", props),
+  divider: (props: WidgetRegistry["divider"]) => widget("divider", props),
   hoverBubble: (props: WidgetRegistry["hoverBubble"]) => widget("hoverBubble", props),
+  input: (props: WidgetRegistry["input"]) => widget("input", props),
   link: (props: WidgetRegistry["link"]) => widget("link", props),
   modal: (props: WidgetRegistry["modal"]) => widget("modal", props),
   slider: (props: WidgetRegistry["slider"]) => widget("slider", props),
   slides: (props: WidgetRegistry["slides"]) => widget("slides", props),
   table: (props: WidgetRegistry["table"]) => widget("table", props),
   text: (props: WidgetRegistry["text"]) => widget("text", props),
-  container: (props: WidgetRegistry["container"]) => widget("container", props),
+  toggle: (props: WidgetRegistry["toggle"]) => widget("toggle", props),
 } as const
 
 /**
@@ -276,39 +276,6 @@ export function fragment(id: string, name: string): FragmentBuilder {
  */
 export const actions = {
   /**
-   * Create a setState action
-   */
-  setState(id: string, updates: Record<string, unknown>): ActionConfig {
-    return {
-      id,
-      type: "setState",
-      stateUpdates: updates,
-    }
-  },
-
-  /**
-   * Create a navigate action
-   */
-  navigate(id: string, path: string): ActionConfig {
-    return {
-      id,
-      type: "navigate",
-      path,
-    }
-  },
-
-  /**
-   * Create a custom action
-   */
-  custom(id: string, handler: string): ActionConfig {
-    return {
-      id,
-      type: "custom",
-      handler,
-    }
-  },
-
-  /**
    * Create an API action that calls a plugin backend route
    */
   api(
@@ -325,16 +292,38 @@ export const actions = {
     }
   ): ActionConfig {
     return {
-      id,
-      type: "api",
       apiRoute,
-      method: options?.method ?? "POST",
       body: options?.body,
-      onSuccess: options?.onSuccess,
-      onError: options?.onError,
-      showLoading: options?.showLoading,
       confirm: options?.confirm,
       debounce: options?.debounce,
+      id,
+      method: options?.method ?? "POST",
+      onError: options?.onError,
+      onSuccess: options?.onSuccess,
+      showLoading: options?.showLoading,
+      type: "api",
+    }
+  },
+
+  /**
+   * Create a custom action
+   */
+  custom(id: string, handler: string): ActionConfig {
+    return {
+      handler,
+      id,
+      type: "custom",
+    }
+  },
+
+  /**
+   * Create a navigate action
+   */
+  navigate(id: string, path: string): ActionConfig {
+    return {
+      id,
+      path,
+      type: "navigate",
     }
   },
 
@@ -344,8 +333,18 @@ export const actions = {
   reload(id: string, loaderIds?: string[]): ActionConfig {
     return {
       id,
-      type: "reload",
       loaderIds,
+      type: "reload",
+    }
+  },
+  /**
+   * Create a setState action
+   */
+  setState(id: string, updates: Record<string, unknown>): ActionConfig {
+    return {
+      id,
+      stateUpdates: updates,
+      type: "setState",
     }
   },
 } as const
@@ -354,6 +353,34 @@ export const actions = {
  * Loader builder helpers
  */
 export const loaders = {
+  /**
+   * Create a cached loader
+   */
+  cached(
+    id: string,
+    apiRoute: string,
+    ttl: number,
+    options?: {
+      method?: "GET" | "POST"
+      body?: unknown
+      stateKey?: string
+      dataKey?: string
+      cacheKey?: string
+    }
+  ): LoaderConfig {
+    return {
+      apiRoute,
+      body: options?.body,
+      cache: {
+        key: options?.cacheKey,
+        ttl,
+      },
+      dataKey: options?.dataKey ?? id,
+      id,
+      method: options?.method ?? "GET",
+      stateKey: options?.stateKey,
+    }
+  },
   /**
    * Create a basic data loader
    */
@@ -368,33 +395,12 @@ export const loaders = {
     }
   ): LoaderConfig {
     return {
-      id,
       apiRoute,
-      method: options?.method ?? "GET",
       body: options?.body,
-      stateKey: options?.stateKey,
       dataKey: options?.dataKey ?? id,
-    }
-  },
-
-  /**
-   * Create a loader that stores data in state
-   */
-  toState(
-    id: string,
-    apiRoute: string,
-    stateKey: string,
-    options?: {
-      method?: "GET" | "POST"
-      body?: unknown
-    }
-  ): LoaderConfig {
-    return {
       id,
-      apiRoute,
       method: options?.method ?? "GET",
-      body: options?.body,
-      stateKey,
+      stateKey: options?.stateKey,
     }
   },
 
@@ -414,45 +420,37 @@ export const loaders = {
     }
   ): LoaderConfig {
     return {
-      id,
       apiRoute,
-      method: options?.method ?? "GET",
       body: options?.body,
-      stateKey: options?.stateKey,
       dataKey: options?.dataKey ?? id,
+      id,
+      method: options?.method ?? "GET",
       polling: {
-        interval,
         enabled: options?.enabled ?? true,
+        interval,
       },
+      stateKey: options?.stateKey,
     }
   },
 
   /**
-   * Create a cached loader
+   * Create a loader that stores data in state
    */
-  cached(
+  toState(
     id: string,
     apiRoute: string,
-    ttl: number,
+    stateKey: string,
     options?: {
       method?: "GET" | "POST"
       body?: unknown
-      stateKey?: string
-      dataKey?: string
-      cacheKey?: string
     }
   ): LoaderConfig {
     return {
-      id,
       apiRoute,
-      method: options?.method ?? "GET",
       body: options?.body,
-      stateKey: options?.stateKey,
-      dataKey: options?.dataKey ?? id,
-      cache: {
-        ttl,
-        key: options?.cacheKey,
-      },
+      id,
+      method: options?.method ?? "GET",
+      stateKey,
     }
   },
 } as const
@@ -462,23 +460,23 @@ export const loaders = {
  */
 export const layouts = {
   /**
+   * Centered container
+   */
+  centered(maxWidth?: string | number, options?: Partial<LayoutConfig>): LayoutConfig {
+    return {
+      centered: true,
+      maxWidth,
+      type: "block",
+      ...options,
+    }
+  },
+  /**
    * Flex column layout
    */
   column(options?: Partial<LayoutConfig>): LayoutConfig {
     return {
-      type: "flex",
       direction: "column",
-      ...options,
-    }
-  },
-
-  /**
-   * Flex row layout
-   */
-  row(options?: Partial<LayoutConfig>): LayoutConfig {
-    return {
       type: "flex",
-      direction: "row",
       ...options,
     }
   },
@@ -488,20 +486,19 @@ export const layouts = {
    */
   grid(columns: number | string, options?: Partial<LayoutConfig>): LayoutConfig {
     return {
-      type: "grid",
       columns,
+      type: "grid",
       ...options,
     }
   },
 
   /**
-   * Centered container
+   * Flex row layout
    */
-  centered(maxWidth?: string | number, options?: Partial<LayoutConfig>): LayoutConfig {
+  row(options?: Partial<LayoutConfig>): LayoutConfig {
     return {
-      type: "block",
-      centered: true,
-      maxWidth,
+      direction: "row",
+      type: "flex",
       ...options,
     }
   },

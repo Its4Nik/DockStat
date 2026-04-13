@@ -7,14 +7,6 @@ const wsIntervals = new WeakMap<object, Timer>()
 const RSS_INTERVAL_SEC = 2 * 1000
 
 export const RssSocket = new Elysia().ws("/rss", {
-  response: t.String(),
-
-  open(ws) {
-    const sendRss = () => ws.send(formatBytes(memoryUsage().current))
-    sendRss()
-    wsIntervals.set(ws, setInterval(sendRss, RSS_INTERVAL_SEC))
-  },
-
   close(ws) {
     const interval = wsIntervals.get(ws)
     if (interval) {
@@ -22,4 +14,11 @@ export const RssSocket = new Elysia().ws("/rss", {
       wsIntervals.delete(ws)
     }
   },
+
+  open(ws) {
+    const sendRss = () => ws.send(formatBytes(memoryUsage().current))
+    sendRss()
+    wsIntervals.set(ws, setInterval(sendRss, RSS_INTERVAL_SEC))
+  },
+  response: t.String(),
 })

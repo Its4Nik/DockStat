@@ -3,17 +3,17 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { Toggle } from "../components/Forms/Toggle"
 
 const meta: Meta<typeof Toggle> = {
-  title: "Inputs/Toggle",
-  component: Toggle,
   argTypes: {
-    size: {
-      control: "radio",
-      options: ["sm", "md", "lg"],
-      defaultValue: "md",
-    },
     disabled: { control: "boolean" },
     label: { control: "text" },
+    size: {
+      control: "radio",
+      defaultValue: "md",
+      options: ["sm", "md", "lg"],
+    },
   },
+  component: Toggle,
+  title: "Inputs/Toggle",
 }
 
 export default meta
@@ -26,8 +26,8 @@ type Story = StoryObj<typeof Toggle>
 export const Interactive: Story = {
   args: {
     checked: false,
-    size: "md",
     label: "Enable notifications",
+    size: "md",
   },
   render: (args) => {
     // eslint-disable-next-line
@@ -38,7 +38,12 @@ export const Interactive: Story = {
       args.onChange?.(checked)
     }
 
-    return <Toggle {...args} onChange={handleChange} />
+    return (
+      <Toggle
+        {...args}
+        onChange={handleChange}
+      />
+    )
   },
 }
 
@@ -48,9 +53,19 @@ export const Interactive: Story = {
 export const Sizes: Story = {
   render: () => (
     <div className="w-full flex gap-8">
-      <Toggle size="sm" label="Small" />
-      <Toggle size="md" label="Medium" checked />
-      <Toggle size="lg" label="Large" />
+      <Toggle
+        label="Small"
+        size="sm"
+      />
+      <Toggle
+        checked
+        label="Medium"
+        size="md"
+      />
+      <Toggle
+        label="Large"
+        size="lg"
+      />
     </div>
   ),
 }

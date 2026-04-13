@@ -3,7 +3,7 @@ import { NavLink, type NavLinkRenderProps } from "react-router"
 
 export interface LinkWithIconProps {
   href: string
-  children: React.ReactNode
+  children?: React.ReactNode
   icon?: React.ReactNode
   iconPosition?: "left" | "right"
   className?: string
@@ -28,11 +28,12 @@ export const LinkWithIcon: React.FC<LinkWithIconProps> = ({
   if (typeof navLinkActive === "function") {
     return (
       <NavLink
-        to={href}
-        target={external ? "_blank" : undefined}
-        rel={external ? "noopener noreferrer" : undefined}
         className={navLinkActive}
+        end
+        rel={external ? "noopener noreferrer" : undefined}
         style={style}
+        target={external ? "_blank" : undefined}
+        to={href}
       >
         {isLeft && <span className="mr-1">{icon}</span>}
         {children}
@@ -43,10 +44,10 @@ export const LinkWithIcon: React.FC<LinkWithIconProps> = ({
 
   return (
     <a
-      href={href}
-      target={external ? "_blank" : undefined}
-      rel={external ? "noopener noreferrer" : undefined}
       className={`inline-flex items-center text-icon-link-text hover:icon-link-text-hover transition-colors hover:underline ${className}`}
+      href={href}
+      rel={external ? "noopener noreferrer" : undefined}
+      target={external ? "_blank" : undefined}
     >
       {isLeft && <span className="mr-1">{icon}</span>}
       {children}

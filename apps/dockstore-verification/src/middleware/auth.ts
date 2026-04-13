@@ -58,19 +58,19 @@ export interface AuthConfig {
  * Default authentication configuration
  */
 export const defaultAuthConfig: AuthConfig = {
-  enabled: process.env.AUTH_ENABLED === "true",
-  publicRoutes: ["/health", "/public/*", "/api/compare/*", "/api/public/*", "/status"],
-  oidc: {
-    issuer: process.env.OIDC_ISSUER,
-    clientId: process.env.OIDC_CLIENT_ID,
-    clientSecret: process.env.OIDC_CLIENT_SECRET,
-    redirectUri: process.env.OIDC_REDIRECT_URI,
-    scope: process.env.OIDC_SCOPE || "openid profile email",
-  },
   apiKeys: {
     enabled: process.env.API_KEYS_ENABLED === "true",
     headerName: "X-API-Key",
   },
+  enabled: process.env.AUTH_ENABLED === "true",
+  oidc: {
+    clientId: process.env.OIDC_CLIENT_ID,
+    clientSecret: process.env.OIDC_CLIENT_SECRET,
+    issuer: process.env.OIDC_ISSUER,
+    redirectUri: process.env.OIDC_REDIRECT_URI,
+    scope: process.env.OIDC_SCOPE || "openid profile email",
+  },
+  publicRoutes: ["/health", "/public/*", "/api/compare/*", "/api/public/*", "/status"],
 }
 
 /**
@@ -105,8 +105,8 @@ function validateApiKey(_apiKey: string): AuthContext["user"] | null {
 
   // Return a placeholder user for API key auth
   return {
-    id: "api-key-user",
     email: "api@dockstore.local",
+    id: "api-key-user",
     name: "API Key User",
     roles: ["api"],
   }
@@ -169,8 +169,8 @@ export function createAuthMiddleware(config: Partial<AuthConfig> = {}) {
 
       // Initialize auth context
       let authContext: AuthContext = {
-        user: null,
         isAuthenticated: false,
+        user: null,
       }
 
       // Skip authentication for public routes
@@ -184,13 +184,13 @@ export function createAuthMiddleware(config: Partial<AuthConfig> = {}) {
         logger.debug("Authentication disabled, allowing access")
         // Return a mock user when auth is disabled (for development)
         authContext = {
+          isAuthenticated: true,
           user: {
-            id: "dev-user",
             email: "dev@dockstore.local",
+            id: "dev-user",
             name: "Development User",
             roles: ["admin"],
           },
-          isAuthenticated: true,
         }
         return { auth: authContext }
       }
@@ -205,8 +205,8 @@ export function createAuthMiddleware(config: Partial<AuthConfig> = {}) {
           if (user) {
             logger.info(`API key authentication successful for: ${user.email}`)
             authContext = {
-              user,
               isAuthenticated: true,
+              user,
             }
             return { auth: authContext }
           }
@@ -222,8 +222,8 @@ export function createAuthMiddleware(config: Partial<AuthConfig> = {}) {
         if (user) {
           logger.info(`OIDC authentication successful for: ${user.email}`)
           authContext = {
-            user,
             isAuthenticated: true,
+            user,
           }
           return { auth: authContext }
         }
@@ -246,8 +246,8 @@ export function createAuthMiddleware(config: Partial<AuthConfig> = {}) {
         set.status = 401
         return {
           error: "Unauthorized",
-          message: "Authentication required to access this resource",
           hint: "Provide a valid API key in X-API-Key header or Bearer token in Authorization header",
+          message: "Authentication required to access this resource",
         }
       }
     })

@@ -1,0 +1,59 @@
+{
+  "author": "Its4Nik",
+  "bugs": {
+    "url": "https://github.com/Its4Nik/DockStat/issues"
+  },
+  "dependencies": {
+    "@dockstat/logger": "workspace:",
+    "dockerode": "^4.0.9"
+  },
+  "description": "A TypeScript/JavaScript library for Docker Swarm operations",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/dockerode": "^3.3.44"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client/index.ts",
+    "./modules/configs": "./src/modules/configs/index.ts",
+    "./modules/networks": "./src/modules/networks/index.ts",
+    "./modules/nodes": "./src/modules/nodes/index.ts",
+    "./modules/secrets": "./src/modules/secrets/index.ts",
+    "./modules/services": "./src/modules/services/index.ts",
+    "./modules/stacks": "./src/modules/stacks/index.ts",
+    "./modules/swarm": "./src/modules/swarm/index.ts",
+    "./modules/tasks": "./src/modules/tasks/index.ts",
+    "./types": "./src/types.ts"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "homepage": "https://github.com/Its4Nik/DockStat/tree/main/packages/docker-swarm",
+  "main": "./src/index.ts",
+  "name": "@dockstat/docker-swarm",
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "repository": {
+    "directory": "packages/docker-swarm",
+    "type": "git",
+    "url": "https://github.com/Its4Nik/DockStat"
+  },
+  "scripts": {
+    "check-types": "bunx tsc --noEmit",
+    "clean": "rm -rf dist",
+    "dev": "bun run --watch src/index.ts",
+    "format": "biome format --write",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "prepublishOnly": "bun run clean && bun run build",
+    "test": "bun test"
+  },
+  "type": "module",
+  "types": "./src/index.ts",
+  "version": "1.0.0"
+}

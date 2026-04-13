@@ -3,58 +3,58 @@ import { t } from "elysia"
 
 export namespace DockerModel {
   export const status = t.Object({
-    hosts: t.Array(t.Object({ name: t.String(), id: t.Integer(), clientId: t.Integer() })),
-    totalWorkers: t.Integer(),
     activeWorkers: t.Integer(),
-    totalHosts: t.Integer(),
-    totalClients: t.Integer(),
     averageHostsPerWorker: t.Integer(),
+    hosts: t.Array(t.Object({ clientId: t.Integer(), id: t.Integer(), name: t.String() })),
+    totalClients: t.Integer(),
+    totalHosts: t.Integer(),
+    totalWorkers: t.Integer(),
     workers: t.Array(
       t.Object({
-        workerId: t.Number(),
+        activeStreams: t.Number(),
         clientId: t.Number(),
         clientName: t.String(),
         hostsManaged: t.Number(),
-        activeStreams: t.Number(),
-        isMonitoring: t.Boolean(),
         initialized: t.Boolean(),
+        isMonitoring: t.Boolean(),
         memoryUsage: t.Object({
-          rss: t.Number(),
+          external: t.Number(),
           heapTotal: t.Number(),
           heapUsed: t.Number(),
-          external: t.Number(),
+          rss: t.Number(),
         }),
         uptime: t.Number(),
+        workerId: t.Number(),
       })
     ),
   })
   export const error = t.Object({
-    message: t.String(),
     error: t.Unknown(),
+    message: t.String(),
   })
 
   export const poolStatus = t.Object({
-    totalWorkers: t.Integer(),
     activeWorkers: t.Integer(),
-    totalHosts: t.Integer(),
-    totalClients: t.Integer(),
     averageHostsPerWorker: t.Integer(),
+    totalClients: t.Integer(),
+    totalHosts: t.Integer(),
+    totalWorkers: t.Integer(),
     workers: t.Array(
       t.Object({
-        workerId: t.Number(),
+        activeStreams: t.Number(),
         clientId: t.Number(),
         clientName: t.String(),
         hostsManaged: t.Number(),
-        activeStreams: t.Number(),
-        isMonitoring: t.Boolean(),
         initialized: t.Boolean(),
+        isMonitoring: t.Boolean(),
         memoryUsage: t.Object({
-          rss: t.Number(),
+          external: t.Number(),
           heapTotal: t.Number(),
           heapUsed: t.Number(),
-          external: t.Number(),
+          rss: t.Number(),
         }),
         uptime: t.Number(),
+        workerId: t.Number(),
       })
     ),
   })
@@ -62,8 +62,8 @@ export namespace DockerModel {
   export const initAllClientsRes = t.Array(
     t.Object({
       id: t.Number(),
-      name: t.String(),
       initialized: t.MaybeEmpty(t.Boolean()),
+      name: t.String(),
     })
   )
 
@@ -72,9 +72,9 @@ export namespace DockerModel {
     options: t.Nullable(DockerAdapterOptionsSchema),
   })
   export const registerClientSuccess = t.Object({
-    success: t.Boolean(),
-    message: t.String(),
     clientId: t.Number(),
+    message: t.String(),
+    success: t.Boolean(),
   })
 
   export const updateClientBody = t.Object({
@@ -84,16 +84,16 @@ export namespace DockerModel {
   })
 
   export const updateClientSuccess = t.Object({
-    success: t.Literal(true),
-    message: t.String(),
     clientId: t.Number(),
+    message: t.String(),
+    success: t.Literal(true),
   })
 
   export const allHosts = t.Array(
     t.Object({
-      name: t.String(),
-      id: t.Number(),
       clientId: t.Number(),
+      id: t.Number(),
+      name: t.String(),
       reachable: t.Boolean(),
     })
   )
@@ -102,18 +102,18 @@ export namespace DockerModel {
     clientId: t.Number(),
     hostname: t.String(),
     name: t.String(),
-    secure: t.Boolean(),
     port: t.Number(),
+    secure: t.Boolean(),
   })
 
   export const updateBody = t.Object({
     clientId: t.Number(),
     host: t.Object({
-      id: t.Number(),
       host: t.String(),
+      id: t.Number(),
       name: t.String(),
-      secure: t.Boolean(),
       port: t.Number(),
+      secure: t.Boolean(),
     }),
   })
 }

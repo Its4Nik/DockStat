@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, test } from "bun:test"
-import { column, DB } from "../index"
+import { column, DB } from "../src/index"
 
 /**
  * Tests for automatic detection of JSON and BOOLEAN columns from schema definition.
@@ -17,11 +17,11 @@ const autoTable = autoDb.createTable<{
   metadata: unknown | null
   isVerified: boolean | null
 }>("auto_table", {
-  id: column.id(),
   data: column.json({ notNull: false }),
+  id: column.id(),
   isActive: column.boolean({ notNull: false }),
-  metadata: column.json({ notNull: false }),
   isVerified: column.boolean({ notNull: false }),
+  metadata: column.json({ notNull: false }),
 })
 
 afterAll(() => {
@@ -101,13 +101,13 @@ describe("Auto-detection of BOOLEAN columns", () => {
 
 describe("Combined auto-detection of JSON and BOOLEAN", () => {
   test("Auto-detect both JSON and BOOLEAN in same row", () => {
-    const jsonData = { status: "active", metadata: { version: 1 } }
+    const jsonData = { metadata: { version: 1 }, status: "active" }
 
     const insertId = autoTable.insert({
       data: jsonData,
       isActive: true,
-      metadata: { extra: "info" },
       isVerified: false,
+      metadata: { extra: "info" },
     }).insertId
 
     const result = autoTable.select(["*"]).where({ id: insertId }).first()
@@ -120,7 +120,7 @@ describe("Combined auto-detection of JSON and BOOLEAN", () => {
 
   test("Auto-detection works with updates", () => {
     const initialJson = { initial: true }
-    const updatedJson = { updated: true, count: 99 }
+    const updatedJson = { count: 99, updated: true }
 
     const insertId = autoTable.insert({ data: initialJson, isActive: false }).insertId
 
@@ -162,10 +162,10 @@ describe("Auto-detection with explicit parser override", () => {
     }>(
       "mixed_table",
       {
+        boolA: column.boolean({ notNull: false }),
         id: column.id(),
         jsonA: column.json({ notNull: false }),
         jsonB: column.json({ notNull: false }),
-        boolA: column.boolean({ notNull: false }),
       },
       {
         // Only explicitly specify jsonA, but jsonB and boolA should still be auto-detected
@@ -175,7 +175,7 @@ describe("Auto-detection with explicit parser override", () => {
       }
     )
 
-    const testData = { jsonA: { a: 1 }, jsonB: { b: 2 }, boolA: true }
+    const testData = { boolA: true, jsonA: { a: 1 }, jsonB: { b: 2 } }
     const insertId = mixedTable.insert(testData).insertId
 
     const result = mixedTable.select(["*"]).where({ id: insertId }).first()

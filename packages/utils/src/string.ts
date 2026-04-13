@@ -67,11 +67,11 @@ export function slugify(str: string): string {
  */
 export function escapeHtml(str: string): string {
   const htmlEscapes: Record<string, string> = {
+    "'": "&#39;",
+    '"': "&quot;",
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
   }
 
   return str.replace(/[&<>"']/g, (char) => String(htmlEscapes[char]))

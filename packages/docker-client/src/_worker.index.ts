@@ -39,14 +39,14 @@ self.onmessage = async (event: MessageEvent<InboundMessage>) => {
       }
 
       self.postMessage({
-        type: "__init_complete__",
         success: true,
+        type: "__init_complete__",
       })
     } catch (error) {
       self.postMessage({
-        type: "__init_complete__",
-        success: false,
         error: error instanceof Error ? error.message : String(error),
+        success: false,
+        type: "__init_complete__",
       })
     }
     return
@@ -56,18 +56,18 @@ self.onmessage = async (event: MessageEvent<InboundMessage>) => {
   if (msg.type === "__get_metrics__") {
     if (!client) {
       self.postMessage({
-        type: "__metrics__",
         data: null,
+        type: "__metrics__",
       })
       return
     }
     self.postMessage({
-      type: "__metrics__",
       data: {
         ...client.getMetrics(),
         clientId,
         clientName,
       },
+      type: "__metrics__",
     })
     return
   }
@@ -76,11 +76,15 @@ self.onmessage = async (event: MessageEvent<InboundMessage>) => {
   const request = msg as WorkerRequest
   const requestId = request.requestId ?? ""
 
-  const ok = <T>(data: T): WorkerResponse<T> => ({ success: true, data, requestId })
+  const ok = <T>(data: T): WorkerResponse<T> => ({
+    data,
+    requestId,
+    success: true,
+  })
   const fail = (error: unknown): WorkerResponse<never> => ({
-    success: false,
     error: error instanceof Error ? error.message : String(error),
     requestId,
+    success: false,
   })
 
   try {
@@ -95,6 +99,9 @@ self.onmessage = async (event: MessageEvent<InboundMessage>) => {
         break
       case "ping":
         result = await c.ping()
+        break
+      case "pingHost":
+        result = await c.pingHost(request.hostId)
         break
       case "addHost":
         result = c.addHost(request.data)
@@ -290,11 +297,11 @@ self.onmessage = async (event: MessageEvent<InboundMessage>) => {
         const subs = c.streamManager?.getSubscriptions(request.connectionId) ?? []
         // Return a structured-cloneable view (omit callback functions)
         result = subs.map(({ id, channel, options, active, lastActivity }) => ({
-          id,
-          channel,
-          options,
           active,
+          channel,
+          id,
           lastActivity,
+          options,
         }))
         break
       }

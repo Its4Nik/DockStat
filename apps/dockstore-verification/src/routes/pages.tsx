@@ -50,14 +50,14 @@ function getDashboardStats(): DashboardStats {
   const totalRepositories = repositoriesTable.select(["id"]).all().length
 
   return {
-    totalPlugins,
-    verifiedPlugins: verifiedPlugins?.count || 0,
-    totalVersions,
-    verifiedVersions,
-    safePlugins,
-    unsafePlugins,
     pendingReview,
+    safePlugins,
+    totalPlugins,
     totalRepositories,
+    totalVersions,
+    unsafePlugins,
+    verifiedPlugins: verifiedPlugins?.count || 0,
+    verifiedVersions,
   }
 }
 
@@ -144,7 +144,13 @@ const pageRoutes = new Elysia()
     const recentPlugins = getPluginsWithVerification().slice(0, 10)
     const repositories = getRepositoriesWithStats()
 
-    return <Dashboard stats={stats} recentPlugins={recentPlugins} repositories={repositories} />
+    return (
+      <Dashboard
+        recentPlugins={recentPlugins}
+        repositories={repositories}
+        stats={stats}
+      />
+    )
   })
 
   // Plugins list
@@ -171,13 +177,18 @@ const pageRoutes = new Elysia()
 
     if (isHtmx) {
       // Return just the content for HTMX updates
-      return <PluginsContent plugins={plugins} view={view} />
+      return (
+        <PluginsContent
+          plugins={plugins}
+          view={view}
+        />
+      )
     }
 
     return (
       <PluginsView
-        plugins={plugins}
         filter={filter as "all" | "verified" | "unverified" | "safe" | "unsafe"}
+        plugins={plugins}
         search={search}
         view={view}
       />
@@ -194,7 +205,10 @@ const pageRoutes = new Elysia()
       return (
         <div class="text-center py-16">
           <h1 class="text-2xl font-bold text-white">Plugin not found</h1>
-          <a href="/plugins" class="text-blue-400 hover:text-blue-300 mt-4 inline-block">
+          <a
+            class="text-blue-400 hover:text-blue-300 mt-4 inline-block"
+            href="/plugins"
+          >
             ← Back to plugins
           </a>
         </div>
@@ -220,7 +234,10 @@ const pageRoutes = new Elysia()
       return (
         <div class="text-center py-16">
           <h1 class="text-2xl font-bold text-white">Repository not found</h1>
-          <a href="/repositories" class="text-blue-400 hover:text-blue-300 mt-4 inline-block">
+          <a
+            class="text-blue-400 hover:text-blue-300 mt-4 inline-block"
+            href="/repositories"
+          >
             ← Back to repositories
           </a>
         </div>
@@ -246,9 +263,9 @@ const pageRoutes = new Elysia()
 
     return (
       <VerifyView
-        pendingPlugins={pendingPlugins}
         highlightPluginId={highlightPluginId}
         highlightVersion={highlightVersion}
+        pendingPlugins={pendingPlugins}
       />
     )
   })

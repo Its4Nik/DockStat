@@ -24,8 +24,8 @@ export class Monitoring extends DockerClientManagerCore {
 
   public async getHostMetrics(clientId: number, hostId: number): Promise<DOCKER.HostMetrics> {
     return this.sendRequest(clientId, {
-      type: "getHostMetrics",
       hostId,
+      type: "getHostMetrics",
     })
   }
 
@@ -37,8 +37,8 @@ export class Monitoring extends DockerClientManagerCore {
 
   public async checkHostHealth(clientId: number, hostId: number): Promise<boolean> {
     return this.sendRequest(clientId, {
-      type: "checkHostHealth",
       hostId,
+      type: "checkHostHealth",
     })
   }
 

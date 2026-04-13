@@ -22,15 +22,22 @@ export const OnboardingSlide = ({
   return (
     <article
       aria-hidden={index !== currentIndex}
-      aria-roledescription="slide"
       aria-label={`${index + 1} of ${slides.length} — ${slide.title}`}
+      aria-roledescription="slide"
       className={`absolute inset-0 transition-all duration-500 ease-in-out ${slideClass}`}
       style={{ transitionProperty: "transform, opacity" }}
     >
       <div className="h-full w-full flex flex-col px-8 py-8 overflow-y-auto">
-        <SlideHeader slide={slide} currentStep={index} totalSteps={slides.length} />
+        <SlideHeader
+          currentStep={index}
+          slide={slide}
+          totalSteps={slides.length}
+        />
         <div className="flex-1 mt-8">
-          <SlideContent slide={slide} isActive={index === currentIndex} />
+          <SlideContent
+            isActive={index === currentIndex}
+            slide={slide}
+          />
         </div>
       </div>
     </article>

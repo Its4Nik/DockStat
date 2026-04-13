@@ -40,7 +40,7 @@ export async function hashPluginBundle(pluginPath: string): Promise<{
   const glob = new Bun.Glob("**/*.{ts,tsx,js,jsx}")
   const sourceFiles: string[] = []
 
-  for await (const file of glob.scan({ cwd: pluginPath, absolute: true })) {
+  for await (const file of glob.scan({ absolute: true, cwd: pluginPath })) {
     // Exclude generated files
     if (!file.includes("/bundle/") && !file.includes("/dist/") && !file.includes("manifest.ts")) {
       sourceFiles.push(file)
@@ -63,7 +63,7 @@ export async function hashPluginBundle(pluginPath: string): Promise<{
     logger.debug(`No bundle found for plugin at ${pluginPath}`)
   }
 
-  return { sourceHash, bundleHash }
+  return { bundleHash, sourceHash }
 }
 
 /**

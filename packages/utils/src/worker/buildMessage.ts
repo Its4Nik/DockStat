@@ -10,7 +10,7 @@ export function buildMessageData<K extends keyof EVENTS>(
   ctx: Parameters<EVENTS[K]>[0],
   additionalCtx?: Parameters<EVENTS[K]>[1]
 ): buildMessageFromProxyRes<K> {
-  return { type, ctx, additionalCtx }
+  return { additionalCtx, ctx, type }
 }
 
 type AnyProxyEventMessage = ProxyEventMessage<keyof EVENTS>

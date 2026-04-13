@@ -31,7 +31,10 @@ function PublicLayout({
     <html lang="en">
       <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+          content="width=device-width, initial-scale=1.0"
+          name="viewport"
+        />
         <title>{title} - DockStore Plugin Status</title>
         <script src="https://unpkg.com/htmx.org@1.9.10" />
         <script src="https://cdn.tailwindcss.com" />
@@ -124,18 +127,18 @@ function PublicLayout({
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
                   <svg
+                    aria-label="Shield icon"
                     class="w-6 h-6 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                    aria-label="Shield icon"
                   >
                     <title>Shield</title>
                     <path
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                     />
                   </svg>
                 </div>
@@ -148,16 +151,16 @@ function PublicLayout({
               {/* API Documentation Link */}
               <div class="flex items-center gap-4">
                 <a
-                  href="/api/public/plugins"
                   class="text-sm text-gray-400 hover:text-white transition-colors"
+                  href="/api/public/plugins"
                 >
                   API
                 </a>
                 <a
-                  href="https://github.com/its4nik/dockstat"
-                  target="_blank"
-                  rel="noopener noreferrer"
                   class="text-sm text-gray-400 hover:text-white transition-colors"
+                  href="https://github.com/its4nik/dockstat"
+                  rel="noopener noreferrer"
+                  target="_blank"
                 >
                   GitHub
                 </a>
@@ -194,18 +197,18 @@ function StatusIcon({ status }: { status: "safe" | "unsafe" | "unknown" }) {
   if (status === "safe") {
     return (
       <svg
+        aria-label="Safe"
         class="w-5 h-5 text-green-400"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
-        aria-label="Safe"
       >
         <title>Safe</title>
         <path
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
-          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
     )
@@ -213,36 +216,36 @@ function StatusIcon({ status }: { status: "safe" | "unsafe" | "unknown" }) {
   if (status === "unsafe") {
     return (
       <svg
+        aria-label="Unsafe"
         class="w-5 h-5 text-red-400"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
-        aria-label="Unsafe"
       >
         <title>Unsafe</title>
         <path
+          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
-          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
         />
       </svg>
     )
   }
   return (
     <svg
+      aria-label="Unknown"
       class="w-5 h-5 text-gray-400"
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"
-      aria-label="Unknown"
     >
       <title>Unknown</title>
       <path
+        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
         stroke-linecap="round"
         stroke-linejoin="round"
         stroke-width="2"
-        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
       />
     </svg>
   )
@@ -264,9 +267,9 @@ function PublicStatsCard({
 }) {
   const variantStyles = {
     default: "border-l-blue-500",
+    error: "border-l-red-500",
     success: "border-l-green-500",
     warning: "border-l-yellow-500",
-    error: "border-l-red-500",
   }
 
   return (
@@ -313,27 +316,27 @@ export function PublicDashboard({ stats, plugins }: PublicDashboardProps) {
       {/* Stats Overview */}
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <PublicStatsCard
+          subtitle={`${stats.totalVersions} versions`}
           title="Total Plugins"
           value={stats.totalPlugins}
-          subtitle={`${stats.totalVersions} versions`}
           variant="default"
         />
         <PublicStatsCard
+          subtitle={`${verificationRate}% verified`}
           title="Verified"
           value={stats.verifiedPlugins}
-          subtitle={`${verificationRate}% verified`}
           variant="success"
         />
         <PublicStatsCard
+          subtitle="Security verified"
           title="Safe"
           value={stats.safePlugins}
-          subtitle="Security verified"
           variant="success"
         />
         <PublicStatsCard
+          subtitle="Security issues found"
           title="Unsafe"
           value={stats.unsafePlugins}
-          subtitle="Security issues found"
           variant="error"
         />
       </div>
@@ -343,50 +346,50 @@ export function PublicDashboard({ stats, plugins }: PublicDashboardProps) {
         <div class="flex flex-col md:flex-row gap-4">
           <div class="flex-1">
             <input
-              type="text"
-              placeholder="Search plugins..."
               class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
               hx-get="/public/plugins"
-              hx-trigger="keyup changed delay:300ms"
-              hx-target="#plugin-list"
               hx-swap="innerHTML"
+              hx-target="#plugin-list"
+              hx-trigger="keyup changed delay:300ms"
               name="search"
+              placeholder="Search plugins..."
+              type="text"
             />
           </div>
           <div class="flex gap-2">
             <button
-              type="button"
               class="px-4 py-2 bg-gray-700 rounded-lg text-white hover:bg-gray-600 transition-colors"
               hx-get="/public/plugins?filter=all"
-              hx-target="#plugin-list"
               hx-swap="innerHTML"
+              hx-target="#plugin-list"
+              type="button"
             >
               All
             </button>
             <button
-              type="button"
               class="px-4 py-2 bg-green-600/20 border border-green-600/30 rounded-lg text-green-400 hover:bg-green-600/30 transition-colors"
               hx-get="/public/plugins?filter=safe"
-              hx-target="#plugin-list"
               hx-swap="innerHTML"
+              hx-target="#plugin-list"
+              type="button"
             >
               Safe
             </button>
             <button
-              type="button"
               class="px-4 py-2 bg-red-600/20 border border-red-600/30 rounded-lg text-red-400 hover:bg-red-600/30 transition-colors"
               hx-get="/public/plugins?filter=unsafe"
-              hx-target="#plugin-list"
               hx-swap="innerHTML"
+              hx-target="#plugin-list"
+              type="button"
             >
               Unsafe
             </button>
             <button
-              type="button"
               class="px-4 py-2 bg-yellow-600/20 border border-yellow-600/30 rounded-lg text-yellow-400 hover:bg-yellow-600/30 transition-colors"
               hx-get="/public/plugins?filter=unverified"
-              hx-target="#plugin-list"
               hx-swap="innerHTML"
+              hx-target="#plugin-list"
+              type="button"
             >
               Unverified
             </button>
@@ -439,10 +442,10 @@ export function PublicPluginList({ plugins }: { plugins: PluginVerificationView[
         >
           <title>No plugins</title>
           <path
+            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
           />
         </svg>
         <p class="text-gray-400">No plugins found matching your criteria</p>
@@ -500,12 +503,16 @@ export function PublicPluginList({ plugins }: { plugins: PluginVerificationView[
                 <td>
                   {plugin.verified ? (
                     <span class="badge badge-success">
-                      <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <svg
+                        class="w-3 h-3 mr-1"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
                         <title>Verified</title>
                         <path
-                          fill-rule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                           clip-rule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          fill-rule="evenodd"
                         />
                       </svg>
                       Verified

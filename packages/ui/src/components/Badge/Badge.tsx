@@ -1,7 +1,7 @@
 import type React from "react"
 
 export type BadgeVariant = "primary" | "secondary" | "success" | "warning" | "error"
-export type BadgeSize = "sm" | "md" | "lg"
+export type BadgeSize = "xs" | "sm" | "md" | "lg"
 
 export interface BadgeProps {
   children: React.ReactNode
@@ -35,6 +35,9 @@ export const Badge: React.FC<BadgeProps> = ({
   const baseClasses = "inline-flex items-center font-medium"
 
   const variantClasses = {
+    error: outlined
+      ? "text-badge-error-outlined-text border border-badge-error-outlined-border"
+      : "bg-badge-error-bg text-badge-error-text",
     primary: outlined
       ? "text-badge-primary-outlined-text border border-badge-primary-outlined-border"
       : "bg-badge-primary-bg text-badge-primary-text",
@@ -47,15 +50,13 @@ export const Badge: React.FC<BadgeProps> = ({
     warning: outlined
       ? "text-badge-warning-outlined-text border border-badge-warning-outlined-border"
       : "bg-badge-warning-bg text-badge-warning-text",
-    error: outlined
-      ? "text-badge-error-outlined-text border border-badge-error-outlined-border"
-      : "bg-badge-error-bg text-badge-error-text",
   }
 
   const sizeClasses = {
-    sm: "px-2 py-0.5 text-xs",
-    md: "px-2.5 py-0.5 text-sm",
     lg: "px-3 py-1 text-base",
+    md: "px-2.5 py-0.5 text-sm",
+    sm: "px-2 py-0.5 text-xs",
+    xs: "px-1 py-0.5 text-xs",
   }
 
   const roundedClass = rounded ? "rounded-full" : "rounded-md"
@@ -69,10 +70,10 @@ export const Badge: React.FC<BadgeProps> = ({
 
   return (
     <span
-      style={style}
       className={`${baseClasses} ${
         unique ? "" : variantClasses[variant]
       } ${sizeClasses[size]} ${roundedClass} ${className}`}
+      style={style}
     >
       {children}
     </span>

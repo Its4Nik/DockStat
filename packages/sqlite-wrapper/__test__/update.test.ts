@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { column, DB } from "../index"
+import { column, DB } from "../src/index"
 
 /**
  * Tests for UPDATE operations including:
@@ -22,17 +22,17 @@ describe("Basic UPDATE operations", () => {
     age: number
     active: boolean
   }>("users", {
+    active: column.boolean({ default: true }),
+    age: column.integer({ default: 0 }),
+    email: column.text({ notNull: true, unique: true }),
     id: column.id(),
     name: column.text({ notNull: true }),
-    email: column.text({ notNull: true, unique: true }),
-    age: column.integer({ default: 0 }),
-    active: column.boolean({ default: true }),
   })
 
   beforeAll(() => {
-    users.insert({ name: "Alice", email: "alice@example.com", age: 25, active: true })
-    users.insert({ name: "Bob", email: "bob@example.com", age: 30, active: false })
-    users.insert({ name: "Charlie", email: "charlie@example.com", age: 35, active: true })
+    users.insert({ active: true, age: 25, email: "alice@example.com", name: "Alice" })
+    users.insert({ active: false, age: 30, email: "bob@example.com", name: "Bob" })
+    users.insert({ active: true, age: 35, email: "charlie@example.com", name: "Charlie" })
   })
 
   afterAll(() => {
@@ -49,7 +49,7 @@ describe("Basic UPDATE operations", () => {
   })
 
   test("Update multiple columns at once", () => {
-    const result = users.where({ id: 2 }).update({ name: "Bob Updated", age: 31 })
+    const result = users.where({ id: 2 }).update({ age: 31, name: "Bob Updated" })
 
     expect(result.changes).toBe(1)
 
@@ -149,7 +149,7 @@ describe("Upsert operations", () => {
     key: string
     value: string
   }>("settings", {
-    key: column.text({ primaryKey: true, notNull: true }),
+    key: column.text({ notNull: true, primaryKey: true }),
     value: column.text({ notNull: true }),
   })
 
@@ -270,15 +270,15 @@ describe("Update and Get operations", () => {
     processed: boolean
   }>("logs", {
     id: column.id(),
-    message: column.text({ notNull: true }),
     level: column.text({ default: "info" }),
+    message: column.text({ notNull: true }),
     processed: column.boolean({ default: false }),
   })
 
   beforeAll(() => {
-    logs.insert({ message: "System started", level: "info" })
-    logs.insert({ message: "Warning detected", level: "warning" })
-    logs.insert({ message: "Error occurred", level: "error" })
+    logs.insert({ level: "info", message: "System started" })
+    logs.insert({ level: "warning", message: "Warning detected" })
+    logs.insert({ level: "error", message: "Error occurred" })
   })
 
   afterAll(() => {
@@ -311,7 +311,7 @@ describe("Update and Get operations", () => {
   })
 
   test("Update multiple rows", () => {
-    logs.insert({ message: "Another info", level: "info" })
+    logs.insert({ level: "info", message: "Another info" })
 
     // Reset processed status first
     logs.where({ level: "info" }).update({ processed: false })
@@ -338,14 +338,14 @@ describe("Batch Update operations", () => {
   }>("items", {
     id: column.id(),
     name: column.text({ notNull: true }),
-    quantity: column.integer({ default: 0 }),
     price: column.real({ default: 0 }),
+    quantity: column.integer({ default: 0 }),
   })
 
   beforeAll(() => {
-    items.insert({ name: "Item A", quantity: 10, price: 5.0 })
-    items.insert({ name: "Item B", quantity: 20, price: 10.0 })
-    items.insert({ name: "Item C", quantity: 30, price: 15.0 })
+    items.insert({ name: "Item A", price: 5.0, quantity: 10 })
+    items.insert({ name: "Item B", price: 10.0, quantity: 20 })
+    items.insert({ name: "Item C", price: 15.0, quantity: 30 })
   })
 
   afterAll(() => {
@@ -354,9 +354,9 @@ describe("Batch Update operations", () => {
 
   test("Batch update multiple rows with different values", () => {
     const result = items.updateBatch([
-      { where: { id: 1 }, data: { quantity: 100 } },
-      { where: { id: 2 }, data: { quantity: 200 } },
-      { where: { id: 3 }, data: { quantity: 300 } },
+      { data: { quantity: 100 }, where: { id: 1 } },
+      { data: { quantity: 200 }, where: { id: 2 } },
+      { data: { quantity: 300 }, where: { id: 3 } },
     ])
 
     expect(result.changes).toBe(3)
@@ -368,8 +368,8 @@ describe("Batch Update operations", () => {
 
   test("Batch update with different columns per row", () => {
     const result = items.updateBatch([
-      { where: { id: 1 }, data: { name: "Updated A" } },
-      { where: { id: 2 }, data: { price: 99.99 } },
+      { data: { name: "Updated A" }, where: { id: 1 } },
+      { data: { price: 99.99 }, where: { id: 2 } },
     ])
 
     expect(result.changes).toBe(2)
@@ -386,8 +386,8 @@ describe("Batch Update operations", () => {
 
   test("Batch update skips empty data objects", () => {
     const result = items.updateBatch([
-      { where: { id: 1 }, data: { quantity: 50 } },
-      { where: { id: 2 }, data: {} }, // Empty, should be skipped
+      { data: { quantity: 50 }, where: { id: 1 } },
+      { data: {}, where: { id: 2 } }, // Empty, should be skipped
     ])
 
     expect(result.changes).toBe(1)
@@ -395,20 +395,20 @@ describe("Batch Update operations", () => {
 
   test("Batch update throws for missing WHERE conditions", () => {
     expect(() => {
-      items.updateBatch([{ where: {}, data: { quantity: 999 } }])
+      items.updateBatch([{ data: { quantity: 999 }, where: {} }])
     }).toThrow("must have WHERE conditions")
   })
 
   test("Batch update is atomic (transaction)", () => {
     // Insert a row to test atomicity
-    items.insert({ name: "Test Item", quantity: 1, price: 1.0 })
+    items.insert({ name: "Test Item", price: 1.0, quantity: 1 })
 
     const initialCount = items.count()
 
     try {
       items.updateBatch([
-        { where: { name: "Item A" }, data: { quantity: 500 } },
-        { where: { name: "Item B" }, data: { quantity: 600 } },
+        { data: { quantity: 500 }, where: { name: "Item A" } },
+        { data: { quantity: 600 }, where: { name: "Item B" } },
         // This would normally succeed, but let's verify transaction behavior
       ])
     } catch {
@@ -430,9 +430,9 @@ describe("Update with JSON columns", () => {
     metadata: unknown
   }>("configs", {
     id: column.id(),
+    metadata: column.json({ notNull: false }),
     name: column.text({ notNull: true }),
     settings: column.json(),
-    metadata: column.json({ notNull: false }),
   })
 
   afterAll(() => {
@@ -442,17 +442,17 @@ describe("Update with JSON columns", () => {
   test("Update JSON column with object", () => {
     configs.insert({
       name: "config1",
-      settings: { theme: "light", fontSize: 14 },
+      settings: { fontSize: 14, theme: "light" },
     })
 
     const result = configs.where({ name: "config1" }).update({
-      settings: { theme: "dark", fontSize: 16, newOption: true },
+      settings: { fontSize: 16, newOption: true, theme: "dark" },
     })
 
     expect(result.changes).toBe(1)
 
     const updated = configs.where({ name: "config1" }).first()
-    expect(updated?.settings).toEqual({ theme: "dark", fontSize: 16, newOption: true })
+    expect(updated?.settings).toEqual({ fontSize: 16, newOption: true, theme: "dark" })
   })
 
   test("Update JSON column with array", () => {
@@ -499,9 +499,9 @@ describe("Update with JSON columns", () => {
 
   test("Update JSON column to null", () => {
     configs.insert({
+      metadata: { extra: "data" },
       name: "config4",
       settings: { something: true },
-      metadata: { extra: "data" },
     })
 
     const result = configs.where({ name: "config4" }).update({
@@ -524,18 +524,18 @@ describe("Update with regex conditions", () => {
     verified: boolean
     domain: string
   }>("emails", {
-    id: column.id(),
-    email: column.text({ notNull: true }),
-    verified: column.boolean({ default: false }),
     domain: column.text({ notNull: false }),
+    email: column.text({ notNull: true }),
+    id: column.id(),
+    verified: column.boolean({ default: false }),
   })
 
   beforeAll(() => {
-    emails.insert({ email: "user1@gmail.com", domain: "gmail.com", verified: false })
-    emails.insert({ email: "user2@gmail.com", domain: "gmail.com", verified: false })
-    emails.insert({ email: "admin@company.org", domain: "company.org", verified: false })
-    emails.insert({ email: "support@company.org", domain: "company.org", verified: false })
-    emails.insert({ email: "test@yahoo.com", domain: "yahoo.com", verified: false })
+    emails.insert({ domain: "gmail.com", email: "user1@gmail.com", verified: false })
+    emails.insert({ domain: "gmail.com", email: "user2@gmail.com", verified: false })
+    emails.insert({ domain: "company.org", email: "admin@company.org", verified: false })
+    emails.insert({ domain: "company.org", email: "support@company.org", verified: false })
+    emails.insert({ domain: "yahoo.com", email: "test@yahoo.com", verified: false })
   })
 
   afterAll(() => {
@@ -596,16 +596,16 @@ describe("Update with NULL handling", () => {
     description: string | null
     deletedAt: number | null
   }>("records", {
+    deletedAt: column.integer({ notNull: false }),
+    description: column.text({ notNull: false }),
     id: column.id(),
     title: column.text({ notNull: true }),
-    description: column.text({ notNull: false }),
-    deletedAt: column.integer({ notNull: false }),
   })
 
   beforeAll(() => {
-    records.insert({ title: "Record 1", description: "Has description" })
-    records.insert({ title: "Record 2", description: null })
-    records.insert({ title: "Record 3", description: "Another one" })
+    records.insert({ description: "Has description", title: "Record 1" })
+    records.insert({ description: null, title: "Record 2" })
+    records.insert({ description: "Another one", title: "Record 3" })
   })
 
   afterAll(() => {
@@ -647,17 +647,17 @@ describe("Update with IN/NOT IN conditions", () => {
     priority: number
   }>("tasks", {
     id: column.id(),
-    title: column.text({ notNull: true }),
-    status: column.text({ default: "pending" }),
     priority: column.integer({ default: 1 }),
+    status: column.text({ default: "pending" }),
+    title: column.text({ notNull: true }),
   })
 
   beforeAll(() => {
-    tasks.insert({ title: "Task 1", status: "pending", priority: 1 })
-    tasks.insert({ title: "Task 2", status: "in_progress", priority: 2 })
-    tasks.insert({ title: "Task 3", status: "completed", priority: 3 })
-    tasks.insert({ title: "Task 4", status: "pending", priority: 1 })
-    tasks.insert({ title: "Task 5", status: "cancelled", priority: 2 })
+    tasks.insert({ priority: 1, status: "pending", title: "Task 1" })
+    tasks.insert({ priority: 2, status: "in_progress", title: "Task 2" })
+    tasks.insert({ priority: 3, status: "completed", title: "Task 3" })
+    tasks.insert({ priority: 1, status: "pending", title: "Task 4" })
+    tasks.insert({ priority: 2, status: "cancelled", title: "Task 5" })
   })
 
   afterAll(() => {

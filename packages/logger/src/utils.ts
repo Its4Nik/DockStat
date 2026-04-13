@@ -3,17 +3,17 @@ import { callerMatchesDepth, LOG_LEVEL } from "./config"
 import type { LogLevel } from "./types"
 
 export const LEVEL_PRIORITY: Record<LogLevel, number> = {
-  error: 0,
-  warn: 1,
-  info: 2,
   debug: 3,
+  error: 0,
+  info: 2,
+  warn: 1,
 }
 
 export const levelColors: Record<LogLevel, (msg: string) => string> = {
-  error: chalk.red.bold,
-  warn: chalk.yellow.bold,
-  info: chalk.green.bold,
   debug: chalk.blue.bold,
+  error: chalk.red.bold,
+  info: chalk.green.bold,
+  warn: chalk.yellow.bold,
 }
 
 export function stringToHash(str: string): number {
@@ -80,7 +80,7 @@ export function colorByReqID(rawReqId: string) {
   const [r, g, b] = hashToColor(hash)
 
   return {
-    id: chalk.rgb(Math.round(r), Math.round(g), Math.round(b))(reqId),
     from,
+    id: chalk.rgb(Math.round(r), Math.round(g), Math.round(b))(reqId),
   }
 }

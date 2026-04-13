@@ -17,11 +17,8 @@ export const ProgressDots = ({
 
       return (
         <button
-          type="button"
-          key={slide.title}
-          onClick={() => onDotClick(index)}
-          aria-label={`Go to step ${index + 1}: ${slide.title}`}
           aria-current={isActive ? "step" : undefined}
+          aria-label={`Go to step ${index + 1}: ${slide.title}`}
           className={`relative transition-all duration-300 ease-out
             ${isActive ? "w-10 h-3" : "w-3 h-3"}
             ${isActive ? "bg-white" : isCompleted ? "bg-green-500" : "bg-slate-600"}
@@ -29,6 +26,9 @@ export const ProgressDots = ({
             ${!isActive && "hover:scale-125 hover:bg-slate-400"}
             ${isActive && "scale-110"}
           `}
+          key={slide.title}
+          onClick={() => onDotClick(index)}
+          type="button"
         >
           {/* Active indicator glow */}
           {isActive && (

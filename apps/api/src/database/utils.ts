@@ -14,9 +14,9 @@ export function updateConfig(config: typeof DatabaseModel.updateBody.static) {
     })
     .get()
   return {
-    message: "Updated config successfully",
     code: 200,
-    update_response: updateRes,
+    message: "Updated config successfully",
     new_config: newConfig,
+    update_response: updateRes,
   }
 }

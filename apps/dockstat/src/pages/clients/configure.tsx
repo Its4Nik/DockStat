@@ -1,28 +1,28 @@
 import { Card, CardBody, Divider, Slides } from "@dockstat/ui"
-import { useQuery } from "@tanstack/react-query"
+import { eden } from "@dockstat/utils/react"
 import { Plus, Split } from "lucide-react"
 import { ClientCard, HostsList } from "@/components/clients"
 import { AddClient } from "@/components/clients/configure/AddClient"
 import { AddHost } from "@/components/clients/configure/AddHost"
 import { usePageHeading } from "@/hooks/useHeading"
-import { fetchClients, fetchHosts, fetchPoolStatus } from "@/lib/queries"
+import { api } from "@/lib/api"
 
 export default function ConfigureClientsPage() {
   usePageHeading("Configure Clients & Hosts")
 
-  const { data: clientsData } = useQuery({
+  const { data: clientsData } = eden.useEdenQuery({
     queryKey: ["fetchDockerClients"],
-    queryFn: fetchClients,
+    route: api.docker.client.all({ stored: "true" }).get,
   })
 
-  const { data: poolStatus } = useQuery({
+  const { data: poolStatus } = eden.useEdenQuery({
     queryKey: ["fetchPoolStatus"],
-    queryFn: fetchPoolStatus,
+    route: api.docker.manager["pool-stats"].get,
   })
 
-  const { data: hosts } = useQuery({
+  const { data: hosts } = eden.useEdenQuery({
     queryKey: ["fetchHosts"],
-    queryFn: fetchHosts,
+    route: api.docker.hosts.get,
   })
 
   const workersByClientId =
@@ -37,29 +37,45 @@ export default function ConfigureClientsPage() {
   return (
     <div className="flex flex-col gap-6 p-4">
       <Slides
-        connected
         buttonPosition="right"
-        hideable
-        header="Administration"
+        connected
         description="Manage your infrastructure connections"
+        header="Administration"
+        hideable
       >
         {{
           "Add Client": <AddClient />,
-          "Add Host": <AddHost registeredClients={(clientsData || []).flatMap((c) => c.id)} />,
+          "Add Host": (
+            <AddHost
+              registeredClients={(clientsData || []).flatMap((c) => {
+                return { clientId: c.id, clientName: c.name }
+              })}
+            />
+          ),
         }}
       </Slides>
 
       <div>
-        <Card size="sm" variant="flat" className="flex items-center gap-2 mb-4">
-          <Split size={24} className="text-accent" />
+        <Card
+          className="flex items-center gap-2 mb-4"
+          size="sm"
+          variant="flat"
+        >
+          <Split
+            className="text-accent"
+            size={24}
+          />
           <h2 className="text-2xl font-semibold text-muted-text">Docker Clients</h2>
         </Card>
 
-        <Card variant="dark" className="flex flex-wrap gap-4">
+        <Card
+          className="flex flex-wrap gap-4"
+          variant="dark"
+        >
           {(clientsData || []).map((client) => (
             <ClientCard
-              key={client.id}
               client={client}
+              key={client.id}
               workerInfo={client.id ? workersByClientId[client.id] : undefined}
             />
           ))}
@@ -68,13 +84,16 @@ export default function ConfigureClientsPage() {
 
       {(!clientsData || clientsData.length === 0) && (
         <Card
-          variant="outlined"
-          hoverable
           className="border-dashed transition-all hover:border-primary/50"
+          hoverable
+          variant="outlined"
         >
           <CardBody className="flex flex-col items-center justify-center gap-3 py-12">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/30 border border-dashed">
-              <Plus size={24} className="text-muted-text" />
+              <Plus
+                className="text-muted-text"
+                size={24}
+              />
             </div>
             <div className="text-center">
               <p className="font-medium">No Clients Found</p>

@@ -1,5 +1,5 @@
+import { Docker } from "@dockstat/docker"
 import type { DATABASE } from "@dockstat/typings"
-import Dockerode from "dockerode"
 import { proxyEvent } from "../../../events/workerEventProxy"
 import { DockerClientBase } from "../core/base"
 
@@ -65,16 +65,15 @@ export class Hosts extends DockerClientBase {
       this.logger.info(`Host ${host.name} (${Number(host.id)}) already exists. Initializing...`)
     }
 
-    const instanceCfg: Dockerode.DockerOptions = {
-      host: host.host,
-      protocol: host.secure ? "https" : "http",
-      port: host.port,
-      timeout: this.options.defaultTimeout,
-    }
+    const baseUrl = `${host.secure ? "https" : "http"}://${host.host}:${host.port}`
 
-    this.logger.info(`Creating Docker instance: ${JSON.stringify(instanceCfg)}`)
+    this.logger.info(`Creating Docker instance: ${baseUrl}`)
     try {
-      const dockerInstance = new Dockerode(instanceCfg)
+      const dockerInstance = new Docker({
+        baseUrl,
+        dockerAPIVersion: "1.54",
+        mode: "tcp",
+      })
       const hostId = Number(host.id)
 
       // Store Dockerode instance
@@ -93,8 +92,8 @@ export class Hosts extends DockerClientBase {
 
       // Emit event
       proxyEvent("host:added", {
-        hostId,
         docker_client_id: Number(host.docker_client_id ?? 0),
+        hostId,
         hostName: String(host.name),
       })
 
@@ -102,7 +101,9 @@ export class Hosts extends DockerClientBase {
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error)
       this.logger.error(`Failed to create Docker instance for host ${host.name}: ${errMsg}`)
-      throw new Error(`Failed to create Docker instance: ${errMsg}`, { cause: error as Error })
+      throw new Error(`Failed to create Docker instance: ${errMsg}`, {
+        cause: error as Error,
+      })
     }
   }
 
@@ -166,7 +167,9 @@ export class Hosts extends DockerClientBase {
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error)
       this.logger.error(`Failed to remove host ${hostId}: ${errMsg}`)
-      throw new Error(`Failed to remove host: ${errMsg}`, { cause: error as Error })
+      throw new Error(`Failed to remove host: ${errMsg}`, {
+        cause: error as Error,
+      })
     }
   }
 
@@ -215,15 +218,14 @@ export class Hosts extends DockerClientBase {
       this.hostHandler.updateHost(host)
 
       // Recreate Docker instance
-      const instanceCfg: Dockerode.DockerOptions = {
-        host: host.host,
-        protocol: host.secure ? "https" : "http",
-        port: host.port,
-        timeout: this.options.defaultTimeout,
-      }
-      this.logger.info(`Creating new Docker instance: ${JSON.stringify(instanceCfg)}`)
+      const baseUrl = `${host.secure ? "https" : "http"}://${host.host}:${host.port}`
+      this.logger.info(`Creating new Docker instance: ${baseUrl}`)
 
-      const dockerInstance = new Dockerode(instanceCfg)
+      const dockerInstance = new Docker({
+        baseUrl,
+        dockerAPIVersion: "1.54",
+        mode: "tcp",
+      })
       this.dockerInstances.set(hostId, dockerInstance)
 
       // Update monitoring manager if present
@@ -246,7 +248,9 @@ export class Hosts extends DockerClientBase {
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error)
       this.logger.error(`Failed to update host ${hostId}: ${errMsg}`)
-      throw new Error(`Failed to update host: ${errMsg}`, { cause: error as Error })
+      throw new Error(`Failed to update host: ${errMsg}`, {
+        cause: error as Error,
+      })
     }
   }
 
@@ -279,12 +283,12 @@ export class Hosts extends DockerClientBase {
       instances.map(async ([id, docker]) => {
         try {
           this.logger.debug(`Pinging: ID:${id}`)
-          await docker.ping()
-          return { id, ok: true as const }
+          const ok = await docker.ping()
+          return { id, ok: ok ? (true as const) : (false as const) }
         } catch (err) {
           const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
           this.logger.warn(`Ping failed for instance ${id}: ${msg}`)
-          return { id, ok: false as const, error: msg }
+          return { error: msg, id, ok: false as const }
         }
       })
     )
@@ -309,6 +313,32 @@ export class Hosts extends DockerClientBase {
     }
 
     return { reachableInstances, unreachableInstances }
+  }
+
+  /**
+   * Ping only one host of this Docker Instance.
+   * Returns true or false.
+   */
+  public async pingHost(hostId: number) {
+    this.checkDisposed()
+    this.logger.info(`Pinging host: ${hostId}`)
+    const hasHost = this.dockerInstances.has(hostId)
+
+    if (!hasHost) {
+      this.logger.info(`No instance with ${hostId} found`)
+      return false
+    }
+
+    try {
+      const docker = this.getDockerInstance(hostId)
+      this.logger.debug(`Pinging: ID: ${hostId}`)
+      const ok = await docker.ping()
+      return ok
+    } catch (err) {
+      const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
+      this.logger.warn(`Ping failed for instance ${hostId}: ${msg}`)
+      return false
+    }
   }
 
   /**

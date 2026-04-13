@@ -1,23 +1,23 @@
 import type { Variants } from "framer-motion"
 
 export const slideVariants: Variants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? "100%" : "-100%",
-    position: "absolute" as const,
-    top: 0,
-    left: 0,
-    right: 0,
-  }),
   center: {
-    x: 0,
     position: "relative" as const,
+    x: 0,
   },
-  exit: (direction: number) => ({
-    x: direction > 0 ? "-100%" : "100%",
-    position: "absolute" as const,
-    top: 0,
+  enter: (direction: number) => ({
     left: 0,
+    position: "absolute" as const,
     right: 0,
+    top: 0,
+    x: direction > 0 ? "100%" : "-100%",
+  }),
+  exit: (direction: number) => ({
+    left: 0,
+    position: "absolute" as const,
+    right: 0,
+    top: 0,
+    x: direction > 0 ? "-100%" : "100%",
   }),
 }
 

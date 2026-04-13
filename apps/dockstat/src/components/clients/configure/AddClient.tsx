@@ -1,52 +1,39 @@
 import type { DockerAdapterOptionsSchema, MonitoringOptions } from "@dockstat/typings"
 import { Button, Card, CardBody, Divider, Input, Slider, Toggle } from "@dockstat/ui"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
-import { createNewClient } from "@/lib/actions"
+import { useDockerClientMutations } from "@/hooks/mutations"
 
 export function AddClient() {
-  const qc = useQueryClient()
+  const { createClientMutation } = useDockerClientMutations()
   const [clientName, setClientName] = useState("")
   const [options, setOptions] = useState<typeof DockerAdapterOptionsSchema.static>({
     defaultTimeout: 5000,
-    retryAttempts: 3,
-    retryDelay: 1000,
-    enableMonitoring: true,
     enableEventEmitter: true,
+    enableMonitoring: true,
+    execOptions: {
+      env: [],
+      tty: false,
+      workingDir: "/",
+    },
     monitoringOptions: {
-      healthCheckInterval: 30000,
       containerEventPollingInterval: 5000,
-      hostMetricsInterval: 10000,
       containerMetricsInterval: 10000,
       enableContainerEvents: true,
-      enableHostMetrics: true,
       enableContainerMetrics: true,
       enableHealthChecks: true,
+      enableHostMetrics: true,
+      healthCheckInterval: 30000,
+      hostMetricsInterval: 10000,
       retryAttempts: 3,
       retryDelay: 1000,
     },
-    execOptions: {
-      workingDir: "/",
-      env: [],
-      tty: false,
-    },
-  })
-
-  const registerClientMutation = useMutation({
-    mutationKey: ["createNewClient"],
-    mutationFn: createNewClient,
-    onSuccess: async () => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["fetchDockerClients"] }),
-        qc.invalidateQueries({ queryKey: ["fetchPoolStatus"] }),
-      ])
-      setClientName("")
-    },
+    retryAttempts: 3,
+    retryDelay: 1000,
   })
 
   const onSave = async () => {
     if (!clientName.trim()) return
-    await registerClientMutation.mutateAsync({
+    await createClientMutation.mutateAsync({
       clientName,
       options,
     })
@@ -66,34 +53,34 @@ export function AddClient() {
                 <div className="space-y-1.5">
                   <span className="text-sm font-medium">Client Identifier</span>
                   <Input
-                    value={clientName}
                     onChange={(e) => setClientName(e)}
                     placeholder="e.g. production-cluster-01"
+                    value={clientName}
                   />
                 </div>
                 <Slider
                   label="Default Timeout"
-                  value={(options.defaultTimeout ?? 5000) / 1000}
-                  onChange={(v) => setOptions((p) => ({ ...p, defaultTimeout: v * 1000 }))}
-                  min={1}
                   max={30}
+                  min={1}
+                  onChange={(v) => setOptions((p) => ({ ...p, defaultTimeout: v * 1000 }))}
                   step={1}
+                  value={(options.defaultTimeout ?? 5000) / 1000}
                 />
                 <div className="grid grid-cols-2 gap-4">
                   <Slider
                     label="Retries"
-                    value={options.retryAttempts ?? 3}
-                    onChange={(v) => setOptions((p) => ({ ...p, retryAttempts: v }))}
-                    min={0}
                     max={10}
+                    min={0}
+                    onChange={(v) => setOptions((p) => ({ ...p, retryAttempts: v }))}
+                    value={options.retryAttempts ?? 3}
                   />
                   <Slider
                     label="Delay (s)"
-                    value={(options.retryDelay ?? 1000) / 1000}
-                    onChange={(v) => setOptions((p) => ({ ...p, retryDelay: v * 1000 }))}
-                    min={0.1}
                     max={5}
+                    min={0.1}
+                    onChange={(v) => setOptions((p) => ({ ...p, retryDelay: v * 1000 }))}
                     step={0.1}
+                    value={(options.retryDelay ?? 1000) / 1000}
                   />
                 </div>
               </CardBody>
@@ -109,19 +96,18 @@ export function AddClient() {
                 <div className="space-y-1.5">
                   <span className="text-sm font-medium">Working Directory</span>
                   <Input
-                    value={options.execOptions?.workingDir ?? "/"}
                     onChange={(e) =>
                       setOptions((p) => ({
                         ...p,
                         execOptions: { ...p.execOptions, workingDir: e },
                       }))
                     }
+                    value={options.execOptions?.workingDir ?? "/"}
                   />
                 </div>
                 <div className="space-y-1.5">
                   <span className="text-sm font-medium">Environment Variables</span>
                   <Input
-                    value={options.execOptions?.env?.join(",") ?? ""}
                     onChange={(e) =>
                       setOptions((p) => ({
                         ...p,
@@ -129,18 +115,19 @@ export function AddClient() {
                       }))
                     }
                     placeholder="KEY=VALUE,DEBUG=true"
+                    value={options.execOptions?.env?.join(",") ?? ""}
                   />
                 </div>
                 <Toggle
-                  size="sm"
-                  label="Allocate TTY"
                   checked={options.execOptions?.tty ?? false}
+                  label="Allocate TTY"
                   onChange={(checked) =>
                     setOptions((p) => ({
                       ...p,
                       execOptions: { ...p.execOptions, tty: checked },
                     }))
                   }
+                  size="sm"
                 />
               </CardBody>
             </Card>
@@ -157,16 +144,16 @@ export function AddClient() {
               <CardBody className="space-y-4">
                 <div className="flex flex-col gap-1">
                   <Toggle
-                    size="sm"
-                    label="Global Monitoring"
                     checked={options.enableMonitoring ?? true}
+                    label="Global Monitoring"
                     onChange={(c) => setOptions((p) => ({ ...p, enableMonitoring: c }))}
+                    size="sm"
                   />
                   <Toggle
-                    size="sm"
-                    label="Event Streaming"
                     checked={options.enableEventEmitter ?? true}
+                    label="Event Streaming"
                     onChange={(c) => setOptions((p) => ({ ...p, enableEventEmitter: c }))}
+                    size="sm"
                   />
                 </div>
 
@@ -181,23 +168,27 @@ export function AddClient() {
                         ["Containers", "enableContainerMetrics"],
                       ].map(([label, key]) => (
                         <Toggle
-                          size="sm"
+                          checked={!!options.monitoringOptions?.[key as keyof MonitoringOptions]}
                           key={key}
                           label={label}
-                          checked={!!options.monitoringOptions?.[key as keyof MonitoringOptions]}
                           onChange={(c) =>
                             setOptions((p) => ({
                               ...p,
-                              monitoringOptions: { ...p.monitoringOptions, [key]: c },
+                              monitoringOptions: {
+                                ...p.monitoringOptions,
+                                [key]: c,
+                              },
                             }))
                           }
+                          size="sm"
                         />
                       ))}
                     </div>
                     <div className="space-y-4 pt-2">
                       <Slider
                         label="Health Interval (s)"
-                        value={(options.monitoringOptions?.healthCheckInterval ?? 30000) / 1000}
+                        max={120}
+                        min={5}
                         onChange={(v) =>
                           setOptions((p) => ({
                             ...p,
@@ -207,14 +198,12 @@ export function AddClient() {
                             },
                           }))
                         }
-                        min={5}
-                        max={120}
+                        value={(options.monitoringOptions?.healthCheckInterval ?? 30000) / 1000}
                       />
                       <Slider
                         label="Metrics Polling (s)"
-                        value={
-                          (options.monitoringOptions?.containerMetricsInterval ?? 10000) / 1000
-                        }
+                        max={60}
+                        min={5}
                         onChange={(v) =>
                           setOptions((p) => ({
                             ...p,
@@ -224,8 +213,9 @@ export function AddClient() {
                             },
                           }))
                         }
-                        min={5}
-                        max={60}
+                        value={
+                          (options.monitoringOptions?.containerMetricsInterval ?? 10000) / 1000
+                        }
                       />
                     </div>
                   </>
@@ -236,12 +226,12 @@ export function AddClient() {
 
           <div className="flex flex-col gap-3 pt-4">
             <Button
-              size="lg"
               className="w-full"
+              disabled={!clientName.trim() || createClientMutation.isPending}
               onClick={onSave}
-              disabled={!clientName.trim() || registerClientMutation.isPending}
+              size="lg"
             >
-              {registerClientMutation.isPending ? "Creating..." : "Register Docker Client"}
+              {createClientMutation.isPending ? "Creating..." : "Register Docker Client"}
             </Button>
             <p className="text-center text-xs text-muted-text">
               Settings can be modified later in the client dashboard.

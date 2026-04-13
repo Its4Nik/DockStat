@@ -1,10 +1,8 @@
-import type React from "react"
-
 export type InputSize = "sm" | "md" | "lg"
 export type InputVariant = "default" | "filled" | "underline"
 
 export interface InputProps {
-  type?: "text" | "email" | "password" | "number" | "tel" | "url"
+  type?: "text" | "email" | "password" | "number" | "tel" | "url" | "color"
   size?: InputSize
   variant?: InputVariant
   disabled?: boolean
@@ -14,10 +12,10 @@ export interface InputProps {
   className?: string
   error?: boolean
   success?: boolean
-  autoFocus?: boolean
+  required?: boolean
 }
 
-export const Input: React.FC<InputProps> = ({
+export function Input({
   type = "text",
   size = "md",
   variant = "default",
@@ -27,15 +25,15 @@ export const Input: React.FC<InputProps> = ({
   onChange,
   className = "",
   error = false,
-  autoFocus = false,
   success = false,
-}) => {
+  required = false,
+}: InputProps) {
   const baseClasses = "w-full transition-colors focus:outline-none"
 
   const sizeClasses = {
-    sm: "px-2 py-1 text-sm",
-    md: "px-3 py-2 text-base",
     lg: "px-4 py-3 text-lg",
+    md: "px-3 py-2 text-base",
+    sm: "px-2 py-1 text-sm",
   }
 
   const variantClasses = {
@@ -51,7 +49,6 @@ export const Input: React.FC<InputProps> = ({
 
   return (
     <input
-      type={type}
       className={[
         baseClasses,
         sizeClasses[size],
@@ -61,12 +58,12 @@ export const Input: React.FC<InputProps> = ({
         error ? "border-error! focus:border-error! focus:ring-error!" : "",
         success ? "border-success! focus:border-success! focus:ring-success!" : "",
       ].join(" ")}
-      // biome-ignore lint/a11y/noAutofocus: Used in other components
-      autoFocus={autoFocus}
-      placeholder={placeholder}
-      value={value}
-      onChange={(e) => onChange?.(e.target.value)}
       disabled={disabled}
+      onChange={(e) => onChange?.(e.target.value)}
+      placeholder={placeholder}
+      required={required}
+      type={type}
+      value={value}
     />
   )
 }

@@ -1,4 +1,3 @@
-import type { DOCKER } from "@dockstat/typings"
 import { retry } from "@dockstat/utils"
 import { DockerClientBase } from "../core/base"
 
@@ -12,11 +11,11 @@ export class System extends DockerClientBase {
   /**
    * Get system information from the Docker daemon on the specified host.
    */
-  public async getSystemInfo(hostId: number): Promise<DOCKER.DockerAPIResponse["systemInfo"]> {
+  public async getSystemInfo(hostId: number) {
     this.checkDisposed()
 
     const docker = this.getDockerInstance(hostId)
-    return await retry(() => docker.info(), {
+    return await retry(() => docker.system.info(), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
@@ -25,13 +24,11 @@ export class System extends DockerClientBase {
   /**
    * Get Docker daemon version information on the specified host.
    */
-  public async getSystemVersion(
-    hostId: number
-  ): Promise<DOCKER.DockerAPIResponse["dockerVersion"]> {
+  public async getSystemVersion(hostId: number) {
     this.checkDisposed()
 
     const docker = this.getDockerInstance(hostId)
-    return await retry(() => docker.version(), {
+    return await retry(() => docker.system.version(), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
@@ -40,11 +37,11 @@ export class System extends DockerClientBase {
   /**
    * Get disk usage information from the Docker daemon on the specified host.
    */
-  public async getDiskUsage(hostId: number): Promise<DOCKER.DockerAPIResponse["diskUsage"]> {
+  public async getDiskUsage(hostId: number) {
     this.checkDisposed()
 
     const docker = this.getDockerInstance(hostId)
-    return await retry(() => docker.df(), {
+    return await retry(() => docker.system.dataUsage(), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
@@ -54,11 +51,11 @@ export class System extends DockerClientBase {
    * Prune unused Docker images on the specified host.
    * Returns the reclaimed space in bytes.
    */
-  public async pruneSystem(hostId: number): Promise<{ SpaceReclaimed: number }> {
+  public async pruneSystem(hostId: number) {
     this.checkDisposed()
 
     const docker = this.getDockerInstance(hostId)
-    return await retry(() => docker.pruneImages({ dangling: false }), {
+    return await retry(() => docker.images.prune(), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })

@@ -5,13 +5,12 @@ import { defineConfig } from "vite"
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
   clearScreen: false,
+  plugins: [react(), tailwindcss()],
+  publicDir: "./public",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@Queries": path.resolve(__dirname, "./src/lib/queries/index.ts"),
-      "@Actions": path.resolve(__dirname, "./src/lib/actions/index.ts"),
       "@WSS": path.resolve(__dirname, "./src/lib/websocketEffects/index.ts"),
     },
   },

@@ -1,4 +1,3 @@
-import type { ColumnDefinition } from "@dockstat/sqlite-wrapper"
 import { t } from "elysia"
 import type { EVENTS, PluginActions, PluginConfig } from ".."
 import { Repo } from "./db"
@@ -16,19 +15,19 @@ import { Repo } from "./db"
  * tags: Tags which should be shown in DockStore
  */
 export const PluginMeta = {
-  name: t.String(),
-  description: t.String(),
-  version: t.String(),
-  repository: t.String(),
-  repoType: Repo.properties.type,
-  manifest: t.String(),
   author: t.Object({
+    email: t.Optional(t.String({ format: "email" })),
+    license: t.String({ default: "MIT" }),
     name: t.String(),
     website: t.Optional(t.String({ format: "uri" })),
-    license: t.String({ default: "MIT" }),
-    email: t.Optional(t.String({ format: "email" })),
   }),
+  description: t.String(),
+  manifest: t.String(),
+  name: t.String(),
+  repository: t.String(),
+  repoType: Repo.properties.type,
   tags: t.Optional(t.Array(t.String())),
+  version: t.String(),
 }
 
 export const WrappedPluginMeta = t.Object(PluginMeta)
@@ -44,7 +43,7 @@ export const DBPluginShema = t.Object({
 
 export type DBPluginShemaT = typeof DBPluginShema.static
 
-export interface DBPlugin<Columns = Record<string, ColumnDefinition>>
+export interface DBPlugin<Columns = Record<string, unknown>>
   extends WrappedPluginMetaType,
     Record<string, unknown> {
   id?: number
@@ -68,11 +67,11 @@ export interface Plugin<
 
 export const PluginStatusRepsonse = t.Object({
   installed_plugins: t.Number(),
+  loaded_plugins: t.Array(DBPluginShema),
+  repos: t.Array(t.String()),
   types: t.Object({
-    gitlab: t.Array(DBPluginShema),
     github: t.Array(DBPluginShema),
+    gitlab: t.Array(DBPluginShema),
     http: t.Array(DBPluginShema),
   }),
-  repos: t.Array(t.String()),
-  loaded_plugins: t.Array(DBPluginShema),
 })

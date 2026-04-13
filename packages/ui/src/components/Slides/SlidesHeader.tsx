@@ -4,7 +4,7 @@ import type { UseSlideReturn } from "./useSlideState"
 
 interface SlidesHeaderProps {
   header?: string
-  description?: string
+  description?: string | React.ReactNode
   buttonPosition: "left" | "center" | "right"
   connected: boolean
   state: UseSlideReturn
@@ -32,11 +32,11 @@ export const SlidesHeader = ({
 
   const buttons = (
     <ButtonRow
-      slideKeys={state.slideKeys}
       activeSlide={state.activeSlide}
-      isCollapsed={state.isCollapsed}
       connected={connected}
+      isCollapsed={state.isCollapsed}
       onSlideChange={state.changeSlide}
+      slideKeys={state.slideKeys}
       wrapperClass={
         buttonPosition === "right"
           ? ""

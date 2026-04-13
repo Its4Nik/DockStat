@@ -217,11 +217,11 @@ export class FrontendActionsHandler {
       // Create a mock request for the route handler
       const method = loader.method ?? "GET"
       const request = new Request(`http://localhost:${PORT}/${loader.apiRoute}`, {
-        method,
+        body: method === "POST" && resolvedBody ? JSON.stringify(resolvedBody) : undefined,
         headers: {
           "Content-Type": "application/json",
         },
-        body: method === "POST" && resolvedBody ? JSON.stringify(resolvedBody) : undefined,
+        method,
       })
 
       // Call the plugin route handler
@@ -230,24 +230,24 @@ export class FrontendActionsHandler {
       this.logger?.info(`Loader ${loader.id} completed successfully in ${Date.now() - startTime}ms`)
 
       return {
-        loaderId: loader.id,
-        success: true,
         data: result,
-        stateKey: loader.stateKey,
         dataKey: loader.dataKey,
         loadedAt: Date.now(),
+        loaderId: loader.id,
+        stateKey: loader.stateKey,
+        success: true,
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
       this.logger?.error(`Loader ${loader.id} failed: ${errorMessage}`)
 
       return {
-        loaderId: loader.id,
-        success: false,
-        error: errorMessage,
-        stateKey: loader.stateKey,
         dataKey: loader.dataKey,
+        error: errorMessage,
         loadedAt: Date.now(),
+        loaderId: loader.id,
+        stateKey: loader.stateKey,
+        success: false,
       }
     }
   }
@@ -305,11 +305,11 @@ export class FrontendActionsHandler {
           // Create request for the API route
           const method = action.method ?? "POST"
           const request = new Request(`http://localhost:${PORT}/${action.apiRoute}`, {
-            method,
+            body: method === "POST" && resolvedBody ? JSON.stringify(resolvedBody) : undefined,
             headers: {
               "Content-Type": "application/json",
             },
-            body: method === "POST" && resolvedBody ? JSON.stringify(resolvedBody) : undefined,
+            method,
           })
 
           // Call the plugin route handler
@@ -321,9 +321,9 @@ export class FrontendActionsHandler {
 
           return {
             actionId: action.id,
-            success: true,
             data: result,
             executedAt: Date.now(),
+            success: true,
           }
         }
 
@@ -331,36 +331,36 @@ export class FrontendActionsHandler {
           // setState actions are handled on the frontend
           return {
             actionId: action.id,
-            success: true,
             data: { stateUpdates: action.stateUpdates },
             executedAt: Date.now(),
+            success: true,
           }
 
         case "navigate":
           // navigate actions are handled on the frontend
           return {
             actionId: action.id,
-            success: true,
             data: { path: action.path },
             executedAt: Date.now(),
+            success: true,
           }
 
         case "reload":
           // reload actions are handled on the frontend
           return {
             actionId: action.id,
-            success: true,
             data: { loaderIds: action.loaderIds },
             executedAt: Date.now(),
+            success: true,
           }
 
         case "custom":
           // custom actions need a handler on the frontend
           return {
             actionId: action.id,
-            success: true,
             data: { handler: action.handler },
             executedAt: Date.now(),
+            success: true,
           }
 
         default:
@@ -372,9 +372,9 @@ export class FrontendActionsHandler {
 
       return {
         actionId: action.id,
-        success: false,
         error: errorMessage,
         executedAt: Date.now(),
+        success: false,
       }
     }
   }
@@ -408,7 +408,7 @@ export class FrontendActionsHandler {
       }
     }
 
-    return { state, data }
+    return { data, state }
   }
 
   /**

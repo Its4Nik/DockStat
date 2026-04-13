@@ -24,7 +24,7 @@ export function ExtensionBrowser({
   manifests,
 }: ExtensionBrowserProps) {
   const installedPluginsRecord = Object.fromEntries(
-    installedPlugins.map((p) => [p.name, { version: p.version, id: p.id }])
+    installedPlugins.map((p) => [p.name, { id: p.id, version: p.version }])
   ) as Record<string, { version: string; id: number }>
 
   return (
@@ -44,10 +44,10 @@ export function ExtensionBrowser({
         <div className="flex flex-wrap">
           {repos.map((repo) => (
             <Repo
-              repo={repo}
+              installedPlugins={installedPluginsRecord}
               key={repo.name}
               plugins={manifests[repo.name].data.plugins}
-              installedPlugins={installedPluginsRecord}
+              repo={repo}
             />
           ))}
         </div>

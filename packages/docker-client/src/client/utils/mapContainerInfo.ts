@@ -3,49 +3,53 @@ import type Dockerode from "dockerode"
 
 export function mapContainerInfo(
   container: Dockerode.ContainerInfo,
-  hostId: number
+  hostId: number,
+  clientId: number
 ): DOCKER.ContainerInfo {
   return {
-    id: container.Id,
-    hostId,
-    name: container.Names[0]?.replace("/", "") || "unknown",
-    image: container.Image,
-    status: container.Status,
-    state: container.State,
+    clientId: clientId,
     created: container.Created,
+    hostId,
+    id: container.Id,
+    image: container.Image,
+    labels: container.Labels || {},
+    name: container.Names[0]?.replace("/", "") || "unknown",
+    networkSettings: container.NetworkSettings
+      ? { networks: container.NetworkSettings.Networks || {} }
+      : undefined,
     ports: container.Ports.map((port) => ({
       privatePort: port.PrivatePort,
       publicPort: port.PublicPort,
       type: port.Type,
     })),
-    labels: container.Labels || {},
-    networkSettings: container.NetworkSettings
-      ? { networks: container.NetworkSettings.Networks || {} }
-      : undefined,
+    state: container.State,
+    status: container.Status,
   }
 }
 
 export function mapContainerInfoFromInspect(
   containerInfo: Dockerode.ContainerInspectInfo,
-  hostId: number
+  hostId: number,
+  clientId: number
 ): DOCKER.ContainerInfo {
   return {
-    id: containerInfo.Id,
-    hostId,
-    name: containerInfo.Name.replace("/", ""),
-    image: containerInfo.Config.Image,
-    status: containerInfo.State.Status,
-    state: containerInfo.State.Status,
+    clientId,
     created: Math.floor(new Date(containerInfo.Created).getTime() / 1000),
+    hostId,
+    id: containerInfo.Id,
+    image: containerInfo.Config.Image,
+    labels: containerInfo.Config.Labels || {},
+    name: containerInfo.Name.replace("/", ""),
+    networkSettings: {
+      networks: containerInfo.NetworkSettings.Networks || {},
+    },
     ports: Object.entries(containerInfo.NetworkSettings.Ports || {}).map(([port, bindings]) => ({
       privatePort: Number.parseInt(String(port.split("/")[0]), 10),
       publicPort: bindings?.[0]?.HostPort ? Number.parseInt(bindings[0].HostPort, 10) : undefined,
       type: port.split("/")[1] || "tcp",
     })),
-    labels: containerInfo.Config.Labels || {},
-    networkSettings: {
-      networks: containerInfo.NetworkSettings.Networks || {},
-    },
+    state: containerInfo.State.Status,
+    status: containerInfo.State.Status,
   }
 }
 
@@ -80,13 +84,13 @@ export function mapContainerStats(
 
   return {
     ...containerInfo,
-    stats,
-    cpuUsage: Math.round(cpuUsage * 100) / 100,
-    memoryUsage,
-    memoryLimit,
-    networkRx,
-    networkTx,
     blockRead,
     blockWrite,
+    cpuUsage: Math.round(cpuUsage * 100) / 100,
+    memoryLimit,
+    memoryUsage,
+    networkRx,
+    networkTx,
+    stats,
   }
 }

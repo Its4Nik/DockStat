@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { Table } from "../components/Table/Table"
 
-interface User {
+interface User extends Record<string, unknown> {
   id: number
   name: string
   email: string
@@ -10,20 +10,20 @@ interface User {
 }
 
 const meta: Meta<typeof Table> = {
-  title: "Components/Table",
   component: Table,
   parameters: {
     layout: "padded",
   },
+  title: "Components/Table",
 }
 
 export default meta
 type Story = StoryObj<typeof Table<User>>
 
 const sampleData: User[] = [
-  { id: 1, name: "John Doe", email: "john@example.com", role: "Admin", status: "active" },
-  { id: 2, name: "Jane Smith", email: "jane@example.com", role: "User", status: "active" },
-  { id: 3, name: "Bob Johnson", email: "bob@example.com", role: "Editor", status: "inactive" },
+  { email: "john@example.com", id: 1, name: "John Doe", role: "Admin", status: "active" },
+  { email: "jane@example.com", id: 2, name: "Jane Smith", role: "User", status: "active" },
+  { email: "bob@example.com", id: 3, name: "Bob Johnson", role: "Editor", status: "inactive" },
 ]
 
 const columns = [
@@ -33,7 +33,6 @@ const columns = [
   { key: "role", title: "Role" },
   {
     key: "status",
-    title: "Status",
     render: (value: string) => (
       <span
         className={`px-2 py-1 rounded-full text-xs ${
@@ -43,36 +42,37 @@ const columns = [
         {value}
       </span>
     ),
+    title: "Status",
   },
 ]
 
 export const Basic: Story = {
   args: {
-    data: sampleData,
     columns: columns,
+    data: sampleData,
   },
 }
 
 export const Striped: Story = {
   args: {
-    data: sampleData,
     columns: columns,
+    data: sampleData,
     striped: true,
   },
 }
 
 export const Bordered: Story = {
   args: {
-    data: sampleData,
-    columns: columns,
     bordered: true,
+    columns: columns,
+    data: sampleData,
   },
 }
 
 export const Hoverable: Story = {
   args: {
-    data: sampleData,
     columns: columns,
+    data: sampleData,
     hoverable: true,
   },
 }

@@ -1,37 +1,37 @@
 {
-  "name": "@dockstat/template-renderer",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
-  "exports": {
-    ".": "./src/index.ts",
-    "./types": "./src/types/index.ts",
-    "./renderer": "./src/renderer/index.ts",
-    "./validation": "./src/validation/index.ts",
-    "./hooks": "./src/hooks/useTemplate.ts",
-    "./parser": "./src/parser/index.ts",
-    "./builder": "./src/builder/index.ts",
-    "./registry": "./src/registry/index.tsx"
-  },
-  "scripts": {
-    "format": "biome format --write",
-    "lint": "biome lint .",
-    "lint:fix": "biome lint --write .",
-    "check-types": "tsc --noEmit"
-  },
   "dependencies": {
     "@dockstat/ui": "workspace:*",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "@types/react": "^19.1.16",
-    "@types/react-dom": "^19.1.9"
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "bun-types": "latest"
   },
+  "exports": {
+    ".": "./src/index.ts",
+    "./builder": "./src/builder/index.ts",
+    "./hooks": "./src/hooks/useTemplate.ts",
+    "./parser": "./src/parser/index.ts",
+    "./registry": "./src/registry/index.tsx",
+    "./renderer": "./src/renderer/index.ts",
+    "./types": "./src/types/index.ts",
+    "./validation": "./src/validation/index.ts"
+  },
+  "main": "src/index.ts",
+  "name": "@dockstat/template-renderer",
   "peerDependencies": {
-    "typescript": "^5.9.3"
-  }
+    "typescript": "catalog:testing"
+  },
+  "private": true,
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "format": "biome format --write",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write ."
+  },
+  "type": "module",
+  "types": "src/index.ts",
+  "version": "1.0.0"
 }

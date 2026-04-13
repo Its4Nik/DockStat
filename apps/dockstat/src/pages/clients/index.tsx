@@ -1,29 +1,29 @@
-import { Card, Divider } from "@dockstat/ui"
-import { useQuery } from "@tanstack/react-query"
-import { Hammer, Split } from "lucide-react"
+import { Badge, Card, Divider } from "@dockstat/ui"
+import { eden } from "@dockstat/utils/react"
+import { Hammer, Server, Split } from "lucide-react"
 import { ClientCard } from "@/components/clients/ClientCard"
 import { HostsList } from "@/components/clients/HostsList"
 import { PoolStatsCard } from "@/components/clients/PoolStatsCard"
 import { WorkersTable } from "@/components/clients/WorkersTable"
 import { usePageHeading } from "@/hooks/useHeading"
-import { fetchClients, fetchHosts, fetchPoolStatus } from "@/lib/queries"
+import { api } from "@/lib/api"
 
 export default function ClientsPage() {
   usePageHeading("Clients & Workers")
 
-  const { data: clientsData, isLoading: clientsLoading } = useQuery({
+  const { data: clientsData, isLoading: clientsIsLoading } = eden.useEdenQuery({
     queryKey: ["fetchDockerClients"],
-    queryFn: fetchClients,
+    route: api.docker.client.all({ stored: "true" }).get,
   })
 
-  const { data: poolStatus, isLoading: poolLoading } = useQuery({
+  const { data: poolStatus, isLoading: poolLoading } = eden.useEdenQuery({
     queryKey: ["fetchPoolStatus"],
-    queryFn: fetchPoolStatus,
+    route: api.docker.manager["pool-stats"].get,
   })
 
-  const { data: hosts, isLoading: hostsLoading } = useQuery({
+  const { data: hosts, isLoading: hostsLoading } = eden.useEdenQuery({
     queryKey: ["fetchHosts"],
-    queryFn: fetchHosts,
+    route: api.docker.hosts.get,
   })
 
   // Create a map of worker info by client ID for easy lookup
@@ -45,23 +45,33 @@ export default function ClientsPage() {
 
       {/* Clients Section */}
       <div>
-        <Card size="sm" variant="flat" className="flex items-center gap-2 mb-4">
-          <Split size={24} className="text-accent" />
+        <Card
+          className="flex items-center gap-2 mb-4"
+          size="sm"
+          variant="flat"
+        >
+          <Split
+            className="text-accent"
+            size={24}
+          />
           <h2 className="text-2xl font-semibold text-muted-text">Docker Clients</h2>
         </Card>
 
-        {clientsLoading ? (
+        {clientsIsLoading ? (
           <div className="text-center py-12 text-muted-text">Loading clients...</div>
         ) : !clientsData || clientsData.length === 0 ? (
           <div className="text-center py-12 text-muted-text">
             No Docker clients configured. Add a client to get started.
           </div>
         ) : (
-          <Card variant="dark" className="flex flex-wrap gap-4">
+          <Card
+            className="flex flex-wrap gap-4"
+            variant="dark"
+          >
             {clientsData.map((client) => (
               <ClientCard
-                key={client.id}
                 client={client}
+                key={client.id}
                 workerInfo={client.id ? workersByClientId[client.id] : undefined}
               />
             ))}
@@ -74,8 +84,15 @@ export default function ClientsPage() {
 
       {/* Workers Section */}
       <div>
-        <Card size="sm" variant="flat" className="flex items-center gap-2 mb-4">
-          <Hammer size={24} className="text-accent" />
+        <Card
+          className="flex items-center gap-2 mb-4"
+          size="sm"
+          variant="flat"
+        >
+          <Hammer
+            className="text-accent"
+            size={24}
+          />
           <h2 className="text-2xl font-semibold text-muted-text">Worker Pool</h2>
         </Card>
 
@@ -95,7 +112,29 @@ export default function ClientsPage() {
       <Divider variant="dotted" />
 
       {/* Hosts Section */}
-      <div className="">
+      <div>
+        <Card
+          className="flex justify-between justify-centergap-2 mb-4"
+          size="sm"
+          variant="flat"
+        >
+          <div className="flex items-center gap-2">
+            <Server
+              className="text-accent"
+              size={24}
+            />
+            <h2 className="text-2xl font-semibold text-muted-text">Docker Hosts</h2>
+          </div>
+          {hosts && (
+            <Badge
+              size="sm"
+              variant="primary"
+            >
+              {hosts.length} {hosts.length === 1 ? "Host" : "Hosts"}
+            </Badge>
+          )}
+        </Card>
+
         {hostsLoading ? (
           <div className="text-center py-12 text-muted-text">Loading hosts...</div>
         ) : (

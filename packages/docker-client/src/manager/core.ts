@@ -1,4 +1,5 @@
 import { heapStats } from "bun:jsc"
+import { DockerError } from "@dockstat/docker"
 import type Logger from "@dockstat/logger"
 import type { LogEntry } from "@dockstat/logger"
 import type PluginHandler from "@dockstat/plugin-handler"
@@ -84,7 +85,6 @@ export class DockerClientManagerCore {
   }
 
   // ---------- Client registration ----------
-
   public async registerClient(name: string, options: DOCKER.DockerAdapterOptions = {}) {
     let dbStepDone = false
     try {
@@ -107,9 +107,9 @@ export class DockerClientManagerCore {
 
       this.logger.info(msg)
       return {
-        success: true,
-        message: msg,
         clientId,
+        message: msg,
+        success: true,
       }
     } catch (error: unknown) {
       const extra = dbStepDone
@@ -124,9 +124,9 @@ export class DockerClientManagerCore {
       }
 
       return {
-        success: false,
         error,
         message: msg,
+        success: false,
       }
     }
   }
@@ -174,18 +174,18 @@ export class DockerClientManagerCore {
       this.logger.info(msg)
 
       return {
-        success: true,
-        message: msg,
         clientId: id,
+        message: msg,
+        success: true,
       }
     } catch (error: unknown) {
       const msg = `Error while updating Client ${id} (${name}) - error: ${JSON.stringify(error)}`
       this.logger.error(msg)
 
       return {
-        success: false,
         error,
         message: msg,
+        success: false,
       }
     }
   }
@@ -210,17 +210,17 @@ export class DockerClientManagerCore {
 
       const now = Date.now()
       const wrapper: WorkerWrapper = {
-        worker,
+        busy: false,
         clientId,
         clientName,
-        hostIds: new Set(),
-        busy: false,
         createdAt: now,
-        lastUsed: now,
+        errorCount: 0,
+        hostIds: new Set(),
         initialized: false,
         lastError: null,
-        errorCount: 0,
+        lastUsed: now,
         serverHooks: this.serverHooks,
+        worker,
       }
 
       worker.addEventListener("error", (error: ErrorEvent) => {
@@ -328,11 +328,11 @@ export class DockerClientManagerCore {
       wrapper.worker.addEventListener("message", initHandler)
 
       wrapper.worker.postMessage({
-        type: "__init__",
         clientId,
         clientName,
         dbPath: this.dbPath,
         options,
+        type: "__init__",
       })
     })
   }
@@ -374,7 +374,7 @@ export class DockerClientManagerCore {
     wrapper.lastUsed = Date.now()
 
     try {
-      const response = await sendWorkerMessage<T>(wrapper.worker, request)
+      const response = await sendWorkerMessage(wrapper.worker, request)
       if (response.success) {
         return response.data as T
       }
@@ -390,6 +390,10 @@ export class DockerClientManagerCore {
       wrapper.errorCount += 1
       throw new Error(errorMessage)
     } catch (err) {
+      if (err instanceof DockerError) {
+        throw new DockerError(err.name, err.status, err.path, err.version, err.params)
+      }
+
       const errorMessage = err instanceof Error ? err.message : String(err)
       wrapper.lastError = errorMessage
       wrapper.errorCount += 1
@@ -413,16 +417,22 @@ export class DockerClientManagerCore {
   }> {
     const liveMap = new Map<
       number,
-      { id: number; name: string; initialized: true; options: DOCKER.DockerAdapterOptions }
+      {
+        id: number
+        name: string
+        initialized: true
+        options: DOCKER.DockerAdapterOptions
+      }
     >()
+
     for (const w of this.workers.values()) {
       liveMap.set(Number(w.clientId), {
         id: Number(w.clientId),
+        initialized: true,
         name: w.clientName ?? String(w.clientId),
         options:
           this.table.select(["options"]).where({ id: w.clientId }).first()?.options ??
           ({} as DOCKER.DockerAdapterOptions),
-        initialized: true,
       })
     }
 
@@ -434,7 +444,12 @@ export class DockerClientManagerCore {
 
     const resultMap = new Map<
       number,
-      { id: number; name: string; initialized: boolean; options: DOCKER.DockerAdapterOptions }
+      {
+        id: number
+        name: string
+        initialized: boolean
+        options: DOCKER.DockerAdapterOptions
+      }
     >()
 
     for (const { id, name, options } of storedClients) {
@@ -442,9 +457,9 @@ export class DockerClientManagerCore {
       const live = liveMap.get(numId)
       resultMap.set(numId, {
         id: numId,
+        initialized: Boolean(live),
         name: live?.name ?? name,
         options: options,
-        initialized: Boolean(live),
       })
     }
 
@@ -507,7 +522,7 @@ export class DockerClientManagerCore {
 
       if (!message) {
         this.logger.debug(`No message! ${JSON.stringify(payload)}`)
-        return null
+        return
       }
 
       this.internalListeners(wrapper, message)
@@ -542,7 +557,13 @@ export class DockerClientManagerCore {
         const { level, message, caller, name, parents, timestamp, requestId }: LogEntry =
           msg.ctx as Parameters<EVENTS[typeof msg.type]>[0]
 
-        this.logger.emitLogEntry(level, message, { caller, name, parents, timestamp, requestId })
+        this.logger.emitLogEntry(level, message, {
+          caller,
+          name,
+          parents,
+          requestId,
+          timestamp,
+        })
       }
     }
   }
@@ -632,18 +653,6 @@ export class DockerClientManagerCore {
     return false
   }
 
-  public async getAllHosts(): Promise<
-    {
-      name: string
-      id: number
-      clientId: number
-      reachable: boolean
-    }[]
-  > {
-    // Default behavior: no hosts known at core level. HostsMixin overrides this.
-    return []
-  }
-
   // ---------- Pool metrics & status ----------
 
   public async getPoolMetrics(): Promise<PoolMetrics> {
@@ -666,28 +675,28 @@ export class DockerClientManagerCore {
       }
 
       const workerMetrics: WorkerMetrics = {
-        workerId: clientId,
+        activeStreams: 0,
         clientId: wrapper.clientId,
         clientName: wrapper.clientName,
+        hasMonitoringManager,
         hostsManaged: wrapper.hostIds.size,
         initialized: wrapper.initialized,
-        activeStreams: 0,
-        hasMonitoringManager,
         isMonitoring,
-        options: this.table.select(["options"]).where({ id: wrapper.clientId }).first()?.options,
         memoryUsage: heapStats(),
+        options: this.table.select(["options"]).where({ id: wrapper.clientId }).first()?.options,
         uptime: Date.now() - wrapper.createdAt,
+        workerId: clientId,
       }
 
       workers.push(workerMetrics)
     }
 
     return {
-      totalWorkers: this.workers.size,
       activeWorkers: Array.from(this.workers.values()).filter((w) => !w.busy).length,
-      totalHosts,
-      totalClients: this.workers.size,
       averageHostsPerWorker: this.workers.size > 0 ? totalHosts / this.workers.size : 0,
+      totalClients: this.workers.size,
+      totalHosts,
+      totalWorkers: this.workers.size,
       workers,
     }
   }
@@ -719,17 +728,31 @@ export class DockerClientManagerCore {
     }
 
     return {
-      workerId: clientId,
+      activeStreams: 0,
       clientId: wrapper.clientId,
       clientName: wrapper.clientName,
+      hasMonitoringManager,
       hostsManaged: wrapper.hostIds.size,
       initialized: wrapper.initialized,
-      activeStreams: 0,
-      hasMonitoringManager,
       isMonitoring,
       memoryUsage: heapStats(),
       uptime: Date.now() - wrapper.createdAt,
+      workerId: clientId,
     }
+  }
+
+  public async getAllHosts(): Promise<
+    {
+      name: string
+      id: number
+      clientId: number
+      reachable: boolean
+      host: string
+      port: number
+    }[]
+  > {
+    // Default behavior: no hosts known at core level. HostsMixin overrides this.
+    return []
   }
 
   // ---------- Cleanup ----------

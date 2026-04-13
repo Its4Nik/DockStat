@@ -11,17 +11,17 @@ export default class HostHandler {
     this.logger = new Logger(`HostHandler-${id}`)
     this.logger.info("Initializing HostHandler")
     this.logger.debug("Creating hosts table")
-    this.db = { tableName: `host_handler_${id}`, db: hostDB }
+    this.db = { db: hostDB, tableName: `host_handler_${id}` }
     this.hostTable = hostDB.createTable<DATABASE.DB_target_host>(
       `host_handler_${id}`,
       {
+        createdAt: column.createdAt(),
+        docker_client_id: column.integer({ notNull: true }),
+        host: column.text({ notNull: true }),
         id: column.id(),
         name: column.text({ notNull: true }),
-        host: column.text({ notNull: true }),
         port: column.integer({ notNull: true }),
         secure: column.boolean({ default: 0 }),
-        docker_client_id: column.integer({ notNull: true }),
-        createdAt: column.createdAt(),
         updatedAt: column.updatedAt(),
       },
       { ifNotExists: true }
@@ -36,7 +36,7 @@ export default class HostHandler {
 
   public getHosts() {
     this.logger.debug("Fetching all hosts")
-    return this.hostTable.all()
+    return this.hostTable.select(["*"]).all()
   }
 
   public removeHost(hostId: number) {

@@ -15,17 +15,17 @@ export const HoverBubble: FC<HoverBubbleProps> = ({
   className = "",
 }) => {
   const positionClasses: Record<"top" | "bottom" | "left" | "right", string> = {
-    top: "bottom-full mb-3 left-1/2 -translate-x-1/2",
     bottom: "top-full mt-3 left-1/2 -translate-x-1/2",
     left: "right-full mr-3 top-1/2 -translate-y-1/2",
     right: "left-full ml-3 top-1/2 -translate-y-1/2",
+    top: "bottom-full mb-3 left-1/2 -translate-x-1/2",
   }
 
   const arrowClasses: Record<"top" | "bottom" | "left" | "right", string> = {
-    top: "left-1/2 -translate-x-1/2 top-full -mt-1",
     bottom: "left-1/2 -translate-x-1/2 bottom-full -mb-1 rotate-180",
     left: "top-1/2 -translate-y-1/2 left-full -ml-1 -rotate-90",
     right: "top-1/2 -translate-y-1/2 right-full -mr-1 rotate-90",
+    top: "left-1/2 -translate-x-1/2 top-full -mt-1",
   }
 
   return (
@@ -33,7 +33,6 @@ export const HoverBubble: FC<HoverBubbleProps> = ({
       {children}
 
       <div
-        role="tooltip"
         className={`
           absolute z-100
           opacity-0 scale-95
@@ -47,6 +46,7 @@ export const HoverBubble: FC<HoverBubbleProps> = ({
           max-w-[min(16rem,calc(100vw-18rem))]
           ${positionClasses[position]} ${className}
         `}
+        role="tooltip"
       >
         {label}
 

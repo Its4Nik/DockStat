@@ -1,33 +1,33 @@
 {
   "compilerOptions": {
-    /* ---- Build & Module Settings ---- */
-    "composite": true,
-    "module": "ESNext",
-    "target": "ESNext",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "moduleResolution": "Node",
-
-    /* ---- Strictness & Type Safety ---- */
-    "strict": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-
     /* ---- Interop & Convenience ---- */
     "allowSyntheticDefaultImports": true,
+    /* ---- Build & Module Settings ---- */
+    "composite": true,
     "esModuleInterop": true,
-    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
-
-    /* ---- Project Structure ---- */
-    "baseUrl": ".",
-    "outDir": "dist",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
 
     /* ---- Emission ---- */
-    "noEmit": false
+    "noEmit": false,
+
+    /* ---- Project Structure ---- */
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ESNext",
+
+    /* ---- Strictness & Type Safety ---- */
+    "types": ["bun"]
   },
-  "include": [],
   "exclude": ["node_modules", "dist", "build"],
+  "include": [],
   "references": [
+    { "path": "./packages/docker-swarm" },
     { "path": "./packages/docker-client" },
     { "path": "./packages/plugin-handler" },
     { "path": "./packages/sqlite-wrapper" },

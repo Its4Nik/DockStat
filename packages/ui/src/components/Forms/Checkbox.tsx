@@ -48,15 +48,15 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>((props
   }, [indeterminate])
 
   const sizeClasses: Record<CheckboxSize, string> = {
-    sm: "w-4 h-4",
-    md: "w-5 h-5",
     lg: "w-6 h-6",
+    md: "w-5 h-5",
+    sm: "w-4 h-4",
   }
 
   const iconSizeClasses: Record<CheckboxSize, number> = {
-    sm: 12,
-    md: 16,
     lg: 20,
+    md: 16,
+    sm: 12,
   }
 
   const baseClasses =
@@ -74,36 +74,46 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>((props
 
   const renderIcon = () => {
     if (indeterminate) {
-      return <Minus size={iconSizeClasses[size]} className="text-secondary-text" />
+      return (
+        <Minus
+          className="text-secondary-text"
+          size={iconSizeClasses[size]}
+        />
+      )
     }
 
     if (checked) {
       if (props.tickedIcon) {
         return props.tickedIcon
       }
-      return <Check size={iconSizeClasses[size]} className="text-success" />
+      return (
+        <Check
+          className="text-success"
+          size={iconSizeClasses[size]}
+        />
+      )
     }
     return props.unTickedIcon ? props.unTickedIcon : null
   }
 
   return (
     <div
-      className={`inline-flex items-center ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${className}`}
       aria-disabled={disabled}
+      className={`inline-flex items-center ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${className}`}
     >
       {variant === "icon" ? (
         <div className="relative">
           <input
+            aria-checked={ariaChecked}
+            checked={checked}
+            className={`${sizeClasses[size]} ${baseClasses} sr-only`}
+            disabled={disabled}
             id={id}
             name={name}
-            value={value}
+            onChange={handleChange}
             ref={internalRef}
             type="checkbox"
-            className={`${sizeClasses[size]} ${baseClasses} sr-only`}
-            checked={checked}
-            onChange={handleChange}
-            disabled={disabled}
-            aria-checked={ariaChecked}
+            value={value}
             {...rest}
           />
           <div
@@ -122,16 +132,16 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>((props
         </div>
       ) : (
         <input
+          aria-checked={ariaChecked}
+          checked={checked}
+          className={`${sizeClasses[size]} ${baseClasses}`}
+          disabled={disabled}
           id={id}
           name={name}
-          value={value}
+          onChange={handleChange}
           ref={internalRef}
           type="checkbox"
-          className={`${sizeClasses[size]} ${baseClasses}`}
-          checked={checked}
-          onChange={handleChange}
-          disabled={disabled}
-          aria-checked={ariaChecked}
+          value={value}
           {...rest}
         />
       )}

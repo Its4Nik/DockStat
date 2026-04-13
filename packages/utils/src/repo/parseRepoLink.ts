@@ -1,4 +1,5 @@
 import type { RepoType } from "@dockstat/typings/types"
+import { splitDomain } from "./helper"
 
 function parseRepoParts(source: string) {
   const [ownerRepo, branchAndPath] = source.split(":")
@@ -9,16 +10,16 @@ function parseRepoParts(source: string) {
 
   const parts = branchAndPath?.split("/") || []
   const branch = parts[0]
-  // Fixes potential bug with deep paths by joining remaining segments
   const path = parts.slice(1).join("/")
 
-  return { ownerRepo, branch, path }
+  return { branch, ownerRepo, path }
 }
 
 export function parseFromDBToRepoLink(
   type: RepoType["type"],
   source: string,
-  file = "manifest.yaml"
+  file = "repo.json",
+  raw = true
 ) {
   switch (type) {
     case "http":
@@ -26,24 +27,87 @@ export function parseFromDBToRepoLink(
 
     case "github": {
       const { ownerRepo, branch, path } = parseRepoParts(source)
-      return `https://raw.githubusercontent.com/${ownerRepo}/refs/heads/${branch}/${path}/${file}`
+      return raw
+        ? `https://raw.githubusercontent.com/${ownerRepo}/refs/heads/${branch?.replaceAll("heads/", "")}/${path}/${file}`
+        : `https://github.com/${ownerRepo}/tree/${branch}/${path}`
     }
 
     case "gitlab": {
-      const cleanSource = source.replace("gitlab://", "")
-      const { ownerRepo, branch, path } = parseRepoParts(cleanSource)
-      return `https://gitlab.com/${ownerRepo}/-/raw/${branch}/${path}/${file}`
+      const clean = source.replace("gitlab://", "")
+      const { domain, source: repoSource } = splitDomain(clean, "gitlab.com")
+      const { ownerRepo, branch, path } = parseRepoParts(repoSource)
+
+      return raw
+        ? `https://${domain}/${ownerRepo}/-/raw/${branch}/${path}/${file}`
+        : `https://${domain}/${ownerRepo}/-/tree/${branch}/${path}`
     }
 
     case "gitea": {
-      const cleanSource = source.replace("gitea://", "")
-      const { ownerRepo, branch, path } = parseRepoParts(cleanSource)
-      // Replace with your specific Gitea domain if needed
-      const domain = "gitea.com"
-      return `https://${domain}/${ownerRepo}/raw/branch/${branch}/${path}/${file}`
+      const clean = source.replace("gitea://", "")
+      const { domain, source: repoSource } = splitDomain(clean, "gitea.com")
+      const { ownerRepo, branch, path } = parseRepoParts(repoSource)
+
+      return raw
+        ? `https://${domain}/${ownerRepo}/raw/branch/${branch}/${path}/${file}`
+        : `https://${domain}/${ownerRepo}/src/branch/${branch}/${path}`
     }
 
     default:
       throw new Error(`Unsupported repo type: ${type}`)
   }
+}
+
+export function parseRawToDB(rawUrl: string): {
+  type: RepoType["type"]
+  source: string
+} {
+  const url = new URL(rawUrl)
+
+  // HTTP (non-git)
+  if (
+    !url.hostname.includes("github") &&
+    !url.hostname.includes("gitlab") &&
+    !url.pathname.includes("/raw/")
+  ) {
+    return { source: rawUrl, type: "http" }
+  }
+
+  // GitHub
+  if (url.hostname === "raw.githubusercontent.com") {
+    const [, owner, repo, , , branch, ...pathParts] = url.pathname.split("/")
+    console.log({ branch, owner, repo, ...pathParts })
+    const path = pathParts.slice(0, -1).join("/")
+    return {
+      source: `${owner}/${repo}:${branch}/${path}`,
+      type: "github",
+    }
+  }
+
+  // GitLab (hosted or self-hosted)
+  if (url.pathname.includes("/-/raw/")) {
+    const [ownerRepo, , , branch, ...pathParts] = url.pathname.replace(/^\/+/, "").split("/")
+
+    const path = pathParts.slice(0, -1).join("/")
+    const domain = url.hostname === "gitlab.com" ? "" : `${url.hostname}/`
+
+    return {
+      source: `gitlab://${domain}${ownerRepo}:${branch}/${path}`,
+      type: "gitlab",
+    }
+  }
+
+  // Gitea (hosted or self-hosted)
+  if (url.pathname.includes("/raw/branch/")) {
+    const [ownerRepo, , , branch, ...pathParts] = url.pathname.replace(/^\/+/, "").split("/")
+
+    const path = pathParts.slice(0, -1).join("/")
+    const domain = url.hostname === "gitea.com" ? "" : `${url.hostname}/`
+
+    return {
+      source: `gitea://${domain}${ownerRepo}:${branch}/${path}`,
+      type: "gitea",
+    }
+  }
+
+  throw new Error(`Unsupported raw repo URL: ${rawUrl}`)
 }

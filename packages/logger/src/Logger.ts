@@ -42,13 +42,13 @@ class Logger {
   ) {
     if (this.logHook) {
       this.logHook({
+        caller: meta?.caller || getCallerInfo(),
         level,
         message,
         name: meta?.name || this.name,
         parents: meta?.parents || this.parents,
         requestId: meta?.requestId,
         timestamp: meta?.timestamp || new Date(),
-        caller: meta?.caller || getCallerInfo(),
       })
     }
   }

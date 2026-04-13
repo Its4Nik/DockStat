@@ -1,33 +1,33 @@
 {
-  "name": "@dockstat/db",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "./index.ts",
-  "types": "./index.ts",
+  "dependencies": {
+    "@dockstat/typings": "workspace:*",
+    "bun-plugin-dts": "catalog:build-tools"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
   "files": [
     "./defaults.ts",
     "./index.ts"
   ],
+  "main": "./index.ts",
+  "name": "@dockstat/db",
+  "peerDependencies": {
+    "@dockstat/logger": "workspace:*",
+    "@dockstat/sqlite-wrapper": "workspace:*",
+    "typescript": "catalog:testing"
+  },
   "scripts": {
     "build": "bun run ./build.ts",
+    "check-types": "bunx tsc --noEmit",
+    "clean": "rm -rf dist",
     "dev": "bun build index.ts",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "lint:gh": "turbo run lint -- --reporter=github",
-    "check-types": "bunx tsc --noEmit",
-    "test": "bun run test.ts",
-    "clean": "rm -rf dist"
+    "test": "bun run test.ts"
   },
-  "dependencies": {
-    "@dockstat/typings": "workspace:*",
-    "bun-plugin-dts": "^0.3.0"
-  },
-  "peerDependencies": {
-    "typescript": "^5.9.3",
-    "@dockstat/sqlite-wrapper": "latest",
-    "@dockstat/logger": "latest"
-  },
-  "devDependencies": {
-    "@types/bun": "latest"
-  }
+  "type": "module",
+  "types": "./index.ts",
+  "version": "1.0.0"
 }

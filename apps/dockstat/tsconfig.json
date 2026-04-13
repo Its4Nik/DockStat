@@ -1,25 +1,23 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "tsBuildInfoFile": ".tsbuildinfo",
-    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "useDefineForClassFields": true,
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "allowSyntheticDefaultImports": true,
     "jsx": "react-jsx",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "moduleResolution": "bundler",
+    "noEmit": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@Queries": ["./src/lib/queries/index.ts"],
-      "@Actions": ["./src/lib/actions/index.ts"],
-      "@WSS": ["./src/lib/websocketEffects/index.ts"]
-    }
+      "@WSS": ["./src/lib/websocketEffects/index.ts"],
+      "*": ["./*"]
+    },
+    "tsBuildInfoFile": ".tsbuildinfo",
+    "useDefineForClassFields": true
   },
-  "include": ["src"],
   "exclude": ["node_modules"],
+  "extends": "../../tsconfig.base.json",
+  "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

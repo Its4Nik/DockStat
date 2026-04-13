@@ -23,7 +23,13 @@ export function PluginsOverviewCard({
       <CardBody>
         <div className="flex flex-row gap-4">
           {stats.map((stat) => (
-            <Card key={stat.label} size="sm" variant="flat" hoverable className="text-center">
+            <Card
+              className="text-center"
+              hoverable
+              key={stat.label}
+              size="sm"
+              variant="flat"
+            >
               <CardHeader className="text-lg font-medium">{stat.label}</CardHeader>
               <CardBody className="py-2">
                 <span className="text-3xl font-bold text-primary-600">{stat.value}</span>

@@ -1,0 +1,4 @@
+.backups
+node_modules
+stacks
+docknode.db

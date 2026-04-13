@@ -4,27 +4,27 @@ import { useState } from "react"
 import { Checkbox } from "../components/Forms/Checkbox"
 
 const meta: Meta<typeof Checkbox> = {
-  title: "Inputs/Checkbox",
-  component: Checkbox,
   argTypes: {
     checked: {
-      defaultValue: false,
       control: "boolean",
+      defaultValue: false,
     },
     disabled: {
-      defaultValue: false,
       control: "boolean",
+      defaultValue: false,
     },
+    indeterminate: { control: "boolean" },
+    label: {
+      control: "text",
+    },
+    onChange: { action: "changed" },
     size: {
       control: "radio",
       options: ["sm", "md", "lg"],
     },
-    label: {
-      control: "text",
-    },
-    indeterminate: { control: "boolean" },
-    onChange: { action: "changed" },
   },
+  component: Checkbox,
+  title: "Inputs/Checkbox",
 }
 
 export default meta
@@ -52,7 +52,12 @@ export const Interactive: Story = {
       args.onChange?.(nextChecked)
     }
 
-    return <Checkbox {...args} onChange={handleChange} />
+    return (
+      <Checkbox
+        {...args}
+        onChange={handleChange}
+      />
+    )
   },
 }
 
@@ -70,11 +75,11 @@ export const Uncontrolled: Story = {
         <Checkbox
           {...args}
           checked={checked}
+          label="Uncontrolled (local state)"
           onChange={(c) => {
             setChecked(c)
             args.onChange?.(c)
           }}
-          label="Uncontrolled (local state)"
         />
         <div className="text-xs text-muted-text">
           Local state value: {checked ? "true" : "false"}
@@ -111,8 +116,8 @@ export const Indeterminate: Story = {
     return (
       <Checkbox
         {...args}
-        indeterminate={isIndeterminate}
         checked={checked}
+        indeterminate={isIndeterminate}
         onChange={handleChange}
       />
     )
@@ -134,17 +139,32 @@ export const Sizes: Story = {
     return (
       <div className="flex items-center gap-6 text-muted-text">
         <div className="inline-flex items-center gap-2">
-          <Checkbox {...args} size="sm" checked={s1} onChange={setS1} />
+          <Checkbox
+            {...args}
+            checked={s1}
+            onChange={setS1}
+            size="sm"
+          />
           <span className="text-sm">sm</span>
         </div>
 
         <div className="inline-flex items-center gap-2">
-          <Checkbox {...args} size="md" checked={s2} onChange={setS2} />
+          <Checkbox
+            {...args}
+            checked={s2}
+            onChange={setS2}
+            size="md"
+          />
           <span className="text-sm">md</span>
         </div>
 
         <div className="inline-flex items-center gap-2">
-          <Checkbox {...args} size="lg" checked={s3} onChange={setS3} />
+          <Checkbox
+            {...args}
+            checked={s3}
+            onChange={setS3}
+            size="lg"
+          />
           <span className="text-sm">lg</span>
         </div>
       </div>
@@ -161,5 +181,10 @@ export const Disabled: Story = {
     disabled: true,
     label: "Disabled and checked",
   },
-  render: (args) => <Checkbox {...args} onChange={(c) => args.onChange?.(c)} />,
+  render: (args) => (
+    <Checkbox
+      {...args}
+      onChange={(c) => args.onChange?.(c)}
+    />
+  ),
 }

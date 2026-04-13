@@ -1,7 +1,6 @@
-import { addHost } from "@Actions"
 import { Button, Card, CardBody, Input, Toggle } from "@dockstat/ui"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
+import { useDockerHostMutations } from "@/hooks/mutations"
 
 type hostToAdd = {
   secure: boolean
@@ -11,28 +10,23 @@ type hostToAdd = {
   port: number
 }
 
-export function AddHost({ registeredClients }: { registeredClients: number[] }) {
-  const qc = useQueryClient()
+export function AddHost({
+  registeredClients,
+}: {
+  registeredClients: { clientName: string; clientId: number }[]
+}) {
+  const { createHostMutation } = useDockerHostMutations()
   const [formData, setFormData] = useState<hostToAdd>({
-    secure: false,
-    name: "",
+    clientId: registeredClients[0]?.clientId ?? 0,
     hostname: "",
-    clientId: registeredClients[0] || 0,
+    name: "",
     port: 2375,
-  })
-
-  const addHostMutation = useMutation({
-    mutationKey: ["addHost"],
-    mutationFn: addHost,
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["fetchHosts"] })
-      setFormData((p) => ({ ...p, name: "", hostname: "" }))
-    },
+    secure: false,
   })
 
   const handleAddHost = async () => {
     if (!formData.name || !formData.hostname) return
-    await addHostMutation.mutateAsync(formData)
+    await createHostMutation.mutateAsync(formData)
   }
 
   const updateField = (field: keyof hostToAdd, value: unknown) => {
@@ -53,32 +47,32 @@ export function AddHost({ registeredClients }: { registeredClients: number[] }) 
                 <div className="space-y-1.5">
                   <span className="text-sm font-medium">Display Name</span>
                   <Input
-                    value={formData.name}
                     onChange={(v) => updateField("name", v)}
                     placeholder="e.g. Primary Node"
+                    value={formData.name}
                   />
                 </div>
                 <div className="space-y-1.5">
                   <span className="text-sm font-medium">Hostname / IP</span>
                   <Input
-                    value={formData.hostname}
                     onChange={(v) => updateField("hostname", v)}
                     placeholder="192.168.1.10"
+                    value={formData.hostname}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <span className="text-sm font-medium">Port</span>
                     <Input
+                      onChange={(v) => updateField("port", parseInt(v, 10))}
                       type="number"
                       value={formData.port.toString()}
-                      onChange={(v) => updateField("port", parseInt(v, 10))}
                     />
                   </div>
                   <div className="flex flex-col justify-end pb-1">
                     <Toggle
-                      label="Secure (TLS)"
                       checked={formData.secure}
+                      label="Secure (TLS)"
                       onChange={(v) => updateField("secure", v)}
                     />
                   </div>
@@ -100,12 +94,15 @@ export function AddHost({ registeredClients }: { registeredClients: number[] }) 
                   <span className="text-sm font-medium">Target Client ID</span>
                   <select
                     className="w-full rounded-md border border-accent/20 bg-background p-2 text-sm"
-                    value={formData.clientId}
                     onChange={(e) => updateField("clientId", Number.parseInt(e.target.value, 10))}
+                    value={formData.clientId}
                   >
-                    {registeredClients.map((id) => (
-                      <option key={id} value={id}>
-                        Client ID: {id}
+                    {registeredClients.map((c) => (
+                      <option
+                        key={c.clientId}
+                        value={c.clientId}
+                      >
+                        Client: {c.clientName} ({c.clientId})
                       </option>
                     ))}
                     {registeredClients.length === 0 && (
@@ -123,17 +120,17 @@ export function AddHost({ registeredClients }: { registeredClients: number[] }) 
 
           <div className="flex flex-col gap-3 pt-4">
             <Button
-              size="lg"
               className="w-full"
-              onClick={handleAddHost}
               disabled={
                 !formData.name ||
                 !formData.hostname ||
-                addHostMutation.isPending ||
+                createHostMutation.isPending ||
                 registeredClients.length === 0
               }
+              onClick={handleAddHost}
+              size="lg"
             >
-              {addHostMutation.isPending ? "Connecting..." : "Add Remote Host"}
+              {createHostMutation.isPending ? "Connecting..." : "Add Remote Host"}
             </Button>
           </div>
         </div>

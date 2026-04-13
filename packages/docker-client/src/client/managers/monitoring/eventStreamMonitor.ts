@@ -1,26 +1,67 @@
+import type { Docker } from "@dockstat/docker"
 import type Logger from "@dockstat/logger"
-import type { DATABASE, DOCKER } from "@dockstat/typings"
+import type { DATABASE } from "@dockstat/typings"
 import { retry } from "@dockstat/utils"
-import type Dockerode from "dockerode"
 import { proxyEvent } from "../../../events/workerEventProxy"
-import { mapContainerInfoFromInspect } from "../../utils/mapContainerInfo"
+import type { ExtendedContainerInfo } from "../../mixins/containers/index.ts"
+
+/**
+ * Docker event structure from @bun-docker events API
+ */
+interface DockerEvent {
+  Type: string
+  Action: string
+  Actor: {
+    ID: string
+    Attributes: Record<string, string>
+  }
+  time: number
+  timeNano: number
+}
+
+/**
+ * Map ExtendedContainerInfo to object with lowercase properties for proxyEvent compatibility
+ * @bun-docker uses uppercase properties (Id, Name, State) but proxyEvent expects lowercase (id, name, state)
+ */
+function mapToLowercaseProperties(container: ExtendedContainerInfo) {
+  return {
+    clientId: container.clientId,
+    created: container.Created ? Math.floor(new Date(container.Created).getTime() / 1000) : 0,
+    hostId: container.hostId,
+    id: container.Id || "",
+    image: container.Image || "unknown",
+    labels: container.Labels || {},
+    name: container.Names?.[0]?.replace(/^\//, "") || "unknown",
+    ports: (container.Ports || []).map((port) => ({
+      privatePort: port.PrivatePort,
+      publicPort: port.PublicPort,
+      type: port.Type || "tcp",
+    })),
+    state: container.State || "unknown",
+    status: container.State || "unknown",
+  }
+}
 
 class DockerEventStreamManager {
-  private streams = new Map<number, NodeJS.ReadableStream>()
+  private intervalId?: ReturnType<typeof setInterval>
+  private lastEventTime = new Map<number, number>()
   private logger: Logger
-  private dockerInstances: Map<number, Dockerode>
+  private dockerInstances: Map<number, Docker>
   private hosts: DATABASE.DB_target_host[]
+  private clientId: number
   private options: { retryAttempts: number; retryDelay: number }
 
   constructor(
+    clientId: number,
     baseLogger: Logger,
-    dockerInstances: Map<number, Dockerode>,
+    dockerInstances: Map<number, Docker>,
     hosts: DATABASE.DB_target_host[],
     options: {
       retryAttempts: number
       retryDelay: number
     }
   ) {
+    this.clientId = clientId
     this.logger = baseLogger.spawn("DESM")
     this.dockerInstances = dockerInstances
     this.hosts = hosts
@@ -28,26 +69,18 @@ class DockerEventStreamManager {
   }
 
   start(): void {
-    this.logger.info(`Starting Docker event streams for ${this.hosts.length} hosts`)
+    this.logger.info(`Starting Docker event polling for ${this.hosts.length} hosts`)
     for (const host of this.hosts) {
-      this.startStreamForHost(host)
+      this.startPollingForHost(host)
     }
   }
 
   stop(): void {
-    this.streams.forEach((stream, hostId) => {
-      try {
-        if ("destroy" in stream && typeof stream.destroy === "function") {
-          stream.destroy()
-        }
-      } catch (error) {
-        proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
-          hostId,
-          message: "Could not Stop Docker Event Streams",
-        })
-      }
-    })
-    this.streams.clear()
+    if (this.intervalId) {
+      clearInterval(this.intervalId)
+      this.intervalId = undefined
+    }
+    this.lastEventTime.clear()
   }
 
   restart(): void {
@@ -59,131 +92,224 @@ class DockerEventStreamManager {
     this.hosts = hosts
   }
 
-  updateDockerInstances(instances: Map<number, Dockerode>): void {
+  updateDockerInstances(instances: Map<number, Docker>): void {
     this.dockerInstances = instances
   }
 
   getStreams(): Map<number, NodeJS.ReadableStream> {
-    return new Map(this.streams)
+    // Return empty map since we're using polling instead of streaming
+    return new Map()
   }
 
-  private startStreamForHost(host: DATABASE.DB_target_host): void {
-    this.logger.debug(`Starting Docker Event Stream for host ${host.id}`)
+  private startPollingForHost(host: DATABASE.DB_target_host): void {
+    const hostId = Number(host.id)
+    this.logger.debug(`Starting event polling for host ${hostId}`)
+
+    // Poll events every 5 seconds
+    const pollingInterval = 5000
+    this.intervalId = setInterval(() => this.pollEventsForHost(hostId), pollingInterval)
+
+    // Initial poll
+    this.pollEventsForHost(hostId).catch((error) => {
+      proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
+        hostId,
+        message: "Could not start initial docker event polling",
+      })
+    })
+  }
+
+  private async pollEventsForHost(hostId: number): Promise<void> {
+    const docker = this.dockerInstances.get(hostId)
+    if (!docker) {
+      this.logger.warn(`Docker instance not found for host ${hostId}`)
+      return
+    }
+
     try {
-      const docker = this.dockerInstances.get(Number(host.id))
-      if (!docker) {
-        throw new Error(`No Docker instance found for host ${host.id}`)
+      // Get last event time for this host, or use 0 if this is the first poll
+      const lastTime = this.lastEventTime.get(hostId) || 0
+
+      // Fetch events since last known time
+      const events = await retry(
+        () =>
+          docker.system.events({
+            since: String(lastTime),
+            until: String(Math.floor(Date.now() / 1000)), // Current time
+          }),
+        {
+          attempts: this.options.retryAttempts,
+          delay: this.options.retryDelay,
+        }
+      )
+
+      // Ensure events is an array (may be single object or undefined from @bun-docker)
+      const eventsArray = Array.isArray(events) ? events : events ? [events] : []
+
+      // Process each event
+      for (const event of eventsArray) {
+        if (event.time) {
+          // Update last event time
+          this.lastEventTime.set(hostId, event.time)
+
+          // Handle the event
+          this.handleEvent(hostId, event)
+        }
       }
-
-      docker
-        .getEvents({
-          filters: {
-            type: ["container"],
-            event: ["start", "stop", "die", "create", "destroy"],
-          },
-        })
-        .then((stream) => {
-          stream.on("data", (chunk: Buffer) => {
-            try {
-              const info = JSON.parse(chunk.toString()) as {
-                Action: string
-                Actor?: { ID: string }
-              }
-              this.handleEvent(Number(host.id), info)
-            } catch (error) {
-              proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
-                hostId: host.id,
-                message: "Failed to handle Docker Event",
-              })
-            }
-          })
-
-          stream.on("error", (error: Error) => {
-            proxyEvent("error", error, {
-              hostId: host.id,
-              message: "Docker event Stream failed",
-            })
-          })
-
-          this.streams.set(Number(host.id), stream)
-        })
-        .catch((error) => {
-          proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
-            hostId: host.id,
-            message: "Failed to Start docker event Stream",
-          })
-        })
     } catch (error) {
       proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
-        hostId: host.id,
-        message: "Could not Start docker event Stream",
+        hostId,
+        message: "Docker event polling failed",
       })
     }
   }
 
-  private handleEvent(hostId: number, event: { Action: string; Actor?: { ID: string } }): void {
+  private handleEvent(hostId: number, event: DockerEvent): void {
+    // @bun-docker events structure: {
+    //   Type: string,
+    //   Action: string,
+    //   Actor: {
+    //     ID: string,
+    //     Attributes: Record<string, string>
+    //   },
+    //   time: number,
+    //   timeNano: number
+    // }
+
+    // Only handle container events
+    if (event.Type !== "container") {
+      return
+    }
+
     const containerId = event.Actor?.ID
-    if (!containerId) return
+    if (!containerId) {
+      return
+    }
 
-    this.logger.debug(`Handling Docker Event (${event.Action}) for container ${containerId}`)
+    const action = event.Action
+    this.logger.debug(
+      `Handling Docker Event (${action}) for container ${containerId} on host ${hostId}`
+    )
 
-    switch (event.Action) {
+    switch (action) {
       case "start":
         this.getContainerInfo(hostId, containerId)
           .then((containerInfo) => {
             proxyEvent("container:started", {
               containerId,
-              containerInfo,
+              containerInfo: mapToLowercaseProperties(containerInfo),
               hostId,
             })
           })
           .catch((error) => {
-            proxyEvent("error", error, {
+            proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
               containerId,
               hostId,
               message: "Could not handle docker Start Event",
             })
           })
         break
+
       case "stop":
+      case "die":
         this.getContainerInfo(hostId, containerId)
           .then((containerInfo) => {
             proxyEvent("container:stopped", {
               containerId,
-              containerInfo,
+              containerInfo: mapToLowercaseProperties(containerInfo),
               hostId,
             })
           })
-          .catch((error) =>
-            proxyEvent("error", error, {
+          .catch((error) => {
+            proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
               containerId,
               hostId,
-              message: "Could not Handle docker Stop event",
+              message: "Could not handle docker Stop/Die Event",
             })
-          )
+          })
         break
-      case "die":
-        proxyEvent("container:died", { containerId, hostId })
-        break
+
       case "create":
         this.getContainerInfo(hostId, containerId)
-          .then((containerInfo) =>
+          .then((containerInfo) => {
             proxyEvent("container:created", {
               containerId,
-              containerInfo,
+              containerInfo: mapToLowercaseProperties(containerInfo),
               hostId,
             })
-          )
-          .catch((error) =>
-            proxyEvent("error", error, {
+          })
+          .catch((error) => {
+            proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
               containerId,
               hostId,
-              message: "Could not handle container create event",
+              message: "Could not handle docker Create Event",
             })
-          )
+          })
         break
+
       case "destroy":
-        proxyEvent("container:destroyed", { containerId, hostId })
+      case "remove":
+        proxyEvent("container:removed", {
+          containerId,
+          hostId,
+        })
+        break
+
+      case "pause":
+        this.getContainerInfo(hostId, containerId)
+          .then((containerInfo) => {
+            proxyEvent("container:paused", {
+              containerId,
+              containerInfo: mapToLowercaseProperties(containerInfo),
+              hostId,
+            })
+          })
+          .catch((error) => {
+            proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
+              containerId,
+              hostId,
+              message: "Could not handle docker Pause Event",
+            })
+          })
+        break
+
+      case "unpause":
+        this.getContainerInfo(hostId, containerId)
+          .then((containerInfo) => {
+            proxyEvent("container:unpaused", {
+              containerId,
+              containerInfo: mapToLowercaseProperties(containerInfo),
+              hostId,
+            })
+          })
+          .catch((error) => {
+            proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
+              containerId,
+              hostId,
+              message: "Could not handle docker Unpause Event",
+            })
+          })
+        break
+
+      case "restart":
+        this.getContainerInfo(hostId, containerId)
+          .then((containerInfo) => {
+            proxyEvent("container:stopped", {
+              containerId,
+              containerInfo: mapToLowercaseProperties(containerInfo),
+              hostId,
+            })
+          })
+          .catch((error) => {
+            proxyEvent("error", error instanceof Error ? error : new Error(String(error)), {
+              containerId,
+              hostId,
+              message: "Could not handle docker Restart Event",
+            })
+          })
+        break
+
+      default:
+        this.logger.debug(`Unhandled Docker event action: ${action}`)
         break
     }
   }
@@ -191,21 +317,22 @@ class DockerEventStreamManager {
   private async getContainerInfo(
     hostId: number,
     containerId: string
-  ): Promise<DOCKER.ContainerInfo> {
+  ): Promise<ExtendedContainerInfo> {
     const docker = this.dockerInstances.get(hostId)
-
     if (!docker) {
-      throw new Error(
-        `No Docker instance found for host ${hostId} - ${JSON.stringify(this.dockerInstances.keys)}`
-      )
+      throw new Error(`Docker instance not found for host ${hostId}`)
     }
 
-    const container = docker.getContainer(containerId)
-    const info = await retry<DOCKER.DockerAPIResponse["containerInspect"]>(
-      () => container.inspect(),
-      { attempts: this.options.retryAttempts, delay: this.options.retryDelay }
-    )
-    return mapContainerInfoFromInspect(info, hostId)
+    const info = await retry(() => docker.containers.inspect(containerId), {
+      attempts: this.options.retryAttempts,
+      delay: this.options.retryDelay,
+    })
+
+    return {
+      ...info,
+      clientId: this.clientId,
+      hostId,
+    } as ExtendedContainerInfo
   }
 }
 
