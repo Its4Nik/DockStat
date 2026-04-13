@@ -9,6 +9,7 @@
     "js-yaml": "catalog:utils"
   },
   "devDependencies": {
+    "@dockstat/docker": "workspace:*",
     "@dockstat/logger": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*",
     "@types/dockerode": "catalog:docker",

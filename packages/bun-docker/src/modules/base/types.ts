@@ -44,12 +44,6 @@ export interface ConnectionConfig {
   dockerAPIVersion?: string
 
   /**
-   * Request timeout in milliseconds.
-   * Defaults to `DEFAULT_TIMEOUT` (30,000ms) if not specified.
-   */
-  timeout?: number
-
-  /**
    * Logger configuration for request/response logging.
    * Can be a `LoggerConfig` object or `true` to enable with defaults.
    */

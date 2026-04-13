@@ -51,7 +51,11 @@ export function prepareRequestOptions(
     } else if (Array.isArray(headers)) {
       // Handle array format [key, value][]
       for (const [key, value] of headers) {
-        baseHeaders[key] = value
+        if (key !== undefined) {
+          const pKey = String(key)
+          const pVal = String(value)
+          baseHeaders[pKey] = pVal
+        }
       }
     } else {
       // Handle plain object
@@ -86,11 +90,6 @@ export function prepareRequestOptions(
   // Configure TLS
   if (config.tls) {
     options.tls = config.tls
-  }
-
-  // Configure timeout if specified
-  if (config.timeout) {
-    options.timeout = config.timeout
   }
   return options
 }

@@ -1,3 +1,4 @@
+import type { paths } from "@dockstat/docker/spec"
 import type { ContainerInspectInfo, ContainerStats, DockerVersion, Version } from "dockerode"
 import { t } from "elysia"
 
@@ -145,7 +146,12 @@ export interface ContainerInfo {
 }
 
 export interface ContainerStatsInfo extends ContainerInfo {
-  stats: ContainerStats
+  stats: paths["/containers/{id}/stats"]["get"]["responses"]["200"]["content"]["application/json"] & {
+    hostId: number
+    clientId: number
+    containerId: string
+    containerName: string
+  }
   cpuUsage: number
   memoryUsage: number
   memoryLimit: number

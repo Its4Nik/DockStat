@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test"
 import {
   DEFAULT_API_VERSION,
   DEFAULT_SOCKET_PATH,
-  DEFAULT_TIMEOUT,
   getConnectionConfig,
   isSocketAvailable,
   loadTls,
@@ -37,7 +36,6 @@ describe("getConnectionConfig", () => {
     const config = getConnectionConfig()
     expect(config.mode).toBe("unix")
     expect(config.socketPath).toBe(DEFAULT_SOCKET_PATH)
-    expect(config.timeout).toBe(DEFAULT_TIMEOUT)
     expect(config.dockerAPIVersion).toBe(DEFAULT_API_VERSION)
   })
 
@@ -82,12 +80,6 @@ describe("getConnectionConfig", () => {
     const config = getConnectionConfig()
     expect(config.mode).toBe("tcp")
     expect(config.baseUrl).toBe("http://192.168.1.1:2375")
-  })
-
-  it("should set timeout from DOCKER_TIMEOUT", () => {
-    process.env.DOCKER_TIMEOUT = "60000"
-    const config = getConnectionConfig()
-    expect(config.timeout).toBe(60000)
   })
 
   it("should set API version from DOCKER_API_VERSION", () => {
@@ -203,14 +195,9 @@ describe("isSocketAvailable", () => {
 })
 
 describe("getConnectionConfig edge cases", () => {
-  it("should handle invalid DOCKER_TIMEOUT gracefully", () => {
-    process.env.DOCKER_TIMEOUT = "invalid"
-    const config = getConnectionConfig()
-    expect(config.timeout).toBe(DEFAULT_TIMEOUT)
-  })
-
   it("should not enable logger for invalid log level", () => {
-    process.env.DOCKER_CLIENT_LOG_LEVEL = "invalid"
+    // biome-ignore lint/suspicious/noExplicitAny: needed for this test
+    process.env.DOCKER_CLIENT_LOG_LEVEL = "invalid" as any
     const config = getConnectionConfig()
     expect(config.logger).toBeUndefined()
   })
@@ -253,49 +240,43 @@ describe("getConnectionConfig edge cases", () => {
     expect(config.baseUrl).toBe("http://docker.example.com:2375")
   })
 
-  it("should handle zero timeout", () => {
-    process.env.DOCKER_TIMEOUT = "0"
-    const config = getConnectionConfig()
-    expect(config.timeout).toBe(0)
-  })
-})
+  describe("loadTls", () => {
+    it("should return undefined when CERT_FILE is not set", () => {
+      process.env.KEY_FILE = "/path/to/key.pem"
+      const tls = loadTls()
+      expect(tls).toBeUndefined()
+    })
 
-describe("loadTls", () => {
-  it("should return undefined when CERT_FILE is not set", () => {
-    process.env.KEY_FILE = "/path/to/key.pem"
-    const tls = loadTls()
-    expect(tls).toBeUndefined()
-  })
+    it("should return undefined when KEY_FILE is not set", () => {
+      process.env.CERT_FILE = "/path/to/cert.pem"
+      const tls = loadTls()
+      expect(tls).toBeUndefined()
+    })
 
-  it("should return undefined when KEY_FILE is not set", () => {
-    process.env.CERT_FILE = "/path/to/cert.pem"
-    const tls = loadTls()
-    expect(tls).toBeUndefined()
-  })
+    it("should return undefined when neither CERT_FILE nor KEY_FILE are set", () => {
+      const tls = loadTls()
+      expect(tls).toBeUndefined()
+    })
 
-  it("should return undefined when neither CERT_FILE nor KEY_FILE are set", () => {
-    const tls = loadTls()
-    expect(tls).toBeUndefined()
-  })
+    it("should return TLS config with cert and key when both are set", () => {
+      process.env.CERT_FILE = "/path/to/cert.pem"
+      process.env.KEY_FILE = "/path/to/key.pem"
+      const tls = loadTls()
+      expect(tls).toBeDefined()
+      expect(tls?.cert).toBeDefined()
+      expect(tls?.key).toBeDefined()
+      expect(tls?.ca).toBeUndefined()
+    })
 
-  it("should return TLS config with cert and key when both are set", () => {
-    process.env.CERT_FILE = "/path/to/cert.pem"
-    process.env.KEY_FILE = "/path/to/key.pem"
-    const tls = loadTls()
-    expect(tls).toBeDefined()
-    expect(tls?.cert).toBeDefined()
-    expect(tls?.key).toBeDefined()
-    expect(tls?.ca).toBeUndefined()
-  })
-
-  it("should return TLS config with cert, key, and ca when CA_FILE is set", () => {
-    process.env.CERT_FILE = "/path/to/cert.pem"
-    process.env.KEY_FILE = "/path/to/key.pem"
-    process.env.CA_FILE = "/path/to/ca.pem"
-    const tls = loadTls()
-    expect(tls).toBeDefined()
-    expect(tls?.cert).toBeDefined()
-    expect(tls?.key).toBeDefined()
-    expect(tls?.ca).toBeDefined()
+    it("should return TLS config with cert, key, and ca when CA_FILE is set", () => {
+      process.env.CERT_FILE = "/path/to/cert.pem"
+      process.env.KEY_FILE = "/path/to/key.pem"
+      process.env.CA_FILE = "/path/to/ca.pem"
+      const tls = loadTls()
+      expect(tls).toBeDefined()
+      expect(tls?.cert).toBeDefined()
+      expect(tls?.key).toBeDefined()
+      expect(tls?.ca).toBeDefined()
+    })
   })
 })

@@ -6,9 +6,6 @@ import type { LoggerConfig } from "./logger"
 /** Default path to the Docker daemon Unix socket. */
 export const DEFAULT_SOCKET_PATH = "/var/run/docker.sock"
 
-/** Default request timeout in milliseconds (30 seconds). */
-export const DEFAULT_TIMEOUT = 30000
-
 /** Default Docker Engine API version. */
 export const DEFAULT_API_VERSION = "1.54"
 
@@ -151,10 +148,6 @@ export const getConnectionConfig = (): ConnectionConfig => {
 
   const parsed = parseDockerHost(rawHost)
 
-  // Resolve timeout
-  const timeout = env.DOCKER_TIMEOUT ? parseInt(env.DOCKER_TIMEOUT, 10) : DEFAULT_TIMEOUT
-  const finalTimeout = Number.isNaN(timeout) ? DEFAULT_TIMEOUT : timeout
-
   // Resolve API version
   const dockerAPIVersion = env.DOCKER_API_VERSION || DEFAULT_API_VERSION
 
@@ -174,7 +167,6 @@ export const getConnectionConfig = (): ConnectionConfig => {
       logger,
       mode: "unix",
       socketPath: parsed.socketPath,
-      timeout: finalTimeout,
       tls,
     }
   }
@@ -190,7 +182,6 @@ export const getConnectionConfig = (): ConnectionConfig => {
     dockerAPIVersion,
     logger,
     mode: "tcp",
-    timeout: finalTimeout,
     tls,
   }
 }

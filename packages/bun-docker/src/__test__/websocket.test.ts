@@ -6,8 +6,6 @@ function createMockReadableStream(
   { immediateClose = false } = {}
 ): ReadableStream<Uint8Array> {
   let index = 0
-  const _resolveWait: (() => void) | null = null
-  const _waitPromise: Promise<void> | null = null
 
   return new ReadableStream<Uint8Array>({
     pull(controller) {
@@ -27,53 +25,6 @@ function createMockReadableStream(
       }
     },
   })
-}
-
-/**
- * Create a ReadableStream that waits until a signal to provide data.
- * Useful for testing intermediate states like OPEN.
- */
-function _createDeferredStream(): {
-  stream: ReadableStream<Uint8Array>
-  resolve: () => void
-  reject: (err: Error) => void
-} {
-  let controller: ReadableStreamDefaultController<Uint8Array> | null = null
-  let resolveWait: (() => void) | null = null
-
-  const stream = new ReadableStream<Uint8Array>({
-    cancel() {
-      // Stream cancelled
-    },
-    pull() {
-      // Wait for data to be available
-      return new Promise<void>((resolve) => {
-        resolveWait = resolve
-      }).then(() => {
-        // Pull will be called again after enqueue
-      })
-    },
-    start(c) {
-      controller = c
-    },
-  })
-
-  return {
-    reject: (err: Error) => {
-      if (controller) {
-        controller.error(err)
-      }
-      resolveWait?.()
-    },
-    resolve: () => {
-      if (controller) {
-        controller.enqueue(new TextEncoder().encode("hello"))
-        controller.close()
-      }
-      resolveWait?.()
-    },
-    stream,
-  }
 }
 
 describe("DockerWebSocket", () => {
