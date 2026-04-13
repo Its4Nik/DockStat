@@ -121,22 +121,26 @@ class ContainerMetricsMonitor {
         // Get container info for the additional ContainerInfo properties
         const containerInfoForStats = {
           clientId: this.clientId,
+          created: containerInfo.Created
+            ? Math.floor(new Date(containerInfo.Created).getTime() / 1000)
+            : 0,
           hostId,
           id: containerInfo.Id || "",
-          name: containerInfo.Names?.[0]?.replace(/^\//, "") || "unknown",
           image: containerInfo.Image || "unknown",
-          status: containerInfo.Status || "unknown",
-          state: containerInfo.State || "unknown",
-          created: containerInfo.Created ? Math.floor(new Date(containerInfo.Created).getTime() / 1000) : 0,
+          labels: containerInfo.Labels || {},
+          name: containerInfo.Names?.[0]?.replace(/^\//, "") || "unknown",
+          networkSettings: containerInfo.NetworkSettings
+            ? {
+                networks: containerInfo.NetworkSettings.Networks,
+              }
+            : undefined,
           ports: (containerInfo.Ports || []).map((port) => ({
             privatePort: port.PrivatePort,
             publicPort: port.PublicPort,
             type: port.Type || "tcp",
           })),
-          labels: containerInfo.Labels || {},
-          networkSettings: containerInfo.NetworkSettings ? {
-            networks: containerInfo.NetworkSettings.Networks,
-          } : undefined,
+          state: containerInfo.State || "unknown",
+          status: containerInfo.Status || "unknown",
         }
 
         // Calculate derived metrics
@@ -152,7 +156,6 @@ class ContainerMetricsMonitor {
           hostId,
           stats: {
             ...containerInfoForStats,
-            stats: extendedStats as any,
             blockRead,
             blockWrite,
             cpuUsage: Math.round(cpuUsage * 100) / 100,
@@ -160,6 +163,7 @@ class ContainerMetricsMonitor {
             memoryUsage,
             networkRx,
             networkTx,
+            stats: extendedStats as any,
           },
         })
       } catch (error) {

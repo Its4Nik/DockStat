@@ -1,4 +1,3 @@
-import type { DOCKER } from "@dockstat/typings"
 import { retry } from "@dockstat/utils"
 import { DockerClientBase } from "../core/base"
 
@@ -25,9 +24,7 @@ export class System extends DockerClientBase {
   /**
    * Get Docker daemon version information on the specified host.
    */
-  public async getSystemVersion(
-    hostId: number
-  ) {
+  public async getSystemVersion(hostId: number) {
     this.checkDisposed()
 
     const docker = this.getDockerInstance(hostId)

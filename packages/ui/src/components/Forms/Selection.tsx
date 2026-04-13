@@ -60,6 +60,7 @@ export const Select: React.FC<SelectProps> = ({
   return (
     <select
       // biome-ignore lint/a11y/noAutofocus: Used in other components
+      autoFocus={autoFocus}
       className={[
         baseClasses,
         sizeClasses[size],

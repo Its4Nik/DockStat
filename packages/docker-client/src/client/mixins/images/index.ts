@@ -1,5 +1,4 @@
 import { retry } from "@dockstat/utils"
-import type Dockerode from "dockerode"
 import { DockerClientBase } from "../core/base"
 
 /**

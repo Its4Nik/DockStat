@@ -1,6 +1,29 @@
 import type { BodyInit, HeadersInit } from "bun"
 import type { ConnectionConfig, HttpMethod } from "../modules/base/types"
 
+/**
+ * Prepare the full set of request options for a Bun `fetch` call to the Docker API.
+ *
+ * Handles:
+ * - JSON body serialization (sets `Content-Type: application/json` for object bodies)
+ * - Custom header merging (supports `Headers`, array, and plain object formats)
+ * - Host header setting (defaults to `localhost` for Unix sockets; derived from URL for TCP)
+ * - Unix socket path configuration via `BunFetchRequestInit.unix`
+ * - TLS options passthrough
+ *
+ * @param config - The Docker connection configuration.
+ * @param method - The HTTP method to use.
+ * @param body - Optional request body. Objects are serialized as JSON.
+ * @param headers - Optional additional headers to merge with the defaults.
+ * @param url - The full request URL (used to derive the `Host` header for TCP mode).
+ * @returns A `BunFetchRequestInit` object ready to pass to `fetch()`.
+ *
+ * @example
+ * ```ts
+ * const options = prepareRequestOptions(config, "POST", { name: "my-container" })
+ * const response = await fetch(url, options)
+ * ```
+ */
 export function prepareRequestOptions(
   config: ConnectionConfig,
   method: HttpMethod,
@@ -20,19 +43,7 @@ export function prepareRequestOptions(
 
   // Merge additional headers
   if (headers) {
-    if (headers instanceof Headers) {
-      headers.forEach((value, key) => {
-        baseHeaders[key] = value
-      })
-    } else if (Array.isArray(headers)) {
-      headers.forEach(([key, value]) => {
-        if (key !== undefined && value !== undefined) {
-          baseHeaders[key] = value
-        }
-      })
-    } else {
-      Object.assign(baseHeaders, headers)
-    }
+    Object.assign(baseHeaders, headers)
   }
 
   const requestBody = isJsonBody ? JSON.stringify(body) : (body as BodyInit)
@@ -43,12 +54,13 @@ export function prepareRequestOptions(
     method,
   }
 
+  // Set Host header from URL for TCP mode
   if (config.mode !== "unix" && url) {
     try {
       const urlObj = new URL(url)
       // biome-ignore lint: Needed for dts-bundle-generator
       baseHeaders["Host"] = urlObj.host
-    } catch (_) {
+    } catch {
       // Ignore URL parsing errors, keep default Host
     }
   }
@@ -63,5 +75,9 @@ export function prepareRequestOptions(
     options.tls = config.tls
   }
 
+  // Configure timeout if specified
+  if (config.timeout) {
+    options.timeout = config.timeout
+  }
   return options
 }
