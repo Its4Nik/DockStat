@@ -125,24 +125,6 @@ export const DockerClientElysia = new Elysia({
       detail: {
         description:
           "Updates configuration for an existing Docker client. This can include changing the client name, Docker daemon connection settings, TLS certificates, or other adapter options. The client must exist for this operation to succeed.",
-        requestBody: {
-          content: {
-            "application/json": {
-              example: {
-                clientId: 1,
-                clientName: "production-updated",
-                options: {
-                  host: "docker-updated.example.com",
-                  port: 2376,
-                  timeout: 30000,
-                },
-              },
-              schema: DockerModel.updateClientBody,
-            },
-          },
-          description: "Client update configuration",
-          required: true,
-        },
         responses: {
           200: {
             description: "Successfully updated Docker client configuration",
@@ -191,18 +173,6 @@ export const DockerClientElysia = new Elysia({
       detail: {
         description:
           "Removes a Docker client from the system, including all its associated hosts, monitoring connections, and resources. This is a destructive operation that cannot be undone. Ensure you have appropriate backups before deleting clients.",
-        requestBody: {
-          content: {
-            "application/json": {
-              example: {
-                clientId: 1,
-              },
-              schema: t.Object({ clientId: t.Number() }),
-            },
-          },
-          description: "Client identifier to delete",
-          required: true,
-        },
         responses: {
           200: {
             description: "Successfully deleted Docker client and all associated resources",
@@ -234,14 +204,6 @@ export const DockerClientElysia = new Elysia({
     detail: {
       description:
         "Retrieves all registered Docker clients. The `stored` parameter controls whether to return all registered clients from database or only currently active clients in memory. Useful for monitoring system state and managing client lifecycle.",
-      parameters: {
-        stored: {
-          default: false,
-          description:
-            "If true, returns all clients from database. If false, returns only currently active clients.",
-          type: "boolean",
-        },
-      },
       responses: {
         200: {
           description: "Successfully retrieved list of Docker clients",

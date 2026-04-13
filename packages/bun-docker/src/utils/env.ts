@@ -135,7 +135,6 @@ export function parseDockerHost(rawHost: string): {
  * 3. Falls back to `DEFAULT_SOCKET_PATH` (`/var/run/docker.sock`) if neither is set.
  *
  * Also reads:
- * - `DOCKER_TIMEOUT` — Request timeout in milliseconds. Defaults to `DEFAULT_TIMEOUT` (30000).
  * - `DOCKER_API_VERSION` — Docker API version. Defaults to `DEFAULT_API_VERSION` (`1.54`).
  * - `DOCKER_CLIENT_LOG_LEVEL` — Logger level (`debug`, `info`, `warn`, `error`).
  * - `CERT_FILE`, `KEY_FILE`, `CA_FILE` — TLS certificate paths.

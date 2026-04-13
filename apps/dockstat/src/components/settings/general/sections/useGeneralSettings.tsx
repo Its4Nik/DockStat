@@ -48,6 +48,13 @@ export function useGeneralSettings() {
     pinLinkMutation.mutate({ path, slug })
   }
 
+  const showBackendErrors = (show: boolean) => {
+    updateAdditionalSettings({
+      ...additionalSettings,
+      showBackendErrorLogs: show
+    })
+  }
+
   const unpinLink = (slug: string, path: string) => {
     if (!slug || !path) return
     unpinLinkMutation.mutate({ path, slug })
@@ -55,6 +62,7 @@ export function useGeneralSettings() {
 
   const showRamUsageInNavbar = (showRamUsageInNavbar: boolean) => {
     updateAdditionalSettings({
+      ...additionalSettings,
       showBackendRamUsageInNavbar: showRamUsageInNavbar,
     })
   }
@@ -115,5 +123,6 @@ export function useGeneralSettings() {
     pluginLinks,
     showRamUsageInNavbar,
     unpinLink,
+    showBackendErrors
   }
 }

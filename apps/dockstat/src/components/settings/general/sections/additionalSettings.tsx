@@ -5,9 +5,11 @@ import { Settings, ToggleLeft, ToggleRight } from "lucide-react"
 export function AdditionalSettingsSection({
   additionalSettings,
   setShowRamUsageInNavbar,
+  setShowBackendErrors
 }: {
   additionalSettings: DockStatConfigTableType["additionalSettings"]
-  setShowRamUsageInNavbar: (boolean: boolean) => void
+    setShowRamUsageInNavbar: (boolean: boolean) => void
+  setShowBackendErrors: (boolean: boolean) => void
 }) {
   return (
     <>
@@ -73,6 +75,45 @@ export function AdditionalSettingsSection({
                 />
               </div>
             </div>
+
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/5">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-accent/10">
+                  {(additionalSettings.showBackendErrorLogs ?? true) ? (
+                    <ToggleRight
+                      className="text-accent"
+                      size={18}
+                    />
+                  ) : (
+                    <ToggleLeft
+                      className="text-muted-text"
+                      size={18}
+                    />
+                  )}
+                </div>
+                <div>
+                  <div className="font-semibold text-primary-text">Toast backend errors</div>
+                  <div className="text-sm text-muted-text">
+                    Show a toast on Backend error
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-between w-full">
+                <Badge size="sm"
+                  variant={(additionalSettings.showBackendErrorLogs ?? true) ? "success" :"secondary"}>
+                  {(additionalSettings.showBackendErrorLogs ?? true) ? "Enabled" : "Disabled"}
+                </Badge>
+                <Toggle
+                  checked={(additionalSettings.showBackendErrorLogs ?? true)}
+                  onChange={() =>
+                    setShowBackendErrors(!additionalSettings.showBackendErrorLogs)
+                  }
+                  size="md"
+                />
+              </div>
+            </div>
+
+
 
             {/* Debug Info - Only in development */}
             {process.env.NODE_ENV !== "production" && (

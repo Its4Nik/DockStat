@@ -39,7 +39,6 @@ export type { ConnectionConfig, ConnectionMode, HttpMethod } from "./modules/bas
 export {
   DEFAULT_API_VERSION,
   DEFAULT_SOCKET_PATH,
-  DEFAULT_TIMEOUT,
   isSocketAvailable,
   parseDockerHost,
 } from "./utils/env"

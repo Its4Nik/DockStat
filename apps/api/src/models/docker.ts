@@ -29,6 +29,7 @@ export namespace DockerModel {
     ),
   })
   export const error = t.Object({
+    success: t.Boolean(),
     error: t.Unknown(),
     message: t.String(),
   })

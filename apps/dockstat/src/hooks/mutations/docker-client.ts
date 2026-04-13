@@ -5,6 +5,7 @@ export const useDockerClientMutations = () => {
   const deleteClientMutation = eden.useEdenMutation({
     mutationKey: ["deleteClient"],
     route: api.docker.client.delete,
+    invalidateQueries: [["fetchDockerClients"], ["fetchPoolStatus"]],
     toast: {
       errorTitle: (input) => `Could not delete client ${input.clientId}`,
       successTitle: (input) => `Delted Client ${input.clientId}`,

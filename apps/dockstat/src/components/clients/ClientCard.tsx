@@ -1,7 +1,8 @@
+import { useDockerClientMutations } from "@/hooks/mutations"
 import type { DOCKER } from "@dockstat/typings"
-import { Badge, Card, CardBody, CardHeader, type CardProps } from "@dockstat/ui"
+import { Badge, Button, Card, CardBody, CardHeader, type CardProps } from "@dockstat/ui"
 import { formatDuration } from "@dockstat/utils"
-import { Activity, CheckCircle, Clock, XCircle } from "lucide-react"
+import { Activity, CheckCircle, Clock, Trash2, XCircle } from "lucide-react"
 
 interface ClientCardProps {
   variant?: CardProps["variant"]
@@ -21,6 +22,8 @@ interface ClientCardProps {
 }
 
 export function ClientCard({ client, workerInfo, variant = "outlined" }: ClientCardProps) {
+  const {deleteClientMutation} = useDockerClientMutations()
+
   return (
     <Card
       className="min-w-70 max-w-80"
@@ -47,12 +50,16 @@ export function ClientCard({ client, workerInfo, variant = "outlined" }: ClientC
           )}
         </div>
         {client.id && (
+          <>
+
           <Badge
             size="sm"
             variant="secondary"
           >
             ID: {client.id}
           </Badge>
+            <Button variant="danger" size="xs" onClick={() => deleteClientMutation.mutateAsync({ clientId: Number(client.id) })}><Trash2 size={16 } /> </Button>
+          </>
         )}
       </CardHeader>
 

@@ -26,7 +26,6 @@ export {
   compareVersions,
   DEFAULT_HOST,
   DEFAULT_SOCKET_PATH,
-  DEFAULT_TIMEOUT,
   isSocketAvailable,
   parseDockerVersion,
 } from "./utils/docker-socket"

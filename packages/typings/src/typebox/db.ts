@@ -87,6 +87,7 @@ const DockStatConfigTable = t.Object({
   additionalSettings: t.Object({
     defaultDashboard: t.Optional(t.String()),
     showBackendRamUsageInNavbar: t.Optional(t.Boolean()),
+    showBackendErrorLogs: t.Optional(t.Boolean())
   }),
 
   /* Trusted repos will be added later on */
