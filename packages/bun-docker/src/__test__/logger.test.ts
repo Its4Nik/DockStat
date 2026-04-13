@@ -44,12 +44,13 @@ describe("DockerLogger", () => {
     logger.error("test error")
 
     expect(messages).toHaveLength(3)
-    expect(messages[0]!).toContain("[docker:INFO]")
-    expect(messages[0]!).toContain("test info")
-    expect(messages[1]!).toContain("[docker:WARN]")
-    expect(messages[1]!).toContain("test warn")
-    expect(messages[2]!).toContain("[docker:ERROR]")
-    expect(messages[2]!).toContain("test error")
+    const [first, second, third] = messages
+    expect(first).toContain("[docker:INFO]")
+    expect(first).toContain("test info")
+    expect(second).toContain("[docker:WARN]")
+    expect(second).toContain("test warn")
+    expect(third).toContain("[docker:ERROR]")
+    expect(third).toContain("test error")
   })
 
   it("should filter debug messages when level is info", () => {
@@ -64,7 +65,8 @@ describe("DockerLogger", () => {
     logger.info("should appear")
 
     expect(messages).toHaveLength(1)
-    expect(messages[0]!).toContain("should appear")
+    const [first] = messages
+    expect(first).toContain("should appear")
   })
 
   it("should filter info messages when level is warn", () => {
@@ -97,7 +99,8 @@ describe("DockerLogger", () => {
     logger.error("yes")
 
     expect(messages).toHaveLength(1)
-    expect(messages[0]!).toContain("yes")
+    const [first] = messages
+    expect(first).toContain("yes")
   })
 
   it("should include data in log messages", () => {
@@ -111,9 +114,10 @@ describe("DockerLogger", () => {
     logger.info("test message", { method: "GET", path: "/containers/json" })
 
     expect(messages).toHaveLength(1)
-    expect(messages[0]!).toContain("test message")
-    expect(messages[0]!).toContain('"method":"GET"')
-    expect(messages[0]!).toContain('"/containers/json"')
+    const [first] = messages
+    expect(first).toContain("test message")
+    expect(first).toContain('"method":"GET"')
+    expect(first).toContain('"/containers/json"')
   })
 
   it("should format log messages with timestamp", () => {
@@ -126,7 +130,9 @@ describe("DockerLogger", () => {
 
     logger.info("test")
 
-    expect(messages[0]!).toMatch(/\[docker:INFO\] \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z test/)
+    expect(messages).toHaveLength(1)
+    const [first] = messages
+    expect(first).toMatch(/\[docker:INFO\] \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z test/)
   })
 
   it("should include debug level logs when level is debug", () => {
@@ -143,8 +149,9 @@ describe("DockerLogger", () => {
     logger.error("error msg")
 
     expect(messages).toHaveLength(4)
-    expect(messages[0]!).toContain("[docker:DEBUG]")
-    expect(messages[0]!).toContain("debug msg")
+    const [first] = messages
+    expect(first).toContain("[docker:DEBUG]")
+    expect(first).toContain("debug msg")
   })
 
   it("should create child logger with same config", () => {
@@ -161,7 +168,8 @@ describe("DockerLogger", () => {
 
     child.info("child message")
     expect(messages).toHaveLength(1)
-    expect(messages[0]!).toContain("child message")
+    const [first] = messages
+    expect(first).toContain("child message")
   })
 
   it("should create child logger with overrides", () => {
@@ -190,7 +198,8 @@ describe("DockerLogger", () => {
 
     logger.info("custom writer test")
     expect(messages).toHaveLength(1)
-    expect(messages[0]!).toContain("custom writer test")
+    const [first] = messages
+    expect(first).toContain("custom writer test")
   })
 })
 

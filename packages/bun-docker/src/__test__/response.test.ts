@@ -30,9 +30,12 @@ describe("handleDockerResponse", () => {
 
   it("should throw DockerError for error response with JSON body containing message", async () => {
     const response = createMockResponse(404, '{"message": "No such container: abc"}')
-    expect(
+    try {
       await handleDockerResponse(response, "/containers/abc/json", "1.54", { id: "abc" })
-    ).rejects.toThrow(DockerError)
+      expect.unreachable("Should have thrown")
+    } catch (error) {
+      expect(error).toBeInstanceOf(DockerError)
+    }
   })
 
   it("should extract message from JSON body", async () => {

@@ -6,6 +6,20 @@ import { proxyEvent } from "../../../events/workerEventProxy"
 import type { ExtendedContainerInfo } from "../../mixins/containers/index.ts"
 
 /**
+ * Docker event structure from @bun-docker events API
+ */
+interface DockerEvent {
+  Type: string
+  Action: string
+  Actor: {
+    ID: string
+    Attributes: Record<string, string>
+  }
+  time: number
+  timeNano: number
+}
+
+/**
  * Map ExtendedContainerInfo to object with lowercase properties for proxyEvent compatibility
  * @bun-docker uses uppercase properties (Id, Name, State) but proxyEvent expects lowercase (id, name, state)
  */
@@ -149,7 +163,7 @@ class DockerEventStreamManager {
     }
   }
 
-  private handleEvent(hostId: number, event: any): void {
+  private handleEvent(hostId: number, event: DockerEvent): void {
     // @bun-docker events structure: {
     //   Type: string,
     //   Action: string,

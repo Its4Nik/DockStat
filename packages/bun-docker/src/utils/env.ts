@@ -153,6 +153,7 @@ export const getConnectionConfig = (): ConnectionConfig => {
 
   // Resolve timeout
   const timeout = env.DOCKER_TIMEOUT ? parseInt(env.DOCKER_TIMEOUT, 10) : DEFAULT_TIMEOUT
+  const finalTimeout = Number.isNaN(timeout) ? DEFAULT_TIMEOUT : timeout
 
   // Resolve API version
   const dockerAPIVersion = env.DOCKER_API_VERSION || DEFAULT_API_VERSION
@@ -173,7 +174,7 @@ export const getConnectionConfig = (): ConnectionConfig => {
       logger,
       mode: "unix",
       socketPath: parsed.socketPath,
-      timeout,
+      timeout: finalTimeout,
       tls,
     }
   }
@@ -189,7 +190,7 @@ export const getConnectionConfig = (): ConnectionConfig => {
     dockerAPIVersion,
     logger,
     mode: "tcp",
-    timeout,
+    timeout: finalTimeout,
     tls,
   }
 }

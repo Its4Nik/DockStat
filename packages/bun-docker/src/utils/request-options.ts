@@ -43,7 +43,20 @@ export function prepareRequestOptions(
 
   // Merge additional headers
   if (headers) {
-    Object.assign(baseHeaders, headers)
+    if (headers instanceof Headers) {
+      // Handle Headers instance
+      headers.forEach((value, key) => {
+        baseHeaders[key] = value
+      })
+    } else if (Array.isArray(headers)) {
+      // Handle array format [key, value][]
+      for (const [key, value] of headers) {
+        baseHeaders[key] = value
+      }
+    } else {
+      // Handle plain object
+      Object.assign(baseHeaders, headers)
+    }
   }
 
   const requestBody = isJsonBody ? JSON.stringify(body) : (body as BodyInit)

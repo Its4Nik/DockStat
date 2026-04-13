@@ -149,7 +149,7 @@ class ContainerEventMonitor {
               containerInfo: mapToLowercaseProperties(container),
               hostId,
             })
-          } else if (container.State === "exited" && lastContainer.State === "running") {
+          } else if (container.State === "dead" && lastContainer.State === "running") {
             proxyEvent("container:died", {
               containerId: container.Id || "",
               containerInfo: mapToLowercaseProperties(container),

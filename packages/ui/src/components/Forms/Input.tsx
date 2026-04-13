@@ -12,7 +12,6 @@ export interface InputProps {
   className?: string
   error?: boolean
   success?: boolean
-  autoFocus?: boolean
   required?: boolean
 }
 
@@ -26,7 +25,6 @@ export function Input({
   onChange,
   className = "",
   error = false,
-  autoFocus = false,
   success = false,
   required = false,
 }: InputProps) {
@@ -61,7 +59,6 @@ export function Input({
         success ? "border-success! focus:border-success! focus:ring-success!" : "",
       ].join(" ")}
       disabled={disabled}
-      // biome-ignore lint/a11y/noAutofocus: Used in other components
       onChange={(e) => onChange?.(e.target.value)}
       placeholder={placeholder}
       required={required}

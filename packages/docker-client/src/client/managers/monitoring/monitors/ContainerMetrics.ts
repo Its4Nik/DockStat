@@ -163,7 +163,7 @@ class ContainerMetricsMonitor {
             memoryUsage,
             networkRx,
             networkTx,
-            stats: extendedStats as any,
+            stats: extendedStats,
           },
         })
       } catch (error) {

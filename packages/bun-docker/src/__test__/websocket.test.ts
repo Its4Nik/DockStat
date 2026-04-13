@@ -20,7 +20,7 @@ function createMockReadableStream(
       }
 
       if (index < chunks.length) {
-        controller.enqueue(chunks[index]!)
+        controller.enqueue(chunks[index])
         index++
       } else {
         controller.close()

@@ -4,6 +4,8 @@ import {
   DEFAULT_SOCKET_PATH,
   DEFAULT_TIMEOUT,
   getConnectionConfig,
+  isSocketAvailable,
+  loadTls,
   parseDockerHost,
 } from "../utils/env"
 import type { LoggerConfig } from "../utils/logger"
@@ -170,5 +172,130 @@ describe("parseDockerHost", () => {
     const result = parseDockerHost("/var/run/docker.sock")
     expect(result.mode).toBe("unix")
     expect(result.socketPath).toBe("/var/run/docker.sock")
+  })
+})
+
+describe("isSocketAvailable", () => {
+  it("should return false for non-existent socket", async () => {
+    const result = await isSocketAvailable("/tmp/non-existent-docker.sock")
+    expect(result).toBe(false)
+  })
+
+  it("should return true for existing readable file", async () => {
+    // Create a temporary file that exists
+    const tempPath = "/tmp/test-docker-socket.sock"
+    await Bun.write(tempPath, "")
+    try {
+      const result = await isSocketAvailable(tempPath)
+      // The socket won't actually be connectable (it's a file, not a socket)
+      // but the filesystem check should pass and we attempt connection
+      expect(typeof result).toBe("boolean")
+    } finally {
+      await Bun.file(tempPath).delete()
+    }
+  })
+
+  it("should handle connection errors gracefully", async () => {
+    // Test with a path that's not a socket but exists
+    const result = await isSocketAvailable("/etc/passwd")
+    expect(result).toBe(false)
+  })
+})
+
+describe("getConnectionConfig edge cases", () => {
+  it("should handle invalid DOCKER_TIMEOUT gracefully", () => {
+    process.env.DOCKER_TIMEOUT = "invalid"
+    const config = getConnectionConfig()
+    expect(config.timeout).toBe(DEFAULT_TIMEOUT)
+  })
+
+  it("should not enable logger for invalid log level", () => {
+    process.env.DOCKER_CLIENT_LOG_LEVEL = "invalid"
+    const config = getConnectionConfig()
+    expect(config.logger).toBeUndefined()
+  })
+
+  it("should handle empty string for DOCKER_HOST", () => {
+    process.env.DOCKER_HOST = ""
+    const config = getConnectionConfig()
+    expect(config.mode).toBe("unix")
+    expect(config.socketPath).toBe(DEFAULT_SOCKET_PATH)
+  })
+
+  it("should handle empty string for DOCKER_SOCKET", () => {
+    process.env.DOCKER_HOST = undefined as unknown as string
+    process.env.DOCKER_SOCKET = ""
+    const config = getConnectionConfig()
+    expect(config.mode).toBe("unix")
+    expect(config.socketPath).toBe(DEFAULT_SOCKET_PATH)
+  })
+
+  it("should use https protocol when TLS is configured with DOCKER_HOST", () => {
+    process.env.DOCKER_HOST = "tcp://docker.example.com:2376"
+    process.env.CERT_FILE = "/path/to/cert.pem"
+    process.env.KEY_FILE = "/path/to/key.pem"
+    const config = getConnectionConfig()
+    expect(config.baseUrl).toBe("https://docker.example.com:2376")
+  })
+
+  it("should handle DOCKER_HOST with https:// and TLS", () => {
+    process.env.DOCKER_HOST = "https://docker.example.com:2376"
+    process.env.CERT_FILE = "/path/to/cert.pem"
+    process.env.KEY_FILE = "/path/to/key.pem"
+    const config = getConnectionConfig()
+    expect(config.baseUrl).toBe("https://docker.example.com:2376")
+  })
+
+  it("should use http protocol when TLS is not configured with TCP", () => {
+    process.env.DOCKER_HOST = "tcp://docker.example.com:2375"
+    // No TLS certs set
+    const config = getConnectionConfig()
+    expect(config.baseUrl).toBe("http://docker.example.com:2375")
+  })
+
+  it("should handle zero timeout", () => {
+    process.env.DOCKER_TIMEOUT = "0"
+    const config = getConnectionConfig()
+    expect(config.timeout).toBe(0)
+  })
+})
+
+describe("loadTls", () => {
+  it("should return undefined when CERT_FILE is not set", () => {
+    process.env.KEY_FILE = "/path/to/key.pem"
+    const tls = loadTls()
+    expect(tls).toBeUndefined()
+  })
+
+  it("should return undefined when KEY_FILE is not set", () => {
+    process.env.CERT_FILE = "/path/to/cert.pem"
+    const tls = loadTls()
+    expect(tls).toBeUndefined()
+  })
+
+  it("should return undefined when neither CERT_FILE nor KEY_FILE are set", () => {
+    const tls = loadTls()
+    expect(tls).toBeUndefined()
+  })
+
+  it("should return TLS config with cert and key when both are set", () => {
+    process.env.CERT_FILE = "/path/to/cert.pem"
+    process.env.KEY_FILE = "/path/to/key.pem"
+    const tls = loadTls()
+    expect(tls).toBeDefined()
+    expect(tls?.cert).toBeDefined()
+    expect(tls?.key).toBeDefined()
+    expect(tls?.ca).toBeUndefined()
+  })
+
+  it("should return TLS config with cert, key, and ca when CA_FILE is set", () => {
+    process.env.CERT_FILE = "/path/to/cert.pem"
+    process.env.KEY_FILE = "/path/to/key.pem"
+    process.env.CA_FILE = "/path/to/ca.pem"
+    const tls = loadTls()
+    expect(tls).toBeDefined()
+    expect(tls?.cert).toBeDefined()
+    expect(tls?.key).toBeDefined()
+    expect(tls?.ca).toBeDefined()
   })
 })

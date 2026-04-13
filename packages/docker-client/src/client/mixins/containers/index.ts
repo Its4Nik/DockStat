@@ -5,14 +5,12 @@ import { DockerClientBase } from "../../mixins/core/base"
 // Type aliases for @bun-docker OpenAPI types
 type BunDockerContainerList =
   paths["/containers/json"]["get"]["responses"]["200"]["content"]["application/json"]
-type BunDockerContainerInspect =
-  paths["/containers/{id}/json"]["get"]["responses"]["200"]["content"]["application/json"]
+
 type BunDockerContainerStats =
   paths["/containers/{id}/stats"]["get"]["responses"]["200"]["content"]["application/json"]
 type BunDockerContainerLogsRoute = paths["/containers/{id}/logs"]["get"]
 type BunDockerContainerExecRoute = paths["/containers/{id}/exec"]["post"]
 type BunDockerExecStartRoute = paths["/exec/{id}/start"]["post"]
-type BunDockerExecInspectRoute = paths["/exec/{id}/json"]["get"]
 
 /**
  * Extended container info type that includes hostId and clientId
