@@ -96,31 +96,31 @@ export interface DockerAdapterOptions {
 export const DockerAdapterOptionsSchema = t.Partial(
   t.Object({
     defaultTimeout: t.Number(),
-    retryAttempts: t.Number(),
-    retryDelay: t.Number(),
-    enableMonitoring: t.Boolean(),
     enableEventEmitter: t.Boolean(),
+    enableMonitoring: t.Boolean(),
+    execOptions: t.Partial(
+      t.Object({
+        env: t.Array(t.String()),
+        tty: t.Boolean(),
+        workingDir: t.String(),
+      })
+    ),
     monitoringOptions: t.Partial(
       t.Object({
-        healthCheckInterval: t.Number(),
         containerEventPollingInterval: t.Number(),
-        hostMetricsInterval: t.Number(),
         containerMetricsInterval: t.Number(),
         enableContainerEvents: t.Boolean(),
-        enableHostMetrics: t.Boolean(),
         enableContainerMetrics: t.Boolean(),
         enableHealthChecks: t.Boolean(),
+        enableHostMetrics: t.Boolean(),
+        healthCheckInterval: t.Number(),
+        hostMetricsInterval: t.Number(),
         retryAttempts: t.Number(),
         retryDelay: t.Number(),
       })
     ),
-    execOptions: t.Partial(
-      t.Object({
-        workingDir: t.String(),
-        env: t.Array(t.String()),
-        tty: t.Boolean(),
-      })
-    ),
+    retryAttempts: t.Number(),
+    retryDelay: t.Number(),
   })
 )
 
@@ -256,10 +256,12 @@ export interface DockerClientEvents {
 
   "container:started": (ctx: ContainerInfoCtx) => void
   "container:stopped": (ctx: ContainerInfoCtx) => void
+  "container:paused": (ctx: ContainerInfoCtx) => void
+  "container:unpaused": (ctx: ContainerInfoCtx) => void
   "container:removed": (ctx: ContainerBaseCtx) => void
   "container:destroyed": (ctx: ContainerBaseCtx) => void
   "container:created": (ctx: ContainerInfoCtx) => void
-  "container:died": (ctx: ContainerBaseCtx) => void
+  "container:died": (ctx: ContainerInfoCtx) => void
 
   "stream:started": (ctx: BaseStreamCtx) => void
   "stream:stopped": (ctx: BaseStreamCtx) => void

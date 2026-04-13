@@ -18,15 +18,15 @@ export namespace DatabaseModel {
   export const configRes = DockStatConfigTable
 
   export const error = t.Object({
-    success: t.Literal(false),
     error: t.String(),
     message: t.String(),
+    success: t.Literal(false),
   })
 
   export const updateError = t.Object({
-    success: t.Literal(false),
-    message: t.String(),
     error: t.String(),
+    message: t.String(),
+    success: t.Literal(false),
   })
 
   export const configResponses = t.Object({
@@ -35,14 +35,14 @@ export namespace DatabaseModel {
   })
 
   export const hotkeyRes = t.Object({
-    success: t.Literal(true),
-    message: t.String(),
     data: t.Array(
       t.Object({
         action: t.String(),
         key: t.String(),
       })
     ),
+    message: t.String(),
+    success: t.Literal(true),
   })
 
   export const hotkeyBody = t.Pick(updateBody, t.Literal("hotkeys"))
@@ -50,14 +50,14 @@ export namespace DatabaseModel {
   export const additionalSettingsBody = t.Pick(updateBody, t.Literal("additionalSettings"))
 
   export const additionalSettingsRes = t.Object({
-    success: t.Boolean(),
-    message: t.String(),
     data: t.Optional(
       t.Object({
-        showBackendRamUsageInNavbar: t.Optional(t.Boolean()),
         defaultDashboard: t.Optional(t.String()),
+        showBackendRamUsageInNavbar: t.Optional(t.Boolean()),
       })
     ),
+    message: t.String(),
+    success: t.Boolean(),
   })
 }
 
@@ -74,25 +74,25 @@ export namespace RepositoryModel {
   export const response = RepoResponse
 
   export const error = t.Object({
-    success: t.Literal(false),
-    message: t.String(),
     error: t.String(),
+    message: t.String(),
+    success: t.Literal(false),
   })
 
   export const successResponseMultipleRepos = t.Object({
-    success: t.Literal(true),
-    message: t.String(),
     data: t.Array(Repo),
+    message: t.String(),
+    success: t.Literal(true),
   })
 
   export const successResponse = t.Object({
-    success: t.Literal(true),
-    message: t.String(),
     data: Repo,
+    message: t.String(),
+    success: t.Literal(true),
   })
 
   export const deleteResponse = t.Object({
-    success: t.Boolean(),
     message: t.String(),
+    success: t.Boolean(),
   })
 }

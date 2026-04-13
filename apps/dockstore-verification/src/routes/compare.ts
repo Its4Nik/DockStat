@@ -24,13 +24,13 @@ const compareRoutes = new Elysia({ prefix: "/compare" })
       if (!version) {
         set.status = 404
         return {
-          valid: false,
+          hash: body.pluginHash,
+          message: "Plugin hash not found in verification database",
           pluginName: body.pluginName,
           pluginVersion: body.pluginVersion,
-          hash: body.pluginHash,
-          verified: false,
           securityStatus: "unknown",
-          message: "Plugin hash not found in verification database",
+          valid: false,
+          verified: false,
         }
       }
 
@@ -39,13 +39,13 @@ const compareRoutes = new Elysia({ prefix: "/compare" })
 
       if (!verification) {
         return {
-          valid: true,
+          hash: body.pluginHash,
+          message: "Plugin found but not yet verified",
           pluginName: body.pluginName,
           pluginVersion: body.pluginVersion,
-          hash: body.pluginHash,
-          verified: false,
           securityStatus: "unknown",
-          message: "Plugin found but not yet verified",
+          valid: true,
+          verified: false,
         }
       }
 
@@ -53,56 +53,56 @@ const compareRoutes = new Elysia({ prefix: "/compare" })
       const isSafe = verification.verified && verification.security_status === "safe"
 
       return {
-        valid: true,
-        pluginName: body.pluginName,
-        pluginVersion: body.pluginVersion,
         hash: body.pluginHash,
-        verified: verification.verified,
-        securityStatus: verification.security_status,
-        verifiedBy: verification.verified_by,
-        verifiedAt: verification.verified_at,
-        notes: verification.notes,
         message: isSafe
           ? "Plugin is verified and marked as safe"
           : verification.security_status === "unsafe"
             ? "WARNING: Plugin is marked as unsafe"
             : "Plugin verification status is unknown",
+        notes: verification.notes,
+        pluginName: body.pluginName,
+        pluginVersion: body.pluginVersion,
+        securityStatus: verification.security_status,
+        valid: true,
+        verified: verification.verified,
+        verifiedAt: verification.verified_at,
+        verifiedBy: verification.verified_by,
       }
     },
     {
       body: t.Object({
-        pluginName: t.String({ minLength: 1 }),
         pluginHash: t.String({ minLength: 1 }),
+        pluginName: t.String({ minLength: 1 }),
         pluginVersion: t.String({ minLength: 1 }),
       }),
-      response: {
-        200: t.Object({
-          valid: t.Boolean(),
-          pluginName: t.String(),
-          pluginVersion: t.String(),
-          hash: t.String(),
-          verified: t.Boolean(),
-          securityStatus: t.Union([t.Literal("safe"), t.Literal("unsafe"), t.Literal("unknown")]),
-          verifiedBy: t.Optional(t.String()),
-          verifiedAt: t.Optional(t.Number()),
-          notes: t.Optional(t.String()),
-          message: t.String(),
-        }),
-        404: t.Object({
-          valid: t.Boolean(),
-          pluginName: t.String(),
-          pluginVersion: t.String(),
-          hash: t.String(),
-          verified: t.Boolean(),
-          securityStatus: t.Union([t.Literal("safe"), t.Literal("unsafe"), t.Literal("unknown")]),
-          message: t.String(),
-        }),
-      },
       detail: {
-        summary: "Compare/Validate Plugin",
         description:
           "Validates a plugin by comparing its hash against the verification database. Returns verification status and security information.",
+        summary: "Compare/Validate Plugin",
         tags: ["Compare"],
+      },
+      response: {
+        200: t.Object({
+          hash: t.String(),
+          message: t.String(),
+          notes: t.Optional(t.String()),
+          pluginName: t.String(),
+          pluginVersion: t.String(),
+          securityStatus: t.Union([t.Literal("safe"), t.Literal("unsafe"), t.Literal("unknown")]),
+          valid: t.Boolean(),
+          verified: t.Boolean(),
+          verifiedAt: t.Optional(t.Number()),
+          verifiedBy: t.Optional(t.String()),
+        }),
+        404: t.Object({
+          hash: t.String(),
+          message: t.String(),
+          pluginName: t.String(),
+          pluginVersion: t.String(),
+          securityStatus: t.Union([t.Literal("safe"), t.Literal("unsafe"), t.Literal("unknown")]),
+          valid: t.Boolean(),
+          verified: t.Boolean(),
+        }),
       },
     }
   )
@@ -116,13 +116,13 @@ const compareRoutes = new Elysia({ prefix: "/compare" })
 
         if (!version) {
           results.push({
-            valid: false,
+            hash: plugin.pluginHash,
+            message: "Plugin hash not found in verification database",
             pluginName: plugin.pluginName,
             pluginVersion: plugin.pluginVersion,
-            hash: plugin.pluginHash,
-            verified: false,
             securityStatus: "unknown",
-            message: "Plugin hash not found in verification database",
+            valid: false,
+            verified: false,
           })
           continue
         }
@@ -131,13 +131,13 @@ const compareRoutes = new Elysia({ prefix: "/compare" })
 
         if (!verification) {
           results.push({
-            valid: true,
+            hash: plugin.pluginHash,
+            message: "Plugin found but not yet verified",
             pluginName: plugin.pluginName,
             pluginVersion: plugin.pluginVersion,
-            hash: plugin.pluginHash,
-            verified: false,
             securityStatus: "unknown",
-            message: "Plugin found but not yet verified",
+            valid: true,
+            verified: false,
           })
           continue
         }
@@ -145,20 +145,20 @@ const compareRoutes = new Elysia({ prefix: "/compare" })
         const isSafe = verification.verified && verification.security_status === "safe"
 
         results.push({
-          valid: true,
-          pluginName: plugin.pluginName,
-          pluginVersion: plugin.pluginVersion,
           hash: plugin.pluginHash,
-          verified: verification.verified,
-          securityStatus: verification.security_status,
-          verifiedBy: verification.verified_by,
-          verifiedAt: verification.verified_at,
-          notes: verification.notes,
           message: isSafe
             ? "Plugin is verified and marked as safe"
             : verification.security_status === "unsafe"
               ? "WARNING: Plugin is marked as unsafe"
               : "Plugin verification status is unknown",
+          notes: verification.notes,
+          pluginName: plugin.pluginName,
+          pluginVersion: plugin.pluginVersion,
+          securityStatus: verification.security_status,
+          valid: true,
+          verified: verification.verified,
+          verifiedAt: verification.verified_at,
+          verifiedBy: verification.verified_by,
         })
       }
 
@@ -168,13 +168,13 @@ const compareRoutes = new Elysia({ prefix: "/compare" })
       return {
         results,
         summary: {
-          total: results.length,
-          verified: results.filter((r) => r.verified).length,
-          safe: results.filter((r) => r.securityStatus === "safe").length,
-          unsafe: results.filter((r) => r.securityStatus === "unsafe").length,
-          unknown: results.filter((r) => r.securityStatus === "unknown").length,
           allSafe,
           hasUnsafe,
+          safe: results.filter((r) => r.securityStatus === "safe").length,
+          total: results.length,
+          unknown: results.filter((r) => r.securityStatus === "unknown").length,
+          unsafe: results.filter((r) => r.securityStatus === "unsafe").length,
+          verified: results.filter((r) => r.verified).length,
         },
       }
     },
@@ -182,16 +182,16 @@ const compareRoutes = new Elysia({ prefix: "/compare" })
       body: t.Object({
         plugins: t.Array(
           t.Object({
-            pluginName: t.String({ minLength: 1 }),
             pluginHash: t.String({ minLength: 1 }),
+            pluginName: t.String({ minLength: 1 }),
             pluginVersion: t.String({ minLength: 1 }),
           })
         ),
       }),
       detail: {
-        summary: "Batch Compare/Validate Plugins",
         description:
           "Validates multiple plugins at once by comparing their hashes against the verification database.",
+        summary: "Batch Compare/Validate Plugins",
         tags: ["Compare"],
       },
     }
@@ -215,22 +215,22 @@ const compareRoutes = new Elysia({ prefix: "/compare" })
       return {
         found: true,
         hash: params.hash,
-        version: version.version,
-        verified: verification?.verified ?? false,
         securityStatus: verification?.security_status ?? "unknown",
-        verifiedBy: verification?.verified_by,
+        verified: verification?.verified ?? false,
         verifiedAt: verification?.verified_at,
+        verifiedBy: verification?.verified_by,
+        version: version.version,
       }
     },
     {
+      detail: {
+        description: "Quick lookup of a plugin's verification status by its hash.",
+        summary: "Get Plugin Status by Hash",
+        tags: ["Compare"],
+      },
       params: t.Object({
         hash: t.String({ minLength: 1 }),
       }),
-      detail: {
-        summary: "Get Plugin Status by Hash",
-        description: "Quick lookup of a plugin's verification status by its hash.",
-        tags: ["Compare"],
-      },
     }
   )
 

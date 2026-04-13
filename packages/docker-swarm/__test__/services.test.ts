@@ -129,8 +129,8 @@ describe("Service listing", () => {
 
   test("list handles multiple filters", async () => {
     const services = await module.list({
-      name: "test-service",
       mode: "replicated",
+      name: "test-service",
     })
 
     expect(Array.isArray(services)).toBe(true)
@@ -196,8 +196,8 @@ describe("Service creation", () => {
   test("create requires name and image", async () => {
     try {
       const service = await module.create({
-        name: `test-service-${Date.now()}`,
         image: "nginx:latest",
+        name: `test-service-${Date.now()}`,
         replicas: 1,
       })
 
@@ -215,13 +215,13 @@ describe("Service creation", () => {
     try {
       const serviceName = `test-service-${Date.now()}`
       const service = await module.create({
-        name: serviceName,
-        image: "nginx:latest",
-        replicas: 1,
         env: {
           NODE_ENV: "production",
           PORT: "8080",
         },
+        image: "nginx:latest",
+        name: serviceName,
+        replicas: 1,
       })
 
       expect(service).toBeDefined()
@@ -236,10 +236,10 @@ describe("Service creation", () => {
     try {
       const serviceName = `test-service-${Date.now()}`
       const service = await module.create({
-        name: serviceName,
-        image: "nginx:latest",
-        replicas: 1,
         env: ["NODE_ENV=production", "PORT=8080"],
+        image: "nginx:latest",
+        name: serviceName,
+        replicas: 1,
       })
 
       expect(service).toBeDefined()
@@ -254,13 +254,13 @@ describe("Service creation", () => {
     try {
       const serviceName = `test-service-${Date.now()}`
       const service = await module.create({
-        name: serviceName,
         image: "nginx:latest",
-        replicas: 1,
+        name: serviceName,
         ports: [
-          { protocol: "tcp", target: 80, published: 8080 },
-          { protocol: "tcp", target: 443, published: 8443 },
+          { protocol: "tcp", published: 8080, target: 80 },
+          { protocol: "tcp", published: 8443, target: 443 },
         ],
+        replicas: 1,
       })
 
       expect(service).toBeDefined()
@@ -275,10 +275,10 @@ describe("Service creation", () => {
     try {
       const serviceName = `test-service-${Date.now()}`
       const service = await module.create({
-        name: serviceName,
         image: "nginx:latest",
-        replicas: 1,
+        name: serviceName,
         networks: ["default"],
+        replicas: 1,
       })
 
       expect(service).toBeDefined()
@@ -293,13 +293,13 @@ describe("Service creation", () => {
     try {
       const serviceName = `test-service-${Date.now()}`
       const service = await module.create({
-        name: serviceName,
         image: "nginx:latest",
-        replicas: 1,
         labels: {
           "com.example.description": "Test service",
           environment: "test",
         },
+        name: serviceName,
+        replicas: 1,
       })
 
       expect(service).toBeDefined()
@@ -314,17 +314,17 @@ describe("Service creation", () => {
     try {
       const serviceName = `test-service-${Date.now()}`
       const service = await module.create({
-        name: serviceName,
         image: "nginx:latest",
+        name: serviceName,
         replicas: 1,
         resources: {
           limits: {
-            nanoCPUs: 1000000000, // 1 CPU
             memoryBytes: 536870912, // 512 MB
+            nanoCPUs: 1000000000, // 1 CPU
           },
           reservations: {
-            nanoCPUs: 500000000, // 0.5 CPU
             memoryBytes: 268435456, // 256 MB
+            nanoCPUs: 500000000, // 0.5 CPU
           },
         },
       })
@@ -341,13 +341,13 @@ describe("Service creation", () => {
     try {
       const serviceName = `test-service-${Date.now()}`
       const service = await module.create({
-        name: serviceName,
         image: "nginx:latest",
+        name: serviceName,
         replicas: 1,
         restartPolicy: {
           condition: "on-failure",
-          maxAttempts: 3,
           delay: 5000,
+          maxAttempts: 3,
           window: 10000,
         },
       })
@@ -364,10 +364,10 @@ describe("Service creation", () => {
     try {
       const serviceName = `test-service-${Date.now()}`
       const service = await module.create({
-        name: serviceName,
-        image: "nginx:latest",
-        replicas: 1,
         constraints: ["node.role==worker"],
+        image: "nginx:latest",
+        name: serviceName,
+        replicas: 1,
       })
 
       expect(service).toBeDefined()
@@ -382,9 +382,9 @@ describe("Service creation", () => {
     try {
       const serviceName = `test-service-${Date.now()}`
       const service = await module.create({
-        name: serviceName,
         image: "nginx:latest",
         mode: "global",
+        name: serviceName,
       })
 
       expect(service).toBeDefined()
@@ -399,14 +399,14 @@ describe("Service creation", () => {
     try {
       const serviceName = `test-service-${Date.now()}`
       const service = await module.create({
-        name: serviceName,
         image: "nginx:latest",
-        replicas: 1,
         logDriver: "json-file",
         logOptions: {
-          "max-size": "10m",
           "max-file": "3",
+          "max-size": "10m",
         },
+        name: serviceName,
+        replicas: 1,
       })
 
       expect(service).toBeDefined()
@@ -423,15 +423,15 @@ describe("Service creation", () => {
     try {
       // Create first service
       await module.create({
-        name: serviceName,
         image: "nginx:latest",
+        name: serviceName,
         replicas: 1,
       })
 
       // Try to create service with same name
       await module.create({
-        name: serviceName,
         image: "nginx:latest",
+        name: serviceName,
         replicas: 1,
       })
     } catch (error) {
@@ -453,8 +453,8 @@ describe("Service updates", () => {
 
     try {
       const service = await module.create({
-        name: `test-service-${Date.now()}`,
         image: "nginx:latest",
+        name: `test-service-${Date.now()}`,
         replicas: 1,
       })
       createdServiceId = service.id
@@ -480,8 +480,8 @@ describe("Service updates", () => {
 
     try {
       const updated = await module.update(createdServiceId, {
-        version: 1,
         image: "nginx:1.25",
+        version: 1,
       })
 
       expect(updated).toBeDefined()
@@ -498,8 +498,8 @@ describe("Service updates", () => {
 
     try {
       const updated = await module.update(createdServiceId, {
-        version: 2,
         replicas: 3,
+        version: 2,
       })
 
       expect(updated).toBeDefined()
@@ -515,10 +515,10 @@ describe("Service updates", () => {
 
     try {
       const updated = await module.update(createdServiceId, {
-        version: 3,
         env: {
           NEW_VAR: "value",
         },
+        version: 3,
       })
 
       expect(updated).toBeDefined()
@@ -534,10 +534,10 @@ describe("Service updates", () => {
 
     try {
       const updated = await module.update(createdServiceId, {
-        version: 4,
         labels: {
           updated: "true",
         },
+        version: 4,
       })
 
       expect(updated).toBeDefined()
@@ -549,8 +549,8 @@ describe("Service updates", () => {
   test("update handles nonexistent service", async () => {
     try {
       await module.update("nonexistent-service-id", {
-        version: 5,
         image: "nginx:latest",
+        version: 5,
       })
     } catch (error) {
       expect(error).toBeDefined()
@@ -570,8 +570,8 @@ describe("Service scaling", () => {
 
     try {
       const service = await module.create({
-        name: `test-service-${Date.now()}`,
         image: "nginx:latest",
+        name: `test-service-${Date.now()}`,
         replicas: 1,
       })
       createdServiceId = service.id
@@ -653,8 +653,8 @@ describe("Service removal", () => {
 
     try {
       const service = await module.create({
-        name: `test-service-${Date.now()}`,
         image: "nginx:latest",
+        name: `test-service-${Date.now()}`,
         replicas: 1,
       })
       createdServiceId = service.id
@@ -705,8 +705,8 @@ describe("Service logs", () => {
 
     try {
       const service = await module.create({
-        name: `test-service-${Date.now()}`,
         image: "nginx:latest",
+        name: `test-service-${Date.now()}`,
         replicas: 1,
       })
       createdServiceId = service.id
@@ -746,8 +746,8 @@ describe("Service logs", () => {
 
     try {
       const logs = await module.logs(createdServiceId, {
-        stdout: true,
         stderr: true,
+        stdout: true,
         tail: 10,
         timestamps: true,
       })
@@ -796,8 +796,8 @@ describe("Service retrieval by name", () => {
     try {
       createdServiceName = `test-service-${Date.now()}`
       await module.create({
-        name: createdServiceName,
         image: "nginx:latest",
+        name: createdServiceName,
         replicas: 1,
       })
     } catch {
@@ -881,8 +881,8 @@ describe("Error handling", () => {
   test("create handles connection errors", async () => {
     try {
       await module.create({
-        name: "test-service",
         image: "nginx:latest",
+        name: "test-service",
       })
     } catch (error) {
       expect(error).toBeDefined()
@@ -892,8 +892,8 @@ describe("Error handling", () => {
   test("update handles connection errors", async () => {
     try {
       await module.update("service-id", {
-        version: 8,
         image: "nginx:latest",
+        version: 8,
       })
     } catch (error) {
       expect(error).toBeDefined()
@@ -998,8 +998,8 @@ describe("Service options edge cases", () => {
     try {
       const serviceName = `test-service-${Date.now()}`
       await module.create({
-        name: serviceName,
         image: "nginx:latest",
+        name: serviceName,
         replicas: 0,
       })
     } catch (error) {
@@ -1012,8 +1012,8 @@ describe("Service options edge cases", () => {
     try {
       const serviceName = `test-service-${Date.now()}`
       await module.create({
-        name: serviceName,
         image: "nginx:latest",
+        name: serviceName,
         replicas: 9999,
       })
     } catch (error) {
@@ -1026,8 +1026,8 @@ describe("Service options edge cases", () => {
     try {
       const serviceName = `test-service-${Date.now()}`
       await module.create({
-        name: serviceName,
         image: "nginx:latest",
+        name: serviceName,
         replicas: -1,
       })
     } catch (error) {
@@ -1039,8 +1039,8 @@ describe("Service options edge cases", () => {
   test("create with empty name", async () => {
     try {
       await module.create({
-        name: "",
         image: "nginx:latest",
+        name: "",
       })
     } catch (error) {
       // Expected to fail
@@ -1051,8 +1051,8 @@ describe("Service options edge cases", () => {
   test("create with empty image", async () => {
     try {
       await module.create({
-        name: "test-service",
         image: "",
+        name: "test-service",
       })
     } catch (error) {
       // Expected to fail

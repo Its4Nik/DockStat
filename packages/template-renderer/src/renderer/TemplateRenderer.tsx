@@ -235,10 +235,10 @@ function getLayoutClasses(layout?: LayoutConfig): string {
     classes.push("flex")
     if (layout.direction) {
       const directionMap: Record<string, string> = {
-        row: "flex-row",
         column: "flex-col",
-        "row-reverse": "flex-row-reverse",
         "column-reverse": "flex-col-reverse",
+        row: "flex-row",
+        "row-reverse": "flex-row-reverse",
       }
       classes.push(directionMap[layout.direction] || "")
     }
@@ -298,8 +298,8 @@ function WidgetRenderer({ node, loopContext }: WidgetRendererProps): React.React
           return (
             <WidgetRenderer
               key={key}
+              loopContext={{ index, indexVar, item, itemVar }}
               node={{ ...node, loop: undefined }}
-              loopContext={{ item, index, itemVar, indexVar }}
             />
           )
         })}
@@ -323,8 +323,8 @@ function WidgetRenderer({ node, loopContext }: WidgetRendererProps): React.React
     children = node.children.map((childNode, index) => (
       <WidgetRenderer
         key={childNode.id ?? `${childNode.type}-${index}`}
-        node={childNode}
         loopContext={loopContext}
+        node={childNode}
       />
     ))
   }
@@ -332,8 +332,8 @@ function WidgetRenderer({ node, loopContext }: WidgetRendererProps): React.React
   // Transform props
   const transformContext: PropsTransformContext = {
     bindings: resolvedBindings,
-    createActionHandler,
     children,
+    createActionHandler,
   }
 
   const transformedProps = entry.transformProps
@@ -372,7 +372,10 @@ function FragmentRenderer({
   return (
     <>
       {fragment.widgets.map((node, index) => (
-        <WidgetRenderer key={node.id ?? `${node.type}-${index}`} node={node} />
+        <WidgetRenderer
+          key={node.id ?? `${node.type}-${index}`}
+          node={node}
+        />
       ))}
     </>
   )
@@ -451,13 +454,13 @@ export function TemplateRenderer({
   // Build the render context
   const renderContext: TemplateRenderContext = useMemo(
     () => ({
-      state: mergedState,
       data,
-      setState,
-      triggerAction,
-      navigate,
       fragments,
+      navigate,
       pluginContext,
+      setState,
+      state: mergedState,
+      triggerAction,
     }),
     [mergedState, data, setState, triggerAction, navigate, fragments, pluginContext]
   )
@@ -470,8 +473,8 @@ export function TemplateRenderer({
     <TemplateContext.Provider value={renderContext}>
       <div
         className={`template-renderer ${layoutClasses} ${className ?? ""}`}
-        style={layoutStyles}
         data-template-id={template.id}
+        style={layoutStyles}
       >
         {template.widgets.map((node, index) => {
           // Check if it's a fragment reference (cast to TemplateNode for type checking)
@@ -479,14 +482,19 @@ export function TemplateRenderer({
           if (isFragmentReference(templateNode)) {
             return (
               <FragmentRenderer
-                key={templateNode.fragmentId}
                 fragmentId={templateNode.fragmentId}
+                key={templateNode.fragmentId}
                 props={templateNode.props}
               />
             )
           }
 
-          return <WidgetRenderer key={node.id ?? `${node.type}-${index}`} node={node} />
+          return (
+            <WidgetRenderer
+              key={node.id ?? `${node.type}-${index}`}
+              node={node}
+            />
+          )
         })}
       </div>
     </TemplateContext.Provider>

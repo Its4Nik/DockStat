@@ -11,16 +11,16 @@ export const createThemeUpdateRoute = (themeDB: ThemeDB) => {
 
         if (Number.isNaN(id)) {
           return status(400, {
-            success: false as const,
             error: "Invalid theme ID",
+            success: false as const,
           })
         }
 
         const existing = themeDB.getTheme(undefined, id)
         if (!existing) {
           return status(404, {
-            success: false as const,
             error: `Theme with id ${id} not found`,
+            success: false as const,
           })
         }
 
@@ -29,43 +29,43 @@ export const createThemeUpdateRoute = (themeDB: ThemeDB) => {
           const nameConflict = themeDB.getTheme(body.name)
           if (nameConflict) {
             return status(409, {
-              success: false as const,
               error: `Theme with name "${body.name}" already exists`,
+              success: false as const,
             })
           }
         }
 
         themeDB.updateTheme(id, {
+          animations: body.animations,
           name: body.name,
           variables: body.variables,
-          animations: body.animations,
         })
 
         const updated = themeDB.getTheme(undefined, id)
         if (!updated) {
           return status(500, {
-            success: false as const,
             error: "Failed to retrieve updated theme",
+            success: false as const,
           })
         }
 
         return status(200, {
-          success: true as const,
-          message: `Theme "${updated.name}" updated successfully`,
           data: updated,
+          message: `Theme "${updated.name}" updated successfully`,
+          success: true as const,
         })
       } catch (error) {
         return status(500, {
-          success: false as const,
           error: error instanceof Error ? error.message : "Failed to update theme",
+          success: false as const,
         })
       }
     },
     {
+      body: theme.model.post,
       params: t.Object({
         id: t.String(),
       }),
-      body: theme.model.post,
       response: {
         200: theme.responses.success.default,
         400: theme.responses.error,

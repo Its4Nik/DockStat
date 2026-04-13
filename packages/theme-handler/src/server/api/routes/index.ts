@@ -7,11 +7,11 @@ import { createThemeUpdateRoute } from "./update"
 
 export const createThemeRoutes = (themeDB: ThemeDB) =>
   new Elysia({
-    prefix: "/themes",
-    name: "@dockstat/theme-handler",
     detail: {
       tags: ["Themes"],
     },
+    name: "@dockstat/theme-handler",
+    prefix: "/themes",
   })
     .use(createThemeQueryRoutes(themeDB))
     .use(createThemeCreationRoute(themeDB))

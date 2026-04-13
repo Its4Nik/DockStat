@@ -13,7 +13,10 @@ export function Layout({ title, children, currentPath = "/" }: LayoutProps) {
     <html lang="en">
       <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+          content="width=device-width, initial-scale=1.0"
+          name="viewport"
+        />
         <title>{title} - DockStore Verification</title>
         <script src="https://unpkg.com/htmx.org@1.9.10" />
         <script src="https://cdn.tailwindcss.com" />
@@ -184,18 +187,18 @@ export function Layout({ title, children, currentPath = "/" }: LayoutProps) {
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
                   <svg
+                    aria-label="Shield icon"
                     class="w-6 h-6 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                    aria-label="Shield icon"
                   >
                     <title>SVG</title>
                     <path
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                     />
                   </svg>
                 </div>
@@ -207,19 +210,28 @@ export function Layout({ title, children, currentPath = "/" }: LayoutProps) {
 
               {/* Navigation */}
               <nav class="flex items-center gap-2">
-                <a href="/" class={`nav-link ${currentPath === "/" ? "active" : ""}`}>
+                <a
+                  class={`nav-link ${currentPath === "/" ? "active" : ""}`}
+                  href="/"
+                >
                   Dashboard
                 </a>
-                <a href="/plugins" class={`nav-link ${currentPath === "/plugins" ? "active" : ""}`}>
+                <a
+                  class={`nav-link ${currentPath === "/plugins" ? "active" : ""}`}
+                  href="/plugins"
+                >
                   Plugins
                 </a>
                 <a
-                  href="/repositories"
                   class={`nav-link ${currentPath === "/repositories" ? "active" : ""}`}
+                  href="/repositories"
                 >
                   Repositories
                 </a>
-                <a href="/verify" class={`nav-link ${currentPath === "/verify" ? "active" : ""}`}>
+                <a
+                  class={`nav-link ${currentPath === "/verify" ? "active" : ""}`}
+                  href="/verify"
+                >
                   Verify
                 </a>
               </nav>
@@ -239,14 +251,17 @@ export function Layout({ title, children, currentPath = "/" }: LayoutProps) {
               </p>
               <div class="flex items-center gap-4">
                 <a
-                  href="https://github.com/its4nik/dockstat"
-                  target="_blank"
-                  rel="noopener noreferrer"
                   class="text-gray-400 hover:text-white transition-colors"
+                  href="https://github.com/its4nik/dockstat"
+                  rel="noopener noreferrer"
+                  target="_blank"
                 >
                   GitHub
                 </a>
-                <a href="/api" class="text-gray-400 hover:text-white transition-colors">
+                <a
+                  class="text-gray-400 hover:text-white transition-colors"
+                  href="/api"
+                >
                   API
                 </a>
               </div>

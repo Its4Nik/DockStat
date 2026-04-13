@@ -13,25 +13,41 @@ export function AdditionalSettingsSection({
     <>
       <Divider variant="dotted" />
       <div>
-        <Card size="sm" variant="outlined" className="flex gap-2 mb-4">
+        <Card
+          className="flex gap-2 mb-4"
+          size="sm"
+          variant="outlined"
+        >
           <div className="mx-auto gap-2">
             <div className="flex items-center gap-2">
-              <Settings size={24} className="text-accent" />
+              <Settings
+                className="text-accent"
+                size={24}
+              />
               <h2 className="text-2xl font-semibold text-muted-text">Additional Settings</h2>
             </div>
           </div>
         </Card>
 
         <div className="flex gap-4 flex-wrap">
-          <Card variant="dark" className="p-4 space-y-4 flex-1">
+          <Card
+            className="p-4 space-y-4 flex-1"
+            variant="dark"
+          >
             {/* Backend RAM Usage Setting */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/5">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-accent/10">
                   {additionalSettings.showBackendRamUsageInNavbar ? (
-                    <ToggleRight size={18} className="text-accent" />
+                    <ToggleRight
+                      className="text-accent"
+                      size={18}
+                    />
                   ) : (
-                    <ToggleLeft size={18} className="text-muted-text" />
+                    <ToggleLeft
+                      className="text-muted-text"
+                      size={18}
+                    />
                   )}
                 </div>
                 <div>
@@ -43,17 +59,17 @@ export function AdditionalSettingsSection({
               </div>
               <div className="flex justify-between w-full">
                 <Badge
-                  variant={additionalSettings.showBackendRamUsageInNavbar ? "success" : "secondary"}
                   size="sm"
+                  variant={additionalSettings.showBackendRamUsageInNavbar ? "success" : "secondary"}
                 >
                   {additionalSettings.showBackendRamUsageInNavbar ? "Enabled" : "Disabled"}
                 </Badge>
                 <Toggle
-                  size="md"
                   checked={additionalSettings.showBackendRamUsageInNavbar}
                   onChange={() =>
                     setShowRamUsageInNavbar(!additionalSettings.showBackendRamUsageInNavbar)
                   }
+                  size="md"
                 />
               </div>
             </div>

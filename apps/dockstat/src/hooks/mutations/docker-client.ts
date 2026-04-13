@@ -12,9 +12,9 @@ export const useDockerClientMutations = () => {
   })
 
   const createClientMutation = eden.useEdenMutation({
+    invalidateQueries: [["fetchDockerClients"], ["fetchPoolStatus"]],
     mutationKey: ["createClient"],
     route: api.docker.client.post,
-    invalidateQueries: [["fetchDockerClients"], ["fetchPoolStatus"]],
     toast: {
       errorTitle: (input) => `Could not create Client ${input.clientName}`,
       successTitle: (input) => `Created client ${input.clientName}`,
@@ -31,8 +31,8 @@ export const useDockerClientMutations = () => {
   })
 
   return {
-    updateClientMutation,
     createClientMutation,
     deleteClientMutation,
+    updateClientMutation,
   }
 }

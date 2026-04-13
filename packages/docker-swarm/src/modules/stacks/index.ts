@@ -69,11 +69,11 @@ export class StacksModule {
       }
 
       return {
+        configs: this.extractConfigs(options.compose),
         name: stackName,
-        services: await this.getStackServices(stackName),
         networks: this.extractNetworks(options.compose, stackName),
         secrets: this.extractSecrets(options.compose),
-        configs: this.extractConfigs(options.compose),
+        services: await this.getStackServices(stackName),
       }
     } catch (error) {
       throw new SwarmError(
@@ -98,12 +98,12 @@ export class StacksModule {
     }
 
     return Array.from(stackMap.entries()).map(([name, services]) => ({
-      name,
-      services,
-      networks: 0,
-      secrets: 0,
       configs: 0,
+      name,
+      networks: 0,
       orchestrator: "swarm" as const,
+      secrets: 0,
+      services,
     }))
   }
 
@@ -216,12 +216,12 @@ export class StacksModule {
     }
 
     return {
-      Name: `${stackName}_${name}`,
       Labels: { "com.docker.stack.namespace": stackName },
-      TaskTemplate: {
-        ContainerSpec: { Image: image, Env: envList.length > 0 ? envList : undefined },
-      },
       Mode: { Replicated: { Replicas: 1 } },
+      Name: `${stackName}_${name}`,
+      TaskTemplate: {
+        ContainerSpec: { Env: envList.length > 0 ? envList : undefined, Image: image },
+      },
     }
   }
 
@@ -246,11 +246,11 @@ export class StacksModule {
   private mapServiceInfo(service: Record<string, unknown>): ServiceInfo {
     const spec = service.Spec as Record<string, unknown> | undefined
     return {
-      id: (service.ID as string) ?? "",
-      version: { index: ((service.Version as Record<string, unknown>)?.Index as number) ?? 0 },
       createdAt: (service.CreatedAt as string) ?? "",
-      updatedAt: (service.UpdatedAt as string) ?? "",
+      id: (service.ID as string) ?? "",
       spec: { name: (spec?.Name as string) ?? "", taskTemplate: {} },
+      updatedAt: (service.UpdatedAt as string) ?? "",
+      version: { index: ((service.Version as Record<string, unknown>)?.Index as number) ?? 0 },
     }
   }
 }

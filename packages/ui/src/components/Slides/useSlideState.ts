@@ -160,14 +160,14 @@ export const useSlidesState = ({
   }
 
   return {
-    slideKeys,
     activeSlide,
     animationDirection,
-    isCollapsed,
+    changeSlide,
     contentHeight,
     contentRefs,
+    isCollapsed,
     isControlled,
-    changeSlide,
+    slideKeys,
   }
 }
 

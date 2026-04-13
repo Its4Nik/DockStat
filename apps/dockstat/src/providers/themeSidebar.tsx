@@ -16,8 +16,8 @@ export function ThemeSidebarProvider({ children }: { children: React.ReactNode }
     variables: Record<string, string>
   ) => {
     const res = await createThemeMutation.mutateAsync({
-      name,
       animations,
+      name,
       variables,
     })
 

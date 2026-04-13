@@ -11,10 +11,10 @@ export interface DockNodeData extends Record<string, unknown> {
 }
 
 const statusStyleMap: Record<string, string> = {
-  OK: "text-badge-success-outlined-text border-badge-success-outlined-border bg-badge-success-bg/10",
-  NO: "text-badge-error-outlined-text border-badge-error-outlined-border bg-badge-error-bg/10",
   "DockNode not initialised":
     "text-badge-warning-outlined-text border-badge-warning-outlined-border bg-badge-warning-bg/10",
+  NO: "text-badge-error-outlined-text border-badge-error-outlined-border bg-badge-error-bg/10",
+  OK: "text-badge-success-outlined-text border-badge-success-outlined-border bg-badge-success-bg/10",
 }
 
 const fallbackBadge =
@@ -63,16 +63,16 @@ export const DockNode = memo(({ data, selected }: NodeProps<Node<DockNodeData>>)
       </div>
 
       <Handle
-        type="target"
+        className="w-3! h-3! bg-graph-docknode-card-border! border-2! border-graph-docknode-text-primary/40!"
         isConnectable={false}
         position={Position.Left}
-        className="w-3! h-3! bg-graph-docknode-card-border! border-2! border-graph-docknode-text-primary/40!"
+        type="target"
       />
       <Handle
-        type="source"
+        className="w-3! h-3! bg-graph-docknode-card-border! border-2! border-graph-docknode-text-primary/40!"
         isConnectable={false}
         position={Position.Right}
-        className="w-3! h-3! bg-graph-docknode-card-border! border-2! border-graph-docknode-text-primary/40!"
+        type="source"
       />
     </div>
   )

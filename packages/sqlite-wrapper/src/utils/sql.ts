@@ -187,16 +187,16 @@ export function buildCondition(
   // Handle NULL special cases
   if (value === null || value === undefined) {
     if (normalizedOp === "=" || normalizedOp === "IS") {
-      return { sql: `${quotedCol} IS NULL`, params: [] }
+      return { params: [], sql: `${quotedCol} IS NULL` }
     }
     if (normalizedOp === "!=" || normalizedOp === "<>" || normalizedOp === "IS NOT") {
-      return { sql: `${quotedCol} IS NOT NULL`, params: [] }
+      return { params: [], sql: `${quotedCol} IS NOT NULL` }
     }
   }
 
   return {
-    sql: `${quotedCol} ${normalizedOp} ?`,
     params: [value as SQLQueryBindings],
+    sql: `${quotedCol} ${normalizedOp} ?`,
   }
 }
 
@@ -217,8 +217,8 @@ export function buildInClause(
   const keyword = negate ? "NOT IN" : "IN"
 
   return {
-    sql: `${quotedCol} ${keyword} (${placeholders})`,
     params: values,
+    sql: `${quotedCol} ${keyword} (${placeholders})`,
   }
 }
 
@@ -235,7 +235,7 @@ export function buildBetweenClause(
   const keyword = negate ? "NOT BETWEEN" : "BETWEEN"
 
   return {
-    sql: `${quotedCol} ${keyword} ? AND ?`,
     params: [min, max],
+    sql: `${quotedCol} ${keyword} ? AND ?`,
   }
 }

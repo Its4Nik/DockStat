@@ -4,8 +4,8 @@ import Elysia from "elysia"
 import { DockStatDB } from "../../database"
 
 const RepositoryRoutes = new Elysia({
-  prefix: "/repositories",
   detail: { tags: ["repositories"] },
+  prefix: "/repositories",
 })
   .get("/all", () => DockStatDB.repositoriesTable.select(["*"]).all())
   .get("/all-manifests", async () => {
@@ -55,8 +55,8 @@ const RepositoryRoutes = new Elysia({
 
         result[repoElement.name] = {
           data: data as RepoManifestType,
-          type: repoElement.type,
           repoSource: repoElement.source,
+          type: repoElement.type,
         }
       } catch (error) {
         console.error(`Error processing ${link}:`, error)

@@ -59,9 +59,9 @@ export class SecretsModule {
 
     try {
       await this.docker.createSecret({
-        Name: options.name,
         Data: data.toString("base64"),
         Labels: options.labels,
+        Name: options.name,
       } as unknown)
 
       const secrets = await this.list({ name: options.name })
@@ -98,14 +98,14 @@ export class SecretsModule {
   private mapSecretInfo(secret: Record<string, unknown>): SecretInfo {
     const spec = secret.Spec as Record<string, unknown> | undefined
     return {
-      id: (secret.ID as string) ?? "",
-      version: { index: ((secret.Version as Record<string, unknown>)?.Index as number) ?? 0 },
       createdAt: (secret.CreatedAt as string) ?? "",
-      updatedAt: (secret.UpdatedAt as string) ?? "",
+      id: (secret.ID as string) ?? "",
       spec: {
-        name: (spec?.Name as string) ?? "",
         labels: spec?.Labels as Record<string, string> | undefined,
+        name: (spec?.Name as string) ?? "",
       },
+      updatedAt: (secret.UpdatedAt as string) ?? "",
+      version: { index: ((secret.Version as Record<string, unknown>)?.Index as number) ?? 0 },
     }
   }
 }

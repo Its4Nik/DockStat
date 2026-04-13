@@ -3,8 +3,8 @@ import { DNH } from "../../docker/docknode"
 import { DockNodeModel } from "../../models/docknode"
 
 export const DockNodeElyisa = new Elysia({
-  prefix: "/node",
   detail: { tags: ["DockNode"] },
+  prefix: "/node",
 })
   .get("/", async ({ status }) => {
     return status(200, await DNH.getAllNodes())
@@ -47,15 +47,15 @@ export const DockNodeElyisa = new Elysia({
       return DNH.createStack(Number(params.nodeId), body)
     },
     {
-      params: t.Object({ nodeId: t.String() }),
       body: t.Object({
-        name: t.String(),
-        yaml: t.String(),
-        repository: t.String(),
-        repoName: t.String(),
-        version: t.String(),
         env: t.Record(t.String(), t.Union([t.String(), t.Number(), t.Boolean(), t.Null()])),
+        name: t.String(),
+        repoName: t.String(),
+        repository: t.String(),
+        version: t.String(),
+        yaml: t.String(),
       }),
+      params: t.Object({ nodeId: t.String() }),
     }
   )
 
@@ -65,14 +65,14 @@ export const DockNodeElyisa = new Elysia({
       return DNH.updateStack(Number(params.nodeId), Number(params.stackId), body)
     },
     {
-      params: t.Object({ nodeId: t.String(), stackId: t.String() }),
       body: t.Object({
-        version: t.Optional(t.String()),
-        yaml: t.Optional(t.String()),
         env: t.Optional(
           t.Record(t.String(), t.Union([t.String(), t.Number(), t.Boolean(), t.Null()]))
         ),
+        version: t.Optional(t.String()),
+        yaml: t.Optional(t.String()),
       }),
+      params: t.Object({ nodeId: t.String(), stackId: t.String() }),
     }
   )
 
@@ -97,8 +97,8 @@ export const DockNodeElyisa = new Elysia({
       return DNH.renameStack(Number(params.nodeId), Number(params.stackId), body.name)
     },
     {
-      params: t.Object({ nodeId: t.String(), stackId: t.String() }),
       body: t.Object({ name: t.String() }),
+      params: t.Object({ nodeId: t.String(), stackId: t.String() }),
     }
   )
 
@@ -119,8 +119,8 @@ export const DockNodeElyisa = new Elysia({
       return DNH.stackUp(Number(params.nodeId), Number(params.stackId), body?.services)
     },
     {
-      params: t.Object({ nodeId: t.String(), stackId: t.String() }),
       body: t.Optional(t.Object({ services: t.Optional(t.Array(t.String())) })),
+      params: t.Object({ nodeId: t.String(), stackId: t.String() }),
     }
   )
 
@@ -130,13 +130,13 @@ export const DockNodeElyisa = new Elysia({
       return DNH.stackDown(Number(params.nodeId), Number(params.stackId), body || undefined)
     },
     {
-      params: t.Object({ nodeId: t.String(), stackId: t.String() }),
       body: t.Optional(
         t.Object({
-          volumes: t.Optional(t.Boolean()),
           removeOrphans: t.Optional(t.Boolean()),
+          volumes: t.Optional(t.Boolean()),
         })
       ),
+      params: t.Object({ nodeId: t.String(), stackId: t.String() }),
     }
   )
 
@@ -146,8 +146,8 @@ export const DockNodeElyisa = new Elysia({
       return DNH.stackStop(Number(params.nodeId), Number(params.stackId), body?.services)
     },
     {
-      params: t.Object({ nodeId: t.String(), stackId: t.String() }),
       body: t.Optional(t.Object({ services: t.Optional(t.Array(t.String())) })),
+      params: t.Object({ nodeId: t.String(), stackId: t.String() }),
     }
   )
 
@@ -157,8 +157,8 @@ export const DockNodeElyisa = new Elysia({
       return DNH.stackRestart(Number(params.nodeId), Number(params.stackId), body?.services)
     },
     {
-      params: t.Object({ nodeId: t.String(), stackId: t.String() }),
       body: t.Optional(t.Object({ services: t.Optional(t.Array(t.String())) })),
+      params: t.Object({ nodeId: t.String(), stackId: t.String() }),
     }
   )
 
@@ -168,8 +168,8 @@ export const DockNodeElyisa = new Elysia({
       return DNH.stackPull(Number(params.nodeId), Number(params.stackId), body?.services)
     },
     {
-      params: t.Object({ nodeId: t.String(), stackId: t.String() }),
       body: t.Optional(t.Object({ services: t.Optional(t.Array(t.String())) })),
+      params: t.Object({ nodeId: t.String(), stackId: t.String() }),
     }
   )
 
@@ -187,16 +187,16 @@ export const DockNodeElyisa = new Elysia({
     "/:nodeId/stacks/:stackId/logs",
     async ({ params, query }) => {
       return DNH.stackLogs(Number(params.nodeId), Number(params.stackId), {
-        services: query.services,
         follow: query.follow === "true",
+        services: query.services,
         tail: query.tail ? Number(query.tail) : undefined,
       })
     },
     {
       params: t.Object({ nodeId: t.String(), stackId: t.String() }),
       query: t.Object({
-        services: t.Optional(t.String()),
         follow: t.Optional(t.String()),
+        services: t.Optional(t.String()),
         tail: t.Optional(t.String()),
       }),
     }
@@ -229,7 +229,7 @@ export const DockNodeElyisa = new Elysia({
       return DNH.getSwarmStack(Number(params.nodeId), params.name)
     },
     {
-      params: t.Object({ nodeId: t.String(), name: t.String() }),
+      params: t.Object({ name: t.String(), nodeId: t.String() }),
     }
   )
 
@@ -239,16 +239,16 @@ export const DockNodeElyisa = new Elysia({
       return DNH.deploySwarmStack(Number(params.nodeId), body)
     },
     {
-      params: t.Object({ nodeId: t.String() }),
       body: t.Object({
-        name: t.String(),
         composeFile: t.String(),
-        withRegistryAuth: t.Optional(t.Boolean()),
+        name: t.String(),
         prune: t.Optional(t.Boolean()),
         resolveImage: t.Optional(
           t.Union([t.Literal("always"), t.Literal("changed"), t.Literal("never")])
         ),
+        withRegistryAuth: t.Optional(t.Boolean()),
       }),
+      params: t.Object({ nodeId: t.String() }),
     }
   )
 
@@ -258,7 +258,7 @@ export const DockNodeElyisa = new Elysia({
       return DNH.removeSwarmStack(Number(params.nodeId), params.name, query.prune === "true")
     },
     {
-      params: t.Object({ nodeId: t.String(), name: t.String() }),
+      params: t.Object({ name: t.String(), nodeId: t.String() }),
       query: t.Object({ prune: t.Optional(t.String()) }),
     }
   )
@@ -289,8 +289,8 @@ export const DockNodeElyisa = new Elysia({
       return DNH.scaleSwarmService(Number(params.nodeId), params.serviceId, body.replicas)
     },
     {
-      params: t.Object({ nodeId: t.String(), serviceId: t.String() }),
       body: t.Object({ replicas: t.Number() }),
+      params: t.Object({ nodeId: t.String(), serviceId: t.String() }),
     }
   )
 
@@ -300,16 +300,16 @@ export const DockNodeElyisa = new Elysia({
       return DNH.updateSwarmService(Number(params.nodeId), params.serviceId, body)
     },
     {
-      params: t.Object({ nodeId: t.String(), serviceId: t.String() }),
       body: t.Object({
-        image: t.Optional(t.String()),
+        constraints: t.Optional(t.Array(t.String())),
         env: t.Optional(
           t.Record(t.String(), t.Union([t.String(), t.Number(), t.Boolean(), t.Null()]))
         ),
-        replicas: t.Optional(t.Number()),
-        constraints: t.Optional(t.Array(t.String())),
+        image: t.Optional(t.String()),
         labels: t.Optional(t.Record(t.String(), t.String())),
+        replicas: t.Optional(t.Number()),
       }),
+      params: t.Object({ nodeId: t.String(), serviceId: t.String() }),
     }
   )
 
@@ -350,12 +350,12 @@ export const DockNodeElyisa = new Elysia({
       return DNH.initSwarm(Number(params.nodeId), body)
     },
     {
-      params: t.Object({ nodeId: t.String() }),
       body: t.Object({
         advertiseAddr: t.Optional(t.String()),
-        listenAddr: t.Optional(t.String()),
         forceNewCluster: t.Optional(t.Boolean()),
+        listenAddr: t.Optional(t.String()),
       }),
+      params: t.Object({ nodeId: t.String() }),
     }
   )
 

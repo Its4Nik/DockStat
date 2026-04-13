@@ -20,11 +20,11 @@ export const MinimalSlidesHeader = ({
       {description && <span className="text-muted-text text-xs">{description}</span>}
     </div>
     <ButtonRow
-      slideKeys={state.slideKeys}
       activeSlide={state.activeSlide}
-      isCollapsed={state.isCollapsed}
       connected={connected}
+      isCollapsed={state.isCollapsed}
       onSlideChange={state.changeSlide}
+      slideKeys={state.slideKeys}
     />
   </div>
 )

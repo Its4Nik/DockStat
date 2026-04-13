@@ -20,8 +20,8 @@ export function useEdenMutation<TRoute extends EdenRoute>(
   }
 
   return useBaseEdenMutation<ResponseData<TRoute>, EdenBody<TRoute>>({
-    mutationKey: options.mutationKey,
-    mutationFn,
     invalidateQueries: options.invalidateQueries,
+    mutationFn,
+    mutationKey: options.mutationKey,
   })
 }

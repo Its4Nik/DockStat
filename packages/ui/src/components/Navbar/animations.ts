@@ -7,12 +7,12 @@ export const backdropVariants: Variants = {
 
 export const slideUpVariants: Variants = {
   hidden: {
-    y: 20,
     opacity: 0,
+    y: 20,
   },
   open: {
-    y: 0,
     opacity: 1,
+    y: 0,
   },
 }
 
@@ -30,50 +30,50 @@ export const busyVariants: Variants = {
 }
 
 export const animatedBlur: Variants = {
-  opened: {
-    backdropFilter: "blur(16px)",
-    opacity: 1,
-  },
   closed: {
     backdropFilter: "blur(0px)",
     opacity: 0,
+  },
+  opened: {
+    backdropFilter: "blur(16px)",
+    opacity: 1,
   },
 }
 
 export const slideInVariants: Variants = {
   closed: {
-    x: "-100%",
     opacity: 0,
     transition: {
-      stiffness: 300,
       damping: 30,
+      stiffness: 300,
     },
+    x: "-100%",
   },
   open: {
-    x: 0,
     opacity: 1,
     transition: {
-      stiffness: 300,
       damping: 30,
+      stiffness: 300,
     },
+    x: 0,
   },
 }
 
 export const reverseSlideInVariants: Variants = {
   closed: {
-    x: "100%",
     opacity: 0,
     transition: {
-      stiffness: 300,
       damping: 30,
+      stiffness: 300,
     },
+    x: "100%",
   },
   open: {
-    x: 0,
     opacity: 1,
     transition: {
-      stiffness: 300,
       damping: 30,
+      stiffness: 300,
     },
+    x: 0,
   },
 }

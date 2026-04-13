@@ -35,19 +35,19 @@ export const SidebarItem = ({ item, depth = 0, handleTogglePin, isLoading }: Sid
         </LinkWithIcon>
 
         <button
-          type="button"
-          disabled={isLoading}
-          onClick={onToggle}
           className={`${
             item.isPinned ? "opacity-100" : ""
           } ml-2 shrink-0 rounded-md bg-main-bg p-1.5 text-muted-foreground opacity-0 transition-all duration-200 hover:bg-main-bg/30 hover:text-accent focus:opacity-100 disabled:cursor-not-allowed group-hover:opacity-100 group-focus-within:opacity-100`}
+          disabled={isLoading}
+          onClick={onToggle}
           title={item.isPinned ? "Unpin" : "Pin"}
+          type="button"
         >
           <Pin
-            size={14}
             className={`rotate-30 transition-colors duration-200 hover:animate-wave ${
               item.isPinned ? "fill-accent text-accent" : ""
             }`}
+            size={14}
           />
         </button>
       </div>
@@ -56,11 +56,11 @@ export const SidebarItem = ({ item, depth = 0, handleTogglePin, isLoading }: Sid
         <div className="flex flex-col gap-1">
           {item.children.map((child) => (
             <SidebarItem
-              key={child.slug}
-              item={child}
               depth={depth + 1}
               handleTogglePin={handleTogglePin}
               isLoading={isLoading}
+              item={child}
+              key={child.slug}
             />
           ))}
         </div>

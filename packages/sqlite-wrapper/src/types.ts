@@ -4,47 +4,47 @@ import type { Database, SQLQueryBindings } from "bun:sqlite"
  * All SQLite data types including affinity types
  */
 export const SQLiteTypes = {
-  // Standard SQLite types
-  INTEGER: "INTEGER" as const,
-  TEXT: "TEXT" as const,
-  REAL: "REAL" as const,
-  BLOB: "BLOB" as const,
-  NUMERIC: "NUMERIC" as const,
-
-  // Common type aliases and variations
-  INT: "INT" as const,
-  TINYINT: "TINYINT" as const,
-  SMALLINT: "SMALLINT" as const,
-  MEDIUMINT: "MEDIUMINT" as const,
   BIGINT: "BIGINT" as const,
+  BLOB: "BLOB" as const,
 
-  // Text variations
-  VARCHAR: "VARCHAR" as const,
+  // Boolean (stored as INTEGER)
+  BOOLEAN: "BOOLEAN" as const,
   CHAR: "CHAR" as const,
   CHARACTER: "CHARACTER" as const,
-  NCHAR: "NCHAR" as const,
-  NVARCHAR: "NVARCHAR" as const,
   CLOB: "CLOB" as const,
-
-  // Numeric variations
-  DOUBLE: "DOUBLE" as const,
-  FLOAT: "FLOAT" as const,
-  DECIMAL: "DECIMAL" as const,
 
   // Date/Time (stored as TEXT, INTEGER, or REAL)
   DATE: "DATE" as const,
   DATETIME: "DATETIME" as const,
-  TIMESTAMP: "TIMESTAMP" as const,
-  TIME: "TIME" as const,
+  DECIMAL: "DECIMAL" as const,
 
-  // Boolean (stored as INTEGER)
-  BOOLEAN: "BOOLEAN" as const,
+  // Numeric variations
+  DOUBLE: "DOUBLE" as const,
+  FLOAT: "FLOAT" as const,
+
+  // Common type aliases and variations
+  INT: "INT" as const,
+  // Standard SQLite types
+  INTEGER: "INTEGER" as const,
 
   // JSON (stored as TEXT)
   JSON: "JSON" as const,
+  MEDIUMINT: "MEDIUMINT" as const,
 
   // Modules (stored as TEXT)
   MODULE: "TEXT" as const,
+  NCHAR: "NCHAR" as const,
+  NUMERIC: "NUMERIC" as const,
+  NVARCHAR: "NVARCHAR" as const,
+  REAL: "REAL" as const,
+  SMALLINT: "SMALLINT" as const,
+  TEXT: "TEXT" as const,
+  TIME: "TIME" as const,
+  TIMESTAMP: "TIMESTAMP" as const,
+  TINYINT: "TINYINT" as const,
+
+  // Text variations
+  VARCHAR: "VARCHAR" as const,
 } as const
 
 export type SQLiteType = (typeof SQLiteTypes)[keyof typeof SQLiteTypes]
@@ -53,87 +53,86 @@ export type SQLiteType = (typeof SQLiteTypes)[keyof typeof SQLiteTypes]
  * SQLite built-in scalar functions
  */
 export const SQLiteFunctions = {
+  // Math functions
+  ABS: (expr: string) => `ABS(${expr})`,
+  AVG: (expr: string) => `AVG(${expr})`,
+
+  // Type conversion
+  CAST: (expr: string, type: string) => `CAST(${expr} AS ${type})`,
+
+  // Conditional
+  COALESCE: (...exprs: string[]) => `COALESCE(${exprs.join(", ")})`,
+
+  // Aggregate functions (for use in expressions)
+  COUNT: (expr?: string) => (expr ? `COUNT(${expr})` : "COUNT(*)"),
   // Date/Time functions
   DATE: (expr: string) => `DATE(${expr})`,
-  TIME: (expr: string) => `TIME(${expr})`,
   DATETIME: (expr: string) => `DATETIME(${expr})`,
+  GROUP_CONCAT: (expr: string, separator?: string) =>
+    separator ? `GROUP_CONCAT(${expr}, '${separator}')` : `GROUP_CONCAT(${expr})`,
+  IFNULL: (expr: string, replacement: string) => `IFNULL(${expr}, ${replacement})`,
+  IIF: (condition: string, trueValue: string, falseValue: string) =>
+    `IIF(${condition}, ${trueValue}, ${falseValue})`,
+
+  // JSON functions (SQLite 3.45+)
+  JSON: (expr: string) => `JSON(${expr})`,
+  JSON_ARRAY: (...values: string[]) => `JSON_ARRAY(${values.join(", ")})`,
+  JSON_EXTRACT: (json: string, path: string) => `JSON_EXTRACT(${json}, '${path}')`,
+  JSON_OBJECT: (...pairs: string[]) => `JSON_OBJECT(${pairs.join(", ")})`,
+  JSON_TYPE: (json: string, path?: string) =>
+    path ? `JSON_TYPE(${json}, '${path}')` : `JSON_TYPE(${json})`,
+  JSON_VALID: (expr: string) => `JSON_VALID(${expr})`,
   JULIANDAY: (expr: string) => `JULIANDAY(${expr})`,
-  STRFTIME: (format: string, expr: string) => `STRFTIME('${format}', ${expr})`,
 
   // String functions
   LENGTH: (expr: string) => `LENGTH(${expr})`,
   LOWER: (expr: string) => `LOWER(${expr})`,
-  UPPER: (expr: string) => `UPPER(${expr})`,
-  TRIM: (expr: string, chars?: string) => (chars ? `TRIM(${expr}, '${chars}')` : `TRIM(${expr})`),
   LTRIM: (expr: string, chars?: string) =>
     chars ? `LTRIM(${expr}, '${chars}')` : `LTRIM(${expr})`,
+  MAX: (...exprs: string[]) => `MAX(${exprs.join(", ")})`,
+  MIN: (...exprs: string[]) => `MIN(${exprs.join(", ")})`,
+  NULLIF: (expr1: string, expr2: string) => `NULLIF(${expr1}, ${expr2})`,
+  PRINTF: (format: string, ...args: string[]) => `PRINTF('${format}', ${args.join(", ")})`,
+  RANDOM: () => "RANDOM()",
+  REPLACE: (expr: string, old: string, replacement: string) =>
+    `REPLACE(${expr}, '${old}', '${replacement}')`,
+  ROUND: (expr: string, digits?: number) =>
+    digits !== undefined ? `ROUND(${expr}, ${digits})` : `ROUND(${expr})`,
   RTRIM: (expr: string, chars?: string) =>
     chars ? `RTRIM(${expr}, '${chars}')` : `RTRIM(${expr})`,
+  STRFTIME: (format: string, expr: string) => `STRFTIME('${format}', ${expr})`,
   SUBSTR: (expr: string, start: number, length?: number) =>
     length ? `SUBSTR(${expr}, ${start}, ${length})` : `SUBSTR(${expr}, ${start})`,
   SUBSTRING: (expr: string, start: number, length?: number) =>
     length ? `SUBSTRING(${expr}, ${start}, ${length})` : `SUBSTRING(${expr}, ${start})`,
-  REPLACE: (expr: string, old: string, replacement: string) =>
-    `REPLACE(${expr}, '${old}', '${replacement}')`,
-  PRINTF: (format: string, ...args: string[]) => `PRINTF('${format}', ${args.join(", ")})`,
-
-  // Math functions
-  ABS: (expr: string) => `ABS(${expr})`,
-  ROUND: (expr: string, digits?: number) =>
-    digits !== undefined ? `ROUND(${expr}, ${digits})` : `ROUND(${expr})`,
-  RANDOM: () => "RANDOM()",
-  MIN: (...exprs: string[]) => `MIN(${exprs.join(", ")})`,
-  MAX: (...exprs: string[]) => `MAX(${exprs.join(", ")})`,
-
-  // Type conversion
-  CAST: (expr: string, type: string) => `CAST(${expr} AS ${type})`,
-  TYPEOF: (expr: string) => `TYPEOF(${expr})`,
-
-  // Conditional
-  COALESCE: (...exprs: string[]) => `COALESCE(${exprs.join(", ")})`,
-  IFNULL: (expr: string, replacement: string) => `IFNULL(${expr}, ${replacement})`,
-  NULLIF: (expr1: string, expr2: string) => `NULLIF(${expr1}, ${expr2})`,
-  IIF: (condition: string, trueValue: string, falseValue: string) =>
-    `IIF(${condition}, ${trueValue}, ${falseValue})`,
-
-  // Aggregate functions (for use in expressions)
-  COUNT: (expr?: string) => (expr ? `COUNT(${expr})` : "COUNT(*)"),
   SUM: (expr: string) => `SUM(${expr})`,
-  AVG: (expr: string) => `AVG(${expr})`,
+  TIME: (expr: string) => `TIME(${expr})`,
   TOTAL: (expr: string) => `TOTAL(${expr})`,
-  GROUP_CONCAT: (expr: string, separator?: string) =>
-    separator ? `GROUP_CONCAT(${expr}, '${separator}')` : `GROUP_CONCAT(${expr})`,
-
-  // JSON functions (SQLite 3.45+)
-  JSON: (expr: string) => `JSON(${expr})`,
-  JSON_EXTRACT: (json: string, path: string) => `JSON_EXTRACT(${json}, '${path}')`,
-  JSON_TYPE: (json: string, path?: string) =>
-    path ? `JSON_TYPE(${json}, '${path}')` : `JSON_TYPE(${json})`,
-  JSON_VALID: (expr: string) => `JSON_VALID(${expr})`,
-  JSON_ARRAY: (...values: string[]) => `JSON_ARRAY(${values.join(", ")})`,
-  JSON_OBJECT: (...pairs: string[]) => `JSON_OBJECT(${pairs.join(", ")})`,
+  TRIM: (expr: string, chars?: string) => (chars ? `TRIM(${expr}, '${chars}')` : `TRIM(${expr})`),
+  TYPEOF: (expr: string) => `TYPEOF(${expr})`,
+  UPPER: (expr: string) => `UPPER(${expr})`,
 } as const
 
 /**
  * SQLite keywords and special values
  */
 export const SQLiteKeywords = {
+  ABORT: "ABORT" as const,
+  CURRENT_DATE: "CURRENT_DATE" as const,
+  CURRENT_TIME: "CURRENT_TIME" as const,
+  CURRENT_TIMESTAMP: "CURRENT_TIMESTAMP" as const,
+  FAIL: "FAIL" as const,
+  FALSE: "0" as const,
+  IGNORE: "IGNORE" as const,
   // Special values
   NULL: "NULL" as const,
-  CURRENT_TIME: "CURRENT_TIME" as const,
-  CURRENT_DATE: "CURRENT_DATE" as const,
-  CURRENT_TIMESTAMP: "CURRENT_TIMESTAMP" as const,
-
-  // Boolean values (as integers)
-  TRUE: "1" as const,
-  FALSE: "0" as const,
+  REPLACE: "REPLACE" as const,
 
   // Conflict resolution
   ROLLBACK: "ROLLBACK" as const,
-  ABORT: "ABORT" as const,
-  FAIL: "FAIL" as const,
-  IGNORE: "IGNORE" as const,
-  REPLACE: "REPLACE" as const,
+
+  // Boolean values (as integers)
+  TRUE: "1" as const,
 } as const
 
 /**
@@ -279,40 +278,6 @@ interface ModuleParser<T> {
  */
 export const column = {
   /**
-   * Create an INTEGER column with optional size specification
-   */
-  integer: (
-    constraints?: ColumnConstraints & {
-      size?: "TINYINT" | "SMALLINT" | "MEDIUMINT" | "BIGINT"
-    }
-  ): ColumnDefinition => ({
-    type: constraints?.size || SQLiteTypes.INTEGER,
-    ...constraints,
-  }),
-
-  /**
-   * Create a TEXT column with optional length
-   */
-  text: (
-    constraints?: ColumnConstraints & {
-      length?: number
-      variant?: "VARCHAR" | "CHAR" | "CLOB" | "NCHAR" | "NVARCHAR"
-    }
-  ): ColumnDefinition => ({
-    type: constraints?.variant || SQLiteTypes.TEXT,
-    length: constraints?.length,
-    ...constraints,
-  }),
-
-  /**
-   * Create a REAL column
-   */
-  real: (constraints?: ColumnConstraints & { variant?: "DOUBLE" | "FLOAT" }): ColumnDefinition => ({
-    type: constraints?.variant || SQLiteTypes.REAL,
-    ...constraints,
-  }),
-
-  /**
    * Create a BLOB column
    */
   blob: (constraints?: ColumnConstraints): ColumnDefinition => ({
@@ -321,18 +286,36 @@ export const column = {
   }),
 
   /**
-   * Create a NUMERIC/DECIMAL column with precision and scale
+   * Create a BOOLEAN column (stored as INTEGER)
    */
-  numeric: (
-    constraints?: ColumnConstraints & {
-      precision?: number
-      scale?: number
-      variant?: "DECIMAL"
+  boolean: (constraints?: ColumnConstraints): ColumnDefinition => ({
+    check: constraints?.check || "{{COLUMN}} IN (0, 1)", // Placeholder for column name
+    type: SQLiteTypes.BOOLEAN,
+    ...constraints,
+  }),
+
+  /**
+   * Create a CHAR column with specified length
+   */
+  char: (length: number, constraints?: ColumnConstraints): ColumnDefinition => ({
+    length,
+    type: SQLiteTypes.CHAR,
+    ...constraints,
+  }),
+
+  /**
+   * Create a created_at timestamp column
+   */
+  createdAt: (
+    constraints?: Omit<ColumnConstraints, "default" | "notNull"> & {
+      asText?: boolean
     }
   ): ColumnDefinition => ({
-    type: constraints?.variant || SQLiteTypes.NUMERIC,
-    precision: constraints?.precision,
-    scale: constraints?.scale,
+    default: constraints?.asText
+      ? defaultExpr("datetime('now')")
+      : defaultExpr("strftime('%s', 'now')"),
+    notNull: true,
+    type: constraints?.asText ? SQLiteTypes.DATETIME : SQLiteTypes.INTEGER,
     ...constraints,
   }),
 
@@ -353,121 +336,12 @@ export const column = {
   }),
 
   /**
-   * Create a TIMESTAMP column (stored as INTEGER by default)
+   * Create an enum column (with CHECK constraint)
    */
-  timestamp: (constraints?: ColumnConstraints & { asText?: boolean }): ColumnDefinition => ({
-    type: constraints?.asText ? SQLiteTypes.TEXT : SQLiteTypes.INTEGER,
-    ...constraints,
-  }),
-
-  /**
-   * Create a TIME column (stored as TEXT)
-   */
-  time: (constraints?: ColumnConstraints): ColumnDefinition => ({
-    type: SQLiteTypes.TIME,
-    ...constraints,
-  }),
-
-  /**
-   * Create a BOOLEAN column (stored as INTEGER)
-   */
-  boolean: (constraints?: ColumnConstraints): ColumnDefinition => ({
-    type: SQLiteTypes.BOOLEAN,
-    check: constraints?.check || "{{COLUMN}} IN (0, 1)", // Placeholder for column name
-    ...constraints,
-  }),
-
-  /**
-   * Create a JSON column (stored as TEXT)
-   */
-  json: (constraints?: ColumnConstraints & { validateJson?: boolean }): ColumnDefinition => ({
-    type: SQLiteTypes.JSON,
-    check: constraints?.validateJson ? "JSON_VALID({{COLUMN}})" : constraints?.check,
-    ...constraints,
-  }),
-
-  /**
-   * Create a VARCHAR column with specified length
-   */
-  varchar: (length: number, constraints?: ColumnConstraints): ColumnDefinition => ({
-    type: SQLiteTypes.VARCHAR,
-    length,
-    ...constraints,
-  }),
-
-  /**
-   * Create a CHAR column with specified length
-   */
-  char: (length: number, constraints?: ColumnConstraints): ColumnDefinition => ({
-    type: SQLiteTypes.CHAR,
-    length,
-    ...constraints,
-  }),
-
-  /**
-   * Create an auto-incrementing primary key column
-   */
-  id: (
-    constraints?: Omit<ColumnConstraints, "primaryKey" | "autoincrement" | "notNull">
-  ): ColumnDefinition => ({
-    type: SQLiteTypes.INTEGER,
-    primaryKey: true,
-    autoincrement: true,
+  enum: (values: string[], constraints?: ColumnConstraints): ColumnDefinition => ({
+    check: `{{COLUMN}} IN (${values.map((v) => `'${v}'`).join(", ")})`,
     notNull: true,
-    ...constraints,
-  }),
-
-  /**
-   * Create a UUID column (stored as TEXT)
-   */
-  uuid: (constraints?: ColumnConstraints & { generateDefault?: boolean }): ColumnDefinition => ({
     type: SQLiteTypes.TEXT,
-    length: 36,
-    default: constraints?.generateDefault
-      ? defaultExpr(
-          "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))"
-        )
-      : constraints?.default,
-    ...constraints,
-  }),
-
-  /**
-   * Create a created_at timestamp column
-   */
-  createdAt: (
-    constraints?: Omit<ColumnConstraints, "default" | "notNull"> & {
-      asText?: boolean
-    }
-  ): ColumnDefinition => ({
-    type: constraints?.asText ? SQLiteTypes.DATETIME : SQLiteTypes.INTEGER,
-    notNull: true,
-    default: constraints?.asText
-      ? defaultExpr("datetime('now')")
-      : defaultExpr("strftime('%s', 'now')"),
-    ...constraints,
-  }),
-
-  /**
-   * Creates a function Column that will be parsed and transpiled using Bun.transpiler
-   */
-  module: (constraints?: ColumnConstraints): ColumnDefinition => ({
-    type: SQLiteTypes.MODULE,
-    comment:
-      constraints?.comment ||
-      "A simple Module column, with automatic serilisation and deserilisation using Bun.Transpiler()",
-    ...constraints,
-  }),
-
-  /**
-   * Create an updated_at timestamp column
-   */
-  updatedAt: (
-    constraints?: Omit<ColumnConstraints, "default"> & { asText?: boolean }
-  ): ColumnDefinition => ({
-    type: constraints?.asText ? SQLiteTypes.DATETIME : SQLiteTypes.INTEGER,
-    default: constraints?.asText
-      ? defaultExpr("datetime('now')")
-      : defaultExpr("strftime('%s', 'now')"),
     ...constraints,
   }),
 
@@ -483,23 +357,147 @@ export const column = {
       type?: SQLiteType
     }
   ): ColumnDefinition => ({
-    type: constraints?.type || SQLiteTypes.INTEGER,
     references: {
-      table: refTable,
       column: String(refColumn),
       onDelete: constraints?.onDelete,
       onUpdate: constraints?.onUpdate,
+      table: refTable,
     },
+    type: constraints?.type || SQLiteTypes.INTEGER,
     ...constraints,
   }),
 
   /**
-   * Create an enum column (with CHECK constraint)
+   * Create an auto-incrementing primary key column
    */
-  enum: (values: string[], constraints?: ColumnConstraints): ColumnDefinition => ({
-    type: SQLiteTypes.TEXT,
+  id: (
+    constraints?: Omit<ColumnConstraints, "primaryKey" | "autoincrement" | "notNull">
+  ): ColumnDefinition => ({
+    autoincrement: true,
     notNull: true,
-    check: `{{COLUMN}} IN (${values.map((v) => `'${v}'`).join(", ")})`,
+    primaryKey: true,
+    type: SQLiteTypes.INTEGER,
+    ...constraints,
+  }),
+  /**
+   * Create an INTEGER column with optional size specification
+   */
+  integer: (
+    constraints?: ColumnConstraints & {
+      size?: "TINYINT" | "SMALLINT" | "MEDIUMINT" | "BIGINT"
+    }
+  ): ColumnDefinition => ({
+    type: constraints?.size || SQLiteTypes.INTEGER,
+    ...constraints,
+  }),
+
+  /**
+   * Create a JSON column (stored as TEXT)
+   */
+  json: (constraints?: ColumnConstraints & { validateJson?: boolean }): ColumnDefinition => ({
+    check: constraints?.validateJson ? "JSON_VALID({{COLUMN}})" : constraints?.check,
+    type: SQLiteTypes.JSON,
+    ...constraints,
+  }),
+
+  /**
+   * Creates a function Column that will be parsed and transpiled using Bun.transpiler
+   */
+  module: (constraints?: ColumnConstraints): ColumnDefinition => ({
+    comment:
+      constraints?.comment ||
+      "A simple Module column, with automatic serilisation and deserilisation using Bun.Transpiler()",
+    type: SQLiteTypes.MODULE,
+    ...constraints,
+  }),
+
+  /**
+   * Create a NUMERIC/DECIMAL column with precision and scale
+   */
+  numeric: (
+    constraints?: ColumnConstraints & {
+      precision?: number
+      scale?: number
+      variant?: "DECIMAL"
+    }
+  ): ColumnDefinition => ({
+    precision: constraints?.precision,
+    scale: constraints?.scale,
+    type: constraints?.variant || SQLiteTypes.NUMERIC,
+    ...constraints,
+  }),
+
+  /**
+   * Create a REAL column
+   */
+  real: (constraints?: ColumnConstraints & { variant?: "DOUBLE" | "FLOAT" }): ColumnDefinition => ({
+    type: constraints?.variant || SQLiteTypes.REAL,
+    ...constraints,
+  }),
+
+  /**
+   * Create a TEXT column with optional length
+   */
+  text: (
+    constraints?: ColumnConstraints & {
+      length?: number
+      variant?: "VARCHAR" | "CHAR" | "CLOB" | "NCHAR" | "NVARCHAR"
+    }
+  ): ColumnDefinition => ({
+    length: constraints?.length,
+    type: constraints?.variant || SQLiteTypes.TEXT,
+    ...constraints,
+  }),
+
+  /**
+   * Create a TIME column (stored as TEXT)
+   */
+  time: (constraints?: ColumnConstraints): ColumnDefinition => ({
+    type: SQLiteTypes.TIME,
+    ...constraints,
+  }),
+
+  /**
+   * Create a TIMESTAMP column (stored as INTEGER by default)
+   */
+  timestamp: (constraints?: ColumnConstraints & { asText?: boolean }): ColumnDefinition => ({
+    type: constraints?.asText ? SQLiteTypes.TEXT : SQLiteTypes.INTEGER,
+    ...constraints,
+  }),
+
+  /**
+   * Create an updated_at timestamp column
+   */
+  updatedAt: (
+    constraints?: Omit<ColumnConstraints, "default"> & { asText?: boolean }
+  ): ColumnDefinition => ({
+    default: constraints?.asText
+      ? defaultExpr("datetime('now')")
+      : defaultExpr("strftime('%s', 'now')"),
+    type: constraints?.asText ? SQLiteTypes.DATETIME : SQLiteTypes.INTEGER,
+    ...constraints,
+  }),
+
+  /**
+   * Create a UUID column (stored as TEXT)
+   */
+  uuid: (constraints?: ColumnConstraints & { generateDefault?: boolean }): ColumnDefinition => ({
+    default: constraints?.generateDefault
+      ? defaultExpr(
+          "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))"
+        )
+      : constraints?.default,
+    length: 36,
+    type: SQLiteTypes.TEXT,
+    ...constraints,
+  }),
+
+  /**
+   * Create a VARCHAR column with specified length
+   */
+  varchar: (length: number, constraints?: ColumnConstraints): ColumnDefinition => ({
+    length,
+    type: SQLiteTypes.VARCHAR,
     ...constraints,
   }),
 }
@@ -508,23 +506,23 @@ export const column = {
  * SQL function helpers for use in defaults and expressions
  */
 export const sql = {
+  currentDate: () => defaultExpr("date('now')"),
+  currentTime: () => defaultExpr("time('now')"),
+  currentTimestamp: () => defaultExpr("datetime('now')"),
   // Current date/time
   now: () => defaultExpr("datetime('now')"),
-  currentTime: () => defaultExpr("time('now')"),
-  currentDate: () => defaultExpr("date('now')"),
-  currentTimestamp: () => defaultExpr("datetime('now')"),
   unixTimestamp: () => defaultExpr("strftime('%s', 'now')"),
 
   // Functions
   ...SQLiteFunctions,
-
-  // Raw expression
-  raw: (expression: string) => defaultExpr(expression),
+  false: () => 0,
 
   // Literals
   null: () => null,
+
+  // Raw expression
+  raw: (expression: string) => defaultExpr(expression),
   true: () => 1,
-  false: () => 0,
 }
 
 /**

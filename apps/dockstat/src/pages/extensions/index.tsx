@@ -36,8 +36,8 @@ export default function ExtensionsIndex() {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {data?.length === 0 ? (
         <Card
-          variant="outlined"
           className="border-dashed border-2 hover:border-accent/60 transition-colors"
+          variant="outlined"
         >
           <div className="flex flex-col gap-4 h-full">
             <div className="flex items-center gap-3 pb-3 border-b border-accent/20">
@@ -56,13 +56,13 @@ export default function ExtensionsIndex() {
             </div>
 
             <Button
+              className="w-full mt-auto"
+              disabled={addRepoMutation.isPending}
               onClick={() =>
                 handleRepoAdd(
                   "https://raw.githubusercontent.com/Its4Nik/DockStat/refs/heads/feat-settings-page/apps/dockstore/repo.json"
                 )
               }
-              disabled={addRepoMutation.isPending}
-              className="w-full mt-auto"
             >
               {addRepoMutation.isPending ? "Adding..." : "Add Repository"}
             </Button>
@@ -72,19 +72,19 @@ export default function ExtensionsIndex() {
 
       {data?.map((repo) => (
         <RepoCard
-          key={repo.id}
           id={repo.id}
+          key={repo.id}
           name={repo.name}
           policy={repo.policy}
-          type={repo.type}
           source={repo.source}
+          type={repo.type}
           verification_api={repo.verification_api}
         />
       ))}
 
       <Card
-        variant="outlined"
         className="border-dashed border-2 hover:border-accent/60 transition-colors"
+        variant="outlined"
       >
         <div className="flex flex-col gap-4 h-full">
           <div className="flex items-center gap-3 pb-3 border-b border-accent/20">
@@ -97,12 +97,12 @@ export default function ExtensionsIndex() {
 
           <div className="flex flex-col gap-3 flex-1">
             <Input
-              size="md"
-              variant="filled"
-              value={repoLink}
               onChange={setRepoLink}
-              type="url"
               placeholder="https://raw.githubusercontent.com/Its4Nik/DockStat/refs/heads/feat-settings-page/apps/dockstore/repo.json"
+              size="md"
+              type="url"
+              value={repoLink}
+              variant="filled"
             />
 
             <p className="text-xs text-muted-foreground">
@@ -112,9 +112,9 @@ export default function ExtensionsIndex() {
           </div>
 
           <Button
-            onClick={() => handleRepoAdd()}
-            disabled={!isFormValid || addRepoMutation.isPending}
             className="w-full mt-auto"
+            disabled={!isFormValid || addRepoMutation.isPending}
+            onClick={() => handleRepoAdd()}
           >
             {addRepoMutation.isPending ? "Adding..." : "Add Repository"}
           </Button>

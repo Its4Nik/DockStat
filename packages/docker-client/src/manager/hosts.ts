@@ -6,8 +6,8 @@ export class Hosts extends DockerClientManagerCore {
   public async init(clientId: number, hosts?: DATABASE.DB_target_host[]): Promise<void> {
     const actualHosts = hosts ?? []
     return this.sendRequest(clientId, {
-      type: "init",
       hosts: actualHosts,
+      type: "init",
     })
   }
 
@@ -20,15 +20,15 @@ export class Hosts extends DockerClientManagerCore {
     id?: number
   ): Promise<DATABASE.DB_target_host> {
     const result = await this.sendRequest<DATABASE.DB_target_host>(clientId, {
-      type: "addHost",
       data: {
-        host: hostname,
-        name,
-        secure,
-        port,
-        id,
         docker_client_id: clientId,
+        host: hostname,
+        id,
+        name,
+        port,
+        secure,
       },
+      type: "addHost",
     })
 
     const wrapper = this.workers.get(clientId)
@@ -44,8 +44,8 @@ export class Hosts extends DockerClientManagerCore {
 
   public async removeHost(clientId: number, hostId: number): Promise<void> {
     await this.sendRequest(clientId, {
-      type: "removeHost",
       hostId,
+      type: "removeHost",
     })
 
     const wrapper = this.workers.get(clientId)
@@ -63,12 +63,12 @@ export class Hosts extends DockerClientManagerCore {
       ])
 
       const mappedHosts = clientHosts.map((c) => ({
-        name: c.name,
-        id: Number(c.id),
         clientId: Number(client.id),
-        reachable: pRes.reachableInstances.includes(Number(c.id)),
         host: c.host,
+        id: Number(c.id),
+        name: c.name,
         port: c.port,
+        reachable: pRes.reachableInstances.includes(Number(c.id)),
       }))
 
       this.logger.debug(`Clients Hosts for ${client.name}: ${JSON.stringify(mappedHosts)}`)
@@ -86,8 +86,8 @@ export class Hosts extends DockerClientManagerCore {
 
   public async updateHost(clientId: number, host: DATABASE.DB_target_host): Promise<void> {
     return this.sendRequest(clientId, {
-      type: "updateHost",
       host,
+      type: "updateHost",
     })
   }
 

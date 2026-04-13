@@ -15,8 +15,8 @@ export const usePinnedPaths = (paths: PathItem[], pins: { path: string; slug: st
 
     const addPinStatus = (item: PathItem): PathItem => ({
       ...item,
-      isPinned: checkIsPinned(item.path, item.slug),
       children: item.children?.map(addPinStatus),
+      isPinned: checkIsPinned(item.path, item.slug),
     })
 
     return paths.map(addPinStatus)

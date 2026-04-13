@@ -18,19 +18,19 @@ class DockStatDB {
       this.db = new DB(
         "dockstat.sqlite",
         {
-          pragmas: [
-            ["journal_mode", "WAL"],
-            ["cache_size", -64000],
-          ],
           autoBackup: {
+            compress: true,
             directory: ".backups",
             enabled: true,
-            compress: true,
             intervalMs: Bun.env.DOCKSTAT_DB_BACKUP_INTERVAL
               ? Number(Bun.env.DOCKSTAT_DB_BACKUP_INTERVAL) * 60 * 1000
               : undefined,
             maxBackups: Number(Bun.env.DOCKSTAT_MAX_DB_BACKUPS || 10),
           },
+          pragmas: [
+            ["journal_mode", "WAL"],
+            ["cache_size", -64000],
+          ],
         },
         this.logger
       )
@@ -39,18 +39,18 @@ class DockStatDB {
       this.config_table = this.db.createTable<DockStatConfigTableType>(
         "config",
         {
-          name: column.text({ notNull: false }),
-          id: column.uuid(),
-          config_database_rev: column.text(),
-          allow_untrusted_repo: column.boolean({ default: false }),
-          default_themes: column.json({ notNull: true }),
-          tables: column.json({ notNull: true }),
-          keys: column.json({ notNull: true }),
-          version: column.text({ notNull: true }),
-          hotkeys: column.json(),
-          nav_links: column.json(),
-          autostart_handlers_monitoring: column.boolean({ default: true }),
           additionalSettings: column.json(),
+          allow_untrusted_repo: column.boolean({ default: false }),
+          autostart_handlers_monitoring: column.boolean({ default: true }),
+          config_database_rev: column.text(),
+          default_themes: column.json({ notNull: true }),
+          hotkeys: column.json(),
+          id: column.uuid(),
+          keys: column.json({ notNull: true }),
+          name: column.text({ notNull: false }),
+          nav_links: column.json(),
+          tables: column.json({ notNull: true }),
+          version: column.text({ notNull: true }),
         },
         {
           constraints: {
@@ -58,6 +58,7 @@ class DockStatDB {
           },
           ifNotExists: true,
           parser: {
+            BOOLEAN: ["allow_untrusted_repo", "autostart_handlers_monitoring"],
             JSON: [
               "default_themes",
               "tables",
@@ -66,7 +67,6 @@ class DockStatDB {
               "nav_links",
               "additionalSettings",
             ],
-            BOOLEAN: ["allow_untrusted_repo", "autostart_handlers_monitoring"],
           },
         }
       )
@@ -77,10 +77,10 @@ class DockStatDB {
         {
           id: column.id(),
           name: column.text({ notNull: true }),
-          type: column.text({ notNull: true }),
-          source: column.text({ notNull: true }),
-          policy: column.text({ notNull: true, default: "relaxed" }),
           paths: column.json(),
+          policy: column.text({ default: "relaxed", notNull: true }),
+          source: column.text({ notNull: true }),
+          type: column.text({ notNull: true }),
           verification_api: column.text({ notNull: false }),
         },
         {
@@ -92,13 +92,13 @@ class DockStatDB {
       this.metrics_table = this.db.createTable(
         "metrics",
         {
+          errors: column.integer(),
           id: column.id(),
-          totalRequests: column.integer(),
+          requestDurations: column.json(),
           requestsByMethod: column.json(),
           requestsByPath: column.json(),
           requestsByStatus: column.json(),
-          requestDurations: column.json(),
-          errors: column.integer(),
+          totalRequests: column.integer(),
         },
         {
           ifNotExists: true,

@@ -12,12 +12,12 @@ const notify = (action: "Pinned" | "Unpinned", input: PinInput) => {
       : `Unpinned link: "${input.slug}"`
 
   toast({
-    title: `${action} "${input.slug}"!`,
     description: (
       <span>
         {msg} - <pre>{input.path}</pre>
       </span>
     ),
+    title: `${action} "${input.slug}"!`,
     variant: "success",
   })
 }
@@ -38,7 +38,17 @@ export function createPinMutationHandlers({
       slug: string
     }
   >
-  unPinMutation: PinLinkMutation
+  unPinMutation: MutationResult<
+    {
+      changes: number
+    } & UpdateResult & {
+        message: string
+      },
+    {
+      path: string
+      slug: string
+    }
+  >
   isBusy: boolean
 }): {
   pin: PinLinkMutation
@@ -56,8 +66,8 @@ export function createPinMutationHandlers({
   }
 
   return {
+    isBusy,
     pin,
     unpin,
-    isBusy,
   }
 }

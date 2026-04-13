@@ -27,10 +27,10 @@ export function usePluginTemplate(pluginId: number, routePath: string) {
 
   return {
     data,
-    isLoading,
-    parsedTemplate,
-    parsedFragments,
     fetchTemplate: (path: string) => mutate({ path }),
     fetchTemplateAsync: (path: string) => mutateAsync({ path }),
+    isLoading,
+    parsedFragments,
+    parsedTemplate,
   }
 }

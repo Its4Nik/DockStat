@@ -33,7 +33,7 @@ export function Table<T extends Record<string, unknown>>({
     filterValue,
     setFilterValue,
     clearFilter,
-  } = useTable({ data, columns, searchable })
+  } = useTable({ columns, data, searchable })
 
   const shouldVirtualize = processedData.length > virtualizeThreshold
   const effectiveRowHeight = rowHeight ?? ROW_HEIGHTS[size]
@@ -42,16 +42,16 @@ export function Table<T extends Record<string, unknown>>({
     <div className={`${className} w-full max-w-full`}>
       {searchable && (
         <TableToolbar
-          searchValue={searchValue}
-          onSearchChange={setSearchValue}
-          searchPlaceholder={searchPlaceholder}
           columns={columns}
-          onSort={handleSort}
-          onFilterSelect={setFilterColumn}
           filterColumn={filterColumn}
           filterValue={filterValue}
-          onFilterChange={setFilterValue}
           onClearFilter={clearFilter}
+          onFilterChange={setFilterValue}
+          onFilterSelect={setFilterColumn}
+          onSearchChange={setSearchValue}
+          onSort={handleSort}
+          searchPlaceholder={searchPlaceholder}
+          searchValue={searchValue}
         />
       )}
 
@@ -63,17 +63,20 @@ export function Table<T extends Record<string, unknown>>({
         style={{ maxHeight: shouldVirtualize ? maxHeight : undefined }}
       >
         <table className="min-w-full divide-y divide-table-head-divide table-fixed">
-          <TableHeader columns={columns} size={size} />
-          <TableBody
-            data={processedData}
+          <TableHeader
             columns={columns}
             size={size}
-            striped={striped}
+          />
+          <TableBody
+            columns={columns}
+            data={processedData}
             hoverable={hoverable}
-            rowKey={rowKey}
-            virtualize={shouldVirtualize}
-            rowHeight={effectiveRowHeight}
             maxHeight={maxHeight}
+            rowHeight={effectiveRowHeight}
+            rowKey={rowKey}
+            size={size}
+            striped={striped}
+            virtualize={shouldVirtualize}
           />
         </table>
       </div>

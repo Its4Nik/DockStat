@@ -18,8 +18,8 @@ export default function IntroScreen({ message }: { message?: string }) {
       <div className="absolute inset-0 flex bg-transparent">
         {Array.from({ length: 20 }).map((_, i) => (
           <div
-            key={String(i)}
             className="flex-1 bg-linear-to-b from-zinc-800 to-zinc-900 animate-float-up"
+            key={String(i)}
             style={{
               animationDelay: `${i * 0.08}s`,
             }}
@@ -36,7 +36,11 @@ export default function IntroScreen({ message }: { message?: string }) {
           }}
         >
           <Card className="relative">
-            <img src={DockStatLogo} className="w-40 h-40" alt="DockStat Logo" />
+            <img
+              alt="DockStat Logo"
+              className="w-40 h-40"
+              src={DockStatLogo}
+            />
             {message ? (
               <CardBody>
                 <p className="text-sm">{message}</p>

@@ -20,9 +20,9 @@ export const Divider: React.FC<DividerProps> = ({
 }) => {
   const baseClasses = `border-divider-color ${shadow ? "shadow-2xl" : ""}`
   const variantClasses = {
-    solid: "border-solid",
     dashed: "border-dashed",
     dotted: "border-dotted",
+    solid: "border-solid",
   }
 
   // Horizontal divider (default)
@@ -45,8 +45,8 @@ export const Divider: React.FC<DividerProps> = ({
   // Vertical divider
   return (
     <div
-      className={`min-h-full border-l ${variantClasses[variant]} ${baseClasses} ${className}`}
       aria-hidden="true"
+      className={`min-h-full border-l ${variantClasses[variant]} ${baseClasses} ${className}`}
     />
   )
 }

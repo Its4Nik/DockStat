@@ -48,7 +48,10 @@ export function RepoPluginSlide({ plugins, installedPlugins }: RepoPluginSlidePr
   const [showModal, setShowModal] = useState<string>("")
 
   return (
-    <Card variant="flat" size="sm">
+    <Card
+      size="sm"
+      variant="flat"
+    >
       <CardHeader className="text-md font-semibold">Plugins</CardHeader>
       <CardBody>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -62,13 +65,13 @@ export function RepoPluginSlide({ plugins, installedPlugins }: RepoPluginSlidePr
 
             return (
               <PluginCard
-                isInstalled={isInstalled}
                 canBeUpdated={canBeUpdated}
+                isInstalled={isInstalled}
                 key={`${plugin.name}-${plugin.repository}`}
                 plugin={plugin}
-                showModal={showModal}
-                setShowModal={setShowModal}
                 pluginId={isInstalled ? installed.id : null}
+                setShowModal={setShowModal}
+                showModal={showModal}
               />
             )
           })}
@@ -127,16 +130,16 @@ function PluginCard({
     if (isError) {
       toast.error(title, {
         description: fetcher.data.message,
-        icon,
-        duration: 5000,
         dismissible: true,
+        duration: 5000,
+        icon,
       })
     } else {
       toast.success(title, {
         description: fetcher.data.message,
-        icon,
-        duration: 5000,
         dismissible: true,
+        duration: 5000,
+        icon,
       })
     }
   }, [fetcher.state, fetcher.data, isInstalled, canBeUpdated, plugin])
@@ -147,16 +150,16 @@ function PluginCard({
         await fetch(
           `http://localhost:5173/api/extensions/proxy/plugin/bundle/${plugin.repoType.trim()}`,
           {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
             body: JSON.stringify({
               path: `${plugin.repository}/${plugin.manifest.replace(
                 "/manifest.yml",
                 "/bundle/index.js"
               )}`,
             }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+            method: "POST",
           }
         )
       ).text()
@@ -178,21 +181,25 @@ function PluginCard({
   const hasCorrectPluginData = pluginObject && pluginObject.plugin !== "Not Found"
 
   return (
-    <Card size="sm" variant="elevated" className="flex flex-col justify-between">
+    <Card
+      className="flex flex-col justify-between"
+      size="sm"
+      variant="elevated"
+    >
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
             <LinkWithIcon
-              href={`/api/extensions/proxy/plugins/${plugin.repoType}/${plugin.repository}/${plugin.manifest}`}
               external
+              href={`/api/extensions/proxy/plugins/${plugin.repoType}/${plugin.repository}/${plugin.manifest}`}
             >
               {plugin.name}
             </LinkWithIcon>
             <Button
               className="p-0 w-4 h-4 ml-2"
+              onClick={() => setShowModal(id)}
               size="sm"
               variant="ghost"
-              onClick={() => setShowModal(id)}
             >
               <Info className="w-3 h-3" />
             </Button>
@@ -200,7 +207,10 @@ function PluginCard({
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-text font-bold">{plugin.version}</span>
             {canBeUpdated && (
-              <Badge variant="warning" size="sm">
+              <Badge
+                size="sm"
+                variant="warning"
+              >
                 Update available
               </Badge>
             )}
@@ -209,19 +219,29 @@ function PluginCard({
 
         <div className="mt-2 flex flex-wrap gap-1">
           {(plugin.tags || []).map((tag) => (
-            <Badge key={tag} unique size="sm">
+            <Badge
+              key={tag}
+              size="sm"
+              unique
+            >
               {tag}
             </Badge>
           ))}
           {!hasCorrectPluginData && (
-            <Badge variant="error" size="sm">
+            <Badge
+              size="sm"
+              variant="error"
+            >
               No Data for this Plugin received
             </Badge>
           )}
         </div>
       </CardHeader>
 
-      <Modal open={showModal === id} onClose={() => setShowModal("")}>
+      <Modal
+        onClose={() => setShowModal("")}
+        open={showModal === id}
+      >
         <ul className="mt-2 space-y-1">
           {plugin.repository && (
             <li>
@@ -247,10 +267,10 @@ function PluginCard({
             <li>
               <strong>Website:</strong>{" "}
               <a
-                href={plugin.author.website}
                 className="text-primary hover:underline"
-                target="_blank"
+                href={plugin.author.website}
                 rel="noreferrer"
+                target="_blank"
               >
                 {plugin.author.website}
               </a>
@@ -265,13 +285,16 @@ function PluginCard({
       </Modal>
 
       <CardBody className="max-w-80 space-y-1 text-sm text-muted-text">
-        <Card size="sm" variant="outlined" hoverable={false}>
+        <Card
+          hoverable={false}
+          size="sm"
+          variant="outlined"
+        >
           {plugin.description && <p className="text-foreground">{plugin.description}</p>}
         </Card>
 
         {/* Use fetcher.Form here so that navigation doesn’t change */}
         <fetcher.Form
-          method="post"
           action={
             isInstalled
               ? canBeUpdated
@@ -279,27 +302,36 @@ function PluginCard({
                 : "/api/plugins/delete"
               : "/api/plugins/install"
           }
+          method="post"
         >
-          <input type="hidden" name="pluginObject" value={JSON.stringify(pluginObject)} />
-          <input type="hidden" name="pluginId" value={pluginId || undefined} />
+          <input
+            name="pluginObject"
+            type="hidden"
+            value={JSON.stringify(pluginObject)}
+          />
+          <input
+            name="pluginId"
+            type="hidden"
+            value={pluginId || undefined}
+          />
           {/* If installed and update available show Update button.
                 If not installed show Install button.
                 If already installed and not update available show nothing. */}
           {isInstalled ? (
             canBeUpdated ? (
               <Button
+                disabled={fetching ? true : !hasCorrectPluginData}
                 fullWidth
                 type="submit"
-                disabled={fetching ? true : !hasCorrectPluginData}
                 variant={fetching ? "outline" : "primary"}
               >
                 {fetching ? "Updating..." : "Update"}
               </Button>
             ) : (
               <Button
+                disabled={fetching}
                 fullWidth
                 type="submit"
-                disabled={fetching}
                 variant={fetching ? "outline" : "danger"}
               >
                 {fetching ? "Deleting..." : "Delete"}
@@ -307,9 +339,9 @@ function PluginCard({
             )
           ) : (
             <Button
+              disabled={fetching ? true : !hasCorrectPluginData}
               fullWidth
               type="submit"
-              disabled={fetching ? true : !hasCorrectPluginData}
               variant={fetching ? "outline" : "primary"}
             >
               {fetching ? "Installing..." : "Install"}

@@ -8,8 +8,8 @@ let lastCpu = process.cpuUsage()
 let lastTime = Bun.nanoseconds()
 
 const DockStatMiscRoutes = new Elysia({
-  prefix: "/misc",
   detail: { tags: ["Misc"] },
+  prefix: "/misc",
 })
   .use(PrometheusMetricsRoute)
   .get("/stats", () => {
@@ -38,32 +38,32 @@ const DockStatMiscRoutes = new Elysia({
 
     return {
       process: {
-        uptimeSec: process.uptime(),
+        cpu: {
+          percentSinceLastCall: Number(cpuPercent.toFixed(2)),
+          systemMs: cpuNow.system / 1000,
+          userMs: cpuNow.user / 1000,
+        },
         memory: {
-          rss: formatBytes(rssBytes),
+          external: formatBytes(heap.globalObjectCount),
           heapTotal: formatBytes(heap.heapCapacity),
           heapUsed: formatBytes(heap.heapSize),
-          external: formatBytes(heap.globalObjectCount),
-        },
-        cpu: {
-          userMs: cpuNow.user / 1000,
-          systemMs: cpuNow.system / 1000,
-          percentSinceLastCall: Number(cpuPercent.toFixed(2)),
+          rss: formatBytes(rssBytes),
         },
         memoryLimit: formatBytes(process.constrainedMemory() || 0),
+        uptimeSec: process.uptime(),
       },
       system: {
-        uptimeSec: os.uptime(),
-        memory: {
-          total: formatBytes(totalMem),
-          used: formatBytes(usedMem),
-          free: formatBytes(freeMem),
-        },
         cpu: {
           cores: cpus.length,
-          model: cpus[0]?.model,
           loadavg: os.loadavg(),
+          model: cpus[0]?.model,
         },
+        memory: {
+          free: formatBytes(freeMem),
+          total: formatBytes(totalMem),
+          used: formatBytes(usedMem),
+        },
+        uptimeSec: os.uptime(),
       },
     }
   })

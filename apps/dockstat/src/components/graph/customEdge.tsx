@@ -22,29 +22,38 @@ export default function DockStatLabelEdge({
   style,
 }: EdgeProps<CustomEdge>) {
   const [edgePath, labelX, labelY] = getBezierPath({
+    sourcePosition,
     // Destructure labelX and labelY
     sourceX,
     sourceY,
+    targetPosition,
     targetX,
     targetY,
-    sourcePosition,
-    targetPosition,
   })
 
   return (
     <>
-      <BaseEdge id={id} style={style} path={edgePath} />
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        style={style}
+      />
 
       {label && (
         <EdgeLabelRenderer>
           <div
+            className="nodrag nopan"
             style={{
               position: "absolute",
               transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
             }}
-            className="nodrag nopan"
           >
-            <Card glass size="xs" className="text-xs" variant="outlined">
+            <Card
+              className="text-xs"
+              glass
+              size="xs"
+              variant="outlined"
+            >
               {label}
             </Card>
           </div>

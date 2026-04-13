@@ -5,21 +5,20 @@ import type { ElysiaWS } from "elysia/ws"
 export const logClients = new Set<Prettify<ElysiaWS<Context>>>()
 
 export const LogWebsoket = new Elysia().ws("/logs", {
+  close(ws) {
+    logClients.delete(ws)
+  },
+
+  open(ws) {
+    logClients.add(ws)
+  },
   response: t.Object({
+    caller: t.String(),
     level: t.UnionEnum(["error", "warn", "info", "debug"]),
     message: t.String(),
     name: t.String(),
     parents: t.Array(t.String()),
     requestId: t.Optional(t.String()),
     timestamp: t.Date(),
-    caller: t.String(),
   }),
-
-  open(ws) {
-    logClients.add(ws)
-  },
-
-  close(ws) {
-    logClients.delete(ws)
-  },
 })

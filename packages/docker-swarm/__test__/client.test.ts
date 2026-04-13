@@ -69,10 +69,10 @@ describe("SwarmClient initialization", () => {
     const options: SwarmClientOptions = {
       ssh: {
         host: "remote.example.com",
-        port: 22,
-        username: "docker",
-        privateKey: Buffer.from("ssh-key-content"),
         passphrase: "secret",
+        port: 22,
+        privateKey: Buffer.from("ssh-key-content"),
+        username: "docker",
       },
     }
     const client = new SwarmClient(options)
@@ -103,8 +103,8 @@ describe("SwarmClient initialization", () => {
 
   test("Create client with custom logger", () => {
     const options: SwarmClientOptions = {
-      logger: TestLogger,
       debug: true,
+      logger: TestLogger,
     }
     const client = new SwarmClient(options)
 
@@ -127,9 +127,9 @@ describe("SwarmClient initialization", () => {
 
   test("Client options are stored", () => {
     const options: SwarmClientOptions = {
+      debug: true,
       socketPath: "/custom/docker.sock",
       timeout: 45000,
-      debug: true,
     }
     const client = new SwarmClient(options)
 
@@ -355,9 +355,9 @@ describe("Logger functionality", () => {
   test("Logger uses custom logger when provided", () => {
     const mockLogger: Logger = {
       debug: () => {},
+      error: () => {},
       info: () => {},
       warn: () => {},
-      error: () => {},
     }
 
     const client = new SwarmClient({ logger: mockLogger })
@@ -452,8 +452,8 @@ describe("Client with various connection scenarios", () => {
     const client = new SwarmClient({
       ssh: {
         host: "remote-docker.example.com",
-        username: "docker",
         privateKey: Buffer.from("private-key"),
+        username: "docker",
       },
     })
 
@@ -465,8 +465,8 @@ describe("Client with various connection scenarios", () => {
       ssh: {
         host: "remote-docker.example.com",
         port: 2222,
-        username: "docker",
         privateKey: Buffer.from("private-key"),
+        username: "docker",
       },
     })
 

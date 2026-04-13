@@ -65,9 +65,9 @@ export function Navbar({
 
   useHotkey({
     close: () => setIsMenuOpen(false),
-    open: () => setIsMenuOpen(true),
-    isOpen: isMenuOpen,
     closeKey: sidebarHotkeys.close,
+    isOpen: isMenuOpen,
+    open: () => setIsMenuOpen(true),
     openKey: sidebarHotkeys.open,
     toggleKey: sidebarHotkeys.toggle,
   })
@@ -75,12 +75,15 @@ export function Navbar({
   return (
     <>
       <LinkLookup
+        hotkey={openQuickLinksModalHotkey}
         pins={navLinks || []}
         pluginLinks={pluginLinks}
-        hotkey={openQuickLinksModalHotkey}
       />
 
-      <Card size="sm" className="max-w-screen p-0.5 mb-4 relative overflow-visible">
+      <Card
+        className="max-w-screen p-0.5 mb-4 relative overflow-visible"
+        size="sm"
+      >
         <div
           className={`absolute inset-0 bg-linear-to-r from-blue-500 via-purple-500 to-pink-500 bg-size-[200%_200%] transition-opacity duration-500 ${
             isBusy ? "opacity-20 animate-[gradient_1s_ease_infinite]" : "opacity-0"
@@ -92,14 +95,24 @@ export function Navbar({
 
         <nav className="flex items-center justify-between relative z-10">
           <div className="flex items-center gap-3">
-            <motion.button onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
-              <Badge className="p-2!" variant="secondary">
+            <motion.button
+              aria-label="Toggle menu"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <Badge
+                className="p-2!"
+                variant="secondary"
+              >
                 <Menu size={20} />
               </Badge>
             </motion.button>
 
             <LinkWithIcon href="/">
-              <img src={DockStatLogo} alt="DockStat Logo" className="w-8 shrink-0" />
+              <img
+                alt="DockStat Logo"
+                className="w-8 shrink-0"
+                src={DockStatLogo}
+              />
             </LinkWithIcon>
           </div>
 
@@ -111,15 +124,18 @@ export function Navbar({
             <AnimatePresence initial={false}>
               {navLinks?.map((nl) => (
                 <motion.div
-                  key={nl.slug}
-                  layout
-                  variants={floatVariants}
-                  initial="initial"
                   animate="animate"
                   exit="exit"
+                  initial="initial"
+                  key={nl.slug}
+                  layout
                   transition={{ duration: 0.2, ease: "easeOut" }}
+                  variants={floatVariants}
                 >
-                  <NavLink end to={nl.path}>
+                  <NavLink
+                    end
+                    to={nl.path}
+                  >
                     {({ isActive }) => <Badge outlined={isActive}>{nl.slug}</Badge>}
                   </NavLink>
                 </motion.div>
@@ -127,15 +143,18 @@ export function Navbar({
 
               {ramUsage && (
                 <motion.div
-                  key="ram-usage"
-                  layout
-                  variants={floatVariants}
-                  initial="initial"
                   animate="animate"
                   exit="exit"
+                  initial="initial"
+                  key="ram-usage"
+                  layout
                   transition={{ duration: 0.2, ease: "easeOut" }}
+                  variants={floatVariants}
                 >
-                  <Badge variant="secondary" className="font-mono">
+                  <Badge
+                    className="font-mono"
+                    variant="secondary"
+                  >
                     {ramUsage}
                   </Badge>
                 </motion.div>
@@ -145,20 +164,20 @@ export function Navbar({
         </nav>
 
         <Sidebar
-          setIsThemeSidebarOpen={setIsThemeSidebarOpen}
+          currentThemeId={currentThemeId}
           deleteTheme={deleteTheme}
-          isOpen={isMenuOpen}
-          onClose={() => setIsMenuOpen(false)}
           isBusy={isBusy}
+          isOpen={isMenuOpen}
           logEntries={logEntries}
           mutationFn={mutationFn}
+          onClose={() => setIsMenuOpen(false)}
+          onColorChange={onColorChange}
+          onSelectTheme={onSelectTheme}
           pins={navLinks || []}
           pluginLinks={pluginLinks || []}
+          setIsThemeSidebarOpen={setIsThemeSidebarOpen}
           themes={themes}
-          currentThemeId={currentThemeId}
-          onSelectTheme={onSelectTheme}
           toastSuccess={toastSuccess}
-          onColorChange={onColorChange}
         />
 
         <style>{`
@@ -169,7 +188,10 @@ export function Navbar({
           }
         `}</style>
       </Card>
-      <Divider variant="dashed" className="my-4" />
+      <Divider
+        className="my-4"
+        variant="dashed"
+      />
     </>
   )
 }

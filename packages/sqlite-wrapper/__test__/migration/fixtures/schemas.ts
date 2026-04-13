@@ -3,38 +3,38 @@ import type { ColumnDefinition } from "../../../src/types"
 
 export const SCHEMA_WITH_IF_NOT_EXISTS = {
   name: "test_table",
-  type: "table",
   sql: 'CREATE TABLE IF NOT EXISTS "test_table" (id INTEGER PRIMARY KEY, name TEXT);',
+  type: "table",
 }
 
 export const SCHEMA_WITHOUT_IF_NOT_EXISTS = {
   name: "test_table",
-  type: "table",
   sql: 'CREATE TABLE "test_table" (id INTEGER PRIMARY KEY, name TEXT);',
+  type: "table",
 }
 
 export const SCHEMA_WITH_DIFFERENT_COLUMNS = {
   name: "test_table",
-  type: "table",
   sql: 'CREATE TABLE "test_table" (id INTEGER PRIMARY KEY, name TEXT, age INTEGER);',
+  type: "table",
 }
 
 export const SCHEMA_WITH_TEMPORARY = {
   name: "test_table",
-  type: "table",
   sql: 'CREATE TEMPORARY TABLE "test_table" (id INTEGER PRIMARY KEY, name TEXT);',
+  type: "table",
 }
 
 export const SCHEMA_WITHOUT_ROWID = {
   name: "test_table",
-  type: "table",
   sql: 'CREATE TABLE "test_table" (id INTEGER PRIMARY KEY, name TEXT) WITHOUT ROWID;',
+  type: "table",
 }
 
 export const COLUMNS_BASIC: Record<string, ColumnDefinition> = {
   id: {
-    type: "INTEGER",
     primaryKey: true,
+    type: "INTEGER",
   },
   name: {
     type: "TEXT",
@@ -42,15 +42,15 @@ export const COLUMNS_BASIC: Record<string, ColumnDefinition> = {
 }
 
 export const COLUMNS_WITH_AGE: Record<string, ColumnDefinition> = {
-  id: {
+  age: {
     type: "INTEGER",
+  },
+  id: {
     primaryKey: true,
+    type: "INTEGER",
   },
   name: {
     type: "TEXT",
-  },
-  age: {
-    type: "INTEGER",
   },
 }
 

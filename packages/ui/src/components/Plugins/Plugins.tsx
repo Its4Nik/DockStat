@@ -28,14 +28,17 @@ export function PluginsPage({ installedPlugins = [], status }: PluginsPageProps)
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4">
         <PluginsOverviewCard
+          loadedPluginsCount={loadedPlugins.length}
           pluginCount={pluginCount}
           repoCount={repos.length}
-          loadedPluginsCount={loadedPlugins.length}
         />
 
         <RepositoriesList repositories={repos} />
       </div>
-      <Divider className="my-4" variant="dotted" />
+      <Divider
+        className="my-4"
+        variant="dotted"
+      />
       <Card>
         <CardHeader className="text-xl font-semibold">Installed Plugins</CardHeader>
         <CardBody>
@@ -44,7 +47,10 @@ export function PluginsPage({ installedPlugins = [], status }: PluginsPageProps)
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {installedPlugins.map((plugin) => (
-                <PluginCard key={plugin.id} plugin={plugin} />
+                <PluginCard
+                  key={plugin.id}
+                  plugin={plugin}
+                />
               ))}
             </div>
           )}

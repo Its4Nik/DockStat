@@ -25,10 +25,10 @@ describe("Basic INSERT operations", () => {
     email: string
     age: number | null
   }>("users", {
+    age: column.integer({ notNull: false }),
+    email: column.text({ notNull: true, unique: true }),
     id: column.id(),
     name: column.text({ notNull: true }),
-    email: column.text({ notNull: true, unique: true }),
-    age: column.integer({ notNull: false }),
   })
 
   afterAll(() => {
@@ -37,9 +37,9 @@ describe("Basic INSERT operations", () => {
 
   test("Insert single row returns insertId and changes", () => {
     const result = users.insert({
-      name: "Alice",
-      email: "alice@example.com",
       age: 25,
+      email: "alice@example.com",
+      name: "Alice",
     })
 
     expect(result.insertId).toBe(1)
@@ -48,9 +48,9 @@ describe("Basic INSERT operations", () => {
 
   test("Insert row with null value", () => {
     const result = users.insert({
-      name: "Bob",
-      email: "bob@example.com",
       age: null,
+      email: "bob@example.com",
+      name: "Bob",
     })
 
     expect(result.insertId).toBe(2)
@@ -61,8 +61,8 @@ describe("Basic INSERT operations", () => {
 
   test("Insert row without optional field", () => {
     const result = users.insert({
-      name: "Charlie",
       email: "charlie@example.com",
+      name: "Charlie",
     })
 
     expect(result.insertId).toBe(3)
@@ -72,25 +72,25 @@ describe("Basic INSERT operations", () => {
   })
 
   test("Insert multiple rows sequentially", () => {
-    const result1 = users.insert({ name: "User1", email: "user1@example.com" })
-    const result2 = users.insert({ name: "User2", email: "user2@example.com" })
-    const result3 = users.insert({ name: "User3", email: "user3@example.com" })
+    const result1 = users.insert({ email: "user1@example.com", name: "User1" })
+    const result2 = users.insert({ email: "user2@example.com", name: "User2" })
+    const result3 = users.insert({ email: "user3@example.com", name: "User3" })
 
     expect(result1.insertId).toBeLessThan(result2.insertId)
     expect(result2.insertId).toBeLessThan(result3.insertId)
   })
 
   test("Insert throws on duplicate unique constraint", () => {
-    users.insert({ name: "Unique", email: "unique@example.com" })
+    users.insert({ email: "unique@example.com", name: "Unique" })
 
     expect(() => {
-      users.insert({ name: "Duplicate", email: "unique@example.com" })
+      users.insert({ email: "unique@example.com", name: "Duplicate" })
     }).toThrow()
   })
 
   test("Insert throws on NOT NULL constraint violation", () => {
     expect(() => {
-      users.insert({ name: null as unknown as string, email: "test@example.com" })
+      users.insert({ email: "test@example.com", name: null as unknown as string })
     }).toThrow()
   })
 })
@@ -114,8 +114,8 @@ describe("INSERT with conflict resolution", () => {
       name: string
       quantity: number
     }>("items", {
-      id: column.id(),
       code: column.text({ notNull: true, unique: true }),
+      id: column.id(),
       name: column.text({ notNull: true }),
       quantity: column.integer({ default: 0 }),
     })
@@ -214,10 +214,10 @@ describe("INSERT and get operations", () => {
     price: number
     active: boolean
   }>("products", {
+    active: column.boolean({ default: true }),
     id: column.id(),
     name: column.text({ notNull: true }),
     price: column.real({ notNull: true }),
-    active: column.boolean({ default: true }),
   })
 
   afterAll(() => {
@@ -226,9 +226,9 @@ describe("INSERT and get operations", () => {
 
   test("insertAndGet returns the inserted row", () => {
     const inserted = products.insertAndGet({
+      active: true,
       name: "Widget",
       price: 29.99,
-      active: true,
     })
 
     expect(inserted).not.toBeNull()
@@ -254,8 +254,8 @@ describe("INSERT and get operations", () => {
       id: number
       code: string
     }>("unique_products", {
-      id: column.id(),
       code: column.text({ notNull: true, unique: true }),
+      id: column.id(),
     })
 
     uniqueTable.insert({ code: "EXISTING" })
@@ -295,8 +295,8 @@ describe("Batch INSERT operations", () => {
       timestamp: number
     }>("logs", {
       id: column.id(),
-      message: column.text({ notNull: true }),
       level: column.text({ default: "info" }),
+      message: column.text({ notNull: true }),
       timestamp: column.integer({ notNull: true }),
     })
   })
@@ -308,9 +308,9 @@ describe("Batch INSERT operations", () => {
   test("insertBatch inserts multiple rows", () => {
     const now = Date.now()
     const result = logs.insertBatch([
-      { message: "Log 1", level: "info", timestamp: now },
-      { message: "Log 2", level: "warning", timestamp: now + 1 },
-      { message: "Log 3", level: "error", timestamp: now + 2 },
+      { level: "info", message: "Log 1", timestamp: now },
+      { level: "warning", message: "Log 2", timestamp: now + 1 },
+      { level: "error", message: "Log 3", timestamp: now + 2 },
     ])
 
     expect(result.changes).toBe(3)
@@ -319,15 +319,15 @@ describe("Batch INSERT operations", () => {
 
   test("insertBatch returns last insert id", () => {
     const result = logs.insertBatch([
-      { message: "First", level: "info", timestamp: 1000 },
-      { message: "Second", level: "info", timestamp: 2000 },
+      { level: "info", message: "First", timestamp: 1000 },
+      { level: "info", message: "Second", timestamp: 2000 },
     ])
 
     expect(result.insertId).toBe(2) // Last inserted ID
   })
 
   test("insertBatch with single row", () => {
-    const result = logs.insertBatch([{ message: "Single", level: "debug", timestamp: 1000 }])
+    const result = logs.insertBatch([{ level: "debug", message: "Single", timestamp: 1000 }])
 
     expect(result.changes).toBe(1)
     expect(result.insertId).toBe(1)
@@ -344,8 +344,8 @@ describe("Batch INSERT operations", () => {
       id: number
       code: string
     }>("batch_unique", {
-      id: column.id(),
       code: column.text({ notNull: true, unique: true }),
+      id: column.id(),
     })
 
     uniqueTable.insert({ code: "EXISTING" })
@@ -368,8 +368,8 @@ describe("Batch INSERT operations", () => {
       id: number
       code: string
     }>("batch_ignore", {
-      id: column.id(),
       code: column.text({ notNull: true, unique: true }),
+      id: column.id(),
     })
 
     uniqueTable.insert({ code: "EXISTING" })
@@ -385,8 +385,8 @@ describe("Batch INSERT operations", () => {
 
   test("insertBatch with large number of rows", () => {
     const rows = Array.from({ length: 100 }, (_, i) => ({
-      message: `Message ${i}`,
       level: "info",
+      message: `Message ${i}`,
       timestamp: 1000 + i,
     }))
 
@@ -407,9 +407,9 @@ describe("INSERT with JSON columns", () => {
     metadata: unknown
   }>("configs", {
     id: column.id(),
+    metadata: column.json({ notNull: false }),
     name: column.text({ notNull: true }),
     settings: column.json(),
-    metadata: column.json({ notNull: false }),
   })
 
   afterAll(() => {
@@ -417,7 +417,7 @@ describe("INSERT with JSON columns", () => {
   })
 
   test("Insert with JSON object", () => {
-    const settings = { theme: "dark", fontSize: 14, notifications: true }
+    const settings = { fontSize: 14, notifications: true, theme: "dark" }
 
     const result = configs.insert({
       name: "User Config",
@@ -433,11 +433,11 @@ describe("INSERT with JSON columns", () => {
   test("Insert with nested JSON object", () => {
     const settings = {
       display: {
-        theme: "dark",
         colors: {
           primary: "#007bff",
           secondary: "#6c757d",
         },
+        theme: "dark",
       },
       features: ["feature1", "feature2"],
     }
@@ -465,9 +465,9 @@ describe("INSERT with JSON columns", () => {
 
   test("Insert with null JSON value", () => {
     const result = configs.insert({
+      metadata: null,
       name: "Null Metadata",
       settings: {},
-      metadata: null,
     })
 
     const retrieved = configs.where({ id: result.insertId }).first()
@@ -500,11 +500,11 @@ describe("INSERT with boolean columns", () => {
     verified: boolean | null
     premium: boolean
   }>("flags", {
+    active: column.boolean({ default: false }),
     id: column.id(),
     name: column.text({ notNull: true }),
-    active: column.boolean({ default: false }),
-    verified: column.boolean({ notNull: false }),
     premium: column.boolean({ default: false }),
+    verified: column.boolean({ notNull: false }),
   })
 
   afterAll(() => {
@@ -513,10 +513,10 @@ describe("INSERT with boolean columns", () => {
 
   test("Insert with true boolean", () => {
     const result = flags.insert({
-      name: "True Test",
       active: true,
-      verified: true,
+      name: "True Test",
       premium: true,
+      verified: true,
     })
 
     const retrieved = flags.where({ id: result.insertId }).first()
@@ -527,10 +527,10 @@ describe("INSERT with boolean columns", () => {
 
   test("Insert with false boolean", () => {
     const result = flags.insert({
-      name: "False Test",
       active: false,
-      verified: false,
+      name: "False Test",
       premium: false,
+      verified: false,
     })
 
     const retrieved = flags.where({ id: result.insertId }).first()
@@ -541,10 +541,10 @@ describe("INSERT with boolean columns", () => {
 
   test("Insert with null boolean", () => {
     const result = flags.insert({
-      name: "Null Test",
       active: true,
-      verified: null,
+      name: "Null Test",
       premium: false,
+      verified: null,
     })
 
     const retrieved = flags.where({ id: result.insertId }).first()
@@ -563,9 +563,9 @@ describe("INSERT with boolean columns", () => {
 
   test("Batch insert with boolean columns", () => {
     flags.insertBatch([
-      { name: "Batch 1", active: true, premium: false },
-      { name: "Batch 2", active: false, premium: true },
-      { name: "Batch 3", active: true, premium: true },
+      { active: true, name: "Batch 1", premium: false },
+      { active: false, name: "Batch 2", premium: true },
+      { active: true, name: "Batch 3", premium: true },
     ])
 
     const results = flags.whereIn("name", ["Batch 1", "Batch 2", "Batch 3"]).all()
@@ -587,11 +587,11 @@ describe("INSERT with default values", () => {
     priority: number
     created_at: number
   }>("records", {
-    id: column.id(),
-    title: column.text({ notNull: true }),
-    status: column.text({ default: "pending" }),
-    priority: column.integer({ default: 1 }),
     created_at: column.createdAt(),
+    id: column.id(),
+    priority: column.integer({ default: 1 }),
+    status: column.text({ default: "pending" }),
+    title: column.text({ notNull: true }),
   })
 
   afterAll(() => {
@@ -614,9 +614,9 @@ describe("INSERT with default values", () => {
 
   test("Insert can override default values", () => {
     const result = records.insert({
-      title: "Override Test",
-      status: "active",
       priority: 5,
+      status: "active",
+      title: "Override Test",
     })
 
     const retrieved = records.where({ id: result.insertId }).first()
@@ -646,8 +646,8 @@ describe("INSERT edge cases", () => {
 
   test("Insert with only auto-generated fields", () => {
     const minimal = db.createTable<{ id: number; created: number }>("minimal", {
-      id: column.id(),
       created: column.createdAt(),
+      id: column.id(),
     })
 
     // Insert with empty data - the default values will be used
@@ -659,8 +659,8 @@ describe("INSERT edge cases", () => {
 
   test("Insert with special characters in text", () => {
     const texts = db.createTable<{ id: number; content: string }>("texts", {
-      id: column.id(),
       content: column.text({ notNull: true }),
+      id: column.id(),
     })
 
     const specialContent = "It's a \"test\" with 'quotes' and \\ backslashes"
@@ -687,8 +687,8 @@ describe("INSERT edge cases", () => {
 
   test("Insert with very long text", () => {
     const longText = db.createTable<{ id: number; content: string }>("long_text", {
-      id: column.id(),
       content: column.text({ notNull: true }),
+      id: column.id(),
     })
 
     const veryLongContent = "x".repeat(10000)
@@ -705,13 +705,13 @@ describe("INSERT edge cases", () => {
       value: number
       amount: number
     }>("numbers", {
+      amount: column.real({ notNull: true }),
       id: column.id(),
       value: column.integer({ notNull: true }),
-      amount: column.real({ notNull: true }),
     })
 
-    numbers.insert({ value: 0, amount: 0.0 })
-    numbers.insert({ value: -100, amount: -99.99 })
+    numbers.insert({ amount: 0.0, value: 0 })
+    numbers.insert({ amount: -99.99, value: -100 })
 
     const zero = numbers.where({ value: 0 }).first()
     const negative = numbers.where({ value: -100 }).first()

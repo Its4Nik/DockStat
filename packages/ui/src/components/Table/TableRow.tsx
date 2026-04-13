@@ -23,19 +23,19 @@ function TableRowInner<T extends Record<string, unknown>>({
 }: TableRowProps<T>): React.ReactElement {
   return (
     <tr
-      style={style}
       className={`
         ${hoverable ? "transition-colors duration-150 hover:bg-table-body-hover" : ""}
         ${striped && index % 2 === 0 ? "bg-table-body-stripe" : "bg-table-body-bg"}
       `}
+      style={style}
     >
       {columns.map((column) => (
         <td
-          key={String(column.key)}
           className={`${SIZE_CLASSES[size]} text-table-body-text`}
+          key={String(column.key)}
           style={{
-            textAlign: column.align ?? "left",
             minWidth: column.minWidth ?? 100,
+            textAlign: column.align ?? "left",
           }}
         >
           {column.render

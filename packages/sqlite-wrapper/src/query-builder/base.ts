@@ -25,11 +25,11 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
   constructor(db: Database, tableName: string, parser?: Parser<T>, baseLogger?: Logger) {
     this.state = {
       db,
+      parser,
+      regexConditions: [],
       tableName,
       whereConditions: [],
       whereParams: [],
-      regexConditions: [],
-      parser,
     }
 
     // If a base logger is provided, use it directly (it's already the QB logger from QueryBuilder).
@@ -172,14 +172,14 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * (deserialize JSON, convert booleans, etc.)
    */
   protected transformRowFromDb(row: unknown): T {
-    return transformFromDb<T>(row, { parser: this.state.parser, logger: this.log })
+    return transformFromDb<T>(row, { logger: this.log, parser: this.state.parser })
   }
 
   /**
    * Transform multiple rows FROM the database
    */
   protected transformRowsFromDb(rows: unknown[]): T[] {
-    return transformRowsFromDb<T>(rows, { parser: this.state.parser, logger: this.log })
+    return transformRowsFromDb<T>(rows, { logger: this.log, parser: this.state.parser })
   }
 
   /**
@@ -187,6 +187,6 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * (serialize JSON, stringify functions, etc.)
    */
   protected transformRowToDb(row: Partial<T>): RowData {
-    return transformToDb<T>(row, { parser: this.state.parser, logger: this.log })
+    return transformToDb<T>(row, { logger: this.log, parser: this.state.parser })
   }
 }

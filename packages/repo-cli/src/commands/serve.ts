@@ -9,7 +9,6 @@ export const serveCommand = new Command("serve")
   .option("-p, --port <port>", "The port on which the server should listen", "8080")
   .action(async (options) => {
     Bun.serve({
-      port: options.port,
       async fetch(req) {
         const url = new URL(req.url)
 
@@ -36,5 +35,6 @@ export const serveCommand = new Command("serve")
           },
         })
       },
+      port: options.port,
     })
   })

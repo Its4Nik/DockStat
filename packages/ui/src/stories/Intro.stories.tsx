@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import IntroScreen from "../welcome/Intro"
 
 const meta: Meta<typeof IntroScreen> = {
-  title: "App/IntroScreen",
   component: IntroScreen,
   parameters: {
     layout: "fullscreen",
   },
+  title: "App/IntroScreen",
 }
 
 export default meta

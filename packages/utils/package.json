@@ -1,26 +1,26 @@
 {
-  "name": "@dockstat/utils",
-  "main": "src/index.ts",
+  "dependencies": {
+    "@tanstack/react-query": "catalog:react-ui"
+  },
+  "description": "A tiny utils library used in DockStat",
+  "devDependencies": {
+    "@dockstat/logger": "workspace:*",
+    "@dockstat/typings": "workspace:*",
+    "bun-types": "latest"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./react": "./src/react/index.ts"
   },
-  "type": "module",
+  "main": "src/index.ts",
+  "name": "@dockstat/utils",
+  "peerDependencies": {
+    "typescript": "catalog:testing"
+  },
   "private": false,
-  "version": "1.0.1",
-  "description": "A tiny utils library used in DockStat",
   "scripts": {
     "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
-  "dependencies": {
-    "@tanstack/react-query": "catalog:react-ui"
-  },
-  "devDependencies": {
-    "bun-types": "latest",
-    "@dockstat/logger": "workspace:*",
-    "@dockstat/typings": "workspace:*"
-  },
-  "peerDependencies": {
-    "typescript": "catalog:testing"
-  }
+  "type": "module",
+  "version": "1.0.1"
 }

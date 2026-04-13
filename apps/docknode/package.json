@@ -1,20 +1,4 @@
 {
-  "name": "@dockstat/docknode",
-  "version": "1.0.0",
-  "description": "A remote agent for handling verious tasks in the DockStat eco system. Currently only used for Stack administration.",
-  "scripts": {
-    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist",
-    "build": "rm -r ./dist || true && bun build --target bun --sourcemap=inline --outdir=./dist --minify src/index.ts",
-    "build:docker": "bun run build && docker build -t docknode:latest .",
-    "dev": "bun run --watch src/index.ts"
-  },
-  "files": [
-    "src",
-    "README.md"
-  ],
-  "exports": {
-    "./treaty": "./src/_treaty.ts"
-  },
   "dependencies": {
     "@dockstat/docker-client": "workspace:*",
     "@dockstat/docker-swarm": "workspace:*",
@@ -29,8 +13,24 @@
     "dockerode": "^4.0.9",
     "elysia": "catalog:"
   },
+  "description": "A remote agent for handling verious tasks in the DockStat eco system. Currently only used for Stack administration.",
   "devDependencies": {
     "bun-types": "latest"
   },
-  "module": "src/index.ts"
+  "exports": {
+    "./treaty": "./src/_treaty.ts"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "module": "src/index.ts",
+  "name": "@dockstat/docknode",
+  "scripts": {
+    "build": "rm -r ./dist || true && bun build --target bun --sourcemap=inline --outdir=./dist --minify src/index.ts",
+    "build:docker": "bun run build && docker build -t docknode:latest .",
+    "dev": "bun run --watch src/index.ts",
+    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
+  },
+  "version": "1.0.0"
 }

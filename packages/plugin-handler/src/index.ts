@@ -45,17 +45,17 @@ class PluginHandler {
     this.table = this.DB.createTable<DBPluginShemaT>(
       "plugins",
       {
+        author: column.json({ notNull: true }),
+        description: column.text({ notNull: false }),
         id: column.id(),
-        repoType: column.enum(["github", "gitlab", "local", "default"]),
+        manifest: column.text({ notNull: true }),
         // Plugin Metadata
         name: column.text({ notNull: true, unique: true }),
-        description: column.text({ notNull: false }),
+        plugin: column.text({ notNull: true }),
+        repository: column.text({ notNull: true }),
+        repoType: column.enum(["github", "gitlab", "local", "default"]),
         tags: column.json(),
         version: column.text({ notNull: true }),
-        repository: column.text({ notNull: true }),
-        manifest: column.text({ notNull: true }),
-        author: column.json({ notNull: true }),
-        plugin: column.text({ notNull: true }),
       },
       {
         ifNotExists: true,
@@ -113,15 +113,15 @@ class PluginHandler {
 
     try {
       const res = await fetch(new URL(`${repo.verification_api}/api/compare`), {
-        method: "POST",
+        body: JSON.stringify({
+          pluginHash: sourceHash,
+          pluginName: plugin.name,
+          pluginVersion: plugin.version,
+        }),
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          pluginName: plugin.name,
-          pluginHash: sourceHash,
-          pluginVersion: plugin.version,
-        }),
+        method: "POST",
       })
 
       if (res.status !== 200) {
@@ -164,7 +164,7 @@ class PluginHandler {
   public async savePlugin(plugin: DBPluginShemaT, update?: boolean) {
     // Check for duplicates (skip during updates)
     if (!update && this.isDuplicatePlugin(plugin.name)) {
-      return { success: false, message: "Plugin is already installed!" }
+      return { message: "Plugin is already installed!", success: false }
     }
 
     // Ensure plugin bundle is available
@@ -222,8 +222,8 @@ class PluginHandler {
       return { success: true }
     } catch (error) {
       return {
-        success: false,
         message: `Failed to fetch plugin bundle: ${error instanceof Error ? error.message : String(error)}`,
+        success: false,
       }
     }
   }
@@ -243,16 +243,16 @@ class PluginHandler {
 
     // Handle failure cases
     const errorMessages = {
-      "Plugin hasn't been verified yet": "Plugin hasn't been verified yet",
-      "Plugin status unknown": "Plugin status unknown",
       "DVA not reachable": `DockStore Verification API (Repo: ${plugin.repository}) not reachable`,
       false: "Plugin is not safe! Aborting installation",
+      "Plugin hasn't been verified yet": "Plugin hasn't been verified yet",
+      "Plugin status unknown": "Plugin status unknown",
     }
 
     const message =
       errorMessages[verificationRes as keyof typeof errorMessages] || "Plugin verification failed"
 
-    return { success: false, message }
+    return { message, success: false }
   }
 
   private updateExistingPlugin(plugin: DBPluginShemaT) {
@@ -275,16 +275,16 @@ class PluginHandler {
       const res = this.table.insert(plugin)
       this.logger.debug(`Plugin ${plugin.name} saved`)
       return {
-        success: true,
         id: res.insertId,
         message: "Plugin saved successfully",
+        success: true,
       }
     } catch (error: unknown) {
       this.logger.error(`Could not save ${plugin.name} - ${error}`)
       return {
         error: `${error}`,
-        success: false,
         message: "Failed to save plugin",
+        success: false,
       }
     }
   }
@@ -298,15 +298,15 @@ class PluginHandler {
       const unloaded = this.unloadPlugin(id)
 
       return {
-        success: true,
         message: unloaded ? "Deleted and unloaded Plugin" : "Delete plugin; couldn't unload",
+        success: true,
       }
     } catch (error: unknown) {
       this.logger.error(`Could not delete Plugin: ${id} - ${error}`)
       return {
-        success: false,
-        message: `Could not delete Plugin: ${id}`,
         error: `${error}`,
+        message: `Could not delete Plugin: ${id}`,
+        success: false,
       }
     }
   }
@@ -325,7 +325,7 @@ class PluginHandler {
       } catch (error: unknown) {
         const msg = `Could not load ${id} - ${error}`
         this.logger.error(msg)
-        errors.push({ pluginId: id, error: msg })
+        errors.push({ error: msg, pluginId: id })
       }
     }
 
@@ -374,8 +374,8 @@ class PluginHandler {
               mod.config.table.name,
               mod.config?.table.columns,
               {
-                parser: mod.config.table.parser,
                 ifNotExists: true,
+                parser: mod.config.table.parser,
               }
             )
           }
@@ -383,8 +383,8 @@ class PluginHandler {
           if (table) {
             this.logger.debug(`Registering server Hooks for plugin ${plugin.id}`)
             this.pluginServerHooks.set(mod.id as number, {
-              table,
               logger: new Logger(mod.name, this.logger.getParentsForLoggerChaining()),
+              table,
             })
           }
 
@@ -436,7 +436,7 @@ class PluginHandler {
       } catch (error: unknown) {
         const msg = `Could not unload ${id} - ${error}`
         this.logger.error(msg)
-        errors.push({ pluginId: id, error: msg })
+        errors.push({ error: msg, pluginId: id })
       }
     }
 
@@ -512,10 +512,10 @@ class PluginHandler {
         count: installedPlugins.length,
         data: installedPlugins,
       },
-      repos: [...new Set(repos)],
       loaded_plugins: loadedPlugins
         .map((id) => installedPlugins.find((plugin) => plugin.id === id))
         .filter(Boolean),
+      repos: [...new Set(repos)],
     }
     return rDat
   }
@@ -598,7 +598,9 @@ class PluginHandler {
       const act = plugin.config.actions[action]
       if (act) {
         actionRes = act({
+          body: method === "GET" ? undefined : body,
           logger: this.logger.spawn(`${plugin.name}-Actions`),
+          previousAction: actionRes,
           table: plugin.config.table?.name
             ? new QueryBuilder(
                 this.DB.getDb(),
@@ -606,8 +608,6 @@ class PluginHandler {
                 plugin.config.table.parser
               )
             : null,
-          body: method === "GET" ? undefined : body,
-          previousAction: actionRes,
         })
       }
     }
@@ -730,7 +730,7 @@ class PluginHandler {
     const loaders = this.getRouteLoaders(pluginId, routePath)
 
     if (loaders.length === 0) {
-      return { results: [], state: {}, data: {} }
+      return { data: {}, results: [], state: {} }
     }
 
     // Create a bound route handler
@@ -744,7 +744,7 @@ class PluginHandler {
 
     const { state, data } = this.actionsHandler.buildInitialDataFromLoaderResults(results)
 
-    return { results, state, data }
+    return { data, results, state }
   }
 
   /**

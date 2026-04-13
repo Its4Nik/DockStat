@@ -30,7 +30,10 @@ export function NodeDetailsPanel({ node, onClose }: { node: Node | null; onClose
   }
 
   return (
-    <Card glass className="w-72 shadow-xl">
+    <Card
+      className="w-72 shadow-xl"
+      glass
+    >
       <div className="p-3 flex items-center justify-between border-b border-border">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-md bg-muted">{getNodeIcon()}</div>
@@ -39,7 +42,11 @@ export function NodeDetailsPanel({ node, onClose }: { node: Node | null; onClose
             <div className="text-xs text-muted-text">{data.label}</div>
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={onClose}>
+        <Button
+          onClick={onClose}
+          size="sm"
+          variant="ghost"
+        >
           ×
         </Button>
       </div>
@@ -47,11 +54,17 @@ export function NodeDetailsPanel({ node, onClose }: { node: Node | null; onClose
         {Object.entries(data)
           .filter(([key]) => !["label", "type"].includes(key))
           .map(([key, value]) => (
-            <div key={key} className="flex justify-between items-center">
+            <div
+              className="flex justify-between items-center"
+              key={key}
+            >
               <span className="text-muted-text capitalize">
                 {key.replace(/([A-Z])/g, " $1").trim()}:
               </span>
-              <span className="font-mono truncate max-w-37.5 text-right" title={String(value)}>
+              <span
+                className="font-mono truncate max-w-37.5 text-right"
+                title={String(value)}
+              >
                 {String(value ?? "N/A")}
               </span>
             </div>

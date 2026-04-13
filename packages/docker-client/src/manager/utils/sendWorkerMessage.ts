@@ -17,9 +17,9 @@ export function sendWorkerMessage(
       worker.removeEventListener("error", errorHandler)
 
       resolve({
-        success: false,
         error: `Worker request timed out: ${request.type}`,
         requestId,
+        success: false,
       })
     }, timeout)
 
@@ -40,9 +40,9 @@ export function sendWorkerMessage(
       worker.removeEventListener("error", errorHandler)
 
       resolve({
-        success: false,
         error: `Worker crashed: ${err.message}`,
         requestId,
+        success: false,
       })
     }
 

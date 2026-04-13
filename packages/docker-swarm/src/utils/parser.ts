@@ -111,14 +111,14 @@ export function parsePortSpec(spec: string): PortConfig | null {
   if (parts.length === 1) {
     const port = parseInt(parts[0] ?? "", 10)
     if (Number.isNaN(port)) return null
-    return { target: port, protocol }
+    return { protocol, target: port }
   }
 
   if (parts.length === 2) {
     const published = parseInt(parts[0] ?? "", 10)
     const target = parseInt(parts[1] ?? "", 10)
     if (Number.isNaN(published) || Number.isNaN(target)) return null
-    return { published, target, protocol }
+    return { protocol, published, target }
   }
 
   // Host:Port:ContainerPort format
@@ -126,7 +126,7 @@ export function parsePortSpec(spec: string): PortConfig | null {
     const published = parseInt(parts[1] ?? "", 10)
     const target = parseInt(parts[2] ?? "", 10)
     if (Number.isNaN(published) || Number.isNaN(target)) return null
-    return { published, target, protocol }
+    return { protocol, published, target }
   }
 
   return null
@@ -168,10 +168,10 @@ export function parseMountSpec(spec: string): MountConfig | null {
   if (!source || !target) return null
 
   return {
-    type,
+    readOnly,
     source,
     target,
-    readOnly,
+    type,
   }
 }
 
@@ -305,9 +305,9 @@ export function validateComposeStructure(compose: string): {
   }
 
   return {
-    valid: errors.length === 0 && services.length > 0,
     errors,
     services,
+    valid: errors.length === 0 && services.length > 0,
   }
 }
 

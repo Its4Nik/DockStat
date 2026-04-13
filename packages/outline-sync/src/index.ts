@@ -157,17 +157,17 @@ async function getConfig(
   const fileConfig = loadConfigFile ? await loadConfig(options.config) : {}
 
   const config: OutlineConfig = {
-    url: options.url || fileConfig.url || process.env.OUTLINE_URL || "",
-    token: options.token || fileConfig.token || process.env.OUTLINE_TOKEN || "",
-    outputDir:
-      options.output || fileConfig.outputDir || process.env.OUTLINE_OUTPUT_DIR || "./outline-docs",
     customPaths: (fileConfig && (fileConfig.customPaths || {})) || {},
-    includeCollections: options.include
-      ? parseArrayOption(options.include)
-      : (fileConfig && (fileConfig.includeCollections as string[])) || undefined,
     excludeCollections: options.exclude
       ? parseArrayOption(options.exclude)
       : (fileConfig && (fileConfig.excludeCollections as string[])) || undefined,
+    includeCollections: options.include
+      ? parseArrayOption(options.include)
+      : (fileConfig && (fileConfig.includeCollections as string[])) || undefined,
+    outputDir:
+      options.output || fileConfig.outputDir || process.env.OUTLINE_OUTPUT_DIR || "./outline-docs",
+    token: options.token || fileConfig.token || process.env.OUTLINE_TOKEN || "",
+    url: options.url || fileConfig.url || process.env.OUTLINE_URL || "",
     verbose: Boolean(options.verbose || fileConfig.verbose),
   }
 
@@ -274,15 +274,15 @@ program
     }
 
     const sampleConfig = {
-      url: "https://your-outline.com",
-      token: "your_api_token",
-      outputDir: "./outline-docs",
-      includeCollections: ["Engineering", "Product"],
-      excludeCollections: [],
       customPaths: {
-        "example-doc-id": "../../README.md",
         "another-doc-id": "custom/path/document.md",
+        "example-doc-id": "../../README.md",
       },
+      excludeCollections: [],
+      includeCollections: ["Engineering", "Product"],
+      outputDir: "./outline-docs",
+      token: "your_api_token",
+      url: "https://your-outline.com",
     }
 
     await writeFile(configPath, JSON.stringify(sampleConfig, null, 2), "utf-8")

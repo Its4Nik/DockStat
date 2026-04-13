@@ -200,10 +200,10 @@ class DB {
     parser: Partial<Parser<T>> = {}
   ): QueryBuilder<T> {
     const pObj: Parser<T> = {
-      JSON: parser.JSON || [],
-      MODULE: parser.MODULE || {},
       BOOLEAN: parser.BOOLEAN || [],
       DATE: parser.DATE || [],
+      JSON: parser.JSON || [],
+      MODULE: parser.MODULE || {},
     }
 
     this.tableLog.debug(`Creating QueryBuilder for: ${tableName}`)
@@ -286,13 +286,13 @@ class DB {
           this.migrationLog.info("Schema of table not found; new table => no migration needed")
         } else {
           const migrated = checkAndMigrate({
-            db: this.db,
-            tableName,
             currentSchema,
+            db: this.db,
             migrationLog: this.migrationLog,
             newColumns: columns,
-            tableConstraints,
             options: pOpts || {},
+            tableConstraints,
+            tableName,
           })
 
           if (migrated) {
@@ -367,10 +367,10 @@ class DB {
     const mergedDate = [...new Set([...autoDetectedDate, ...userDate])] as Array<keyof _T>
 
     const pObj = {
-      JSON: mergedJson,
-      MODULE: userModule,
       BOOLEAN: mergedBoolean,
       DATE: mergedDate,
+      JSON: mergedJson,
+      MODULE: userModule,
     }
 
     this.tableLog.debug(`Parser config: ${JSON.stringify(pObj)}`)

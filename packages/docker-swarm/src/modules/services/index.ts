@@ -101,12 +101,12 @@ export class ServicesModule {
 
       const spec = {
         ...(currentSpec ?? {}),
+        Labels: options.labels ?? currentSpec?.Labels,
+        Mode: options.replicas ? { Replicated: { Replicas: options.replicas } } : currentSpec?.Mode,
         TaskTemplate: {
           ...(currentTaskTemplate ?? {}),
           ...this.buildTaskSpec(options),
         },
-        Mode: options.replicas ? { Replicated: { Replicas: options.replicas } } : currentSpec?.Mode,
-        Labels: options.labels ?? currentSpec?.Labels,
       }
 
       await (
@@ -180,12 +180,12 @@ export class ServicesModule {
   async logs(serviceId: string, options: ServiceLogsOptions = {}): Promise<string> {
     try {
       const logs = await this.docker.getService(serviceId).logs({
-        stdout: options.stdout ?? true,
-        stderr: options.stderr ?? true,
-        tail: options.tail ?? 100,
         follow: options.follow ?? false,
-        timestamps: options.timestamps ?? false,
         since: options.since,
+        stderr: options.stderr ?? true,
+        stdout: options.stdout ?? true,
+        tail: options.tail ?? 100,
+        timestamps: options.timestamps ?? false,
         until: options.until,
       } as unknown)
       return logs.toString()
@@ -231,8 +231,8 @@ export class ServicesModule {
       spec.EndpointSpec = {
         Ports: options.ports.map((p) => ({
           Protocol: p.protocol ?? "tcp",
-          TargetPort: p.target,
           PublishedPort: typeof p.published === "number" ? p.published : undefined,
+          TargetPort: p.target,
         })),
       }
     }
@@ -266,14 +266,14 @@ export class ServicesModule {
       taskSpec.Resources = {
         Limits: options.resources.limits
           ? {
-              NanoCPUs: options.resources.limits.nanoCPUs,
               MemoryBytes: options.resources.limits.memoryBytes,
+              NanoCPUs: options.resources.limits.nanoCPUs,
             }
           : undefined,
         Reservations: options.resources.reservations
           ? {
-              NanoCPUs: options.resources.reservations.nanoCPUs,
               MemoryBytes: options.resources.reservations.memoryBytes,
+              NanoCPUs: options.resources.reservations.nanoCPUs,
             }
           : undefined,
       }
@@ -300,15 +300,15 @@ export class ServicesModule {
     const version = service.Version as Record<string, unknown> | undefined
 
     return {
-      id: (service.ID as string) ?? "",
-      version: { index: (version?.Index as number) ?? 0 },
       createdAt: (service.CreatedAt as string) ?? "",
-      updatedAt: (service.UpdatedAt as string) ?? "",
+      id: (service.ID as string) ?? "",
       spec: {
-        name: (spec?.Name as string) ?? "",
         labels: spec?.Labels as Record<string, string> | undefined,
+        name: (spec?.Name as string) ?? "",
         taskTemplate: {},
       },
+      updatedAt: (service.UpdatedAt as string) ?? "",
+      version: { index: (version?.Index as number) ?? 0 },
     }
   }
 }

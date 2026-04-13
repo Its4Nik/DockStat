@@ -28,14 +28,14 @@ interface TestUser extends Record<string, unknown> {
 const table = db.createTable<TestUser>(
   "users",
   {
+    active: column.boolean({ notNull: false }),
+    age: column.integer({ notNull: false }),
+    created_at: column.timestamp({ notNull: false }),
+    email: column.text({ notNull: true, unique: true }),
     id: column.id(),
     name: column.text({ notNull: true }),
-    email: column.text({ notNull: true, unique: true }),
-    age: column.integer({ notNull: false }),
-    score: column.integer({ notNull: false }),
-    active: column.boolean({ notNull: false }),
     role: column.text({ notNull: false }),
-    created_at: column.timestamp({ notNull: false }),
+    score: column.integer({ notNull: false }),
   },
   { ifNotExists: true }
 )
@@ -44,58 +44,58 @@ beforeAll(() => {
   // Insert test data
   table.insertBatch([
     {
-      name: "Alice",
-      email: "alice@gmail.com",
+      active: true,
       age: 25,
-      score: 85,
-      active: true,
-      role: "admin",
       created_at: 1000,
+      email: "alice@gmail.com",
+      name: "Alice",
+      role: "admin",
+      score: 85,
     },
     {
-      name: "Bob",
-      email: "bob@yahoo.com",
+      active: true,
       age: 30,
-      score: 92,
-      active: true,
-      role: "user",
       created_at: 2000,
+      email: "bob@yahoo.com",
+      name: "Bob",
+      role: "user",
+      score: 92,
     },
     {
-      name: "Charlie",
-      email: "charlie@gmail.com",
+      active: false,
       age: 35,
-      score: 78,
-      active: false,
-      role: "user",
       created_at: 3000,
-    },
-    {
-      name: "Diana",
-      email: "diana@outlook.com",
-      age: 28,
-      score: 95,
-      active: true,
-      role: "moderator",
-      created_at: 4000,
-    },
-    {
-      name: "Eve",
-      email: "eve@gmail.com",
-      age: null,
-      score: null,
-      active: null,
-      role: null,
-      created_at: null,
-    },
-    {
-      name: "Frank",
-      email: "frank@test.org",
-      age: 40,
-      score: 60,
-      active: false,
+      email: "charlie@gmail.com",
+      name: "Charlie",
       role: "user",
+      score: 78,
+    },
+    {
+      active: true,
+      age: 28,
+      created_at: 4000,
+      email: "diana@outlook.com",
+      name: "Diana",
+      role: "moderator",
+      score: 95,
+    },
+    {
+      active: null,
+      age: null,
+      created_at: null,
+      email: "eve@gmail.com",
+      name: "Eve",
+      role: null,
+      score: null,
+    },
+    {
+      active: false,
+      age: 40,
       created_at: 5000,
+      email: "frank@test.org",
+      name: "Frank",
+      role: "user",
+      score: 60,
     },
   ])
 })
@@ -112,7 +112,7 @@ describe("Simple equality where conditions", () => {
   })
 
   test("where with multiple equality conditions", () => {
-    const result = table.select(["*"]).where({ role: "user", active: true }).first()
+    const result = table.select(["*"]).where({ active: true, role: "user" }).first()
     expect(result?.name).toBe("Bob")
   })
 

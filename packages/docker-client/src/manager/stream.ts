@@ -24,8 +24,8 @@ export class Streams extends DockerClientManagerCore {
    */
   public async createConnection(clientId: number, connectionId: string): Promise<void> {
     await this.sendRequest(clientId, {
-      type: "stream_createConnection",
       connectionId,
+      type: "stream_createConnection",
     })
   }
 
@@ -35,8 +35,8 @@ export class Streams extends DockerClientManagerCore {
    */
   public async closeConnection(clientId: number, connectionId: string): Promise<void> {
     await this.sendRequest(clientId, {
-      type: "stream_closeConnection",
       connectionId,
+      type: "stream_closeConnection",
     })
   }
 
@@ -51,10 +51,10 @@ export class Streams extends DockerClientManagerCore {
     options: DOCKER.StreamOptions
   ): Promise<string> {
     const res = await this.sendRequest<string | undefined>(clientId, {
-      type: "stream_subscribe",
-      connectionId,
       channel,
+      connectionId,
       options,
+      type: "stream_subscribe",
     })
 
     if (!res || typeof res !== "string") {
@@ -70,8 +70,8 @@ export class Streams extends DockerClientManagerCore {
    */
   public async unsubscribe(clientId: number, subscriptionId: string): Promise<boolean> {
     const res = await this.sendRequest<boolean | undefined>(clientId, {
-      type: "stream_unsubscribe",
       subscriptionId,
+      type: "stream_unsubscribe",
     })
 
     return res === true
@@ -85,8 +85,8 @@ export class Streams extends DockerClientManagerCore {
     connectionId?: string
   ): Promise<DOCKER.StreamSubscription[]> {
     const res = await this.sendRequest<DOCKER.StreamSubscription[] | undefined>(clientId, {
-      type: "stream_getSubscriptions",
       connectionId,
+      type: "stream_getSubscriptions",
     })
 
     return Array.isArray(res) ? res : []

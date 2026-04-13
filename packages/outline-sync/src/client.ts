@@ -32,28 +32,28 @@ export class OutlineClient {
     const startTime = performance.now()
 
     this.trace(`request: ${endpoint}`, {
-      url,
-      method: "POST",
-      hasBody: !!data,
       body: data,
+      hasBody: !!data,
+      method: "POST",
+      url,
     })
 
     const response = await fetch(url, {
-      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
       headers: {
         Authorization: `Bearer ${this.token}`,
         "Content-Type": "application/json",
       },
-      body: data ? JSON.stringify(data) : undefined,
+      method: "POST",
     })
 
     const duration = (performance.now() - startTime).toFixed(2)
 
     if (!response.ok) {
       this.trace(`request failed: ${endpoint}`, {
+        durationMs: duration,
         status: response.status,
         statusText: response.statusText,
-        durationMs: duration,
       })
       throw new Error(`Outline API error: ${response.status} ${response.statusText}`)
     }
@@ -61,8 +61,8 @@ export class OutlineClient {
     const result = (await response.json()) as T
 
     this.trace(`request success: ${endpoint}`, {
-      status: response.status,
       durationMs: duration,
+      status: response.status,
     })
 
     return result
@@ -72,8 +72,8 @@ export class OutlineClient {
     this.trace("getCollections: fetching all collections")
     const result = await this.request<{ data: Collection[] }>("collections.list")
     this.trace("getCollections: completed", {
-      count: result.data.length,
       collections: result.data.map((c) => ({ id: c.id, name: c.name })),
+      count: result.data.length,
     })
     return result.data
   }
@@ -89,8 +89,8 @@ export class OutlineClient {
       count: result.data.length,
       documents: result.data.map((d) => ({
         id: d.id,
-        title: d.title,
         parentDocumentId: d.parentDocumentId,
+        title: d.title,
       })),
     })
     return result.data
@@ -103,8 +103,8 @@ export class OutlineClient {
     }>("documents.info", { id })
     this.trace("getDocument: completed", {
       id: result.data.id,
-      title: result.data.title,
       textLength: result.data.text?.length ?? 0,
+      title: result.data.title,
       updatedAt: result.data.updatedAt,
     })
     return result.data
@@ -113,14 +113,14 @@ export class OutlineClient {
   async updateDocument(id: string, text: string, title?: string): Promise<Document> {
     this.trace("updateDocument: updating document", {
       id,
-      title,
       textLength: text.length,
+      title,
     })
     const result = await this.request<{ data: Document }>("documents.update", {
       id,
+      publish: true,
       text,
       title,
-      publish: true,
     })
     this.trace("updateDocument: completed", {
       id: result.data.id,
@@ -136,8 +136,8 @@ export class OutlineClient {
       query,
     })
     this.trace("searchDocuments: completed", {
-      query,
       count: result.data.length,
+      query,
       results: result.data.map((r) => ({ id: r.document.id, title: r.document.title })),
     })
     return result.data.map((r) => r.document)

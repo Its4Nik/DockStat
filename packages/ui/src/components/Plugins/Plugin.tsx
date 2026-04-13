@@ -10,24 +10,37 @@ export function PluginCard({ plugin }: PluginCardProps) {
     <Card variant="outlined">
       <CardHeader className="flex items-center gap-3 pb-2">
         <h3 className="font-semibold text-primary-800 text-lg">{plugin.name}</h3>
-        <Badge unique className="text-xs font-medium">
+        <Badge
+          className="text-xs font-medium"
+          unique
+        >
           v{plugin.version}
         </Badge>
 
-        <Badge className="mr-0" variant="secondary" size={"sm"}>
+        <Badge
+          className="mr-0"
+          size={"sm"}
+          variant="secondary"
+        >
           ID: {plugin.id}
         </Badge>
       </CardHeader>
 
       <CardBody className="space-y-3">
-        <Card size="sm" variant="elevated">
+        <Card
+          size="sm"
+          variant="elevated"
+        >
           <p>{plugin.description}</p>
         </Card>
 
         {plugin.tags && plugin.tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {plugin.tags.map((tag) => (
-              <Badge key={tag} unique>
+              <Badge
+                key={tag}
+                unique
+              >
                 {tag}
               </Badge>
             ))}
@@ -53,8 +66,8 @@ export function PluginCard({ plugin }: PluginCardProps) {
       {plugin.author?.website && (
         <CardFooter>
           <LinkWithIcon
-            href={plugin.author.website}
             className="text-primary-600 hover:text-primary-700"
+            href={plugin.author.website}
           >
             Visit Author's Website →
           </LinkWithIcon>

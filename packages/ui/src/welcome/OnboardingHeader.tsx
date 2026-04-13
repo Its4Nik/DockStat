@@ -10,7 +10,11 @@ export const OnboardingHeader = ({ onSkip }: { onSkip: () => void }) => (
     <CardHeader className="flex items-center justify-between gap-6 px-8 py-5">
       <div className="flex items-center gap-5">
         <div className="flex-shrink-0">
-          <img src={DockStatLogo} className="w-16 h-16" alt="DockStat Logo" />
+          <img
+            alt="DockStat Logo"
+            className="w-16 h-16"
+            src={DockStatLogo}
+          />
         </div>
         <div className="flex flex-col gap-1">
           <h3 className="text-xl font-bold tracking-tight">DockStat</h3>
@@ -21,8 +25,16 @@ export const OnboardingHeader = ({ onSkip }: { onSkip: () => void }) => (
       </div>
 
       <div className="flex-shrink-0">
-        <HoverBubble label="Skip Onboarding" position="left">
-          <Button variant="outline" onClick={onSkip} aria-label="Skip onboarding" size="sm">
+        <HoverBubble
+          label="Skip Onboarding"
+          position="left"
+        >
+          <Button
+            aria-label="Skip onboarding"
+            onClick={onSkip}
+            size="sm"
+            variant="outline"
+          >
             <X className="w-4 h-4" />
           </Button>
         </HoverBubble>

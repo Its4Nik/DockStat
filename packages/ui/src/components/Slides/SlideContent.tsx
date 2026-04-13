@@ -22,25 +22,29 @@ export const SlideContent = ({
           // Animate height and opacity directly from the measured contentHeight.
           // Using numeric heights ensures updates to `state.contentHeight` trigger animations
           // when dynamic content resizes (ResizeObserver updates the value).
-          initial={{ height: 0, opacity: 0 }}
           animate={{ height: show ? state.contentHeight : 0, opacity: show ? 1 : 0 }}
-          exit={{ height: 0, opacity: 0 }}
-          transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
           className="overflow-hidden"
+          exit={{ height: 0, opacity: 0 }}
+          initial={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
         >
           <div className="relative">
-            <AnimatePresence initial={false} custom={state.animationDirection} mode="popLayout">
+            <AnimatePresence
+              custom={state.animationDirection}
+              initial={false}
+              mode="popLayout"
+            >
               {state.activeSlide && !state.isCollapsed && (
                 <motion.div
-                  key={state.activeSlide}
-                  custom={state.animationDirection}
-                  variants={slideVariants}
-                  initial="enter"
                   animate="center"
+                  custom={state.animationDirection}
                   exit="exit"
+                  initial="enter"
+                  key={state.activeSlide}
                   transition={{
                     x: { duration: 0.3, type: "tween" },
                   }}
+                  variants={slideVariants}
                 >
                   <div
                     ref={(el) => {

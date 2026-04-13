@@ -49,8 +49,8 @@ export function DockNodeCard({
 
   return (
     <Card
-      variant="elevated"
       className="group overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
+      variant="elevated"
     >
       <CardBody className="space-y-5">
         {/* Header */}
@@ -64,7 +64,11 @@ export function DockNodeCard({
               <h3 className="text-lg font-semibold leading-tight">{dn.name}</h3>
 
               <div className="mt-1 flex items-center gap-2">
-                <Badge size="sm" variant={isOnline ? "success" : "error"} className="gap-1">
+                <Badge
+                  className="gap-1"
+                  size="sm"
+                  variant={isOnline ? "success" : "error"}
+                >
                   <Activity className="h-3 w-3" />
                   {isOnline ? "Online" : "Offline"}
                 </Badge>
@@ -112,21 +116,21 @@ export function DockNodeCard({
       {/* Footer */}
       <CardFooter className="flex items-center justify-between border-t bg-muted/30">
         <LinkWithIcon
+          className="text-sm"
+          external
           href={`http${dn.useSSL ? "s" : ""}://${dn.host}:${dn.port}`}
           icon={<ExternalLink className="h-4 w-4" />}
           iconPosition="left"
-          external
-          className="text-sm"
         >
           Open
         </LinkWithIcon>
 
         <Button
-          size="sm"
-          variant="danger"
+          className="gap-2"
           disabled={isDisabled || isDeleting}
           onClick={handleDelete}
-          className="gap-2"
+          size="sm"
+          variant="danger"
         >
           <Trash2 className="h-4 w-4" />
           {isDeleting ? "Deleting…" : "Delete"}

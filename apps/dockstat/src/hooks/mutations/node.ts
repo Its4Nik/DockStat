@@ -3,9 +3,9 @@ import { api } from "@/lib/api"
 
 export const useDockNodeMutations = () => {
   const createDockNodeMutation = eden.useEdenMutation({
-    route: api.node.post,
-    mutationKey: ["createDockNode"],
     invalidateQueries: [["getAllDockNodes"]],
+    mutationKey: ["createDockNode"],
+    route: api.node.post,
     toast: {
       errorTitle: (dn) => `${dn?.name || "DockNode"} could not be created`,
       successTitle: (dn) => `${dn?.name || "DockNode"} created`,
@@ -13,9 +13,9 @@ export const useDockNodeMutations = () => {
   })
 
   const deleteDockNodeMutation = eden.useEdenMutation({
-    route: api.node.delete,
-    mutationKey: ["deleteDockNode"],
     invalidateQueries: [["getAllDockNodes"]],
+    mutationKey: ["deleteDockNode"],
+    route: api.node.delete,
     toast: {
       errorTitle: (dn) => `${dn?.id || "DockNode"} could not be deleted`,
       successTitle: (dn) => `${dn?.id || "DockNode"} deleted`,

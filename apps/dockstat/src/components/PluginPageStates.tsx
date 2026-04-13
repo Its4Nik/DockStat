@@ -4,8 +4,8 @@ import { AlertTriangle, ArrowLeft, FileX, Loader2, Search } from "lucide-react"
 import { useNavigate } from "react-router"
 
 const cardVariants = {
+  animate: { opacity: 1, transition: { duration: 0.3 }, y: 0 },
   initial: { opacity: 0, y: 10 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 }
 
 const InfoBlock = ({ label, value }: { label: string; value: string }) => (
@@ -19,9 +19,9 @@ const HomeButton = () => {
   const navigate = useNavigate()
   return (
     <button
-      type="button"
-      onClick={() => navigate("/")}
       className="flex items-center gap-2 px-4 py-2.5 bg-accent-primary text-white text-sm font-medium rounded-lg hover:bg-accent-primary/90 transition-all active:scale-95"
+      onClick={() => navigate("/")}
+      type="button"
     >
       <ArrowLeft className="h-4 w-4" />
       Go Home
@@ -31,12 +31,15 @@ const HomeButton = () => {
 
 export const PluginPageLoading = () => (
   <motion.div
+    animate="animate"
     className="w-full max-w-md mx-auto mt-12"
     initial="initial"
-    animate="animate"
     variants={cardVariants}
   >
-    <Card variant="elevated" size="md">
+    <Card
+      size="md"
+      variant="elevated"
+    >
       <div className="flex flex-col items-center justify-center gap-6 p-12">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
         <p className="text-secondary-text">Loading plugin page...</p>
@@ -55,12 +58,15 @@ export const PluginPageError = ({
   error: string
 }) => (
   <motion.div
+    animate="animate"
     className="w-full max-w-md mx-auto mt-12"
     initial="initial"
-    animate="animate"
     variants={cardVariants}
   >
-    <Card variant="elevated" size="md">
+    <Card
+      size="md"
+      variant="elevated"
+    >
       <div className="flex flex-col items-center gap-6 p-8">
         <div className="p-4 rounded-full bg-error/10">
           <AlertTriangle className="h-8 w-8 text-error" />
@@ -70,8 +76,14 @@ export const PluginPageError = ({
           <p className="text-secondary-text">{error}</p>
         </div>
         <div className="w-full bg-muted/50 rounded-lg p-4 mt-2 space-y-1">
-          <InfoBlock label="Plugin ID" value={String(pluginId)} />
-          <InfoBlock label="Route" value={`/${routePath}`} />
+          <InfoBlock
+            label="Plugin ID"
+            value={String(pluginId)}
+          />
+          <InfoBlock
+            label="Route"
+            value={`/${routePath}`}
+          />
         </div>
         <HomeButton />
       </div>
@@ -87,12 +99,15 @@ export const PluginPageNotFound = ({
   routePath: string
 }) => (
   <motion.div
+    animate="animate"
     className="w-full max-w-md mx-auto mt-12"
     initial="initial"
-    animate="animate"
     variants={cardVariants}
   >
-    <Card variant="elevated" size="md">
+    <Card
+      size="md"
+      variant="elevated"
+    >
       <div className="flex flex-col items-center gap-6 p-8">
         <div className="p-4 rounded-full bg-muted/10">
           <Search className="h-8 w-8 text-muted-foreground" />
@@ -102,8 +117,14 @@ export const PluginPageNotFound = ({
           <p className="text-secondary-text">The requested plugin page could not be found.</p>
         </div>
         <div className="w-full bg-muted/50 rounded-lg p-4 mt-2 space-y-1">
-          <InfoBlock label="Plugin ID" value={String(pluginId)} />
-          <InfoBlock label="Route" value={`/${routePath}`} />
+          <InfoBlock
+            label="Plugin ID"
+            value={String(pluginId)}
+          />
+          <InfoBlock
+            label="Route"
+            value={`/${routePath}`}
+          />
         </div>
         <HomeButton />
       </div>
@@ -119,12 +140,15 @@ export const PluginPageNoTemplate = ({
   route: string
 }) => (
   <motion.div
+    animate="animate"
     className="w-full max-w-md mx-auto mt-12"
     initial="initial"
-    animate="animate"
     variants={cardVariants}
   >
-    <Card variant="elevated" size="md">
+    <Card
+      size="md"
+      variant="elevated"
+    >
       <div className="flex flex-col items-center gap-6 p-8">
         <div className="p-4 rounded-full bg-muted/10">
           <FileX className="h-8 w-8 text-muted-foreground" />
@@ -136,8 +160,14 @@ export const PluginPageNoTemplate = ({
           </p>
         </div>
         <div className="w-full bg-muted/50 rounded-lg p-4 mt-2 space-y-1">
-          <InfoBlock label="Plugin" value={pluginName} />
-          <InfoBlock label="Route" value={route} />
+          <InfoBlock
+            label="Plugin"
+            value={pluginName}
+          />
+          <InfoBlock
+            label="Route"
+            value={route}
+          />
         </div>
         <HomeButton />
       </div>

@@ -19,7 +19,10 @@ export const SlideBullet = ({
   >
     <div className="flex items-start gap-4">
       <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-green-500/20 to-green-600/20 border border-green-500/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-        <Check className="w-5 h-5 text-green-400" strokeWidth={2.5} />
+        <Check
+          className="w-5 h-5 text-green-400"
+          strokeWidth={2.5}
+        />
       </div>
       <div className="flex-1 min-w-0">
         <h3 className="text-lg font-semibold text-white mb-1.5 tracking-tight">{bullet.title}</h3>

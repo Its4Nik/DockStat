@@ -69,9 +69,9 @@ export function useEdenRouteMutation<TParams, TRoute extends EdenRoute>(
   }
 
   return useBaseEdenMutation<ResponseData<TRoute>, { params: TParams; body: EdenBody<TRoute> }>({
-    mutationKey: options.mutationKey,
-    mutationFn,
     invalidateQueries: options.invalidateQueries,
+    mutationFn,
+    mutationKey: options.mutationKey,
     toast: options.toast,
   })
 }

@@ -70,10 +70,10 @@ const app = new Elysia()
 
   // Health check endpoint (always public)
   .get("/health", () => ({
+    authEnabled: AUTH_ENABLED,
     status: "ok",
     timestamp: new Date().toISOString(),
     version: "1.0.0",
-    authEnabled: AUTH_ENABLED,
   }))
 
   // Status endpoint for quick checks
@@ -94,7 +94,10 @@ const app = new Elysia()
         <html lang="en">
           <head>
             <meta charset="UTF-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <meta
+              content="width=device-width, initial-scale=1.0"
+              name="viewport"
+            />
             <title>404 - Not Found</title>
             <script src="https://cdn.tailwindcss.com" />
           </head>
@@ -104,14 +107,14 @@ const app = new Elysia()
               <p class="text-xl text-gray-400 mb-8">Page not found</p>
               <div class="flex gap-4 justify-center">
                 <a
-                  href="/"
                   class="px-6 py-3 bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors"
+                  href="/"
                 >
                   Dashboard
                 </a>
                 <a
-                  href="/public"
                   class="px-6 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+                  href="/public"
                 >
                   Public Status
                 </a>
@@ -125,9 +128,9 @@ const app = new Elysia()
     if (code === "VALIDATION") {
       set.status = 400
       return {
+        code: "VALIDATION_ERROR",
         error: "Validation Error",
         message: errorMessage,
-        code: "VALIDATION_ERROR",
       }
     }
 
@@ -136,7 +139,10 @@ const app = new Elysia()
       <html lang="en">
         <head>
           <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <meta
+            content="width=device-width, initial-scale=1.0"
+            name="viewport"
+          />
           <title>500 - Server Error</title>
           <script src="https://cdn.tailwindcss.com" />
         </head>
@@ -144,12 +150,15 @@ const app = new Elysia()
           <div class="text-center">
             <h1 class="text-6xl font-bold text-red-600 mb-4">500</h1>
             <p class="text-xl text-gray-400 mb-4">Something went wrong</p>
-            <p safe class="text-sm text-gray-500 mb-8">
+            <p
+              class="text-sm text-gray-500 mb-8"
+              safe
+            >
               {errorMessage}
             </p>
             <a
-              href="/"
               class="px-6 py-3 bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors"
+              href="/"
             >
               Go Home
             </a>

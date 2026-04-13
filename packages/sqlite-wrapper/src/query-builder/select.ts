@@ -217,7 +217,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
     const hasRegex = this.hasRegexConditions()
     const [query, params] = this.buildSelectQuery(!hasRegex)
 
-    this.logSelectStart("all", { query, params })
+    this.logSelectStart("all", { params, query })
     this.selectLog.info(`SELECT: Query: ${query} - Params: ${truncate(params.join(", "), 25)}`)
 
     const rows = this.getDb()
@@ -268,7 +268,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
     if (!this.hasRegexConditions()) {
       const [query, params] = this.buildSelectQuery(true)
 
-      this.logSelectStart("get", { query, params })
+      this.logSelectStart("get", { params, query })
       this.selectLog.info(
         `SELECT (get): Query: ${query} - Params: ${truncate(params.join(", "), 25)}`
       )
@@ -309,7 +309,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const [whereClause, whereParams] = this.buildWhereClause()
       const query = `SELECT COUNT(*) AS __count FROM ${quoteIdentifier(this.getTableName())}${whereClause}`
 
-      this.logSelectStart("count", { query, params: whereParams })
+      this.logSelectStart("count", { params: whereParams, query })
       this.selectLog.info(`COUNT: Query: ${query} - Where: ${whereParams}`)
 
       const result = this.getDb()
@@ -336,7 +336,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const subquery = `SELECT 1 FROM ${quoteIdentifier(this.getTableName())}${whereClause} LIMIT 1`
       const query = `SELECT EXISTS(${subquery}) AS __exists`
 
-      this.logSelectStart("exists", { query, params: whereParams })
+      this.logSelectStart("exists", { params: whereParams, query })
       this.selectLog.info(`"EXISTS: Query: ${query} - Where: ${whereParams}`)
 
       const result = this.getDb()

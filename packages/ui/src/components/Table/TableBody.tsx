@@ -60,16 +60,19 @@ function TableBodyInner<T extends Record<string, unknown>>({
   // Non-virtualized rendering
   if (!virtualize) {
     return (
-      <tbody ref={containerRef} className="divide-y divide-table-body-divide">
+      <tbody
+        className="divide-y divide-table-body-divide"
+        ref={containerRef}
+      >
         {data.map((record, index) => (
           <TableRow
-            key={getRowKey(record, index)}
-            record={record}
             columns={columns}
-            size={size}
-            striped={striped}
             hoverable={hoverable}
             index={index}
+            key={getRowKey(record, index)}
+            record={record}
+            size={size}
+            striped={striped}
           />
         ))}
       </tbody>
@@ -85,28 +88,34 @@ function TableBodyInner<T extends Record<string, unknown>>({
   const visibleData = data.slice(startIndex, endIndex)
 
   return (
-    <tbody ref={containerRef} className="relative">
+    <tbody
+      className="relative"
+      ref={containerRef}
+    >
       {/* Spacer for total height */}
-      <tr style={{ height: totalHeight }} className="absolute w-0">
+      <tr
+        className="absolute w-0"
+        style={{ height: totalHeight }}
+      >
         <td />
       </tr>
       {visibleData.map((record, i) => {
         const actualIndex = startIndex + i
         return (
           <TableRow
-            key={getRowKey(record, actualIndex)}
-            record={record}
             columns={columns}
-            size={size}
-            striped={striped}
             hoverable={hoverable}
             index={actualIndex}
+            key={getRowKey(record, actualIndex)}
+            record={record}
+            size={size}
+            striped={striped}
             style={{
+              display: "table-row",
+              height: rowHeight,
               position: "absolute",
               top: actualIndex * rowHeight,
-              height: rowHeight,
               width: "100%",
-              display: "table-row",
             }}
           />
         )

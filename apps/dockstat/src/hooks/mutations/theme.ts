@@ -3,22 +3,22 @@ import { api } from "@/lib/api"
 
 export const useThemeMutations = () => {
   const createThemeMutation = eden.useEdenMutation({
+    invalidateQueries: [["fetchAllThemes"]],
     mutationKey: ["createTheme"],
     route: api.themes.post,
-    invalidateQueries: [["fetchAllThemes"]],
     toast: {
-      successTitle: (input) => `Created new Theme: ${input.name}`,
       errorTitle: (input) => `Could not create new Theme: ${input.name}`,
+      successTitle: (input) => `Created new Theme: ${input.name}`,
     },
   })
 
   const deleteThemeMutation = eden.useEdenMutation({
+    invalidateQueries: [["fetchAllThemes"]],
     mutationKey: ["deleteTheme"],
     route: api.themes.delete,
-    invalidateQueries: [["fetchAllThemes"]],
     toast: {
-      successTitle: (input) => `Deleted theme ${input.id}`,
       errorTitle: (input) => `Could not delete theme ${input.id}`,
+      successTitle: (input) => `Deleted theme ${input.id}`,
     },
   })
 

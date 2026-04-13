@@ -17,21 +17,21 @@ class DockNodeHandler {
     this.table = DB.createTable<DockNodeTable>(
       "docknode-register",
       {
-        id: column.id(),
-        name: column.text(),
         host: column.text(),
-        port: column.integer(),
-        useSSL: column.boolean(),
+        id: column.id(),
         keys: column.foreignKey<DockStatConfigTableType>("config", "keys", {
           references: {
+            column: "keys",
             onDelete: "NO ACTION",
             onUpdate: "CASCADE",
-            column: "keys",
             table: "config",
           },
           type: "JSON",
         }),
+        name: column.text(),
+        port: column.integer(),
         timeout: column.integer({ default: 60 }),
+        useSSL: column.boolean(),
       },
       { ifNotExists: true }
     )

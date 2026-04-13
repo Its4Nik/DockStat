@@ -13,11 +13,11 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
 
       for (const route of PluginHandler.getAllFrontendRoutes()) {
         data[route.pluginName] = {
-          pluginName: route.pluginName,
           paths: [
             ...((data[route.pluginName] || { paths: [] }).paths || []),
             { fullPath: route.fullPath, metaTitle: route.meta?.title || "Unknown" },
           ],
+          pluginName: route.pluginName,
         }
       }
 
@@ -77,43 +77,43 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
       } = await PluginHandler.executeRouteLoaders(pluginId, routePath)
 
       return {
-        route,
-        template,
-        fragments,
-        loaders,
         actions,
+        fragments,
         initialData: {
+          data: loadedData,
           loaderResults,
           state: loadedState,
-          data: loadedData,
         },
+        loaders,
+        route,
+        template,
       }
     },
     {
-      params: t.Object({
-        pluginId: t.String(),
-      }),
       body: t.Object({
         path: t.String(),
       }),
       detail: {
         description: "Get the template for a specific plugin frontend route with initial data",
       },
+      params: t.Object({
+        pluginId: t.String(),
+      }),
     }
   )
   .get(
     "/:pluginId/has-routes",
     ({ params }) => ({
-      pluginId: Number(params.pluginId),
       hasFrontendRoutes: PluginHandler.hasFrontendRoutes(Number(params.pluginId)),
+      pluginId: Number(params.pluginId),
     }),
     {
-      params: t.Object({
-        pluginId: t.String(),
-      }),
       detail: {
         description: "Check if a plugin has any frontend routes",
       },
+      params: t.Object({
+        pluginId: t.String(),
+      }),
     }
   )
   // ==================== Frontend Loaders Endpoints ====================
@@ -124,21 +124,21 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
       const routePath = `/${query.path || ""}`
 
       return {
+        loaders: PluginHandler.getRouteLoaders(pluginId, routePath),
         pluginId,
         routePath,
-        loaders: PluginHandler.getRouteLoaders(pluginId, routePath),
       }
     },
     {
+      detail: {
+        description: "Get all loaders for a plugin route",
+      },
       params: t.Object({
         pluginId: t.String(),
       }),
       query: t.Object({
         path: t.Optional(t.String()),
       }),
-      detail: {
-        description: "Get all loaders for a plugin route",
-      },
     }
   )
   .post(
@@ -154,17 +154,14 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
       )
 
       return {
-        pluginId,
-        routePath,
-        results,
-        state,
         data,
+        pluginId,
+        results,
+        routePath,
+        state,
       }
     },
     {
-      params: t.Object({
-        pluginId: t.String(),
-      }),
       body: t.Object({
         path: t.String(),
         state: t.Optional(t.Record(t.String(), t.Unknown())),
@@ -172,6 +169,9 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
       detail: {
         description: "Execute all loaders for a plugin route",
       },
+      params: t.Object({
+        pluginId: t.String(),
+      }),
     }
   )
   .post(
@@ -187,24 +187,20 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
       if (!result) {
         return {
           error: "Loader not found",
+          loaderId: params.loaderId,
           pluginId,
           routePath,
-          loaderId: params.loaderId,
         }
       }
 
       return {
-        pluginId,
-        routePath,
         loaderId: params.loaderId,
+        pluginId,
         result,
+        routePath,
       }
     },
     {
-      params: t.Object({
-        pluginId: t.String(),
-        loaderId: t.String(),
-      }),
       body: t.Object({
         path: t.String(),
         state: t.Optional(t.Record(t.String(), t.Unknown())),
@@ -212,6 +208,10 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
       detail: {
         description: "Execute a specific loader by ID",
       },
+      params: t.Object({
+        loaderId: t.String(),
+        pluginId: t.String(),
+      }),
     }
   )
   // ==================== Frontend Actions Endpoints ====================
@@ -222,21 +222,21 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
       const routePath = `/${query.path || ""}`
 
       return {
+        actions: PluginHandler.getRouteActions(pluginId, routePath),
         pluginId,
         routePath,
-        actions: PluginHandler.getRouteActions(pluginId, routePath),
       }
     },
     {
+      detail: {
+        description: "Get all actions for a plugin route",
+      },
       params: t.Object({
         pluginId: t.String(),
       }),
       query: t.Object({
         path: t.Optional(t.String()),
       }),
-      detail: {
-        description: "Get all actions for a plugin route",
-      },
     }
   )
   .post(
@@ -246,39 +246,39 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
       const routePath = `/${body.path || ""}`
 
       const result = await PluginHandler.executeAction(pluginId, routePath, params.actionId, {
-        state: body.state,
         payload: body.payload,
+        state: body.state,
       })
 
       if (!result) {
         return {
+          actionId: params.actionId,
           error: "Action not found",
           pluginId,
           routePath,
-          actionId: params.actionId,
         }
       }
 
       return {
-        pluginId,
-        routePath,
         actionId: params.actionId,
+        pluginId,
         result,
+        routePath,
       }
     },
     {
-      params: t.Object({
-        pluginId: t.String(),
-        actionId: t.String(),
-      }),
       body: t.Object({
         path: t.String(),
-        state: t.Optional(t.Record(t.String(), t.Unknown())),
         payload: t.Optional(t.Unknown()),
+        state: t.Optional(t.Record(t.String(), t.Unknown())),
       }),
       detail: {
         description: "Execute a frontend action by ID",
       },
+      params: t.Object({
+        actionId: t.String(),
+        pluginId: t.String(),
+      }),
     }
   )
   .get(
@@ -291,30 +291,30 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
 
       if (!action) {
         return {
+          actionId: params.actionId,
           error: "Action not found",
           pluginId,
           routePath,
-          actionId: params.actionId,
         }
       }
 
       return {
+        action,
         pluginId,
         routePath,
-        action,
       }
     },
     {
+      detail: {
+        description: "Get a specific action definition by ID",
+      },
       params: t.Object({
-        pluginId: t.String(),
         actionId: t.String(),
+        pluginId: t.String(),
       }),
       query: t.Object({
         path: t.Optional(t.String()),
       }),
-      detail: {
-        description: "Get a specific action definition by ID",
-      },
     }
   )
 

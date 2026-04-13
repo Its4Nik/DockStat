@@ -21,14 +21,14 @@ export function useLogs() {
     if (logMessage.level === "error") {
       console.error(logMessage)
       toast({
-        variant: "error",
+        description: logMessage.message,
         title: (
           <div>
             <p>A server error occurred!</p>
             <span className="text-accent">{logMessage.name}</span>
           </div>
         ),
-        description: logMessage.message,
+        variant: "error",
       })
     }
   }, [logMessage])

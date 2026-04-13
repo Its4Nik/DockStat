@@ -6,27 +6,27 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "build/**", ".next/**", "!.next/cache/**"]
     },
-    "lint": {
-      "outputs": [],
-      "outputLogs": "errors-only"
-    },
-    "lint:fix": {
+    "check-types": {
       "outputs": []
+    },
+    "clean": {
+      "cache": false
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
-    "clean": {
-      "cache": false
+    "lint": {
+      "outputLogs": "errors-only",
+      "outputs": []
     },
+    "lint:fix": {
+      "outputs": []
+    },
+    "publish": {},
     "test": {
       "dependsOn": ["build"],
       "outputs": ["coverage/**"]
-    },
-    "publish": {},
-    "check-types": {
-      "outputs": []
     }
   }
 }

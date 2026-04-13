@@ -46,12 +46,12 @@ function getPublicStats(): PublicDashboardStats {
     .get() as { count: number }
 
   return {
-    totalPlugins,
-    verifiedPlugins: verifiedPlugins?.count || 0,
-    totalVersions,
-    verifiedVersions,
     safePlugins,
+    totalPlugins,
+    totalVersions,
     unsafePlugins,
+    verifiedPlugins: verifiedPlugins?.count || 0,
+    verifiedVersions,
   }
 }
 
@@ -134,7 +134,12 @@ const publicRoutes = new Elysia({ prefix: "/public" })
     const stats = getPublicStats()
     const plugins = getPublicPlugins()
 
-    return <PublicDashboard stats={stats} plugins={plugins} />
+    return (
+      <PublicDashboard
+        plugins={plugins}
+        stats={stats}
+      />
+    )
   })
 
   // Public plugin list (for HTMX partial updates)
@@ -169,7 +174,12 @@ const publicRoutes = new Elysia({ prefix: "/public" })
 
       // Full page response
       const stats = getPublicStats()
-      return <PublicDashboard stats={stats} plugins={plugins} />
+      return (
+        <PublicDashboard
+          plugins={plugins}
+          stats={stats}
+        />
+      )
     },
     {
       query: t.Object({
@@ -201,30 +211,30 @@ const publicRoutes = new Elysia({ prefix: "/public" })
 
       return {
         plugins: Object.values(latestPlugins).map((p) => ({
-          name: p.plugin_name,
-          version: p.version,
-          description: p.description,
           author: p.author_name,
+          description: p.description,
           hash: p.version_hash,
-          verified: p.verified,
+          name: p.plugin_name,
           securityStatus: p.security_status,
-          verifiedBy: p.verified_by,
+          verified: p.verified,
           verifiedAt: p.verified_at,
+          verifiedBy: p.verified_by,
+          version: p.version,
         })),
         total: Object.keys(latestPlugins).length,
       }
     },
     {
+      detail: {
+        description:
+          "Get a list of all plugins with their verification status. This endpoint is public and does not require authentication.",
+        summary: "List Plugins (Public)",
+        tags: ["Public"],
+      },
       query: t.Object({
         filter: t.Optional(t.String()),
         search: t.Optional(t.String()),
       }),
-      detail: {
-        summary: "List Plugins (Public)",
-        description:
-          "Get a list of all plugins with their verification status. This endpoint is public and does not require authentication.",
-        tags: ["Public"],
-      },
     }
   )
 

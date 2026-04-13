@@ -210,8 +210,8 @@ export function createApiErrorResponse(
   additionalFields?: Partial<Omit<ApiErrorResponse, "success" | "error">>
 ): ApiErrorResponse {
   return {
-    success: false,
     error: extractErrorMessage(error),
+    success: false,
     ...additionalFields,
   }
 }

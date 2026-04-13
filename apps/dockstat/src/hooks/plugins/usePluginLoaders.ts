@@ -30,8 +30,8 @@ export function usePluginLoaders({
   const executeLoader = useCallback(
     async (loaderId: string) => {
       const res = await loaderMutation.mutateAsync({
-        params: { loaderId },
         body: { path: routePath, state },
+        params: { loaderId },
       })
 
       const result = (res as { result?: LoaderResult }).result
@@ -80,7 +80,7 @@ export function usePluginLoaders({
 
   return {
     executeLoader,
-    reloadLoaders,
     isExecutingLoader: loaderMutation.isPending,
+    reloadLoaders,
   }
 }

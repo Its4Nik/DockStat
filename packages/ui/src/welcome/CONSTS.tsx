@@ -16,67 +16,70 @@ import type { Slide } from "./types"
 
 export const slides: Slide[] = [
   {
-    title: "Welcome to DockStat",
-    subtitle: "Next-gen container management and orchestration — modular, extensible, TS-first.",
-    icon: <Hand className="w-10 h-10 animate-wave rotate-45" />,
     bullets: [
       {
-        title: "Plugin-first design",
         desc: "Extend everything: deployers, notifiers, themes. The only limit is your imagination!",
+        title: "Plugin-first design",
       },
-      { title: "Modern JS/TS ecosystem", desc: "Use the huge library ecosystem without limits." },
-      { title: "DockStore", desc: "Browse Stacks, Plugins and Themes from the store." },
+      { desc: "Use the huge library ecosystem without limits.", title: "Modern JS/TS ecosystem" },
+      { desc: "Browse Stacks, Plugins and Themes from the store.", title: "DockStore" },
     ],
     footer: (
       <div className="space-y-2">
-        <LinkWithIcon icon={<Puzzle />} href="https://github.com/its4nik/dockstat">
+        <LinkWithIcon
+          href="https://github.com/its4nik/dockstat"
+          icon={<Puzzle />}
+        >
           Plugin Development
         </LinkWithIcon>
-        <LinkWithIcon icon={<ShoppingBag />} href="https://dockstore.itsnik.de">
+        <LinkWithIcon
+          href="https://dockstore.itsnik.de"
+          icon={<ShoppingBag />}
+        >
           Browse
         </LinkWithIcon>
       </div>
     ),
+    icon: <Hand className="w-10 h-10 animate-wave rotate-45" />,
+    subtitle: "Next-gen container management and orchestration — modular, extensible, TS-first.",
+    title: "Welcome to DockStat",
   },
   {
-    title: "DockStacks",
-    subtitle: "One-click deployments of compose-like stacks.",
-    icon: <Layers className="w-10 h-10" />,
     bullets: [
-      { title: "Templating format", desc: "Translate to/from Docker Compose easily." },
-      { title: "One-click deploy", desc: "Deploy stacks to DockNodes via handlers." },
-      { title: "Flexible mounts", desc: "Control managed vs custom mount paths." },
+      { desc: "Translate to/from Docker Compose easily.", title: "Templating format" },
+      { desc: "Deploy stacks to DockNodes via handlers.", title: "One-click deploy" },
+      { desc: "Control managed vs custom mount paths.", title: "Flexible mounts" },
     ],
+    icon: <Layers className="w-10 h-10" />,
+    subtitle: "One-click deployments of compose-like stacks.",
+    title: "DockStacks",
   },
   {
-    title: "DockStat × Zoraxy",
-    subtitle: "A modern alternative to Nginx Proxy Manager.",
-    icon: <LockIcon className="w-10 h-10" />,
     bullets: [
-      { title: "Automatic subdomains", desc: "Auto-create based on container_name." },
-      { title: "One-click deploy", desc: "Deploy Zoraxy to a host and manage proxies visually." },
-      { title: "Integrations", desc: "Works with DockStacks and the DockStore." },
+      { desc: "Auto-create based on container_name.", title: "Automatic subdomains" },
+      { desc: "Deploy Zoraxy to a host and manage proxies visually.", title: "One-click deploy" },
+      { desc: "Works with DockStacks and the DockStore.", title: "Integrations" },
     ],
     footer: <p>Zoraxy is a newer alternative, written in GO, to Nginx-Proxy-Manager or Traeffik</p>,
+    icon: <LockIcon className="w-10 h-10" />,
+    subtitle: "A modern alternative to Nginx Proxy Manager.",
+    title: "DockStat × Zoraxy",
   },
   {
-    title: "DockStack Migrator",
-    subtitle: "Migrate existing containers into DockStacks-managed stacks.",
-    icon: <PlaneTakeoff className="w-10 h-10" />,
     bullets: [
-      { title: "Read metadata", desc: "Generates docker-compose files from host containers." },
-      { title: "Mount handling", desc: "Keep mounts or optionally copy data to managed paths." },
-      { title: "Fast onboarding", desc: "Migrate hosts to DockStat in minutes." },
+      { desc: "Generates docker-compose files from host containers.", title: "Read metadata" },
+      { desc: "Keep mounts or optionally copy data to managed paths.", title: "Mount handling" },
+      { desc: "Migrate hosts to DockStat in minutes.", title: "Fast onboarding" },
     ],
+    icon: <PlaneTakeoff className="w-10 h-10" />,
+    subtitle: "Migrate existing containers into DockStacks-managed stacks.",
+    title: "DockStack Migrator",
   },
   {
-    title: "DockStore & Next Steps",
-    subtitle: "Browse Stacks, Plugins, and Themes — install with a click.",
-    icon: <Store className="w-10 h-10" />,
     bullets: [
-      { title: "Discover", desc: "Find ready-made stacks and plugins." },
-      { title: "Install", desc: "One-click install to your DockNode clusters." },
-      { title: "Contribute", desc: "Publish plugins and themes to DockStore." },
+      { desc: "Find ready-made stacks and plugins.", title: "Discover" },
+      { desc: "One-click install to your DockNode clusters.", title: "Install" },
+      { desc: "Publish plugins and themes to DockStore.", title: "Contribute" },
     ],
     footer: (
       <div className="space-y-1">
@@ -88,18 +91,28 @@ export const slides: Slide[] = [
               iconPosition="left"
             >
               <span className="text-sm">Contribute plugins & themes</span>
-              <Badge variant="success" className="ml-2" outlined>
+              <Badge
+                className="ml-2"
+                outlined
+                variant="success"
+              >
                 Open Source
               </Badge>
             </LinkWithIcon>
           </HoverBubble>
         </div>
-        <Divider label="Next Steps" variant="dashed" />
+        <Divider
+          label="Next Steps"
+          variant="dashed"
+        />
         <div className="flex flex-col flex-2 gap-2">
           <Badge outlined>Deploy Your First Stack</Badge>
           <Badge outlined>Setup Hosts to Monitor</Badge>
         </div>
       </div>
     ),
+    icon: <Store className="w-10 h-10" />,
+    subtitle: "Browse Stacks, Plugins, and Themes — install with a click.",
+    title: "DockStore & Next Steps",
   },
 ]

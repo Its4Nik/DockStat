@@ -23,9 +23,9 @@ const sliderStyles = {
 }
 
 const sizes = {
-  sm: "h-1",
-  md: "h-3",
   lg: "h-5",
+  md: "h-3",
+  sm: "h-1",
 }
 
 export const Slider = ({
@@ -65,7 +65,10 @@ export const Slider = ({
         <div className="flex justify-between items-center mb-2">
           {label && <Card className="px-2 py-1 text-sm font-medium">{label}</Card>}
           {showValue && (
-            <Card className="px-2 py-1 text-sm font-medium" variant="default">
+            <Card
+              className="px-2 py-1 text-sm font-medium"
+              variant="default"
+            >
               {value}
             </Card>
           )}
@@ -84,17 +87,17 @@ export const Slider = ({
 
         {/* Invisible input overlay */}
         <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={handleChange}
-          disabled={disabled}
           className={`
             absolute inset-0 w-full h-full opacity-0 cursor-pointer
             ${disabled ? "cursor-not-allowed" : ""}
           `}
+          disabled={disabled}
+          max={max}
+          min={min}
+          onChange={handleChange}
+          step={step}
+          type="range"
+          value={value}
         />
 
         {/* Knob */}

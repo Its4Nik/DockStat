@@ -281,12 +281,12 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
     if (value === null || value === undefined) {
       if (normalizedOp === "=" || normalizedOp === "IS") {
         this.state.whereConditions.push(`${quoteIdentifier(columnStr)} IS NULL`)
-        this.logWhere("whereOp", { column: columnStr, added: "IS NULL" })
+        this.logWhere("whereOp", { added: "IS NULL", column: columnStr })
         return this
       }
       if (normalizedOp === "!=" || normalizedOp === "<>" || normalizedOp === "IS NOT") {
         this.state.whereConditions.push(`${quoteIdentifier(columnStr)} IS NOT NULL`)
-        this.logWhere("whereOp", { column: columnStr, added: "IS NOT NULL" })
+        this.logWhere("whereOp", { added: "IS NOT NULL", column: columnStr })
         return this
       }
     }

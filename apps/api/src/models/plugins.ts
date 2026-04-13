@@ -11,8 +11,8 @@ export namespace PluginModel {
   })
 
   export const singlePathItem = t.Object({
-    pluginName: t.String(),
     paths: t.Array(t.Object({ fullPath: t.String(), metaTitle: t.String() })),
+    pluginName: t.String(),
   })
 
   export const pathItems = t.Record(t.String(), singlePathItem)

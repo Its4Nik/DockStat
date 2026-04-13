@@ -36,7 +36,7 @@ describe("Database creation and configuration", () => {
     expect(existsSync(dbPath)).toBe(true)
 
     db.close()
-    rmSync(testDir, { recursive: true, force: true })
+    rmSync(testDir, { force: true, recursive: true })
   })
 
   test("Database with pragma options", () => {
@@ -74,9 +74,9 @@ describe("Table management", () => {
     }>(
       "users",
       {
+        email: column.text({ notNull: true, unique: true }),
         id: column.id(),
         name: column.text({ notNull: true }),
-        email: column.text({ notNull: true, unique: true }),
       },
       { ifNotExists: true }
     )
@@ -94,9 +94,9 @@ describe("Table management", () => {
       db.createTable(
         "users",
         {
+          email: column.text({ notNull: true }),
           id: column.id(),
           name: column.text({ notNull: true }),
-          email: column.text({ notNull: true }),
         },
         { ifNotExists: true }
       )
@@ -113,7 +113,7 @@ describe("Table management", () => {
         id: column.id(),
         value: column.text(),
       },
-      { temporary: true, ifNotExists: true }
+      { ifNotExists: true, temporary: true }
     )
 
     expect(tempTable).toBeDefined()
@@ -126,10 +126,10 @@ describe("Table management", () => {
     }>(
       "keyvalue",
       {
-        key: column.text({ primaryKey: true, notNull: true }),
+        key: column.text({ notNull: true, primaryKey: true }),
         value: column.text({ notNull: true }),
       },
-      { withoutRowId: true, ifNotExists: true }
+      { ifNotExists: true, withoutRowId: true }
     )
 
     expect(table).toBeDefined()
@@ -174,10 +174,10 @@ describe("Index management", () => {
     }>(
       "indexed_table",
       {
-        id: column.id(),
-        email: column.text({ notNull: true }),
-        name: column.text({ notNull: true }),
         category: column.text({ notNull: true }),
+        email: column.text({ notNull: true }),
+        id: column.id(),
+        name: column.text({ notNull: true }),
       },
       { ifNotExists: true }
     )
@@ -199,8 +199,8 @@ describe("Index management", () => {
 
   test("Create unique index", () => {
     db.createIndex("idx_name_unique", "indexed_table", ["name"], {
-      unique: true,
       ifNotExists: true,
+      unique: true,
     })
 
     const indexes = db.getIndexes("indexed_table")
@@ -406,8 +406,8 @@ describe("Database maintenance operations", () => {
     }>(
       "maintenance_test",
       {
-        id: column.id(),
         data: column.text(),
+        id: column.id(),
       },
       { ifNotExists: true }
     )
@@ -465,10 +465,10 @@ describe("Schema introspection", () => {
     }>(
       "schema_test",
       {
+        created_at: column.timestamp({ notNull: false }),
+        email: column.text({ notNull: true, unique: true }),
         id: column.id(),
         name: column.text({ notNull: true }),
-        email: column.text({ notNull: true, unique: true }),
-        created_at: column.timestamp({ notNull: false }),
       },
       { ifNotExists: true }
     )
@@ -485,11 +485,11 @@ describe("Schema introspection", () => {
     }>(
       "posts",
       {
+        content: column.text({ notNull: true }),
         id: column.id(),
         user_id: column.foreignKey("schema_test", "id", {
           onDelete: "CASCADE",
         }),
-        content: column.text({ notNull: true }),
       },
       { ifNotExists: true }
     )
@@ -641,10 +641,10 @@ describe("Table access via db.table()", () => {
     }>(
       "table_access",
       {
+        active: column.boolean({ default: true }),
+        data: column.json({ notNull: false }),
         id: column.id(),
         name: column.text({ notNull: true }),
-        data: column.json({ notNull: false }),
-        active: column.boolean({ default: true }),
       },
       { ifNotExists: true }
     )
@@ -661,11 +661,11 @@ describe("Table access via db.table()", () => {
       data: unknown
       active: boolean
     }>("table_access", {
-      JSON: ["data"],
       BOOLEAN: ["active"],
+      JSON: ["data"],
     })
 
-    table.insert({ name: "Test", data: { key: "value" }, active: true })
+    table.insert({ active: true, data: { key: "value" }, name: "Test" })
 
     const result = table.where({ name: "Test" }).first()
 
@@ -681,12 +681,12 @@ describe("Table access via db.table()", () => {
       data: unknown
       active: boolean
     }>("table_access", {
-      JSON: ["data"],
       BOOLEAN: ["active"],
+      JSON: ["data"],
     })
 
     // Multiple operations should all use parser
-    table.insert({ name: "Another", data: { nested: { deep: true } }, active: false })
+    table.insert({ active: false, data: { nested: { deep: true } }, name: "Another" })
 
     const all = table.select(["*"]).all()
     expect(all.length).toBeGreaterThan(0)

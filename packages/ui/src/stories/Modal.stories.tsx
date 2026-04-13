@@ -5,12 +5,12 @@ import { Button } from "../components/Button/Button"
 import { Modal } from "../components/Modal/Modal"
 
 const meta: Meta<typeof Modal> = {
-  title: "Feedback/Modal",
-  component: Modal,
   argTypes: {
     open: { control: "boolean" },
     title: { control: "text" },
   },
+  component: Modal,
+  title: "Feedback/Modal",
 }
 
 export default meta
@@ -30,7 +30,10 @@ export const Interactive: Story = {
     return (
       <div>
         <Button onClick={toggle}>Open Modal</Button>
-        <Modal {...args} onClose={() => updateArgs({ open: false })}>
+        <Modal
+          {...args}
+          onClose={() => updateArgs({ open: false })}
+        >
           <p>This is a demo modal. Click outside or press “Close” to dismiss.</p>
         </Modal>
       </div>
@@ -40,8 +43,8 @@ export const Interactive: Story = {
 
 export const StringFooter: Story = {
   args: {
-    open: false,
     footer: "Sample String footer",
+    open: false,
     title: "String Footer",
   },
   render: (args) => {
@@ -52,7 +55,10 @@ export const StringFooter: Story = {
     return (
       <div>
         <Button onClick={toggle}>Open Modal</Button>
-        <Modal {...args} onClose={() => updateArgs({ open: false })}>
+        <Modal
+          {...args}
+          onClose={() => updateArgs({ open: false })}
+        >
           <p>This is a demo modal. Click outside or press “Close” to dismiss.</p>
         </Modal>
       </div>
@@ -62,8 +68,8 @@ export const StringFooter: Story = {
 
 export const ElementFooter: Story = {
   args: {
-    open: false,
     footer: <Badge variant="primary">Example Element</Badge>,
+    open: false,
     title: "String Footer",
   },
   render: (args) => {
@@ -74,7 +80,10 @@ export const ElementFooter: Story = {
     return (
       <div>
         <Button onClick={toggle}>Open Modal</Button>
-        <Modal {...args} onClose={() => updateArgs({ open: false })}>
+        <Modal
+          {...args}
+          onClose={() => updateArgs({ open: false })}
+        >
           <p>This is a demo modal. Click outside or press “Close” to dismiss.</p>
         </Modal>
       </div>

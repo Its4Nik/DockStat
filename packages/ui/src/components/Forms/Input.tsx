@@ -12,7 +12,6 @@ export interface InputProps {
   className?: string
   error?: boolean
   success?: boolean
-  autoFocus?: boolean
   required?: boolean
 }
 
@@ -26,16 +25,15 @@ export function Input({
   onChange,
   className = "",
   error = false,
-  autoFocus = false,
   success = false,
   required = false,
 }: InputProps) {
   const baseClasses = "w-full transition-colors focus:outline-none"
 
   const sizeClasses = {
-    sm: "px-2 py-1 text-sm",
-    md: "px-3 py-2 text-base",
     lg: "px-4 py-3 text-lg",
+    md: "px-3 py-2 text-base",
+    sm: "px-2 py-1 text-sm",
   }
 
   const variantClasses = {
@@ -51,8 +49,6 @@ export function Input({
 
   return (
     <input
-      type={type}
-      required={required}
       className={[
         baseClasses,
         sizeClasses[size],
@@ -62,12 +58,12 @@ export function Input({
         error ? "border-error! focus:border-error! focus:ring-error!" : "",
         success ? "border-success! focus:border-success! focus:ring-success!" : "",
       ].join(" ")}
-      // biome-ignore lint/a11y/noAutofocus: Used in other components
-      autoFocus={autoFocus}
-      placeholder={placeholder}
-      value={value}
-      onChange={(e) => onChange?.(e.target.value)}
       disabled={disabled}
+      onChange={(e) => onChange?.(e.target.value)}
+      placeholder={placeholder}
+      required={required}
+      type={type}
+      value={value}
     />
   )
 }

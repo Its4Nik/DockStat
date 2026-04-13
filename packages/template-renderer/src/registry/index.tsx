@@ -107,27 +107,27 @@ function Container({
   }
 
   const directionClasses: Record<string, string> = {
-    row: "flex-row",
     column: "flex-col",
-    "row-reverse": "flex-row-reverse",
     "column-reverse": "flex-col-reverse",
+    row: "flex-row",
+    "row-reverse": "flex-row-reverse",
   }
 
   const alignClasses: Record<string, string> = {
-    start: "items-start",
+    baseline: "items-baseline",
     center: "items-center",
     end: "items-end",
+    start: "items-start",
     stretch: "items-stretch",
-    baseline: "items-baseline",
   }
 
   const justifyClasses: Record<string, string> = {
-    start: "justify-start",
+    around: "justify-around",
+    between: "justify-between",
     center: "justify-center",
     end: "justify-end",
-    between: "justify-between",
-    around: "justify-around",
     evenly: "justify-evenly",
+    start: "justify-start",
   }
 
   const classes = [
@@ -150,7 +150,10 @@ function Container({
   }
 
   return (
-    <div className={classes} style={style}>
+    <div
+      className={classes}
+      style={style}
+    >
       {children}
     </div>
   )
@@ -186,7 +189,10 @@ function ButtonWrapper({
   children?: ReactNode
 } & Omit<Parameters<typeof Button>[0], "children" | "onClick">) {
   return (
-    <Button {...props} onClick={onClick}>
+    <Button
+      {...props}
+      onClick={onClick}
+    >
       {text || children}
     </Button>
   )
@@ -242,8 +248,8 @@ const WIDGET_REGISTRY: { [K in WidgetType]: RegistryEntry<K> } = {
     hasChildren: false,
     transformProps: (props, ctx) => ({
       ...props,
-      text: ctx.bindings.text ?? props.text,
       onClick: props.action ? ctx.createActionHandler(props.action) : undefined,
+      text: ctx.bindings.text ?? props.text,
     }),
   },
 
@@ -254,16 +260,6 @@ const WIDGET_REGISTRY: { [K in WidgetType]: RegistryEntry<K> } = {
       ...props,
       children: ctx.children,
       onClick: props.action ? ctx.createActionHandler(props.action) : undefined,
-    }),
-  },
-
-  cardHeader: {
-    component: CardHeaderWrapper as unknown as WidgetComponent<"cardHeader">,
-    hasChildren: true,
-    transformProps: (props, ctx) => ({
-      ...props,
-      text: ctx.bindings.text ?? props.text,
-      children: ctx.children,
     }),
   },
 
@@ -285,22 +281,13 @@ const WIDGET_REGISTRY: { [K in WidgetType]: RegistryEntry<K> } = {
     }),
   },
 
-  divider: {
-    component: Divider as unknown as WidgetComponent<"divider">,
-    hasChildren: false,
+  cardHeader: {
+    component: CardHeaderWrapper as unknown as WidgetComponent<"cardHeader">,
+    hasChildren: true,
     transformProps: (props, ctx) => ({
       ...props,
-      label: ctx.bindings.label ?? props.label,
-    }),
-  },
-
-  input: {
-    component: Input as unknown as WidgetComponent<"input">,
-    hasChildren: false,
-    transformProps: (props, ctx) => ({
-      ...props,
-      value: ctx.bindings.value as string | undefined,
-      onChange: ctx.bindings.onChange as ((value: string) => void) | undefined,
+      children: ctx.children,
+      text: ctx.bindings.text ?? props.text,
     }),
   },
 
@@ -319,18 +306,26 @@ const WIDGET_REGISTRY: { [K in WidgetType]: RegistryEntry<K> } = {
     hasChildren: false,
     transformProps: (props, ctx) => ({
       ...props,
-      selectedValues: (ctx.bindings.selectedValues as string[]) ?? [],
       onChange: ctx.bindings.onChange as ((values: string[]) => void) | undefined,
+      selectedValues: (ctx.bindings.selectedValues as string[]) ?? [],
     }),
   },
 
-  toggle: {
-    component: Toggle as unknown as WidgetComponent<"toggle">,
+  container: {
+    component: Container as unknown as WidgetComponent<"container">,
+    hasChildren: true,
+    transformProps: (props, ctx) => ({
+      ...props,
+      children: ctx.children,
+    }),
+  },
+
+  divider: {
+    component: Divider as unknown as WidgetComponent<"divider">,
     hasChildren: false,
     transformProps: (props, ctx) => ({
       ...props,
-      checked: ctx.bindings.checked as boolean | undefined,
-      onChange: ctx.bindings.onChange as ((checked: boolean) => void) | undefined,
+      label: ctx.bindings.label ?? props.label,
     }),
   },
 
@@ -339,8 +334,18 @@ const WIDGET_REGISTRY: { [K in WidgetType]: RegistryEntry<K> } = {
     hasChildren: true,
     transformProps: (props, ctx) => ({
       ...props,
-      label: ctx.bindings.label ?? props.label,
       children: ctx.children,
+      label: ctx.bindings.label ?? props.label,
+    }),
+  },
+
+  input: {
+    component: Input as unknown as WidgetComponent<"input">,
+    hasChildren: false,
+    transformProps: (props, ctx) => ({
+      ...props,
+      onChange: ctx.bindings.onChange as ((value: string) => void) | undefined,
+      value: ctx.bindings.value as string | undefined,
     }),
   },
 
@@ -359,9 +364,9 @@ const WIDGET_REGISTRY: { [K in WidgetType]: RegistryEntry<K> } = {
     hasChildren: true,
     transformProps: (props, ctx) => ({
       ...props,
-      open: ctx.bindings.open as boolean | undefined,
-      onClose: ctx.bindings.onClose as (() => void) | undefined,
       children: ctx.children,
+      onClose: ctx.bindings.onClose as (() => void) | undefined,
+      open: ctx.bindings.open as boolean | undefined,
     }),
   },
 
@@ -370,8 +375,8 @@ const WIDGET_REGISTRY: { [K in WidgetType]: RegistryEntry<K> } = {
     hasChildren: false,
     transformProps: (props, ctx) => ({
       ...props,
-      value: ctx.bindings.value as number | undefined,
       onChange: ctx.bindings.onChange as ((value: number) => void) | undefined,
+      value: ctx.bindings.value as number | undefined,
     }),
   },
 
@@ -380,9 +385,9 @@ const WIDGET_REGISTRY: { [K in WidgetType]: RegistryEntry<K> } = {
     hasChildren: true,
     transformProps: (props, ctx) => ({
       ...props,
-      selectedSlide: ctx.bindings.selectedSlide as string | undefined,
-      onSlideChange: ctx.bindings.onSlideChange as ((slide: string | null) => void) | undefined,
       children: ctx.children,
+      onSlideChange: ctx.bindings.onSlideChange as ((slide: string | null) => void) | undefined,
+      selectedSlide: ctx.bindings.selectedSlide as string | undefined,
     }),
   },
 
@@ -391,15 +396,15 @@ const WIDGET_REGISTRY: { [K in WidgetType]: RegistryEntry<K> } = {
     hasChildren: false,
     transformProps: (props, ctx) => ({
       ...props,
-      data: (ctx.bindings.data as Record<string, unknown>[]) ?? [],
       columns: props.columns.map((col) => ({
+        align: col.align,
+        filterable: col.filterable,
         key: col.key,
+        sortable: col.sortable,
         title: col.title,
         width: col.width,
-        align: col.align,
-        sortable: col.sortable,
-        filterable: col.filterable,
       })),
+      data: (ctx.bindings.data as Record<string, unknown>[]) ?? [],
     }),
   },
 
@@ -412,12 +417,13 @@ const WIDGET_REGISTRY: { [K in WidgetType]: RegistryEntry<K> } = {
     }),
   },
 
-  container: {
-    component: Container as unknown as WidgetComponent<"container">,
-    hasChildren: true,
+  toggle: {
+    component: Toggle as unknown as WidgetComponent<"toggle">,
+    hasChildren: false,
     transformProps: (props, ctx) => ({
       ...props,
-      children: ctx.children,
+      checked: ctx.bindings.checked as boolean | undefined,
+      onChange: ctx.bindings.onChange as ((checked: boolean) => void) | undefined,
     }),
   },
 }

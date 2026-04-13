@@ -113,7 +113,7 @@ describe("Environment record to array conversion", () => {
   })
 
   test("envRecordToArray handles number values", () => {
-    const env = { PORT: 3000, COUNT: 5 }
+    const env = { COUNT: 5, PORT: 3000 }
     const array = envRecordToArray(env)
 
     expect(array).toContain("PORT=3000")
@@ -217,8 +217,8 @@ describe("Port specification parsing", () => {
     const port = parsePortSpec("80")
 
     expect(port).toEqual({
-      target: 80,
       protocol: "tcp",
+      target: 80,
     })
   })
 
@@ -226,9 +226,9 @@ describe("Port specification parsing", () => {
     const port = parsePortSpec("8080:80")
 
     expect(port).toEqual({
+      protocol: "tcp",
       published: 8080,
       target: 80,
-      protocol: "tcp",
     })
   })
 
@@ -236,9 +236,9 @@ describe("Port specification parsing", () => {
     const port = parsePortSpec("192.168.1.1:8080:80")
 
     expect(port).toEqual({
+      protocol: "tcp",
       published: 8080,
       target: 80,
-      protocol: "tcp",
     })
   })
 
@@ -246,9 +246,9 @@ describe("Port specification parsing", () => {
     const port = parsePortSpec("80:8080/tcp")
 
     expect(port).toEqual({
+      protocol: "tcp",
       published: 80,
       target: 8080,
-      protocol: "tcp",
     })
   })
 
@@ -256,9 +256,9 @@ describe("Port specification parsing", () => {
     const port = parsePortSpec("53:53/udp")
 
     expect(port).toEqual({
+      protocol: "udp",
       published: 53,
       target: 53,
-      protocol: "udp",
     })
   })
 
@@ -266,9 +266,9 @@ describe("Port specification parsing", () => {
     const port = parsePortSpec("36412:36412/sctp")
 
     expect(port).toEqual({
+      protocol: "sctp",
       published: 36412,
       target: 36412,
-      protocol: "sctp",
     })
   })
 
@@ -296,10 +296,10 @@ describe("Mount specification parsing", () => {
     const mount = parseMountSpec("/host/path:/container/path")
 
     expect(mount).toEqual({
-      type: "bind",
+      readOnly: false,
       source: "/host/path",
       target: "/container/path",
-      readOnly: false,
+      type: "bind",
     })
   })
 
@@ -307,10 +307,10 @@ describe("Mount specification parsing", () => {
     const mount = parseMountSpec("/host/path:/container/path:ro")
 
     expect(mount).toEqual({
-      type: "bind",
+      readOnly: true,
       source: "/host/path",
       target: "/container/path",
-      readOnly: true,
+      type: "bind",
     })
   })
 
@@ -318,10 +318,10 @@ describe("Mount specification parsing", () => {
     const mount = parseMountSpec("volume:my-volume:/container/path")
 
     expect(mount).toEqual({
-      type: "volume",
+      readOnly: false,
       source: "my-volume",
       target: "/container/path",
-      readOnly: false,
+      type: "volume",
     })
   })
 
@@ -337,10 +337,10 @@ describe("Mount specification parsing", () => {
     const mount = parseMountSpec("bind:/host/path:/container/path")
 
     expect(mount).toEqual({
-      type: "bind",
+      readOnly: false,
       source: "/host/path",
       target: "/container/path",
-      readOnly: false,
+      type: "bind",
     })
   })
 
@@ -348,10 +348,10 @@ describe("Mount specification parsing", () => {
     const mount = parseMountSpec("volume:my-volume:/container/path")
 
     expect(mount).toEqual({
-      type: "volume",
+      readOnly: false,
       source: "my-volume",
       target: "/container/path",
-      readOnly: false,
+      type: "volume",
     })
   })
 
@@ -379,10 +379,10 @@ describe("Mount specification parsing", () => {
     const mount = parseMountSpec("/host/path:/container/path:ro")
 
     expect(mount).toEqual({
-      type: "bind",
+      readOnly: true,
       source: "/host/path",
       target: "/container/path",
-      readOnly: true,
+      type: "bind",
     })
   })
 })
@@ -585,9 +585,9 @@ services:
 describe("Environment content building", () => {
   test("buildEnvContent builds from envContent", () => {
     const options: StackDeployOptions = {
-      name: "my-stack",
       compose: "services:\n  web:\n    image: nginx",
       envContent: "VAR1=value1\nVAR2=value2",
+      name: "my-stack",
     }
 
     const content = buildEnvContent(options)
@@ -598,13 +598,13 @@ describe("Environment content building", () => {
 
   test("buildEnvContent overrides envContent with env", () => {
     const options: StackDeployOptions = {
-      name: "my-stack",
       compose: "services:\n  web:\n    image: nginx",
-      envContent: "VAR1=value1\nVAR2=value2",
       env: {
         VAR1: "overridden",
         VAR3: "value3",
       },
+      envContent: "VAR1=value1\nVAR2=value2",
+      name: "my-stack",
     }
 
     const content = buildEnvContent(options)
@@ -616,12 +616,12 @@ describe("Environment content building", () => {
 
   test("buildEnvContent works with only env", () => {
     const options: StackDeployOptions = {
-      name: "my-stack",
       compose: "services:\n  web:\n    image: nginx",
       env: {
         VAR1: "value1",
         VAR2: "value2",
       },
+      name: "my-stack",
     }
 
     const content = buildEnvContent(options)
@@ -632,8 +632,8 @@ describe("Environment content building", () => {
 
   test("buildEnvContent handles empty options", () => {
     const options: StackDeployOptions = {
-      name: "my-stack",
       compose: "services:\n  web:\n    image: nginx",
+      name: "my-stack",
     }
 
     const content = buildEnvContent(options)
@@ -645,13 +645,13 @@ describe("Environment content building", () => {
 describe("Stack name resolution", () => {
   test("resolveStackName returns explicit name", () => {
     const options: StackDeployOptions = {
-      name: "explicit-stack-name",
       compose: `
 name: implicit-stack-name
 services:
   web:
     image: nginx
 `,
+      name: "explicit-stack-name",
     }
 
     const name = resolveStackName(options)

@@ -11,29 +11,29 @@ export const createThemeDeleteRoute = (themeDB: ThemeDB) => {
 
         if (Number.isNaN(id)) {
           return status(400, {
-            success: false as const,
             error: "Invalid theme ID",
+            success: false as const,
           })
         }
 
         const existing = themeDB.getTheme(undefined, id)
         if (!existing) {
           return status(404, {
-            success: false as const,
             error: `Theme with id ${id} not found`,
+            success: false as const,
           })
         }
 
         themeDB.deleteTheme(id)
 
         return status(200, {
-          success: true as const,
           message: `Theme "${existing.name}" deleted successfully`,
+          success: true as const,
         })
       } catch (error) {
         return status(500, {
-          success: false as const,
           error: error instanceof Error ? error.message : "Failed to delete theme",
+          success: false as const,
         })
       }
     },

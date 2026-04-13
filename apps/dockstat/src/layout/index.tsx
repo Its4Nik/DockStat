@@ -34,45 +34,48 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="bg-main-bg min-h-screen w-screen p-4">
-      <Toaster expand position="bottom-right" />
+      <Toaster
+        expand
+        position="bottom-right"
+      />
       <Navbar
-        setIsThemeSidebarOpen={setIsThemeSidebarOpen}
-        toastSuccess={toastSuccess}
-        onSelectTheme={onSelectTheme}
-        onColorChange={onColorChange}
         currentThemeId={currentThemeId}
-        themes={themes}
         deleteTheme={deleteTheme}
+        heading={heading}
+        isBusy={isBusy}
+        logEntries={logMessagesArr}
+        mutationFn={createPinMutationHandlers({ isBusy, pinMutation, unPinMutation })}
+        navLinks={config?.navLinks || []}
+        onColorChange={onColorChange}
+        onSelectTheme={onSelectTheme}
+        openQuickLinksModalHotkey={config?.hotkeys?.["open:quicklinks"]}
+        pluginLinks={frontendPluginRoutes || []}
+        ramUsage={config.additionalSettings?.showBackendRamUsageInNavbar ? ramUsage : undefined}
+        setIsThemeSidebarOpen={setIsThemeSidebarOpen}
         sidebarHotkeys={{
           close: config.hotkeys?.["close:sidebar"],
           open: config.hotkeys?.["open:sidebar"],
           toggle: config.hotkeys?.["toggle:sidebar"],
         }}
-        isBusy={isBusy}
-        navLinks={config?.navLinks || []}
-        pluginLinks={frontendPluginRoutes || []}
-        ramUsage={config.additionalSettings?.showBackendRamUsageInNavbar ? ramUsage : undefined}
-        logEntries={logMessagesArr}
-        heading={heading}
-        mutationFn={createPinMutationHandlers({ pinMutation, unPinMutation, isBusy })}
-        openQuickLinksModalHotkey={config?.hotkeys?.["open:quicklinks"]}
+        themes={themes}
+        toastSuccess={toastSuccess}
       />
 
       <div className="px-4">{children}</div>
 
       <ThemeSidebar
-        currentThemeValues={{
-          vars: theme?.vars || {},
-          animations: {},
-        }}
-        saveNewTheme={createNewThemeFromTheme}
-        onColorChange={onColorChange}
-        isOpen={isThemeSidebarOpen}
         allColors={currentThemeColors || []}
         currentTheme={currentThemeName || "Undefined"}
+        currentThemeValues={{
+          animations: {},
+          vars: theme?.vars || {},
+        }}
+        isOpen={isThemeSidebarOpen}
         onClose={() => {
           setIsThemeSidebarOpen(false)
         }}
+        onColorChange={onColorChange}
+        saveNewTheme={createNewThemeFromTheme}
       />
     </div>
   )

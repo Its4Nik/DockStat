@@ -23,7 +23,7 @@ class TestRunner {
   private currentSection = ""
 
   addError(section: string, name: string, error: string) {
-    this.results.push({ section, name, success: false, error })
+    this.results.push({ error, name, section, success: false })
     console.log(`❌ ${section} - ${name}: ${error}`)
   }
 
@@ -42,8 +42,8 @@ class TestRunner {
         await result
       }
       this.results.push({
-        section: this.currentSection,
         name,
+        section: this.currentSection,
         success: true,
       })
       console.log(`✅ ${name}`)
@@ -62,8 +62,8 @@ class TestRunner {
       this.addError(this.currentSection, name, "Expected error but none thrown")
     } catch (_) {
       this.results.push({
-        section: this.currentSection,
         name,
+        section: this.currentSection,
         success: true,
       })
       console.log(`✅ ${name}`)
@@ -130,45 +130,45 @@ async function runComprehensiveTests() {
 
   // Sample test data
   const customTheme: THEME.THEME_config = {
-    name: "custom-theme",
-    version: "2.0.0",
     creator: "TestCreator",
     license: "GPL-3.0",
+    name: "custom-theme",
     vars: {
       background_effect: {
         Gradient: {
+          direction: "l-t",
           from: "#ff0000",
           to: "#0000ff",
-          direction: "l-t",
         },
       },
       components: {
         Card: {
           accent: "#00ff00",
           border: false,
-          border_size: 2,
           border_color: "#ff00ff",
-          title: {
+          border_size: 2,
+          content: {
+            color: "#666666",
             font: "Helvetica",
-            color: "#000000",
-            font_size: 14,
-            font_weight: 700,
+            font_size: 10,
+            font_weight: 300,
           },
           sub_title: {
-            font: "Helvetica",
             color: "#333333",
+            font: "Helvetica",
             font_size: 12,
             font_weight: 500,
           },
-          content: {
+          title: {
+            color: "#000000",
             font: "Helvetica",
-            color: "#666666",
-            font_size: 10,
-            font_weight: 300,
+            font_size: 14,
+            font_weight: 700,
           },
         },
       },
     },
+    version: "2.0.0",
   }
 
   // DATABASE INITIALIZATION
@@ -291,8 +291,8 @@ async function runComprehensiveTests() {
 
     const updatedTheme: THEME.THEME_config = {
       ...customTheme,
-      version: "3.0.0",
       creator: "UpdatedCreator",
+      version: "3.0.0",
     }
 
     db.addOrUpdateTheme(updatedTheme)
@@ -368,10 +368,9 @@ async function runComprehensiveTests() {
 
     // Add theme with complex nested structure
     const complexTheme: THEME.THEME_config = {
-      name: "complex-theme",
-      version: "1.0.0",
       creator: "TestCreator",
       license: "MIT",
+      name: "complex-theme",
       vars: {
         background_effect: {
           Aurora: {
@@ -382,29 +381,30 @@ async function runComprehensiveTests() {
           Card: {
             accent: "#ffffff",
             border: true,
-            border_size: 3,
             border_color: "#cccccc",
-            title: {
+            border_size: 3,
+            content: {
+              color: "#999999",
               font: "Roboto",
-              color: "#333333",
-              font_size: 16,
-              font_weight: 600,
+              font_size: 12,
+              font_weight: 300,
             },
             sub_title: {
-              font: "Roboto",
               color: "#666666",
+              font: "Roboto",
               font_size: 14,
               font_weight: 400,
             },
-            content: {
+            title: {
+              color: "#333333",
               font: "Roboto",
-              color: "#999999",
-              font_size: 12,
-              font_weight: 300,
+              font_size: 16,
+              font_weight: 600,
             },
           },
         },
       },
+      version: "1.0.0",
     }
 
     db.addOrUpdateTheme(complexTheme)

@@ -10,8 +10,8 @@ export const createThemeCreationRoute = (themeDB: ThemeDB) => {
         const existing = themeDB.getTheme(body.name)
         if (existing !== null) {
           return status(409, {
-            success: false as const,
             error: `Theme with name "${body.name}" already exists`,
+            success: false as const,
           })
         }
 
@@ -20,20 +20,20 @@ export const createThemeCreationRoute = (themeDB: ThemeDB) => {
         const created = themeDB.getTheme(body.name)
         if (!created) {
           return status(500, {
-            success: false as const,
             error: "Failed to retrieve created theme",
+            success: false as const,
           })
         }
 
         return status(201, {
-          success: true as const,
-          message: `Theme "${body.name}" created successfully`,
           data: created,
+          message: `Theme "${body.name}" created successfully`,
+          success: true as const,
         })
       } catch (error) {
         return status(500, {
-          success: false as const,
           error: error instanceof Error ? error.message : "Failed to create theme",
+          success: false as const,
         })
       }
     },

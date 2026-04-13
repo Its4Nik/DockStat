@@ -1,14 +1,14 @@
+import type { Docker } from "@dockstat/docker"
 import type Logger from "@dockstat/logger"
 import type { DATABASE, DB_target_host } from "@dockstat/typings"
 import { retry } from "@dockstat/utils"
-import type Dockerode from "dockerode"
 import { proxyEvent } from "../../../../events/workerEventProxy"
 
 class HealthCheckMonitor {
   private intervalId?: ReturnType<typeof setInterval>
   private lastHealthStatus = new Map<number, boolean>()
   private logger: Logger
-  private dockerInstances: Map<number, Dockerode>
+  private dockerInstances: Map<number, Docker>
   private hosts: DATABASE.DB_target_host[]
   private options: {
     interval: number
@@ -18,7 +18,7 @@ class HealthCheckMonitor {
 
   constructor(
     baseLogger: Logger,
-    dockerInstances: Map<number, Dockerode>,
+    dockerInstances: Map<number, Docker>,
     hosts: DATABASE.DB_target_host[],
     options: {
       interval: number
@@ -59,7 +59,7 @@ class HealthCheckMonitor {
     this.hosts = hosts
   }
 
-  updateDockerInstances(instances: Map<number, Dockerode>): void {
+  public updateDockerInstances(instances: Map<number, Docker>): void {
     this.dockerInstances = instances
   }
 

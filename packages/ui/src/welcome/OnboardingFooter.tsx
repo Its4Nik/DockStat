@@ -27,11 +27,11 @@ export const OnboardingFooter = ({
     <CardFooter className="flex items-center justify-between gap-4 px-8 py-6">
       <div className="flex items-center gap-4">
         <Button
-          onClick={onPrev}
-          disabled={currentIndex === 0}
           aria-label="Previous slide"
-          variant="outline"
+          disabled={currentIndex === 0}
+          onClick={onPrev}
           size="md"
+          variant="outline"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Previous
@@ -39,22 +39,31 @@ export const OnboardingFooter = ({
       </div>
 
       <div className="flex-1 flex items-center justify-center">
-        <ProgressDots slides={slides} currentIndex={currentIndex} onDotClick={goToSlide} />
+        <ProgressDots
+          currentIndex={currentIndex}
+          onDotClick={goToSlide}
+          slides={slides}
+        />
       </div>
 
       <div className="flex items-center gap-4">
         {currentIndex < totalSlides - 1 ? (
-          <Button onClick={onNext} aria-label="Next slide" variant="primary" size="md">
+          <Button
+            aria-label="Next slide"
+            onClick={onNext}
+            size="md"
+            variant="primary"
+          >
             Next
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         ) : (
           <Button
-            onClick={onFinish}
-            className="flex items-center gap-2"
             aria-label="Finish onboarding"
-            variant="primary"
+            className="flex items-center gap-2"
+            onClick={onFinish}
             size="md"
+            variant="primary"
           >
             Get Started
             <Check className="w-4 h-4 ml-2" />

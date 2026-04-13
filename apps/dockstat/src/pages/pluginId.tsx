@@ -30,15 +30,31 @@ export default function PluginIdPage() {
   if (isLoading) return <PluginPageLoading />
 
   if (data?.error) {
-    return <PluginPageError pluginId={pluginId} routePath={routePath} error={data.error} />
+    return (
+      <PluginPageError
+        error={data.error}
+        pluginId={pluginId}
+        routePath={routePath}
+      />
+    )
   }
 
   if (!data?.route) {
-    return <PluginPageNotFound pluginId={pluginId} routePath={routePath} />
+    return (
+      <PluginPageNotFound
+        pluginId={pluginId}
+        routePath={routePath}
+      />
+    )
   }
 
   if (!parsedTemplate) {
-    return <PluginPageNoTemplate pluginName={data.route.pluginName} route={data.route.path} />
+    return (
+      <PluginPageNoTemplate
+        pluginName={data.route.pluginName}
+        route={data.route.path}
+      />
+    )
   }
 
   return (
@@ -51,18 +67,18 @@ export default function PluginIdPage() {
       )}
 
       <TemplateRenderer
-        template={parsedTemplate}
-        state={state}
+        className="plugin-page-content"
         data={externalData}
-        onStateChange={handleStateChange}
+        fragments={parsedFragments}
         onAction={handleAction}
         onNavigate={handleNavigate}
-        fragments={parsedFragments}
+        onStateChange={handleStateChange}
         pluginContext={{
           pluginId: data.route.pluginId,
           pluginName: data.route.pluginName,
         }}
-        className="plugin-page-content"
+        state={state}
+        template={parsedTemplate}
       />
     </div>
   )

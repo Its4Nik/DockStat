@@ -1,7 +1,7 @@
+import type { Docker } from "@dockstat/docker"
 import type Logger from "@dockstat/logger"
 import type DB from "@dockstat/sqlite-wrapper"
 import type { DOCKER } from "@dockstat/typings"
-import type Dockerode from "dockerode"
 import HostHandler from "../../managers/host-handler"
 import MonitoringManager from "../../managers/monitoring"
 import StreamManager, { type StreamCapableClient } from "../../managers/stream"
@@ -16,7 +16,7 @@ export class DockerClientBase {
   public name: string
   public logger: Logger
   public hostHandler: HostHandler
-  public dockerInstances: Map<number, Dockerode> = new Map()
+  public dockerInstances: Map<number, Docker> = new Map()
   public activeStreams: Map<string, NodeJS.Timeout> = new Map()
   public options: Required<DOCKER.DockerAdapterOptions>
   public disposed = false
@@ -63,6 +63,7 @@ export class DockerClientBase {
     this.options = this.initializeOptions(options)
 
     // Initialize optional managers
+    // Initialize monitoring manager if present
     if (this.options.enableMonitoring) {
       this.monitoringManager = new MonitoringManager(
         this.id,
@@ -71,6 +72,7 @@ export class DockerClientBase {
         this.hostHandler.getHosts(),
         this.options.monitoringOptions
       )
+      this.streamManager = new StreamManager(this as unknown as StreamCapableClient, this.logger)
     }
     this.streamManager = new StreamManager(this as unknown as StreamCapableClient, this.logger)
 
@@ -86,12 +88,12 @@ export class DockerClientBase {
   ): Required<DOCKER.DockerAdapterOptions> {
     const baseOptions = {
       defaultTimeout: options.defaultTimeout ?? 5000,
+      enableEventEmitter: options.enableEventEmitter ?? true,
+      enableMonitoring: options.enableMonitoring ?? true,
+      execOptions: options.execOptions ?? {},
+      monitoringOptions: options.monitoringOptions ?? {},
       retryAttempts: options.retryAttempts ?? 3,
       retryDelay: options.retryDelay ?? 1000,
-      enableMonitoring: options.enableMonitoring ?? true,
-      enableEventEmitter: options.enableEventEmitter ?? true,
-      monitoringOptions: options.monitoringOptions ?? {},
-      execOptions: options.execOptions ?? {},
     }
 
     // Validate timeout
@@ -118,9 +120,9 @@ export class DockerClientBase {
     baseOptions.monitoringOptions = {
       containerEventPollingInterval:
         options.monitoringOptions?.containerEventPollingInterval ?? 30000,
-      enableContainerMetrics: options.monitoringOptions?.enableContainerMetrics ?? false,
       containerMetricsInterval: options.monitoringOptions?.containerMetricsInterval ?? 60000,
       enableContainerEvents: options.monitoringOptions?.enableContainerEvents ?? false,
+      enableContainerMetrics: options.monitoringOptions?.enableContainerMetrics ?? false,
       enableHealthChecks: options.monitoringOptions?.enableHealthChecks ?? true,
       enableHostMetrics: options.monitoringOptions?.enableHostMetrics ?? false,
       healthCheckInterval: options.monitoringOptions?.healthCheckInterval ?? 60000,
@@ -168,12 +170,12 @@ export class DockerClientBase {
    */
   public getMetrics() {
     return {
+      activeStreams: this.activeStreams.size,
+      disposed: this.disposed,
+      hostsManaged: this.dockerInstances.size,
       id: this.id,
       name: this.name,
-      hostsManaged: this.dockerInstances.size,
-      activeStreams: this.activeStreams.size,
       uptime: Date.now() - this.startTime,
-      disposed: this.disposed,
     }
   }
 
@@ -201,7 +203,7 @@ export class DockerClientBase {
     this.logger.info(`DockerClient ${this.name} (ID: ${this.id}) disposed`)
   }
 
-  public getDockerInstance(hostId: number): Dockerode {
+  public getDockerInstance(hostId: number): Docker {
     this.checkDisposed()
 
     if (typeof hostId !== "number" || hostId < 0) {

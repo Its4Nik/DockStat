@@ -33,7 +33,12 @@ function Plugins({
     return
   }
 
-  return <RepoPluginSlide plugins={plugins} installedPlugins={installedPlugins} />
+  return (
+    <RepoPluginSlide
+      installedPlugins={installedPlugins}
+      plugins={plugins}
+    />
+  )
 }
 
 export function Repo({
@@ -50,16 +55,21 @@ export function Repo({
   const [asTable, setAsTable] = useState<boolean>(false)
 
   return (
-    <Card hoverable variant="outlined" className="w-full" size="md">
+    <Card
+      className="w-full"
+      hoverable
+      size="md"
+      variant="outlined"
+    >
       <CardHeader className="">
         <div className="justify-between flex">
           <p>
             <LinkWithIcon
-              iconPosition="left"
               external
-              key={repo.source}
-              icon={<Link />}
               href={`/api/extensions/proxy/repo/${repo.type}/${repo.source}`}
+              icon={<Link />}
+              iconPosition="left"
+              key={repo.source}
             >
               {repo.name}
             </LinkWithIcon>
@@ -87,7 +97,12 @@ export function Repo({
               )}
             </Badge>
 
-            <Divider shadow={false} orientation="vertical" className="ml-4 py-4" variant="solid" />
+            <Divider
+              className="ml-4 py-4"
+              orientation="vertical"
+              shadow={false}
+              variant="solid"
+            />
             <Badge className="mx-4">{getRepoIcon(repo.type)}</Badge>
           </div>
         </div>
@@ -95,43 +110,50 @@ export function Repo({
       <CardBody>
         <div className="w-fit flex-row space-x-2">
           <Button
-            size="sm"
             disabled={selectedType === "plugins"}
-            variant={selectedType === "plugins" ? "outline" : "primary"}
             onClick={() => setSelectedType("plugins")}
+            size="sm"
+            variant={selectedType === "plugins" ? "outline" : "primary"}
           >
             <Puzzle className="w-4 h-4 mr-1" />
             Plugins ({plugins.length})
           </Button>
           <Button
-            size="sm"
             disabled={selectedType === "stacks"}
-            variant={selectedType === "stacks" ? "outline" : "primary"}
             onClick={() => setSelectedType("stacks")}
+            size="sm"
+            variant={selectedType === "stacks" ? "outline" : "primary"}
           >
             <BookTemplate className="w-4 h-4 mr-1" />
             Stacks
           </Button>
           <Button
-            size="sm"
             disabled={selectedType === "themes"}
-            variant={selectedType === "themes" ? "outline" : "primary"}
             onClick={() => setSelectedType("themes")}
+            size="sm"
+            variant={selectedType === "themes" ? "outline" : "primary"}
           >
             <PaintBucket className="w-4 h-4 mr-1" />
             Themes
           </Button>
           <Checkbox
-            variant="icon"
+            onChange={() => setAsTable(!asTable)}
             tickedIcon={<Table />}
             unTickedIcon={<Blocks />}
-            onChange={() => setAsTable(!asTable)}
+            variant="icon"
           />
-          <Divider className="my-4" variant="dotted" />
+          <Divider
+            className="my-4"
+            variant="dotted"
+          />
         </div>
 
         {selectedType === "plugins" ? (
-          <Plugins plugins={plugins} installedPlugins={installedPlugins} pluginsAsTable={asTable} />
+          <Plugins
+            installedPlugins={installedPlugins}
+            plugins={plugins}
+            pluginsAsTable={asTable}
+          />
         ) : null}
       </CardBody>
     </Card>

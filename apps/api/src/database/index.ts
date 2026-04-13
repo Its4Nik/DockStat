@@ -13,11 +13,11 @@ export const DockStatDB: {
   repositoriesTable: QueryBuilder<RepoType>
   metricsTable: unknown
 } = {
-  _sqliteWrapper: InitialDockStatDB.getDB(),
   _dbPath: InitialDockStatDB.getDatabasePath(),
+  _sqliteWrapper: InitialDockStatDB.getDB(),
   configTable: InitialDockStatDB.getConfigTable(),
-  repositoriesTable: InitialDockStatDB.getRepositoriesTable(),
   metricsTable: InitialDockStatDB.getMetricsTable(),
+  repositoriesTable: InitialDockStatDB.getRepositoriesTable(),
 }
 
 process.on("SIGINT", () => {

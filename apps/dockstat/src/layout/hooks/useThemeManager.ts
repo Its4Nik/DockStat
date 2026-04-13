@@ -25,8 +25,8 @@ export function useThemeManager() {
   }, [adjustCurrentTheme])
 
   const currentThemeColors = Object.entries(theme?.vars || {}).map(([key, val]) => ({
-    colorName: key,
     color: val,
+    colorName: key,
   }))
 
   const currentThemeName = theme?.name || "Undefined"
@@ -64,16 +64,16 @@ export function useThemeManager() {
   }
 
   return {
-    isThemeSidebarOpen,
-    setIsThemeSidebarOpen,
     createNewThemeFromTheme,
-    theme,
     currentThemeColors,
-    currentThemeName,
     currentThemeId,
+    currentThemeName,
+    isThemeSidebarOpen,
     onColorChange,
-    themes,
     onSelectTheme,
+    setIsThemeSidebarOpen,
+    theme,
+    themes,
     toastSuccess,
   }
 }

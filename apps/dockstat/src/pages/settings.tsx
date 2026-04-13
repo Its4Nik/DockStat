@@ -19,42 +19,40 @@ export default function SettingsPage() {
   }
   const parsedColors = Object.entries(allColors).map((c) => {
     return {
-      colorName: c[0],
       color: c[1],
+      colorName: c[0],
     }
   })
 
   const [selectedSlide, setSelectedSlide] = useState("General")
 
   const slideDescription: Record<string, string> = {
+    Accounts: "Manage DockStat Accounts and permissions",
+    Certificates: "Manage Certificates used for authentication via SSH",
+    Colors: "Customize the appearance of DockStat",
+    "Database Management": "Database Management, cleanup and maintain tables",
     General: "General Settings",
     Hotkeys: "Configure your way of navigating DockStat",
-    "Database Management": "Database Management, cleanup and maintain tables",
-    Certificates: "Manage Certificates used for authentication via SSH",
     "SSL Credentials": "SSL Credentials, manage certificates used for SSL",
-    Accounts: "Manage DockStat Accounts and permissions",
-    Colors: "Customize the appearance of DockStat",
   }
 
   return (
     <div>
       <Slides
-        connected
-        header="DockStat Settings"
         buttonPosition="right"
+        connected
         description={slideDescription[selectedSlide]}
+        header="DockStat Settings"
         onSlideChange={(key) => setSelectedSlide(String(key))}
       >
         {{
-          General: <GeneralSettingsSlide />,
-          Hotkeys: <HotkeysSlide />,
-          Certificates: <div>Certificates Settings</div>,
           Accounts: <div>Accounts Settings</div>,
+          Certificates: <div>Certificates Settings</div>,
           Colors: (
             <ThemeEditor
-              multiColumn
-              currentTheme={themeName}
               allColors={parsedColors}
+              currentTheme={themeName}
+              multiColumn
               onColorChange={(colorValue, colorName) => {
                 adjustCurrentTheme({ [colorName]: colorValue })
                 toast({
@@ -64,6 +62,8 @@ export default function SettingsPage() {
               }}
             />
           ),
+          General: <GeneralSettingsSlide />,
+          Hotkeys: <HotkeysSlide />,
         }}
       </Slides>
     </div>

@@ -29,53 +29,53 @@ export interface StreamCapableClient {
 }
 
 export const STREAM_CHANNELS: Record<string, DOCKER.StreamChannel> = {
-  container_stats: {
-    name: "container_stats",
-    type: "container_stats",
-    description: "Real-time container statistics",
-    defaultInterval: 1000,
-    requiresHostId: true,
-    requiresContainerId: true,
-  },
-  host_metrics: {
-    name: "host_metrics",
-    type: "host_metrics",
-    description: "Host system metrics",
+  all_stats: {
     defaultInterval: 5000,
-    requiresHostId: true,
+    description: "Combined container stats and host metrics",
+    name: "all_stats",
     requiresContainerId: false,
+    requiresHostId: false,
+    type: "all_stats",
   },
   container_list: {
-    name: "container_list",
-    type: "container_list",
-    description: "Container list updates",
     defaultInterval: 2000,
-    requiresHostId: false,
+    description: "Container list updates",
+    name: "container_list",
     requiresContainerId: false,
+    requiresHostId: false,
+    type: "container_list",
   },
   container_logs: {
-    name: "container_logs",
-    type: "container_logs",
-    description: "Container log streams",
     defaultInterval: 500,
-    requiresHostId: true,
+    description: "Container log streams",
+    name: "container_logs",
     requiresContainerId: true,
+    requiresHostId: true,
+    type: "container_logs",
+  },
+  container_stats: {
+    defaultInterval: 1000,
+    description: "Real-time container statistics",
+    name: "container_stats",
+    requiresContainerId: true,
+    requiresHostId: true,
+    type: "container_stats",
   },
   docker_events: {
-    name: "docker_events",
-    type: "docker_events",
-    description: "Docker daemon events",
     defaultInterval: 0, // Event-driven
-    requiresHostId: false,
+    description: "Docker daemon events",
+    name: "docker_events",
     requiresContainerId: false,
+    requiresHostId: false,
+    type: "docker_events",
   },
-  all_stats: {
-    name: "all_stats",
-    type: "all_stats",
-    description: "Combined container stats and host metrics",
+  host_metrics: {
     defaultInterval: 5000,
-    requiresHostId: false,
+    description: "Host system metrics",
+    name: "host_metrics",
     requiresContainerId: false,
+    requiresHostId: true,
+    type: "host_metrics",
   },
 }
 
@@ -136,18 +136,18 @@ export default class StreamManager {
           break
         default:
           this.sendMessage(connectionId, {
-            id: message.id || "unknown",
-            type: "error",
             error: `Unknown message type: ${message.type}`,
+            id: message.id || "unknown",
             timestamp: Date.now(),
+            type: "error",
           })
       }
     } catch (error) {
       this.sendMessage(connectionId, {
-        id: "parse_error",
-        type: "error",
         error: `Failed to parse message: ${error instanceof Error ? error.message : "Unknown error"}`,
+        id: "parse_error",
         timestamp: Date.now(),
+        type: "error",
       })
     }
   }
@@ -175,15 +175,15 @@ export default class StreamManager {
     }
 
     const subscription: DOCKER.StreamSubscription = {
-      id: subscriptionId,
+      active: true,
+      callback,
       channel,
+      id: subscriptionId,
+      lastActivity: Date.now(),
       options: {
         interval: options.interval || channelDef.defaultInterval,
         ...options,
       },
-      callback,
-      active: true,
-      lastActivity: Date.now(),
     }
 
     this.subscriptions.set(subscriptionId, subscription)
@@ -261,25 +261,25 @@ export default class StreamManager {
 
       // Send back a subscription response that matches the updated typing
       this.sendMessage(connectionId, {
-        id: message.id,
-        type: "data",
         channel,
         data: {
-          subscriptionId,
           channel,
-          status: "subscribed" as const,
           options: {
             ...(options as DOCKER.StreamOptions),
           },
+          status: "subscribed" as const,
+          subscriptionId,
         },
+        id: message.id,
         timestamp: Date.now(),
+        type: "data",
       })
     } catch (error) {
       this.sendMessage(connectionId, {
-        id: message.id,
-        type: "error",
         error: error instanceof Error ? error.message : "Subscription failed",
+        id: message.id,
         timestamp: Date.now(),
+        type: "error",
       })
     }
   }
@@ -290,10 +290,10 @@ export default class StreamManager {
 
     if (!subscriptionId) {
       this.sendMessage(connectionId, {
-        id: message.id,
-        type: "error",
         error: "Subscription ID is required for unsubscribe",
+        id: message.id,
         timestamp: Date.now(),
+        type: "error",
       })
       return
     }
@@ -309,25 +309,25 @@ export default class StreamManager {
       status: "subscribed" | "unsubscribed" | "not_found"
       options: DOCKER.StreamOptions
     } = {
-      subscriptionId,
       channel: existingSub?.channel ?? subscriptionId.split(":")[1] ?? "unknown",
-      status: success ? "unsubscribed" : "not_found",
       options: existingSub?.options ?? {},
+      status: success ? "unsubscribed" : "not_found",
+      subscriptionId,
     }
 
     this.sendMessage(connectionId, {
-      id: message.id,
-      type: "data",
       data: responseData,
+      id: message.id,
       timestamp: Date.now(),
+      type: "data",
     })
   }
 
   private handlePing(connectionId: string, message: DOCKER.StreamMessage): void {
     this.sendMessage(connectionId, {
       id: message.id,
-      type: "pong",
       timestamp: Date.now(),
+      type: "pong",
     })
   }
 
@@ -381,20 +381,20 @@ export default class StreamManager {
         const statsInfo = await this.dockerClient.getContainerStats(hostId, containerId)
 
         subscription.callback({
-          id: `stats-${Date.now()}`,
-          type: "data",
           channel: "container_stats",
           data: statsInfo,
+          id: `stats-${Date.now()}`,
           timestamp: Date.now(),
+          type: "data",
         })
         subscription.lastActivity = Date.now()
       } catch (error) {
         subscription.callback({
-          id: `error-${Date.now()}`,
-          type: "error",
           channel: "container_stats",
           error: error instanceof Error ? error.message : "Failed to get container stats",
+          id: `error-${Date.now()}`,
           timestamp: Date.now(),
+          type: "error",
         })
       }
     }, interval)
@@ -418,20 +418,20 @@ export default class StreamManager {
         const metrics = hostId ? await mm.getHostMetrics(hostId) : await mm.getAllHostMetrics()
 
         subscription.callback({
-          id: `metrics-${Date.now()}`,
-          type: "data",
           channel: "host_metrics",
           data: metrics,
+          id: `metrics-${Date.now()}`,
           timestamp: Date.now(),
+          type: "data",
         })
         subscription.lastActivity = Date.now()
       } catch (error) {
         subscription.callback({
-          id: `error-${Date.now()}`,
-          type: "error",
           channel: "host_metrics",
           error: error instanceof Error ? error.message : "Failed to get host metrics",
+          id: `error-${Date.now()}`,
           timestamp: Date.now(),
+          type: "error",
         })
       }
     }, interval)
@@ -457,20 +457,20 @@ export default class StreamManager {
         }
 
         subscription.callback({
-          id: `containers-${Date.now()}`,
-          type: "data",
           channel: "container_list",
           data: containers,
+          id: `containers-${Date.now()}`,
           timestamp: Date.now(),
+          type: "data",
         })
         subscription.lastActivity = Date.now()
       } catch (error) {
         subscription.callback({
-          id: `error-${Date.now()}`,
-          type: "error",
           channel: "container_list",
           error: error instanceof Error ? error.message : "Failed to get container list",
+          id: `error-${Date.now()}`,
           timestamp: Date.now(),
+          type: "error",
         })
       }
     }, interval)
@@ -495,27 +495,27 @@ export default class StreamManager {
         // This is a placeholder - you'd need to implement actual log streaming
         const logs = await this.getContainerLogs(hostId, containerId, logLines)
         const logData: DOCKER.ContainerLogs = {
-          logs,
           containerId,
           hostId,
+          logs,
           timestamp: Date.now(),
         }
 
         subscription.callback({
-          id: `logs-${Date.now()}`,
-          type: "data",
           channel: "container_logs",
           data: logData,
+          id: `logs-${Date.now()}`,
           timestamp: Date.now(),
+          type: "data",
         })
         subscription.lastActivity = Date.now()
       } catch (error) {
         subscription.callback({
-          id: `error-${Date.now()}`,
-          type: "error",
           channel: "container_logs",
           error: error instanceof Error ? error.message : "Failed to get container logs",
+          id: `error-${Date.now()}`,
           timestamp: Date.now(),
+          type: "error",
         })
       }
     }, 1000)
@@ -545,20 +545,20 @@ export default class StreamManager {
         const allStats = await mm.getAllStats()
 
         subscription.callback({
-          id: `all-stats-${Date.now()}`,
-          type: "data",
           channel: "all_stats",
           data: allStats,
+          id: `all-stats-${Date.now()}`,
           timestamp: Date.now(),
+          type: "data",
         })
         subscription.lastActivity = Date.now()
       } catch (error) {
         subscription.callback({
-          id: `error-${Date.now()}`,
-          type: "error",
           channel: "all_stats",
           error: error instanceof Error ? error.message : "Failed to get all stats",
+          id: `error-${Date.now()}`,
           timestamp: Date.now(),
+          type: "error",
         })
       }
     }, interval)
@@ -570,8 +570,8 @@ export default class StreamManager {
     this.heartbeatInterval = setInterval(() => {
       this.broadcast({
         id: `heartbeat-${Date.now()}`,
-        type: "ping",
         timestamp: Date.now(),
+        type: "ping",
       })
     }, this.heartbeatIntervalMs)
   }
@@ -608,8 +608,8 @@ export default class StreamManager {
   ): Promise<string[]> {
     try {
       const logsString = await this.dockerClient.getContainerLogs(hostId, containerId, {
-        stdout: true,
         stderr: true,
+        stdout: true,
         tail: lines,
         timestamps: true,
       })

@@ -48,13 +48,13 @@ export const bundleCommand = new Command("bundle")
 
       try {
         const build = await Bun.build({
+          banner: "/* Bundled by DockStat */",
           entrypoints: [pluginPath],
-          outdir,
+          env: `${name.toUpperCase()}_*`,
           minify: options.minify,
+          outdir,
           sourcemap: options.sourcemap ? "external" : "none",
           splitting: false,
-          env: `${name.toUpperCase()}_*`,
-          banner: "/* Bundled by DockStat */",
           target: "bun",
         })
 
@@ -80,11 +80,11 @@ export const bundleCommand = new Command("bundle")
         }
 
         log("✅", name, `${outdir}/index.js`)
-        results.push({ name, success: true, meta })
+        results.push({ meta, name, success: true })
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         console.error(`❌ ${name}: ${message.split("\n")[0]}`)
-        results.push({ name, success: false, error: message })
+        results.push({ error: message, name, success: false })
       }
     }
 

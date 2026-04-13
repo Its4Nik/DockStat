@@ -1,12 +1,21 @@
 import type { Variants } from "framer-motion"
 
 const backdropVariants: Variants = {
+  exit: { opacity: 0 },
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
-  exit: { opacity: 0 },
 } as const
 
 const modalVariants: Variants = {
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    transition: {
+      duration: 0.15,
+      ease: "easeOut" as const,
+    },
+    y: 10,
+  },
   hidden: {
     opacity: 0,
     scale: 0.95,
@@ -15,25 +24,20 @@ const modalVariants: Variants = {
   visible: {
     opacity: 1,
     scale: 1,
-    y: 0,
     transition: {
-      type: "spring" as const,
-      stiffness: 300,
       damping: 25,
+      stiffness: 300,
+      type: "spring" as const,
     },
-  },
-  exit: {
-    opacity: 0,
-    scale: 0.95,
-    y: 10,
-    transition: {
-      duration: 0.15,
-      ease: "easeOut" as const,
-    },
+    y: 0,
   },
 }
 
 const glassModalVariants: Variants = {
+  exit: {
+    ...modalVariants.exit,
+    backdropFilter: "blur(16px)",
+  },
   hidden: {
     ...modalVariants.hidden,
     backdropFilter: "blur(16px)",
@@ -42,15 +46,11 @@ const glassModalVariants: Variants = {
     ...modalVariants.visible,
     backdropFilter: "blur(16px)",
     transition: {
-      type: "spring" as const,
-      stiffness: 300,
-      damping: 25,
       backdropFilter: { duration: 0.2 },
+      damping: 25,
+      stiffness: 300,
+      type: "spring" as const,
     },
-  },
-  exit: {
-    ...modalVariants.exit,
-    backdropFilter: "blur(16px)",
   },
 }
 

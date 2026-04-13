@@ -14,8 +14,8 @@ export function useTable<T extends Record<string, unknown>>({
 }: UseTableOptions<T>) {
   const [searchValue, setSearchValue] = useState("")
   const [sortConfig, setSortConfig] = useState<SortConfig<T>>({
-    key: null,
     direction: "asc",
+    key: null,
   })
   const [filterColumn, setFilterColumn] = useState<keyof T | null>(null)
   const [filterValue, setFilterValue] = useState("")
@@ -65,8 +65,8 @@ export function useTable<T extends Record<string, unknown>>({
 
   const handleSort = useCallback((key: keyof T) => {
     setSortConfig((prev) => ({
-      key,
       direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+      key,
     }))
   }, [])
 
@@ -76,15 +76,15 @@ export function useTable<T extends Record<string, unknown>>({
   }, [])
 
   return {
+    clearFilter,
+    filterColumn,
+    filterValue,
+    handleSort,
     processedData,
     searchValue,
+    setFilterColumn,
+    setFilterValue,
     setSearchValue,
     sortConfig,
-    handleSort,
-    filterColumn,
-    setFilterColumn,
-    filterValue,
-    setFilterValue,
-    clearFilter,
   }
 }

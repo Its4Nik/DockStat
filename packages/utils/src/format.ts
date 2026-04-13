@@ -99,9 +99,9 @@ export function formatDate(
 
     case "log": {
       const base = new Intl.DateTimeFormat("de-DE", {
+        hour: "2-digit",
         hour12: false,
         minute: "2-digit",
-        hour: "2-digit",
       }).format(date)
 
       return `${base}.${new Intl.DateTimeFormat("de-DE", { second: "2-digit" }).format(date)}`
@@ -109,26 +109,26 @@ export function formatDate(
 
     case "long":
       return new Intl.DateTimeFormat("de-DE", {
-        month: "long",
         day: "numeric",
+        month: "long",
         year: "numeric",
       }).format(date)
 
     case "time":
       return new Intl.DateTimeFormat("de-DE", {
         hour: "numeric",
-        minute: "2-digit",
         hour12: true,
+        minute: "2-digit",
       }).format(date)
 
     case "datetime":
       return new Intl.DateTimeFormat("de-DE", {
-        month: "short",
         day: "numeric",
-        year: "numeric",
         hour: "numeric",
-        minute: "2-digit",
         hour12: true,
+        minute: "2-digit",
+        month: "short",
+        year: "numeric",
       }).format(date)
 
     case "iso":
@@ -136,8 +136,8 @@ export function formatDate(
 
     default:
       return new Intl.DateTimeFormat("en-US", {
-        month: "short",
         day: "numeric",
+        month: "short",
         year: "numeric",
       }).format(date)
   }

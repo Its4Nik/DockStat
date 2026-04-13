@@ -59,9 +59,9 @@ export class ConfigsModule {
 
     try {
       await this.docker.createConfig({
-        Name: options.name,
         Data: data.toString("base64"),
         Labels: options.labels,
+        Name: options.name,
       } as unknown)
 
       const configs = await this.list({ name: options.name })
@@ -98,14 +98,14 @@ export class ConfigsModule {
   private mapConfigInfo(config: Record<string, unknown>): ConfigInfo {
     const spec = config.Spec as Record<string, unknown> | undefined
     return {
-      id: (config.ID as string) ?? "",
-      version: { index: ((config.Version as Record<string, unknown>)?.Index as number) ?? 0 },
       createdAt: (config.CreatedAt as string) ?? "",
-      updatedAt: (config.UpdatedAt as string) ?? "",
+      id: (config.ID as string) ?? "",
       spec: {
-        name: (spec?.Name as string) ?? "",
         labels: spec?.Labels as Record<string, string> | undefined,
+        name: (spec?.Name as string) ?? "",
       },
+      updatedAt: (config.UpdatedAt as string) ?? "",
+      version: { index: ((config.Version as Record<string, unknown>)?.Index as number) ?? 0 },
     }
   }
 }

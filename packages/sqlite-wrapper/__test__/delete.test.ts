@@ -54,20 +54,20 @@ describe("DeleteQueryBuilder Tests", () => {
       }>(
         "delete_basic",
         {
+          active: column.boolean({ default: true }),
+          email: column.text({ notNull: false }),
           id: column.id(),
           name: column.text({ notNull: true }),
-          email: column.text({ notNull: false }),
-          active: column.boolean({ default: true }),
         },
         { ifNotExists: true }
       )
 
       // Insert test data
       table.insertBatch([
-        { name: "Alice", email: "alice@example.com", active: true },
-        { name: "Bob", email: "bob@example.com", active: false },
-        { name: "Charlie", email: "charlie@example.com", active: true },
-        { name: "David", email: "david@example.com", active: false },
+        { active: true, email: "alice@example.com", name: "Alice" },
+        { active: false, email: "bob@example.com", name: "Bob" },
+        { active: true, email: "charlie@example.com", name: "Charlie" },
+        { active: false, email: "david@example.com", name: "David" },
       ])
     })
 
@@ -137,18 +137,18 @@ describe("DeleteQueryBuilder Tests", () => {
       }>(
         "delete_regex",
         {
+          email: column.text({ notNull: true }),
           id: column.id(),
           name: column.text({ notNull: true }),
-          email: column.text({ notNull: true }),
         },
         { ifNotExists: true }
       )
 
       table.insertBatch([
-        { name: "Alice Smith", email: "alice@gmail.com" },
-        { name: "Bob Johnson", email: "bob@yahoo.com" },
-        { name: "Charlie Smith", email: "charlie@gmail.com" },
-        { name: "David Brown", email: "david@hotmail.com" },
+        { email: "alice@gmail.com", name: "Alice Smith" },
+        { email: "bob@yahoo.com", name: "Bob Johnson" },
+        { email: "charlie@gmail.com", name: "Charlie Smith" },
+        { email: "david@hotmail.com", name: "David Brown" },
       ])
     })
 
@@ -190,7 +190,7 @@ describe("DeleteQueryBuilder Tests", () => {
     })
 
     test("Delete with combined WHERE and regex", () => {
-      table.insert({ name: "Eve Smith", email: "eve@gmail.com" })
+      table.insert({ email: "eve@gmail.com", name: "Eve Smith" })
 
       // Only delete gmail users with Smith in name
       const result = table
@@ -286,17 +286,17 @@ describe("DeleteQueryBuilder Tests", () => {
       }>(
         "soft_delete",
         {
+          deleted_at: column.integer({ notNull: false }),
           id: column.id(),
           name: column.text({ notNull: true }),
-          deleted_at: column.integer({ notNull: false }),
         },
         { ifNotExists: true }
       )
 
       table.insertBatch([
-        { name: "Active1", deleted_at: null },
-        { name: "Active2", deleted_at: null },
-        { name: "Active3", deleted_at: null },
+        { deleted_at: null, name: "Active1" },
+        { deleted_at: null, name: "Active2" },
+        { deleted_at: null, name: "Active3" },
       ])
     })
 
@@ -360,7 +360,7 @@ describe("DeleteQueryBuilder Tests", () => {
     })
 
     test("Soft delete with regex conditions", () => {
-      table.insert({ name: "RegexTest", deleted_at: null })
+      table.insert({ deleted_at: null, name: "RegexTest" })
 
       const result = table.whereOp("id", ">", 0).whereRgx({ name: /Regex/ }).softDelete()
 
@@ -391,18 +391,18 @@ describe("DeleteQueryBuilder Tests", () => {
       }>(
         "restore_test",
         {
+          deleted_at: column.integer({ notNull: false }),
           id: column.id(),
           name: column.text({ notNull: true }),
-          deleted_at: column.integer({ notNull: false }),
         },
         { ifNotExists: true }
       )
 
       const now = Math.floor(Date.now() / 1000)
       table.insertBatch([
-        { name: "Deleted1", deleted_at: now },
-        { name: "Deleted2", deleted_at: now },
-        { name: "Active1", deleted_at: null },
+        { deleted_at: now, name: "Deleted1" },
+        { deleted_at: now, name: "Deleted2" },
+        { deleted_at: null, name: "Active1" },
       ])
     })
 
@@ -498,19 +498,19 @@ describe("DeleteQueryBuilder Tests", () => {
       }>(
         "delete_batch",
         {
+          category: column.text({ notNull: false }),
           id: column.id(),
           name: column.text({ notNull: true }),
-          category: column.text({ notNull: false }),
         },
         { ifNotExists: true }
       )
 
       table.insertBatch([
-        { name: "Item1", category: "A" },
-        { name: "Item2", category: "B" },
-        { name: "Item3", category: "A" },
-        { name: "Item4", category: "C" },
-        { name: "Item5", category: "B" },
+        { category: "A", name: "Item1" },
+        { category: "B", name: "Item2" },
+        { category: "A", name: "Item3" },
+        { category: "C", name: "Item4" },
+        { category: "B", name: "Item5" },
       ])
     })
 
@@ -635,19 +635,19 @@ describe("DeleteQueryBuilder Tests", () => {
       }>(
         "delete_older",
         {
+          created_at: column.integer({ notNull: true }),
           id: column.id(),
           name: column.text({ notNull: true }),
-          created_at: column.integer({ notNull: true }),
         },
         { ifNotExists: true }
       )
 
       const now = Math.floor(Date.now() / 1000)
       table.insertBatch([
-        { name: "Old1", created_at: now - 86400 * 10 }, // 10 days ago
-        { name: "Old2", created_at: now - 86400 * 5 }, // 5 days ago
-        { name: "Recent1", created_at: now - 86400 }, // 1 day ago
-        { name: "Recent2", created_at: now }, // now
+        { created_at: now - 86400 * 10, name: "Old1" }, // 10 days ago
+        { created_at: now - 86400 * 5, name: "Old2" }, // 5 days ago
+        { created_at: now - 86400, name: "Recent1" }, // 1 day ago
+        { created_at: now, name: "Recent2" }, // now
       ])
     })
 
@@ -702,8 +702,8 @@ describe("DeleteQueryBuilder Tests", () => {
       }>(
         "delete_dups",
         {
-          id: column.id(),
           email: column.text({ notNull: true }),
+          id: column.id(),
           name: column.text({ notNull: true }),
         },
         { ifNotExists: true }
@@ -747,8 +747,8 @@ describe("DeleteQueryBuilder Tests", () => {
       }>(
         "unique_items",
         {
-          id: column.id(),
           code: column.text({ notNull: true, unique: true }),
+          id: column.id(),
         },
         { ifNotExists: true }
       )

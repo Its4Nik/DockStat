@@ -14,10 +14,10 @@ export const errorHandler = new Elysia().onError(({ code, error, set, request })
       set.status = 500
 
       return {
-        success: false,
         error: "Response validation failed",
         message: validationError.message,
         path,
+        success: false,
         timestamp,
         ...(process.env.NODE_ENV === "development" && {
           detail: validationError.all,
@@ -31,22 +31,22 @@ export const errorHandler = new Elysia().onError(({ code, error, set, request })
     // In production, hide validation details for security
     if (process.env.NODE_ENV === "production") {
       return {
-        success: false,
         error: "Validation failed",
         message: validationError.message,
         path,
+        success: false,
         timestamp,
       }
     }
 
     // In development, show details
     return {
-      success: false,
+      detail: validationError.all,
       error: "Validation failed",
       message: validationError.message,
       path,
+      success: false,
       timestamp,
-      detail: validationError.all,
     }
   }
 
@@ -54,10 +54,10 @@ export const errorHandler = new Elysia().onError(({ code, error, set, request })
   if (code === "PARSE") {
     set.status = 400
     return {
-      success: false,
       error: "Parse error",
       message: "Invalid request format",
       path,
+      success: false,
       timestamp,
     }
   }
@@ -66,10 +66,10 @@ export const errorHandler = new Elysia().onError(({ code, error, set, request })
   if (code === "NOT_FOUND") {
     set.status = 404
     return {
-      success: false,
       error: "Not found",
       message: `Cannot ${request.method} ${path}`,
       path,
+      success: false,
       timestamp,
     }
   }
@@ -79,10 +79,10 @@ export const errorHandler = new Elysia().onError(({ code, error, set, request })
     const errorMessage = extractErrorMessage(error, "An unexpected error occurred")
     set.status = 500
     return {
-      success: false,
       error: "Internal server error",
       message: errorMessage,
       path,
+      success: false,
       timestamp,
     }
   }
@@ -94,10 +94,10 @@ export const errorHandler = new Elysia().onError(({ code, error, set, request })
   console.error("Unhandled error:", { code, error, path, timestamp })
 
   return {
-    success: false,
     error: errorMessage,
     message: "An unexpected error occurred",
     path,
+    success: false,
     timestamp,
   }
 })

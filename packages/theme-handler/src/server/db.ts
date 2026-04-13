@@ -21,10 +21,10 @@ export class ThemeDB {
     this.table = DB.createTable<themeType>(
       "themes",
       {
-        id: column.id(),
         animations: column.json(),
-        variables: column.json(),
+        id: column.id(),
         name: column.text({ unique: true }),
+        variables: column.json(),
       },
       { ifNotExists: true }
     )
@@ -37,41 +37,41 @@ export class ThemeDB {
 
     !names.includes("DockStat-Dark") &&
       this.table.insert({
+        animations: DarkThemeAnimations,
         id: -1,
         name: "DockStat-Dark",
         variables: DarkTheme,
-        animations: DarkThemeAnimations,
       })
 
     !names.includes("DockStat-OLED") &&
       this.table.insert({
+        animations: DarkThemeAnimations,
         id: -2,
         name: "DockStat-OLED",
         variables: OledTheme,
-        animations: DarkThemeAnimations,
       })
 
     !names.includes("DockStat-Light") &&
       this.table.insert({
+        animations: DarkThemeAnimations,
         id: -3,
         name: "DockStat-Light",
         variables: LightTheme,
-        animations: DarkThemeAnimations,
       })
 
     !names.includes("DockStat-UltraDark") &&
       this.table.insert({
+        animations: DarkThemeAnimations,
         id: -4,
         name: "DockStat-UltraDark",
         variables: UltraDarkTheme,
-        animations: DarkThemeAnimations,
       })
   }
 
   addTheme(name: string, animations: themeType["animations"], variables: themeType["variables"]) {
     this.table.insert({
-      name,
       animations,
+      name,
       variables,
     })
     this.logger.info(`Added theme: ${name}`)

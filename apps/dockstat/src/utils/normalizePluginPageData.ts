@@ -6,13 +6,13 @@ import {
 import type { PluginPageData } from "@/components/plugins/id/types"
 
 const emptyPluginPageData: PluginPageData = {
+  actions: [],
+  error: undefined,
+  fragments: [],
+  initialData: { data: {}, loaderResults: [], state: {} },
+  loaders: [],
   route: null,
   template: null,
-  fragments: [],
-  loaders: [],
-  actions: [],
-  initialData: { loaderResults: [], state: {}, data: {} },
-  error: undefined,
 }
 
 export function normalizePluginPageData(

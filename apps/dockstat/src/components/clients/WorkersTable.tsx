@@ -12,107 +12,122 @@ export function WorkersTable({ workers }: WorkersTableProps) {
   const columns: Column<WorkerMetrics>[] = [
     {
       key: "workerId",
-      title: "Worker ID",
-      width: 100,
-      sortable: true,
       render: (value) => (
-        <Badge variant="primary" size="sm">
+        <Badge
+          size="sm"
+          variant="primary"
+        >
           {value as number}
         </Badge>
       ),
-    },
-    {
-      key: "clientName",
-      title: "Client Name",
       sortable: true,
-      filterable: true,
-      render: (value) => <span className="font-semibold">{value}</span>,
-    },
-    {
-      key: "initialized",
-      title: "Status",
+      title: "Worker ID",
       width: 100,
+    },
+    {
+      filterable: true,
+      key: "clientName",
+      render: (value) => <span className="font-semibold">{value}</span>,
       sortable: true,
+      title: "Client Name",
+    },
+    {
       align: "center",
+      key: "initialized",
       render: (value) => {
         const isInitialized = value as boolean
         return (
           <div className="flex items-center justify-center gap-2">
             {isInitialized ? (
               <>
-                <CheckCircle size={16} className="text-green-500" />
+                <CheckCircle
+                  className="text-green-500"
+                  size={16}
+                />
                 <span className="text-green-500 text-sm font-medium">Ready</span>
               </>
             ) : (
               <>
-                <XCircle size={16} className="text-red-500" />
+                <XCircle
+                  className="text-red-500"
+                  size={16}
+                />
                 <span className="text-red-500 text-sm font-medium">Not Ready</span>
               </>
             )}
           </div>
         )
       },
+      sortable: true,
+      title: "Status",
+      width: 100,
     },
     {
-      key: "hostsManaged",
-      title: "Hosts",
-      width: 100,
-      sortable: true,
       align: "center",
+      key: "hostsManaged",
       render: (value) => (
-        <Badge variant="secondary" size="sm">
+        <Badge
+          size="sm"
+          variant="secondary"
+        >
           {value}
         </Badge>
       ),
+      sortable: true,
+      title: "Hosts",
+      width: 100,
     },
     {
-      key: "activeStreams",
-      title: "Active Streams",
-      width: 120,
-      sortable: true,
       align: "center",
+      key: "activeStreams",
       render: (value) => {
         const streams = value as number
         return (
-          <Badge variant={streams > 0 ? "success" : "secondary"} size="sm">
+          <Badge
+            size="sm"
+            variant={streams > 0 ? "success" : "secondary"}
+          >
             {streams}
           </Badge>
         )
       },
+      sortable: true,
+      title: "Active Streams",
+      width: 120,
     },
     {
-      key: "isMonitoring",
-      title: "Monitoring",
-      width: 120,
-      sortable: true,
       align: "center",
+      key: "isMonitoring",
       render: (value) => {
         const isMonitoring = value as boolean
         return isMonitoring ? (
           <div className="flex items-center justify-center gap-2">
-            <Activity size={14} className="text-green-500" />
+            <Activity
+              className="text-green-500"
+              size={14}
+            />
             <span className="text-green-500 text-sm font-medium">Active</span>
           </div>
         ) : (
           <span className="text-muted-text text-sm">Inactive</span>
         )
       },
+      sortable: true,
+      title: "Monitoring",
+      width: 120,
     },
     {
       key: "uptime",
-      title: "Uptime",
-      width: 120,
-      sortable: true,
       render: (value) => (
         <span className="text-sm font-medium">{formatDuration(value as number)}</span>
       ),
+      sortable: true,
+      title: "Uptime",
+      width: 120,
     },
     {
-      key: "memoryUsage",
-      title: "Memory Usage",
-      width: 120,
-      sortable: true,
       align: "right",
+      key: "memoryUsage",
       render: (value) => {
         const memory = value as WorkerMetrics["memoryUsage"]
         if (!memory) return <span className="text-muted-text text-sm">N/A</span>
@@ -125,20 +140,23 @@ export function WorkersTable({ workers }: WorkersTableProps) {
           </div>
         )
       },
+      sortable: true,
+      title: "Memory Usage",
+      width: 120,
     },
   ]
 
   return (
     <div className="w-full">
       <Table
-        data={workers}
         columns={columns}
+        data={workers}
+        hoverable
+        rowKey="workerId"
         searchable
         searchPlaceholder="Search workers..."
-        striped
-        hoverable
         size="md"
-        rowKey="workerId"
+        striped
       />
     </div>
   )

@@ -12,14 +12,14 @@ export const createThemeQueryRoutes = (themeDB: ThemeDB) => {
         try {
           const themes = themeDB.getAllThemes()
           return status(200, {
-            success: true as const,
-            message: `Found ${themes.length} theme(s)`,
             data: themes,
+            message: `Found ${themes.length} theme(s)`,
+            success: true as const,
           })
         } catch (error) {
           return status(500, {
-            success: false as const,
             error: error instanceof Error ? error.message : "Failed to fetch themes",
+            success: false as const,
           })
         }
       },
@@ -39,20 +39,20 @@ export const createThemeQueryRoutes = (themeDB: ThemeDB) => {
 
           if (!theme) {
             return status(404, {
-              success: false as const,
               error: `Theme with name "${params.name}" not found`,
+              success: false as const,
             })
           }
 
           return status(200, {
-            success: true as const,
-            message: `Found theme "${params.name}"`,
             data: theme,
+            message: `Found theme "${params.name}"`,
+            success: true as const,
           })
         } catch (error) {
           return status(500, {
-            success: false as const,
             error: error instanceof Error ? error.message : "Failed to fetch theme",
+            success: false as const,
           })
         }
       },
@@ -76,8 +76,8 @@ export const createThemeQueryRoutes = (themeDB: ThemeDB) => {
 
           if (Number.isNaN(id)) {
             return status(400, {
-              success: false as const,
               error: "Invalid theme ID",
+              success: false as const,
             })
           }
 
@@ -85,20 +85,20 @@ export const createThemeQueryRoutes = (themeDB: ThemeDB) => {
 
           if (!theme) {
             return status(404, {
-              success: false as const,
               error: `Theme with id ${id} not found`,
+              success: false as const,
             })
           }
 
           return status(200, {
-            success: true as const,
-            message: `Found theme with id ${id}`,
             data: theme,
+            message: `Found theme with id ${id}`,
+            success: true as const,
           })
         } catch (error) {
           return status(500, {
-            success: false as const,
             error: error instanceof Error ? error.message : "Failed to fetch theme",
+            success: false as const,
           })
         }
       },

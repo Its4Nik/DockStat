@@ -93,9 +93,9 @@ export function parseTemplate(content: string, format?: TemplateFormat): ParseRe
 
   if (parseError || data === undefined) {
     return {
-      success: false,
       parseError: parseError ?? "Failed to parse content",
-      validation: { valid: false, errors: [] },
+      success: false,
+      validation: { errors: [], valid: false },
     }
   }
 
@@ -110,8 +110,8 @@ export function parseTemplate(content: string, format?: TemplateFormat): ParseRe
   }
 
   return {
-    success: true,
     data: data as PageTemplate,
+    success: true,
     validation,
   }
 }
@@ -132,9 +132,9 @@ export function parseFragment(
 
   if (parseError || data === undefined) {
     return {
-      success: false,
       parseError: parseError ?? "Failed to parse content",
-      validation: { valid: false, errors: [] },
+      success: false,
+      validation: { errors: [], valid: false },
     }
   }
 
@@ -149,8 +149,8 @@ export function parseFragment(
   }
 
   return {
-    success: true,
     data: data as TemplateFragment,
+    success: true,
     validation,
   }
 }
@@ -177,9 +177,9 @@ export async function parseTemplateFile(path: string): Promise<ParseResult<PageT
     return parseTemplate(content, format)
   } catch (error) {
     return {
-      success: false,
       parseError: error instanceof Error ? error.message : "Failed to read file",
-      validation: { valid: false, errors: [] },
+      success: false,
+      validation: { errors: [], valid: false },
     }
   }
 }
@@ -206,9 +206,9 @@ export async function parseFragmentFile(path: string): Promise<ParseResult<Templ
     return parseFragment(content, format)
   } catch (error) {
     return {
-      success: false,
       parseError: error instanceof Error ? error.message : "Failed to read file",
-      validation: { valid: false, errors: [] },
+      success: false,
+      validation: { errors: [], valid: false },
     }
   }
 }

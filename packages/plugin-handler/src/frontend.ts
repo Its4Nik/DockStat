@@ -77,9 +77,9 @@ export class PluginFrontendHandler {
         const fullPath = this.buildFullPath(pluginId, route.path)
         routes.push({
           ...route,
+          fullPath,
           pluginId,
           pluginName: plugin.name,
-          fullPath,
         })
       }
     }
@@ -101,11 +101,11 @@ export class PluginFrontendHandler {
       }
 
       result.push({
+        globalState: frontendConfig.globalState,
         pluginId,
         pluginName: plugin.name,
         routes: frontendConfig.routes,
         sharedFragments: frontendConfig.sharedFragments,
-        globalState: frontendConfig.globalState,
       })
     }
 
@@ -163,9 +163,9 @@ export class PluginFrontendHandler {
 
     return {
       ...route,
+      fullPath: this.buildFullPath(pluginId, route.path),
       pluginId,
       pluginName: plugin.name,
-      fullPath: this.buildFullPath(pluginId, route.path),
     }
   }
 
@@ -219,12 +219,12 @@ export class PluginFrontendHandler {
       for (const route of frontendConfig.routes) {
         if (route.meta?.showInNav !== false) {
           navItems.push({
-            pluginId,
-            pluginName: plugin.name,
-            path: this.buildFullPath(pluginId, route.path),
-            title: route.meta?.title ?? plugin.name,
             icon: route.meta?.icon,
             order: route.meta?.navOrder ?? 999,
+            path: this.buildFullPath(pluginId, route.path),
+            pluginId,
+            pluginName: plugin.name,
+            title: route.meta?.title ?? plugin.name,
           })
         }
       }
@@ -279,9 +279,9 @@ export class PluginFrontendHandler {
     }
 
     return {
-      totalRoutes,
       pluginsWithFrontend,
       routesByPlugin,
+      totalRoutes,
     }
   }
 }

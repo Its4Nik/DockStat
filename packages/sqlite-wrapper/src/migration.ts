@@ -44,10 +44,10 @@ export function getTableIndexes(db: Database, tableName: string): IndexInfo[] {
 
     return {
       name: idx.name,
-      sql: sqlResult?.sql || null,
-      unique: idx.unique === 1,
       origin: idx.origin,
       partial: idx.partial,
+      sql: sqlResult?.sql || null,
+      unique: idx.unique === 1,
     }
   })
 }
@@ -204,8 +204,8 @@ export function generateColumnMapping(
   const commonColumns = newColumnNames.filter((name) => currentColumnNames.has(name))
 
   return {
-    selectColumns: commonColumns,
     insertColumns: commonColumns,
+    selectColumns: commonColumns,
   }
 }
 

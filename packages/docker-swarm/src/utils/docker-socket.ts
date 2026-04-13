@@ -58,13 +58,13 @@ export async function isSocketAvailable(
 ): Promise<boolean> {
   try {
     const socket = await Bun.connect({
-      unix: socketPath,
       socket: {
+        close() {},
         data() {},
         error() {},
         open() {},
-        close() {},
       },
+      unix: socketPath,
     })
     socket.end()
     return true
@@ -96,10 +96,10 @@ export function parseDockerVersion(version: string): {
     return null
   }
   return {
+    build: match[4],
     major: parseInt(match[1], 10),
     minor: parseInt(match[2], 10),
     patch: parseInt(match[3], 10),
-    build: match[4],
   }
 }
 

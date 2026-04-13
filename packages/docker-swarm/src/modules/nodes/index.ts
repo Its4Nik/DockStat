@@ -83,10 +83,10 @@ export class NodesModule {
 
       const spec = {
         ...currentSpec,
-        Name: options.name ?? currentSpec?.Name,
-        Labels: options.labels ?? currentSpec?.Labels,
-        Role: options.role ?? currentSpec?.Role,
         Availability: options.availability ?? currentSpec?.Availability,
+        Labels: options.labels ?? currentSpec?.Labels,
+        Name: options.name ?? currentSpec?.Name,
+        Role: options.role ?? currentSpec?.Role,
       }
 
       await (
@@ -169,39 +169,9 @@ export class NodesModule {
     const version = node.Version as Record<string, unknown> | undefined
 
     return {
-      id: (node.ID as string) ?? "",
-      version: {
-        index: (version?.Index as number) ?? 0,
-      },
       createdAt: (node.CreatedAt as string) ?? "",
-      updatedAt: (node.UpdatedAt as string) ?? "",
-      spec: {
-        name: spec?.Name as string | undefined,
-        labels: spec?.Labels as Record<string, string> | undefined,
-        role: spec?.Role as "worker" | "manager" | undefined,
-        availability: spec?.Availability as "active" | "pause" | "drain" | undefined,
-      },
       description: description
         ? {
-            hostname: description.Hostname as string | undefined,
-            platform: description.Platform
-              ? {
-                  architecture: (description.Platform as Record<string, unknown>).Architecture as
-                    | string
-                    | undefined,
-                  os: (description.Platform as Record<string, unknown>).OS as string | undefined,
-                }
-              : undefined,
-            resources: description.Resources
-              ? {
-                  nanoCPUs: (description.Resources as Record<string, unknown>).NanoCPUs as
-                    | number
-                    | undefined,
-                  memoryBytes: (description.Resources as Record<string, unknown>).MemoryBytes as
-                    | number
-                    | undefined,
-                }
-              : undefined,
             engine: description.Engine
               ? {
                   engineVersion: (description.Engine as Record<string, unknown>).EngineVersion as
@@ -216,30 +186,60 @@ export class NodesModule {
                           Record<string, unknown>
                         >
                       ).map((p) => ({
-                        type: (p.Type as string) ?? "",
                         name: (p.Name as string) ?? "",
+                        type: (p.Type as string) ?? "",
                       }))
                     : undefined,
                 }
               : undefined,
+            hostname: description.Hostname as string | undefined,
+            platform: description.Platform
+              ? {
+                  architecture: (description.Platform as Record<string, unknown>).Architecture as
+                    | string
+                    | undefined,
+                  os: (description.Platform as Record<string, unknown>).OS as string | undefined,
+                }
+              : undefined,
+            resources: description.Resources
+              ? {
+                  memoryBytes: (description.Resources as Record<string, unknown>).MemoryBytes as
+                    | number
+                    | undefined,
+                  nanoCPUs: (description.Resources as Record<string, unknown>).NanoCPUs as
+                    | number
+                    | undefined,
+                }
+              : undefined,
           }
         : undefined,
-      status: {
-        state: (status?.State as "unknown" | "down" | "ready" | "disconnected") ?? "unknown",
-        message: status?.Message as string | undefined,
-        addr: status?.Addr as string | undefined,
-      },
+      id: (node.ID as string) ?? "",
       managerStatus: managerStatus
         ? {
+            addr: managerStatus.Addr as string | undefined,
             leader: managerStatus.Leader as boolean | undefined,
             reachability: managerStatus.Reachability as
               | "unknown"
               | "unreachable"
               | "reachable"
               | undefined,
-            addr: managerStatus.Addr as string | undefined,
           }
         : undefined,
+      spec: {
+        availability: spec?.Availability as "active" | "pause" | "drain" | undefined,
+        labels: spec?.Labels as Record<string, string> | undefined,
+        name: spec?.Name as string | undefined,
+        role: spec?.Role as "worker" | "manager" | undefined,
+      },
+      status: {
+        addr: status?.Addr as string | undefined,
+        message: status?.Message as string | undefined,
+        state: (status?.State as "unknown" | "down" | "ready" | "disconnected") ?? "unknown",
+      },
+      updatedAt: (node.UpdatedAt as string) ?? "",
+      version: {
+        index: (version?.Index as number) ?? 0,
+      },
     }
   }
 }

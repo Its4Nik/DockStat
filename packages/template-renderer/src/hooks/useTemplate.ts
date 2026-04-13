@@ -61,11 +61,11 @@ export function useTemplateState(
   }, [])
 
   return {
-    state,
-    setState,
-    resetState,
     getValue,
+    resetState,
+    setState,
     setValue,
+    state,
   }
 }
 
@@ -234,8 +234,8 @@ export function useTemplateActions(
         }
 
         return {
-          success: false,
           error: error instanceof Error ? error.message : String(error),
+          success: false,
         }
       } finally {
         setLoadingActions((prev) => {
@@ -291,10 +291,10 @@ export function useTemplateActions(
         case "api":
           if (options?.pluginId && options?.routePath) {
             await executeApiAction(action, {
+              payload,
               pluginId: options.pluginId,
               routePath: options.routePath,
               state: undefined, // Will be provided by the caller if needed
-              payload,
             })
           } else {
             console.warn(`API action "${actionId}" requires pluginId and routePath in options`)
@@ -348,11 +348,11 @@ export function useTemplateActions(
   )
 
   return {
-    triggerAction,
-    registerHandler,
-    unregisterHandler,
-    loadingActions,
     isActionLoading,
+    loadingActions,
+    registerHandler,
+    triggerAction,
+    unregisterHandler,
   }
 }
 
@@ -493,12 +493,12 @@ export function useTemplateLoaders(
   }, [loaders, options.state, executeLoader])
 
   return {
-    executeLoader,
     executeAllLoaders,
-    reloadLoaders,
-    loadingLoaders,
+    executeLoader,
     isLoaderLoading,
     loaderData,
+    loadingLoaders,
+    reloadLoaders,
   }
 }
 
@@ -561,12 +561,12 @@ export function useTemplate(
   const loadersResult = useTemplateLoaders(
     loaderConfigs && pluginId && routePath ? loaderConfigs : [],
     {
+      loaderExecutor,
+      onDataUpdate: (updates) => setData((prev) => ({ ...prev, ...updates })),
+      onStateUpdate: stateResult.setState,
       pluginId: pluginId ?? 0,
       routePath: routePath ?? "",
       state: stateResult.state,
-      onStateUpdate: stateResult.setState,
-      onDataUpdate: (updates) => setData((prev) => ({ ...prev, ...updates })),
-      loaderExecutor,
     }
   )
 
@@ -575,18 +575,18 @@ export function useTemplate(
 
   // Action management
   const actionsResult = useTemplateActions(template, stateResult.setState, navigate, {
+    apiExecutor,
+    onReloadLoaders: loadersResult.reloadLoaders,
     pluginId,
     routePath,
-    onReloadLoaders: loadersResult.reloadLoaders,
-    apiExecutor,
   })
 
   return {
-    template,
     data,
-    setData,
     fragments,
     loaders: hasLoaders ? loadersResult : undefined,
+    setData,
+    template,
     ...stateResult,
     ...actionsResult,
   }

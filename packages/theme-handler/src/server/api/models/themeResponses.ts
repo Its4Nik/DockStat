@@ -3,24 +3,24 @@ import { ThemeModel } from "./themeModel"
 
 export namespace themeResponse {
   export const error = t.Object({
-    success: t.Literal(false),
     error: t.String(),
+    success: t.Literal(false),
   })
 
   export const success = {
-    list: t.Object({
-      success: t.Literal(true),
-      message: t.String(),
-      data: t.Array(ThemeModel),
-    }),
     default: t.Object({
-      success: t.Literal(true),
-      message: t.String(),
       data: ThemeModel,
+      message: t.String(),
+      success: t.Literal(true),
     }),
     delete: t.Object({
-      success: t.Literal(true),
       message: t.String(),
+      success: t.Literal(true),
+    }),
+    list: t.Object({
+      data: t.Array(ThemeModel),
+      message: t.String(),
+      success: t.Literal(true),
     }),
   }
 }

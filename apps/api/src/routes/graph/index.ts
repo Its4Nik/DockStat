@@ -8,10 +8,10 @@ import { mapReachableStatus } from "../../graph/reachableStatus"
 import { GraphModel } from "../../models/graph"
 
 export const GraphElysia = new Elysia({
-  prefix: "/graph",
   detail: {
     tags: ["Infrastructure Graph"],
   },
+  prefix: "/graph",
 })
   .get(
     "/",
@@ -34,9 +34,9 @@ export const GraphElysia = new Elysia({
             if (node.id === undefined) return null
 
             return {
+              hostname: node.host,
               id: node.id,
               name: node.name,
-              hostname: node.host,
               port: node.port,
               reachable: mapReachableStatus(node),
             }
@@ -46,42 +46,42 @@ export const GraphElysia = new Elysia({
         // Pass the flattened containers array to the layout function
         const { nodes, edges } = calculateNodeLayout({
           clients,
-          hosts,
-          dockNodes,
           containers,
+          dockNodes,
+          hosts,
         })
 
         const dat = {
-          nodes,
-          edges,
           clients: clients.map((c) => ({
             id: c.id,
-            name: c.name,
             initialized: c.initialized ?? false,
+            name: c.name,
           })),
+          containers,
+          dockNodes,
+          edges,
           hosts: hosts.map((h) => ({
+            clientId: h.clientId,
             id: h.id,
             name: h.name,
-            clientId: h.clientId,
             reachable: h.reachable ?? false,
           })),
-          dockNodes,
-          containers,
+          nodes,
         }
 
         return status(200, dat)
       } catch (error) {
         const errorMessage = extractErrorMessage(error, "Could not fetch graph data")
         return status(400, {
-          success: false as const,
           error: errorMessage,
+          success: false as const,
         })
       }
     },
     {
       response: {
         200: GraphModel.GraphDataSchema,
-        400: t.Object({ success: t.Boolean(), error: t.String() }),
+        400: t.Object({ error: t.String(), success: t.Boolean() }),
       },
     }
   )
@@ -94,15 +94,15 @@ export const GraphElysia = new Elysia({
     "/regions",
     async () => {
       return {
-        success: true as const,
         message: "Region creation not yet implemented",
+        success: true as const,
       }
     },
     {
       body: t.Object({
-        name: t.String(),
-        description: t.Optional(t.String()),
         color: t.Optional(t.String()),
+        description: t.Optional(t.String()),
+        name: t.String(),
       }),
     }
   )

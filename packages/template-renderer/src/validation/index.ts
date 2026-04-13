@@ -36,12 +36,12 @@ interface ValidationContext {
  */
 function createContext(): ValidationContext {
   return {
-    errors: [],
-    warnings: [],
-    path: [],
     definedActions: new Set(),
-    definedStateKeys: new Set(),
     definedFragments: new Set(),
+    definedStateKeys: new Set(),
+    errors: [],
+    path: [],
+    warnings: [],
   }
 }
 
@@ -56,9 +56,9 @@ function addError(
 ): void {
   ctx.errors.push({
     code,
+    context: additionalContext,
     message,
     path: ctx.path.join("."),
-    context: additionalContext,
   })
 }
 
@@ -73,9 +73,9 @@ function addWarning(
 ): void {
   ctx.warnings.push({
     code,
+    context: additionalContext,
     message,
     path: ctx.path.join("."),
-    context: additionalContext,
   })
 }
 
@@ -419,7 +419,7 @@ export function validateFragment(fragment: unknown): TemplateValidationResult {
 
   if (typeof fragment !== "object" || fragment === null || Array.isArray(fragment)) {
     addError(ctx, "INVALID_TYPE", "Template fragment must be an object")
-    return { valid: false, errors: ctx.errors, warnings: ctx.warnings }
+    return { errors: ctx.errors, valid: false, warnings: ctx.warnings }
   }
 
   const f = fragment as Record<string, unknown>
@@ -446,8 +446,8 @@ export function validateFragment(fragment: unknown): TemplateValidationResult {
   }
 
   return {
-    valid: ctx.errors.length === 0,
     errors: ctx.errors.length > 0 ? ctx.errors : undefined,
+    valid: ctx.errors.length === 0,
     warnings: ctx.warnings.length > 0 ? ctx.warnings : undefined,
   }
 }
@@ -460,7 +460,7 @@ export function validateTemplate(template: unknown): TemplateValidationResult {
 
   if (typeof template !== "object" || template === null || Array.isArray(template)) {
     addError(ctx, "INVALID_TYPE", "Template must be an object")
-    return { valid: false, errors: ctx.errors, warnings: ctx.warnings }
+    return { errors: ctx.errors, valid: false, warnings: ctx.warnings }
   }
 
   const t = template as Record<string, unknown>
@@ -507,8 +507,8 @@ export function validateTemplate(template: unknown): TemplateValidationResult {
   }
 
   return {
-    valid: ctx.errors.length === 0,
     errors: ctx.errors.length > 0 ? ctx.errors : undefined,
+    valid: ctx.errors.length === 0,
     warnings: ctx.warnings.length > 0 ? ctx.warnings : undefined,
   }
 }

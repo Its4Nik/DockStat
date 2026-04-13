@@ -3,13 +3,13 @@ import type { PluginMetaType } from "@dockstat/typings/types"
 
 export function extractMeta(plugin: Record<string, unknown>): PluginMetaType {
   return {
-    name: plugin.name,
+    author: plugin.author,
     description: plugin.description,
-    version: plugin.version,
+    manifest: plugin.manifest,
+    name: plugin.name,
     repository: plugin.repository,
     repoType: plugin.repoType,
-    manifest: plugin.manifest,
-    author: plugin.author,
     tags: plugin.tags,
+    version: plugin.version,
   } as PluginMetaType
 }

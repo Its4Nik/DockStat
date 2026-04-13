@@ -82,8 +82,8 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
       .run(...values)
 
     return {
-      insertId: result.lastInsertRowid ? Number(result.lastInsertRowid) : 0,
       changes: result.changes,
+      insertId: result.lastInsertRowid ? Number(result.lastInsertRowid) : 0,
     }
   }
 
@@ -140,8 +140,8 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
     this.reset()
 
     return {
-      insertId: lastInsertId,
       changes: totalChanges,
+      insertId: lastInsertId,
     }
   }
 
@@ -273,7 +273,7 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
         }
       }
 
-      return { insertId: lastInsertId, insertedIDs: insertedIDs, changes: totalChanges }
+      return { changes: totalChanges, insertedIDs: insertedIDs, insertId: lastInsertId }
     })
 
     const result = transaction(rows)

@@ -15,7 +15,7 @@ services:
       - ALLOW_START=1
       - ALLOW_STOP=1
       - ALLOW_RESTARTS=1
-      - AUTH=1
+      - AUTH=0
       - BUILD=1
       - COMMIT=1
       - CONFIGS=1
