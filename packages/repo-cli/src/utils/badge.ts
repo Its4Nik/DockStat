@@ -1,5 +1,6 @@
-import type { BadgeOptions } from "../types"
 import Bun from "bun"
+import type { BadgeOptions } from "../types"
+
 function escapeXml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
