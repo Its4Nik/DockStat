@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@better-auth/api-key": "^1.6.2",
     "@dockstat/db": "workspace:*",
     "@dockstat/docker-client": "workspace:*",
     "@dockstat/docknode": "workspace:*",
@@ -16,6 +17,7 @@
     "@elysiajs/openapi": "catalog:",
     "@elysiajs/server-timing": "catalog:",
     "@types/dagre": "catalog:docker",
+    "better-auth": "^1.6.2",
     "dagre": "catalog:docker",
     "elysia": "catalog:"
   },
