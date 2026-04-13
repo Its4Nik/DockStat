@@ -1,5 +1,6 @@
 import { Slides, ThemeEditor } from "@dockstat/ui"
 import { useState } from "react"
+import { AccountsSettingsSlide } from "@/components/settings/accounts"
 import { GeneralSettingsSlide } from "@/components/settings/general/index"
 import { HotkeysSlide } from "@/components/settings/hotkeys"
 import { usePageHeading } from "@/hooks/useHeading"
@@ -46,7 +47,7 @@ export default function SettingsPage() {
         onSlideChange={(key) => setSelectedSlide(String(key))}
       >
         {{
-          Accounts: <div>Accounts Settings</div>,
+          Accounts: <AccountsSettingsSlide />,
           Certificates: <div>Certificates Settings</div>,
           Colors: (
             <ThemeEditor
