@@ -266,8 +266,8 @@ export function hasTransformations<T>(parser?: Parser<T>): boolean {
 
   const hasJson = !!(parser.JSON && parser.JSON.length > 0)
   const hasBoolean = !!(parser.BOOLEAN && parser.BOOLEAN.length > 0)
-  const hasModule = !!(parser.MODULE && Object.keys(parser.MODULE).length > 0)
   const hasDate = !!(parser.DATE && parser.DATE.length > 0)
+  const hasModule = !!(parser.MODULE && Object.keys(parser.MODULE).length > 0)
 
   return hasJson || hasBoolean || hasModule || hasDate
 }

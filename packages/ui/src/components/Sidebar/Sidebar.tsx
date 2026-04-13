@@ -351,8 +351,6 @@ export function Sidebar({
                   toastSuccess={toastSuccess}
                 />
               </Modal>
-
-              {/* ThemeSidebar is now rendered globally in layout.tsx */}
             </Card>
           </motion.div>
         </>

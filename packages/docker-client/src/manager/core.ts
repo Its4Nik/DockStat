@@ -521,7 +521,7 @@ export class DockerClientManagerCore {
         : tryBuildFromProxy(payload)
 
       if (!message) {
-        this.logger.debug("No message!")
+        this.logger.debug(`No message! ${JSON.stringify(payload)}`)
         return
       }
 
