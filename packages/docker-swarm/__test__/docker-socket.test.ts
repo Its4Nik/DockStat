@@ -27,7 +27,6 @@ describe("Default constants", () => {
   test("DEFAULT_HOST is set correctly", () => {
     expect(DEFAULT_HOST).toBe("http://localhost")
   })
-
 })
 
 describe("Connection configuration building", () => {
