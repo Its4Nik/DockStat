@@ -30,10 +30,12 @@ export const OpenAPI = {
         const key = prefix + path
         reference[key] = paths[path]
         for (const method of Object.keys(paths[path])) {
+          // biome-ignore lint/suspicious/noExplicitAny: from better auth example
           const operation = (reference[key] as any)[method]
           operation.tags = ["Better Auth"]
         }
       }
       return reference
+      // biome-ignore lint/suspicious/noExplicitAny: from better auth example
     }) as Promise<any>,
 } as const

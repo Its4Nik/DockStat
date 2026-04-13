@@ -3,6 +3,7 @@ import { openapi } from "@elysiajs/openapi"
 import { serverTiming } from "@elysiajs/server-timing"
 import Elysia from "elysia"
 import { auth, OpenAPI } from "./auth"
+import { OpenAPISchemaType } from "better-auth"
 
 const DockStatElysiaPlugins = new Elysia()
   .use(cors())
