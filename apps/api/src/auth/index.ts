@@ -22,6 +22,7 @@ let _schema: ReturnType<typeof auth.api.generateOpenAPISchema>
 const getSchema = async () => (_schema ??= auth.api.generateOpenAPISchema())
 
 export const OpenAPI = {
+  // biome-ignore lint/suspicious/noExplicitAny: from better auth example
   components: getSchema().then(({ components }) => components) as Promise<any>,
   getPaths: (prefix = "/auth/api") =>
     getSchema().then(({ paths }) => {
