@@ -14,12 +14,14 @@
     "@dockstat/utils": "workspace:*",
     "@elysiajs/cors": "catalog:",
     "@elysiajs/eden": "catalog:",
+    "@elysiajs/jwt": "^1.4.1",
     "@elysiajs/openapi": "catalog:",
     "@elysiajs/server-timing": "catalog:",
     "@types/dagre": "catalog:docker",
     "better-auth": "^1.6.2",
     "dagre": "catalog:docker",
-    "elysia": "catalog:"
+    "elysia": "catalog:",
+    "jose": "^6.2.2"
   },
   "devDependencies": {
     "bun-types": "latest"
