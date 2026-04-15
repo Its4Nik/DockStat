@@ -1,15 +1,17 @@
 {
   "dependencies": {
-    "elysia": "catalog:"
+    "@dockstat/logger": "workspace:*"
   },
   "devDependencies": {
+    "@dockstat/sqlite-wrapper": "workspace:*",
     "@types/bun": "latest"
   },
   "exports": {
-    ".": "./src/index.ts"
+    "/client": "./src/client/index.ts",
+    "/server": "./src/server/index.ts"
   },
   "module": "src/index.ts",
-  "name": "@dockstat/elysia-decorators",
+  "name": "@dockstat/auth",
   "peerDependencies": {
     "typescript": "^5"
   },

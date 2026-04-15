@@ -2,7 +2,6 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "allowJs": true,
-    "experimentalDecorators": true,
     "jsx": "react-jsx",
     // Environment setup & latest features
     "lib": ["ESNext"],
