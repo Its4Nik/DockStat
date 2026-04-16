@@ -598,6 +598,7 @@ export interface JoinClause {
   table: string
   alias?: string
   condition: JoinCondition
+  parser?: Parser<Record<string, unknown>>
 }
 
 /**

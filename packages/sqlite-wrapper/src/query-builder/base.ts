@@ -55,14 +55,14 @@ export abstract class BaseQueryBuilder<
   /**
    * Get the table name
    */
-  protected getTableName(): string {
+  public getTableName(): string {
     return this.state.tableName
   }
 
   /**
    * Get the parser configuration
    */
-  protected getParser(): Parser<T> | undefined {
+  public getParser(): Parser<T> | undefined {
     return this.state.parser
   }
 
@@ -271,6 +271,58 @@ export abstract class BaseQueryBuilder<
     }
   }
 
+  /**
+   * Check if there are any join clauses
+   */
+  protected hasJoins(): boolean {
+    return this.state.joinClauses.length > 0
+  }
+
+  /**
+   * Merge parsers from all joined tables with the base table's parser
+   * This is necessary so that columns from joined tables are properly transformed
+   * (e.g., booleans converted from 0/1 to true/false)
+   */
+  private getMergedParser(): Parser<ResultType> {
+    const baseParser = this.state.parser || { BOOLEAN: [], DATE: [], JSON: [], MODULE: {} }
+
+    if (!this.hasJoins()) {
+      return baseParser as Parser<ResultType>
+    }
+
+    const merged = {
+      BOOLEAN: [...(baseParser.BOOLEAN || [])] as string[],
+      DATE: [...(baseParser.DATE || [])] as string[],
+      JSON: [...(baseParser.JSON || [])] as string[],
+      MODULE: { ...(baseParser.MODULE || {}) },
+    }
+
+    for (const join of this.state.joinClauses) {
+      const joinParser = join.parser
+      if (joinParser) {
+        if (joinParser.BOOLEAN) {
+          merged.BOOLEAN.push(...(joinParser.BOOLEAN as string[]))
+        }
+        if (joinParser.DATE) {
+          merged.DATE.push(...(joinParser.DATE as string[]))
+        }
+        if (joinParser.JSON) {
+          merged.JSON.push(...(joinParser.JSON as string[]))
+        }
+        if (joinParser.MODULE) {
+          merged.MODULE = { ...merged.MODULE, ...joinParser.MODULE }
+        }
+      }
+    }
+
+    // Deduplicate
+    merged.BOOLEAN = [...new Set(merged.BOOLEAN)]
+    merged.DATE = [...new Set(merged.DATE)]
+    merged.JSON = [...new Set(merged.JSON)]
+
+    return merged as Parser<ResultType>
+  }
+
   // ===== Row Transformation =====
 
   /**
@@ -280,7 +332,7 @@ export abstract class BaseQueryBuilder<
   protected transformRowFromDb(row: unknown): ResultType {
     return transformFromDb<ResultType>(row, {
       logger: this.log,
-      parser: this.state.parser as Parser<unknown>,
+      parser: this.getMergedParser(),
     })
   }
 
@@ -290,7 +342,7 @@ export abstract class BaseQueryBuilder<
   protected transformRowsFromDb(rows: unknown[]): ResultType[] {
     return transformRowsFromDb<ResultType>(rows, {
       logger: this.log,
-      parser: this.state.parser as Parser<unknown>,
+      parser: this.getMergedParser(),
     })
   }
 

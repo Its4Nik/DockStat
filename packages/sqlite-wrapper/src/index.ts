@@ -96,7 +96,6 @@ class DB {
   private backupLog: Logger
   private tableLog: Logger
   private migrationLog: Logger
-  private tableParsers: Map<string, Parser<Record<string, unknown>>> = new Map()
 
   /**
    * Open or create a SQLite database at `path`.
@@ -187,7 +186,7 @@ class DB {
   }
 
   /**
-   * Get the database file path
+   * Get database path
    */
   getPath(): string {
     return this.dbPath

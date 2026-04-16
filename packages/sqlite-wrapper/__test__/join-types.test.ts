@@ -99,9 +99,9 @@ describe("Type-safe JOIN with IntelliSense", () => {
     expect(results.length).toBe(1)
   })
 
-  test("join<Post>(...) should merge result types", () => {
+  test("join(...) should merge result types", () => {
     // After joining with Post, result type is QueryBuilder<User, User & Post>
-    const joinedQuery = users.join<Post>("posts", { id: "user_id" })
+    const joinedQuery = users.join(posts, { id: "user_id" })
 
     // This demonstrates that the result type is User & Post
     // IntelliSense should show columns from BOTH tables: id, name, email, user_id, title, content, published
@@ -126,7 +126,7 @@ describe("Type-safe JOIN with IntelliSense", () => {
   // HALLO
   test("where(...) should work with merged type columns", () => {
     const results = users
-      .join<Post>("posts", { id: "user_id" })
+      .join(posts, { id: "user_id" })
       .where({ published: true }) // Filter by Post column
       .all()
 
@@ -138,7 +138,7 @@ describe("Type-safe JOIN with IntelliSense", () => {
   test("select(...) should work with merged type columns", () => {
     // We can select specific columns from either table
     const results = users
-      .join<Post>("posts", { id: "user_id" })
+      .join(posts, { id: "user_id" })
       .select(["name", "title"]) // Mix columns from both tables
       .all()
 
@@ -149,7 +149,7 @@ describe("Type-safe JOIN with IntelliSense", () => {
   test("orderBy(...) should work with merged type columns", () => {
     // We can order by columns from either table
     const results = users
-      .join<Post>("posts", { id: "user_id" })
+      .join(posts, { id: "user_id" })
       .orderBy("title") // Order by Post column
       .all()
 
@@ -158,14 +158,14 @@ describe("Type-safe JOIN with IntelliSense", () => {
 
   test("value(...) should work with merged type columns", () => {
     // We can get a single value from any column
-    const title = users.join<Post>("posts", { id: "user_id" }).value("title") // Get Post column value
+    const title = users.join(posts, { id: "user_id" }).value("title") // Get Post column value
 
     expect(typeof title).toBe("string")
   })
 
   test("pluck(...) should work with merged type columns", () => {
     // We can pluck values from any column
-    const titles = users.join<Post>("posts", { id: "user_id" }).pluck("title") // Pluck Post column values
+    const titles = users.join(posts, { id: "user_id" }).pluck("title") // Pluck Post column values
 
     expect(titles).toHaveLength(2)
     expect(titles.every((t) => typeof t === "string")).toBe(true)
@@ -174,8 +174,8 @@ describe("Type-safe JOIN with IntelliSense", () => {
   test("multiple joins should merge all types", () => {
     // Join multiple tables - result type is User & Post & Comment
     const results = users
-      .join<Post>("posts", { id: "user_id" })
-      .join<Comment>("comments", { "posts.id": "post_id" })
+      .join(posts, { id: "user_id" })
+      .join(comments, { "posts.id": "post_id" })
       .all()
 
     expect(results.length).toBeGreaterThan(0)
@@ -198,7 +198,7 @@ describe("Type-safe JOIN with IntelliSense", () => {
   test("chained operations should preserve type safety", () => {
     // All operations should preserve the merged type
     const result = users
-      .join<Post>("posts", { id: "user_id" })
+      .join(posts, { id: "user_id" })
       .where({ published: true }) // Filter by Post column
       .orderBy("name") // Order by User column
       .select(["name", "title"]) // Select from both tables
@@ -214,7 +214,7 @@ describe("Type-safe JOIN with IntelliSense", () => {
 
   test("left join should preserve type safety", () => {
     // LEFT JOIN should also preserve merged type
-    const results = users.leftJoin<Post>("posts", { id: "user_id" }).all()
+    const results = users.leftJoin(posts, { id: "user_id" }).all()
 
     expect(results.length).toBeGreaterThanOrEqual(1) // At least one user
 
@@ -226,7 +226,7 @@ describe("Type-safe JOIN with IntelliSense", () => {
 
   test("raw expression join should preserve type safety", () => {
     // Using raw expression should still preserve type safety
-    const results = users.join<Post>("posts", "users.id = posts.user_id").all()
+    const results = users.join(posts, "users.id = posts.user_id").all()
 
     expect(results.length).toBe(2)
 
@@ -238,7 +238,7 @@ describe("Type-safe JOIN with IntelliSense", () => {
 
   test("join with alias should preserve type safety", () => {
     // Join with alias should still preserve type safety
-    const results = users.join<Post>("posts", { id: "user_id" }, "p").all()
+    const results = users.join(posts, { id: "user_id" }, "p").all()
 
     expect(results.length).toBe(2)
 
@@ -250,10 +250,10 @@ describe("Type-safe JOIN with IntelliSense", () => {
 
   test("chained joins should update type correctly", () => {
     // First join: QueryBuilder<User, User & Post>
-    const afterPostJoin = users.join<Post>("posts", { id: "user_id" })
+    const afterPostJoin = users.join(posts, { id: "user_id" })
 
     // Second join: QueryBuilder<User, User & Post & Comment>
-    const afterCommentJoin = afterPostJoin.join<Comment>("comments", {
+    const afterCommentJoin = afterPostJoin.join(comments, {
       "posts.id": "post_id",
     })
 
@@ -271,7 +271,7 @@ describe("Type-safe JOIN with IntelliSense", () => {
   test("type safety should prevent column name typos", () => {
     // Type safety ensures only valid columns can be used
     // This will be caught by TypeScript compiler at compile time
-    const results = users.join<Post>("posts", { id: "user_id" }).where({ name: "Alice" }).all()
+    const results = users.join(posts, { id: "user_id" }).where({ name: "Alice" }).all()
     expect(results.length).toBeGreaterThan(0)
   })
 })

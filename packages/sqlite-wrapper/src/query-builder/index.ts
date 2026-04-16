@@ -69,6 +69,22 @@ export class QueryBuilder<
     ;(this.deleteBuilder as unknown as { state: QueryBuilderState<T> }).state = masterState
   }
 
+  // ===== STATE ACCESSORS =====
+
+  /**
+   * Get the table name
+   */
+  public getTableName(): string {
+    return this.selectBuilder.getTableName()
+  }
+
+  /**
+   * Get the parser configuration
+   */
+  public getParser(): Parser<T> | undefined {
+    return this.selectBuilder.getParser()
+  }
+
   // ===== WHERE METHODS (delegated to selectBuilder) =====
 
   /**
@@ -173,7 +189,7 @@ export class QueryBuilder<
    * const results = query.all() // Returns (User & Post)[]
    */
   join<JT extends Record<string, unknown>>(
-    table: string,
+    table: QueryBuilder<JT, JT>,
     condition: JoinCondition,
     alias?: string
   ): QueryBuilder<T, ResultType & JT> {
@@ -188,7 +204,7 @@ export class QueryBuilder<
    * @returns A new QueryBuilder with the merged result type (ResultType & JT)
    */
   innerJoin<JT extends Record<string, unknown>>(
-    table: string,
+    table: QueryBuilder<JT, JT>,
     condition: JoinCondition,
     alias?: string
   ): QueryBuilder<T, ResultType & JT> {
@@ -203,7 +219,7 @@ export class QueryBuilder<
    * @returns A new QueryBuilder with the merged result type (ResultType & JT)
    */
   leftJoin<JT extends Record<string, unknown>>(
-    table: string,
+    table: QueryBuilder<JT, JT>,
     condition: JoinCondition,
     alias?: string
   ): QueryBuilder<T, ResultType & JT> {
@@ -218,7 +234,7 @@ export class QueryBuilder<
    * @returns A new QueryBuilder with the merged result type (ResultType & JT)
    */
   rightJoin<JT extends Record<string, unknown>>(
-    table: string,
+    table: QueryBuilder<JT, JT>,
     condition: JoinCondition,
     alias?: string
   ): QueryBuilder<T, ResultType & JT> {
@@ -233,7 +249,7 @@ export class QueryBuilder<
    * @returns A new QueryBuilder with the merged result type (ResultType & JT)
    */
   fullJoin<JT extends Record<string, unknown>>(
-    table: string,
+    table: QueryBuilder<JT, JT>,
     condition: JoinCondition,
     alias?: string
   ): QueryBuilder<T, ResultType & JT> {
@@ -248,7 +264,7 @@ export class QueryBuilder<
    * @returns A new QueryBuilder with the merged result type (ResultType & JT)
    */
   crossJoin<JT extends Record<string, unknown>>(
-    table: string,
+    table: QueryBuilder<JT, JT>,
     alias?: string
   ): QueryBuilder<T, ResultType & JT> {
     this.selectBuilder.crossJoin<JT>(table, alias)

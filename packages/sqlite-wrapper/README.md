@@ -9,44 +9,6 @@ Schema-first table helpers, an expressive chainable QueryBuilder, safe defaults 
 
 ---
 
-## 🆕 What's New in v1.4.0
-
-### New Features
-
-- **DATE Column Support with Auto-detection** — DATE, DATETIME, and TIMESTAMP columns are now fully supported with automatic serialization/deserialization! JavaScript `Date` objects are automatically converted to/from ISO strings in the database
-- **Automatic DATE Parser Detection** — Columns using `column.date()`, `column.datetime()`, or `column.timestamp()` are automatically detected and parsed without manual configuration
-
-### Previous Features (v1.3.x)
-
-- **Automatic Schema Migration** — Tables automatically migrate when schema changes are detected! Add/remove columns, change constraints, and preserve data without manual intervention
-- **Auto-detection of JSON & Boolean columns** — Columns using `column.json()` or `column.boolean()` are automatically detected from schema
-- **Automatic backups with retention** — Configure `autoBackup` to create periodic backups with automatic cleanup of old files
-- **Backup & Restore API** — `backup()`, `restore()`, and `listBackups()` methods
-- **`getPath()` method** — Get the database file path
-
-### Bug Fixes
-
-- **Fixed type errors** — Improved type handling in transformer and table creation
-
-### Breaking Changes
-
-- **DATE Column Behavior** — If you have existing tables with DATE, DATETIME, or TIMESTAMP columns, you must now insert/update using JavaScript `Date` objects instead of ISO strings. Previously, you might have done `createdAt: new Date().toISOString()` - now you must use `createdAt: new Date()`. The library automatically handles conversion to/from ISO strings in the database.
-If you need to opt-out of automatic DATE parsing for specific columns, you can remove them from the parser configuration or use `column.text()` instead of `column.date()`.
-
-**Migration Guide:**
-
-```typescript
-// ❌ Before (v1.3.x) - manual ISO string conversion
-table.insert({ createdAt: new Date().toISOString() })
-
-// ✅ After (v1.4.0) - use Date objects directly
-table.insert({ createdAt: new Date() })
-```
-
-If you need to opt-out of automatic DATE parsing for specific columns, you can remove them from the parser configuration or use `column.text()` instead of `column.date()`.
-
----
-
 ## 🆕 What's New in v1.5.0
 
 ### Type-Safe JOIN Operations
@@ -61,7 +23,7 @@ If you need to opt-out of automatic DATE parsing for specific columns, you can r
 ```typescript
 // Join users with posts — result type is automatically inferred as User & Post
 const results = users
-  .join<Post>("posts", { id: "user_id" })
+  .join(posts, { id: "user_id" })
   .where({ published: true })
   .all()
 
@@ -69,6 +31,8 @@ const results = users
 results[0].name      // ✅ From User
 results[0].title     // ✅ From Post
 ```
+
+> **Note:** The joined table type (`Post`) is automatically inferred from the `posts` QueryBuilder parameter — no generic type needed!
 
 ### Previous Features (v1.4.0)
 
@@ -534,9 +498,9 @@ interface Post extends Record<string, unknown> {
   published: boolean;
 }
 
-// Simple column mapping
+// Simple column mapping - pass the QueryBuilder directly
 const results = users
-  .join<Post>("posts", { id: "user_id" })
+  .join(posts, { id: "user_id" })
   .all()
 
 // Result type is automatically inferred as User & Post
@@ -549,12 +513,14 @@ results[0].published  // From Post
 
 #### Join Methods
 
-- **`join<JT>(table, condition, alias?)`** — INNER JOIN (default)
-- **`innerJoin<JT>(table, condition, alias?)`** — Explicit INNER JOIN
-- **`leftJoin<JT>(table, condition, alias?)`** — LEFT JOIN
-- **`rightJoin<JT>(table, condition, alias?)`** — RIGHT JOIN
-- **`fullJoin<JT>(table, condition, alias?)`** — FULL JOIN
-- **`crossJoin<JT>(table, alias?)`** — CROSS JOIN (no condition needed)
+- **`join(queryBuilder, condition, alias?)`** — INNER JOIN (default)
+- **`innerJoin(queryBuilder, condition, alias?)`** — Explicit INNER JOIN
+- **`leftJoin(queryBuilder, condition, alias?)`** — LEFT JOIN
+- **`rightJoin(queryBuilder, condition, alias?)`** — RIGHT JOIN
+- **`fullJoin(queryBuilder, condition, alias?)`** — FULL JOIN
+- **`crossJoin(queryBuilder, alias?)`** — CROSS JOIN (no condition needed)
+
+> **Note:** The joined table type is automatically inferred from the QueryBuilder parameter, no need to specify a generic type!
 
 #### Join Conditions
 
@@ -562,15 +528,15 @@ You can specify join conditions in two ways:
 
 ```typescript
 // 1. Simple column mapping
-users.join<Post>("posts", { id: "user_id" })
+users.join(posts, { id: "user_id" })
 // Generates: INNER JOIN "posts" ON "users"."id" = "posts"."user_id"
 
 // 2. Column mapping with explicit table references
-users.join<Post>("posts", { "users.id": "posts.user_id" })
+users.join(posts, { "users.id": "posts.user_id" })
 // Generates: INNER JOIN "posts" ON "users"."id" = "posts"."user_id"
 
 // 3. Raw SQL expression for complex conditions
-users.join<Post>("posts", "users.id = posts.user_id AND posts.published = 1")
+users.join(posts, "users.id = posts.user_id AND posts.published = 1")
 // Generates: INNER JOIN "posts" ON users.id = posts.user_id AND posts.published = 1
 ```
 
@@ -579,8 +545,8 @@ users.join<Post>("posts", "users.id = posts.user_id AND posts.published = 1")
 Use aliases for self-joins or to avoid column name conflicts:
 
 ```typescript
-users.join<Post>("posts", { id: "user_id" }, "p")
-  .join<Comment>("comments", { "p.id": "post_id" }, "c")
+users.join(posts, { id: "user_id" }, "p")
+  .join(comments, { "p.id": "post_id" }, "c")
   .all()
 ```
 
@@ -591,8 +557,8 @@ Chain multiple joins with cumulative type merging:
 ```typescript
 // Result type: User & Post & Comment
 const results = users
-  .join<Post>("posts", { id: "user_id" })
-  .join<Comment>("comments", { "posts.id": "post_id" })
+  .join(posts, { id: "user_id" })
+  .join(comments, { "posts.id": "post_id" })
   .all()
 
 // IntelliSense shows columns from all three tables!
@@ -607,13 +573,13 @@ Join operations are fully type-safe:
 
 ```typescript
 // ✅ Valid: accessing columns from joined tables
-users.join<Post>("posts", { id: "user_id" })
+users.join(posts, { id: "user_id" })
   .where({ published: true })  // Post column
   .orderBy("name")           // User column
   .select(["name", "title"]) // Mix columns from both tables
 
 // ❌ Error: typos in column names caught at compile time
-users.join<Post>("posts", { id: "user_id" })
+users.join(posts, { id: "user_id" })
   .where({ titl: "value" })  // TypeScript error: Property 'titl' does not exist
 ```
 

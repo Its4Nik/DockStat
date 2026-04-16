@@ -277,7 +277,6 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
 
       // Build query and prepare statement
       const query = this.buildInsertQuery(columns, options)
-      const conflictType = this.getConflictClause(options)
 
       this.insertLog.debug(`SQL: ${query}`)
 

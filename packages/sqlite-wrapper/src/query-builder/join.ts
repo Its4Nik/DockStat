@@ -1,7 +1,7 @@
-import type { Database, SQLQueryBindings } from "bun:sqlite"
+import type { Database } from "bun:sqlite"
 import type { Logger } from "@dockstat/logger"
 import type { JoinClause, JoinCondition, JoinType, Parser } from "../types"
-import { quoteIdentifier } from "../utils"
+import type { QueryBuilder } from "./index"
 import { WhereQueryBuilder } from "./where"
 
 /**
@@ -36,100 +36,94 @@ export class JoinQueryBuilder<
   /**
    * Add a JOIN clause (default: INNER JOIN)
    *
-   * @template JT - The joined table type for type safety
-   * @param table - The table to join
+   * @param queryBuilder - The QueryBuilder for the table to join (provides both type and parser)
    * @param condition - Join condition (column mapping or raw expression)
    * @param alias - Optional alias for the joined table
    *
    * @example
    * // Simple column mapping with type inference
-   * .join<Post>("posts", { "id": "user_id" })
+   * .join(posts, { "id": "user_id" })
    * // Result type becomes User & Post
    *
    * @example
    * // Column mapping with explicit tables
-   * .join<Post>("posts", { "users.id": "posts.user_id" })
+   * .join(posts, { "users.id": "posts.user_id" })
    *
    * @example
    * // Raw expression
-   * .join<Post>("posts", "users.id = posts.user_id AND posts.published = 1")
+   * .join(posts, "users.id = posts.user_id AND posts.published = 1")
    *
    * @example
    * // With alias
-   * .join<Post>("posts", { "id": "user_id" }, "p")
+   * .join(posts, { "id": "user_id" }, "p")
    *
    * @returns A new query builder with the merged result type
    * @note The actual type transformation is handled by the main QueryBuilder class
    */
   join<JT extends Record<string, unknown>>(
-    table: string,
+    queryBuilder: QueryBuilder<JT>,
     condition: JoinCondition,
     alias?: string
   ): this {
-    return this.addJoin("INNER", table, condition, alias)
+    return this.addJoin("INNER", queryBuilder, condition, alias)
   }
 
   /**
    * Add an INNER JOIN clause
    *
    * Same as join(), but explicitly specifies INNER JOIN.
-   *
-   * @template JT - The joined table type for type safety
    */
   innerJoin<JT extends Record<string, unknown>>(
-    table: string,
+    queryBuilder: QueryBuilder<JT>,
     condition: JoinCondition,
     alias?: string
   ): this {
-    return this.addJoin("INNER", table, condition, alias)
+    return this.addJoin("INNER", queryBuilder, condition, alias)
   }
 
   /**
    * Add a LEFT JOIN clause
    *
-   * @template JT - The joined table type for type safety
    * @example
-   * .leftJoin<Post>("posts", { "id": "user_id" })
+   * .leftJoin(posts, { "id": "user_id" })
    * // LEFT JOIN "posts" ON "users"."id" = "posts"."user_id"
    */
   leftJoin<JT extends Record<string, unknown>>(
-    table: string,
+    queryBuilder: QueryBuilder<JT>,
     condition: JoinCondition,
     alias?: string
   ): this {
-    return this.addJoin("LEFT", table, condition, alias)
+    return this.addJoin("LEFT", queryBuilder, condition, alias)
   }
 
   /**
    * Add a RIGHT JOIN clause
    *
-   * @template JT - The joined table type for type safety
    * @example
-   * .rightJoin<Comment>("comments", { "posts.id": "comment.post_id" })
+   * .rightJoin(comments, { "posts.id": "comment.post_id" })
    * // RIGHT JOIN "comments" ON "posts"."id" = "comments"."post_id"
    */
   rightJoin<JT extends Record<string, unknown>>(
-    table: string,
+    queryBuilder: QueryBuilder<JT>,
     condition: JoinCondition,
     alias?: string
   ): this {
-    return this.addJoin("RIGHT", table, condition, alias)
+    return this.addJoin("RIGHT", queryBuilder, condition, alias)
   }
 
   /**
    * Add a FULL JOIN clause
    *
-   * @template JT - The joined table type for type safety
    * @example
-   * .fullJoin<Order>("orders", { "customers.id": "orders.customer_id" })
+   * .fullJoin(orders, { "customers.id": "orders.customer_id" })
    * // FULL JOIN "orders" ON "customers"."id" = "orders"."customer_id"
    */
   fullJoin<JT extends Record<string, unknown>>(
-    table: string,
+    queryBuilder: QueryBuilder<JT>,
     condition: JoinCondition,
     alias?: string
   ): this {
-    return this.addJoin("FULL", table, condition, alias)
+    return this.addJoin("FULL", queryBuilder, condition, alias)
   }
 
   /**
@@ -137,22 +131,27 @@ export class JoinQueryBuilder<
    *
    * Note: CROSS JOIN does not use an ON clause.
    *
-   * @template JT - The joined table type
    * @returns A new QueryBuilder with the merged result type (ResultType & JT)
    *
    * @example
-   * .crossJoin<Product>("products")
+   * .crossJoin(products)
    * // CROSS JOIN "products"
    */
-  crossJoin<JT extends Record<string, unknown>>(table: string, alias?: string): this {
-    const tableRef = alias ? `${table} AS ${alias}` : table
+  crossJoin<JT extends Record<string, unknown>>(
+    queryBuilder: QueryBuilder<JT>,
+    alias?: string
+  ): this {
+    const tableName = queryBuilder.getTableName()
+    const parser = queryBuilder.getParser()
+    const tableRef = alias ? `${tableName} AS ${alias}` : tableName
 
     this.logWithTable("info", "CROSS_JOIN", `Adding CROSS JOIN | Table: ${tableRef}`)
 
     const joinClause: JoinClause = {
       alias,
       condition: "", // CROSS JOIN doesn't use ON clause
-      table,
+      parser: parser as Parser<Record<string, unknown>> | undefined,
+      table: tableName,
       type: "CROSS",
     }
 
@@ -165,8 +164,15 @@ export class JoinQueryBuilder<
   /**
    * Internal method to add a join clause
    */
-  private addJoin(type: JoinType, table: string, condition: JoinCondition, alias?: string): this {
-    const tableRef = alias ? `${table} AS ${alias}` : table
+  private addJoin<JT extends Record<string, unknown>>(
+    type: JoinType,
+    queryBuilder: QueryBuilder<JT>,
+    condition: JoinCondition,
+    alias?: string
+  ): this {
+    const tableName = queryBuilder.getTableName()
+    const parser = queryBuilder.getParser()
+    const tableRef = alias ? `${tableName} AS ${alias}` : tableName
     const conditionStr = typeof condition === "string" ? condition : JSON.stringify(condition)
 
     this.logWithTable(
@@ -178,7 +184,8 @@ export class JoinQueryBuilder<
     const joinClause: JoinClause = {
       alias,
       condition,
-      table,
+      parser: parser as Parser<Record<string, unknown>> | undefined,
+      table: tableName,
       type,
     }
 
@@ -186,12 +193,5 @@ export class JoinQueryBuilder<
     this.joinLog.debug(`Total JOIN clauses: ${this.state.joinClauses.length}`)
 
     return this
-  }
-
-  /**
-   * Check if there are any join clauses
-   */
-  protected hasJoins(): boolean {
-    return this.state.joinClauses.length > 0
   }
 }
