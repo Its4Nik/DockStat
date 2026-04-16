@@ -1,4 +1,5 @@
 import type { AutoBackupOptions } from "../../index"
+import type { Logger } from "@dockstat/logger"
 
 /**
  * List all available backups
@@ -9,10 +10,10 @@ import type { AutoBackupOptions } from "../../index"
  */
 export function listBackups(
   autoBackupOptions: AutoBackupOptions | null | undefined,
-  backupLog: any
+  backupLog: Logger
 ): Array<{ filename: string; path: string; size: number; created: Date }> {
   if (!autoBackupOptions) {
-    backupLog.warn("Auto-backup is not configured. Use backup() with a custom path instead.")
+    backupLog.warn("[BACKUP] Auto-backup is not configured, use backup() with custom path")
     return []
   }
 
@@ -38,7 +39,7 @@ export function listBackups(
       })
       .sort((a: { created: Date }, b: { created: Date }) => b.created.getTime() - a.created.getTime())
   } catch (error) {
-    backupLog.error(`Failed to list backups: ${error}`)
+    backupLog.error("[BACKUP] Failed to list backups | Error: ${error}", backupDir)
     return []
   }
 }

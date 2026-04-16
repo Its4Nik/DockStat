@@ -40,7 +40,7 @@ export abstract class BaseQueryBuilder<
     // Otherwise, create a new QB logger.
     this.log = baseLogger || new Logger("QB")
 
-    this.log.debug(`QueryBuilder initialized for table: ${tableName}`)
+    this.log.debug(`[INIT] QueryBuilder initialized`, tableName)
   }
 
   // ===== State Accessors =====
@@ -66,13 +66,30 @@ export abstract class BaseQueryBuilder<
     return this.state.parser
   }
 
+  // ===== Logging Helpers =====
+
+  /**
+   * Helper method for consistent logging with table context
+   *
+   * @param level - Log level (debug, info, warn, error)
+   * @param operation - The operation being performed (e.g., "UPDATE", "INSERT", "SELECT")
+   * @param message - Additional message details
+   */
+  protected logWithTable(
+    level: "debug" | "info" | "warn" | "error",
+    operation: string,
+    message: string
+  ): void {
+    this.log[level](`[${operation}] ${message}`, this.getTableName())
+  }
+
   // ===== State Management =====
 
   /**
    * Reset query builder state to initial values
    */
   protected reset(): void {
-    this.log.debug("Resetting QueryBuilder state")
+    this.log.debug("[RESET] Resetting QueryBuilder state", this.getTableName())
 
     this.state.whereConditions = []
     this.state.whereParams = []
@@ -91,7 +108,7 @@ export abstract class BaseQueryBuilder<
    * Reset only WHERE conditions (useful for reusing builder)
    */
   protected resetWhereConditions(): void {
-    this.log.debug("Resetting Where conditions")
+    this.log.debug("[RESET] Resetting WHERE conditions", this.getTableName())
     this.state.whereConditions = []
     this.state.whereParams = []
     this.state.regexConditions = []
@@ -101,7 +118,7 @@ export abstract class BaseQueryBuilder<
    * Reset only JOIN clauses (useful for reusing builder)
    */
   protected resetJoinClauses(): void {
-    this.log.debug("Resetting Join clauses")
+    this.log.debug("[RESET] Resetting JOIN clauses", this.getTableName())
     this.state.joinClauses = []
   }
 
@@ -111,7 +128,7 @@ export abstract class BaseQueryBuilder<
    * Quote a SQL identifier to prevent injection
    */
   protected quoteIdentifier(identifier: string): string {
-    this.log.debug("Quoting identifier")
+    this.log.debug(`[SQL] Quoting identifier: ${identifier}`, this.getTableName())
     return quoteIdentifier(identifier)
   }
 
@@ -121,7 +138,10 @@ export abstract class BaseQueryBuilder<
    * @returns Tuple of [whereClause, parameters]
    */
   protected buildWhereClause(): [string, SQLQueryBindings[]] {
-    this.log.debug("Building Where Clause")
+    this.log.debug(
+      `[SQL] Building WHERE clause with ${this.state.whereConditions.length} conditions`,
+      this.getTableName()
+    )
     if (this.state.whereConditions.length === 0) {
       return ["", []]
     }
@@ -138,7 +158,10 @@ export abstract class BaseQueryBuilder<
    * @returns Tuple of [joinClause, joinParams]
    */
   protected buildJoinClause(): [string, SQLQueryBindings[]] {
-    this.log.debug("Building Join Clause")
+    this.log.debug(
+      `[SQL] Building JOIN clause with ${this.state.joinClauses.length} joins`,
+      this.getTableName()
+    )
     if (this.state.joinClauses.length === 0) {
       return ["", []]
     }
@@ -243,7 +266,7 @@ export abstract class BaseQueryBuilder<
       const message =
         `${operation} requires at least one WHERE condition. ` +
         `Use where(), whereRaw(), whereIn(), whereOp(), or whereRgx().`
-      this.log.error(message)
+      this.log.error(`[VALIDATION] ${message}`, this.getTableName())
       throw new Error(message)
     }
   }

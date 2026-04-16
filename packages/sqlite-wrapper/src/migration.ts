@@ -1,5 +1,5 @@
 import type { Database } from "bun:sqlite"
-import type Logger from "@dockstat/logger"
+import type { Logger } from "@dockstat/logger"
 import { buildColumnSQL } from "./lib/table/buildColumnSQL"
 import { buildTableSQL } from "./lib/table/buildTableSQL"
 import type {
@@ -105,7 +105,7 @@ export function schemasAreDifferent<TCols extends Record<string, unknown>>(
   options: TableOptions<TCols>,
   logger: Logger
 ): boolean {
-  logger.info("Comparing schemas")
+  logger.info(`[${currentSchema.name}] Comparing schemas`)
 
   const pCurrentSchemaSQL = currentSchema.sql.trim().endsWith(";")
     ? currentSchema.sql.trim()
@@ -128,13 +128,13 @@ export function schemasAreDifferent<TCols extends Record<string, unknown>>(
   const normalizedCurrentSchema = normalizeCreateTable(pCurrentSchemaSQL, ifNotExists)
 
   if (normalizedCurrentSchema !== normalizedNewSchema) {
-    logger.info("Schema changes detected")
-    logger.debug(`Old Schema: ${normalizedCurrentSchema}`)
-    logger.debug(`New Schema: ${normalizedNewSchema}`)
+    logger.info(`[${currentSchema.name}] Schema changes detected`)
+    logger.debug(`[${currentSchema.name}] Old Schema: ${normalizedCurrentSchema}`)
+    logger.debug(`[${currentSchema.name}] New Schema: ${normalizedNewSchema}`)
     return true
   }
 
-  logger.info("No schema changes detected")
+  logger.info(`[${currentSchema.name}] No schema changes detected`)
   return false
 }
 
@@ -225,7 +225,7 @@ export function migrateTable<TCols extends Record<string, unknown>>(
     type: string
   }
 ): void {
-  migrationLog.info(`Starting migration for table: ${tableName}`)
+  migrationLog.info(`[${tableName}] Starting migration`)
 
   const migrationOpts = options.migrate !== undefined ? options.migrate : {}
   const {
@@ -239,7 +239,7 @@ export function migrateTable<TCols extends Record<string, unknown>>(
 
   // Check if migration is needed
   if (!schemasAreDifferent(currentSchema, newColumns, options, migrationLog)) {
-    migrationLog.info(`No migration needed for table: ${tableName}`)
+    migrationLog.info(`[${tableName}] No migration needed`)
     return
   }
 
@@ -247,13 +247,14 @@ export function migrateTable<TCols extends Record<string, unknown>>(
 
   const fkStatus = db.prepare("PRAGMA foreign_keys").get() as ForeignKeyStatus | null
   if (fkStatus && fkStatus.foreign_keys === 1) {
+    migrationLog.debug(`[${tableName}] Disabling foreign key constraints for migration`)
     db.run("PRAGMA foreign_keys = OFF")
   }
 
   db.transaction(() => {
     try {
       // Step 1: Create temporary table with new schema
-      migrationLog.debug(`Creating temporary table: ${tempTableName}`)
+      migrationLog.info(`[${tableName}] Step 1/6: Creating temporary table ${tempTableName}`)
       const columnDefs: string[] = []
 
       for (const [colName, colDef] of Object.entries(
@@ -270,6 +271,7 @@ export function migrateTable<TCols extends Record<string, unknown>>(
           : columnDefs.join(", ")
 
       const createTempTableSql = `CREATE TABLE "${tempTableName}" (${allDefinitions})`
+      migrationLog.debug(`[${tableName}] SQL: ${createTempTableSql}`)
       db.run(createTempTableSql)
 
       // Step 2: Copy data if requested
@@ -280,72 +282,74 @@ export function migrateTable<TCols extends Record<string, unknown>>(
         )
 
         if (selectColumns.length > 0) {
-          migrationLog.debug(`Copying data from ${tableName} to ${tempTableName}`)
+          migrationLog.info(
+            `[${tableName}] Step 2/6: Copying data (${selectColumns.length} columns)`
+          )
 
           const quotedSelectCols = selectColumns.map((col) => `"${col}"`).join(", ")
           const quotedInsertCols = insertColumns.map((col) => `"${col}"`).join(", ")
 
-          migrationLog.debug("Building base SQL statement")
           let copySql = `INSERT INTO "${tempTableName}" (${quotedInsertCols})
                          SELECT ${quotedSelectCols} FROM "${tableName}"`
 
           if (onConflict === "ignore") {
-            migrationLog.debug("Building ignore statement")
+            migrationLog.info(`[${tableName}] Using OR IGNORE conflict resolution`)
             copySql = `INSERT OR IGNORE INTO "${tempTableName}" (${quotedInsertCols})
                        SELECT ${quotedSelectCols} FROM "${tableName}"`
           } else if (onConflict === "replace") {
-            migrationLog.debug("Building replace statement")
+            migrationLog.info(`[${tableName}] Using OR REPLACE conflict resolution`)
             copySql = `INSERT OR REPLACE INTO "${tempTableName}" (${quotedInsertCols})
                        SELECT ${quotedSelectCols} FROM "${tableName}"`
           }
 
-          migrationLog.debug(`Running migration: ${JSON.stringify(copySql)}`)
-
+          migrationLog.debug(`[${tableName}] SQL: ${copySql}`)
           db.run(copySql)
+        } else {
+          migrationLog.warn(`[${tableName}] No common columns found for data copy`)
         }
       }
 
       // Step 3: Drop the original table
-      migrationLog.debug(`Dropping original table: ${tableName}`)
-
+      migrationLog.info(`[${tableName}] Step 3/6: Dropping original table`)
       db.run(`DROP TABLE "${tableName}"`)
 
       // Step 4: Rename temporary table to original name
-      migrationLog.debug(`Renaming ${tempTableName} to ${tableName}`)
+      migrationLog.info(`[${tableName}] Step 4/6: Renaming ${tempTableName} to ${tableName}`)
       db.run(`ALTER TABLE "${tempTableName}" RENAME TO "${tableName}"`)
 
       // Step 5: Recreate indexes
+      migrationLog.info(`[${tableName}] Step 5/6: Recreating ${indexes.length} indexes`)
       for (const index of indexes) {
         if (index.sql && !index.sql.includes("sqlite_autoindex")) {
-          migrationLog.debug(`Recreating index: ${index.name}`)
+          migrationLog.debug(`[${tableName}] Recreating index: ${index.name}`)
           try {
             db.run(index.sql)
           } catch (err) {
-            migrationLog.warn(`Failed to recreate index ${index.name}: ${err}`)
+            migrationLog.warn(`[${tableName}] Failed to recreate index ${index.name}: ${err}`)
           }
         }
       }
 
       // Step 6: Recreate triggers
+      migrationLog.info(`[${tableName}] Step 6/6: Recreating ${triggers.length} triggers`)
       for (const trigger of triggers) {
-        migrationLog.debug(`Recreating trigger: ${trigger.name}`)
+        migrationLog.debug(`[${tableName}] Recreating trigger: ${trigger.name}`)
         try {
           db.run(trigger.sql)
         } catch (err) {
-          migrationLog.warn(`Failed to recreate trigger ${trigger.name}: ${err}`)
+          migrationLog.warn(`[${tableName}] Failed to recreate trigger ${trigger.name}: ${err}`)
         }
       }
 
-      // Re-enable foreign key constraints if they were enabled
-
-      migrationLog.info(`Successfully migrated table: ${tableName}`)
+      migrationLog.info(`[${tableName}] Migration completed successfully`)
     } catch (error) {
-      migrationLog.error(`Migration failed for table ${tableName}: ${error}`)
+      migrationLog.error(`[${tableName}] Migration failed: ${error}`)
       throw error
     }
   })()
 
   if (fkStatus && fkStatus.foreign_keys === 1) {
+    migrationLog.debug(`[${tableName}] Re-enabling foreign key constraints`)
     db.run("PRAGMA foreign_keys = ON")
   }
 }
@@ -376,14 +380,14 @@ export function checkAndMigrate<TCols extends Record<string, unknown>>({
 }): boolean {
   const logger = migrationLog.spawn(tableName)
 
-  logger.debug("Checking if Table exists")
+  logger.debug(`[${tableName}] Checking if table exists`)
 
   if (!tableExists(db, tableName)) {
+    logger.info(`[${tableName}] Table does not exist, skipping migration`)
     return false
   }
-  logger.debug("Getting current schema")
 
-  //const currentSchema = getTableColumns(db, tableName)
+  logger.debug(`[${tableName}] Table exists, comparing schemas`)
 
   if (schemasAreDifferent(currentSchema, newColumns, options, logger)) {
     migrateTable(db, tableName, newColumns, options, tableConstraints, migrationLog, currentSchema)

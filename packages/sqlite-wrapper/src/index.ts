@@ -96,6 +96,7 @@ class DB {
   private backupLog: Logger
   private tableLog: Logger
   private migrationLog: Logger
+  private tableParsers: Map<string, Parser<Record<string, unknown>>> = new Map()
 
   /**
    * Open or create a SQLite database at `path`.
@@ -116,7 +117,7 @@ class DB {
     this.tableLog = this.baseLogger.spawn("Table")
     this.migrationLog = this.baseLogger.spawn("Migration")
 
-    this.dbLog.info(`Database open: ${path}`)
+    this.dbLog.info(`[INIT] Database opened`, path)
 
     this.dbPath = path
     this.db = new Database(path)
@@ -124,7 +125,7 @@ class DB {
     // Apply PRAGMA settings if provided
     if (options?.pragmas) {
       for (const [name, value] of options.pragmas) {
-        this.dbLog.info(`Applying Pragma: ${name} - ${JSON.stringify(value)}`)
+        this.dbLog.info(`[PRAGMA] Applying ${name} = ${JSON.stringify(value)}`, path)
         this.pragma(name, value)
       }
     }
@@ -181,7 +182,7 @@ class DB {
     if (this.autoBackupTimer) {
       clearInterval(this.autoBackupTimer)
       this.autoBackupTimer = null
-      this.backupLog.info("Auto-backup stopped")
+      this.backupLog.info("[BACKUP] Auto-backup timer stopped", this.dbPath)
     }
   }
 
@@ -206,7 +207,7 @@ class DB {
       MODULE: parser.MODULE || {},
     }
 
-    this.tableLog.debug(`Creating QueryBuilder for: ${tableName}`)
+    this.tableLog.info(`[TABLE] Creating QueryBuilder`, tableName)
     return new QueryBuilder<T>(this.db, tableName, pObj, this.baseLogger)
   }
 
@@ -215,7 +216,7 @@ class DB {
    * Also stops auto-backup if it's running.
    */
   close(): void {
-    this.dbLog.info(`Closed Database: ${this.dbPath}`)
+    this.dbLog.info(`[CLOSE] Database closed`, this.dbPath)
     this.stopAutoBackup()
     this.db.close()
   }
@@ -283,7 +284,10 @@ class DB {
         this.migrationLog.debug(`${JSON.stringify(currentSchema)}`)
 
         if (!currentSchema) {
-          this.migrationLog.info("Schema of table not found; new table => no migration needed")
+          this.migrationLog.info(
+            "[MIGRATION] Table schema not found, no migration needed",
+            tableName
+          )
         } else {
           const migrated = checkAndMigrate({
             currentSchema,
@@ -457,7 +461,7 @@ class DB {
    * Commit a transaction
    */
   commit(): void {
-    this.dbLog.info("Running commit...")
+    this.dbLog.info("[TRANSACTION] Committing transaction")
     this.run("COMMIT")
   }
 
@@ -465,7 +469,7 @@ class DB {
    * Rollback a transaction
    */
   rollback(): void {
-    this.dbLog.info("Running rollback..")
+    this.dbLog.info("[TRANSACTION] Rolling back transaction")
     this.run("ROLLBACK")
   }
 
@@ -498,7 +502,7 @@ class DB {
    */
   vacuum() {
     const result = this.db.run("VACUUM")
-    this.dbLog.debug("Vacuum completed")
+    this.dbLog.info("[MAINTENANCE] VACUUM completed", this.dbPath)
     return result
   }
 

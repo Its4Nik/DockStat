@@ -123,16 +123,16 @@ describe("Type-safe JOIN with IntelliSense", () => {
     expect(first).toHaveProperty("content") // From Post
   })
 
+  // HALLO
   test("where(...) should work with merged type columns", () => {
-    // After joining, we can filter on columns from either table
     const results = users
       .join<Post>("posts", { id: "user_id" })
       .where({ published: true }) // Filter by Post column
       .all()
 
     expect(results.length).toBe(1)
-    expect(results[0].published).toBe(1) // Post column (SQLite stores booleans as 0/1)
-    expect(results[0].name).toBe("Alice") // User column
+    expect(results[0].published).toBe(true)
+    expect(results[0].name).toBe("Alice")
   })
 
   test("select(...) should work with merged type columns", () => {

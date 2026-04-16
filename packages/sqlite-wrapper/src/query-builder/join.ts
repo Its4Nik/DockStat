@@ -1,5 +1,5 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
-import type Logger from "@dockstat/logger"
+import type { Logger } from "@dockstat/logger"
 import type { JoinClause, JoinCondition, JoinType, Parser } from "../types"
 import { quoteIdentifier } from "../utils"
 import { WhereQueryBuilder } from "./where"
@@ -26,24 +26,11 @@ export class JoinQueryBuilder<
   T extends Record<string, unknown>,
   ResultType extends Record<string, unknown> = T,
 > extends WhereQueryBuilder<T, ResultType> {
-  private joinLogger: Logger
+  private joinLog: Logger
 
   constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {
     super(db, tableName, parser, baseLogger)
-    this.joinLogger = baseLogger.spawn("JOIN")
-  }
-
-  protected logJoin(method: string, data: Record<string, unknown>): void {
-    const parts = Object.entries(data).map(
-      ([key, value]) => `${key}=${WhereQueryBuilder.safeStringify(value)}`
-    )
-    this.joinLogger.info(`${method} | ${parts.join(" ")}`)
-  }
-
-  protected logJoinState(method: string): void {
-    this.logJoin(method, {
-      joinClauses: this.state.joinClauses,
-    })
+    this.joinLog = this.log.spawn("JOIN")
   }
 
   /**
@@ -158,10 +145,9 @@ export class JoinQueryBuilder<
    * // CROSS JOIN "products"
    */
   crossJoin<JT extends Record<string, unknown>>(table: string, alias?: string): this {
-    // Log invocation
-    this.joinLogger.info(
-      `crossJoin | table=${quoteIdentifier(table)}${alias ? ` alias=${quoteIdentifier(alias)}` : ""}`
-    )
+    const tableRef = alias ? `${table} AS ${alias}` : table
+
+    this.logWithTable("info", "CROSS_JOIN", `Adding CROSS JOIN | Table: ${tableRef}`)
 
     const joinClause: JoinClause = {
       alias,
@@ -171,9 +157,7 @@ export class JoinQueryBuilder<
     }
 
     this.state.joinClauses.push(joinClause)
-
-    // Log resulting join state
-    this.logJoinState("crossJoin")
+    this.joinLog.debug(`Total JOIN clauses: ${this.state.joinClauses.length}`)
 
     return this
   }
@@ -182,9 +166,13 @@ export class JoinQueryBuilder<
    * Internal method to add a join clause
    */
   private addJoin(type: JoinType, table: string, condition: JoinCondition, alias?: string): this {
-    // Log invocation
-    this.joinLogger.info(
-      `${type.toLowerCase()}Join | table=${quoteIdentifier(table)}${alias ? ` alias=${quoteIdentifier(alias)}` : ""} condition=${WhereQueryBuilder.safeStringify(condition)}`
+    const tableRef = alias ? `${table} AS ${alias}` : table
+    const conditionStr = typeof condition === "string" ? condition : JSON.stringify(condition)
+
+    this.logWithTable(
+      "info",
+      `${type}_JOIN`,
+      `Adding | Table: ${tableRef} | Condition: ${WhereQueryBuilder.safeStringify(conditionStr)}`
     )
 
     const joinClause: JoinClause = {
@@ -195,9 +183,7 @@ export class JoinQueryBuilder<
     }
 
     this.state.joinClauses.push(joinClause)
-
-    // Log resulting join state
-    this.logJoinState(`${type.toLowerCase()}Join`)
+    this.joinLog.debug(`Total JOIN clauses: ${this.state.joinClauses.length}`)
 
     return this
   }

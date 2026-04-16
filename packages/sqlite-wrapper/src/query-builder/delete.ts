@@ -1,5 +1,5 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
-import type Logger from "@dockstat/logger"
+import type { Logger } from "@dockstat/logger"
 import type { DeleteResult, Parser } from "../types"
 import { quoteIdentifier } from "../utils"
 import { SelectQueryBuilder } from "./select"
@@ -53,14 +53,14 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const [whereClause, whereParams] = this.buildWhereClause()
     const query = `DELETE FROM ${quoteIdentifier(this.getTableName())}${whereClause}`
 
-    this.deleteLog.debug(`Query: ${query} - Where: ${whereParams}`)
+    this.logWithTable("info", "DELETE", `Executing | Where params: ${whereParams.length}`)
+    this.deleteLog.debug(`SQL: ${query}`)
 
     const result = this.getDb()
       .prepare(query)
       .run(...whereParams)
 
-    this.deleteLog.info(`Deleted: ${result.changes}`)
-
+    this.logWithTable("info", "DELETE", `Completed | Deleted: ${result.changes}`)
     this.reset()
 
     return { changes: result.changes }
@@ -80,6 +80,12 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const [whereClause, whereParams] = this.buildWhereClause()
     const selectQuery = `SELECT rowid as _rowid_, * FROM ${quoteIdentifier(this.getTableName())}${whereClause}`
 
+    this.logWithTable(
+      "debug",
+      "DELETE",
+      `Fetching candidates for regex filter | Where params: ${whereParams.length}`
+    )
+
     const candidateRows = this.getDb()
       .prepare(selectQuery)
       .all(...whereParams) as (T & { _rowid_: number })[]
@@ -88,15 +94,16 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const matchingRows = this.applyRegexFiltering(candidateRows)
 
     if (matchingRows.length === 0) {
+      this.logWithTable("info", "DELETE", `No matches found via regex filter`)
       this.reset()
       return { changes: 0 }
     }
 
+    this.logWithTable("info", "DELETE", `Deleting ${matchingRows.length} rows via regex filter`)
+
     // Delete each matching row by rowid
     const deleteQuery = `DELETE FROM ${quoteIdentifier(this.getTableName())} WHERE rowid = ?`
     const stmt = this.getDb().prepare(deleteQuery)
-
-    this.deleteLog.debug(`DELETE-RGX: ${deleteQuery}`)
 
     let totalChanges = 0
 
@@ -105,7 +112,7 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
       totalChanges += result.changes
     }
 
-    this.deleteLog.info(`Changes: ${totalChanges}`)
+    this.logWithTable("info", "DELETE", `Completed via regex | Deleted: ${totalChanges}`)
     this.reset()
 
     return { changes: totalChanges }
@@ -126,6 +133,8 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const savedWhereParams = [...this.state.whereParams]
     const savedRegexConditions = [...this.state.regexConditions]
 
+    this.logWithTable("debug", "DELETE_AND_GET", `Fetching rows before delete`)
+
     // Get rows before deletion
     const rowsToDelete = this.all()
 
@@ -138,9 +147,11 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const deleteResult = this.delete()
 
     if (deleteResult.changes === 0) {
+      this.logWithTable("info", "DELETE_AND_GET", `No rows deleted`)
       return []
     }
 
+    this.logWithTable("info", "DELETE_AND_GET", `Returning ${rowsToDelete.length} deleted rows`)
     return rowsToDelete
   }
 
@@ -174,13 +185,18 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const query = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${quoteIdentifier(String(deletedColumn))} = ?${whereClause}`
     const params = [deletedValue, ...whereParams] as SQLQueryBindings[]
 
-    this.deleteLog.info(`SOFT DELETE: ${JSON.stringify({ params, query })}`)
+    this.logWithTable(
+      "info",
+      "SOFT_DELETE",
+      `Executing | Column: ${String(deletedColumn)} | Where params: ${whereParams.length}`
+    )
+    this.deleteLog.debug(`SQL: ${query}`)
 
     const result = this.getDb()
       .prepare(query)
       .run(...params)
 
-    this.deleteLog.info(`Changes: ${result.changes}`)
+    this.logWithTable("info", "SOFT_DELETE", `Completed | Marked as deleted: ${result.changes}`)
     this.reset()
 
     return { changes: result.changes }
@@ -198,6 +214,12 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const [whereClause, whereParams] = this.buildWhereClause()
     const selectQuery = `SELECT rowid as _rowid_, * FROM ${quoteIdentifier(this.getTableName())}${whereClause}`
 
+    this.logWithTable(
+      "debug",
+      "SOFT_DELETE",
+      `Fetching candidates for regex filter | Where params: ${whereParams.length}`
+    )
+
     const candidateRows = this.getDb()
       .prepare(selectQuery)
       .all(...whereParams) as (T & { _rowid_: number })[]
@@ -206,15 +228,20 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const matchingRows = this.applyRegexFiltering(candidateRows)
 
     if (matchingRows.length === 0) {
+      this.logWithTable("info", "SOFT_DELETE", `No matches found via regex filter`)
       this.reset()
       return { changes: 0 }
     }
 
+    this.logWithTable(
+      "info",
+      "SOFT_DELETE",
+      `Soft deleting ${matchingRows.length} rows via regex filter`
+    )
+
     // Soft delete each matching row by rowid
     const updateQuery = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${quoteIdentifier(String(deletedColumn))} = ? WHERE rowid = ?`
     const stmt = this.getDb().prepare(updateQuery)
-
-    this.deleteLog.info(`SOFT DELETE (regex): ${updateQuery}`)
 
     let totalChanges = 0
 
@@ -223,7 +250,11 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
       totalChanges += result.changes
     }
 
-    this.deleteLog.info(`Changes: ${totalChanges}`)
+    this.logWithTable(
+      "info",
+      "SOFT_DELETE",
+      `Completed via regex | Marked as deleted: ${totalChanges}`
+    )
     this.reset()
 
     return { changes: totalChanges }
@@ -252,13 +283,18 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const [whereClause, whereParams] = this.buildWhereClause()
     const query = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${quoteIdentifier(String(deletedColumn))} = NULL${whereClause}`
 
-    this.deleteLog.info(`RESTORE: ${JSON.stringify({ query, whereParams })}`)
+    this.logWithTable(
+      "info",
+      "RESTORE",
+      `Executing | Column: ${String(deletedColumn)} | Where params: ${whereParams.length}`
+    )
+    this.deleteLog.debug(`SQL: ${query}`)
 
     const result = this.getDb()
       .prepare(query)
       .run(...whereParams)
 
-    this.deleteLog.info(`Changes: ${result.changes}`)
+    this.logWithTable("info", "RESTORE", `Completed | Restored: ${result.changes}`)
     this.reset()
 
     return { changes: result.changes }
@@ -273,6 +309,12 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const [whereClause, whereParams] = this.buildWhereClause()
     const selectQuery = `SELECT rowid as _rowid_, * FROM ${quoteIdentifier(this.getTableName())}${whereClause}`
 
+    this.logWithTable(
+      "debug",
+      "RESTORE",
+      `Fetching candidates for regex filter | Where params: ${whereParams.length}`
+    )
+
     const candidateRows = this.getDb()
       .prepare(selectQuery)
       .all(...whereParams) as (T & { _rowid_: number })[]
@@ -281,15 +323,16 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
     const matchingRows = this.applyRegexFiltering(candidateRows)
 
     if (matchingRows.length === 0) {
+      this.logWithTable("info", "RESTORE", `No matches found via regex filter`)
       this.reset()
       return { changes: 0 }
     }
 
+    this.logWithTable("info", "RESTORE", `Restoring ${matchingRows.length} rows via regex filter`)
+
     // Restore each matching row by rowid
     const updateQuery = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${quoteIdentifier(String(deletedColumn))} = NULL WHERE rowid = ?`
     const stmt = this.getDb().prepare(updateQuery)
-
-    this.deleteLog.info(`RESTORE (regex): ${updateQuery}`)
 
     let totalChanges = 0
 
@@ -298,7 +341,7 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
       totalChanges += result.changes
     }
 
-    this.deleteLog.info(`Changes: ${totalChanges}`)
+    this.logWithTable("info", "RESTORE", `Completed via regex | Restored: ${totalChanges}`)
     this.reset()
 
     return { changes: totalChanges }
@@ -322,10 +365,13 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
       throw new Error("deleteBatch: conditions must be a non-empty array")
     }
 
+    this.logWithTable("info", "DELETE_BATCH", `Starting | Batch size: ${conditions.length}`)
+
     const db = this.getDb()
 
     const transaction = db.transaction((conditionsToProcess: Array<Partial<T>>) => {
       let totalChanges = 0
+      let processedCount = 0
 
       for (const whereData of conditionsToProcess) {
         // Build WHERE conditions for this delete
@@ -351,16 +397,18 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
 
         const result = db.prepare(query).run(...whereParams)
         totalChanges += result.changes
+        processedCount++
       }
 
+      this.deleteLog.debug(
+        `Processed ${processedCount}/${conditionsToProcess.length} deletes in transaction`
+      )
       return { changes: totalChanges }
     })
 
-    this.deleteLog.info(`DELETE BATCH: ${conditions.length} deletes`)
-
     const result = transaction(conditions)
 
-    this.deleteLog.info(`Changes: ${result.changes}`)
+    this.logWithTable("info", "DELETE_BATCH", `Completed | Total deleted: ${result.changes}`)
     this.reset()
 
     return result
@@ -379,11 +427,12 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
   truncate(): DeleteResult {
     const query = `DELETE FROM ${quoteIdentifier(this.getTableName())}`
 
-    this.deleteLog.info(`TRUNCATE: ${query}`)
+    this.logWithTable("warn", "TRUNCATE", `Executing | CAUTION: Deleting all rows`)
+    this.deleteLog.debug(`SQL: ${query}`)
 
     const result = this.getDb().prepare(query).run()
 
-    this.deleteLog.info(`Changes: ${result.changes}`)
+    this.logWithTable("warn", "TRUNCATE", `Completed | Deleted: ${result.changes}`)
     this.reset()
 
     return { changes: result.changes }
@@ -404,6 +453,11 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
    * table.deleteOlderThan("timestamp", thirtyDaysAgo)
    */
   deleteOlderThan(timestampColumn: keyof T, olderThan: number): DeleteResult {
+    this.logWithTable(
+      "debug",
+      "DELETE_OLDER_THAN",
+      `Executing | Column: ${String(timestampColumn)} | Older than: ${olderThan}`
+    )
     return this.whereOp(timestampColumn, "<", olderThan).delete()
   }
 
@@ -439,11 +493,16 @@ export class DeleteQueryBuilder<T extends Record<string, unknown>> extends Selec
       )
     `.trim()
 
-    this.deleteLog.info(`DELETE DUPLICATES: ${query}`)
+    this.logWithTable("info", "DELETE_DUPLICATES", `Executing | Columns: ${quotedColumns}`)
+    this.deleteLog.debug(`SQL: ${query}`)
 
     const result = this.getDb().prepare(query).run()
 
-    this.deleteLog.info(`Changes: ${result.changes}`)
+    this.logWithTable(
+      "info",
+      "DELETE_DUPLICATES",
+      `Completed | Deleted duplicates: ${result.changes}`
+    )
     this.reset()
 
     return { changes: result.changes }

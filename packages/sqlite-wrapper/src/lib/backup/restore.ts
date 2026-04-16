@@ -38,24 +38,24 @@ export function restore(
       db.close()
     } catch (err) {
       // continue — if close fails, copy may still succeed or re-open will error
-      backupLog.warn(`Error closing DB before restore: ${err}`)
+      backupLog.warn("[RESTORE] Error closing DB before restore | Error: ${err}", dbPath)
     }
   }
 
   try {
     fs.copyFileSync(backupPath, restorePath)
-    backupLog.info(`Restoring from: ${backupPath}`)
+    backupLog.info("[RESTORE] Copying backup", `${backupPath} -> ${restorePath}`)
 
     // If we restored to the original database path, reopen and return new Database
     if (restorePath === dbPath) {
       const reopened = new Database(dbPath)
-      backupLog.info("Database connection reopened after restore")
+      backupLog.info("[RESTORE] Database connection reopened", restorePath)
       return reopened
     }
 
     return null
   } catch (error) {
-    backupLog.error(`Failed to restore backup: ${error}`)
+    backupLog.error(`[RESTORE] Failed to restore backup | Error: ${error}`, restorePath)
     throw error
   }
 }
