@@ -17,7 +17,10 @@ import { SelectQueryBuilder } from "./select"
  * - Delete duplicates
  * - Truncate (explicit full-table delete)
  */
-export class DeleteQueryBuilder<T extends Record<string, unknown>> extends SelectQueryBuilder<T> {
+export class DeleteQueryBuilder<T extends Record<string, unknown>> extends SelectQueryBuilder<
+  T,
+  T
+> {
   private deleteLog: Logger
 
   constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {

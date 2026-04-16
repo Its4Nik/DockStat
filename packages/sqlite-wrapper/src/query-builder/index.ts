@@ -5,6 +5,7 @@ import type {
   DeleteResult,
   InsertOptions,
   InsertResult,
+  JoinCondition,
   Parser,
   QueryBuilderState,
   RegexCondition,
@@ -26,9 +27,15 @@ import { UpdateQueryBuilder } from "./update"
  * - UPDATE: safe updates with mandatory WHERE conditions
  * - DELETE: safe deletes with mandatory WHERE conditions
  * - WHERE: shared conditional logic across all operations
+ *
+ * @template T - The original table type (used for INSERT, UPDATE, DELETE operations)
+ * @template ResultType - The current query result type (defaults to T, updates with each JOIN)
  */
-export class QueryBuilder<T extends Record<string, unknown> = Record<string, unknown>> {
-  private selectBuilder: SelectQueryBuilder<T>
+export class QueryBuilder<
+  T extends Record<string, unknown> = Record<string, unknown>,
+  ResultType extends Record<string, unknown> = T,
+> {
+  private selectBuilder: SelectQueryBuilder<T, ResultType>
   private insertBuilder: InsertQueryBuilder<T>
   private updateBuilder: UpdateQueryBuilder<T>
   private deleteBuilder: DeleteQueryBuilder<T>
@@ -41,7 +48,7 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
     this.qbLogger = logger
 
     // Create instances of each specialized builder
-    this.selectBuilder = new SelectQueryBuilder<T>(db, tableName, parser, logger)
+    this.selectBuilder = new SelectQueryBuilder<T, ResultType>(db, tableName, parser, logger)
     this.insertBuilder = new InsertQueryBuilder<T>(db, tableName, parser, logger)
     this.updateBuilder = new UpdateQueryBuilder<T>(db, tableName, parser, logger)
     this.deleteBuilder = new DeleteQueryBuilder<T>(db, tableName, parser, logger)
@@ -67,7 +74,7 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
   /**
    * Add simple equality conditions to the WHERE clause.
    */
-  where(conditions: WhereCondition<T>): this {
+  where(conditions: WhereCondition<ResultType>): this {
     this.selectBuilder.where(conditions)
     return this
   }
@@ -75,7 +82,7 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
   /**
    * Add regex conditions (applied client-side).
    */
-  whereRgx(conditions: RegexCondition<T>): this {
+  whereRgx(conditions: RegexCondition<ResultType>): this {
     this.selectBuilder.whereRgx(conditions)
     return this
   }
@@ -99,7 +106,7 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
   /**
    * Add an IN clause with proper parameter binding.
    */
-  whereIn(column: keyof T, values: SQLQueryBindings[]): this {
+  whereIn(column: keyof ResultType, values: SQLQueryBindings[]): this {
     this.selectBuilder.whereIn(column, values)
     return this
   }
@@ -107,7 +114,7 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
   /**
    * Add a NOT IN clause with proper parameter binding.
    */
-  whereNotIn(column: keyof T, values: SQLQueryBindings[]): this {
+  whereNotIn(column: keyof ResultType, values: SQLQueryBindings[]): this {
     this.selectBuilder.whereNotIn(column, values)
     return this
   }
@@ -115,7 +122,7 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
   /**
    * Add a comparison operator condition.
    */
-  whereOp(column: keyof T, op: string, value: SQLQueryBindings): this {
+  whereOp(column: keyof ResultType, op: string, value: SQLQueryBindings): this {
     this.selectBuilder.whereOp(column, op, value)
     return this
   }
@@ -123,7 +130,7 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
   /**
    * Add a BETWEEN condition.
    */
-  whereBetween(column: keyof T, min: SQLQueryBindings, max: SQLQueryBindings): this {
+  whereBetween(column: keyof ResultType, min: SQLQueryBindings, max: SQLQueryBindings): this {
     this.selectBuilder.whereBetween(column, min, max)
     return this
   }
@@ -131,7 +138,7 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
   /**
    * Add a NOT BETWEEN condition.
    */
-  whereNotBetween(column: keyof T, min: SQLQueryBindings, max: SQLQueryBindings): this {
+  whereNotBetween(column: keyof ResultType, min: SQLQueryBindings, max: SQLQueryBindings): this {
     this.selectBuilder.whereNotBetween(column, min, max)
     return this
   }
@@ -139,7 +146,7 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
   /**
    * Add an IS NULL condition.
    */
-  whereNull(column: keyof T): this {
+  whereNull(column: keyof ResultType): this {
     this.selectBuilder.whereNull(column)
     return this
   }
@@ -147,9 +154,105 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
   /**
    * Add an IS NOT NULL condition.
    */
-  whereNotNull(column: keyof T): this {
+  whereNotNull(column: keyof ResultType): this {
     this.selectBuilder.whereNotNull(column)
     return this
+  }
+
+  // ===== JOIN METHODS (delegated to selectBuilder) =====
+
+  /**
+   * Add a JOIN clause (default: INNER JOIN).
+   *
+   * @template JT - The joined table type
+   * @returns A new QueryBuilder with the merged result type (ResultType & JT)
+   *
+   * @example
+   * const query = users.join<Post>("posts", { id: "user_id" })
+   * // ResultType is now User & Post
+   * const results = query.all() // Returns (User & Post)[]
+   */
+  join<JT extends Record<string, unknown>>(
+    table: string,
+    condition: JoinCondition,
+    alias?: string
+  ): QueryBuilder<T, ResultType & JT> {
+    this.selectBuilder.join<JT>(table, condition, alias)
+    return this as unknown as QueryBuilder<T, ResultType & JT>
+  }
+
+  /**
+   * Add an INNER JOIN clause.
+   *
+   * @template JT - The joined table type
+   * @returns A new QueryBuilder with the merged result type (ResultType & JT)
+   */
+  innerJoin<JT extends Record<string, unknown>>(
+    table: string,
+    condition: JoinCondition,
+    alias?: string
+  ): QueryBuilder<T, ResultType & JT> {
+    this.selectBuilder.innerJoin<JT>(table, condition, alias)
+    return this as unknown as QueryBuilder<T, ResultType & JT>
+  }
+
+  /**
+   * Add a LEFT JOIN clause.
+   *
+   * @template JT - The joined table type
+   * @returns A new QueryBuilder with the merged result type (ResultType & JT)
+   */
+  leftJoin<JT extends Record<string, unknown>>(
+    table: string,
+    condition: JoinCondition,
+    alias?: string
+  ): QueryBuilder<T, ResultType & JT> {
+    this.selectBuilder.leftJoin<JT>(table, condition, alias)
+    return this as unknown as QueryBuilder<T, ResultType & JT>
+  }
+
+  /**
+   * Add a RIGHT JOIN clause.
+   *
+   * @template JT - The joined table type
+   * @returns A new QueryBuilder with the merged result type (ResultType & JT)
+   */
+  rightJoin<JT extends Record<string, unknown>>(
+    table: string,
+    condition: JoinCondition,
+    alias?: string
+  ): QueryBuilder<T, ResultType & JT> {
+    this.selectBuilder.rightJoin<JT>(table, condition, alias)
+    return this as unknown as QueryBuilder<T, ResultType & JT>
+  }
+
+  /**
+   * Add a FULL JOIN clause.
+   *
+   * @template JT - The joined table type
+   * @returns A new QueryBuilder with the merged result type (ResultType & JT)
+   */
+  fullJoin<JT extends Record<string, unknown>>(
+    table: string,
+    condition: JoinCondition,
+    alias?: string
+  ): QueryBuilder<T, ResultType & JT> {
+    this.selectBuilder.fullJoin<JT>(table, condition, alias)
+    return this as unknown as QueryBuilder<T, ResultType & JT>
+  }
+
+  /**
+   * Add a CROSS JOIN clause.
+   *
+   * @template JT - The joined table type
+   * @returns A new QueryBuilder with the merged result type (ResultType & JT)
+   */
+  crossJoin<JT extends Record<string, unknown>>(
+    table: string,
+    alias?: string
+  ): QueryBuilder<T, ResultType & JT> {
+    this.selectBuilder.crossJoin<JT>(table, alias)
+    return this as unknown as QueryBuilder<T, ResultType & JT>
   }
 
   // ===== SELECT METHODS (delegated to selectBuilder) =====
@@ -157,7 +260,7 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
   /**
    * Specify which columns to select.
    */
-  select(columns: ColumnNames<T>): this {
+  select(columns: ColumnNames<ResultType>): this {
     this.selectBuilder.select(columns)
     return this
   }
@@ -165,7 +268,7 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
   /**
    * Add ORDER BY clause.
    */
-  orderBy(column: keyof T): this {
+  orderBy(column: keyof ResultType): this {
     this.selectBuilder.orderBy(column)
     return this
   }
@@ -207,21 +310,21 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
   /**
    * Execute the query and return all matching rows.
    */
-  all(): T[] {
+  all(): ResultType[] {
     return this.selectBuilder.all()
   }
 
   /**
    * Execute the query and return the first matching row, or null.
    */
-  get(): T | null {
+  get(): ResultType | null {
     return this.selectBuilder.get()
   }
 
   /**
    * Execute the query and return the first matching row, or null.
    */
-  first(): T | null {
+  first(): ResultType | null {
     return this.selectBuilder.first()
   }
 
@@ -242,14 +345,14 @@ export class QueryBuilder<T extends Record<string, unknown> = Record<string, unk
   /**
    * Execute the query and return a single column value from the first row.
    */
-  value<K extends keyof T>(column: K): T[K] | null {
+  value<K extends keyof ResultType>(column: K): ResultType[K] | null {
     return this.selectBuilder.value(column)
   }
 
   /**
    * Execute the query and return an array of values from a single column.
    */
-  pluck<K extends keyof T>(column: K): T[K][] {
+  pluck<K extends keyof ResultType>(column: K): ResultType[K][] {
     return this.selectBuilder.pluck(column)
   }
 

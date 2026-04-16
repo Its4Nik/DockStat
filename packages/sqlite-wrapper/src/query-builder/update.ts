@@ -15,7 +15,10 @@ import { SelectQueryBuilder } from "./select"
  * - Batch updates with transaction support
  * - Automatic JSON serialization
  */
-export class UpdateQueryBuilder<T extends Record<string, unknown>> extends SelectQueryBuilder<T> {
+export class UpdateQueryBuilder<T extends Record<string, unknown>> extends SelectQueryBuilder<
+  T,
+  T
+> {
   private updateLog: Logger
 
   constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {

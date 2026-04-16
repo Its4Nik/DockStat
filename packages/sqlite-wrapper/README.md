@@ -31,8 +31,10 @@ Schema-first table helpers, an expressive chainable QueryBuilder, safe defaults 
 ### Breaking Changes
 
 - **DATE Column Behavior** — If you have existing tables with DATE, DATETIME, or TIMESTAMP columns, you must now insert/update using JavaScript `Date` objects instead of ISO strings. Previously, you might have done `createdAt: new Date().toISOString()` - now you must use `createdAt: new Date()`. The library automatically handles conversion to/from ISO strings in the database.
+If you need to opt-out of automatic DATE parsing for specific columns, you can remove them from the parser configuration or use `column.text()` instead of `column.date()`.
 
 **Migration Guide:**
+
 ```typescript
 // ❌ Before (v1.3.x) - manual ISO string conversion
 table.insert({ createdAt: new Date().toISOString() })
@@ -42,6 +44,36 @@ table.insert({ createdAt: new Date() })
 ```
 
 If you need to opt-out of automatic DATE parsing for specific columns, you can remove them from the parser configuration or use `column.text()` instead of `column.date()`.
+
+---
+
+## 🆕 What's New in v1.5.0
+
+### Type-Safe JOIN Operations
+
+- **Full type inference for JOIN queries** — Join tables with automatic type merging and IntelliSense support
+- **Support for all JOIN types** — INNER, LEFT, RIGHT, FULL, and CROSS JOINs
+- **Flexible join conditions** — Use simple column mappings or raw SQL expressions
+- **Chain multiple JOINs** — Join multiple tables with cumulative type merging
+
+**Quick Example:**
+
+```typescript
+// Join users with posts — result type is automatically inferred as User & Post
+const results = users
+  .join<Post>("posts", { id: "user_id" })
+  .where({ published: true })
+  .all()
+
+// IntelliSense works on both User and Post columns!
+results[0].name      // ✅ From User
+results[0].title     // ✅ From Post
+```
+
+### Previous Features (v1.4.0)
+
+- **DATE Column Support with Auto-detection** — DATE, DATETIME, and TIMESTAMP columns are now fully supported with automatic serialization/deserialization! JavaScript `Date` objects are automatically converted to/from ISO strings in database
+- **Automatic DATE Parser Detection** — Columns using `column.date()`, `column.datetime()`, or `column.timestamp()` are automatically detected and parsed without manual configuration
 
 ---
 
@@ -483,6 +515,108 @@ userTable.truncate();
 userTable.deleteOlderThan("created_at", Date.now() - 86400000);
 ```
 
+### JOIN Operations
+
+Join tables with full type safety and IntelliSense support:
+
+```typescript
+interface User extends Record<string, unknown> {
+  id: number;
+  name: string;
+  email: string;
+}
+
+interface Post extends Record<string, unknown> {
+  id: number;
+  user_id: number;
+  title: string;
+  content: string | null;
+  published: boolean;
+}
+
+// Simple column mapping
+const results = users
+  .join<Post>("posts", { id: "user_id" })
+  .all()
+
+// Result type is automatically inferred as User & Post
+// IntelliSense shows columns from BOTH tables!
+results[0].name       // From User
+results[0].email      // From User
+results[0].title      // From Post
+results[0].published  // From Post
+```
+
+#### Join Methods
+
+- **`join<JT>(table, condition, alias?)`** — INNER JOIN (default)
+- **`innerJoin<JT>(table, condition, alias?)`** — Explicit INNER JOIN
+- **`leftJoin<JT>(table, condition, alias?)`** — LEFT JOIN
+- **`rightJoin<JT>(table, condition, alias?)`** — RIGHT JOIN
+- **`fullJoin<JT>(table, condition, alias?)`** — FULL JOIN
+- **`crossJoin<JT>(table, alias?)`** — CROSS JOIN (no condition needed)
+
+#### Join Conditions
+
+You can specify join conditions in two ways:
+
+```typescript
+// 1. Simple column mapping
+users.join<Post>("posts", { id: "user_id" })
+// Generates: INNER JOIN "posts" ON "users"."id" = "posts"."user_id"
+
+// 2. Column mapping with explicit table references
+users.join<Post>("posts", { "users.id": "posts.user_id" })
+// Generates: INNER JOIN "posts" ON "users"."id" = "posts"."user_id"
+
+// 3. Raw SQL expression for complex conditions
+users.join<Post>("posts", "users.id = posts.user_id AND posts.published = 1")
+// Generates: INNER JOIN "posts" ON users.id = posts.user_id AND posts.published = 1
+```
+
+#### Table Aliases
+
+Use aliases for self-joins or to avoid column name conflicts:
+
+```typescript
+users.join<Post>("posts", { id: "user_id" }, "p")
+  .join<Comment>("comments", { "p.id": "post_id" }, "c")
+  .all()
+```
+
+#### Multiple Joins
+
+Chain multiple joins with cumulative type merging:
+
+```typescript
+// Result type: User & Post & Comment
+const results = users
+  .join<Post>("posts", { id: "user_id" })
+  .join<Comment>("comments", { "posts.id": "post_id" })
+  .all()
+
+// IntelliSense shows columns from all three tables!
+results[0].name   // User
+results[0].title  // Post
+results[0].text   // Comment
+```
+
+#### Type Safety
+
+Join operations are fully type-safe:
+
+```typescript
+// ✅ Valid: accessing columns from joined tables
+users.join<Post>("posts", { id: "user_id" })
+  .where({ published: true })  // Post column
+  .orderBy("name")           // User column
+  .select(["name", "title"]) // Mix columns from both tables
+
+// ❌ Error: typos in column names caught at compile time
+users.join<Post>("posts", { id: "user_id" })
+  .where({ titl: "value" })  // TypeScript error: Property 'titl' does not exist
+```
+
 ### WHERE Conditions
 
 ```typescript
@@ -591,7 +725,7 @@ column.enum(["pending", "active", "completed"]);
 
 The package is organized into modular components for maintainability:
 
-```
+```text
 @dockstat/sqlite-wrapper
 ├── index.ts              # Main exports & DB class
 ├── types.ts              # Type definitions & column helpers

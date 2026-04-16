@@ -14,7 +14,7 @@ import { WhereQueryBuilder } from "./where"
  * - Batch inserts with transaction support
  * - Automatic JSON/Boolean serialization
  */
-export class InsertQueryBuilder<T extends Record<string, unknown>> extends WhereQueryBuilder<T> {
+export class InsertQueryBuilder<T extends Record<string, unknown>> extends WhereQueryBuilder<T, T> {
   private insertLog: Logger
 
   constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {

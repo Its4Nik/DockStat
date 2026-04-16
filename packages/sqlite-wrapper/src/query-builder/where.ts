@@ -22,7 +22,10 @@ import { BaseQueryBuilder } from "./base"
  * - Raw SQL expressions
  * - Regex conditions (client-side filtering)
  */
-export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQueryBuilder<T> {
+export class WhereQueryBuilder<
+  T extends Record<string, unknown>,
+  ResultType extends Record<string, unknown> = T,
+> extends BaseQueryBuilder<T, ResultType> {
   whereLogger: Logger
 
   constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {
@@ -102,7 +105,7 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * .where({ deleted_at: null })
    * // WHERE "deleted_at" IS NULL
    */
-  where(conditions: WhereCondition<T>): this {
+  where(conditions: WhereCondition<ResultType>): this {
     this.logWhere("where", { conditions })
 
     for (const [column, value] of Object.entries(conditions)) {
@@ -126,7 +129,7 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * @example
    * .whereRgx({ email: /@gmail\.com$/ })
    */
-  whereRgx(conditions: RegexCondition<T>): this {
+  whereRgx(conditions: RegexCondition<ResultType>): this {
     // Log invocation with a safe serializer for regex values
     this.log.info(`whereRgx | conditions=${WhereQueryBuilder.safeStringify(conditions)}`)
 
@@ -135,12 +138,12 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
 
       if (value instanceof RegExp) {
         this.state.regexConditions.push({
-          column: column as keyof T,
+          column: String(column),
           regex: value,
         })
       } else if (typeof value === "string") {
         this.state.regexConditions.push({
-          column: column as keyof T,
+          column: String(column),
           regex: new RegExp(value),
         })
       } else if (value !== null && value !== undefined) {
@@ -204,7 +207,7 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * .whereIn("status", ["active", "pending"])
    * // WHERE "status" IN (?, ?)
    */
-  whereIn(column: keyof T, values: SQLQueryBindings[]): this {
+  whereIn(column: keyof ResultType, values: SQLQueryBindings[]): this {
     // Log invocation
     this.log.info(
       `whereIn | column=${String(column)} values=${WhereQueryBuilder.safeStringify(values)}`
@@ -237,7 +240,7 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * .whereNotIn("role", ["banned", "suspended"])
    * // WHERE "role" NOT IN (?, ?)
    */
-  whereNotIn(column: keyof T, values: SQLQueryBindings[]): this {
+  whereNotIn(column: keyof ResultType, values: SQLQueryBindings[]): this {
     // Log invocation
     this.log.info(
       `whereNotIn | column=${String(column)} values=${WhereQueryBuilder.safeStringify(values)}`
@@ -272,7 +275,7 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * .whereOp("age", ">=", 18)
    * .whereOp("name", "LIKE", "%smith%")
    */
-  whereOp(column: keyof T, op: string, value: SQLQueryBindings): this {
+  whereOp(column: keyof ResultType, op: string, value: SQLQueryBindings): this {
     const columnStr = String(column)
     this.logWhere("whereOp", { column: columnStr, op, value })
 
@@ -305,7 +308,7 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * .whereBetween("age", 18, 65)
    * // WHERE "age" BETWEEN ? AND ?
    */
-  whereBetween(column: keyof T, min: SQLQueryBindings, max: SQLQueryBindings): this {
+  whereBetween(column: keyof ResultType, min: SQLQueryBindings, max: SQLQueryBindings): this {
     // Log invocation
     this.log.info(
       `whereBetween | column=${String(column)} min=${WhereQueryBuilder.safeStringify(min)} max=${WhereQueryBuilder.safeStringify(
@@ -336,7 +339,7 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * .whereNotBetween("score", 0, 50)
    * // WHERE "score" NOT BETWEEN ? AND ?
    */
-  whereNotBetween(column: keyof T, min: SQLQueryBindings, max: SQLQueryBindings): this {
+  whereNotBetween(column: keyof ResultType, min: SQLQueryBindings, max: SQLQueryBindings): this {
     // Log invocation
     this.log.info(
       `whereNotBetween | column=${String(column)} min=${WhereQueryBuilder.safeStringify(min)} max=${WhereQueryBuilder.safeStringify(
@@ -367,7 +370,7 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * .whereNull("deleted_at")
    * // WHERE "deleted_at" IS NULL
    */
-  whereNull(column: keyof T): this {
+  whereNull(column: keyof ResultType): this {
     // Log invocation
     this.log.info(`whereNull | column=${String(column)}`)
 
@@ -391,7 +394,7 @@ export class WhereQueryBuilder<T extends Record<string, unknown>> extends BaseQu
    * .whereNotNull("email")
    * // WHERE "email" IS NOT NULL
    */
-  whereNotNull(column: keyof T): this {
+  whereNotNull(column: keyof ResultType): this {
     // Log invocation
     this.log.info(`whereNotNull | column=${String(column)}`)
 

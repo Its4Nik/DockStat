@@ -2,6 +2,7 @@ import type { Database, SQLQueryBindings } from "bun:sqlite"
 import type { Logger } from "@dockstat/logger"
 import type { ColumnNames, OrderDirection, Parser } from "../types"
 import { quoteIdentifier, truncate } from "../utils"
+import { JoinQueryBuilder } from "./join"
 import { WhereQueryBuilder } from "./where"
 
 /**
@@ -14,9 +15,12 @@ import { WhereQueryBuilder } from "./where"
  * - Result transformation (JSON/Boolean parsing)
  * - Client-side regex filtering when needed
  */
-export class SelectQueryBuilder<T extends Record<string, unknown>> extends WhereQueryBuilder<T> {
-  private selectedColumns: ColumnNames<T> = ["*"]
-  private orderColumn?: keyof T
+export class SelectQueryBuilder<
+  T extends Record<string, unknown>,
+  ResultType extends Record<string, unknown> = T,
+> extends JoinQueryBuilder<T, ResultType> {
+  private selectedColumns: ColumnNames<ResultType> = ["*"]
+  private orderColumn?: keyof ResultType
   private orderDirection: OrderDirection = "ASC"
   private limitValue?: number
   private offsetValue?: number
@@ -37,7 +41,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    * .select(["id", "name", "email"])
    * .select(["*"])
    */
-  select(columns: ColumnNames<T>): this {
+  select(columns: ColumnNames<ResultType>): this {
     this.selectedColumns = columns
     return this
   }
@@ -48,7 +52,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    * @example
    * .orderBy("created_at")
    */
-  orderBy(column: keyof T): this {
+  orderBy(column: keyof ResultType): this {
     this.orderColumn = column
     return this
   }
@@ -114,6 +118,10 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
     // Start with basic SELECT
     let query = `SELECT ${cols} FROM ${quoteIdentifier(this.getTableName())}`
 
+    // Add JOIN clauses
+    const [joinClause, joinParams] = this.buildJoinClause()
+    query += joinClause
+
     // Add WHERE clause
     const [whereClause, whereParams] = this.buildWhereClause()
     query += whereClause
@@ -135,13 +143,13 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       }
     }
 
-    return [query, whereParams]
+    return [query, [...joinParams, ...whereParams]]
   }
 
   /**
    * Apply client-side operations (sorting, pagination) when regex filtering is used
    */
-  private applyClientSideOperations(rows: T[]): T[] {
+  private applyClientSideOperations(rows: ResultType[]): ResultType[] {
     if (!this.hasRegexConditions()) {
       return rows
     }
@@ -213,7 +221,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    * @example
    * const users = table.select(["*"]).where({ active: true }).all()
    */
-  all(): T[] {
+  all(): ResultType[] {
     const hasRegex = this.hasRegexConditions()
     const [query, params] = this.buildSelectQuery(!hasRegex)
 
@@ -222,7 +230,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
 
     const rows = this.getDb()
       .prepare(query)
-      .all(...params) as T[]
+      .all(...params) as ResultType[]
 
     this.selectLog.info(`Found ${rows.length} row${rows.length > 0 ? "s" : ""}`)
 
@@ -243,7 +251,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    *
    * Respects LIMIT if set, otherwise adds LIMIT 1 for efficiency
    */
-  get(): T | null {
+  get(): ResultType | null {
     if (!this.hasRegexConditions() && this.limitValue === undefined) {
       const [query, params] = this.buildSelectQuery(true)
       const optimizedQuery = `${query} LIMIT 1`
@@ -255,7 +263,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
 
       const row = this.getDb()
         .prepare(optimizedQuery)
-        .get(...params) as T | null
+        .get(...params) as ResultType | null
       this.selectLog.info(row ? "Found row" : "Could not retrieve row")
 
       const result = row ? this.transformRowFromDb(row) : null
@@ -275,7 +283,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
 
       const row = this.getDb()
         .prepare(query)
-        .get(...params) as T | null
+        .get(...params) as ResultType | null
       this.selectLog.info(`SELECT (get): ${row ? "Found row" : "Could not get row"}`)
 
       const result = row ? this.transformRowFromDb(row) : null
@@ -293,7 +301,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    * Execute the query and return the first matching row, or null
    * Always applies LIMIT 1 semantics
    */
-  first(): T | null {
+  first(): ResultType | null {
     const prevLimit = this.limitValue
     this.limitValue = 1
     const result = this.get()
@@ -365,7 +373,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    * @example
    * const emails = table.where({ active: true }).pluck("email")
    */
-  pluck<K extends keyof T>(column: K): T[K][] {
+  pluck<K extends keyof ResultType>(column: K): ResultType[K][] {
     const rows = this.all() || []
     const values = rows.map((row) => row[column])
 
@@ -379,7 +387,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    * @example
    * const name = table.where({ id: 1 }).value("name")
    */
-  value<K extends keyof T>(column: K): T[K] | null {
+  value<K extends keyof ResultType>(column: K): ResultType[K] | null {
     const row = this.first()
     const value = row ? row[column] : null
 
