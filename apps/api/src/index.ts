@@ -18,9 +18,9 @@ import DockStatWebsockets from "./websockets"
 const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 
 export const DockStatAPI = new Elysia({ precompile: false, prefix: "/api/v2" })
+  .use(DockStatElysiaPlugins)
   .use(RequestLogger)
   .use(MetricsMiddleware)
-  .use(DockStatElysiaPlugins)
   .use(errorHandler)
   .use(StatusRoutes)
   .use(DBRoutes)

@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "@dockstat/logger": "workspace:*"
+  },
+  "devDependencies": {
+    "@dockstat/sqlite-wrapper": "workspace:*",
+    "@types/bun": "latest"
+  },
+  "exports": {
+    "/client": "./src/client/index.ts",
+    "/server": "./src/server/index.ts"
+  },
+  "module": "src/index.ts",
+  "name": "@dockstat/auth",
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "type": "module"
+}

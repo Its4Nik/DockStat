@@ -7,7 +7,10 @@ import { ExecModule } from "./modules/exec"
 import { ImagesModule } from "./modules/images"
 import { NetworksModule } from "./modules/networks"
 import { NodesModule } from "./modules/nodes"
+import { PluginsModule } from "./modules/plugins"
+import { SecretsModule } from "./modules/secrets"
 import { ServicesModule } from "./modules/services"
+import { SwarmModule } from "./modules/swarm"
 import { SystemModule } from "./modules/system"
 import { VolumeModule } from "./modules/volumes"
 
@@ -56,6 +59,12 @@ export class Docker {
    */
   public readonly system: SystemModule
 
+  public readonly plugins: PluginsModule
+
+  public readonly secrets: SecretsModule
+
+  public readonly swarm: SwarmModule
+
   constructor(private config: ConnectionConfig) {
     this.containers = new ContainerModule(config)
     this.images = new ImagesModule(config)
@@ -67,6 +76,9 @@ export class Docker {
     this.configs = new ConfigsModule(config)
     this.services = new ServicesModule(config)
     this.system = new SystemModule(config)
+    this.plugins = new PluginsModule(config)
+    this.secrets = new SecretsModule(config)
+    this.swarm = new SwarmModule(config)
   }
 
   async ping(): Promise<boolean> {

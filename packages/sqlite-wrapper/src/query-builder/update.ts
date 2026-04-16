@@ -15,7 +15,10 @@ import { SelectQueryBuilder } from "./select"
  * - Batch updates with transaction support
  * - Automatic JSON serialization
  */
-export class UpdateQueryBuilder<T extends Record<string, unknown>> extends SelectQueryBuilder<T> {
+export class UpdateQueryBuilder<T extends Record<string, unknown>> extends SelectQueryBuilder<
+  T,
+  T
+> {
   private updateLog: Logger
 
   constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {
@@ -61,13 +64,18 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     const updateValues = columns.map((col) => transformedData[col])
     const allParams = [...updateValues, ...whereParams] as SQLQueryBindings[]
 
-    this.updateLog.info(`Query: ${query} - Params: ${truncate(allParams.join(", "), 25)}`)
+    this.logWithTable(
+      "info",
+      "UPDATE",
+      `Executing | Columns: ${columns.join(", ")} | Params: ${truncate(allParams.join(", "), 25)}`
+    )
+    this.updateLog.debug(`SQL: ${query}`)
 
     const result = this.getDb()
       .prepare(query)
       .run(...allParams)
 
-    this.updateLog.info(`Changes: ${result.changes}`)
+    this.logWithTable("info", "UPDATE", `Completed | Changes: ${result.changes}`)
     this.reset()
 
     return { changes: result.changes }
@@ -89,6 +97,12 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     const [whereClause, whereParams] = this.buildWhereClause()
     const selectQuery = `SELECT rowid as _rowid_, * FROM ${quoteIdentifier(this.getTableName())}${whereClause}`
 
+    this.logWithTable(
+      "debug",
+      "UPDATE",
+      `Fetching candidates for regex filter | Where: ${whereParams.length} params`
+    )
+
     const candidateRows = this.getDb()
       .prepare(selectQuery)
       .all(...whereParams) as (T & { _rowid_: number })[]
@@ -97,16 +111,21 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     const matchingRows = this.applyRegexFiltering(candidateRows)
 
     if (matchingRows.length === 0) {
+      this.logWithTable("info", "UPDATE", `No matches found via regex filter`)
       this.reset()
       return { changes: 0 }
     }
+
+    this.logWithTable(
+      "info",
+      "UPDATE",
+      `Updating ${matchingRows.length} rows via regex filter | Columns: ${columns.join(", ")}`
+    )
 
     // Update each matching row by rowid
     const setClause = buildSetClause(columns)
     const updateQuery = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${setClause} WHERE rowid = ?`
     const stmt = this.getDb().prepare(updateQuery)
-
-    this.updateLog.info(`"UPDATE (regex): Query: ${updateQuery}`)
 
     let totalChanges = 0
     const updateValues: SQLQueryBindings[] = columns.map(
@@ -118,7 +137,7 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
       totalChanges += result.changes
     }
 
-    this.updateLog.info(`Changes: ${totalChanges}`)
+    this.logWithTable("info", "UPDATE", `Completed via regex | Changes: ${totalChanges}`)
     this.reset()
 
     return { changes: totalChanges }
@@ -146,17 +165,22 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
 
     const columnList = columns.map((col) => quoteIdentifier(col)).join(", ")
     const placeholders = columns.map(() => "?").join(", ")
-    const values = columns.map((col) => transformedData[col] ?? null)
+    const values = columns.map((col) => transformedData[col] ?? null) as SQLQueryBindings[]
 
     const query = `INSERT OR REPLACE INTO ${quoteIdentifier(this.getTableName())} (${columnList}) VALUES (${placeholders})`
 
-    this.updateLog.info(`UPSERT: Query: ${query} - Values: ${values}`)
+    this.logWithTable(
+      "info",
+      "UPSERT",
+      `Executing | Columns: ${columns.join(", ")} | Values: ${truncate(values.join(", "), 25)}`
+    )
+    this.updateLog.debug(`SQL: ${query}`)
 
     const result = this.getDb()
       .prepare(query)
       .run(...values)
 
-    this.updateLog.info(`Changes: ${result.changes}`)
+    this.logWithTable("info", "UPSERT", `Completed | Changes: ${result.changes}`)
     this.reset()
 
     return { changes: result.changes }
@@ -180,13 +204,18 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     const query = `UPDATE ${quoteIdentifier(this.getTableName())} SET ${quotedColumn} = ${quotedColumn} + ?${whereClause}`
     const params = [amount, ...whereParams] as SQLQueryBindings[]
 
-    this.updateLog.info(`INCREMENT: Query: ${query} - Params: ${truncate(params.join(", "), 25)}`)
+    this.logWithTable(
+      "info",
+      "INCREMENT",
+      `Executing | Column: ${String(column)} | Amount: ${amount} | Where params: ${whereParams.length}`
+    )
+    this.updateLog.debug(`SQL: ${query}`)
 
     const result = this.getDb()
       .prepare(query)
       .run(...params)
 
-    this.updateLog.info(`Changes: ${result.changes}`)
+    this.logWithTable("info", "INCREMENT", `Completed | Changes: ${result.changes}`)
     this.reset()
 
     return { changes: result.changes }
@@ -220,7 +249,8 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     const savedWhereParams = [...this.state.whereParams]
     const savedRegexConditions = [...this.state.regexConditions]
 
-    // Get rows before update
+    this.logWithTable("debug", "UPDATE_AND_GET", `Fetching rows before update`)
+
     const rowsToUpdate = this.all()
 
     // Restore WHERE state for the update
@@ -228,13 +258,14 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
     this.state.whereParams = savedWhereParams
     this.state.regexConditions = savedRegexConditions
 
-    // Perform the update
     const updateResult = this.update(data)
 
     if (updateResult.changes === 0) {
+      this.logWithTable("info", "UPDATE_AND_GET", `No rows updated`)
       return []
     }
 
+    this.logWithTable("info", "UPDATE_AND_GET", `Returning ${rowsToUpdate.length} rows`)
     return rowsToUpdate
   }
 
@@ -256,14 +287,16 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
       throw new Error("updateBatch: updates must be a non-empty array")
     }
 
+    this.logWithTable("info", "UPDATE_BATCH", `Starting | Batch size: ${updates.length}`)
+
     const db = this.getDb()
 
     const transaction = db.transaction(
       (updatesToProcess: Array<{ where: Partial<T>; data: Partial<T> }>) => {
         let totalChanges = 0
+        let processedCount = 0
 
         for (const { where: whereData, data } of updatesToProcess) {
-          // Transform data
           const transformedData = this.transformRowToDb(data)
           const updateColumns = Object.keys(transformedData)
 
@@ -298,17 +331,19 @@ export class UpdateQueryBuilder<T extends Record<string, unknown>> extends Selec
 
           const result = db.prepare(query).run(...allParams)
           totalChanges += result.changes
+          processedCount++
         }
 
+        this.updateLog.debug(
+          `Processed ${processedCount}/${updatesToProcess.length} updates in transaction`
+        )
         return { changes: totalChanges }
       }
     )
 
-    this.updateLog.info(`UPDATE BATCH: ${updates.length} updates`)
-
     const result = transaction(updates)
 
-    this.updateLog.info(`Changes: ${result.changes}`)
+    this.logWithTable("info", "UPDATE_BATCH", `Completed | Total changes: ${result.changes}`)
     this.reset()
 
     return result

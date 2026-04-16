@@ -550,9 +550,10 @@ export interface QueryBuilderState<T extends Record<string, unknown>> {
   whereConditions: string[]
   whereParams: SQLQueryBindings[]
   regexConditions: Array<{
-    column: keyof T
+    column: string
     regex: RegExp
   }>
+  joinClauses: JoinClause[]
   parser?: Parser<T>
 }
 
@@ -575,6 +576,30 @@ export type WhereCondition<T> = Partial<T>
  * Regex condition object type
  */
 export type RegexCondition<T> = Partial<Record<keyof T, RegExp | string>>
+
+/**
+ * Join type for SQL JOIN clauses
+ */
+export type JoinType = "INNER" | "LEFT" | "RIGHT" | "FULL" | "CROSS"
+
+/**
+ * Join condition - can be a column mapping or raw expression
+ *
+ * Column mapping example: { "local_column": "foreign_table.foreign_column" }
+ * Raw expression example: "users.id = posts.user_id AND posts.published = 1"
+ */
+export type JoinCondition = Record<string, string> | string
+
+/**
+ * Join clause representing a single JOIN operation
+ */
+export interface JoinClause {
+  type: JoinType
+  table: string
+  alias?: string
+  condition: JoinCondition
+  parser?: Parser<Record<string, unknown>>
+}
 
 /**
  * Insert result interface

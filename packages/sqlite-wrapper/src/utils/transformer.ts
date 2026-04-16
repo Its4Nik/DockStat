@@ -1,5 +1,5 @@
 import type { SQLQueryBindings } from "bun:sqlite"
-import Logger from "@dockstat/logger"
+import { Logger } from "@dockstat/logger"
 import type { Parser } from "../types"
 
 /**
@@ -51,6 +51,8 @@ export function transformFromDb<T extends Record<string, unknown>>(
 
   // Transform JSON columns
   if (parser.JSON && parser.JSON.length > 0) {
+    logger.debug(`[FROM_DB] Processing ${parser.JSON.length} JSON columns`)
+
     for (const column of parser.JSON) {
       const columnKey = String(column)
       const value = transformed[columnKey]
@@ -59,9 +61,10 @@ export function transformFromDb<T extends Record<string, unknown>>(
         try {
           transformed[columnKey] = JSON.parse(value)
           transformedColumns.push(`JSON:${columnKey}`)
+          logger.debug(`[FROM_DB] JSON column parsed successfully`, columnKey)
         } catch {
           // Keep original value if JSON parsing fails
-          logger.warn(`Failed to parse JSON column: ${columnKey}`)
+          logger.warn(`[FROM_DB] Failed to parse JSON column: ${value}`, columnKey)
         }
       }
     }
@@ -69,6 +72,8 @@ export function transformFromDb<T extends Record<string, unknown>>(
 
   // Transform BOOLEAN columns
   if (parser.BOOLEAN && parser.BOOLEAN.length > 0) {
+    logger.debug(`[FROM_DB] Processing ${parser.BOOLEAN.length} BOOLEAN columns`)
+
     for (const column of parser.BOOLEAN) {
       const columnKey = String(column)
       const value = transformed[columnKey]
@@ -79,6 +84,7 @@ export function transformFromDb<T extends Record<string, unknown>>(
 
       // Already a boolean - no transformation needed
       if (typeof value === "boolean") {
+        logger.debug(`[FROM_DB] BOOLEAN column already boolean`, columnKey)
         continue
       }
 
@@ -86,6 +92,10 @@ export function transformFromDb<T extends Record<string, unknown>>(
       if (typeof value === "number") {
         transformed[columnKey] = value === 1
         transformedColumns.push(`BOOL:${columnKey}`)
+        logger.debug(
+          `[FROM_DB] BOOLEAN column converted from number ${value} -> ${value === 1}`,
+          columnKey
+        )
         continue
       }
 
@@ -95,15 +105,27 @@ export function transformFromDb<T extends Record<string, unknown>>(
         if (["1", "true", "t", "yes"].includes(normalized)) {
           transformed[columnKey] = true
           transformedColumns.push(`BOOL:${columnKey}`)
+          logger.debug(
+            `[FROM_DB] BOOLEAN column converted from string: ${value} -> true`,
+            columnKey
+          )
         } else if (["0", "false", "f", "no"].includes(normalized)) {
           transformed[columnKey] = false
           transformedColumns.push(`BOOL:${columnKey}`)
+          logger.debug(
+            `[FROM_DB] BOOLEAN column converted from string: ${value} -> false`,
+            columnKey
+          )
         } else {
           // Try numeric conversion
           const num = Number(normalized)
           if (!Number.isNaN(num)) {
             transformed[columnKey] = num === 1
             transformedColumns.push(`BOOL:${columnKey}`)
+            logger.debug(
+              `[FROM_DB] BOOLEAN column converted via numeric: ${value} -> ${num === 1}`,
+              columnKey
+            )
           }
         }
       }
@@ -112,6 +134,8 @@ export function transformFromDb<T extends Record<string, unknown>>(
 
   // Transform DATE columns
   if (parser.DATE && parser.DATE.length > 0) {
+    logger.debug(`[FROM_DB] Processing ${parser.DATE.length} DATE columns`)
+
     for (const column of parser.DATE) {
       const columnKey = String(column)
       const value = transformed[columnKey]
@@ -120,9 +144,10 @@ export function transformFromDb<T extends Record<string, unknown>>(
         try {
           transformed[columnKey] = new Date(value)
           transformedColumns.push(`DATE:${columnKey}`)
+          logger.debug(`[FROM_DB] DATE column parsed ${value}`, columnKey)
         } catch {
           // Keep original value if DATE parsing fails
-          logger.warn(`Failed to parse DATE column: ${columnKey}`)
+          logger.warn(`[FROM_DB] Failed to parse DATE column Value: ${value}`, columnKey)
         }
       }
     }
@@ -130,6 +155,8 @@ export function transformFromDb<T extends Record<string, unknown>>(
 
   // Transform MODULE columns
   if (parser.MODULE && Object.keys(parser.MODULE).length > 0) {
+    logger.debug(`[FROM_DB] Processing ${Object.keys(parser.MODULE).length} MODULE columns`)
+
     for (const [funcKey, options] of Object.entries(parser.MODULE)) {
       const value = transformed[funcKey]
 
@@ -140,15 +167,20 @@ export function transformFromDb<T extends Record<string, unknown>>(
           const blob = new Blob([compiled], { type: "text/javascript" })
           transformed[funcKey] = URL.createObjectURL(blob)
           transformedColumns.push(`MODULE:${funcKey}`)
+          logger.debug(`[FROM_DB] MODULE column transpiled`, funcKey)
         } catch (_error) {
-          logger.warn(`Failed to transpile MODULE column: ${funcKey}`)
+          logger.warn(`[FROM_DB] Failed to transpile MODULE column: ${funcKey}`, funcKey)
         }
       }
     }
   }
 
   if (transformedColumns.length > 0) {
-    logger.info(`Deserialized columns: ${transformedColumns.join(", ")}`)
+    logger.info(
+      `[FROM_DB] Completed | Transformed ${transformedColumns.length} columns: ${transformedColumns.join(", ")}`
+    )
+  } else {
+    logger.debug(`[FROM_DB] Completed | No columns transformed`)
   }
 
   return transformed as T
@@ -164,6 +196,9 @@ export function transformRowsFromDb<T extends Record<string, unknown>>(
   if (!rows || !Array.isArray(rows)) {
     return []
   }
+
+  const logger = options?.logger?.spawn("Transformer") || defaultLogger.spawn("Transformer")
+  logger.debug(`[FROM_DB] Transforming ${rows.length} rows`)
 
   return rows.map((row) => transformFromDb<T>(row, options))
 }
@@ -195,6 +230,8 @@ export function transformToDb<T extends Record<string, unknown>>(
 
   // Serialize JSON columns
   if (parser.JSON && parser.JSON.length > 0) {
+    logger.debug(`[TO_DB] Processing ${parser.JSON.length} JSON columns`)
+
     for (const column of parser.JSON) {
       const columnKey = String(column)
       const value = transformed[columnKey]
@@ -202,12 +239,15 @@ export function transformToDb<T extends Record<string, unknown>>(
       if (value !== undefined && value !== null && typeof value === "object") {
         transformed[columnKey] = JSON.stringify(value)
         transformedColumns.push(`JSON:${columnKey}`)
+        logger.debug(`[TO_DB] JSON column serialized`, columnKey)
       }
     }
   }
 
   // Serialize DATE columns
   if (parser.DATE && parser.DATE.length > 0) {
+    logger.debug(`[TO_DB] Processing ${parser.DATE.length} DATE columns`)
+
     for (const column of parser.DATE) {
       const columnKey = String(column)
       const value = transformed[columnKey]
@@ -215,12 +255,15 @@ export function transformToDb<T extends Record<string, unknown>>(
       if (value !== undefined && value !== null && value instanceof Date) {
         transformed[columnKey] = value.toISOString()
         transformedColumns.push(`DATE:${columnKey}`)
+        logger.debug(`[TO_DB] DATE column serialized ${value.toISOString()}`, columnKey)
       }
     }
   }
 
   // Serialize MODULE columns (functions to strings)
   if (parser.MODULE && Object.keys(parser.MODULE).length > 0) {
+    logger.debug(`[TO_DB] Processing ${Object.keys(parser.MODULE).length} MODULE columns`)
+
     for (const [funcKey, options] of Object.entries(parser.MODULE)) {
       const value = transformed[funcKey]
 
@@ -230,15 +273,20 @@ export function transformToDb<T extends Record<string, unknown>>(
           const fnValue = value as () => unknown
           transformed[funcKey] = transpiler.transformSync(fnValue.toString())
           transformedColumns.push(`MODULE:${funcKey}`)
+          logger.debug("[TO_DB] MODULE column transpiled", funcKey)
         } catch {
-          logger.warn(`Failed to serialize MODULE column: ${funcKey}`)
+          logger.warn(`[TO_DB] Failed to serialize MODULE column`, funcKey)
         }
       }
     }
   }
 
   if (transformedColumns.length > 0) {
-    logger.info(`Serialized columns: ${transformedColumns.join(", ")}`)
+    logger.info(
+      `[TO_DB] Completed | Transformed ${transformedColumns.length} columns: ${transformedColumns.join(", ")}`
+    )
+  } else {
+    logger.debug(`[TO_DB] Completed | No columns transformed`)
   }
 
   return transformed
@@ -254,6 +302,9 @@ export function transformRowsToDb<T extends Record<string, unknown>>(
   if (!rows || !Array.isArray(rows)) {
     return []
   }
+
+  const logger = options?.logger?.spawn("Transformer") || defaultLogger.spawn("Transformer")
+  logger.debug(`[TO_DB] Transforming ${rows.length} rows`)
 
   return rows.map((row) => transformToDb<T>(row, options))
 }

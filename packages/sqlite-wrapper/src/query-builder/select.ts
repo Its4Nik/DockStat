@@ -2,6 +2,7 @@ import type { Database, SQLQueryBindings } from "bun:sqlite"
 import type { Logger } from "@dockstat/logger"
 import type { ColumnNames, OrderDirection, Parser } from "../types"
 import { quoteIdentifier, truncate } from "../utils"
+import { JoinQueryBuilder } from "./join"
 import { WhereQueryBuilder } from "./where"
 
 /**
@@ -14,9 +15,12 @@ import { WhereQueryBuilder } from "./where"
  * - Result transformation (JSON/Boolean parsing)
  * - Client-side regex filtering when needed
  */
-export class SelectQueryBuilder<T extends Record<string, unknown>> extends WhereQueryBuilder<T> {
-  private selectedColumns: ColumnNames<T> = ["*"]
-  private orderColumn?: keyof T
+export class SelectQueryBuilder<
+  T extends Record<string, unknown>,
+  ResultType extends Record<string, unknown> = T,
+> extends JoinQueryBuilder<T, ResultType> {
+  private selectedColumns: ColumnNames<ResultType> = ["*"]
+  private orderColumn?: keyof ResultType
   private orderDirection: OrderDirection = "ASC"
   private limitValue?: number
   private offsetValue?: number
@@ -37,7 +41,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    * .select(["id", "name", "email"])
    * .select(["*"])
    */
-  select(columns: ColumnNames<T>): this {
+  select(columns: ColumnNames<ResultType>): this {
     this.selectedColumns = columns
     return this
   }
@@ -48,7 +52,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    * @example
    * .orderBy("created_at")
    */
-  orderBy(column: keyof T): this {
+  orderBy(column: keyof ResultType): this {
     this.orderColumn = column
     return this
   }
@@ -103,8 +107,6 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    * Build the SELECT query SQL
    */
   private buildSelectQuery(includeOrderAndLimit = true): [string, SQLQueryBindings[]] {
-    this.selectLog.debug("Building select query")
-
     // Build column list
     const cols =
       this.selectedColumns[0] === "*"
@@ -113,6 +115,10 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
 
     // Start with basic SELECT
     let query = `SELECT ${cols} FROM ${quoteIdentifier(this.getTableName())}`
+
+    // Add JOIN clauses
+    const [joinClause, joinParams] = this.buildJoinClause()
+    query += joinClause
 
     // Add WHERE clause
     const [whereClause, whereParams] = this.buildWhereClause()
@@ -135,13 +141,13 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       }
     }
 
-    return [query, whereParams]
+    return [query, [...joinParams, ...whereParams]]
   }
 
   /**
    * Apply client-side operations (sorting, pagination) when regex filtering is used
    */
-  private applyClientSideOperations(rows: T[]): T[] {
+  private applyClientSideOperations(rows: ResultType[]): ResultType[] {
     if (!this.hasRegexConditions()) {
       return rows
     }
@@ -177,35 +183,41 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
     return result
   }
 
+  /**
+   * Log the start of a SELECT operation
+   */
   private logSelectStart(
     method: string,
-    details: { query?: string; optimizedQuery?: string; params?: unknown }
+    details: { query?: string; params?: unknown; hasRegex?: boolean }
   ): void {
-    const { query, optimizedQuery, params } = details
-    const q = query ?? optimizedQuery ?? ""
-    this.selectLog.info(
-      `${method} | ${query ? "query" : "optimizedQuery"}=${q} params=${WhereQueryBuilder.safeStringify(params)}`
+    const { query, params, hasRegex } = details
+    this.logWithTable(
+      "debug",
+      `SELECT_${method}`,
+      `Starting | Params: ${params ? truncate(JSON.stringify(params), 25) : "none"} | Regex: ${hasRegex ? "yes" : "no"}`
     )
+    if (query) {
+      this.selectLog.debug(`SQL: ${query}`)
+    }
   }
 
-  private logSelectReturn(
-    method: string,
-    details: { returned?: unknown; length?: number; sample?: unknown }
-  ): void {
-    const { returned, length, sample } = details
-    if (length !== undefined && sample !== undefined) {
-      this.selectLog.info(
-        `${method} | returned=${length} sample=${WhereQueryBuilder.safeStringify(sample)}`
-      )
+  /**
+   * Log the result of a SELECT operation
+   */
+  private logSelectReturn(method: string, details: { returned?: unknown; count?: number }): void {
+    const { returned, count } = details
+    if (count !== undefined) {
+      this.logWithTable("info", `SELECT_${method}`, `Completed | Rows: ${count}`)
     } else {
-      this.selectLog.info(`${method} | returned=${WhereQueryBuilder.safeStringify(returned)}`)
+      this.logWithTable(
+        "info",
+        `SELECT_${method}`,
+        `Completed | Returned: ${WhereQueryBuilder.safeStringify(returned)}`
+      )
     }
   }
 
   // ===== Execution Methods =====
-
-  // Use the protected static helper inherited from WhereQueryBuilder: `safeStringify`
-  // (Removed duplicate implementation to avoid static-side conflicts with the base class.)
 
   /**
    * Execute the query and return all matching rows
@@ -213,26 +225,20 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    * @example
    * const users = table.select(["*"]).where({ active: true }).all()
    */
-  all(): T[] {
+  all(): ResultType[] {
     const hasRegex = this.hasRegexConditions()
     const [query, params] = this.buildSelectQuery(!hasRegex)
 
-    this.logSelectStart("all", { params, query })
-    this.selectLog.info(`SELECT: Query: ${query} - Params: ${truncate(params.join(", "), 25)}`)
+    this.logSelectStart("ALL", { hasRegex, params, query })
 
     const rows = this.getDb()
       .prepare(query)
-      .all(...params) as T[]
-
-    this.selectLog.info(`Found ${rows.length} row${rows.length > 0 ? "s" : ""}`)
+      .all(...params) as ResultType[]
 
     const transformed = this.transformRowsFromDb(rows)
     const result = hasRegex ? this.applyClientSideOperations(transformed) : transformed
 
-    this.logSelectReturn("all", {
-      length: result.length,
-      sample: result[0] ?? null,
-    })
+    this.logSelectReturn("ALL", { count: result.length })
 
     this.reset()
     return result
@@ -243,23 +249,20 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    *
    * Respects LIMIT if set, otherwise adds LIMIT 1 for efficiency
    */
-  get(): T | null {
+  get(): ResultType | null {
     if (!this.hasRegexConditions() && this.limitValue === undefined) {
       const [query, params] = this.buildSelectQuery(true)
       const optimizedQuery = `${query} LIMIT 1`
 
-      this.logSelectStart("get", { optimizedQuery, params })
-      this.selectLog.info(
-        `SELECT (get): Query: ${optimizedQuery} - Params: ${truncate(params.join(", "), 25)}`
-      )
+      this.logSelectStart("GET", { params })
+      this.selectLog.debug(`SQL (optimized): ${optimizedQuery}`)
 
       const row = this.getDb()
         .prepare(optimizedQuery)
-        .get(...params) as T | null
-      this.selectLog.info(row ? "Found row" : "Could not retrieve row")
+        .get(...params) as ResultType | null
 
       const result = row ? this.transformRowFromDb(row) : null
-      this.logSelectReturn("get", { returned: result })
+      this.logSelectReturn("GET", { returned: result })
 
       this.reset()
       return result
@@ -268,18 +271,14 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
     if (!this.hasRegexConditions()) {
       const [query, params] = this.buildSelectQuery(true)
 
-      this.logSelectStart("get", { params, query })
-      this.selectLog.info(
-        `SELECT (get): Query: ${query} - Params: ${truncate(params.join(", "), 25)}`
-      )
+      this.logSelectStart("GET", { hasRegex: false, params, query })
 
       const row = this.getDb()
         .prepare(query)
-        .get(...params) as T | null
-      this.selectLog.info(`SELECT (get): ${row ? "Found row" : "Could not get row"}`)
+        .get(...params) as ResultType | null
 
       const result = row ? this.transformRowFromDb(row) : null
-      this.logSelectReturn("get", { returned: result })
+      this.logSelectReturn("GET", { returned: result })
 
       this.reset()
       return result
@@ -293,7 +292,7 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    * Execute the query and return the first matching row, or null
    * Always applies LIMIT 1 semantics
    */
-  first(): T | null {
+  first(): ResultType | null {
     const prevLimit = this.limitValue
     this.limitValue = 1
     const result = this.get()
@@ -309,8 +308,8 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const [whereClause, whereParams] = this.buildWhereClause()
       const query = `SELECT COUNT(*) AS __count FROM ${quoteIdentifier(this.getTableName())}${whereClause}`
 
-      this.logSelectStart("count", { params: whereParams, query })
-      this.selectLog.info(`COUNT: Query: ${query} - Where: ${whereParams}`)
+      this.logSelectStart("COUNT", { hasRegex: false, params: whereParams })
+      this.selectLog.debug(`SQL: ${query}`)
 
       const result = this.getDb()
         .prepare(query)
@@ -319,10 +318,15 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const count = result?.__count ?? 0
       this.reset()
 
-      this.logSelectReturn("count", { returned: count })
+      this.logSelectReturn("COUNT", { returned: count })
       return count
     }
 
+    this.logWithTable(
+      "info",
+      "COUNT",
+      `Falling back to client-side counting due to regex conditions`
+    )
     const results = this.all()
     return results.length
   }
@@ -336,8 +340,8 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const subquery = `SELECT 1 FROM ${quoteIdentifier(this.getTableName())}${whereClause} LIMIT 1`
       const query = `SELECT EXISTS(${subquery}) AS __exists`
 
-      this.logSelectStart("exists", { params: whereParams, query })
-      this.selectLog.info(`"EXISTS: Query: ${query} - Where: ${whereParams}`)
+      this.logSelectStart("EXISTS", { hasRegex: false, params: whereParams })
+      this.selectLog.debug(`SQL: ${query}`)
 
       const result = this.getDb()
         .prepare(query)
@@ -346,17 +350,12 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
       const exists = Boolean(result?.__exists)
       this.reset()
 
-      this.logSelectReturn("exists", { returned: exists })
+      this.logSelectReturn("EXISTS", { returned: exists })
       return exists
     }
 
+    this.logWithTable("info", "EXISTS", `Falling back to client-side check due to regex conditions`)
     return this.count() > 0
-  }
-
-  private logColumnReturn(method: "value" | "pluck", column: string, returned: unknown): void {
-    this.selectLog.info(
-      `${method} | column=${column} returned=${WhereQueryBuilder.safeStringify(returned)}`
-    )
   }
 
   /**
@@ -365,11 +364,17 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    * @example
    * const emails = table.where({ active: true }).pluck("email")
    */
-  pluck<K extends keyof T>(column: K): T[K][] {
+  pluck<K extends keyof ResultType>(column: K): ResultType[K][] {
+    this.logWithTable("debug", "PLUCK", `Extracting column: ${String(column)}`)
+
     const rows = this.all() || []
     const values = rows.map((row) => row[column])
 
-    this.logColumnReturn("pluck", String(column), values)
+    this.logWithTable(
+      "info",
+      "PLUCK",
+      `Completed | Column: ${String(column)} | Values: ${values.length}`
+    )
     return values
   }
 
@@ -379,11 +384,17 @@ export class SelectQueryBuilder<T extends Record<string, unknown>> extends Where
    * @example
    * const name = table.where({ id: 1 }).value("name")
    */
-  value<K extends keyof T>(column: K): T[K] | null {
+  value<K extends keyof ResultType>(column: K): ResultType[K] | null {
+    this.logWithTable("debug", "VALUE", `Extracting value from column: ${String(column)}`)
+
     const row = this.first()
     const value = row ? row[column] : null
 
-    this.logColumnReturn("value", String(column), value)
+    this.logWithTable(
+      "info",
+      "VALUE",
+      `Completed | Column: ${String(column)} | Value: ${WhereQueryBuilder.safeStringify(value)}`
+    )
     return value
   }
 }

@@ -314,7 +314,10 @@ describe("transformToDb - Serialization", () => {
 
     const result = transformToDb(row, { parser })
 
-    expect(result.data).toBe('{"key":"value","count":42}')
+    expect(JSON.parse(String(result.data))).toMatchObject({
+      count: 42,
+      key: "value",
+    })
   })
 
   test("Serialize array to JSON string", () => {

@@ -2,7 +2,7 @@ import { cors } from "@elysiajs/cors"
 import { openapi } from "@elysiajs/openapi"
 import { serverTiming } from "@elysiajs/server-timing"
 import Elysia from "elysia"
-import { auth, OpenAPI } from "./auth"
+import { OpenAPI } from "./auth"
 
 const DockStatElysiaPlugins = new Elysia()
   .use(cors())
@@ -32,6 +32,5 @@ const DockStatElysiaPlugins = new Elysia()
       },
     })
   )
-  .mount(auth.handler)
 
 export default DockStatElysiaPlugins

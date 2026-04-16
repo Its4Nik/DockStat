@@ -18,13 +18,17 @@ import {
  * - Regex condition handling (client-side filtering)
  * - Row transformation (JSON/Boolean serialization)
  */
-export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
+export abstract class BaseQueryBuilder<
+  T extends Record<string, unknown>,
+  ResultType extends Record<string, unknown> = T,
+> {
   protected state: QueryBuilderState<T>
   protected log: Logger
 
   constructor(db: Database, tableName: string, parser?: Parser<T>, baseLogger?: Logger) {
     this.state = {
       db,
+      joinClauses: [],
       parser,
       regexConditions: [],
       tableName,
@@ -36,7 +40,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
     // Otherwise, create a new QB logger.
     this.log = baseLogger || new Logger("QB")
 
-    this.log.debug(`QueryBuilder initialized for table: ${tableName}`)
+    this.log.debug(`[INIT] QueryBuilder initialized`, tableName)
   }
 
   // ===== State Accessors =====
@@ -51,15 +55,32 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
   /**
    * Get the table name
    */
-  protected getTableName(): string {
+  public getTableName(): string {
     return this.state.tableName
   }
 
   /**
    * Get the parser configuration
    */
-  protected getParser(): Parser<T> | undefined {
+  public getParser(): Parser<T> | undefined {
     return this.state.parser
+  }
+
+  // ===== Logging Helpers =====
+
+  /**
+   * Helper method for consistent logging with table context
+   *
+   * @param level - Log level (debug, info, warn, error)
+   * @param operation - The operation being performed (e.g., "UPDATE", "INSERT", "SELECT")
+   * @param message - Additional message details
+   */
+  protected logWithTable(
+    level: "debug" | "info" | "warn" | "error",
+    operation: string,
+    message: string
+  ): void {
+    this.log[level](`[${operation}] ${message}`, this.getTableName())
   }
 
   // ===== State Management =====
@@ -68,11 +89,12 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * Reset query builder state to initial values
    */
   protected reset(): void {
-    this.log.debug("Resetting QueryBuilder state")
+    this.log.debug("[RESET] Resetting QueryBuilder state", this.getTableName())
 
     this.state.whereConditions = []
     this.state.whereParams = []
     this.state.regexConditions = []
+    this.state.joinClauses = []
 
     // Reset any additional state in subclasses
     if ("orderColumn" in this) this.orderColumn = undefined
@@ -86,10 +108,18 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * Reset only WHERE conditions (useful for reusing builder)
    */
   protected resetWhereConditions(): void {
-    this.log.debug("Resetting Where conditions")
+    this.log.debug("[RESET] Resetting WHERE conditions", this.getTableName())
     this.state.whereConditions = []
     this.state.whereParams = []
     this.state.regexConditions = []
+  }
+
+  /**
+   * Reset only JOIN clauses (useful for reusing builder)
+   */
+  protected resetJoinClauses(): void {
+    this.log.debug("[RESET] Resetting JOIN clauses", this.getTableName())
+    this.state.joinClauses = []
   }
 
   // ===== SQL Building Helpers =====
@@ -98,7 +128,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * Quote a SQL identifier to prevent injection
    */
   protected quoteIdentifier(identifier: string): string {
-    this.log.debug("Quoting identifier")
+    this.log.debug(`[SQL] Quoting identifier: ${identifier}`, this.getTableName())
     return quoteIdentifier(identifier)
   }
 
@@ -108,7 +138,10 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * @returns Tuple of [whereClause, parameters]
    */
   protected buildWhereClause(): [string, SQLQueryBindings[]] {
-    this.log.debug("Building Where Clause")
+    this.log.debug(
+      `[SQL] Building WHERE clause with ${this.state.whereConditions.length} conditions`,
+      this.getTableName()
+    )
     if (this.state.whereConditions.length === 0) {
       return ["", []]
     }
@@ -117,6 +150,79 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
     const params = [...this.state.whereParams]
 
     return [clause, params]
+  }
+
+  /**
+   * Build the JOIN clause from accumulated join conditions
+   *
+   * @returns Tuple of [joinClause, joinParams]
+   */
+  protected buildJoinClause(): [string, SQLQueryBindings[]] {
+    this.log.debug(
+      `[SQL] Building JOIN clause with ${this.state.joinClauses.length} joins`,
+      this.getTableName()
+    )
+    if (this.state.joinClauses.length === 0) {
+      return ["", []]
+    }
+
+    const joinParts: string[] = []
+    const params: SQLQueryBindings[] = []
+
+    for (const join of this.state.joinClauses) {
+      const { type, table, alias, condition } = join
+
+      // Build table reference with optional alias
+      const tableRef = alias
+        ? `${quoteIdentifier(table)} AS ${quoteIdentifier(alias)}`
+        : quoteIdentifier(table)
+
+      let onClause: string
+
+      // Handle condition type
+      if (typeof condition === "string") {
+        // Raw expression condition
+        onClause = ` ON ${condition}`
+      } else {
+        // Column mapping condition: { local_column: "foreign_column" }
+        // or with explicit table: { "local_table.local_column": "foreign_table.foreign_column" }
+        const conditions: string[] = []
+        for (const [localRef, foreignRef] of Object.entries(condition)) {
+          let localPart: string
+          let foreignPart: string
+
+          // Parse local reference (could be "column" or "table.column")
+          if (localRef.includes(".")) {
+            localPart = localRef
+              .split(".")
+              .map((p) => quoteIdentifier(p.trim()))
+              .join(".")
+          } else {
+            // Default to main table if no table specified
+            localPart = `${quoteIdentifier(this.getTableName())}.${quoteIdentifier(localRef)}`
+          }
+
+          // Parse foreign reference (could be "column" or "table.column")
+          if (foreignRef.includes(".")) {
+            foreignPart = foreignRef
+              .split(".")
+              .map((p) => quoteIdentifier(p.trim()))
+              .join(".")
+          } else {
+            // Default to the joined table (or alias if provided) if no table specified
+            const foreignTable = alias || table
+            foreignPart = `${quoteIdentifier(foreignTable)}.${quoteIdentifier(foreignRef)}`
+          }
+
+          conditions.push(`${localPart} = ${foreignPart}`)
+        }
+        onClause = ` ON ${conditions.join(" AND ")}`
+      }
+
+      joinParts.push(` ${type} JOIN ${tableRef}${onClause}`)
+    }
+
+    return [joinParts.join(""), params]
   }
 
   // ===== Regex Condition Handling =====
@@ -131,7 +237,7 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
   /**
    * Apply regex filtering to rows (client-side)
    */
-  protected applyRegexFiltering(rows: T[]): T[] {
+  protected applyRegexFiltering(rows: ResultType[]): ResultType[] {
     if (!this.hasRegexConditions()) {
       return rows
     }
@@ -160,9 +266,61 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
       const message =
         `${operation} requires at least one WHERE condition. ` +
         `Use where(), whereRaw(), whereIn(), whereOp(), or whereRgx().`
-      this.log.error(message)
+      this.log.error(`[VALIDATION] ${message}`, this.getTableName())
       throw new Error(message)
     }
+  }
+
+  /**
+   * Check if there are any join clauses
+   */
+  protected hasJoins(): boolean {
+    return this.state.joinClauses.length > 0
+  }
+
+  /**
+   * Merge parsers from all joined tables with the base table's parser
+   * This is necessary so that columns from joined tables are properly transformed
+   * (e.g., booleans converted from 0/1 to true/false)
+   */
+  private getMergedParser(): Parser<ResultType> {
+    const baseParser = this.state.parser || { BOOLEAN: [], DATE: [], JSON: [], MODULE: {} }
+
+    if (!this.hasJoins()) {
+      return baseParser as Parser<ResultType>
+    }
+
+    const merged = {
+      BOOLEAN: [...(baseParser.BOOLEAN || [])] as string[],
+      DATE: [...(baseParser.DATE || [])] as string[],
+      JSON: [...(baseParser.JSON || [])] as string[],
+      MODULE: { ...(baseParser.MODULE || {}) },
+    }
+
+    for (const join of this.state.joinClauses) {
+      const joinParser = join.parser
+      if (joinParser) {
+        if (joinParser.BOOLEAN) {
+          merged.BOOLEAN.push(...(joinParser.BOOLEAN as string[]))
+        }
+        if (joinParser.DATE) {
+          merged.DATE.push(...(joinParser.DATE as string[]))
+        }
+        if (joinParser.JSON) {
+          merged.JSON.push(...(joinParser.JSON as string[]))
+        }
+        if (joinParser.MODULE) {
+          merged.MODULE = { ...merged.MODULE, ...joinParser.MODULE }
+        }
+      }
+    }
+
+    // Deduplicate
+    merged.BOOLEAN = [...new Set(merged.BOOLEAN)]
+    merged.DATE = [...new Set(merged.DATE)]
+    merged.JSON = [...new Set(merged.JSON)]
+
+    return merged as Parser<ResultType>
   }
 
   // ===== Row Transformation =====
@@ -171,15 +329,21 @@ export abstract class BaseQueryBuilder<T extends Record<string, unknown>> {
    * Transform a single row FROM the database
    * (deserialize JSON, convert booleans, etc.)
    */
-  protected transformRowFromDb(row: unknown): T {
-    return transformFromDb<T>(row, { logger: this.log, parser: this.state.parser })
+  protected transformRowFromDb(row: unknown): ResultType {
+    return transformFromDb<ResultType>(row, {
+      logger: this.log,
+      parser: this.getMergedParser(),
+    })
   }
 
   /**
    * Transform multiple rows FROM the database
    */
-  protected transformRowsFromDb(rows: unknown[]): T[] {
-    return transformRowsFromDb<T>(rows, { logger: this.log, parser: this.state.parser })
+  protected transformRowsFromDb(rows: unknown[]): ResultType[] {
+    return transformRowsFromDb<ResultType>(rows, {
+      logger: this.log,
+      parser: this.getMergedParser(),
+    })
   }
 
   /**

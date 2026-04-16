@@ -1,42 +1,23 @@
-import { apiKey } from "@better-auth/api-key"
-import { betterAuth } from "better-auth"
-import { openAPI } from "better-auth/plugins"
+import { OidcClient } from "elysia-openid-client"
 import { DockStatDB } from "../database"
+import BaseLogger from "../logger"
 
-export const auth = betterAuth({
-  account: { encryptOAuthTokens: true },
-  advanced: { useSecureCookies: true },
-  appName: "DockStat",
-  basePath: "/auth",
-  baseURL: process.env.NODE_ENV === "production" ? process.env.BASE_URL : "http://localhost",
-  database: DockStatDB._sqliteWrapper.getDb(),
-  plugins: [apiKey(), openAPI()],
-  telemetry: {
-    enabled: true,
-  },
-})
+export class AuthHandler {
+  private table = DockStatDB.authTable
+  private logger = BaseLogger.spawn("Auth")
 
-let _schema: ReturnType<typeof auth.api.generateOpenAPISchema>
+  createApiKey(name: string) {
+    this.logger.info(`Creating API Key ${name}`)
+    const token = `DAPI-${Bun.randomUUIDv7("base64")}`
+    return this.table.insertAndGet({ name, token, type: "api-key" })
+  }
 
-// biome-ignore lint/suspicious/noAssignInExpressions: From the better auth examples
-const getSchema = async () => (_schema ??= auth.api.generateOpenAPISchema())
+  createUser(name: string, password: string) {
+    this.logger.info(`Creating user ${name}`)
+    return this.table.insertAndGet({ name, pass: password, type: "user" })
+  }
 
-export const OpenAPI = {
-  // biome-ignore lint/suspicious/noExplicitAny: from better auth example
-  components: getSchema().then(({ components }) => components) as Promise<any>,
-  getPaths: (prefix = "/auth/api") =>
-    getSchema().then(({ paths }) => {
-      const reference: typeof paths = Object.create(null)
-      for (const path of Object.keys(paths)) {
-        const key = prefix + path
-        reference[key] = paths[path]
-        for (const method of Object.keys(paths[path])) {
-          // biome-ignore lint/suspicious/noExplicitAny: from better auth example
-          const operation = (reference[key] as any)[method]
-          operation.tags = ["Better Auth"]
-        }
-      }
-      return reference
-      // biome-ignore lint/suspicious/noExplicitAny: from better auth example
-    }) as Promise<any>,
-} as const
+  createOIDCTarget() {
+    this.logger.info(`Creating OIDC Target `)
+  }
+}
