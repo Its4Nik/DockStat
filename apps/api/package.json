@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@better-auth/api-key": "^1.6.2",
+    "@dockstat/auth": "workspace:*",
     "@dockstat/db": "workspace:*",
     "@dockstat/docker-client": "workspace:*",
     "@dockstat/docknode": "workspace:*",
@@ -21,7 +22,9 @@
     "better-auth": "^1.6.2",
     "dagre": "catalog:docker",
     "elysia": "catalog:",
-    "jose": "^6.2.2"
+    "elysia-oauth2": "^2.1.0",
+    "jose": "^6.2.2",
+    "openid-client": "^6.8.3"
   },
   "devDependencies": {
     "bun-types": "latest"

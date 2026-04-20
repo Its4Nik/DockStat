@@ -1,14 +1,15 @@
 {
   "dependencies": {
-    "@dockstat/logger": "workspace:*"
+    "elysia": "catalog:",
+    "openid-client": "^6.8.3"
   },
   "devDependencies": {
+    "@dockstat/logger": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*",
     "@types/bun": "latest"
   },
   "exports": {
-    "/client": "./src/client/index.ts",
-    "/server": "./src/server/index.ts"
+    ".": "./src/index.ts"
   },
   "module": "src/index.ts",
   "name": "@dockstat/auth",

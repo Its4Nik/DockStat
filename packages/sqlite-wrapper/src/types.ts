@@ -532,10 +532,11 @@ export type CreateTableColumns = string | Record<string, string> | TableSchema
 
 export type IndexOrder = "ASC" | "DESC"
 
-export type IndexColumn =
+export type IndexColumn<_T extends Record<string, unknown> = Record<string, unknown>> =
+  | keyof _T
   | string
   | {
-      name: string
+      name: keyof _T | string
       order?: IndexOrder
     }
 

@@ -384,10 +384,10 @@ class DB {
   /**
    * Create an index on a table
    */
-  createIndex(
+  createIndex<_T extends Record<string, unknown> = Record<string, unknown>>(
     indexName: string,
     tableName: string,
-    columns: IndexColumn | IndexColumn[],
+    columns: IndexColumn<_T> | IndexColumn<_T>[],
     options?: {
       unique?: boolean
       ifNotExists?: boolean
@@ -399,7 +399,7 @@ class DB {
       using?: IndexMethod
     }
   ): void {
-    helperCreateIndex(this.db, indexName, tableName, columns, options)
+    helperCreateIndex<_T>(this.db, indexName, tableName, columns, options)
   }
 
   /**

@@ -2,16 +2,13 @@ import { cors } from "@elysiajs/cors"
 import { openapi } from "@elysiajs/openapi"
 import { serverTiming } from "@elysiajs/server-timing"
 import Elysia from "elysia"
-import { OpenAPI } from "./auth"
 
 const DockStatElysiaPlugins = new Elysia()
-  .use(cors())
+  .use(cors({
+    credentials: true
+  }))
   .use(
     openapi({
-      documentation: {
-        components: await OpenAPI.components,
-        paths: await OpenAPI.getPaths(),
-      },
       path: "/docs",
       provider: "scalar",
     })

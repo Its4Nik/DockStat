@@ -1,6 +1,5 @@
 declare module "bun" {
   interface Env {
     BASE_URL: string
-    FRONTEND_URL: string
   }
 }

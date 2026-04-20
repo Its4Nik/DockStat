@@ -10,6 +10,8 @@ import DockNodePage from "./pages/node"
 import NodeStacksPage from "./pages/node/stacks"
 import PluginIdPage from "./pages/pluginId"
 import SettingsPage from "./pages/settings"
+import { AuthCallback, LoginButtons } from "./pages/SignIn"
+import { ProtectedRoute } from "./lib/protectedRoute"
 
 export default function DockStatRouter() {
   return (
@@ -47,14 +49,24 @@ export default function DockStatRouter() {
         element={<PluginIdPage />}
         path="/p/:pluginId/*"
       />
+
       <Route
-        element={<ExtensionsIndex />}
+        element={<ProtectedRoute>
+          <ExtensionsIndex />
+        </ProtectedRoute>}
         path="/extensions"
       />
+
       <Route
         element={<PluginBrowser />}
         path="/extensions/plugins"
       />
+
+      <Route
+        element={<LoginButtons />}
+        path="/login"
+      />
+      <Route path="/auth/:providerId/callback" element={<AuthCallback />} />
     </Routes>
   )
 }
