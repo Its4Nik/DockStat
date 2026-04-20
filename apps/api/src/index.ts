@@ -1,4 +1,5 @@
 import Elysia from "elysia"
+import { AuthHandler } from "./auth"
 import DockStatElysiaPlugins from "./elysia-plugins"
 import { errorHandler } from "./handlers/onError"
 import RequestLogger from "./handlers/requestLogger"
@@ -14,7 +15,6 @@ import RepositoryRoutes from "./routes/repositories"
 import StatusRoutes from "./routes/status"
 import ThemeRoutes from "./routes/themes"
 import DockStatWebsockets from "./websockets"
-import { AuthHandler } from "./auth"
 
 const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 

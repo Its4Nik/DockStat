@@ -4,9 +4,11 @@ import { serverTiming } from "@elysiajs/server-timing"
 import Elysia from "elysia"
 
 const DockStatElysiaPlugins = new Elysia()
-  .use(cors({
-    credentials: true
-  }))
+  .use(
+    cors({
+      credentials: true,
+    })
+  )
   .use(
     openapi({
       path: "/docs",

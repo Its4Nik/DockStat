@@ -1,4 +1,4 @@
-import {AuthHandler as AuthHandlerFactory } from "@dockstat/auth"
+import { AuthHandler as AuthHandlerFactory } from "@dockstat/auth"
 import { DockStatDB } from "./database"
 import BaseLogger from "./logger"
 

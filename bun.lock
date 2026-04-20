@@ -147,6 +147,7 @@
       "name": "@dockstat/auth",
       "dependencies": {
         "elysia": "catalog:",
+        "jose": "^6.2.2",
         "openid-client": "^6.8.3",
       },
       "devDependencies": {

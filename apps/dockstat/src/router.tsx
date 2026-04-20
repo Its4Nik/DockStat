@@ -1,5 +1,5 @@
 import { Route, Routes } from "react-router"
-
+import { ProtectedRoute } from "./lib/protectedRoute"
 import IndexPage from "./pages"
 import ConfigureClientsPage from "./pages/clients/configure"
 import ClientsPage from "./pages/clients/index"
@@ -9,9 +9,8 @@ import GraphPage from "./pages/graph"
 import DockNodePage from "./pages/node"
 import NodeStacksPage from "./pages/node/stacks"
 import PluginIdPage from "./pages/pluginId"
+import { AuthCallback, SignInPage } from "./pages/SignIn"
 import SettingsPage from "./pages/settings"
-import { AuthCallback, LoginButtons } from "./pages/SignIn"
-import { ProtectedRoute } from "./lib/protectedRoute"
 
 export default function DockStatRouter() {
   return (
@@ -51,9 +50,11 @@ export default function DockStatRouter() {
       />
 
       <Route
-        element={<ProtectedRoute>
-          <ExtensionsIndex />
-        </ProtectedRoute>}
+        element={
+          <ProtectedRoute>
+            <ExtensionsIndex />
+          </ProtectedRoute>
+        }
         path="/extensions"
       />
 
@@ -63,10 +64,13 @@ export default function DockStatRouter() {
       />
 
       <Route
-        element={<LoginButtons />}
+        element={<SignInPage />}
         path="/login"
       />
-      <Route path="/auth/:providerId/callback" element={<AuthCallback />} />
+      <Route
+        element={<AuthCallback />}
+        path="/auth/:providerId/callback"
+      />
     </Routes>
   )
 }
