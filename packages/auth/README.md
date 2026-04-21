@@ -194,9 +194,141 @@ GET /auth/550e8400-e29b-41d4-a716-446655440000/logout?redirectUri=http://localho
 
 ### Quick Example
 
-#### Backend Setup
+#### Backend Setup with Authentication Middleware
 
-Initialize the AuthHandler and register routes with your Elysia application:
+The `@dockstat/auth` package now includes comprehensive authentication middleware for ElysiaJS. This middleware automatically validates JWT tokens and attaches user information to request contexts.
+
+**Initialize the AuthHandler and middleware:**
+
+```typescript
+import { AuthHandler as AuthHandlerFactory, createAuthMiddleware } from "@dockstat/auth"
+import { DockStatDB } from "./database"
+import BaseLogger from "./logger"
+import Elysia from "elysia"
+
+// Initialize the AuthHandler with database and logger
+export const AuthHandler = new AuthHandlerFactory(
+  DockStatDB._sqliteWrapper, 
+  BaseLogger
+)
+
+// Create authentication middleware
+const authMiddleware = createAuthMiddleware()
+
+// Create the Elysia app with authentication
+const app = new Elysia()
+  .use(authMiddleware)
+  .use(AuthHandler.routes)
+  .listen(3000)
+
+console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`)
+```
+
+**Protecting Routes:**
+
+There are multiple ways to protect your routes:
+
+**Option 1: Using the `authenticated()` decorator**
+
+```typescript
+const app = new Elysia()
+  .use(createAuthMiddleware())
+  .get("/protected", () => {
+    return "This route is protected"
+  }, {
+    authenticated()
+  })
+```
+
+**Option 2: Using the macro in route handlers**
+
+```typescript
+const app = new Elysia()
+  .use(createAuthMiddleware())
+  .macro({
+    authenticated: {
+      authenticated: () => ({
+        beforeHandle: ({ isAuthenticated, user, set }) => {
+          if (!isAuthenticated) {
+            set.status = 401
+            return { error: "Authentication required" }
+          }
+          // User is now available in the handler
+          return { user }
+        }
+      })
+    }
+  })
+  .get("/protected", ({ user }) => {
+    return `Hello, ${user.name}!`
+  }, {
+    beforeHandle: ({ isAuthenticated, set }) => {
+      if (!isAuthenticated) {
+        set.status = 401
+        return { error: "Authentication required" }
+      }
+    }
+  })
+```
+
+**Option 3: Checking authentication manually in handlers**
+
+```typescript
+const app = new Elysia()
+  .use(createAuthMiddleware())
+  .get("/protected", ({ isAuthenticated, user }) => {
+    if (!isAuthenticated) {
+      throw new Error("Not authenticated")
+    }
+    return `Hello, ${user?.name}!`
+  })
+```
+
+**Accessing User Information:**
+
+The middleware automatically attaches user information to the request context:
+
+```typescript
+const app = new Elysia()
+  .use(createAuthMiddleware())
+  .get("/profile", ({ user }) => {
+    return {
+      id: user?.sub,
+      email: user?.email,
+      name: user?.name,
+    }
+  }, authenticated())
+```
+
+**WebSocket Authentication:**
+
+For WebSocket connections, use the `createWsAuthMiddleware`:
+
+```typescript
+const app = new Elysia()
+  .ws("/ws", {
+    ...createWsAuthMiddleware(),
+    open: (ws) => {
+      const user = ws.data.user
+      console.log(`User connected: ${user?.email}`)
+    },
+    message: (ws, message) => {
+      const user = ws.data.user
+      ws.send(`Hello, ${user?.name}!`)
+    }
+  })
+```
+
+**Token Sources:**
+
+The middleware looks for JWT tokens in the following order:
+1. `Authorization: Bearer <token>` header
+2. `auth_token` cookie
+3. `?token=<token>` query parameter (for WebSockets)
+
+#### Adding a Provider
+
+Add a new OAuth provider to the database:
 
 ```typescript
 import { AuthHandler as AuthHandlerFactory } from "@dockstat/auth"
@@ -233,9 +365,115 @@ await AuthHandler.table.insert({
 })
 ```
 
-#### Frontend Integration (React)
+#### Frontend Integration (React) - New Context-Based Approach
 
-Create a custom hook for authentication:
+The `@dockstat/auth` package now provides an improved React integration using the Context API for better state management, automatic token refresh, and cross-tab synchronization.
+
+**Setup the AuthProvider:**
+
+Wrap your application with the `AuthProvider`:
+
+```typescript
+import { AuthProvider } from "@dockstat/auth/client"
+import App from "./App"
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3030/api/v2"
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <AuthProvider apiBase={API_BASE}>
+      <App />
+    </AuthProvider>
+  </React.StrictMode>
+)
+```
+
+**Use the authentication hooks in your components:**
+
+```typescript
+import { useAuth, useUser, useIsAuthenticated } from "@dockstat/auth/client"
+
+function Dashboard() {
+  const { login, logout, loading, error } = useAuth()
+  const user = useUser()
+  const isAuthenticated = useIsAuthenticated()
+
+  if (loading) return <div>Loading...</div>
+
+  if (!isAuthenticated) {
+    return <button onClick={() => login("google-provider-id")}>Login with Google</button>
+  }
+
+  return (
+    <div>
+      <h1>Welcome, {user?.name}!</h1>
+      <p>Email: {user?.email}</p>
+      <button onClick={logout}>Logout</button>
+      {error && <p className="error">{error}</p>}
+    </div>
+  )
+}
+```
+
+**Using ProtectedRoute:**
+
+```typescript
+import { ProtectedRoute } from "@dockstat/auth/client"
+import Dashboard from "./Dashboard"
+import Login from "./Login"
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute loadingComponent={<Spinner />}>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  )
+}
+```
+
+**Available Hooks:**
+
+- `useAuth()`: Full authentication context (user, token, loading, error, login, logout, refreshToken, clearError)
+- `useUser()`: Get current user object
+- `useIsAuthenticated()`: Check if user is authenticated
+- `useIsLoading()`: Check if authentication is loading
+- `useAuthError()`: Get authentication error message
+
+**AuthProvider Props:**
+
+```typescript
+interface AuthProviderProps {
+  children: ReactNode
+  apiBase: string                    // Base URL for the API
+  tokenStorageKey?: string           // Key for storing token in localStorage (default: "auth_token")
+  userStorageKey?: string            // Key for storing user in localStorage (default: "user")
+  onTokenExpired?: () => void        // Callback when token expires
+}
+```
+
+**Automatic Features:**
+
+- **Token Refresh**: Automatically refreshes tokens every 4 minutes (assuming 5-minute token lifetime)
+- **Cross-tab Sync**: Keeps authentication state synchronized across browser tabs
+- **URL Callback Handling**: Automatically processes OAuth callbacks from the URL
+- **Redirect Handling**: Remembers and redirects to the page the user was trying to access
+
+#### Frontend Integration (React) - Legacy Approach (Deprecated)
+
+```typescript
+> ⚠️ **DEPRECATED**: The following approach is deprecated. Please migrate to the new Context-based approach described above.
+
+The old hook-based approach has been replaced with a Context-based approach that provides better state management, automatic token refresh, and cross-tab synchronization.
+
+**Legacy Example (Deprecated):**
 
 ```typescript
 import { useEffect, useState } from "react"
@@ -287,63 +525,135 @@ export function useAuth() {
 }
 ```
 
+**Migration Guide:**
+
+To migrate from the old hook-based approach to the new Context-based approach:
+
+1. **Wrap your app with AuthProvider:**
+   ```typescript
+   // Before
+   <App />
+   
+   // After
+   <AuthProvider apiBase={API_BASE}>
+     <App />
+   </AuthProvider>
+   ```
+
+2. **Update imports:**
+   ```typescript
+   // Before
+   import { useAuth } from "@dockstat/auth/client/useAuth"
+   const { login, logout, user } = useAuth({ API_BASE: "/api" })
+   
+   // After
+   import { useAuth } from "@dockstat/auth/client/AuthProvider"
+   const { login, logout, user } = useAuth()
+   ```
+
+3. **Update ProtectedRoute:**
+   ```typescript
+   // Before
+   <ProtectedRoute api_base={API_BASE}>
+     <Dashboard />
+   </ProtectedRoute>
+   
+   // After
+   <ProtectedRoute>
+     <Dashboard />
+   </ProtectedRoute>
+   ```
+
+4. **Use additional hooks for better control:**
+   ```typescript
+   import { useUser, useIsAuthenticated, useAuthError } from "@dockstat/auth/client"
+   
+   const user = useUser()
+   const isAuthenticated = useIsAuthenticated()
+   const error = useAuthError()
+   ```
+
 #### Handling OAuth Callback (React)
 
-Create a callback component to handle the OAuth response:
+The new AuthProvider automatically handles OAuth callbacks from the URL. However, you can still create a dedicated callback page if needed:
 
 ```typescript
-import { useEffect, useState } from "react"
+```typescript
+import { useEffect } from "react"
 import { useSearchParams, useNavigate } from "react-router"
 
 export function AuthCallback() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // The AuthProvider automatically handles the token from the URL
+    // This page is optional - you can set the callback URL to any page in your app
     const token = searchParams.get("token")
 
     if (!token) {
-      setError("Missing authentication token")
+      navigate("/login", { replace: true })
       return
     }
 
-    try {
-      // Decode JWT token (payload is base64 encoded)
-      const base64Url = token.split(".")[1]
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split("")
-          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-          .join("")
-      )
-
-      const { user } = JSON.parse(jsonPayload)
-
-      if (!user) {
-        throw new Error("Invalid token payload")
+    // The AuthProvider will process the token and handle the redirect
+    // You can optionally show a loading state here
+    setTimeout(() => {
+      // Check if auth is complete by checking for user in localStorage
+      const user = localStorage.getItem("user")
+      if (user) {
+        navigate("/", { replace: true })
+      } else {
+        navigate("/login", { replace: true })
       }
-
-      // Store user info
-      localStorage.setItem("user", JSON.stringify(user))
-
-      // Redirect back to original page
-      const redirect = localStorage.getItem("auth_redirect") || "/"
-      localStorage.removeItem("auth_redirect")
-      navigate(redirect)
-    } catch (err) {
-      console.error("Auth callback error:", err)
-      setError("Failed to process authentication. Please try again.")
-    }
+    }, 1000)
   }, [searchParams, navigate])
-
-  if (error) {
-    return <div>Error: {error}</div>
-  }
 
   return <div>Completing authentication...</div>
 }
+```
+
+## New Exports
+
+### Backend Exports
+
+```typescript
+import {
+  // Main handler
+  AuthHandler,
+  
+  // Middleware
+  createAuthMiddleware,
+  authenticated,
+  createWsAuthMiddleware,
+  getWsUser,
+  
+  // Types
+  type AuthUser,
+  type AuthContext,
+} from "@dockstat/auth"
+```
+
+### Client Exports
+
+```typescript
+import {
+  // Context Provider
+  AuthProvider,
+  
+  // Hooks (recommended)
+  useAuth,
+  useUser,
+  useIsAuthenticated,
+  useIsLoading,
+  useAuthError,
+  
+  // Components
+  ProtectedRoute,
+  
+  // Legacy hooks (deprecated)
+  useAuth as useAuthLegacy,
+} from "@dockstat/auth/client"
 ```
 
 ## Contributing

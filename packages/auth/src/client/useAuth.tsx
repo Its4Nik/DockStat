@@ -1,47 +1,47 @@
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
+import { useAuth as useAuthContext } from "./AuthProvider"
 
-interface User {
-  sub: string
-  email?: string
-  name?: string
-  picture?: string
-  [key: string]: unknown
-}
-
+/**
+ * @deprecated This hook is deprecated. Please use the new AuthProvider and import useAuth from "./AuthProvider" instead.
+ *
+ * The old hook-based approach has been replaced with a Context-based approach that provides better
+ * state management, automatic token refresh, and cross-tab synchronization.
+ *
+ * To migrate:
+ * 1. Wrap your app with AuthProvider
+ * 2. Import useAuth from "./AuthProvider" instead
+ * 3. Remove the API_BASE parameter (it's now provided by the AuthProvider)
+ *
+ * @example
+ * ```tsx
+ * // Old way (deprecated)
+ * const { login, logout, user } = useAuth({ API_BASE: "/api" })
+ *
+ * // New way (recommended)
+ * import { AuthProvider, useAuth } from "@dockstat/auth/client"
+ *
+ * // Wrap your app
+ * <AuthProvider apiBase="/api">
+ *   <App />
+ * </AuthProvider>
+ *
+ * // Use the hook
+ * const { login, logout, user } = useAuth()
+ * ```
+ */
 export function useAuth({ API_BASE }: { API_BASE: string }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error] = useState<string | null>(null)
+  const contextAuth = useAuthContext()
 
+  // Log deprecation warning
   useEffect(() => {
-    const storedUser = localStorage.getItem("user")
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser))
-      } catch {
-        localStorage.removeItem("user")
-      }
-    }
-    setLoading(false)
+    console.warn(
+      "[@dockstat/auth] useAuth({ API_BASE }) is deprecated. " +
+        "Please use the new AuthProvider context-based approach. " +
+        "Import useAuth from './AuthProvider' instead of './useAuth'."
+    )
   }, [])
 
-  // Initiate login with a specific provider
-  const login = (providerId: string) => {
-    // Store the current location to redirect back after auth
-    localStorage.setItem("auth_redirect", window.location.pathname)
-    localStorage.setItem("auth_provider_id", providerId)
-    window.location.href = `${API_BASE}/auth/${providerId}/login`
-  }
-
-  // Logout
-  const logout = () => {
-    localStorage.removeItem("user")
-    const providerId = localStorage.getItem("auth_provider_id")
-    localStorage.removeItem("auth_provider_id")
-    const loc = window.location.href
-    setUser(null)
-    window.location.href = `${API_BASE}/auth/${providerId}/logout?redirectUri=${loc}`
-  }
-
-  return { error, loading, login, logout, user }
+  // Return the context-based auth, ignoring the API_BASE parameter
+  // since it's now managed by the AuthProvider
+  return contextAuth
 }

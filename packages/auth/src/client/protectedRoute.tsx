@@ -1,16 +1,16 @@
 import { Navigate } from "react-router"
-import { useAuth } from "./useAuth"
+import { useAuth } from "./AuthProvider"
 
 export function ProtectedRoute({
   children,
-  api_base,
   loadingComponent,
+  redirectTo = "/login",
 }: {
   children: React.ReactNode
-  api_base: string
   loadingComponent?: React.ReactNode
+  redirectTo?: string
 }) {
-  const { user, loading } = useAuth({ API_BASE: api_base })
+  const { user, loading, isAuthenticated } = useAuth()
 
   if (loading) {
     if (loadingComponent) {
@@ -19,13 +19,13 @@ export function ProtectedRoute({
     return <div>Loading...</div>
   }
 
-  if (!user) {
+  if (!isAuthenticated || !user) {
     // Save current location for post-login redirect
     localStorage.setItem("auth_redirect", window.location.pathname)
     return (
       <Navigate
         replace
-        to="/login"
+        to={redirectTo}
       />
     )
   }

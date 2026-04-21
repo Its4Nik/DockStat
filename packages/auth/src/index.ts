@@ -1,8 +1,23 @@
 import type Logger from "@dockstat/logger"
-import { column, type DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
+import { type QueryBuilder, type DB, column } from "@dockstat/sqlite-wrapper"
 import { ConfigService } from "./config"
 import { createAuthRoutes } from "./routes"
 import type { ProvidersTable } from "./types"
+import {
+  authenticated,
+  createAuthMiddleware,
+  createAuthenticatedWsHandler,
+  handleWsAuthentication,
+  isAuthenticatedUser,
+  requireAuth,
+  verifyWsToken,
+  withAuth,
+  getWsUser,
+  type AuthContext,
+  type AuthUser,
+  type AuthWsContext,
+  type JWTPayload,
+} from "./middleware"
 
 export class AuthHandler {
   table: QueryBuilder<ProvidersTable>
@@ -34,3 +49,16 @@ export class AuthHandler {
     this.routes = createAuthRoutes(this.table, this.logger, this.configService)
   }
 }
+
+export {
+  authenticated,
+  createAuthMiddleware,
+  createAuthenticatedWsHandler,
+  handleWsAuthentication,
+  isAuthenticatedUser,
+  requireAuth,
+  verifyWsToken,
+  withAuth,
+  getWsUser,
+}
+export type { AuthContext, AuthUser, AuthWsContext, JWTPayload }
