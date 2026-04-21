@@ -33,7 +33,7 @@ export const DockStatAPI = new Elysia({ precompile: false, prefix: "/api/v2" })
   .use(DockStatWebsockets)
   .use(DockNodeElyisa)
   .use(GraphRoutes)
-  .use(AuthHandler.getRoutes())
+  .use(AuthHandler.routes)
   .listen(PORT)
 
 const hostnameAndPort = `${DockStatAPI.server?.hostname}:${DockStatAPI.server?.port}`

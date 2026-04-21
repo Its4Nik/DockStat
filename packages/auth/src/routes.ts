@@ -1,0 +1,240 @@
+import type Logger from "@dockstat/logger"
+import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
+import Elysia, { t } from "elysia"
+import * as client from "openid-client"
+import type { ProvidersTable } from "./types"
+import { ConfigService } from "./config"
+import { createAuthToken } from "./utils/jwt"
+import { BASE_URL, FRONTEND_URL } from "./utils/env"
+
+export function createAuthRoutes(
+  table: QueryBuilder<ProvidersTable>,
+  logger: Logger,
+  configService: ConfigService
+) {
+  return new Elysia({ prefix: "/auth", detail: { tags: ["Auth"] } })
+    .post(
+      "/providers",
+      ({ body }) =>
+        table.insertAndGet({
+          ...(body as object),
+          scopes: (body as { scopes: string }).scopes
+            ? (body as { scopes: string }).scopes
+            : null,
+        }),
+      {
+        body: t.Object({
+          client_id: t.String(),
+          client_secret: t.String(),
+          issuer_url: t.String(),
+          scopes: t.MaybeEmpty(t.String()),
+          logout_url: t.MaybeEmpty(t.String()),
+        }),
+      }
+    )
+    .get(
+      "/:providerId/login",
+      async ({ params: { providerId }, redirect, cookie: { state, nonce, pkce } }) => {
+        const { meta, scopes } = await configService.getConfig(providerId)
+
+        const stateVal = client.randomState()
+        const nonceVal = client.randomNonce()
+
+        const code_verifier = client.randomPKCECodeVerifier()
+        const code_challenge = await client.calculatePKCECodeChallenge(code_verifier)
+
+        const isSecure = BASE_URL.startsWith("https://")
+        logger.info(`Setting OAuth cookies for provider ${providerId} (secure: ${isSecure})`)
+
+        state.value = stateVal
+        state.httpOnly = true
+        state.secure = isSecure
+        state.sameSite = "lax"
+        state.maxAge = 600
+
+        nonce.value = nonceVal
+        nonce.httpOnly = true
+        nonce.secure = isSecure
+        nonce.sameSite = "lax"
+        nonce.maxAge = 600
+
+        pkce.value = code_verifier
+        pkce.httpOnly = true
+        pkce.secure = isSecure
+        pkce.sameSite = "lax"
+        pkce.maxAge = 600
+
+        const params: Record<string, string> = {
+          code_challenge,
+          code_challenge_method: "S256",
+          redirect_uri: `${BASE_URL}/${providerId}/callback`,
+          scopes,
+          nonce: nonceVal,
+          state: stateVal,
+        }
+
+        const redirectTo: URL = client.buildAuthorizationUrl(meta, params)
+
+        logger.info(`=== OAuth Login Flow ===`)
+        logger.info(`Authorization URL: ${redirectTo.toString()}`)
+        logger.info(`Params sent: ${JSON.stringify(params)}`)
+        logger.info(`=== End Login Flow ===\n`)
+        return redirect(redirectTo.toString())
+      },
+      {
+        params: t.Object({ providerId: t.String() }),
+      }
+    )
+    .get(
+      "/:providerId/callback",
+      async ({ params: { providerId }, query, cookie, set }) => {
+        const { meta } = await configService.getConfig(providerId)
+        const { state: returnedState, code } = query
+
+        logger.info(`=== OAuth Callback Flow for ${providerId} ===`)
+        logger.info(`Query params: ${JSON.stringify(query)}`)
+        logger.info(`Code present: ${!!code}`)
+        logger.info(`Returned state: ${returnedState}`)
+
+        // Check if OAuth cookies are present (they should have been set by login route)
+        if (!cookie.state?.value || !cookie.nonce?.value || !cookie.pkce?.value) {
+          logger.error(
+            `Missing OAuth cookies - login route may have failed ${JSON.stringify({
+              allCookies: Object.keys(cookie),
+              nonce: cookie.nonce?.value ? "present" : "missing",
+              pkce: cookie.pkce?.value ? "present" : "missing",
+              state: cookie.state?.value ? "present" : "missing",
+            })}`
+          )
+          set.status = 400
+          return "Authentication failed: Missing security cookies. Please try logging in again from the login page."
+        }
+
+        logger.info(`Cookie state: ${cookie.state.value}`)
+        logger.info(`Cookie nonce: ${cookie.nonce.value}`)
+        logger.info(`Cookie pkce: ${String(cookie.pkce.value).substring(0, 20)}...`)
+
+        if (cookie.state.value !== returnedState) {
+          logger.error(
+            `Invalid state parameter in OAuth callback: ${JSON.stringify({
+              expected: cookie.state.value,
+              received: returnedState,
+            })}`
+          )
+          set.status = 400
+          return "Invalid state"
+        }
+
+        logger.info("State validation passed. Exchanging authorization code for tokens...")
+
+        const callbackUrl = new URL(
+          `${BASE_URL}/${providerId}/callback?${new URLSearchParams(query)}`
+        )
+        logger.info(`Callback URL for token exchange: ${callbackUrl.toString()}`)
+
+        // Log detailed token exchange parameters
+        const serverMetadata = meta.serverMetadata()
+        logger.info(`=== Token Exchange Parameters ===`)
+        logger.info(`Token Endpoint: ${serverMetadata.token_endpoint}`)
+        logger.info(
+          `Authorization Endpoint: ${serverMetadata.authorization_endpoint}`
+        )
+        logger.info(`Expected Nonce: ${cookie.nonce.value}`)
+        logger.info(`Expected State: ${cookie.state.value}`)
+        logger.info(
+          `PKCE Code Verifier (first 20 chars): ${String(cookie.pkce.value).substring(0, 20)}...`
+        )
+        logger.info(`Full PKCE Code Verifier: ${String(cookie.pkce.value)}`)
+        logger.info(`Callback URL (full): ${callbackUrl.toString()}`)
+        logger.info(`=== End Token Exchange Parameters ===`)
+
+        try {
+          const tokens = await client.authorizationCodeGrant(meta, callbackUrl, {
+            expectedNonce: String(cookie.nonce.value),
+            expectedState: String(cookie.state.value),
+            pkceCodeVerifier: String(cookie.pkce.value),
+          })
+          logger.info(
+            `Token exchange successful! Token type: ${tokens.token_type}`
+          )
+
+          const userInfo = await client.fetchUserInfo(
+            meta,
+            tokens.access_token,
+            String(tokens.claims().sub)
+          )
+          logger.info(
+            `Successfully fetched user info for: ${userInfo.email || userInfo.sub}`
+          )
+
+          cookie.state.remove()
+          cookie.nonce.remove()
+          cookie.pkce.remove()
+
+          // Create a JWT with user info to pass to the frontend
+          const token = await createAuthToken(userInfo)
+
+          // Redirect to frontend callback page with JWT token
+          const frontendCallbackUrl = `${FRONTEND_URL}/auth/${providerId}/callback?token=${token}`
+          logger.info(
+            `Redirecting to frontend callback: ${FRONTEND_URL}/auth/${providerId}/callback`
+          )
+
+          return new Response(null, {
+            headers: {
+              Location: frontendCallbackUrl,
+            },
+            status: 302,
+          })
+        } catch (error) {
+          const errorDetails = {
+            error: error instanceof Error ? error.message : String(error),
+            name: error instanceof Error ? error.name : undefined,
+            stack: error instanceof Error ? error.stack : undefined,
+            constructor: error?.constructor?.name,
+          }
+
+          logger.error(`Token exchange failed! ${JSON.stringify(errorDetails, null, 2)}`)
+          set.status = 500
+          return `Authentication failed: ${error instanceof Error ? error.message : "Unknown error"}`
+        }
+      },
+      {
+        params: t.Object({ providerId: t.String() }),
+        query: t.Object({ code: t.String(), state: t.String() }),
+      }
+    )
+    .get("/providers", () =>
+      table
+        .select(["id", "issuer_url", "scopes", "client_id", "created_at"])
+        .all()
+    )
+    .get(
+      "/:providerId/logout",
+      async ({ params: { providerId }, query, redirect }) => {
+        const { meta } = await configService.getConfig(providerId)
+        const { logout_url: logoutUrl } = table
+          .select(["logout_url"])
+          .where({ id: providerId })
+          .first()
+
+        logger.info(`Logging out from ${providerId}; redirect after: ${query.redirectUri}`)
+
+        let redirectTo = client.buildEndSessionUrl(meta, {
+          post_logout_redirect_uri: query.redirectUri,
+        })
+
+        if (logoutUrl !== null) {
+          redirectTo = new URL(logoutUrl)
+        }
+
+        logger.info(`End Session URL: ${redirectTo.toString()}`)
+
+        return redirect(redirectTo.toString())
+      },
+      {
+        params: t.Object({ providerId: t.String() }),
+        query: t.Object({ redirectUri: t.String() }),
+      }
+    )
+}

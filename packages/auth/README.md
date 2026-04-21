@@ -1,7 +1,6 @@
 # @dockstat/auth
 
-`@dockstat/auth` is a comprehensive OIDC/OAuth proxy service built for ElysiaJS applications. It provides seamless integration with various OIDC/OAuth providers including Authentik, Google, GitHub, Microsoft, Keycloak, and Okta. The library handles the complete OAuth 2.0 authorization code flow with PKCE (Proof Key for Code Exchange) for enhanced security.
-
+> `@dockstat/auth` is a comprehensive OIDC/OAuth proxy service built for ElysiaJS applications. It provides seamless integration with various OIDC/OAuth providers including Authentik, Google, GitHub, Microsoft, Keycloak, and Okta. The library handles the complete OAuth 2.0 authorization code flow with PKCE (Proof Key for Code Exchange) for enhanced security.
 
 ## Description
 
@@ -61,7 +60,7 @@ class AuthHandler {
   issuerCache: Map<string, client.Configuration>
   
   getConfig(providerId: string): Promise<OAuthConfig>
-  getRoutes(): Promise<Elysia>
+  routes: Elysia
 }
 ```
 
@@ -213,7 +212,7 @@ export const AuthHandler = new AuthHandlerFactory(
 
 // Register the auth routes with your Elysia app
 const app = new Elysia()
-  .use(await AuthHandler.getRoutes())
+  .use(AuthHandler.routes)
   .listen(3000)
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`)
