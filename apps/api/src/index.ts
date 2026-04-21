@@ -1,9 +1,11 @@
+import { authenticated } from "@dockstat/auth"
 import Elysia from "elysia"
-import { AuthHandler, AuthMiddleware } from "./auth"
+import { AuthHandler } from "./auth"
 import DockStatElysiaPlugins from "./elysia-plugins"
 import { errorHandler } from "./handlers/onError"
 import RequestLogger from "./handlers/requestLogger"
 import BaseLogger from "./logger"
+import { AuthMiddleware } from "./middleware/auth"
 import MetricsMiddleware from "./middleware/metrics"
 import DBRoutes from "./routes/db"
 import DockerRoutes from "./routes/docker"
@@ -21,19 +23,22 @@ const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 export const DockStatAPI = new Elysia({ precompile: false, prefix: "/api/v2" })
   .use(AuthMiddleware)
   .use(DockStatElysiaPlugins)
-  .use(RequestLogger)
-  .use(MetricsMiddleware)
-  .use(errorHandler)
-  .use(StatusRoutes)
-  .use(DBRoutes)
-  .use(DockerRoutes)
-  .use(PluginRoutes)
-  .use(DockStatMiscRoutes)
-  .use(RepositoryRoutes)
-  .use(ThemeRoutes)
-  .use(DockStatWebsockets)
-  .use(DockNodeElyisa)
-  .use(GraphRoutes)
+  .guard(authenticated(), (app) => {
+    return app
+      .use(RequestLogger)
+      .use(MetricsMiddleware)
+      .use(errorHandler)
+      .use(StatusRoutes)
+      .use(DBRoutes)
+      .use(DockerRoutes)
+      .use(PluginRoutes)
+      .use(DockStatMiscRoutes)
+      .use(RepositoryRoutes)
+      .use(ThemeRoutes)
+      .use(DockStatWebsockets)
+      .use(DockNodeElyisa)
+      .use(GraphRoutes)
+  })
   .use(AuthHandler.routes)
   .listen(PORT)
 

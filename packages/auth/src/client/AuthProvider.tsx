@@ -1,10 +1,10 @@
 import React, {
   createContext,
+  type ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useState,
-  useCallback,
-  type ReactNode,
 } from "react"
 
 interface User {
@@ -48,11 +48,11 @@ export function AuthProvider({
   onTokenExpired,
 }: AuthProviderProps) {
   const [state, setState] = useState<AuthState>({
-    user: null,
-    token: null,
-    loading: true,
     error: null,
     isAuthenticated: false,
+    loading: true,
+    token: null,
+    user: null,
   })
 
   const loadAuthState = useCallback(() => {
@@ -66,11 +66,11 @@ export function AuthProvider({
       }
 
       setState({
-        user,
-        token: storedToken,
-        loading: false,
         error: null,
         isAuthenticated: !!user && !!storedToken,
+        loading: false,
+        token: storedToken,
+        user,
       })
     } catch (error) {
       console.error("Failed to load auth state:", error)
@@ -78,11 +78,11 @@ export function AuthProvider({
       localStorage.removeItem(userStorageKey)
       setState((prev) => ({
         ...prev,
-        user: null,
-        token: null,
-        loading: false,
         error: "Failed to load authentication state",
         isAuthenticated: false,
+        loading: false,
+        token: null,
+        user: null,
       }))
     }
   }, [tokenStorageKey, userStorageKey])
@@ -111,11 +111,11 @@ export function AuthProvider({
 
       // Update state
       setState({
-        user: null,
-        token: null,
-        loading: false,
         error: null,
         isAuthenticated: false,
+        loading: false,
+        token: null,
+        user: null,
       })
 
       // Redirect to logout endpoint if provider ID exists
@@ -198,9 +198,12 @@ export function AuthProvider({
     }
 
     // Refresh token every 4 minutes (assuming 5 minute token lifetime)
-    const interval = setInterval(() => {
-      refreshToken()
-    }, 4 * 60 * 1000)
+    const interval = setInterval(
+      () => {
+        refreshToken()
+      },
+      4 * 60 * 1000
+    )
 
     return () => clearInterval(interval)
   }, [state.token, state.isAuthenticated, refreshToken])
@@ -228,11 +231,11 @@ export function AuthProvider({
 
             // Update state
             setState({
-              user,
-              token,
-              loading: false,
               error: null,
               isAuthenticated: true,
+              loading: false,
+              token,
+              user,
             })
 
             // Redirect to stored location or home
@@ -244,8 +247,8 @@ export function AuthProvider({
           console.error("Failed to process auth callback:", error)
           setState((prev) => ({
             ...prev,
-            loading: false,
             error: "Failed to process authentication",
+            loading: false,
           }))
         }
       }
@@ -268,10 +271,10 @@ export function AuthProvider({
 
   const contextValue: AuthContextType = {
     ...state,
+    clearError,
     login,
     logout,
     refreshToken,
-    clearError,
   }
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>

@@ -236,38 +236,19 @@ const app = new Elysia()
   .get("/protected", () => {
     return "This route is protected"
   }, {
-    authenticated()
+    ...authenticated()
   })
 ```
 
-**Option 2: Using the macro in route handlers**
+**Option 2: Using a guard**
 
 ```typescript
 const app = new Elysia()
   .use(createAuthMiddleware())
-  .macro({
-    authenticated: {
-      authenticated: () => ({
-        beforeHandle: ({ isAuthenticated, user, set }) => {
-          if (!isAuthenticated) {
-            set.status = 401
-            return { error: "Authentication required" }
-          }
-          // User is now available in the handler
-          return { user }
-        }
-      })
-    }
-  })
-  .get("/protected", ({ user }) => {
-    return `Hello, ${user.name}!`
-  }, {
-    beforeHandle: ({ isAuthenticated, set }) => {
-      if (!isAuthenticated) {
-        set.status = 401
-        return { error: "Authentication required" }
-      }
-    }
+  .guard(authenticated(), (app) => {
+    .get("/protected", ({ user }) => {
+      return `Hello, ${user.name}!`
+    })
   })
 ```
 

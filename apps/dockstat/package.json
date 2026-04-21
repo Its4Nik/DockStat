@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@dockstat/auth": "workspace:*",
     "@dockstat/docker-client": "workspace:*",
     "@dockstat/template-renderer": "workspace:*",
     "@dockstat/theme-handler": "workspace:*",

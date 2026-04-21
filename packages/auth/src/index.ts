@@ -1,23 +1,23 @@
 import type Logger from "@dockstat/logger"
-import { type QueryBuilder, type DB, column } from "@dockstat/sqlite-wrapper"
+import { column, type DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import { ConfigService } from "./config"
-import { createAuthRoutes } from "./routes"
-import type { ProvidersTable } from "./types"
 import {
-  authenticated,
-  createAuthMiddleware,
-  createAuthenticatedWsHandler,
-  handleWsAuthentication,
-  isAuthenticatedUser,
-  requireAuth,
-  verifyWsToken,
-  withAuth,
-  getWsUser,
   type AuthContext,
   type AuthUser,
   type AuthWsContext,
+  authenticated,
+  createAuthenticatedWsHandler,
+  createAuthMiddleware,
+  getWsUser,
+  handleWsAuthentication,
+  isAuthenticatedUser,
   type JWTPayload,
+  requireAuth,
+  verifyWsToken,
+  withAuth,
 } from "./middleware"
+import { createAuthRoutes } from "./routes"
+import type { ProvidersTable } from "./types"
 
 export class AuthHandler {
   table: QueryBuilder<ProvidersTable>

@@ -1,10 +1,10 @@
-export * from "./protectedRoute"
-export * from "./useAuth"
 export {
   AuthProvider,
   useAuth,
-  useIsAuthenticated,
-  useUser,
-  useIsLoading,
   useAuthError,
+  useIsAuthenticated,
+  useIsLoading,
+  useUser,
 } from "./AuthProvider"
+export * from "./protectedRoute"
+export * from "./useAuth"

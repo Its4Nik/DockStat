@@ -1,23 +1,34 @@
-import { Navigate } from "react-router"
-import { useAuth } from "../hooks/useAuth"
+import { ProtectedRoute as PRoute } from "@dockstat/auth/client"
+import { Route, Routes } from "react-router"
 
-export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth()
-
-  if (loading) {
-    return <div>Loading...</div>
-  }
-
-  if (!user) {
-    // Save current location for post-login redirect
-    localStorage.setItem("auth_redirect", window.location.pathname)
-    return (
-      <Navigate
-        replace
-        to="/login"
-      />
-    )
-  }
-
-  return <>{children}</>
+const CreateRoutes = ({
+  protectedRoutes,
+  routes,
+}: {
+  routes?: Array<{ path: string; element: React.ReactNode }>
+  protectedRoutes?: Array<{
+    path: string
+    element: React.ReactNode
+    loadingComponent?: React.ReactNode
+  }>
+}) => {
+  return (
+    <Routes>
+      {(protectedRoutes ?? []).map((r) => {
+        return (
+          <Route path={r.path} element={<PRoute
+            loadingComponent={r.loadingComponent}
+            redirectTo={"/login"}
+          >
+            {r.element}
+          </PRoute>} />
+        )
+      })}
+      {(routes ?? []).map((r) => {
+        return <Route path={r.path} element={r.element} />
+      })}
+    </Routes>
+  )
 }
+
+export default CreateRoutes

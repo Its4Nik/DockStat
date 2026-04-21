@@ -1,4 +1,4 @@
-import Elysia, { t } from "elysia"
+import Elysia, { type AnyElysia, t } from "elysia"
 import type { ElysiaWS } from "elysia/ws"
 import { verifyAuthToken } from "./utils/jwt"
 
@@ -32,38 +32,37 @@ export interface AuthContext {
 export function createAuthMiddleware() {
   return new Elysia({
     name: "auth-middleware",
+  }).resolve(async ({ cookie, headers }) => {
+    let token: string | null = null
+
+    // Try to get token from Authorization header first
+    const authHeader = headers["authorization"] as string | undefined
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.slice(7)
+    }
+
+    // Fall back to cookie if no token in header
+    if (!token) {
+      const authTokenCookie = cookie?.auth_token as { value?: string } | undefined
+      if (authTokenCookie?.value) {
+        token = authTokenCookie.value
+      }
+    }
+
+    // Verify the token if present
+    let user: AuthUser | undefined
+    if (token) {
+      const payload = await verifyAuthToken(token)
+      if (payload && typeof payload.user === "object" && payload.user !== null) {
+        user = payload.user as AuthUser
+      }
+    }
+
+    return {
+      isAuthenticated: !!user,
+      user,
+    }
   })
-    .resolve({ as: 'global' },async ({ cookie, headers, set }) => {
-      let token: string | null = null
-
-      // Try to get token from Authorization header first
-      const authHeader = headers["authorization"] as string | undefined
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        token = authHeader.slice(7)
-      }
-
-      // Fall back to cookie if no token in header
-      if (!token) {
-        const authTokenCookie = cookie?.auth_token as { value?: string } | undefined
-        if (authTokenCookie?.value) {
-          token = authTokenCookie.value
-        }
-      }
-
-      // Verify the token if present
-      let user: AuthUser | undefined
-      if (token) {
-        const payload = await verifyAuthToken(token)
-        if (payload && typeof payload.user === "object" && payload.user !== null) {
-          user = payload.user as AuthUser
-        }
-      }
-
-      return {
-        user,
-        isAuthenticated: !!user,
-      }
-    })
 }
 
 /**
@@ -78,22 +77,21 @@ export function createAuthMiddleware() {
  *   .get("/protected", () => "Protected data", authenticated())
  * ```
  */
-export const authenticated = (options?: {
-  error?: string
-  response?: Record<string, any>
-}) => {
+export const authenticated = (options?: { error?: string; response?: Record<string, any> }) => {
   const { error = "Authentication required" } = options || {}
 
   return {
-    detail: {
-      security: [{ bearerAuth: [] as const }],
-      description: "Requires authentication",
-    },
-    beforeHandle: ({ isAuthenticated, set }: { isAuthenticated: boolean; set: { status: number } }) => {
+    // biome-ignore lint/suspicious/noExplicitAny: I dont know the correct Elysia typing :(
+    beforeHandle: (context: any) => {
+      const { isAuthenticated, set } = context
       if (!isAuthenticated) {
         set.status = 401
         return { error }
       }
+    },
+    detail: {
+      description: "Requires authentication",
+      security: [{ bearerAuth: [] as string[] }],
     },
     ...(options?.response && { response: options.response }),
   }
@@ -260,10 +258,16 @@ export type WsTokenExtractor = (ws: ElysiaWS) => string | null
  * })
  * ```
  */
-export function createAuthenticatedWsHandler(options?: {
-  extractToken?: WsTokenExtractor
-}) {
+export function createAuthenticatedWsHandler(options?: { extractToken?: WsTokenExtractor }) {
   return {
+    message: (ws: ElysiaWS<{ user?: AuthUser }>, message: unknown) => {
+      if (!ws.data.user) {
+        ws.send(JSON.stringify({ error: "Not authenticated" }))
+        ws.close(1008, "Authentication required")
+        return
+      }
+      // Continue processing message if authenticated
+    },
     open: async (ws: ElysiaWS<{ user?: AuthUser; userId?: string }>) => {
       // Extract token using the provided function or default
       let token: string | null = null
@@ -280,14 +284,6 @@ export function createAuthenticatedWsHandler(options?: {
 
       ws.data.user = user
       ws.data.userId = user.sub
-    },
-    message: (ws: ElysiaWS<{ user?: AuthUser }>, message: unknown) => {
-      if (!ws.data.user) {
-        ws.send(JSON.stringify({ error: "Not authenticated" }))
-        ws.close(1008, "Authentication required")
-        return
-      }
-      // Continue processing message if authenticated
     },
   }
 }

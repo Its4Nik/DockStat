@@ -1,7 +1,7 @@
+import { useAuth } from "@dockstat/auth/client"
 import { Button, Card, CardBody, CardHeader, Input } from "@dockstat/ui"
 import { useEffect, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router"
-import { useAuth } from "@/hooks/useAuth"
 import { api } from "@/lib/api"
 
 interface OAuthProvider {
