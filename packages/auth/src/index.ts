@@ -4,9 +4,7 @@ import Elysia, { t } from "elysia"
 import { SignJWT } from "jose"
 import * as client from "openid-client"
 import type { ProvidersTable } from "./types"
-import { BASE_URL, FRONTEND_URL } from "./utils/env"
-
-type tokens = client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
+import { BASE_URL, FRONTEND_URL, JWT_SECRET } from "./utils/env"
 
 export class AuthHandler {
   table: QueryBuilder<ProvidersTable>
@@ -21,11 +19,12 @@ export class AuthHandler {
     this.table = db.createTable<ProvidersTable>(
       "oidc-providers",
       {
-        client_id: column.text(),
-        client_secret: column.text(),
+        client_id: column.text({notNull: true}),
+        client_secret: column.text({notNull: true}),
         created_at: column.createdAt(),
         id: column.uuid({ generateDefault: true }),
-        issuer_url: column.text(),
+        issuer_url: column.text({notNull: true}),
+        logout_url: column.text( {notNull: true}),
         scopes: column.text({ default: "openid profile email" }),
       },
       { ifNotExists: true }
@@ -72,19 +71,20 @@ export class AuthHandler {
     } satisfies client.ClientMetadata
 
     this.logger.info(`Client config redirect_uris: ${JSON.stringify(config.redirect_uris)}`)
-    this.logger.info(`=== End OAuth Config ===\n`)
+    this.logger.info(`=== End OAuth Config ===`)
 
     return { config, meta, scopes: row.scopes }
   }
 
   async getRoutes() {
-    return new Elysia({ prefix: "/auth" })
-      .post("/providers", ({ body }) => this.table.insertAndGet({...body as object, scopes: (body as {scopes: string}).scopes ? (body as {scopes: string}).scopes : undefined}), {
+    return new Elysia({ prefix: "/auth", detail: {tags: ["Auth"]} })
+      .post("/providers", ({ body }) => this.table.insertAndGet({...body as object, scopes: (body as {scopes: string}).scopes ? (body as {scopes: string}).scopes : null}), {
         body: t.Object({
           client_id: t.String(),
           client_secret: t.String(),
           issuer_url: t.String(),
           scopes: t.MaybeEmpty(t.String()),
+          logout_url: t.MaybeEmpty(t.String())
         })
       })
       .get(
@@ -124,10 +124,8 @@ export class AuthHandler {
             code_challenge_method: "S256",
             redirect_uri: `${BASE_URL}/${providerId}/callback`,
             scopes,
-          }
-
-          if (meta.serverMetadata().supportsPKCE()) {
-            params.state = stateVal
+            nonce: nonceVal,
+            state: stateVal,
           }
 
           const redirectTo: URL = client.buildAuthorizationUrl(meta, params)
@@ -190,6 +188,18 @@ export class AuthHandler {
           )
           this.logger.info(`Callback URL for token exchange: ${callbackUrl.toString()}`)
 
+          // Log detailed token exchange parameters
+          const serverMetadata = meta.serverMetadata()
+          this.logger.info(`=== Token Exchange Parameters ===`)
+          this.logger.info(`Token Endpoint: ${serverMetadata.token_endpoint}`)
+          this.logger.info(`Authorization Endpoint: ${serverMetadata.authorization_endpoint}`)
+          this.logger.info(`Expected Nonce: ${cookie.nonce.value}`)
+          this.logger.info(`Expected State: ${cookie.state.value}`)
+          this.logger.info(`PKCE Code Verifier (first 20 chars): ${String(cookie.pkce.value).substring(0, 20)}...`)
+          this.logger.info(`Full PKCE Code Verifier: ${String(cookie.pkce.value)}`)
+          this.logger.info(`Callback URL (full): ${callbackUrl.toString()}`)
+          this.logger.info(`=== End Token Exchange Parameters ===`)
+
           try {
             const tokens = await client.authorizationCodeGrant(meta, callbackUrl, {
               expectedNonce: String(cookie.nonce.value),
@@ -206,9 +216,7 @@ export class AuthHandler {
           cookie.pkce.remove()
 
           // Create a JWT with user info to pass to the frontend
-          const secret = new TextEncoder().encode(
-            Bun.env.JWT_SECRET || "your-secret-key-change-in-production"
-          )
+          const secret = JWT_SECRET
           const token = await new SignJWT({ user: userInfo })
             .setProtectedHeader({ alg: "HS256" })
             .setIssuedAt()
@@ -228,13 +236,14 @@ export class AuthHandler {
             status: 302,
           })
           } catch (error) {
-            this.logger.error(
-              `Token exchange failed! ${JSON.stringify({
-                error: error instanceof Error ? error.message : String(error),
-                name: error instanceof Error ? error.name : undefined,
-                stack: error instanceof Error ? error.stack : undefined,
-              })}`
-            )
+            const errorDetails = {
+              error: error instanceof Error ? error.message : String(error),
+              name: error instanceof Error ? error.name : undefined,
+              stack: error instanceof Error ? error.stack : undefined,
+              constructor: error?.constructor?.name,
+            }
+
+            this.logger.error(`Token exchange failed! ${JSON.stringify(errorDetails, null, 2)}`)
             set.status = 500
             return `Authentication failed: ${error instanceof Error ? error.message : "Unknown error"}`
           }
@@ -250,5 +259,25 @@ export class AuthHandler {
     )
 
       .get("/providers", () => this.table.select(["id", "issuer_url", "scopes", "client_id", "created_at"]).all())
+
+      .get("/:providerId/logout", async ({params: {providerId}, query, redirect}) => {
+        const { meta } = await this.getConfig(providerId)
+        const {logout_url: logoutUrl} = this.table.select(["logout_url"]).where({id: providerId}).first()
+
+        this.logger.info(`Logging out from ${providerId}; redirect after: ${query.redirectUri}`)
+
+        let redirectTo = client.buildEndSessionUrl(meta,{post_logout_redirect_uri: query.redirectUri })
+
+        if(logoutUrl !== null){
+          redirectTo = new URL(logoutUrl)
+        }
+
+        this.logger.info(`End Session URL: ${redirectTo.toString()}`)
+
+        return redirect(redirectTo.toString())
+      }, {
+        params: t.Object({ providerId: t.String() }),
+        query: t.Object({redirectUri: t.String()})
+      })
   }
 }

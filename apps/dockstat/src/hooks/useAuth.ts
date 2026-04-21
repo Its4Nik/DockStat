@@ -32,14 +32,18 @@ export function useAuth() {
   const login = (providerId: string) => {
     // Store the current location to redirect back after auth
     localStorage.setItem("auth_redirect", window.location.pathname)
-    // Redirect to your Elysia auth endpoint
+    localStorage.setItem("auth_provider_id", providerId)
     window.location.href = `${API_BASE}/auth/${providerId}/login`
   }
 
   // Logout
   const logout = () => {
     localStorage.removeItem("user")
+    const providerId = localStorage.getItem("auth_provider_id")
+    localStorage.removeItem("auth_provider_id")
+    const loc = window.location.href
     setUser(null)
+    window.location.href = `${API_BASE}/auth/${providerId}/logout?redirectUri=${loc}`
   }
 
   return { error, loading, login, logout, user }

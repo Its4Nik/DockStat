@@ -5,4 +5,5 @@ export type ProvidersTable = {
   client_secret: string
   scopes: string
   created_at: Date
+  logout_url: string
 }
