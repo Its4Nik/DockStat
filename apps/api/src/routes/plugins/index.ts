@@ -2,6 +2,7 @@ import Elysia, { t } from "elysia"
 import { PluginModel } from "../../models/plugins"
 import PluginHandler from "../../plugins"
 import DockStatAPIFrontendPluginRoutes from "./frontend"
+import { DBPluginShemaT } from "@dockstat/typings/types"
 
 const PluginRoutes = new Elysia({
   detail: {
@@ -65,7 +66,7 @@ const PluginRoutes = new Elysia({
       summary: "Get Plugin System Status",
     },
   })
-  .post("/install", ({ body }) => PluginHandler.savePlugin(body), {
+  .post("/install", ({ body }) => PluginHandler.savePlugin(body as DBPluginShemaT), {
     body: PluginModel.installPluginBody,
     description:
       "Installs a new plugin into the DockStat system. The plugin code is stored in the database and can be activated later. Plugins can provide custom API routes, database tables, event hooks, and background tasks.",
@@ -104,7 +105,24 @@ const PluginRoutes = new Elysia({
   .post(
     "/unloadPlugins",
     async ({ status, body }) => status(200, await PluginHandler.unloadPlugins(body.ids)),
-    { body: t.Object({ ids: t.Array(t.Number()) }) }
+    {
+      body: t.Object({ ids: t.Array(t.Number()) }),
+      detail: {
+        description:
+          "Deactivates one or more active plugins by unloading them from memory and unregistering their routes, hooks, and database tables. Deactivated plugins remain installed but do not contribute functionality to the system. This endpoint returns detailed success/failure information for each plugin.",
+        responses: {
+          200: {
+            description:
+              "Successfully unloaded specified plugins. Check response for individual success/failure status.",
+          },
+          400: {
+            description: "Failed to unload plugins due to invalid request or errors",
+          },
+        },
+        summary: "Unload/Deactivate Plugins",
+      },
+      responses: { 200: PluginModel.activatePluginRes },
+    }
   )
   .post("/delete", ({ body }) => PluginHandler.deletePlugin(body.pluginId), {
     body: PluginModel.deletePluginBody,

@@ -66,6 +66,12 @@ const DockStatMiscRoutes = new Elysia({
         uptimeSec: os.uptime(),
       },
     }
+  }, {
+    detail: {
+      summary: "Get System Statistics",
+      description:
+        "Retrieve detailed system and process statistics including CPU usage, memory usage, uptime, and other performance metrics. Returns information about process resource consumption, system CPU cores and load, memory usage, and system uptime.",
+    }
   })
 
 export default DockStatMiscRoutes

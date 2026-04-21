@@ -7,7 +7,13 @@ const RepositoryRoutes = new Elysia({
   detail: { tags: ["repositories"] },
   prefix: "/repositories",
 })
-  .get("/all", () => DockStatDB.repositoriesTable.select(["*"]).all())
+  .get("/all", () => DockStatDB.repositoriesTable.select(["*"]).all(), {
+    detail: {
+      summary: "Get All Repositories",
+      description:
+        "Retrieve all repositories registered in the database. Returns a list of repository records containing metadata such as name, type, source, and other configuration details.",
+    },
+  })
   .get("/all-manifests", async () => {
     const allRepos = DockStatDB.repositoriesTable.select(["*"]).all()
 
@@ -64,6 +70,12 @@ const RepositoryRoutes = new Elysia({
     }
 
     return result
+  }, {
+    detail: {
+      summary: "Get All Repository Manifests",
+      description:
+        "Fetch and parse manifest files from all registered repositories. Supports both JSON and YAML formats. Returns a dictionary mapping repository names to their parsed manifest data, including the manifest content, source type, and repository source URL.",
+    },
   })
 
 export default RepositoryRoutes

@@ -50,25 +50,6 @@ export const DockerClientElysia = new Elysia({
       detail: {
         description:
           "Creates a new Docker client instance for managing Docker daemon connections. A client can manage multiple Docker hosts and provides a unified interface for monitoring and controlling containers across those hosts. Options include Docker daemon configuration, connection timeouts, and TLS settings.",
-        requestBody: {
-          content: {
-            "application/json": {
-              example: {
-                clientName: "production",
-                options: {
-                  ca: "/path/to/ca.pem",
-                  cert: "/path/to/cert.pem",
-                  host: "docker.example.com",
-                  key: "/path/to/key.pem",
-                  port: 2376,
-                },
-              },
-              schema: DockerModel.registerClientBody,
-            },
-          },
-          description: "Client registration configuration",
-          required: true,
-        },
         responses: {
           200: {
             description: "Successfully registered Docker client",
@@ -240,12 +221,6 @@ export const DockerClientElysia = new Elysia({
       detail: {
         description:
           "Starts real-time monitoring for a Docker client and all its associated hosts. This enables container statistics streaming, event notifications, and health checks. Monitoring runs in background worker threads and updates continuously.",
-        parameters: {
-          clientId: {
-            description: "The unique identifier of the Docker client",
-            type: "number",
-          },
-        },
         responses: {
           200: {
             description: "Successfully started monitoring for the client",
@@ -303,12 +278,6 @@ export const DockerClientElysia = new Elysia({
       detail: {
         description:
           "Stops real-time monitoring for a Docker client. This halts container statistics streaming, event notifications, and health checks. Worker threads for monitoring will be terminated and resources will be released. This operation does not remove the client or its hosts.",
-        parameters: {
-          clientId: {
-            description: "The unique identifier of the Docker client",
-            type: "number",
-          },
-        },
         responses: {
           200: {
             description: "Successfully stopped monitoring for the client",
@@ -372,12 +341,6 @@ export const DockerClientElysia = new Elysia({
       detail: {
         description:
           "Toggles monitoring state for a Docker client. If monitoring is active, it will be stopped. If monitoring is inactive, it will be started. Returns the new monitoring state in the response. Useful for quick enable/disable of monitoring without needing to check current state first.",
-        parameters: {
-          clientId: {
-            description: "The unique identifier of the Docker client",
-            type: "number",
-          },
-        },
         responses: {
           200: {
             description: "Successfully toggled monitoring state",
@@ -439,12 +402,6 @@ export const DockerClientElysia = new Elysia({
       detail: {
         description:
           "Creates a monitoring manager instance for a Docker client. The monitoring manager handles the lifecycle of monitoring tasks, coordinates worker threads, and manages resource allocation for real-time data collection. Use this endpoint to initialize monitoring infrastructure for a client before starting actual monitoring.",
-        parameters: {
-          clientId: {
-            description: "The unique identifier of the Docker client",
-            type: "number",
-          },
-        },
         responses: {
           200: {
             description: "Successfully created monitoring manager for the client",
