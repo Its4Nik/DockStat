@@ -21,9 +21,9 @@ const PrometheusMetricsRoute = new Elysia({ prefix: "/metrics" }).get(
   },
   {
     detail: {
-      summary: "Get Prometheus Metrics",
       description:
         "Retrieve Prometheus-formatted metrics for monitoring and alerting. Returns various system metrics including database operations, Docker client statistics, memory usage, and other performance indicators in Prometheus text format.",
+      summary: "Get Prometheus Metrics",
     },
     response: {
       200: MetricsModel.prometheusRes,

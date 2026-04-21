@@ -9,73 +9,77 @@ const RepositoryRoutes = new Elysia({
 })
   .get("/all", () => DockStatDB.repositoriesTable.select(["*"]).all(), {
     detail: {
-      summary: "Get All Repositories",
       description:
         "Retrieve all repositories registered in the database. Returns a list of repository records containing metadata such as name, type, source, and other configuration details.",
+      summary: "Get All Repositories",
     },
   })
-  .get("/all-manifests", async () => {
-    const allRepos = DockStatDB.repositoriesTable.select(["*"]).all()
+  .get(
+    "/all-manifests",
+    async () => {
+      const allRepos = DockStatDB.repositoriesTable.select(["*"]).all()
 
-    const result: Record<
-      string,
-      {
-        data: RepoManifestType
-        type: RepoType["type"]
-        repoSource: string
-      }
-    > = {}
-
-    for (const repoElement of allRepos) {
-      const link = repo.parseFromDBToRepoLink(repoElement.type, repoElement.source)
-
-      try {
-        const response = await fetch(link)
-        if (!response.ok) {
-          console.warn(`Failed to fetch ${link}: ${response.statusText}`)
-          continue
+      const result: Record<
+        string,
+        {
+          data: RepoManifestType
+          type: RepoType["type"]
+          repoSource: string
         }
+      > = {}
 
-        const text = await response.text()
-        const contentType = response.headers.get("content-type") || ""
+      for (const repoElement of allRepos) {
+        const link = repo.parseFromDBToRepoLink(repoElement.type, repoElement.source)
 
-        let data: unknown
-
-        if (contentType.includes("application/json") || link.endsWith(".json")) {
-          data = JSON.parse(text)
-        } else if (
-          contentType.includes("yaml") ||
-          contentType.includes("yml") ||
-          link.endsWith(".yaml") ||
-          link.endsWith(".yml")
-        ) {
-          data = Bun.YAML.parse(text)
-        } else {
-          // Fallback: try YAML then JSON
-          try {
-            data = Bun.YAML.parse(text)
-          } catch {
-            data = JSON.parse(text)
+        try {
+          const response = await fetch(link)
+          if (!response.ok) {
+            console.warn(`Failed to fetch ${link}: ${response.statusText}`)
+            continue
           }
-        }
 
-        result[repoElement.name] = {
-          data: data as RepoManifestType,
-          repoSource: repoElement.source,
-          type: repoElement.type,
+          const text = await response.text()
+          const contentType = response.headers.get("content-type") || ""
+
+          let data: unknown
+
+          if (contentType.includes("application/json") || link.endsWith(".json")) {
+            data = JSON.parse(text)
+          } else if (
+            contentType.includes("yaml") ||
+            contentType.includes("yml") ||
+            link.endsWith(".yaml") ||
+            link.endsWith(".yml")
+          ) {
+            data = Bun.YAML.parse(text)
+          } else {
+            // Fallback: try YAML then JSON
+            try {
+              data = Bun.YAML.parse(text)
+            } catch {
+              data = JSON.parse(text)
+            }
+          }
+
+          result[repoElement.name] = {
+            data: data as RepoManifestType,
+            repoSource: repoElement.source,
+            type: repoElement.type,
+          }
+        } catch (error) {
+          console.error(`Error processing ${link}:`, error)
         }
-      } catch (error) {
-        console.error(`Error processing ${link}:`, error)
       }
-    }
 
-    return result
-  }, {
-    detail: {
-      summary: "Get All Repository Manifests",
-      description:
-        "Fetch and parse manifest files from all registered repositories. Supports both JSON and YAML formats. Returns a dictionary mapping repository names to their parsed manifest data, including the manifest content, source type, and repository source URL.",
+      return result
     },
-  })
+    {
+      detail: {
+        description:
+          "Fetch and parse manifest files from all registered repositories. Supports both JSON and YAML formats. Returns a dictionary mapping repository names to their parsed manifest data, including the manifest content, source type, and repository source URL.",
+        summary: "Get All Repository Manifests",
+      },
+    }
+  )
 
 export default RepositoryRoutes

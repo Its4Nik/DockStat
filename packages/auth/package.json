@@ -10,12 +10,18 @@
     "@types/bun": "latest"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./client": "./src/client/index.ts"
   },
   "module": "src/index.ts",
   "name": "@dockstat/auth",
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "peerDependenciesMeta": {
+    "react-router": {
+      "optional": true
+    }
   },
   "type": "module",
   "version": "1.0.0"

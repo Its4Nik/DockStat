@@ -1,8 +1,8 @@
+import type { DBPluginShemaT } from "@dockstat/typings/types"
 import Elysia, { t } from "elysia"
 import { PluginModel } from "../../models/plugins"
 import PluginHandler from "../../plugins"
 import DockStatAPIFrontendPluginRoutes from "./frontend"
-import { DBPluginShemaT } from "@dockstat/typings/types"
 
 const PluginRoutes = new Elysia({
   detail: {

@@ -1,8 +1,8 @@
 import type Logger from "@dockstat/logger"
 import { column, type DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
-import type { ProvidersTable } from "./types"
 import { ConfigService } from "./config"
 import { createAuthRoutes } from "./routes"
+import type { ProvidersTable } from "./types"
 
 export class AuthHandler {
   table: QueryBuilder<ProvidersTable>
@@ -14,7 +14,6 @@ export class AuthHandler {
     this.logger = logger.spawn("Auth")
 
     this.logger.info("Initializing Auth Service")
-
 
     this.table = db.createTable<ProvidersTable>(
       "oidc-providers",

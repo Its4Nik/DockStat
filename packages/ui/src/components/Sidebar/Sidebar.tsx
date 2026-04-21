@@ -77,7 +77,7 @@ export function Sidebar({
   currentThemeId,
   toastSuccess,
   deleteTheme,
-  auth
+  auth,
 }: SidebarProps) {
   const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
   const [themeModalOpen, setThemeModalOpen] = useState<boolean>(false)
@@ -138,26 +138,30 @@ export function Sidebar({
                   {auth.user ? (
                     <div className="flex w-full justify-between">
                       <p className="my-auto">{auth.user}</p>
-                  </div>
+                    </div>
                   ) : (
-                  <p className="text-lg font-bold tracking-tight">DockStat</p>
+                    <p className="text-lg font-bold tracking-tight">DockStat</p>
                   )}
                 </div>
                 <div>
                   {auth.user && (
-
-                <Button size="sm" className="h-8 w-8 p-0 mr-2" variant="ghost" onClick={auth.logout}>
-                  <LogOut size={16} />
-                </Button>
-)}
-                <Button
-                  className="h-8 w-8 p-0"
-                  onClick={onClose}
-                  size="sm"
-                  variant="outline"
-                >
-                  <X size={16} />
-                </Button>
+                    <Button
+                      className="h-8 w-8 p-0 mr-2"
+                      onClick={auth.logout}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      <LogOut size={16} />
+                    </Button>
+                  )}
+                  <Button
+                    className="h-8 w-8 p-0"
+                    onClick={onClose}
+                    size="sm"
+                    variant="outline"
+                  >
+                    <X size={16} />
+                  </Button>
                 </div>
               </div>
 

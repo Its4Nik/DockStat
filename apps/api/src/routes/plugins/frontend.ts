@@ -25,8 +25,8 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
     },
     {
       detail: {
-        summary: "Get All Frontend Routes",
         description: "Get all frontend routes from loaded plugins",
+        summary: "Get All Frontend Routes",
       },
       response: {
         200: t.Array(PluginModel.singlePathItem),
@@ -35,20 +35,20 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
   )
   .get("/routes/by-plugin", () => PluginHandler.getFrontendRoutesByPlugin(), {
     detail: {
-      summary: "Get Frontend Routes by Plugin",
       description: "Get frontend routes grouped by plugin",
+      summary: "Get Frontend Routes by Plugin",
     },
   })
   .get("/navigation", () => PluginHandler.getFrontendNavigationItems(), {
     detail: {
-      summary: "Get Frontend Navigation Items",
       description: "Get navigation items for plugins with frontend routes",
+      summary: "Get Frontend Navigation Items",
     },
   })
   .get("/summary", () => PluginHandler.getFrontendSummary(), {
     detail: {
-      summary: "Get Frontend Configuration Summary",
       description: "Get summary of all frontend configurations",
+      summary: "Get Frontend Configuration Summary",
     },
   })
   .post(
@@ -98,8 +98,8 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
         path: t.String(),
       }),
       detail: {
-        summary: "Get Plugin Frontend Route Template",
         description: "Get the template for a specific plugin frontend route with initial data",
+        summary: "Get Plugin Frontend Route Template",
       },
       params: t.Object({
         pluginId: t.String(),
@@ -114,8 +114,8 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
     }),
     {
       detail: {
-        summary: "Check Plugin Has Frontend Routes",
         description: "Check if a plugin has any frontend routes",
+        summary: "Check Plugin Has Frontend Routes",
       },
       params: t.Object({
         pluginId: t.String(),
@@ -137,8 +137,8 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
     },
     {
       detail: {
-        summary: "Get Route Loaders",
         description: "Get all loaders for a plugin route",
+        summary: "Get Route Loaders",
       },
       params: t.Object({
         pluginId: t.String(),
@@ -174,8 +174,8 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
         state: t.Optional(t.Record(t.String(), t.Unknown())),
       }),
       detail: {
-        summary: "Execute All Route Loaders",
         description: "Execute all loaders for a plugin route",
+        summary: "Execute All Route Loaders",
       },
       params: t.Object({
         pluginId: t.String(),
@@ -214,8 +214,8 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
         state: t.Optional(t.Record(t.String(), t.Unknown())),
       }),
       detail: {
-        summary: "Execute Loader by ID",
         description: "Execute a specific loader by ID",
+        summary: "Execute Loader by ID",
       },
       params: t.Object({
         loaderId: t.String(),
@@ -238,8 +238,8 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
     },
     {
       detail: {
-        summary: "Get Route Actions",
         description: "Get all actions for a plugin route",
+        summary: "Get Route Actions",
       },
       params: t.Object({
         pluginId: t.String(),
@@ -283,8 +283,8 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
         state: t.Optional(t.Record(t.String(), t.Unknown())),
       }),
       detail: {
-        summary: "Execute Frontend Action",
         description: "Execute a frontend action by ID",
+        summary: "Execute Frontend Action",
       },
       params: t.Object({
         actionId: t.String(),
@@ -317,8 +317,8 @@ const DockStatAPIFrontendPluginRoutes = new Elysia({
     },
     {
       detail: {
-        summary: "Get Action Definition",
         description: "Get a specific action definition by ID",
+        summary: "Get Action Definition",
       },
       params: t.Object({
         actionId: t.String(),

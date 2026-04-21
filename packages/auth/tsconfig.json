@@ -4,7 +4,7 @@
     "allowJs": true,
     "jsx": "react-jsx",
     // Environment setup & latest features
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM", "DOM.AsyncIterable"],
     "module": "Preserve",
     "moduleDetection": "force",
 

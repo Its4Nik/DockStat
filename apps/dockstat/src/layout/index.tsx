@@ -4,9 +4,9 @@ import { Navbar, ThemeSidebar } from "@dockstat/ui"
 import { useContext } from "react"
 import { Toaster } from "sonner"
 import { PageHeadingContext } from "@/contexts/pageHeadingContext"
+import { useAuth } from "@/hooks/useAuth"
 import { createPinMutationHandlers } from "@/utils/createPinMutations"
 import { useLayout } from "./hooks/useLayout"
-import { useAuth } from "@/hooks/useAuth"
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const {
@@ -31,7 +31,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     theme,
   } = useLayout()
 
-  const {user,logout} = useAuth()
+  const { user, logout } = useAuth()
 
   const heading = useContext(PageHeadingContext).heading
 
@@ -42,6 +42,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         position="bottom-right"
       />
       <Navbar
+        auth={{
+          logout,
+          user: user ? (user.name ? user.name : user.email ? user.email : user.sub) : null,
+        }}
         currentThemeId={currentThemeId}
         deleteTheme={deleteTheme}
         heading={heading}
@@ -62,8 +66,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }}
         themes={themes}
         toastSuccess={toastSuccess}
-        auth={{user: user ? (user.name ? user.name : (user.email ? user.email : user.sub)) : null, logout
-        }}
       />
 
       <div className="px-4">{children}</div>
