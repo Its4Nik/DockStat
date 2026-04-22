@@ -36,14 +36,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth()
 
   const heading = useContext(PageHeadingContext).heading
-
+  const isLoginPage = pathname !== "/login"
   return (
-    <div className="bg-main-bg min-h-screen w-screen p-4">
+    <div className="bg-main-bg min-h-screen w-screen">
       <Toaster
         expand
         position="bottom-right"
       />
-      {pathname !== "/login" && (
+      {isLoginPage && (
         <>
           <Navbar
             auth={{
@@ -88,7 +88,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </>
       )}
 
-      <div className="px-4">{children}</div>
+      <div className={isLoginPage ? undefined : "p-4"}>{children}</div>
     </div>
   )
 }
