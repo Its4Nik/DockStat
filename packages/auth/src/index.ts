@@ -3,10 +3,11 @@ import { column, type DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import { ConfigService } from "./config"
 import { getMiddlewareFunctions } from "./middleware"
 import { createAuthRoutes } from "./routes"
-import type { ProvidersTable } from "./types"
+import type { LocalUsersTable, ProvidersTable } from "./types"
 
 export class AuthHandler {
-  table: QueryBuilder<ProvidersTable>
+  providers: QueryBuilder<ProvidersTable>
+  users: QueryBuilder<LocalUsersTable>
   logger: Logger
   configService: ConfigService
   routes: ReturnType<typeof createAuthRoutes>
@@ -17,7 +18,7 @@ export class AuthHandler {
 
     this.logger.info("Initializing Auth Service")
 
-    this.table = db.createTable<ProvidersTable>(
+    this.providers = db.createTable<ProvidersTable>(
       "oidc-providers",
       {
         client_id: column.text({ notNull: true }),
@@ -31,9 +32,17 @@ export class AuthHandler {
       { ifNotExists: true }
     )
 
-    this.configService = new ConfigService(this.table, this.logger)
+    this.users = db.createTable<LocalUsersTable>("users", {
+      createdAt: column.createdAt(),
+      id: column.uuid({ generateDefault: true }),
+      name: column.text({ notNull: true, unique: true }),
+      passHash: column.text({ notNull: true }),
+      updatedAt: column.updatedAt(),
+    })
 
-    this.routes = createAuthRoutes(this.table, this.logger, this.configService)
+    this.configService = new ConfigService(this.providers, this.logger)
+
+    this.routes = createAuthRoutes(this.providers, this.users, this.logger, this.configService)
 
     this.middleware = getMiddlewareFunctions(this.logger)
   }

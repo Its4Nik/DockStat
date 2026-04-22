@@ -7,3 +7,11 @@ export type ProvidersTable = {
   created_at: Date
   logout_url: string
 }
+
+export type LocalUsersTable = {
+  id: string
+  name: string
+  passHash: string
+  createdAt: Date
+  updatedAt: Date
+}

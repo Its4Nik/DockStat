@@ -1,10 +1,10 @@
 export { useLayout } from "./hooks/useLayout"
 
+import { useAuth } from "@dockstat/auth/client"
 import { Navbar, ThemeSidebar } from "@dockstat/ui"
 import { useContext } from "react"
 import { Toaster } from "sonner"
 import { PageHeadingContext } from "@/contexts/pageHeadingContext"
-import { useAuth } from "@/hooks/useAuth"
 import { createPinMutationHandlers } from "@/utils/createPinMutations"
 import { useLayout } from "./hooks/useLayout"
 

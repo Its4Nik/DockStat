@@ -1,6 +1,6 @@
-import Cryptr from "cryptr"
+import { CryptrAsync } from "cryptr"
 import { CRYPTO_SECRET } from "./env"
 
-const crypt = new Cryptr(CRYPTO_SECRET)
+const crypt = new CryptrAsync(CRYPTO_SECRET)
 
 export default crypt

@@ -48,7 +48,7 @@ export class ConfigService {
 
     const config = {
       client_id: row.client_id,
-      client_secret: crypt.decrypt(row.client_secret),
+      client_secret: await crypt.decrypt(row.client_secret),
       redirect_uris: [redirectUri],
       response_types: ["code"],
     } satisfies client.ClientMetadata

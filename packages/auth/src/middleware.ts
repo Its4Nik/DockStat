@@ -1,5 +1,5 @@
 import type Logger from "@dockstat/logger"
-import Elysia from "elysia"
+import Elysia, { type AnySchema } from "elysia"
 import type { ElysiaWS } from "elysia/ws"
 import { verifyAuthToken } from "./utils/jwt"
 
@@ -88,7 +88,7 @@ export const getMiddlewareFunctions = (baseLogger: Logger) => {
    *   .get("/protected", () => "Protected data", authenticated())
    * ```
    */
-  const authenticated = (options?: { error?: string; response?: Response }) => {
+  const authenticated = (options?: { error?: string; response?: AnySchema }) => {
     const { error = "Authentication required" } = options || {}
 
     logger.info("Route with Authentication hit!")

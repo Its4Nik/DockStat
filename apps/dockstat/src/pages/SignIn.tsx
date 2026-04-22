@@ -153,8 +153,16 @@ export function SignInPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchProvider, setSearchProvider] = useState("")
 
+  // Local auth state
+  const [localUsersExist, setLocalUsersExist] = useState(false)
+  const [localChecking, setLocalChecking] = useState(true)
+  const [localLoginData, setLocalLoginData] = useState({ name: "", pass: "" })
+  const [localLoginError, setLocalLoginError] = useState<string | null>(null)
+  const [isSubmittingLocal, setIsSubmittingLocal] = useState(false)
+
   useEffect(() => {
     fetchProviders()
+    checkLocalUsers()
   }, [])
 
   const fetchProviders = async () => {
@@ -176,6 +184,73 @@ export function SignInPage() {
 
   const handleLogin = (providerId: string) => {
     login(providerId)
+  }
+
+  const checkLocalUsers = async () => {
+    try {
+      setLocalChecking(true)
+      const response = await api.auth.local.exists.get()
+      if (response.status === 200 && response.data) {
+        setLocalUsersExist(response.data.exists)
+      }
+    } catch (err) {
+      console.error("Failed to check local users:", err)
+      setLocalUsersExist(false)
+    } finally {
+      setLocalChecking(false)
+    }
+  }
+
+  const handleLocalLogin = async (e: React.SyntheticEvent) => {
+    e.preventDefault()
+    setLocalLoginError(null)
+    setIsSubmittingLocal(true)
+
+    try {
+      const response = await api.auth.local.login.post({
+        name: localLoginData.name,
+        pass: localLoginData.pass,
+      })
+
+      if (response.status === 401) {
+        setLocalLoginError("Invalid username or password")
+        return
+      }
+
+      if (response.status !== 200 && response.status !== 302) {
+        setLocalLoginError("Login failed. Please try again.")
+        return
+      }
+
+      // The backend will redirect to the callback URL
+      // But if we get here, handle it manually
+      const token = response.data?.token
+      if (token) {
+        // Decode and store token
+        const base64Url = token.split(".")[1]
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split("")
+            .map((c) => `%${(`00${c.charCodeAt(0).toString(16)}`).slice(-2)}`)
+            .join("")
+        )
+
+        const { user } = JSON.parse(jsonPayload)
+        localStorage.setItem("user", JSON.stringify(user))
+        localStorage.setItem("auth_token", token)
+        localStorage.setItem("auth_provider_id", "local")
+
+        const redirect = localStorage.getItem("auth_redirect") || "/"
+        localStorage.removeItem("auth_redirect")
+        window.location.href = redirect
+      }
+    } catch (err) {
+      console.error("Local login error:", err)
+      setLocalLoginError("Login failed. Please try again.")
+    } finally {
+      setIsSubmittingLocal(false)
+    }
   }
 
   // ProtectedRoute will handle authenticated user redirects
@@ -243,6 +318,64 @@ export function SignInPage() {
           </Card>
         )}
 
+        {/* Local Login Card - Only shows if local users exist */}
+        {!localChecking && localUsersExist && (
+          <Card
+            className="max-w-md mx-auto"
+            size="lg"
+            variant="outlined"
+          >
+            <CardHeader>
+              <h2 className="text-xl font-bold text-primary-text">Local Account</h2>
+              <p className="text-sm text-secondary-text">Sign in with your local account</p>
+            </CardHeader>
+            <CardBody>
+              <form
+                className="space-y-4"
+                onSubmit={handleLocalLogin}
+              >
+                <div>
+                  <label className="block text-sm font-medium text-primary-text mb-1">
+                    Username
+                  </label>
+                  <Input
+                    disabled={isSubmittingLocal}
+                    onChange={(v) => setLocalLoginData({ ...localLoginData, name: v })}
+                    placeholder="Enter your username"
+                    value={localLoginData.name}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-primary-text mb-1">
+                    Password
+                  </label>
+                  <Input
+                    disabled={isSubmittingLocal}
+                    onChange={(v) => setLocalLoginData({ ...localLoginData, pass: v })}
+                    placeholder="Enter your password"
+                    type="password"
+                    value={localLoginData.pass}
+                  />
+                </div>
+
+                {localLoginError && (
+                  <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <p className="text-sm text-red-600 dark:text-red-400">{localLoginError}</p>
+                  </div>
+                )}
+
+                <Button
+                  disabled={isSubmittingLocal || !localLoginData.name || !localLoginData.pass}
+                  fullWidth
+                  type="submit"
+                >
+                  {isSubmittingLocal ? "Signing in..." : "Sign In"}
+                </Button>
+              </form>
+            </CardBody>
+          </Card>
+        )}
+
         {/* Provider Cards Grid */}
         {!providersLoading && !error && filteredProviders.length === 0 && (
           <Card
@@ -296,10 +429,12 @@ export function SignInPage() {
         )}
 
         {/* Help Text */}
-        {!providersLoading && !error && (
+        {!providersLoading && !error && !localChecking && (
           <div className="text-center text-sm text-secondary-text">
             <p>By signing in, you agree to our Terms of Service and Privacy Policy.</p>
-            <p className="mt-2">Don't see your provider? Contact your administrator.</p>
+            {!localUsersExist && (
+              <p className="mt-2">Don't see your provider? Contact your administrator.</p>
+            )}
           </div>
         )}
       </div>

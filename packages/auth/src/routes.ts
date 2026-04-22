@@ -3,23 +3,24 @@ import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import Elysia, { t } from "elysia"
 import * as client from "openid-client"
 import type { ConfigService } from "./config"
-import type { ProvidersTable } from "./types"
+import type { LocalUsersTable, ProvidersTable } from "./types"
 import crypt from "./utils/encrypt"
 import { BASE_URL, FRONTEND_URL } from "./utils/env"
 import { createAuthToken } from "./utils/jwt"
 
 export function createAuthRoutes(
   table: QueryBuilder<ProvidersTable>,
+  users: QueryBuilder<LocalUsersTable>,
   logger: Logger,
   configService: ConfigService
 ) {
   return new Elysia({ detail: { tags: ["Auth"] }, prefix: "/auth" })
     .post(
       "/providers",
-      ({ body }) =>
+      async ({ body }) =>
         table.insertAndGet({
           ...(body as object),
-          client_secret: crypt.encrypt((body as { client_secret: string }).client_secret),
+          client_secret: await crypt.encrypt((body as { client_secret: string }).client_secret),
           scopes: (body as { scopes: string }).scopes ? (body as { scopes: string }).scopes : null,
         }),
       {
@@ -247,5 +248,170 @@ export function createAuthRoutes(
         params: t.Object({ providerId: t.String() }),
         query: t.Object({ redirectUri: t.String() }),
       }
+    )
+    .group("/local", (app) =>
+      app
+        .post(
+          "/register",
+          async ({ body, set }) => {
+            try {
+              const requestBody = body as { name: string; pass: string }
+
+              // Check if user already exists
+              const existingUser = users.select(["id"]).where({ name: requestBody.name }).first()
+
+              if (existingUser) {
+                set.status = 409
+                return { error: "Username already exists" }
+              }
+
+              // Hash password with argon2id
+              const passHash = await Bun.password.hash(requestBody.pass, {
+                algorithm: "argon2id",
+                memoryCost: 65536,
+                timeCost: 4,
+              })
+
+              // Create user
+              const user = await users.insertAndGet({
+                name: requestBody.name,
+                passHash,
+              })
+
+              logger.info(`New local user registered: ${requestBody.name}`)
+
+              return {
+                success: true,
+                user: { id: user.id, name: user.name },
+              }
+            } catch (error) {
+              const requestBody = body as { name: string; pass: string }
+              logger.error(`Registration failed for ${requestBody.name}: ${error}`)
+              set.status = 500
+              return { error: "Registration failed" }
+            }
+          },
+          {
+            body: t.Object({
+              name: t.String({ maxLength: 50, minLength: 3 }),
+              pass: t.String({ minLength: 8 }),
+            }),
+            detail: {
+              description: "Register a new local user",
+              summary: "Register",
+            },
+          }
+        )
+        .get(
+          "/login",
+          async ({ redirect }) => {
+            const loginUrl = `${FRONTEND_URL}/auth/local/login`
+            logger.info(`Redirecting to local login page: ${loginUrl}`)
+            return redirect(loginUrl)
+          },
+          {
+            detail: {
+              description: "Redirect to frontend login page",
+              summary: "Login Page",
+            },
+          }
+        )
+        .post(
+          "/login",
+          async ({ body, set, redirect }) => {
+            try {
+              const requestBody = body as { name: string; pass: string }
+
+              // Find user by username
+              const user = users
+                .select(["id", "name", "passHash"])
+                .where({ name: requestBody.name })
+                .first()
+
+              if (!user) {
+                logger.warn(`Login attempt for non-existent user: ${requestBody.name}`)
+                set.status = 401
+                return { error: "Invalid credentials" }
+              }
+
+              // Verify password
+              const isValid = await Bun.password.verify(requestBody.pass, user.passHash)
+
+              if (!isValid) {
+                logger.warn(`Failed login attempt for user: ${requestBody.name}`)
+                set.status = 401
+                return { error: "Invalid credentials" }
+              }
+
+              logger.info(`Successful login for local user: ${requestBody.name}`)
+
+              // Create JWT token with user info
+              const token = await createAuthToken({
+                email: user.name,
+                name: user.name,
+                provider: "local",
+                sub: user.id,
+              })
+
+              // Return token to frontend (avoid CORS issues with redirect from POST)
+              return {
+                success: true,
+                token,
+              }
+            } catch (error) {
+              const requestBody = body as { name: string; pass: string }
+              logger.error(`Login failed for ${requestBody.name}: ${error}`)
+              set.status = 500
+              return { error: "Login failed" }
+            }
+          },
+          {
+            body: t.Object({
+              name: t.String(),
+              pass: t.String(),
+            }),
+            detail: {
+              description: "Authenticate with username and password",
+              summary: "Login",
+            },
+          }
+        )
+        .get(
+          "/logout",
+          async ({ query, redirect }) => {
+            const redirectUri = query.redirectUri || FRONTEND_URL
+            logger.info(`Local user logout, redirecting to: ${redirectUri}`)
+            return redirect(redirectUri)
+          },
+          {
+            detail: {
+              description: "Logout local user and redirect",
+              summary: "Logout",
+            },
+            query: t.Object({
+              redirectUri: t.Optional(t.String()),
+            }),
+          }
+        )
+        .get(
+          "/exists",
+          async () => {
+            try {
+              const user = users.select(["id"]).first()
+              const exists = !!user
+              logger.info(`Local user exists check: ${exists}`)
+              return { exists }
+            } catch (error) {
+              logger.error(`Error checking if local user exists: ${error}`)
+              return { exists: false }
+            }
+          },
+          {
+            detail: {
+              description: "Check if any local users exist",
+              summary: "Check Local Users",
+            },
+          }
+        )
     )
 }
