@@ -3,9 +3,8 @@ import { treaty } from "@elysiajs/eden"
 
 const getHeaders = () => {
   const token = localStorage.getItem("auth_token")
-  return {
-    Autorization: `Bearer ${token}`
-  }
+  console.log(`Found auth token: ${token}`)
+  return token ? { authorization: `Bearer ${token}` } : {}
 }
 
 /**
@@ -14,7 +13,8 @@ const getHeaders = () => {
  *
  * Configured with:
  * - Base URL from DOCKSTAT_API_PORT environment variable
- * - Credentials included for cookie-based authentication (will maybe added in the future)
+ * - Credentials included for cookie-based authentication
+ * - Dynamic authorization header with JWT token from localStorage
  */
 export const api = treaty<TreatyType>(
   import.meta.env.DOCKSTAT_API_PORT || `http://localhost:3030`,

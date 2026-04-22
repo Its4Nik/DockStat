@@ -13,6 +13,18 @@ const DockStatElysiaPlugins = new Elysia()
     openapi({
       path: "/docs",
       provider: "scalar",
+      documentation: {
+        components: {
+          securitySchemes: {
+            bearerAuth: {
+              type: "http",
+              scheme: "bearer",
+              bearerFormat: "JWT",
+              description: "A bearer token which is needed for production"
+            }
+          }
+        }
+    }
     })
   )
   .use(

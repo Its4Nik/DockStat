@@ -1,21 +1,7 @@
 import type Logger from "@dockstat/logger"
 import { column, type DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import { ConfigService } from "./config"
-import {
-  type AuthContext,
-  type AuthUser,
-  type AuthWsContext,
-  authenticated,
-  createAuthenticatedWsHandler,
-  createAuthMiddleware,
-  getWsUser,
-  handleWsAuthentication,
-  isAuthenticatedUser,
-  type JWTPayload,
-  requireAuth,
-  verifyWsToken,
-  withAuth,
-} from "./middleware"
+import {getMiddlewareFunctions} from "./middleware"
 import { createAuthRoutes } from "./routes"
 import type { ProvidersTable } from "./types"
 
@@ -24,6 +10,7 @@ export class AuthHandler {
   logger: Logger
   configService: ConfigService
   routes: ReturnType<typeof createAuthRoutes>
+  middleware: ReturnType<typeof getMiddlewareFunctions>
 
   constructor(db: DB, logger: Logger) {
     this.logger = logger.spawn("Auth")
@@ -47,18 +34,7 @@ export class AuthHandler {
     this.configService = new ConfigService(this.table, this.logger)
 
     this.routes = createAuthRoutes(this.table, this.logger, this.configService)
+
+    this.middleware = getMiddlewareFunctions(this.logger)
   }
 }
-
-export {
-  authenticated,
-  createAuthMiddleware,
-  createAuthenticatedWsHandler,
-  handleWsAuthentication,
-  isAuthenticatedUser,
-  requireAuth,
-  verifyWsToken,
-  withAuth,
-  getWsUser,
-}
-export type { AuthContext, AuthUser, AuthWsContext, JWTPayload }
