@@ -8,7 +8,7 @@ import { eden } from "@dockstat/utils/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { type ThemeListItem, ThemeProviderContext, type ThemeProviderData } from "@/contexts/theme"
 import { useThemeMutations } from "@/hooks/mutations"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<ThemeContextData | null>(null)
@@ -18,6 +18,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const hasLoadedSavedTheme = useRef(false)
 
   const { data: ThemesRes } = eden.useEdenQuery({
+    opts: {
+      headers: getAuthHeaders(),
+    },
     queryKey: ["fetchAllThemes"],
     route: api.themes.get,
   })
@@ -61,7 +64,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data, error: fetchError } = await api.themes["by-name"]({
           name: themeName,
-        }).get()
+        }).get({ headers: getAuthHeaders() })
 
         if (fetchError || !data) {
           throw new Error(`Failed to fetch theme "${themeName}"`)
@@ -95,7 +98,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data, error: fetchError } = await api.themes["by-id"]({
           id: themeId,
-        }).get()
+        }).get({ headers: getAuthHeaders() })
 
         if (fetchError || !data) {
           throw new Error(`Failed to fetch theme with id ${themeId}`)

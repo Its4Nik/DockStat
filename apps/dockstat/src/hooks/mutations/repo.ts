@@ -1,10 +1,13 @@
 import { eden } from "@dockstat/utils/react"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 
 export const useAddRepoMutation = () =>
   eden.useEdenMutation({
     invalidateQueries: [["fetchAllRepositories"]],
     mutationKey: ["addRepo"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: api.db.repositories.post,
     toast: {
       errorTitle: () => "Could not add repository",
@@ -16,6 +19,9 @@ export const useDeleteRepoMutation = (id: number, name: string) =>
   eden.useEdenMutation({
     invalidateQueries: [["fetchAllRepositories"]],
     mutationKey: ["deleteRepo"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: api.db.repositories({ id }).delete,
     toast: {
       errorTitle: `Could not delete repository`,

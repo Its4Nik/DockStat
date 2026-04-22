@@ -3,9 +3,8 @@ import { treaty } from "@elysiajs/eden"
 
 type ApiClient = ReturnType<typeof treaty<TreatyType>>["api"]["v2"]
 
-const getHeaders = (): HeadersInit => {
+export const getAuthHeaders = (): Record<string, unknown> => {
   const token = localStorage.getItem("auth_token")
-  console.log(`Found auth token: ${token}`)
   return token ? { authorization: `Bearer ${token}` } : {}
 }
 
@@ -24,6 +23,5 @@ export const api: ApiClient = treaty<TreatyType>(
     fetch: {
       credentials: "include",
     },
-    headers: getHeaders(),
   }
 ).api.v2

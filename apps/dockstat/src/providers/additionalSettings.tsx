@@ -1,9 +1,12 @@
 import { eden } from "@dockstat/utils/react"
 import { ConfigProviderContext, type ConfigProviderData } from "@/contexts/config"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 
 export function ConfigProvider({ children }: { children: React.ReactNode }) {
   const { data } = eden.useEdenQuery({
+    opts: {
+      headers: getAuthHeaders(),
+    },
     queryKey: ["fetchAdditionalSettings"],
     route: api.db.config.get,
   })

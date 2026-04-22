@@ -20,7 +20,7 @@ import { eden } from "@dockstat/utils/react"
 import { MapPin, Maximize2, RefreshCw, Route, Server } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 import DockStatLabelEdge from "./customEdge"
 import { Legend } from "./legend"
 import { NodeDetailsPanel } from "./nodeDetails"
@@ -31,6 +31,9 @@ export function GraphFlow() {
   const { fitView } = useReactFlow()
 
   const { data, isLoading, error, refetch } = eden.useEdenQuery({
+    opts: {
+      headers: getAuthHeaders(),
+    },
     queryKey: ["graphData"],
     route: api.graph.get,
   })

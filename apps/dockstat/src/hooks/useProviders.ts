@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 import type { OAuthProvider } from "@/components/auth/types"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 
 export function useProviders() {
   const [providers, setProviders] = useState<OAuthProvider[]>([])
@@ -11,7 +11,7 @@ export function useProviders() {
     try {
       setLoading(true)
       setError(null)
-      const response = await api.auth.providers.get()
+      const response = await api.auth.providers.get({ headers: getAuthHeaders() })
       if (response.status === 200 && response.data) {
         setProviders(response.data)
       } else {

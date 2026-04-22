@@ -5,7 +5,7 @@ import { useState } from "react"
 import { RepoCard } from "@/components/extensions/RepoCard"
 import { useAddRepoMutation } from "@/hooks/mutations"
 import { usePageHeading } from "@/hooks/useHeading"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 
 export default function ExtensionsIndex() {
   usePageHeading("Repositories")
@@ -13,6 +13,9 @@ export default function ExtensionsIndex() {
   const [repoLink, setRepoLink] = useState("")
 
   const { data } = eden.useEdenQuery({
+    opts: {
+      headers: getAuthHeaders(),
+    },
     queryKey: ["fetchAllRepositories"],
     route: api.repositories.all.get,
   })

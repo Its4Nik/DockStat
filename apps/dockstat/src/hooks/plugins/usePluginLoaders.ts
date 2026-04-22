@@ -1,7 +1,7 @@
 import { eden } from "@dockstat/utils/react"
 import { useCallback, useEffect } from "react"
 import type { LoaderResult, ResolvedLoader } from "@/components/plugins/id/types"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 import { getValueByPath } from "./utils"
 
 type UsePluginLoadersParams = {
@@ -23,6 +23,9 @@ export function usePluginLoaders({
 }: UsePluginLoadersParams) {
   const loaderMutation = eden.useEdenRouteMutation({
     mutationKey: ["executeLoader", String(pluginId)],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     routeBuilder: ({ loaderId }: { loaderId: string }) =>
       api.plugins.frontend({ pluginId }).loaders({ loaderId }).execute.post,
   })

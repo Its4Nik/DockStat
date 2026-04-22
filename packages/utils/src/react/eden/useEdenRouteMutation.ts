@@ -13,7 +13,7 @@ export function useEdenRouteMutation<TParams, TRoute extends EdenRoute>(
 ): MutationResult<ResponseData<TRoute>, { params: TParams; body: EdenBody<TRoute> }> {
   const mutationFn = async (input: { params: TParams; body: EdenBody<TRoute> }) => {
     const routeFn = options.routeBuilder(input.params)
-    const { data, error } = await routeFn(input.body as never)
+    const { data, error } = await routeFn(input.body as never, options.opts as never)
 
     if (error) {
       throw new Error(extractEdenError({ error }))

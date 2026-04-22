@@ -6,22 +6,31 @@ import { HostsList } from "@/components/clients/HostsList"
 import { PoolStatsCard } from "@/components/clients/PoolStatsCard"
 import { WorkersTable } from "@/components/clients/WorkersTable"
 import { usePageHeading } from "@/hooks/useHeading"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 
 export default function ClientsPage() {
   usePageHeading("Clients & Workers")
 
   const { data: clientsData, isLoading: clientsIsLoading } = eden.useEdenQuery({
+    opts: {
+      headers: getAuthHeaders(),
+    },
     queryKey: ["fetchDockerClients"],
     route: api.docker.client.all({ stored: "true" }).get,
   })
 
   const { data: poolStatus, isLoading: poolLoading } = eden.useEdenQuery({
+    opts: {
+      headers: getAuthHeaders(),
+    },
     queryKey: ["fetchPoolStatus"],
     route: api.docker.manager["pool-stats"].get,
   })
 
   const { data: hosts, isLoading: hostsLoading } = eden.useEdenQuery({
+    opts: {
+      headers: getAuthHeaders(),
+    },
     queryKey: ["fetchHosts"],
     route: api.docker.hosts.get,
   })

@@ -1,6 +1,6 @@
 import { Badge, Button, Card, type Column, Input, Modal, Table } from "@dockstat/ui"
 import { useCallback, useEffect, useState } from "react"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 import { toast } from "@/lib/toast"
 
 // ============================================
@@ -386,10 +386,13 @@ function SwarmInitModal({ open, onClose, nodeId, onSuccess }: SwarmInitModalProp
   const handleInit = async () => {
     setLoading(true)
     try {
-      await api.node({ nodeId }).swarm.init.post({
-        advertiseAddr: advertiseAddr || undefined,
-        listenAddr: listenAddr || undefined,
-      })
+      await api.node({ nodeId }).swarm.init.post(
+        {
+          advertiseAddr: advertiseAddr || undefined,
+          listenAddr: listenAddr || undefined,
+        },
+        { headers: getAuthHeaders() }
+      )
       toast({ title: "Swarm initialized successfully", variant: "success" })
       onSuccess()
       onClose()
@@ -492,10 +495,13 @@ function SwarmJoinModal({ open, onClose, nodeId, onSuccess }: SwarmJoinModalProp
 
     setLoading(true)
     try {
-      await api.node({ nodeId }).swarm.join.post({
-        joinToken,
-        remoteAddrs: [remoteAddr],
-      })
+      await api.node({ nodeId }).swarm.join.post(
+        {
+          joinToken,
+          remoteAddrs: [remoteAddr],
+        },
+        { headers: getAuthHeaders() }
+      )
       toast({ title: "Joined swarm successfully", variant: "success" })
       onSuccess()
       onClose()
@@ -598,11 +604,14 @@ function SwarmStackDeployModal({ open, onClose, nodeId, onSuccess }: SwarmStackD
 
     setLoading(true)
     try {
-      await api.node({ nodeId }).swarm.stacks.deploy.post({
-        composeFile,
-        name,
-        withRegistryAuth,
-      })
+      await api.node({ nodeId }).swarm.stacks.deploy.post(
+        {
+          composeFile,
+          name,
+          withRegistryAuth,
+        },
+        { headers: getAuthHeaders() }
+      )
       toast({ title: "Swarm stack deployed successfully", variant: "success" })
       onSuccess()
       onClose()
@@ -716,11 +725,14 @@ function DockStoreStackModal({ open, onClose, nodeId, onSuccess }: DockStoreStac
 
     setLoading(true)
     try {
-      await api.node({ nodeId }).stacks.fromStore.post({
-        nodeId: Number(nodeId),
-        repoUrl,
-        stackName,
-      })
+      await api.node({ nodeId }).stacks.fromStore.post(
+        {
+          nodeId: Number(nodeId),
+          repoUrl,
+          stackName,
+        },
+        { headers: getAuthHeaders() }
+      )
       toast({ title: "Stack deployed from DockStore successfully", variant: "success" })
       onSuccess()
       onClose()
@@ -895,20 +907,26 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
     setLoading(true)
     try {
       // Fetch compose stacks
-      const stacksResult = await api.node({ nodeId: effectiveNodeId }).stacks.get()
+      const stacksResult = await api
+        .node({ nodeId: effectiveNodeId })
+        .stacks.get({ headers: getAuthHeaders() })
       if (stacksResult.data) {
         setStacks(Array.isArray(stacksResult.data) ? stacksResult.data : [])
       }
 
       // Fetch swarm status
-      const swarmStatusResult = await api.node({ nodeId: effectiveNodeId }).swarm.status.get()
+      const swarmStatusResult = await api
+        .node({ nodeId: effectiveNodeId })
+        .swarm.status.get({ headers: getAuthHeaders() })
       if (swarmStatusResult.data) {
         setSwarmStatus(swarmStatusResult.data as SwarmStatus)
       }
 
       // Fetch swarm stacks if in swarm mode
       if ((swarmStatusResult.data as SwarmStatus)?.isSwarmManager) {
-        const swarmStacksResult = await api.node({ nodeId: effectiveNodeId }).swarm.stacks.get()
+        const swarmStacksResult = await api
+          .node({ nodeId: effectiveNodeId })
+          .swarm.stacks.get({ headers: getAuthHeaders() })
         if (swarmStacksResult.data) {
           setSwarmStacks(Array.isArray(swarmStacksResult.data) ? swarmStacksResult.data : [])
         }
@@ -959,10 +977,13 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
       await api
         .node({ nodeId: effectiveNodeId })
         .stacks({ stackId: String(selectedStack.id) })
-        .patch({
-          env: data.env,
-          yaml: data.yaml,
-        })
+        .patch(
+          {
+            env: data.env,
+            yaml: data.yaml,
+          },
+          { headers: getAuthHeaders() }
+        )
       toast({ title: "Stack updated successfully", variant: "success" })
       fetchData()
     } catch (error) {
@@ -977,7 +998,7 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
       await api
         .node({ nodeId: effectiveNodeId })
         .stacks({ stackId: String(stackId) })
-        .delete()
+        .delete({ headers: getAuthHeaders() })
       toast({ title: "Stack deleted successfully", variant: "success" })
       fetchData()
     } catch (error) {
@@ -991,7 +1012,7 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
       const result = await api
         .node({ nodeId: effectiveNodeId })
         .stacks({ stackId: String(stackId) })
-        [action].post({})
+        [action].post({}, { headers: getAuthHeaders() })
 
       // Check for errors in the result
       const resultData = result.data as
@@ -1023,7 +1044,9 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
     if (!confirm("Are you sure you want to leave the swarm? This may affect running services."))
       return
     try {
-      await api.node({ nodeId: effectiveNodeId }).swarm.leave.post({ query: { force: "true" } })
+      await api
+        .node({ nodeId: effectiveNodeId })
+        .swarm.leave.post({ query: { force: "true" } }, { headers: getAuthHeaders() })
       toast({ title: "Left swarm successfully", variant: "success" })
       fetchData()
     } catch (error) {

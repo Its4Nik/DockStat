@@ -1,10 +1,13 @@
 import { eden } from "@dockstat/utils/react"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 
 export const useDockerHostMutations = () => {
   const createHostMutation = eden.useEdenMutation({
     invalidateQueries: [["fetchHosts"]],
     mutationKey: ["addHost"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: api.docker.hosts.post,
     toast: {
       errorTitle: (h) => `Could not add Host: ${h.name}`,
@@ -15,6 +18,9 @@ export const useDockerHostMutations = () => {
   const updateHostMutation = eden.useEdenMutation({
     invalidateQueries: [["fetchHosts"]],
     mutationKey: ["updateHost"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: api.docker.hosts.patch,
     toast: {
       errorTitle: (h) => `Could not update Host: ${h.host.id} (Client: ${h.clientId})`,
@@ -25,6 +31,9 @@ export const useDockerHostMutations = () => {
   const deleteHostMutation = eden.useEdenMutation({
     invalidateQueries: [["fetchHosts"]],
     mutationKey: ["deleteHost"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: api.docker.hosts.delete,
     toast: {
       errorTitle: (h) => `Could not delete Host: ${h.hostId} (Client: ${h.clientId})`,

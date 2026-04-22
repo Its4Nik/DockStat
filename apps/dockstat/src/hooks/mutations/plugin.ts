@@ -1,10 +1,13 @@
 import { eden } from "@dockstat/utils/react"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 
 export const usePluginMutations = () => {
   const installPluginMutation = eden.useEdenMutation({
     invalidateQueries: [["fetchAllPlugins"], ["fetchFrontendPluginRoutes"]],
     mutationKey: ["installPlugin"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: api.plugins.install.post,
     toast: {
       errorTitle: (plugin) => `Failed to install ${plugin.name}`,
@@ -15,6 +18,9 @@ export const usePluginMutations = () => {
   const deletePluginMutation = eden.useEdenMutation({
     invalidateQueries: [["fetchAllPlugins"], ["fetchFrontendPluginRoutes"]],
     mutationKey: ["deletePlugin"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: api.plugins.delete.post,
     toast: {
       errorTitle: (p) => `Error while uninstalling PluginID: ${p.pluginId}`,
@@ -31,5 +37,8 @@ export const usePluginMutations = () => {
 export const usePluginTemplateMutation = (pluginId: number) =>
   eden.useEdenMutation({
     mutationKey: ["plugin-template", String(pluginId)],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: api.plugins.frontend({ pluginId }).template.post,
   })

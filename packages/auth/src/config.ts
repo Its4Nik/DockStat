@@ -32,9 +32,11 @@ export class ConfigService {
 
     let meta = this.issuerCache.get(row.issuer_url)
 
+    const clientSecret = await crypt.decrypt(row.client_secret)
+
     if (!meta) {
       this.logger.info(`Discovering OIDC configuration from issuer...`)
-      meta = await client.discovery(new URL(row.issuer_url), row.client_id, row.client_secret)
+      meta = await client.discovery(new URL(row.issuer_url), row.client_id, clientSecret)
       this.issuerCache.set(row.issuer_url, meta)
       this.logger.info(
         `OIDC discovery complete. Token endpoint: ${meta.serverMetadata().token_endpoint}`
@@ -48,7 +50,7 @@ export class ConfigService {
 
     const config = {
       client_id: row.client_id,
-      client_secret: await crypt.decrypt(row.client_secret),
+      client_secret: clientSecret,
       redirect_uris: [redirectUri],
       response_types: ["code"],
     } satisfies client.ClientMetadata

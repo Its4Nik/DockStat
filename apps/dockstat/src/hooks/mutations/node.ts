@@ -1,10 +1,13 @@
 import { eden } from "@dockstat/utils/react"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 
 export const useDockNodeMutations = () => {
   const createDockNodeMutation = eden.useEdenMutation({
     invalidateQueries: [["getAllDockNodes"]],
     mutationKey: ["createDockNode"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: api.node.post,
     toast: {
       errorTitle: (dn) => `${dn?.name || "DockNode"} could not be created`,
@@ -15,6 +18,9 @@ export const useDockNodeMutations = () => {
   const deleteDockNodeMutation = eden.useEdenMutation({
     invalidateQueries: [["getAllDockNodes"]],
     mutationKey: ["deleteDockNode"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: api.node.delete,
     toast: {
       errorTitle: (dn) => `${dn?.id || "DockNode"} could not be deleted`,

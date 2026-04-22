@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { api, getAuthHeaders } from "@/lib/api"
 
 export function useLocalAuthCheck() {
   const [exists, setExists] = useState(false)
@@ -7,7 +8,7 @@ export function useLocalAuthCheck() {
   useEffect(() => {
     const check = async () => {
       try {
-        const response = await api.auth.local.exists.get()
+        const response = await api.auth.local.exists.get({ headers: getAuthHeaders() })
         if (response.status === 200 && response.data) {
           setExists(response.data.exists)
         }

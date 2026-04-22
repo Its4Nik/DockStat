@@ -1,5 +1,5 @@
 import { eden } from "@dockstat/utils/react"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 
 // ============================================
 // Stack Mutation Hooks
@@ -10,6 +10,9 @@ export const useStackMutations = () => {
   const createStackMutation = eden.useEdenMutation({
     invalidateQueries: [["listStacks"]],
     mutationKey: ["createStack"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string) => api.node({ nodeId }).stacks.post,
     toast: {
       errorTitle: "Failed to create stack",
@@ -21,6 +24,9 @@ export const useStackMutations = () => {
   const updateStackMutation = eden.useEdenMutation({
     invalidateQueries: [["listStacks"]],
     mutationKey: ["updateStack"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string, stackId: string) => api.node({ nodeId }).stacks({ stackId }).patch,
     toast: {
       errorTitle: "Failed to update stack",
@@ -32,6 +38,9 @@ export const useStackMutations = () => {
   const deleteStackMutation = eden.useEdenMutation({
     invalidateQueries: [["listStacks"]],
     mutationKey: ["deleteStack"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string, stackId: string) => api.node({ nodeId }).stacks({ stackId }).delete,
     toast: {
       errorTitle: "Failed to delete stack",
@@ -43,6 +52,9 @@ export const useStackMutations = () => {
   const renameStackMutation = eden.useEdenMutation({
     invalidateQueries: [["listStacks"]],
     mutationKey: ["renameStack"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string, stackId: string) =>
       api.node({ nodeId }).stacks({ stackId }).rename.patch,
     toast: {
@@ -68,6 +80,9 @@ export const useStackLifecycleMutations = () => {
   const stackUpMutation = eden.useEdenMutation({
     invalidateQueries: [["stackPs"]],
     mutationKey: ["stackUp"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string, stackId: string) => api.node({ nodeId }).stacks({ stackId }).up.post,
     toast: {
       errorTitle: "Failed to start stack",
@@ -79,6 +94,9 @@ export const useStackLifecycleMutations = () => {
   const stackDownMutation = eden.useEdenMutation({
     invalidateQueries: [["stackPs"]],
     mutationKey: ["stackDown"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string, stackId: string) => api.node({ nodeId }).stacks({ stackId }).down.post,
     toast: {
       errorTitle: "Failed to stop stack",
@@ -90,6 +108,9 @@ export const useStackLifecycleMutations = () => {
   const stackRestartMutation = eden.useEdenMutation({
     invalidateQueries: [["stackPs"]],
     mutationKey: ["stackRestart"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string, stackId: string) =>
       api.node({ nodeId }).stacks({ stackId }).restart.post,
     toast: {
@@ -102,6 +123,9 @@ export const useStackLifecycleMutations = () => {
   const stackStopMutation = eden.useEdenMutation({
     invalidateQueries: [["stackPs"]],
     mutationKey: ["stackStop"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string, stackId: string) => api.node({ nodeId }).stacks({ stackId }).stop.post,
     toast: {
       errorTitle: "Failed to stop stack",
@@ -112,6 +136,9 @@ export const useStackLifecycleMutations = () => {
   // Stack pull mutation
   const stackPullMutation = eden.useEdenMutation({
     mutationKey: ["stackPull"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string, stackId: string) => api.node({ nodeId }).stacks({ stackId }).pull.post,
     toast: {
       errorTitle: "Failed to pull images",
@@ -137,6 +164,9 @@ export const useSwarmMutations = () => {
   const deploySwarmStackMutation = eden.useEdenMutation({
     invalidateQueries: [["listSwarmStacks"]],
     mutationKey: ["deploySwarmStack"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string) => api.node({ nodeId }).swarm.stacks.deploy.post,
     toast: {
       errorTitle: "Failed to deploy swarm stack",
@@ -148,6 +178,9 @@ export const useSwarmMutations = () => {
   const removeSwarmStackMutation = eden.useEdenMutation({
     invalidateQueries: [["listSwarmStacks"]],
     mutationKey: ["removeSwarmStack"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string, name: string) => api.node({ nodeId }).swarm.stacks({ name }).delete,
     toast: {
       errorTitle: "Failed to remove swarm stack",
@@ -159,6 +192,9 @@ export const useSwarmMutations = () => {
   const scaleSwarmServiceMutation = eden.useEdenMutation({
     invalidateQueries: [["listSwarmServices"]],
     mutationKey: ["scaleSwarmService"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string, serviceId: string) =>
       api.node({ nodeId }).swarm.services({ serviceId }).scale.post,
     toast: {
@@ -171,6 +207,9 @@ export const useSwarmMutations = () => {
   const updateSwarmServiceMutation = eden.useEdenMutation({
     invalidateQueries: [["listSwarmServices"]],
     mutationKey: ["updateSwarmService"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string, serviceId: string) =>
       api.node({ nodeId }).swarm.services({ serviceId }).patch,
     toast: {
@@ -183,6 +222,9 @@ export const useSwarmMutations = () => {
   const removeSwarmServiceMutation = eden.useEdenMutation({
     invalidateQueries: [["listSwarmServices"]],
     mutationKey: ["removeSwarmService"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string, serviceId: string) =>
       api.node({ nodeId }).swarm.services({ serviceId }).delete,
     toast: {
@@ -195,6 +237,9 @@ export const useSwarmMutations = () => {
   const initSwarmMutation = eden.useEdenMutation({
     invalidateQueries: [["swarmStatus"]],
     mutationKey: ["initSwarm"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string) => api.node({ nodeId }).swarm.init.post,
     toast: {
       errorTitle: "Failed to initialize swarm",
@@ -206,6 +251,9 @@ export const useSwarmMutations = () => {
   const leaveSwarmMutation = eden.useEdenMutation({
     invalidateQueries: [["swarmStatus"]],
     mutationKey: ["leaveSwarm"],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     route: (nodeId: string) => api.node({ nodeId }).swarm.leave.post,
     toast: {
       errorTitle: "Failed to leave swarm",

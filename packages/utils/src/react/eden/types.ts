@@ -1,6 +1,12 @@
 export type EdenRoute = (...args: never[]) => Promise<{ data: unknown; error: unknown }>
 export type EdenData<T extends EdenRoute> = Awaited<ReturnType<T>>["data"]
 
+export type EdenFetchOptions = {
+  headers?: Record<string, unknown> | undefined
+  query?: Record<string, unknown> | undefined
+  fetch?: RequestInit | undefined
+}
+
 export type EdenQueryRoute = (options?: {
   fetch?: RequestInit
   headers?: Record<string, unknown>
@@ -16,6 +22,7 @@ export type UseEdenQueryOptions<TRoute extends EdenQueryRoute> = {
   staleTime?: number
   refetchInterval?: number | false
   refetchOnWindowFocus?: boolean
+  opts?: EdenFetchOptions
 }
 
 export type EdenBody<T extends EdenRoute> = Parameters<T> extends []
@@ -42,6 +49,7 @@ export type DirectRouteOptions<TRoute extends EdenRoute> = {
   mutationKey: readonly string[]
   invalidateQueries?: readonly string[][]
   toast?: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
+  opts?: EdenFetchOptions
 }
 
 // Route builder - params passed at mutation time
@@ -50,6 +58,7 @@ export type RouteBuilderOptions<TParams, TRoute extends EdenRoute> = {
   routeBuilder: (params: TParams) => TRoute
   mutationKey: readonly string[]
   invalidateQueries?: readonly string[][]
+  opts?: EdenFetchOptions
   toast?: ToastConfig<ResponseData<TRoute>, { params: TParams; body: EdenBody<TRoute> }>
 }
 

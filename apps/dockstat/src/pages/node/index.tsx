@@ -6,7 +6,7 @@ import { DockNodeCard } from "@/components/docknode/card"
 import { useDockNodeMutations } from "@/hooks/mutations"
 import { useGlobalBusy } from "@/hooks/useGlobalBusy"
 import { usePageHeading } from "@/hooks/useHeading"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 
 type Target = {
   host: string
@@ -33,6 +33,9 @@ export default function DockNodePage() {
     options.name.trim().length >= 3 && options.host.trim().length >= 5 && options.port > 0
 
   const { data: docknodes, isLoading } = eden.useEdenQuery({
+    opts: {
+      headers: getAuthHeaders(),
+    },
     queryKey: ["getAllDockNodes"],
     route: api.node.get,
   })

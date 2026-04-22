@@ -4,7 +4,7 @@ import { eden } from "@dockstat/utils/react"
 import { useContext, useMemo } from "react"
 import { ConfigProviderContext } from "@/contexts/config"
 import { useConfigMutations } from "@/hooks/mutations"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 
 export type NavLink = {
   slug: string
@@ -33,6 +33,9 @@ export function useGeneralSettings() {
     useConfigMutations()
 
   const { data: frontendPluginRoutes } = eden.useEdenQuery({
+    opts: {
+      headers: getAuthHeaders(),
+    },
     queryKey: ["fetchFrontendPluginRoutes"],
     route: api.plugins.frontend.routes.get,
   })

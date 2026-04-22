@@ -9,13 +9,14 @@ export function useEdenQuery<TRoute extends EdenQueryRoute>({
   staleTime,
   refetchInterval,
   refetchOnWindowFocus,
+  opts,
 }: UseEdenQueryOptions<TRoute>) {
   type TData = NonNullable<EdenQueryData<TRoute>>
 
   return useQuery<TData, Error>({
     enabled,
     queryFn: async ({ signal }) => {
-      const { data, error } = await route({ fetch: { signal } })
+      const { data, error } = await route({ fetch: { signal }, ...opts })
 
       if (error) {
         throw new Error(extractEdenError({ error }))

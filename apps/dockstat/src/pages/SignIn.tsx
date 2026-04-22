@@ -9,8 +9,6 @@ import {
   SiOkta,
 } from "@icons-pack/react-simple-icons"
 import { useCallback } from "react"
-// @ts-expect-error
-import DockStatLogo from "@/assets/logo.png"
 import { Footer } from "@/components/auth/Footer"
 import { PageHeader } from "@/components/auth/Header"
 import { HeroPanel } from "@/components/auth/HeroPanel"
@@ -75,13 +73,6 @@ function SignInPage() {
       icons={floatingIcons}
       isError={providersError !== null}
       isLoading={providersLoading}
-      logo={
-        <img
-          alt="DockStat Logo"
-          className=""
-          src={DockStatLogo}
-        />
-      }
     >
       <div className="min-h-screen relative flex overflow-hidden">
         <HeroPanel />

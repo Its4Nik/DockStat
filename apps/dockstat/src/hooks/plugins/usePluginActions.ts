@@ -2,7 +2,7 @@ import type { ActionConfig, PageTemplate } from "@dockstat/template-renderer"
 import { eden } from "@dockstat/utils/react"
 import { useCallback, useRef } from "react"
 import type { ResolvedAction } from "@/components/plugins/id/types"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 import { getValueByPath } from "./utils"
 
 type ActionResult = {
@@ -40,6 +40,9 @@ export function usePluginActions({
 
   const actionMutation = eden.useEdenRouteMutation({
     mutationKey: ["executeAction", String(pluginId)],
+    opts: {
+      headers: getAuthHeaders(),
+    },
     routeBuilder: ({ actionId }: { actionId: string }) =>
       api.plugins.frontend({ pluginId }).actions({ actionId }).execute.post,
   })

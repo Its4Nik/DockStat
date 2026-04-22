@@ -6,7 +6,7 @@ export function useEdenMutation<TRoute extends EdenRoute>(
   options: DirectRouteOptions<TRoute>
 ): MutationResult<ResponseData<TRoute>, EdenBody<TRoute>> {
   const mutationFn = async (body: EdenBody<TRoute>) => {
-    const { data, error } = await options.route(body as never)
+    const { data, error } = await options.route(body as never, options.opts as never)
 
     if (error) {
       throw new Error(extractEdenError({ error }))

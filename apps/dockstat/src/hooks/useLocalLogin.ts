@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 
 export function useLocalLogin() {
   const [formData, setFormData] = useState({ name: "", pass: "" })
@@ -14,10 +14,13 @@ export function useLocalLogin() {
       setIsSubmitting(true)
 
       try {
-        const response = await api.auth.local.login.post({
-          name: formData.name,
-          pass: formData.pass,
-        })
+        const response = await api.auth.local.login.post(
+          {
+            name: formData.name,
+            pass: formData.pass,
+          },
+          { headers: getAuthHeaders() }
+        )
 
         if (response.status === 401) {
           setError("Invalid username or password")

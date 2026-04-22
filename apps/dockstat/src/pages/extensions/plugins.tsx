@@ -5,7 +5,7 @@ import { Link } from "lucide-react"
 import { useMemo, useState } from "react"
 import { usePluginMutations } from "@/hooks/mutations"
 import { usePageHeading } from "@/hooks/useHeading"
-import { api } from "@/lib/api"
+import { api, getAuthHeaders } from "@/lib/api"
 
 const parseRepoLink = repo.parseFromDBToRepoLink
 
@@ -37,16 +37,25 @@ export default function PluginBrowser() {
   const [selectedPlugin, setSelectedPlugin] = useState<AvailablePlugin | null>(null)
 
   const { data: allPlugins } = eden.useEdenQuery({
+    opts: {
+      headers: getAuthHeaders(),
+    },
     queryKey: ["fetchAllPlugins"],
     route: api.plugins.all.get,
   })
 
   const { data: allRepos } = eden.useEdenQuery({
+    opts: {
+      headers: getAuthHeaders(),
+    },
     queryKey: ["fetchAllRepositories"],
     route: api.repositories.all.get,
   })
 
   const { data: allManifests } = eden.useEdenQuery({
+    opts: {
+      headers: getAuthHeaders(),
+    },
     queryKey: ["fetchAllManifests"],
     route: api.repositories["all-manifests"].get,
   })
