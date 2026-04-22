@@ -2,8 +2,8 @@ import { useAuth } from "@dockstat/auth/client"
 import { Button, Card, CardBody, CardHeader, Input } from "@dockstat/ui"
 import { ArrowRight } from "lucide-react"
 import { useEffect, useState } from "react"
-import { useNavigate, useSearchParams } from "react-router"
 import { api } from "@/lib/api"
+import { getProviderInfo } from "./getProviderInfo"
 
 interface OAuthProvider {
   id: string
@@ -11,138 +11,6 @@ interface OAuthProvider {
   client_id: string
   scopes: string
   created_at: Date
-}
-
-// Map issuer URLs to provider names and icons
-function getProviderInfo(issuerUrl: string): { name: string; icon: string } {
-  const lowerUrl = issuerUrl.toLowerCase()
-
-  if (lowerUrl.includes("google.com")) {
-    return { icon: "G", name: "Google" }
-  }
-  if (lowerUrl.includes("github.com")) {
-    return { icon: "GH", name: "GitHub" }
-  }
-  if (lowerUrl.includes("microsoft.com") || lowerUrl.includes("login.microsoftonline.com")) {
-    return { icon: "MS", name: "Microsoft" }
-  }
-  if (lowerUrl.includes("authentik")) {
-    return { icon: "A", name: "Authentik" }
-  }
-  if (lowerUrl.includes("keycloak")) {
-    return { icon: "K", name: "Keycloak" }
-  }
-  if (lowerUrl.includes("okta.com")) {
-    return { icon: "O", name: "Okta" }
-  }
-
-  // Extract domain for custom providers
-  try {
-    const url = new URL(issuerUrl)
-    const hostname = url.hostname
-    const name = hostname.replace("accounts.", "").replace("login.", "")
-    return {
-      icon: name.slice(0, 2).toUpperCase(),
-      name: name.charAt(0).toUpperCase() + name.slice(1),
-    }
-  } catch {
-    return { icon: "🔐", name: "OAuth Provider" }
-  }
-}
-
-export function AuthCallback() {
-  const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const token = searchParams.get("token")
-
-    if (!token) {
-      setError("Missing authentication token")
-      return
-    }
-
-    try {
-      // Decode JWT token (payload is base64 encoded)
-      const base64Url = token.split(".")[1]
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split("")
-          .map((c) => `%${(`00${c.charCodeAt(0).toString(16)}`).slice(-2)}`)
-          .join("")
-      )
-
-      const { user } = JSON.parse(jsonPayload)
-
-      if (!user) {
-        throw new Error("Invalid token payload")
-      }
-
-      // Store user info
-      localStorage.setItem("user", JSON.stringify(user))
-      localStorage.setItem("auth_token", token)
-
-      // Redirect back to original page
-      const redirect = localStorage.getItem("auth_redirect") || "/"
-      localStorage.removeItem("auth_redirect")
-      navigate(redirect)
-    } catch (err) {
-      console.error("Auth callback error:", err)
-      setError("Failed to process authentication. Please try again.")
-    }
-  }, [searchParams, navigate])
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card
-          className="max-w-md w-full"
-          size="lg"
-          variant="error"
-        >
-          <CardHeader>
-            <h2 className="text-xl font-bold">Authentication Failed</h2>
-          </CardHeader>
-          <CardBody>
-            <p className="text-sm mb-4">{error}</p>
-            <Button
-              fullWidth
-              onClick={() => navigate("/login")}
-              variant="outline"
-            >
-              Try Again
-            </Button>
-            <Button
-              className="mt-2"
-              fullWidth
-              onClick={() => navigate("/")}
-              variant="ghost"
-            >
-              Go Home
-            </Button>
-          </CardBody>
-        </Card>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Card
-        className="max-w-md w-full"
-        size="lg"
-      >
-        <CardBody>
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-current mb-4" />
-            <p>Completing authentication...</p>
-          </div>
-        </CardBody>
-      </Card>
-    </div>
-  )
 }
 
 export function SignInPage() {

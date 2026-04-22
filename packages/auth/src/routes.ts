@@ -3,7 +3,7 @@ import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import Elysia, { t } from "elysia"
 import * as client from "openid-client"
 import type { ConfigService } from "./config"
-import type { LocalUsersTable, ProvidersTable } from "./types"
+import type { ApiKeysTable, LocalUsersTable, ProvidersTable } from "./types"
 import crypt from "./utils/encrypt"
 import { BASE_URL, FRONTEND_URL } from "./utils/env"
 import { createAuthToken } from "./utils/jwt"
@@ -11,6 +11,7 @@ import { createAuthToken } from "./utils/jwt"
 export function createAuthRoutes(
   table: QueryBuilder<ProvidersTable>,
   users: QueryBuilder<LocalUsersTable>,
+  apiKeys: QueryBuilder<ApiKeysTable>,
   logger: Logger,
   configService: ConfigService
 ) {
@@ -411,6 +412,192 @@ export function createAuthRoutes(
               description: "Check if any local users exist",
               summary: "Check Local Users",
             },
+          }
+        )
+    )
+    .group("/api-keys", (app) =>
+      app
+        .post(
+          "/",
+          async ({ body, set }) => {
+            try {
+              const requestBody = body as {
+                userId: string
+                name: string
+                scopes?: string
+                expiresAt?: string
+              }
+
+              // Generate a secure API key
+              const apiKey = `dockstat_${crypto.randomUUID().replace(/-/g, "")}`
+
+              // Hash the API key before storing
+              const keyHash = await Bun.password.hash(apiKey, {
+                algorithm: "argon2id",
+                memoryCost: 65536,
+                timeCost: 3,
+              })
+
+              // Create API key record
+              const apiKeyRecord = await apiKeys.insertAndGet({
+                expiresAt: requestBody.expiresAt ? new Date(requestBody.expiresAt) : null,
+                keyHash,
+                lastUsedAt: null,
+                name: requestBody.name,
+                revokedAt: null,
+                scopes: requestBody.scopes || "*",
+                userId: requestBody.userId,
+              })
+
+              logger.info(`API key created for user ${requestBody.userId}: ${apiKeyRecord.id}`)
+
+              return {
+                apiKey: {
+                  expiresAt: apiKeyRecord.expiresAt,
+                  id: apiKeyRecord.id,
+                  key: apiKey, // Only return the key once!
+                  name: apiKeyRecord.name,
+                  scopes: apiKeyRecord.scopes,
+                },
+                success: true,
+              }
+            } catch (error) {
+              logger.error(`Failed to create API key: ${error}`)
+              set.status = 500
+              return { error: "Failed to create API key" }
+            }
+          },
+          {
+            body: t.Object({
+              expiresAt: t.Optional(t.String()),
+              name: t.String({ maxLength: 100, minLength: 1 }),
+              scopes: t.Optional(t.String()),
+              userId: t.String(),
+            }),
+            detail: {
+              description: "Generate a new API key for a user",
+              summary: "Create API Key",
+            },
+          }
+        )
+        .get(
+          "/",
+          async ({ query }) => {
+            try {
+              const queryParams = query as { userId?: string }
+
+              const keys = queryParams.userId
+                ? apiKeys
+                    .select([
+                      "id",
+                      "name",
+                      "scopes",
+                      "expiresAt",
+                      "lastUsedAt",
+                      "createdAt",
+                      "revokedAt",
+                    ])
+                    .where({ userId: queryParams.userId })
+                    .all()
+                : apiKeys
+                    .select([
+                      "id",
+                      "name",
+                      "scopes",
+                      "expiresAt",
+                      "lastUsedAt",
+                      "createdAt",
+                      "revokedAt",
+                    ])
+                    .all()
+
+              return { keys }
+            } catch (error) {
+              logger.error(`Failed to list API keys: ${error}`)
+              return { keys: [] }
+            }
+          },
+          {
+            detail: {
+              description: "List all API keys (optionally filtered by user)",
+              summary: "List API Keys",
+            },
+            query: t.Object({
+              userId: t.Optional(t.String()),
+            }),
+          }
+        )
+        .get(
+          "/:id",
+          async ({ params: { id }, set }) => {
+            try {
+              const apiKey = apiKeys
+                .select([
+                  "id",
+                  "name",
+                  "scopes",
+                  "expiresAt",
+                  "lastUsedAt",
+                  "createdAt",
+                  "revokedAt",
+                ])
+                .where({ id })
+                .first()
+
+              if (!apiKey) {
+                set.status = 404
+                return { error: "API key not found" }
+              }
+
+              return { apiKey }
+            } catch (error) {
+              logger.error(`Failed to get API key ${id}: ${error}`)
+              set.status = 500
+              return { error: "Failed to get API key" }
+            }
+          },
+          {
+            detail: {
+              description: "Get a specific API key details (excludes the actual key)",
+              summary: "Get API Key",
+            },
+            params: t.Object({ id: t.String() }),
+          }
+        )
+        .delete(
+          "/:id",
+          async ({ params: { id }, set }) => {
+            try {
+              const apiKey = apiKeys.select(["id", "revokedAt"]).where({ id }).first()
+
+              if (!apiKey) {
+                set.status = 404
+                return { error: "API key not found" }
+              }
+
+              if (apiKey.revokedAt) {
+                set.status = 400
+                return { error: "API key is already revoked" }
+              }
+
+              // Revoke the API key by setting revokedAt
+              await apiKeys.update({ id, revokedAt: new Date() })
+
+              logger.info(`API key revoked: ${id}`)
+
+              return { message: "API key revoked successfully", success: true }
+            } catch (error) {
+              logger.error(`Failed to revoke API key ${id}: ${error}`)
+              set.status = 500
+              return { error: "Failed to revoke API key" }
+            }
+          },
+          {
+            detail: {
+              description: "Revoke an API key",
+              summary: "Revoke API Key",
+            },
+            params: t.Object({ id: t.String() }),
           }
         )
     )

@@ -3,12 +3,14 @@ export { useLayout } from "./hooks/useLayout"
 import { useAuth } from "@dockstat/auth/client"
 import { Navbar, ThemeSidebar } from "@dockstat/ui"
 import { useContext } from "react"
+import { useLocation } from "react-router"
 import { Toaster } from "sonner"
 import { PageHeadingContext } from "@/contexts/pageHeadingContext"
 import { createPinMutationHandlers } from "@/utils/createPinMutations"
 import { useLayout } from "./hooks/useLayout"
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation()
   const {
     ramUsage,
     logMessagesArr,
@@ -41,49 +43,52 @@ export function Layout({ children }: { children: React.ReactNode }) {
         expand
         position="bottom-right"
       />
-      <Navbar
-        auth={{
-          logout,
-          user: user ? (user.name ? user.name : user.email ? user.email : user.sub) : null,
-        }}
-        currentThemeId={currentThemeId}
-        deleteTheme={deleteTheme}
-        heading={heading}
-        isBusy={isBusy}
-        logEntries={logMessagesArr}
-        mutationFn={createPinMutationHandlers({ isBusy, pinMutation, unPinMutation })}
-        navLinks={config?.navLinks || []}
-        onColorChange={onColorChange}
-        onSelectTheme={onSelectTheme}
-        openQuickLinksModalHotkey={config?.hotkeys?.["open:quicklinks"]}
-        pluginLinks={frontendPluginRoutes || []}
-        ramUsage={config.additionalSettings?.showBackendRamUsageInNavbar ? ramUsage : undefined}
-        setIsThemeSidebarOpen={setIsThemeSidebarOpen}
-        sidebarHotkeys={{
-          close: config.hotkeys?.["close:sidebar"],
-          open: config.hotkeys?.["open:sidebar"],
-          toggle: config.hotkeys?.["toggle:sidebar"],
-        }}
-        themes={themes}
-        toastSuccess={toastSuccess}
-      />
+      {pathname !== "/login" && (
+        <>
+          <Navbar
+            auth={{
+              logout,
+              user: user ? (user.name ? user.name : user.email ? user.email : user.sub) : null,
+            }}
+            currentThemeId={currentThemeId}
+            deleteTheme={deleteTheme}
+            heading={heading}
+            isBusy={isBusy}
+            logEntries={logMessagesArr}
+            mutationFn={createPinMutationHandlers({ isBusy, pinMutation, unPinMutation })}
+            navLinks={config?.navLinks || []}
+            onColorChange={onColorChange}
+            onSelectTheme={onSelectTheme}
+            openQuickLinksModalHotkey={config?.hotkeys?.["open:quicklinks"]}
+            pluginLinks={frontendPluginRoutes || []}
+            ramUsage={config.additionalSettings?.showBackendRamUsageInNavbar ? ramUsage : undefined}
+            setIsThemeSidebarOpen={setIsThemeSidebarOpen}
+            sidebarHotkeys={{
+              close: config.hotkeys?.["close:sidebar"],
+              open: config.hotkeys?.["open:sidebar"],
+              toggle: config.hotkeys?.["toggle:sidebar"],
+            }}
+            themes={themes}
+            toastSuccess={toastSuccess}
+          />
+          <ThemeSidebar
+            allColors={currentThemeColors || []}
+            currentTheme={currentThemeName || "Undefined"}
+            currentThemeValues={{
+              animations: {},
+              vars: theme?.vars || {},
+            }}
+            isOpen={isThemeSidebarOpen}
+            onClose={() => {
+              setIsThemeSidebarOpen(false)
+            }}
+            onColorChange={onColorChange}
+            saveNewTheme={createNewThemeFromTheme}
+          />
+        </>
+      )}
 
       <div className="px-4">{children}</div>
-
-      <ThemeSidebar
-        allColors={currentThemeColors || []}
-        currentTheme={currentThemeName || "Undefined"}
-        currentThemeValues={{
-          animations: {},
-          vars: theme?.vars || {},
-        }}
-        isOpen={isThemeSidebarOpen}
-        onClose={() => {
-          setIsThemeSidebarOpen(false)
-        }}
-        onColorChange={onColorChange}
-        saveNewTheme={createNewThemeFromTheme}
-      />
     </div>
   )
 }

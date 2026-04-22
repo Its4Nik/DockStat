@@ -1,4 +1,4 @@
-import type { DockNodeTreaty } from "@dockstat/docknode/treaty"
+import type { CommandResult, DockNodeTreaty } from "@dockstat/docknode/treaty"
 import type Logger from "@dockstat/logger"
 import { column, type DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DockStatConfigTableType } from "@dockstat/typings/types"

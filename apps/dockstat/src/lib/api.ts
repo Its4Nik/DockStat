@@ -1,7 +1,7 @@
 import type { TreatyType } from "@dockstat/api"
 import { treaty } from "@elysiajs/eden"
 
-const getHeaders = () => {
+const getHeaders = (): HeadersInit => {
   const token = localStorage.getItem("auth_token")
   console.log(`Found auth token: ${token}`)
   return token ? { authorization: `Bearer ${token}` } : {}

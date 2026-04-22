@@ -15,3 +15,15 @@ export type LocalUsersTable = {
   createdAt: Date
   updatedAt: Date
 }
+
+export type ApiKeysTable = {
+  id: string
+  userId: string
+  name: string
+  keyHash: string
+  scopes: string
+  expiresAt: Date | null
+  lastUsedAt: Date | null
+  createdAt: Date
+  revokedAt: Date | null
+}

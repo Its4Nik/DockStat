@@ -1,6 +1,8 @@
 import type Logger from "@dockstat/logger"
+import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import Elysia, { type AnySchema } from "elysia"
 import type { ElysiaWS } from "elysia/ws"
+import type { ApiKeysTable } from "./types"
 import { verifyAuthToken } from "./utils/jwt"
 
 export type AuthUser = {
@@ -8,6 +10,8 @@ export type AuthUser = {
   email?: string
   name?: string
   picture?: string
+  authMethod?: "jwt" | "apikey"
+  scopes?: string
   iat?: number
   exp?: number
   [key: string]: unknown
@@ -18,11 +22,59 @@ export interface AuthContext {
   isAuthenticated: boolean
 }
 
-export const getMiddlewareFunctions = (baseLogger: Logger) => {
+export const getMiddlewareFunctions = (
+  baseLogger: Logger,
+  apiKeys?: QueryBuilder<ApiKeysTable>
+) => {
   const logger = baseLogger.spawn("Middleware")
+
+  /**
+   * Validates an API key and returns the associated user ID if valid
+   */
+  const validateApiKey = async (
+    apiKey: string
+  ): Promise<{ userId: string; scopes: string } | null> => {
+    if (!apiKeys) return null
+
+    try {
+      const allKeys = apiKeys
+        .select(["id", "userId", "keyHash", "scopes", "expiresAt", "revokedAt"])
+        .all()
+
+      for (const keyRecord of allKeys) {
+        const isValid = await Bun.password.verify(apiKey, keyRecord.keyHash)
+        if (isValid) {
+          // Check if key is revoked
+          if (keyRecord.revokedAt) {
+            logger.warn(`API key ${keyRecord.id} is revoked`)
+            return null
+          }
+
+          // Check if key is expired
+          if (keyRecord.expiresAt && keyRecord.expiresAt < new Date()) {
+            logger.warn(`API key ${keyRecord.id} is expired`)
+            return null
+          }
+
+          // Update lastUsedAt
+          apiKeys.update({ id: keyRecord.id, lastUsedAt: new Date() })
+
+          logger.info(`Valid API key found for user ${keyRecord.userId}`)
+          return { scopes: keyRecord.scopes, userId: keyRecord.userId }
+        }
+      }
+
+      return null
+    } catch (error) {
+      logger.error(`Error validating API key: ${error}`)
+      return null
+    }
+  }
+
   /**
    * Creates ElysiaJS authentication middleware
    * Validates JWT tokens from Authorization header or cookies
+   * Also validates API keys if apiKeys table is provided
    * Attaches user information to request context
    *
    * @example
@@ -40,32 +92,61 @@ export const getMiddlewareFunctions = (baseLogger: Logger) => {
       logger.info(`Checking auth for route ${route}`)
 
       let token: string | null = null
+      let apiKey: string | null = null
+      let authMethod: "jwt" | "apikey" | null = null
 
       // Try to get token from Authorization header first
       const authHeader = headers.authorization as string | undefined
       if (authHeader?.startsWith("Bearer ")) {
         token = authHeader.slice(7)
+        authMethod = "jwt"
+      } else if (authHeader?.startsWith("Api-Key ")) {
+        apiKey = authHeader.slice(8)
+        authMethod = "apikey"
       } else {
         logger.warn("No authorization token found!")
       }
 
-      // Fall back to cookie if no token in header
-      if (!token) {
+      // Also check for X-API-Key header
+      if (!apiKey && !token) {
+        apiKey = (headers["x-api-key"] as string | undefined) || null
+        if (apiKey) {
+          authMethod = "apikey"
+        }
+      }
+
+      // Fall back to cookie if no token in header (for JWT only)
+      if (!token && !apiKey) {
         const authTokenCookie = cookie?.auth_token as { value?: string } | undefined
         if (authTokenCookie?.value) {
           token = authTokenCookie.value
+          authMethod = "jwt"
         } else {
           logger.warn("No Auth cookie found!")
         }
       }
 
-      // Verify the token if present
+      // Verify the token if present (JWT)
       let user: AuthUser | undefined
-      if (token) {
+      if (token && authMethod === "jwt") {
         logger.info("Verifying JWT Token")
         const payload = await verifyAuthToken(token)
         if (payload && typeof payload.user === "object" && payload.user !== null) {
           user = payload.user as AuthUser
+          user.authMethod = "jwt"
+        }
+      }
+
+      // Verify API key if present
+      if (apiKey && authMethod === "apikey" && !user) {
+        logger.info("Verifying API Key")
+        const keyValidation = await validateApiKey(apiKey)
+        if (keyValidation) {
+          user = {
+            authMethod: "apikey",
+            scopes: keyValidation.scopes,
+            sub: keyValidation.userId,
+          } as AuthUser
         }
       }
 
@@ -164,6 +245,81 @@ export const getMiddlewareFunctions = (baseLogger: Logger) => {
     }
   }
 
+  /**
+   * Creates an authenticated route definition that requires API key authentication
+   * Use this decorator to mark routes that require API key authentication
+   * Automatically rejects requests without valid API keys with a 401 status
+   *
+   * @example
+   * ```typescript
+   * const app = new Elysia()
+   *   .use(createAuthMiddleware(apiKeysTable))
+   *   .get("/api/protected", () => "Protected data", apiKeyAuth())
+   * ```
+   */
+  const apiKeyAuth = (options?: { error?: string; response?: AnySchema }) => {
+    const { error = "API key authentication required" } = options || {}
+
+    logger.info("Route with API Key Authentication hit!")
+
+    return {
+      // biome-ignore lint/suspicious/noExplicitAny: I dont know the correct Elysia typing :(
+      beforeHandle: (context: any) => {
+        const { user, isAuthenticated, set } = context
+        if (!isAuthenticated || !user || user.authMethod !== "apikey") {
+          logger.error("Not authenticated with API key")
+          set.status = 401
+          return { error }
+        }
+      },
+      detail: {
+        description: "Requires API key authentication",
+        security: [{ apiKeyAuth: [] as string[] }],
+      },
+      ...(options?.response && { response: options.response }),
+    }
+  }
+
+  /**
+   * Helper function to check if user is authenticated via API key
+   *
+   * @example
+   * ```typescript
+   * if (isApiKeyAuth(user)) {
+   *   console.log(`API key user: ${user.sub}, scopes: ${user.scopes}`)
+   * }
+   * ```
+   */
+  const isApiKeyAuth = (
+    user: AuthUser | undefined
+  ): user is AuthUser & { authMethod: "apikey"; scopes: string } => {
+    return (
+      user !== undefined &&
+      typeof user === "object" &&
+      "authMethod" in user &&
+      user.authMethod === "apikey"
+    )
+  }
+
+  /**
+   * Helper function to check if user is authenticated via JWT
+   *
+   * @example
+   * ```typescript
+   * if (isJwtAuth(user)) {
+   *   console.log(`JWT user: ${user.name}`)
+   * }
+   * ```
+   */
+  const isJwtAuth = (user: AuthUser | undefined): user is AuthUser & { authMethod: "jwt" } => {
+    return (
+      user !== undefined &&
+      typeof user === "object" &&
+      "authMethod" in user &&
+      user.authMethod === "jwt"
+    )
+  }
+
   const verifyWsToken = async (token: string | null): Promise<AuthUser | null> => {
     if (!token) return null
 
@@ -260,12 +416,16 @@ export const getMiddlewareFunctions = (baseLogger: Logger) => {
   }
 
   return {
+    apiKeyAuth,
     authenticated,
     createAuthenticatedWsHandler,
     createAuthMiddleware,
     getWsUser,
     handleWsAuthentication,
+    isApiKeyAuth,
     isAuthenticatedUser,
+    isJwtAuth,
+    validateApiKey,
     withAuth,
   }
 }

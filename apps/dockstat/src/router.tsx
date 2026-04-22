@@ -1,5 +1,7 @@
 import CreateRoutes from "./lib/protectedRoute"
 import IndexPage from "./pages"
+import AuthCallback from "./pages/auth/Callback"
+import SignInPage from "./pages/auth/SignIn"
 import ConfigureClientsPage from "./pages/clients/configure"
 import ClientsPage from "./pages/clients/index"
 import ExtensionsIndex from "./pages/extensions"
@@ -8,7 +10,6 @@ import GraphPage from "./pages/graph"
 import DockNodePage from "./pages/node"
 import NodeStacksPage from "./pages/node/stacks"
 import PluginIdPage from "./pages/pluginId"
-import { AuthCallback, SignInPage } from "./pages/SignIn"
 import SettingsPage from "./pages/settings"
 
 export default function DockStatRouter() {
