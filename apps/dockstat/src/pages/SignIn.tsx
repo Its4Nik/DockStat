@@ -81,6 +81,7 @@ export function AuthCallback() {
 
       // Store user info
       localStorage.setItem("user", JSON.stringify(user))
+      localStorage.setItem("auth_token", token)
 
       // Redirect back to original page
       const redirect = localStorage.getItem("auth_redirect") || "/"
@@ -144,9 +145,10 @@ export function AuthCallback() {
 }
 
 export function SignInPage() {
-  const { login, user } = useAuth()
+  const { login } = useAuth()
+
   const [providers, setProviders] = useState<OAuthProvider[]>([])
-  const [loading, setLoading] = useState(true)
+  const [providersLoading, setProvidersLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchProvider, setSearchProvider] = useState("")
 
@@ -156,7 +158,7 @@ export function SignInPage() {
 
   const fetchProviders = async () => {
     try {
-      setLoading(true)
+      setProvidersLoading(true)
       const response = await api.auth.providers.get()
       if (response.status === 200 && response.data) {
         setProviders(response.data)
@@ -167,7 +169,7 @@ export function SignInPage() {
       console.error("Failed to fetch providers:", err)
       setError("Failed to load authentication providers")
     } finally {
-      setLoading(false)
+      setProvidersLoading(false)
     }
   }
 
@@ -175,10 +177,8 @@ export function SignInPage() {
     login(providerId)
   }
 
-  // If user is already authenticated, redirect to home
-  if (user) {
-    return <div className="min-h-screen flex items-center justify-center">Redirecting...</div>
-  }
+  // ProtectedRoute will handle authenticated user redirects
+  // This page only shows the login form for unauthenticated users
 
   const filteredProviders = providers.filter((provider) => {
     if (!searchProvider) return true
@@ -206,7 +206,7 @@ export function SignInPage() {
         </div>
 
         {/* Loading State */}
-        {loading && (
+        {providersLoading && (
           <Card
             className="max-w-md mx-auto"
             size="lg"
@@ -243,7 +243,7 @@ export function SignInPage() {
         )}
 
         {/* Provider Cards Grid */}
-        {!loading && !error && filteredProviders.length === 0 && (
+        {!providersLoading && !error && filteredProviders.length === 0 && (
           <Card
             className="max-w-md mx-auto"
             size="lg"
@@ -257,7 +257,7 @@ export function SignInPage() {
           </Card>
         )}
 
-        {!loading && !error && filteredProviders.length > 0 && (
+        {!providersLoading && !error && filteredProviders.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredProviders.map((provider) => {
               const info = getProviderInfo(provider.issuer_url)
@@ -307,7 +307,7 @@ export function SignInPage() {
         )}
 
         {/* Help Text */}
-        {!loading && !error && (
+        {!providersLoading && !error && (
           <div className="text-center text-sm text-secondary-text">
             <p>By signing in, you agree to our Terms of Service and Privacy Policy.</p>
             <p className="mt-2">Don't see your provider? Contact your administrator.</p>
