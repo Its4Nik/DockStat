@@ -2,8 +2,8 @@ import type Logger from "@dockstat/logger"
 import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import * as client from "openid-client"
 import type { ProvidersTable } from "./types"
-import { BASE_URL } from "./utils/env"
 import crypt from "./utils/encrypt"
+import { BASE_URL } from "./utils/env"
 
 export class ConfigService {
   table: QueryBuilder<ProvidersTable>
