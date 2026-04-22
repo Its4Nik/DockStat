@@ -42,7 +42,7 @@ export const getMiddlewareFunctions = (baseLogger: Logger) => {
       let token: string | null = null
 
       // Try to get token from Authorization header first
-      const authHeader = headers["authorization"] as string | undefined
+      const authHeader = headers.authorization as string | undefined
       if (authHeader?.startsWith("Bearer ")) {
         token = authHeader.slice(7)
       } else {
@@ -216,7 +216,7 @@ export const getMiddlewareFunctions = (baseLogger: Logger) => {
    */
   const createAuthenticatedWsHandler = (options?: { extractToken?: WsTokenExtractor }) => {
     return {
-      message: (ws: ElysiaWS<{ user?: AuthUser }>, message: unknown) => {
+      message: (ws: ElysiaWS<{ user?: AuthUser }>, _message: unknown) => {
         if (!ws.data.user) {
           ws.send(JSON.stringify({ error: "Not authenticated" }))
           ws.close(1008, "Authentication required")

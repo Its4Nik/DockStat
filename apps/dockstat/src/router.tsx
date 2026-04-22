@@ -1,5 +1,3 @@
-import { Route, Routes } from "react-router"
-import ProtectedRoute from "./lib/protectedRoute"
 import CreateRoutes from "./lib/protectedRoute"
 import IndexPage from "./pages"
 import ConfigureClientsPage from "./pages/clients/configure"
