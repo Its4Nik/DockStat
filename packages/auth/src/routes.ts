@@ -319,7 +319,7 @@ export function createAuthRoutes(
         )
         .post(
           "/login",
-          async ({ body, set, redirect }) => {
+          async ({ body, set }) => {
             try {
               const requestBody = body as { name: string; pass: string }
 

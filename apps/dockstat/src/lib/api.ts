@@ -1,6 +1,8 @@
 import type { TreatyType } from "@dockstat/api"
 import { treaty } from "@elysiajs/eden"
 
+type ApiClient = ReturnType<typeof treaty<TreatyType>>["api"]["v2"]
+
 const getHeaders = (): HeadersInit => {
   const token = localStorage.getItem("auth_token")
   console.log(`Found auth token: ${token}`)
@@ -16,7 +18,7 @@ const getHeaders = (): HeadersInit => {
  * - Credentials included for cookie-based authentication
  * - Dynamic authorization header with JWT token from localStorage
  */
-export const api = treaty<TreatyType>(
+export const api: ApiClient = treaty<TreatyType>(
   import.meta.env.DOCKSTAT_API_PORT || `http://localhost:3030`,
   {
     fetch: {

@@ -203,9 +203,7 @@ export function SignInPage() {
                 onSubmit={handleLocalLogin}
               >
                 <div>
-                  <label className="block text-sm font-medium text-primary-text mb-1">
-                    Username
-                  </label>
+                  <p className="block text-sm font-medium text-primary-text mb-1">Username</p>
                   <Input
                     disabled={isSubmittingLocal}
                     onChange={(v) => setLocalLoginData({ ...localLoginData, name: v })}
@@ -214,9 +212,7 @@ export function SignInPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-primary-text mb-1">
-                    Password
-                  </label>
+                  <p className="block text-sm font-medium text-primary-text mb-1">Password</p>
                   <Input
                     disabled={isSubmittingLocal}
                     onChange={(v) => setLocalLoginData({ ...localLoginData, pass: v })}
