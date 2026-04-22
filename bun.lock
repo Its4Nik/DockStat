@@ -148,6 +148,7 @@
       "name": "@dockstat/auth",
       "version": "1.0.0",
       "dependencies": {
+        "cryptr": "^6.4.0",
         "elysia": "catalog:",
         "jose": "^6.2.2",
         "openid-client": "^6.8.3",
@@ -1236,6 +1237,8 @@
     "cross-spawn": ["cross-spawn@5.1.0", "", { "dependencies": { "lru-cache": "^4.0.1", "shebang-command": "^1.2.0", "which": "^1.2.9" } }, "sha512-pTgQJ5KC0d2hcY8eyL1IzlBPYjTkyH72XRZPnLyKus2mBfNjQs3klqbJU2VILqZryAZUt9JOb3h/mWMy23/f5A=="],
 
     "crypto-random-string": ["crypto-random-string@1.0.0", "", {}, "sha512-GsVpkFPlycH7/fRR7Dhcmnoii54gV1nz7y4CWyeFS14N+JVBBhY+r8amRHE4BwSYal7BPTDp8isvAlCxyFt3Hg=="],
+
+    "cryptr": ["cryptr@6.4.0", "", {}, "sha512-9jpMU9HMt1vhMUqNO+MPuGEpbh/f7HHZdxrd6L2DMwTuYGyt9pgUJfQyTS1Ei4/sn7qPM4FkjxUoiW79k0x8sA=="],
 
     "css.escape": ["css.escape@1.5.1", "", {}, "sha512-YUifsXXuknHlUsmlgyY0PKzgPOr7/FjCePfHNt0jxm83wHZi44VDMQ7/fGNkjY3/jV1MC+1CmZbaHzugyeRtpg=="],
 

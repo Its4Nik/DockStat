@@ -3,6 +3,7 @@ import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import * as client from "openid-client"
 import type { ProvidersTable } from "./types"
 import { BASE_URL } from "./utils/env"
+import crypt from "./utils/encrypt"
 
 export class ConfigService {
   table: QueryBuilder<ProvidersTable>
@@ -47,7 +48,7 @@ export class ConfigService {
 
     const config = {
       client_id: row.client_id,
-      client_secret: row.client_secret,
+      client_secret: crypt.decrypt(row.client_secret),
       redirect_uris: [redirectUri],
       response_types: ["code"],
     } satisfies client.ClientMetadata

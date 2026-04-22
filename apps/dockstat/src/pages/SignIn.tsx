@@ -1,5 +1,6 @@
 import { useAuth } from "@dockstat/auth/client"
 import { Button, Card, CardBody, CardHeader, Input } from "@dockstat/ui"
+import { ArrowRight } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router"
 import { api } from "@/lib/api"
@@ -285,19 +286,7 @@ export function SignInPage() {
                       </div>
 
                       {/* Arrow Icon */}
-                      <svg
-                        className="flex-shrink-0 w-5 h-5 text-secondary-text"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          d="M9 5l7 7-7 7"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                        />
-                      </svg>
+                      <ArrowRight size={20} />
                     </div>
                   </CardBody>
                 </Card>

@@ -6,6 +6,7 @@ import type { ConfigService } from "./config"
 import type { ProvidersTable } from "./types"
 import { BASE_URL, FRONTEND_URL } from "./utils/env"
 import { createAuthToken } from "./utils/jwt"
+import crypt from "./utils/encrypt"
 
 export function createAuthRoutes(
   table: QueryBuilder<ProvidersTable>,
@@ -18,6 +19,7 @@ export function createAuthRoutes(
       ({ body }) =>
         table.insertAndGet({
           ...(body as object),
+          client_secret: crypt.encrypt((body as {client_secret: string}).client_secret),
           scopes: (body as { scopes: string }).scopes ? (body as { scopes: string }).scopes : null,
         }),
       {

@@ -88,7 +88,7 @@ export const getMiddlewareFunctions = (baseLogger: Logger) => {
    *   .get("/protected", () => "Protected data", authenticated())
    * ```
    */
-  const authenticated = (options?: { error?: string; response?: Record<string, any> }) => {
+  const authenticated = (options?: { error?: string; response?: Response }) => {
     const { error = "Authentication required" } = options || {}
 
     logger.info("Route with Authentication hit!")
