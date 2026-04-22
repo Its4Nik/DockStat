@@ -41,6 +41,7 @@ export function createAuthRoutes(
     .get(
       "/:providerId/login",
       async ({ params: { providerId }, redirect, cookie: { state, nonce, pkce } }) => {
+        logger.info(`Logging in via ${providerId}`)
         const { meta, scopes } = await configService.getConfig(providerId)
 
         const stateVal = client.randomState()

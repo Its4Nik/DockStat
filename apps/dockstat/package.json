@@ -8,6 +8,7 @@
     "@dockstat/ui": "workspace:*",
     "@dockstat/utils": "workspace:*",
     "@elysiajs/eden": "catalog:",
+    "@icons-pack/react-simple-icons": "^13.13.0",
     "@sglara/cn": "catalog:utils",
     "@tailwindcss/vite": "catalog:react-ui",
     "@tanstack/react-query": "catalog:react-ui",

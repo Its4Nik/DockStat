@@ -27,7 +27,6 @@ ENV DOCKER_SOCKET_PATH="/var/run/docker.sock"
 EXPOSE 4040/tcp
 
 # Create volumes for persistent data
-VOLUME ["/opt/docknode"]
 VOLUME ["/opt/docknode/stacks"]
 
 # Run the application

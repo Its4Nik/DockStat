@@ -1,0 +1,55 @@
+import { ArrowRight } from "lucide-react"
+import { getProviderLogo } from "./getProviderLogo"
+import type { OAuthProvider } from "./types"
+
+export function ProviderList({
+  providers,
+  onSelect,
+}: {
+  providers: OAuthProvider[]
+  onSelect: (id: string) => void
+}) {
+  if (providers.length === 0) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-sm text-white/30">No providers found</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-2.5 mb-4">
+      {providers.map((provider) => {
+        const info = getProviderLogo(provider.issuer_url)
+        return (
+          <button
+            className="provider-card px-5 py-4"
+            key={provider.id}
+            onClick={() => onSelect(provider.id)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") onSelect(provider.id)
+            }}
+            tabIndex={0}
+            type="button"
+          >
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/20 text-white font-bold text-sm">
+                {info.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-white/90 truncate">{info.name}</h3>
+                <p className="text-xs truncate mt-0.5 font-mono text-white/25">
+                  {new URL(provider.issuer_url).hostname}
+                </p>
+              </div>
+              <ArrowRight
+                className="provider-arrow flex-shrink-0 text-white/15"
+                size={16}
+              />
+            </div>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
