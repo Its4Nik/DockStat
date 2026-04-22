@@ -22,6 +22,6 @@ export const api = treaty<TreatyType>(
     fetch: {
       credentials: "include",
     },
-    headers: getHeaders()
+    headers: getHeaders(),
   }
 ).api.v2

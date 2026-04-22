@@ -14,23 +14,24 @@ import { AuthCallback, SignInPage } from "./pages/SignIn"
 import SettingsPage from "./pages/settings"
 
 export default function DockStatRouter() {
-  return <CreateRoutes protectedRoutes={
-    [
-      { element: <IndexPage />, path: "/" },
-      { element: <GraphPage />, path: "/graph" },
-      { element: <SettingsPage />, path: "/settings" },
-      { element: <DockNodePage />, path: "/node" },
-      { element: <NodeStacksPage />, path: "/node/stacks" },
-      { element: <ClientsPage />, path: "/clients" },
-      { element: <ConfigureClientsPage />, path: "/client/configure" },
-      { element: <PluginIdPage />, path: "/p/:pluginId/*" },
-      { element: <ExtensionsIndex />, path: "/extensions" },
-      {element: <PluginBrowser />, path: "/extensions/plugins"}
-    ]
-  }
-    routes={[
-      { element: <SignInPage />, path: "/login" },
-      {element: <AuthCallback />, path: "/auth/:providerId/callback"}
- ]}
-  />
+  return (
+    <CreateRoutes
+      protectedRoutes={[
+        { element: <IndexPage />, path: "/" },
+        { element: <GraphPage />, path: "/graph" },
+        { element: <SettingsPage />, path: "/settings" },
+        { element: <DockNodePage />, path: "/node" },
+        { element: <NodeStacksPage />, path: "/node/stacks" },
+        { element: <ClientsPage />, path: "/clients" },
+        { element: <ConfigureClientsPage />, path: "/client/configure" },
+        { element: <PluginIdPage />, path: "/p/:pluginId/*" },
+        { element: <ExtensionsIndex />, path: "/extensions" },
+        { element: <PluginBrowser />, path: "/extensions/plugins" },
+      ]}
+      routes={[
+        { element: <SignInPage />, path: "/login" },
+        { element: <AuthCallback />, path: "/auth/:providerId/callback" },
+      ]}
+    />
+  )
 }

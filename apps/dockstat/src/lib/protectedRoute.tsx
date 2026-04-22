@@ -16,16 +16,26 @@ const CreateRoutes = ({
     <Routes>
       {(protectedRoutes ?? []).map((r) => {
         return (
-          <Route path={r.path} element={<PRoute
-            loadingComponent={r.loadingComponent}
-            redirectTo={"/login"}
-          >
-            {r.element}
-          </PRoute>} />
+          <Route
+            element={
+              <PRoute
+                loadingComponent={r.loadingComponent}
+                redirectTo={"/login"}
+              >
+                {r.element}
+              </PRoute>
+            }
+            path={r.path}
+          />
         )
       })}
       {(routes ?? []).map((r) => {
-        return <Route path={r.path} element={r.element} />
+        return (
+          <Route
+            element={r.element}
+            path={r.path}
+          />
+        )
       })}
     </Routes>
   )

@@ -1,7 +1,7 @@
+import type Logger from "@dockstat/logger"
 import Elysia from "elysia"
 import type { ElysiaWS } from "elysia/ws"
 import { verifyAuthToken } from "./utils/jwt"
-import type Logger from "@dockstat/logger"
 
 export type AuthUser = {
   sub: string
@@ -36,7 +36,7 @@ export const getMiddlewareFunctions = (baseLogger: Logger) => {
     logger.info("Creating auth middleware")
     return new Elysia({
       name: "auth-middleware",
-    }).resolve({as: "global"},async ({ cookie, headers, route }) => {
+    }).resolve({ as: "global" }, async ({ cookie, headers, route }) => {
       logger.info(`Checking auth for route ${route}`)
 
       let token: string | null = null
@@ -49,31 +49,31 @@ export const getMiddlewareFunctions = (baseLogger: Logger) => {
         logger.warn("No authorization token found!")
       }
 
-     // Fall back to cookie if no token in header
-     if (!token) {
-       const authTokenCookie = cookie?.auth_token as { value?: string } | undefined
-       if (authTokenCookie?.value) {
-         token = authTokenCookie.value
-       } else {
-         logger.warn("No Auth cookie found!")
-       }
-     }
+      // Fall back to cookie if no token in header
+      if (!token) {
+        const authTokenCookie = cookie?.auth_token as { value?: string } | undefined
+        if (authTokenCookie?.value) {
+          token = authTokenCookie.value
+        } else {
+          logger.warn("No Auth cookie found!")
+        }
+      }
 
-     // Verify the token if present
-     let user: AuthUser | undefined
+      // Verify the token if present
+      let user: AuthUser | undefined
       if (token) {
-       logger.info("Verifying JWT Token")
-       const payload = await verifyAuthToken(token)
-       if (payload && typeof payload.user === "object" && payload.user !== null) {
-         user = payload.user as AuthUser
-       }
-     }
+        logger.info("Verifying JWT Token")
+        const payload = await verifyAuthToken(token)
+        if (payload && typeof payload.user === "object" && payload.user !== null) {
+          user = payload.user as AuthUser
+        }
+      }
 
-     return {
-       isAuthenticated: !!user,
-       user,
-     }
-   })
+      return {
+        isAuthenticated: !!user,
+        user,
+      }
+    })
   }
 
   /**
@@ -125,20 +125,19 @@ export const getMiddlewareFunctions = (baseLogger: Logger) => {
     return user !== undefined && typeof user === "object" && "sub" in user
   }
 
-
-/**
- * Helper function to extract and validate user from context
- * Throws an error if user is not authenticated
- *
- * @example
- * ```typescript
- * app.get("/profile", ({ user }) => {
- *   const authenticatedUser = requireAuth({ user, isAuthenticated: !!user })
- *   return { email: authenticatedUser.email }
- * })
- * ```
- */
-  const requireAuth = (context: { user?: AuthUser; isAuthenticated: boolean }): AuthUser  => {
+  /**
+   * Helper function to extract and validate user from context
+   * Throws an error if user is not authenticated
+   *
+   * @example
+   * ```typescript
+   * app.get("/profile", ({ user }) => {
+   *   const authenticatedUser = requireAuth({ user, isAuthenticated: !!user })
+   *   return { email: authenticatedUser.email }
+   * })
+   * ```
+   */
+  const requireAuth = (context: { user?: AuthUser; isAuthenticated: boolean }): AuthUser => {
     if (!context.isAuthenticated || !context.user) {
       throw new Error("Authentication required")
     }
@@ -158,7 +157,7 @@ export const getMiddlewareFunctions = (baseLogger: Logger) => {
    */
   const withAuth = <T extends Record<string, unknown>, R>(
     handler: (context: { user: AuthUser } & T) => R
-  ): (context: { user?: AuthUser; isAuthenticated: boolean } & T) => R => {
+  ): ((context: { user?: AuthUser; isAuthenticated: boolean } & T) => R) => {
     return (context) => {
       const user = requireAuth(context)
       return handler({ ...context, user })
@@ -174,7 +173,6 @@ export const getMiddlewareFunctions = (baseLogger: Logger) => {
     }
     return null
   }
-
 
   /**
    * Extracts authenticated user from WebSocket context
@@ -263,7 +261,12 @@ export const getMiddlewareFunctions = (baseLogger: Logger) => {
 
   return {
     authenticated,
-    handleWsAuthentication,createAuthenticatedWsHandler,getWsUser,withAuth,isAuthenticatedUser,createAuthMiddleware
+    createAuthenticatedWsHandler,
+    createAuthMiddleware,
+    getWsUser,
+    handleWsAuthentication,
+    isAuthenticatedUser,
+    withAuth,
   }
 }
 

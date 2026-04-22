@@ -1,7 +1,7 @@
 import type Logger from "@dockstat/logger"
 import { column, type DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import { ConfigService } from "./config"
-import {getMiddlewareFunctions} from "./middleware"
+import { getMiddlewareFunctions } from "./middleware"
 import { createAuthRoutes } from "./routes"
 import type { ProvidersTable } from "./types"
 
