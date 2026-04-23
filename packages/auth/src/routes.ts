@@ -13,7 +13,9 @@ export function createAuthRoutes(
   users: QueryBuilder<LocalUsersTable>,
   apiKeys: QueryBuilder<ApiKeysTable>,
   logger: Logger,
-  configService: ConfigService
+  configService: ConfigService,
+  getAllowGuestRegistration: () => boolean,
+  setAllowGuestRegistration: (enable: boolean) => void
 ) {
   return new Elysia({ detail: { tags: ["Auth"] }, prefix: "/auth" })
     .post(
@@ -255,16 +257,25 @@ export function createAuthRoutes(
       app
         .post(
           "/register",
-          async ({ body, set }) => {
+          async (context) => {
+            const { body, set } = context
             try {
               const requestBody = body as { name: string; pass: string }
 
-              // Check if user already exists
+              const allowGuests = getAllowGuestRegistration()
               const existingUser = users.select(["id"]).where({ name: requestBody.name }).first()
 
               if (existingUser) {
                 set.status = 409
                 return { error: "Username already exists" }
+              }
+
+              // Allow registration if guests are allowed OR user is authenticated
+              if (!allowGuests && !(context as any).isAuthenticated) {
+                set.status = 403
+                return {
+                  error: "Guest registration is disabled. Please authenticate to create new users.",
+                }
               }
 
               // Hash password with argon2id
@@ -275,7 +286,7 @@ export function createAuthRoutes(
               })
 
               // Create user
-              const user = await users.insertAndGet({
+              const user = users.insertAndGet({
                 name: requestBody.name,
                 passHash,
               })
@@ -304,6 +315,7 @@ export function createAuthRoutes(
             },
           }
         )
+        .get("/allow-guest", () => getAllowGuestRegistration())
         .get(
           "/login",
           async ({ redirect }) => {
@@ -601,5 +613,33 @@ export function createAuthRoutes(
             params: t.Object({ id: t.String() }),
           }
         )
+    )
+    .post(
+      "/guest/:allow",
+      async ({ params, set }) => {
+        const allow = params.allow as "enable" | "disable"
+
+        if (allow === "enable") {
+          setAllowGuestRegistration(true)
+          logger.info("Guest registration enabled")
+          return { message: "Guest registration enabled", success: true }
+        } else if (allow === "disable") {
+          setAllowGuestRegistration(false)
+          logger.info("Guest registration disabled")
+          return { message: "Guest registration disabled", success: true }
+        } else {
+          set.status = 400
+          return { error: "Invalid action. Use 'enable' or 'disable'" }
+        }
+      },
+      {
+        detail: {
+          description: "Enable or disable guest registration",
+          summary: "Toggle Guest Registration",
+        },
+        params: t.Object({
+          allow: t.Union([t.Literal("enable"), t.Literal("disable")]),
+        }),
+      }
     )
 }

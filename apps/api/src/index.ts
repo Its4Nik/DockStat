@@ -2,7 +2,7 @@ import Elysia from "elysia"
 import { AuthHandler, authenticated, Middleware } from "./auth"
 import DockStatElysiaPlugins from "./elysia-plugins"
 import { errorHandler } from "./handlers/onError"
-import RequestLogger from "./handlers/requestLogger"
+import CreateRequestLogger from "./handlers/requestLogger"
 import BaseLogger from "./logger"
 import MetricsMiddleware from "./middleware/metrics"
 import DBRoutes from "./routes/db"
@@ -21,9 +21,9 @@ const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 export const DockStatAPI = new Elysia({ precompile: false, prefix: "/api/v2" })
   .use(Middleware)
   .use(DockStatElysiaPlugins)
+  .use(CreateRequestLogger())
   .guard(authenticated(), (app) => {
     return app
-      .use(RequestLogger)
       .use(MetricsMiddleware)
       .use(errorHandler)
       .use(StatusRoutes)
@@ -37,7 +37,7 @@ export const DockStatAPI = new Elysia({ precompile: false, prefix: "/api/v2" })
       .use(DockNodeElyisa)
       .use(GraphRoutes)
   })
-  .use(AuthHandler.routes)
+  .use(AuthHandler.getRoutes())
   .listen(PORT)
 
 const hostnameAndPort = `${DockStatAPI.server?.hostname}:${DockStatAPI.server?.port}`
@@ -57,6 +57,7 @@ BaseLogger.info(
   - API running at ${hostnameAndPort}/api/v2
   - API-Docs at: ${hostnameAndPort}/api/v2/docs
   - DockStat Docs at: https://dockstat.itsnik.de
+  - Allow guest registration: ${AuthHandler.getAllowGuestRegistration()} (${AuthHandler.users.select(["id"]).count()} User)
   `
 )
 

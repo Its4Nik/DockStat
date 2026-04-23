@@ -20,7 +20,7 @@ export function HeroPanel() {
       </div>
 
       <div className="relative z-10 max-w-lg">
-        <p className="text-lg leading-relaxed text-white/40 mb-10 slide-l-d3 max-w-md">
+        <p className="text-lg leading-relaxed text-white/60 mb-10 slide-l-d3 max-w-md">
           A unified platform for container administration, real‑time infrastructure monitoring, and
           extensible plugin architecture.
         </p>

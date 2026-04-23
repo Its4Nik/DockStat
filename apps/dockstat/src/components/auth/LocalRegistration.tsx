@@ -1,10 +1,41 @@
 import { Card, Input } from "@dockstat/ui"
-import { ArrowRight, Eye, EyeOff, Loader2, Shield } from "lucide-react"
-import { useLocalLogin } from "@/hooks/useLocalLogin"
+import { ArrowRight, DoorOpen, Eye, EyeOff, Loader2 } from "lucide-react"
+import { useState } from "react"
+import { useCreateUserMutations } from "@/hooks/mutations/registerUser"
 
-export function LocalLoginForm() {
-  const { formData, error, isSubmitting, showPassword, handleSubmit, updateField, togglePassword } =
-    useLocalLogin()
+export function LocalRegistration({
+  allowGuest,
+  isAuthenticated,
+}: {
+  allowGuest: boolean
+  isAuthenticated: boolean
+}) {
+  if (allowGuest === false && isAuthenticated !== true) {
+    return
+  }
+
+  const [name, setName] = useState<string>("")
+  const [pass, setPass] = useState<string>("")
+  const [showPass, setShowPass] = useState(false)
+  const [err, setErr] = useState<null | string>(null)
+
+  const { registerLocalUser } = useCreateUserMutations()
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setErr(null)
+
+    registerLocalUser.mutate({
+      name,
+      pass,
+    })
+
+    if (registerLocalUser.error !== null) {
+      setErr(registerLocalUser.error.toString())
+    }
+  }
+
+  const togglePassword = () => setShowPass(!showPass)
 
   return (
     <Card
@@ -13,14 +44,14 @@ export function LocalLoginForm() {
     >
       <div className="flex items-center gap-3 mb-5">
         <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-indigo-500/10 border border-indigo-500/20">
-          <Shield
+          <DoorOpen
             className="text-indigo-400"
             size={16}
           />
         </div>
         <div>
-          <h3 className="font-semibold text-white/80">Local Account</h3>
-          <p className="text-xs text-white/30">Use your username and password</p>
+          <h3 className="font-semibold text-white/80">Register local Account</h3>
+          <p className="text-xs text-white/30">Provide your username and password</p>
         </div>
       </div>
 
@@ -35,10 +66,10 @@ export function LocalLoginForm() {
           <div className="field-shell px-4 py-3">
             <Input
               className="!bg-transparent !border-0 !shadow-none !p-0 !ring-0 w-full text-sm text-white/80 placeholder:text-white/25"
-              disabled={isSubmitting}
-              onChange={(v) => updateField("name", v)}
+              disabled={registerLocalUser.isPending}
+              onChange={(v) => setName(v)}
               placeholder="Enter your username"
-              value={formData.name}
+              value={name}
             />
           </div>
         </div>
@@ -50,11 +81,11 @@ export function LocalLoginForm() {
           <div className="field-shell px-4 py-3 flex items-center">
             <Input
               className="!bg-transparent !border-0 !shadow-none !p-0 !ring-0 w-full text-sm text-white/80 placeholder:text-white/25"
-              disabled={isSubmitting}
-              onChange={(v) => updateField("pass", v)}
+              disabled={registerLocalUser.isPending}
+              onChange={(v) => setPass(v)}
               placeholder="Enter your password"
-              type={showPassword ? "text" : "password"}
-              value={formData.pass}
+              type={showPass ? "text" : "password"}
+              value={pass}
             />
             <button
               className="flex-shrink-0 ml-2 p-1 rounded-md text-white/20 hover:text-white/40 transition-colors"
@@ -62,23 +93,23 @@ export function LocalLoginForm() {
               tabIndex={-1}
               type="button"
             >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
         </div>
 
-        {error && (
+        {err && (
           <div className="px-4 py-3 rounded-xl bg-red-500/5 border border-red-500/10">
-            <p className="text-sm text-red-300/80">{error}</p>
+            <p className="text-sm text-red-300/80">{err}</p>
           </div>
         )}
 
         <button
           className="cta-button w-full py-3.5 text-white font-semibold text-sm flex items-center justify-center gap-2"
-          disabled={isSubmitting || !formData.name || !formData.pass}
+          disabled={registerLocalUser.isPending || !name || !pass}
           type="submit"
         >
-          {isSubmitting ? (
+          {registerLocalUser.isPending ? (
             <>
               <Loader2
                 className="animate-spin"

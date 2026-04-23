@@ -1,3 +1,4 @@
+import { Card } from "@dockstat/ui"
 import { ArrowRight } from "lucide-react"
 import { getProviderLogo } from "./getProviderLogo"
 import type { OAuthProvider } from "./types"
@@ -22,15 +23,12 @@ export function ProviderList({
       {providers.map((provider) => {
         const info = getProviderLogo(provider.issuer_url)
         return (
-          <button
+          <Card
             className="provider-card px-5 py-4"
+            glass
             key={provider.id}
             onClick={() => onSelect(provider.id)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") onSelect(provider.id)
-            }}
             tabIndex={0}
-            type="button"
           >
             <div className="relative z-10 flex items-center gap-4">
               <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/20 text-white font-bold text-sm">
@@ -47,7 +45,7 @@ export function ProviderList({
                 size={16}
               />
             </div>
-          </button>
+          </Card>
         )
       })}
     </div>

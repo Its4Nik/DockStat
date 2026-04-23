@@ -1,5 +1,5 @@
 import { useAuth } from "@dockstat/auth/client"
-import { Divider } from "@dockstat/ui"
+import { Card, Divider } from "@dockstat/ui"
 import {
   SiAuthelia,
   SiAuthentik,
@@ -9,10 +9,12 @@ import {
   SiOkta,
 } from "@icons-pack/react-simple-icons"
 import { useCallback } from "react"
+import DockStatLogo from "@/assets/logo.png"
 import { Footer } from "@/components/auth/Footer"
 import { PageHeader } from "@/components/auth/Header"
 import { HeroPanel } from "@/components/auth/HeroPanel"
 import { LocalLoginForm } from "@/components/auth/LocalLoginForm"
+import { LocalRegistration } from "@/components/auth/LocalRegistration"
 import { ProvidersError } from "@/components/auth/ProviderError"
 import { ProviderList } from "@/components/auth/ProviderList"
 import { ProvidersLoading } from "@/components/auth/ProviderLoading"
@@ -45,17 +47,45 @@ const floatingIcons = [
     className="w-full h-full"
     key="database"
   />,
+  <img
+    alt="DockStat Logo"
+    className="w-10 h-10"
+    key="DockStat"
+    src={DockStatLogo}
+  />,
+  <img
+    alt="DockStat Logo"
+    className="w-10 h-10"
+    key="DockStat"
+    src={DockStatLogo}
+  />,
+  <img
+    alt="DockStat Logo"
+    className="w-10 h-10"
+    key="DockStat"
+    src={DockStatLogo}
+  />,
+  <img
+    alt="DockStat Logo"
+    className="w-10 h-10"
+    key="DockStat"
+    src={DockStatLogo}
+  />,
 ]
 
 function SignInPage() {
-  const { login } = useAuth()
+  const { login, isAuthenticated } = useAuth()
   const {
     providers,
     loading: providersLoading,
     error: providersError,
     refetch: refetchProviders,
   } = useProviders()
-  const { exists: localUsersExist, checking: localChecking } = useLocalAuthCheck()
+  const {
+    exists: localUsersExist,
+    checking: localChecking,
+    allowRegistration,
+  } = useLocalAuthCheck()
 
   const showDivider =
     !localChecking &&
@@ -72,14 +102,16 @@ function SignInPage() {
     <AnimatedIconBackground
       icons={floatingIcons}
       isError={providersError !== null}
-      isLoading={providersLoading}
     >
       <div className="min-h-screen relative flex overflow-hidden">
         <HeroPanel />
 
         <div className="relative w-full lg:w-[48%] min-h-screen flex items-center justify-center p-5 sm:p-8 overflow-auto">
           <div className="w-full max-w-[460px] relative z-10 py-8 lg:py-0">
-            <div className="glass-panel rounded-3xl p-7 sm:p-9 slide-r">
+            <Card
+              className="rounded-3xl p-7 sm:p-9 slide-r"
+              glass
+            >
               <PageHeader />
 
               {providersLoading && <ProvidersLoading />}
@@ -102,8 +134,13 @@ function SignInPage() {
 
               {!localChecking && localUsersExist && <LocalLoginForm />}
 
-              {isReady && <Footer showLocalHint={!localUsersExist} />}
-            </div>
+              <LocalRegistration
+                allowGuest={allowRegistration}
+                isAuthenticated={isAuthenticated}
+              />
+
+              {isReady && <Footer />}
+            </Card>
           </div>
         </div>
       </div>

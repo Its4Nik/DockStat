@@ -11,8 +11,8 @@ export class AuthHandler {
   apiKeys: QueryBuilder<ApiKeysTable>
   logger: Logger
   configService: ConfigService
-  routes: ReturnType<typeof createAuthRoutes>
   middleware: ReturnType<typeof getMiddlewareFunctions>
+  allowGuestRegistration: boolean
 
   constructor(db: DB, logger: Logger) {
     this.logger = logger.spawn("Auth")
@@ -53,16 +53,33 @@ export class AuthHandler {
       userId: column.text({ notNull: true }),
     })
 
+    this.allowGuestRegistration = true
+    if (this.users.select(["id"]).count() < 1) {
+      this.allowGuestRegistration = true
+    }
+
     this.configService = new ConfigService(this.providers, this.logger)
 
-    this.routes = createAuthRoutes(
+    this.middleware = getMiddlewareFunctions(this.logger, this.apiKeys)
+  }
+
+  getAllowGuestRegistration() {
+    return this.allowGuestRegistration
+  }
+
+  setAllowGuestRegistration(enable: boolean) {
+    return (this.allowGuestRegistration = enable)
+  }
+
+  getRoutes() {
+    return createAuthRoutes(
       this.providers,
       this.users,
       this.apiKeys,
       this.logger,
-      this.configService
+      this.configService,
+      () => this.getAllowGuestRegistration(),
+      (enable: boolean) => this.setAllowGuestRegistration(enable)
     )
-
-    this.middleware = getMiddlewareFunctions(this.logger, this.apiKeys)
   }
 }
