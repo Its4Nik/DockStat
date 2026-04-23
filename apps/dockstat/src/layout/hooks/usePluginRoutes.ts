@@ -1,11 +1,11 @@
-import { eden } from "@dockstat/utils/react"
-import { api, getAuthHeaders } from "@/lib/api"
+import { useContext } from "react"
+import { EdenClientContext } from "@/contexts/edenClient"
+import { api } from "@/lib/api"
 
 export function usePluginRoutes() {
-  const { data: frontendPluginRoutes } = eden.useEdenQuery({
-    opts: {
-      headers: getAuthHeaders(),
-    },
+  const eden = useContext(EdenClientContext)
+
+  const { data: frontendPluginRoutes } = eden.query({
     queryKey: ["fetchFrontendPluginRoutes"],
     route: api.plugins.frontend.routes.get,
   })

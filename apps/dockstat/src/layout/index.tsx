@@ -5,6 +5,7 @@ import { Navbar, ThemeSidebar } from "@dockstat/ui"
 import { useContext } from "react"
 import { useLocation } from "react-router"
 import { Toaster } from "sonner"
+import { EdenClientContext } from "@/contexts/edenClient"
 import { PageHeadingContext } from "@/contexts/pageHeadingContext"
 import { createPinMutationHandlers } from "@/utils/createPinMutations"
 import { useLayout } from "./hooks/useLayout"
@@ -36,6 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth()
 
   const heading = useContext(PageHeadingContext).heading
+  const { setToken } = useContext(EdenClientContext)
   const isLoginPage = pathname === "/login"
 
   return (
@@ -49,7 +51,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="mt-4 mx-4">
             <Navbar
               auth={{
-                logout,
+                logout: () => {
+                  setToken("")
+                  logout()
+                },
                 user: user ? (user.name ? user.name : user.email ? user.email : user.sub) : null,
               }}
               currentThemeId={currentThemeId}

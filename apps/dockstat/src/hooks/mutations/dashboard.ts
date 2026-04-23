@@ -1,13 +1,13 @@
-import { eden } from "@dockstat/utils/react"
-import { api, getAuthHeaders } from "@/lib/api"
+import { useContext } from "react"
+import { EdenClientContext } from "@/contexts/edenClient"
+import { api } from "@/lib/api"
 
 export const useDashboardMutations = () => {
-  const setDefaultDashboardMutation = eden.useEdenMutation({
+  const eden = useContext(EdenClientContext)
+
+  const setDefaultDashboardMutation = eden.mutate({
     invalidateQueries: [["fetchAdditionalSettings"], ["fetchAllDashboards"]],
     mutationKey: ["setDefaultDashboard"],
-    opts: {
-      headers: getAuthHeaders(),
-    },
     route: api.db.config.defaultDashboard.post,
     toast: {
       errorTitle: () => "Could not set default dashboard",
@@ -19,9 +19,6 @@ export const useDashboardMutations = () => {
   })
 
   return {
-    createDashboardMutation,
-    deleteDashboardMutation,
     setDefaultDashboardMutation,
-    updateDashboardMutation,
   }
 }

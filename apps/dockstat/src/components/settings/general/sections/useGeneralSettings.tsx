@@ -1,10 +1,11 @@
 import type { DockStatConfigTableType } from "@dockstat/typings/types"
 import { type PathItem, SidebarPaths } from "@dockstat/ui"
-import { eden } from "@dockstat/utils/react"
+
 import { useContext, useMemo } from "react"
 import { ConfigProviderContext } from "@/contexts/config"
+import { EdenClientContext } from "@/contexts/edenClient"
 import { useConfigMutations } from "@/hooks/mutations"
-import { api, getAuthHeaders } from "@/lib/api"
+import { api } from "@/lib/api"
 
 export type NavLink = {
   slug: string
@@ -32,10 +33,9 @@ export function useGeneralSettings() {
   const { pinLinkMutation, unpinLinkMutation, updateAdditionalSettingsMutation } =
     useConfigMutations()
 
-  const { data: frontendPluginRoutes } = eden.useEdenQuery({
-    opts: {
-      headers: getAuthHeaders(),
-    },
+  const eden = useContext(EdenClientContext)
+
+  const { data: frontendPluginRoutes } = eden.query({
     queryKey: ["fetchFrontendPluginRoutes"],
     route: api.plugins.frontend.routes.get,
   })

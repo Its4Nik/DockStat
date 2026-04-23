@@ -64,15 +64,17 @@ export class Client {
   }
 
   mutate<TRoute extends EdenRoute>(
-    ctx: Omit<Parameters<typeof useEdenMutation<TRoute>>[0], "toast"> &
-    { toast: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>> }
+    ctx: Omit<Parameters<typeof useEdenMutation<TRoute>>[0], "toast"> & {
+      toast: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
+    }
   ) {
     return useEdenMutation(this.buildCtx(ctx))
   }
 
   mutateRoute<TParams extends Record<string, unknown>, TRoute extends EdenRoute>(
-    ctx: Omit<Parameters<typeof useEdenRouteMutation<TParams, TRoute>>[0], "toast"> &
-      {toast: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>}
+    ctx: Omit<Parameters<typeof useEdenRouteMutation<TParams, TRoute>>[0], "toast"> & {
+      toast: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
+    }
   ) {
     return useEdenRouteMutation(this.buildCtx(ctx))
   }

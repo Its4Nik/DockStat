@@ -1,22 +1,18 @@
-import { eden } from "@dockstat/utils/react"
-import { api, getAuthHeaders } from "@/lib/api"
-import { toast } from "@/lib/toast"
+import { useContext } from "react"
+import { EdenClientContext } from "@/contexts/edenClient"
+import { api } from "@/lib/api"
 
 export const useCreateUserMutations = () => {
-  const registerLocalUser = eden.useEdenMutation({
+  const eden = useContext(EdenClientContext)
+
+  const registerLocalUser = eden.mutate({
     mutationKey: ["registerLocalUser"],
-    opts: {
-      headers: getAuthHeaders(),
-    },
     route: api.auth.local.register.post,
     toast: {
-      toaster: toast,
-      toasts: {
-        errorDescription: (_, error) => `Error: ${error}`,
-        errorTitle: (input) => `Error while registering local user ${input.name}`,
-        successDescription: () => "",
-        successTitle: (input) => `Created new Local User: ${input.name}`,
-      },
+      errorDescription: (_, error) => `Error: ${error}`,
+      errorTitle: (input) => `Error while registering local user ${input.name}`,
+      successDescription: () => "",
+      successTitle: (input) => `Created new Local User: ${input.name}`,
     },
   })
 

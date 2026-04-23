@@ -1,7 +1,7 @@
-import { eden } from "@dockstat/utils/react"
-import { useCallback, useEffect } from "react"
+import { useCallback, useContext, useEffect } from "react"
 import type { LoaderResult, ResolvedLoader } from "@/components/plugins/id/types"
-import { api, getAuthHeaders } from "@/lib/api"
+import { EdenClientContext } from "@/contexts/edenClient"
+import { api } from "@/lib/api"
 import { getValueByPath } from "./utils"
 
 type UsePluginLoadersParams = {
@@ -21,13 +21,16 @@ export function usePluginLoaders({
   onStateUpdate,
   onExternalDataUpdate,
 }: UsePluginLoadersParams) {
-  const loaderMutation = eden.useEdenRouteMutation({
+  const eden = useContext(EdenClientContext)
+
+  const loaderMutation = eden.mutateRoute({
     mutationKey: ["executeLoader", String(pluginId)],
-    opts: {
-      headers: getAuthHeaders(),
-    },
     routeBuilder: ({ loaderId }: { loaderId: string }) =>
       api.plugins.frontend({ pluginId }).loaders({ loaderId }).execute.post,
+    toast: {
+      errorTitle: "Failed to execute loader",
+      successTitle: "Loader executed successfully",
+    },
   })
 
   const executeLoader = useCallback(

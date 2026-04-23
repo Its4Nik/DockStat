@@ -1,13 +1,13 @@
-import { eden } from "@dockstat/utils/react"
-import { api, getAuthHeaders } from "@/lib/api"
+import { useContext } from "react"
+import { EdenClientContext } from "@/contexts/edenClient"
+import { api } from "@/lib/api"
 
 export const useThemeMutations = () => {
-  const createThemeMutation = eden.useEdenMutation({
+  const eden = useContext(EdenClientContext)
+
+  const createThemeMutation = eden.mutate({
     invalidateQueries: [["fetchAllThemes"]],
     mutationKey: ["createTheme"],
-    opts: {
-      headers: getAuthHeaders(),
-    },
     route: api.themes.post,
     toast: {
       errorTitle: (input) => `Could not create new Theme: ${input.name}`,
@@ -15,12 +15,9 @@ export const useThemeMutations = () => {
     },
   })
 
-  const deleteThemeMutation = eden.useEdenMutation({
+  const deleteThemeMutation = eden.mutate({
     invalidateQueries: [["fetchAllThemes"]],
     mutationKey: ["deleteTheme"],
-    opts: {
-      headers: getAuthHeaders(),
-    },
     route: api.themes.delete,
     toast: {
       errorTitle: (input) => `Could not delete theme ${input.id}`,

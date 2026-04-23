@@ -1,8 +1,10 @@
 import { Button, Card, CardBody, CardHeader } from "@dockstat/ui"
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router"
+import { EdenClientContext } from "@/contexts/edenClient"
 
 function AuthCallback() {
+  const { setToken } = useContext(EdenClientContext)
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
@@ -35,12 +37,14 @@ function AuthCallback() {
       // Store user info
       localStorage.setItem("user", JSON.stringify(user))
       localStorage.setItem("auth_token", token)
+      setToken(token)
 
       // Redirect back to original page
       const redirect = localStorage.getItem("auth_redirect") || "/"
       localStorage.removeItem("auth_redirect")
       navigate(redirect)
     } catch (err) {
+      setToken("")
       console.error("Auth callback error:", err)
       setError("Failed to process authentication. Please try again.")
     }

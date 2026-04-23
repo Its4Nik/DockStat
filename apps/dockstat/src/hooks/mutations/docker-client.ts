@@ -1,13 +1,13 @@
-import { eden } from "@dockstat/utils/react"
-import { api, getAuthHeaders } from "@/lib/api"
+import { useContext } from "react"
+import { EdenClientContext } from "@/contexts/edenClient"
+import { api } from "@/lib/api"
 
 export const useDockerClientMutations = () => {
-  const deleteClientMutation = eden.useEdenMutation({
+  const eden = useContext(EdenClientContext)
+
+  const deleteClientMutation = eden.mutate({
     invalidateQueries: [["fetchDockerClients"], ["fetchPoolStatus"]],
     mutationKey: ["deleteClient"],
-    opts: {
-      headers: getAuthHeaders(),
-    },
     route: api.docker.client.delete,
     toast: {
       errorTitle: (input) => `Could not delete client ${input.clientId}`,
@@ -15,12 +15,9 @@ export const useDockerClientMutations = () => {
     },
   })
 
-  const createClientMutation = eden.useEdenMutation({
+  const createClientMutation = eden.mutate({
     invalidateQueries: [["fetchDockerClients"], ["fetchPoolStatus"]],
     mutationKey: ["createClient"],
-    opts: {
-      headers: getAuthHeaders(),
-    },
     route: api.docker.client.post,
     toast: {
       errorTitle: (input) => `Could not create Client ${input.clientName}`,
@@ -28,11 +25,8 @@ export const useDockerClientMutations = () => {
     },
   })
 
-  const updateClientMutation = eden.useEdenMutation({
+  const updateClientMutation = eden.mutate({
     mutationKey: ["updateClient"],
-    opts: {
-      headers: getAuthHeaders(),
-    },
     route: api.docker.client.patch,
     toast: {
       errorTitle: (input) => `Could not update Client ${input.clientId}`,

@@ -1,6 +1,6 @@
-import { api } from "@/lib/api"
-import { EdenClientContext } from "@/contexts/edenClient"
 import { useContext } from "react"
+import { EdenClientContext } from "@/contexts/edenClient"
+import { api } from "@/lib/api"
 
 export const useConfigMutations = () => {
   const eden = useContext(EdenClientContext)
@@ -12,7 +12,7 @@ export const useConfigMutations = () => {
     toast: {
       errorTitle: (input) => `Could not pin ${input.path}`,
       successTitle: (input) => `Pinned ${input.path}`,
-    }
+    },
   })
 
   const unpinLinkMutation = eden.mutate({
