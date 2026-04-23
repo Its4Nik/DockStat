@@ -1,5 +1,6 @@
 import { AuthProvider } from "@dockstat/auth/client"
 import { ConfigProvider } from "./additionalSettings"
+import { EdenClientProvider } from "./edenClient"
 import { PageHeadingProvider } from "./pageHeading"
 import { QueryClientProvider } from "./queryClient"
 import { ThemeProvider } from "./theme"
@@ -12,7 +13,9 @@ export default function DockStatProviders({ children }: { children: React.ReactN
         <ThemeProvider>
           <ThemeSidebarProvider>
             <PageHeadingProvider>
-              <ConfigProvider>{children}</ConfigProvider>
+              <EdenClientProvider>
+                <ConfigProvider>{children}</ConfigProvider>
+              </EdenClientProvider>
             </PageHeadingProvider>
           </ThemeSidebarProvider>
         </ThemeProvider>

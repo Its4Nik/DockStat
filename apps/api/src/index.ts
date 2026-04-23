@@ -2,7 +2,7 @@ import Elysia from "elysia"
 import { AuthHandler, authenticated, Middleware } from "./auth"
 import DockStatElysiaPlugins from "./elysia-plugins"
 import { errorHandler } from "./handlers/onError"
-import CreateRequestLogger from "./handlers/requestLogger"
+import CreateRequestLogger, { stateMap } from "./handlers/requestLogger"
 import BaseLogger from "./logger"
 import MetricsMiddleware from "./middleware/metrics"
 import DBRoutes from "./routes/db"
@@ -22,21 +22,24 @@ export const DockStatAPI = new Elysia({ precompile: false, prefix: "/api/v2" })
   .use(Middleware)
   .use(DockStatElysiaPlugins)
   .use(CreateRequestLogger())
-  .guard(authenticated(), (app) => {
-    return app
-      .use(MetricsMiddleware)
-      .use(errorHandler)
-      .use(StatusRoutes)
-      .use(DBRoutes)
-      .use(DockerRoutes)
-      .use(PluginRoutes)
-      .use(DockStatMiscRoutes)
-      .use(RepositoryRoutes)
-      .use(ThemeRoutes)
-      .use(DockStatWebsockets)
-      .use(DockNodeElyisa)
-      .use(GraphRoutes)
-  })
+  .guard(
+    authenticated(() => stateMap),
+    (app) => {
+      return app
+        .use(MetricsMiddleware)
+        .use(errorHandler)
+        .use(StatusRoutes)
+        .use(DBRoutes)
+        .use(DockerRoutes)
+        .use(PluginRoutes)
+        .use(DockStatMiscRoutes)
+        .use(RepositoryRoutes)
+        .use(ThemeRoutes)
+        .use(DockStatWebsockets)
+        .use(DockNodeElyisa)
+        .use(GraphRoutes)
+    }
+  )
   .use(AuthHandler.getRoutes())
   .listen(PORT)
 

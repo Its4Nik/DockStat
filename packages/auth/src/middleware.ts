@@ -24,6 +24,7 @@ export interface AuthContext {
 
 export const getMiddlewareFunctions = (
   baseLogger: Logger,
+  getStateMap: () => WeakMap<Request, { startTime: number; reqId: string }>,
   apiKeys?: QueryBuilder<ApiKeysTable>
 ) => {
   const logger = baseLogger.spawn("Middleware")
@@ -32,9 +33,12 @@ export const getMiddlewareFunctions = (
    * Validates an API key and returns the associated user ID if valid
    */
   const validateApiKey = async (
-    apiKey: string
+    apiKey: string,
+    request: Request
   ): Promise<{ userId: string; scopes: string } | null> => {
     if (!apiKeys) return null
+
+    const reqId = getStateMap().get(request).reqId
 
     try {
       const allKeys = apiKeys
@@ -46,27 +50,27 @@ export const getMiddlewareFunctions = (
         if (isValid) {
           // Check if key is revoked
           if (keyRecord.revokedAt) {
-            logger.warn(`API key ${keyRecord.id} is revoked`)
+            logger.warn(`API key ${keyRecord.id} is revoked`, reqId)
             return null
           }
 
           // Check if key is expired
           if (keyRecord.expiresAt && keyRecord.expiresAt < new Date()) {
-            logger.warn(`API key ${keyRecord.id} is expired`)
+            logger.warn(`API key ${keyRecord.id} is expired`, reqId)
             return null
           }
 
           // Update lastUsedAt
           apiKeys.update({ id: keyRecord.id, lastUsedAt: new Date() })
 
-          logger.info(`Valid API key found for user ${keyRecord.userId}`)
+          logger.info(`Valid API key found for user ${keyRecord.userId}`, reqId)
           return { scopes: keyRecord.scopes, userId: keyRecord.userId }
         }
       }
 
       return null
     } catch (error) {
-      logger.error(`Error validating API key: ${error}`)
+      logger.error(`Error validating API key: ${error}`, reqId)
       return null
     }
   }
@@ -84,12 +88,15 @@ export const getMiddlewareFunctions = (
    *   .get("/protected", ({ user }) => `Hello ${user?.name}`)
    * ```
    */
-  const createAuthMiddleware = () => {
+  const createAuthMiddleware = (
+    getStateMap: () => WeakMap<Request, { startTime: number; reqId: string }>
+  ) => {
     logger.info("Creating auth middleware")
     return new Elysia({
       name: "auth-middleware",
-    }).resolve({ as: "global" }, async ({ cookie, headers, route }) => {
-      logger.info(`Checking auth for route ${route}`)
+    }).resolve({ as: "global" }, async ({ cookie, headers, route, request }) => {
+      const reqId = getStateMap().get(request).reqId
+      logger.info(`Checking auth for route ${route}`, reqId)
 
       let token: string | null = null
       let apiKey: string | null = null
@@ -104,7 +111,7 @@ export const getMiddlewareFunctions = (
         apiKey = authHeader.slice(8)
         authMethod = "apikey"
       } else {
-        logger.warn("No authorization token found!")
+        logger.warn("No authorization token found!", reqId)
       }
 
       // Also check for X-API-Key header
@@ -122,7 +129,7 @@ export const getMiddlewareFunctions = (
           token = authTokenCookie.value
           authMethod = "jwt"
         } else {
-          logger.warn("No Auth cookie found!")
+          logger.warn("No Auth cookie found!", reqId)
         }
       }
 
@@ -139,8 +146,8 @@ export const getMiddlewareFunctions = (
 
       // Verify API key if present
       if (apiKey && authMethod === "apikey" && !user) {
-        logger.info("Verifying API Key")
-        const keyValidation = await validateApiKey(apiKey)
+        logger.info("Verifying API Key", reqId)
+        const keyValidation = await validateApiKey(apiKey, request)
         if (keyValidation) {
           user = {
             authMethod: "apikey",
@@ -169,7 +176,10 @@ export const getMiddlewareFunctions = (
    *   .get("/protected", () => "Protected data", authenticated())
    * ```
    */
-  const authenticated = (options?: { error?: string; response?: AnySchema }) => {
+  const authenticated = (
+    getStateMap: () => WeakMap<Request, { startTime: number; reqId: string }>,
+    options?: { error?: string; response?: AnySchema }
+  ) => {
     const { error = "Authentication required" } = options || {}
 
     logger.info("Route with Authentication hit!")
@@ -177,9 +187,10 @@ export const getMiddlewareFunctions = (
     return {
       // biome-ignore lint/suspicious/noExplicitAny: I dont know the correct Elysia typing :(
       beforeHandle: (context: any) => {
-        const { isAuthenticated, set } = context
+        const { isAuthenticated, set, request } = context
+        const reqId = getStateMap().get(request).reqId
         if (!isAuthenticated) {
-          logger.error("Not authenticated")
+          logger.error("Not authenticated", reqId)
           set.status = 401
           return { error }
         }
@@ -257,7 +268,10 @@ export const getMiddlewareFunctions = (
    *   .get("/api/protected", () => "Protected data", apiKeyAuth())
    * ```
    */
-  const apiKeyAuth = (options?: { error?: string; response?: AnySchema }) => {
+  const apiKeyAuth = (
+    getStateMap: () => WeakMap<Request, { startTime: number; reqId: string }>,
+    options?: { error?: string; response?: AnySchema }
+  ) => {
     const { error = "API key authentication required" } = options || {}
 
     logger.info("Route with API Key Authentication hit!")
@@ -265,9 +279,10 @@ export const getMiddlewareFunctions = (
     return {
       // biome-ignore lint/suspicious/noExplicitAny: I dont know the correct Elysia typing :(
       beforeHandle: (context: any) => {
-        const { user, isAuthenticated, set } = context
+        const { user, isAuthenticated, set, request } = context
+        const reqId = getStateMap().get(request).reqId
         if (!isAuthenticated || !user || user.authMethod !== "apikey") {
-          logger.error("Not authenticated with API key")
+          logger.error("Not authenticated with API key", reqId)
           set.status = 401
           return { error }
         }

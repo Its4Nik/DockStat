@@ -264,6 +264,7 @@ export function createAuthRoutes(
 
               const allowGuests = getAllowGuestRegistration()
               const existingUser = users.select(["id"]).where({ name: requestBody.name }).first()
+              const isInitialUser = users.select(["id"]).count() === 0
 
               if (existingUser) {
                 set.status = 409
@@ -293,7 +294,17 @@ export function createAuthRoutes(
 
               logger.info(`New local user registered: ${requestBody.name}`)
 
+              let msg: undefined | string
+
+              if (isInitialUser) {
+                msg =
+                  "This was the first user that has been created, restricting local registration of users to already registered users. You can change this inside the DockStat settings under additional settings."
+                logger.warn(msg)
+                setAllowGuestRegistration(false)
+              }
+
               return {
+                msg,
                 success: true,
                 user: { id: user.id, name: user.name },
               }

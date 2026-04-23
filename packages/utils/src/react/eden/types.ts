@@ -34,13 +34,21 @@ export type EdenBody<T extends EdenRoute> = Parameters<T> extends []
     : Parameters<T>[0]
 
 export type ToastConfig<TData, TInput> = {
-  successTitle: string | ((input: TInput, response: TData) => string)
-  errorTitle: string | ((input: TInput, error: Error) => string)
+  successTitle: React.ReactNode | ((input: TInput, response: TData) => React.ReactNode)
+  successDescription?: React.ReactNode | ((input: TInput, response: TData) => React.ReactNode)
+  errorTitle: React.ReactNode | ((input: TInput, error: Error) => React.ReactNode)
+  errorDescription?: React.ReactNode | ((input: TInput, error: Error) => React.ReactNode)
 }
 
 export type ResponseData<TRoute extends EdenRoute> = NonNullable<EdenData<TRoute>> & {
   message: string
 }
+
+export type ToasterFunction = (ctx: {
+  description: React.ReactNode
+  title: React.ReactNode
+  variant?: "error" | "success"
+}) => string | number
 
 // Direct route - no params needed at mutation time
 export type DirectRouteOptions<TRoute extends EdenRoute> = {
@@ -48,7 +56,10 @@ export type DirectRouteOptions<TRoute extends EdenRoute> = {
   routeBuilder?: never
   mutationKey: readonly string[]
   invalidateQueries?: readonly string[][]
-  toast?: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
+  toast?: {
+    toaster: ToasterFunction
+    toasts: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
+  }
   opts?: EdenFetchOptions
 }
 
@@ -59,7 +70,10 @@ export type RouteBuilderOptions<TParams, TRoute extends EdenRoute> = {
   mutationKey: readonly string[]
   invalidateQueries?: readonly string[][]
   opts?: EdenFetchOptions
-  toast?: ToastConfig<ResponseData<TRoute>, { params: TParams; body: EdenBody<TRoute> }>
+  toast?: {
+    toaster: ToasterFunction
+    toasts: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
+  }
 }
 
 export type MutationResult<TData, TInput> = {

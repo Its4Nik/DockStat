@@ -1,5 +1,6 @@
 import { heapStats, memoryUsage } from "bun:jsc"
 import type { Database } from "bun:sqlite"
+import { stateMap } from "@dockstat/api/handlers/requestLogger"
 import { truncate } from "@dockstat/utils"
 import type { Elysia } from "elysia"
 import { DockStatDB } from "../../database"
@@ -110,7 +111,7 @@ function initPersistedMetrics() {
       persistedMetricsId = Number(id ?? 1)
     }
   } catch (err) {
-    console.error("Failed to init persisted metrics:", err)
+    logger.error(`Failed to init persisted metrics: ${(err as Error).toString()}`)
     // Fall back to in-memory only
     persistedMetricsId = null
   }
@@ -137,7 +138,7 @@ function savePersistedMetrics() {
       totalRequests: persistedMetrics.totalRequests,
     })
   } catch (err) {
-    console.error("Failed to save persisted metrics:", err)
+    logger.error(`Failed to save persisted metrics: ${(err as Error).toString()}`)
   }
 }
 
@@ -173,17 +174,15 @@ const MetricsMiddleware = (app: Elysia) => {
         as: "global",
       },
       ({ request, responseValue, store, headers }) => {
+        const reqId = stateMap.get(request)?.reqId
         const duration = performance.now() - (store.startTime || 0)
         const method = request.method
         const path = new URL(request.url).pathname
 
-        logger.debug(
-          `[${method}] Took ${Math.round(duration)}ms on ${path}`,
-          headers?.["x-dockstatapi-reqid"]
-        )
+        logger.debug(`[${method}] Took ${Math.round(duration)}ms on ${path}`, reqId)
 
         if (path === "/api/metrics") {
-          logger.debug(`Skipped path: ${path}`, headers?.["x-dockstatapi-reqid"])
+          logger.debug(`Skipped path: ${path}`, reqId)
         } else {
           // ---- SESSION METRICS ----
           metrics.totalRequests++
@@ -214,18 +213,16 @@ const MetricsMiddleware = (app: Elysia) => {
           savePersistedMetrics()
         }
 
-        logger.info(
-          `Request on ${new URL(request.url).pathname} finished`,
-          headers?.["x-dockstatapi-reqid"]
-        )
+        logger.info(`Request on ${new URL(request.url).pathname} finished`, reqId)
       }
     )
     .onError(
       {
         as: "global",
       },
-      ({ store, headers, error }) => {
+      ({ store, error, request }) => {
         const duration = performance.now() - (store.startTime || 0)
+        const reqId = stateMap.get(request)?.reqId
 
         // Session metrics
         metrics.errors++
@@ -247,10 +244,7 @@ const MetricsMiddleware = (app: Elysia) => {
               }
             : error
 
-        logger.debug(
-          `Tracked Error: ${truncate(JSON.stringify(errorDetails), 100)}`,
-          headers?.["x-dockstatapi-reqid"]
-        )
+        logger.debug(`Tracked Error: ${truncate(JSON.stringify(errorDetails), 100)}`, reqId)
       }
     )
 }
@@ -314,7 +308,7 @@ function getDatabaseMetrics(db: Database) {
       }
     }
   } catch (error) {
-    console.error("Error collecting database metrics:", error)
+    logger.error(`Error collecting database metrics: ${(error as Error).toString()}`)
   }
 
   return dbMetrics

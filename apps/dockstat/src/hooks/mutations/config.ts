@@ -1,26 +1,23 @@
-import { eden } from "@dockstat/utils/react"
-import { api, getAuthHeaders } from "@/lib/api"
+import { api } from "@/lib/api"
+import { EdenClientContext } from "@/contexts/edenClient"
+import { useContext } from "react"
 
 export const useConfigMutations = () => {
-  const pinLinkMutation = eden.useEdenMutation({
+  const eden = useContext(EdenClientContext)
+
+  const pinLinkMutation = eden.mutate({
     invalidateQueries: [["fetchAdditionalSettings"]],
     mutationKey: ["pinNavLink"],
-    opts: {
-      headers: getAuthHeaders(),
-    },
     route: api.db.config.pinItem.post,
     toast: {
-      errorTitle: "Failed to pin link",
-      successTitle: "Link pinned successfully",
-    },
+      errorTitle: (input) => `Could not pin ${input.path}`,
+      successTitle: (input) => `Pinned ${input.path}`,
+    }
   })
 
-  const unpinLinkMutation = eden.useEdenMutation({
+  const unpinLinkMutation = eden.mutate({
     invalidateQueries: [["fetchAdditionalSettings"]],
     mutationKey: ["unPinNavLink"],
-    opts: {
-      headers: getAuthHeaders(),
-    },
     route: api.db.config.unpinItem.post,
     toast: {
       errorTitle: "Failed to unpin link",
@@ -28,12 +25,9 @@ export const useConfigMutations = () => {
     },
   })
 
-  const updateAdditionalSettingsMutation = eden.useEdenMutation({
+  const updateAdditionalSettingsMutation = eden.mutate({
     invalidateQueries: [["fetchAdditionalSettings"]],
     mutationKey: ["updateAdditionalSettings"],
-    opts: {
-      headers: getAuthHeaders(),
-    },
     route: api.db.config.additionalSettings.post,
     toast: {
       errorTitle: "Failed to update additional settings",
@@ -41,12 +35,9 @@ export const useConfigMutations = () => {
     },
   })
 
-  const editHotkeyMutation = eden.useEdenMutation({
+  const editHotkeyMutation = eden.mutate({
     invalidateQueries: [["fetchAdditionalSettings"]],
     mutationKey: ["editHotkey"],
-    opts: {
-      headers: getAuthHeaders(),
-    },
     route: api.db.config.hotkey.post,
     toast: {
       errorTitle: "Failed to update hotkey",

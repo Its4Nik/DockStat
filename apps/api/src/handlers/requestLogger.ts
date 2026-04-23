@@ -2,29 +2,25 @@ import { http } from "@dockstat/utils"
 import Elysia from "elysia"
 import BaseLogger from "../logger"
 
+export const stateMap = new WeakMap<Request, { startTime: number; reqId: string }>()
+
 const logger = BaseLogger.spawn("Elysia")
 const CreateRequestLogger = () => {
-  const stateMap = new WeakMap<Request, { startTime: number }>()
-
   return new Elysia()
     .onRequest(({ request, set }) => {
-      stateMap.set(request, { startTime: Date.now() })
+      const startTime = Date.now()
       const reqId = http.requestId.getRequestID()
+      stateMap.set(request, { reqId, startTime })
 
-      logger.info(`[${request.method}] Request received from: ${request.url}`, reqId)
-
-      set.headers["x-dockstat-reqid"] = reqId
-
-      logger.info(`Incoming request: [${request.method}] ${request.url} - Status: ${set.status}`)
+      logger.info(`[${request.method}] Request received ${request.url}`, reqId)
     })
 
-    .onAfterResponse(({ headers, request }) => {
-      const reqId = headers?.["x-dockstatapi-reqid"]
+    .onAfterResponse(({ request }) => {
+      const state = stateMap.get(request)
 
-      logger.info(`[${request.method}] Request ${request.url} completed`, reqId)
+      logger.info(`[${request.method}] Request ${request.url} completed`, state?.reqId)
     })
-    .onError(({ request, set, error, code, headers }) => {
-      const reqId = headers?.["x-dockstatapi-reqid"]
+    .onError(({ request, set, error, code }) => {
       const state = stateMap.get(request)
       if (!state) return
 
@@ -32,7 +28,7 @@ const CreateRequestLogger = () => {
 
       logger.error(
         `[${request.method}] ${request.url} - Status: ${set.status} - Duration: ${duration}ms - Code: ${code}`,
-        reqId
+        state.reqId
       )
       logger.error(`Error: ${error.toString()}`)
     })

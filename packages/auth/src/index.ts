@@ -13,9 +13,15 @@ export class AuthHandler {
   configService: ConfigService
   middleware: ReturnType<typeof getMiddlewareFunctions>
   allowGuestRegistration: boolean
+  getStateMap: () => WeakMap<Request, { startTime: number; reqId: string }>
 
-  constructor(db: DB, logger: Logger) {
+  constructor(
+    db: DB,
+    logger: Logger,
+    getStateMap: () => WeakMap<Request, { startTime: number; reqId: string }>
+  ) {
     this.logger = logger.spawn("Auth")
+    this.getStateMap = getStateMap
 
     this.logger.info("Initializing Auth Service")
 
@@ -60,7 +66,7 @@ export class AuthHandler {
 
     this.configService = new ConfigService(this.providers, this.logger)
 
-    this.middleware = getMiddlewareFunctions(this.logger, this.apiKeys)
+    this.middleware = getMiddlewareFunctions(this.logger, this.getStateMap, this.apiKeys)
   }
 
   getAllowGuestRegistration() {
