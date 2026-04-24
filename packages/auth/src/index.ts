@@ -74,7 +74,7 @@ export class AuthHandler {
   }
 
   setAllowGuestRegistration(enable: boolean) {
-    return (this.allowGuestRegistration = enable)
+    this.allowGuestRegistration = enable
   }
 
   getRoutes() {

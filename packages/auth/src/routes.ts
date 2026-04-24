@@ -272,6 +272,7 @@ export function createAuthRoutes(
               }
 
               // Allow registration if guests are allowed OR user is authenticated
+              // biome-ignore lint/suspicious/noExplicitAny: Idk the Elysia ctx typing for this :(
               if (!allowGuests && !(context as any).isAuthenticated) {
                 set.status = 403
                 return {
