@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/turbo/schema.json",
   "globalDependencies": ["**/.env.*local"],
+  "globalPassThroughEnv": ["DOCKSTAT_LOGGER_IGNORE_MESSAGES"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
