@@ -39,7 +39,7 @@
     "dev:dockstat": "bun run docker-up:quiet && bun run dev --filter=@dockstat/frontend --filter=@dockstat/api --filter=@dockstat/store-verification --filter=@dockstat/docknode",
     "dev:dockstat:no-docker": "bun run dev --filter=@dockstat/frontend --filter=@dockstat/api --filter=@dockstat/store-verification --filter=@dockstat/docknode",
     "dev:dockstat/api": "bun run docker-up:quiet && bun run dev --filter=@dockstat/api",
-    "docker-up": "docker-compose -f './.dev_env/docker-compose.dev.yaml' up --remove-orphans",
+    "docker-up": "docker compose -f './.dev_env/docker-compose.dev.yaml' up --remove-orphans",
     "docker-up:quiet": "bun run docker-up -- -d",
     "format:all": "biome format --write .",
     "format:check:all": "biome format --check .",

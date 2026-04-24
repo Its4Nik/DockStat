@@ -236,6 +236,7 @@ export function AnimatedIconBackground({
       className="relative w-full h-full min-h-screen overflow-hidden transition-colors duration-500"
       onMouseMove={handleMouseMove}
       ref={containerRef}
+      role="none"
       style={{ backgroundColor: isError ? "rgb(10, 5, 5)" : "rgb(5, 5, 10)" }}
     >
       {/* Performance CSS Keyframes */}

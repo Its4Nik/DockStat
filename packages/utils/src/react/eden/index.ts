@@ -3,7 +3,6 @@ export * from "./useEdenMutation"
 export * from "./useEdenQuery"
 export * from "./useEdenRouteMutation"
 
-import type { NestedOmit } from "../../type"
 import type {
   EdenBody,
   EdenQueryRoute,
@@ -36,10 +35,11 @@ export class Client {
   private buildCtx<
     T extends {
       opts?: { headers?: Record<string, unknown> }
+      // biome-ignore lint/suspicious/noExplicitAny: Im way too tired for ts
       toast?: any
     },
   >(ctx: T): WrapToast<T> {
-    const authorization = "Bearer " + this.bearerToken
+    const authorization = `Bearer ${this.bearerToken}`
     return {
       ...ctx,
       opts: {
