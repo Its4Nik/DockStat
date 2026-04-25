@@ -37,7 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth()
 
   const heading = useContext(PageHeadingContext).heading
-  const { setToken } = useContext(EdenClientContext)
+  const edenClient = useContext(EdenClientContext)
   const isLoginPage =
     pathname === "/login" || (pathname.startsWith("/auth") && pathname.endsWith("/callback"))
 
@@ -53,7 +53,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Navbar
               auth={{
                 logout: () => {
-                  setToken("")
+                  edenClient.setToken("")
                   logout()
                 },
                 user: user ? (user.name ? user.name : user.email ? user.email : user.sub) : null,

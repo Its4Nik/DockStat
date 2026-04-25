@@ -1,5 +1,6 @@
 import { Button, Card, CardBody, Input } from "@dockstat/ui"
 import {
+  type IconType,
   SiAuth0,
   SiAuthentik,
   SiBitbucket,
@@ -9,8 +10,20 @@ import {
   SiKeycloak,
   SiOkta,
 } from "@icons-pack/react-simple-icons"
-import { ExternalLink, Eye, EyeOff, Globe, Key, Loader2, Lock, Plus, Trash2 } from "lucide-react"
-import { useState } from "react"
+import {
+  ExternalLink,
+  Eye,
+  EyeOff,
+  Globe,
+  Key,
+  Loader2,
+  Lock,
+  LockKeyhole,
+  type LucideProps,
+  Plus,
+  Trash2,
+} from "lucide-react"
+import { type ForwardRefExoticComponent, useState } from "react"
 import { getProviderLogo } from "@/components/auth/getProviderLogo"
 import { useAccountsMutations } from "@/hooks/mutations/accounts"
 import { useAccountsQueries } from "@/hooks/queries/accounts"
@@ -29,7 +42,7 @@ const COMMON_PROVIDERS = [
 ]
 
 // Map icon strings to React components
-const ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
+const ICON_MAP: Record<string, IconType | ForwardRefExoticComponent<Omit<LucideProps, "ref">>> = {
   SiAuth0: SiAuth0,
   SiAuthentik: SiAuthentik,
   SiBitbucket: SiBitbucket,
@@ -38,6 +51,12 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
   SiGoogle: SiGoogle,
   SiKeycloak: SiKeycloak,
   SiOkta: SiOkta,
+}
+
+export const mapIconNameToIcon = (
+  name: string
+): ForwardRefExoticComponent<Omit<LucideProps, "ref">> => {
+  return ICON_MAP[name] || LockKeyhole
 }
 
 export function OAuthProvidersSection() {
@@ -350,7 +369,7 @@ export function OAuthProvidersSection() {
         <div className="space-y-3">
           {providers.map((provider) => {
             // Try to use database icon/name first, otherwise fall back to getProviderLogo
-            const fallback = getProviderLogo(provider.issuer_url)
+            const fallback = getProviderLogo(provider.issuer_url, provider.icon ?? "")
             const displayName = provider.name || fallback.name
 
             // Check if we have a custom icon component from the database
@@ -364,13 +383,9 @@ export function OAuthProvidersSection() {
                 <CardBody className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                      {CustomIconComponent ? (
-                        <div className="text-accent">
-                          <CustomIconComponent size={18} />
-                        </div>
-                      ) : (
-                        <div className="text-accent">{fallback.icon}</div>
-                      )}
+                      <div className="text-accent">
+                        <CustomIconComponent size={18} />
+                      </div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-white/90">{displayName}</p>

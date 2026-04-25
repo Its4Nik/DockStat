@@ -14,7 +14,8 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./client": "./src/client/index.tsx"
+    "./client": "./src/client/index.tsx",
+    "./types": "./src/types.ts"
   },
   "module": "src/index.ts",
   "name": "@dockstat/auth",

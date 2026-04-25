@@ -1,9 +1,9 @@
+import type { ProvidersTable } from "@dockstat/auth/types"
 import { useCallback, useEffect, useState } from "react"
-import type { OAuthProvider } from "@/components/auth/types"
 import { api, getAuthHeaders } from "@/lib/api"
 
 export function useProviders() {
-  const [providers, setProviders] = useState<OAuthProvider[]>([])
+  const [providers, setProviders] = useState<ProvidersTable[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

@@ -18,11 +18,8 @@ function deleteCookie(name: string): void {
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`
 }
 
-async function verifyToken(token: string): Promise<{ user: unknown }> {
+async function verifyToken(): Promise<{ user: unknown }> {
   const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
     method: "GET",
   })
 
@@ -34,7 +31,7 @@ async function verifyToken(token: string): Promise<{ user: unknown }> {
 }
 
 function AuthCallback() {
-  const { setToken } = useContext(EdenClientContext)
+  const edenClient = useContext(EdenClientContext)
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
 
@@ -46,10 +43,7 @@ function AuthCallback() {
       return
     }
 
-    // Delete the cookie since we'll store the token in localStorage
-    deleteCookie("auth_token")
-
-    verifyToken(token)
+    verifyToken()
       .then((data) => {
         if (!data.user) {
           throw new Error("Invalid token payload: missing user")
@@ -58,7 +52,10 @@ function AuthCallback() {
         // Store user info and token
         localStorage.setItem("user", JSON.stringify(data.user))
         localStorage.setItem("auth_token", token)
-        setToken(token)
+        edenClient.setToken(token)
+
+        // Delete the cookie since we've stored the token in localStorage
+        deleteCookie("auth_token")
 
         // Redirect back to original page
         const redirect = localStorage.getItem("auth_redirect") || "/"
@@ -66,11 +63,12 @@ function AuthCallback() {
         navigate(redirect)
       })
       .catch((err) => {
-        setToken("")
+        deleteCookie("auth_token")
+        edenClient.setToken("")
         console.error("Auth callback error:", err)
         setError("Failed to process authentication. Please try again.")
       })
-  }, [navigate, setToken])
+  }, [navigate, edenClient])
 
   if (error) {
     return (
