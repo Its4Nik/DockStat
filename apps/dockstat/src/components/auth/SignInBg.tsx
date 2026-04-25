@@ -109,7 +109,9 @@ export function AnimatedIconBackground({
       ))}
 
       {/* Content overlay */}
-      <div className="relative z-20">{children}</div>
+      <div className="relative z-20 min-h-screen flex items-center justify-center p-4">
+        {children}
+      </div>
 
       {/* Simple vignette effect */}
       <div

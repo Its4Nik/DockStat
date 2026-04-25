@@ -38,7 +38,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const heading = useContext(PageHeadingContext).heading
   const { setToken } = useContext(EdenClientContext)
-  const isLoginPage = pathname === "/login"
+  const isLoginPage =
+    pathname === "/login" || (pathname.startsWith("/auth") && pathname.endsWith("/callback"))
 
   return (
     <div className="bg-main-bg min-h-screen w-screen">

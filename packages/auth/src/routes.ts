@@ -22,25 +22,71 @@ export function createAuthRoutes(
   return new Elysia({ detail: { tags: ["Auth"] }, prefix: "/auth" })
     .post(
       "/providers",
-      async ({ body }) =>
-        table.insertAndGet({
-          ...(body as object),
-          client_secret: await crypt.encrypt((body as { client_secret: string }).client_secret),
-          scopes: (body as { scopes: string }).scopes ? (body as { scopes: string }).scopes : null,
-        }),
+      async ({ body }) => {
+        const requestBody = body as {
+          client_id: string
+          client_secret: string
+          icon: string | undefined
+          issuer_url: string
+          logout_url: string | null
+          name: string | undefined
+          scopes: string | null
+        }
+        return table.insertAndGet({
+          client_id: requestBody.client_id,
+          client_secret: await crypt.encrypt(requestBody.client_secret),
+          icon: requestBody.icon || null,
+          issuer_url: requestBody.issuer_url,
+          logout_url: requestBody.logout_url || null,
+          name: requestBody.name || null,
+          scopes: requestBody.scopes || null,
+        })
+      },
       {
         ...requireAuth(),
         body: t.Object({
           client_id: t.String(),
           client_secret: t.String(),
+          icon: t.Optional(t.String()),
           issuer_url: t.String(),
           logout_url: t.MaybeEmpty(t.String()),
+          name: t.Optional(t.String()),
           scopes: t.MaybeEmpty(t.String()),
         }),
         detail: {
           description: "Create a new OAuth/OIDC provider",
           summary: "Create Provider",
         },
+      }
+    )
+    .delete(
+      "/providers/:providerId",
+      async ({ params: { providerId }, set }) => {
+        try {
+          const existing = table.where({ id: providerId }).first()
+          if (!existing) {
+            set.status = 404
+            return { error: "Provider not found" }
+          }
+
+          table.where({ id: providerId }).delete()
+          logger.info(`Deleted provider ${providerId}`)
+          return { message: "Provider deleted", success: true }
+        } catch (error) {
+          logger.error(`Failed to delete provider ${providerId}: ${error}`)
+          set.status = 500
+          return { error: "Failed to delete provider" }
+        }
+      },
+      {
+        ...requireAuth(),
+        detail: {
+          description: "Delete an OAuth/OIDC provider",
+          summary: "Delete Provider",
+        },
+        params: t.Object({
+          providerId: t.String(),
+        }),
       }
     )
     .get(
@@ -195,7 +241,10 @@ export function createAuthRoutes(
     )
     .get(
       "/providers",
-      () => table.select(["id", "issuer_url", "scopes", "client_id", "created_at"]).all(),
+      () =>
+        table
+          .select(["id", "issuer_url", "scopes", "client_id", "created_at", "name", "icon"])
+          .all(),
       {
         //...requireAuth(),
         detail: {
@@ -422,6 +471,55 @@ export function createAuthRoutes(
             },
           }
         )
+    )
+    .get(
+      "/users",
+      async () => {
+        try {
+          const userList = users.select(["id", "name", "createdAt", "updatedAt"]).all()
+          return { users: userList }
+        } catch (error) {
+          logger.error(`Failed to list users: ${error}`)
+          return { users: [] }
+        }
+      },
+      {
+        ...requireAuth(),
+        detail: {
+          description: "List all local users",
+          summary: "List Users",
+        },
+      }
+    )
+    .delete(
+      "/users/:userId",
+      async ({ params: { userId }, set }) => {
+        try {
+          const existing = users.where({ id: userId }).first()
+          if (!existing) {
+            set.status = 404
+            return { error: "User not found" }
+          }
+
+          users.where({ id: userId }).delete()
+          logger.info(`Deleted user ${userId}`)
+          return { message: "User deleted", success: true }
+        } catch (error) {
+          logger.error(`Failed to delete user ${userId}: ${error}`)
+          set.status = 500
+          return { error: "Failed to delete user" }
+        }
+      },
+      {
+        ...requireAuth(),
+        detail: {
+          description: "Delete a local user",
+          summary: "Delete User",
+        },
+        params: t.Object({
+          userId: t.String(),
+        }),
+      }
     )
     .group("/api-keys", (app) =>
       app

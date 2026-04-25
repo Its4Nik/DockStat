@@ -33,7 +33,7 @@ import { useLocalAuthCheck } from "@/hooks/useLocalAuthCheck"
 import { useLocalLogin } from "@/hooks/useLocalLogin"
 import { useProviders } from "@/hooks/useProviders"
 
-const floatingIcons = [
+export const floatingIcons = [
   <SiAuthelia
     className="w-full h-full"
     key="authelia"
@@ -145,8 +145,9 @@ function SignInPage() {
         <div className="relative w-full lg:w-[48%] min-h-screen flex items-center justify-center p-5 sm:p-8 overflow-auto">
           <div className="w-full max-w-115 relative z-10 py-8 lg:py-0">
             <Card
-              className="rounded-3xl p-7 sm:p-9 slide-r"
+              className={"rounded-3xl p-7 sm:p-9 slide-r"}
               glass
+              variant={providersError !== null ? "error" : "default"}
             >
               <PageHeader />
 
@@ -182,7 +183,7 @@ function SignInPage() {
               )}
 
               {/* Tab Navigation */}
-              <div className="flex gap-2 mb-4">
+              <div className="flex gap-2 my-4">
                 <Button
                   className={`flex-1 py-2.5 text-sm font-medium rounded-xl transition-all ${
                     activeTab === "login"
@@ -212,7 +213,7 @@ function SignInPage() {
               </div>
 
               {/* Form Content */}
-              <div className="min-h-[280px]">
+              <div className="min-h-70">
                 {activeTab === "login" && !localChecking && localUsersExist && <LoginFormContent />}
                 {activeTab === "register" && showRegisterTab && (
                   <RegisterContent
@@ -261,7 +262,7 @@ function LoginFormContent() {
           </p>
           <div className="field-shell px-4 py-3">
             <Input
-              className="!bg-transparent !border-0 !shadow-none !p-0 !ring-0 w-full text-sm text-white/80 placeholder:text-white/25"
+              className="bg-transparent! border-0! shadow-none! p-0! ring-0! w-full text-sm text-white/80 placeholder:text-white/25"
               disabled={isSubmitting}
               onChange={(v) => updateField("name", v)}
               placeholder="Enter your username"
@@ -276,7 +277,7 @@ function LoginFormContent() {
           </p>
           <div className="field-shell px-4 py-3 flex items-center">
             <Input
-              className="!bg-transparent !border-0 !shadow-none !p-0 !ring-0 w-full text-sm text-white/80 placeholder:text-white/25"
+              className="bg-transparent! border-0! shadow-none! p-0! ring-0! w-full text-sm text-white/80 placeholder:text-white/25"
               disabled={isSubmitting}
               onChange={(v) => updateField("pass", v)}
               placeholder="Enter your password"
@@ -284,7 +285,7 @@ function LoginFormContent() {
               value={formData.pass}
             />
             <button
-              className="flex-shrink-0 ml-2 p-1 rounded-md text-white/20 hover:text-white/40 transition-colors"
+              className="shrink-0 ml-2 p-1 rounded-md text-white/20 hover:text-white/40 transition-colors"
               onClick={togglePassword}
               tabIndex={-1}
               type="button"
@@ -344,7 +345,7 @@ function RegisterContent({
 
   const { registerLocalUser } = useCreateUserMutations()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault()
     setErr(null)
 
@@ -385,7 +386,7 @@ function RegisterContent({
           </p>
           <div className="field-shell px-4 py-3">
             <Input
-              className="!bg-transparent !border-0 !shadow-none !p-0 !ring-0 w-full text-sm text-white/80 placeholder:text-white/25"
+              className="bg-transparent! border-0! shadow-none! p-0! ring-0! w-full text-sm text-white/80 placeholder:text-white/25"
               disabled={registerLocalUser.isPending}
               onChange={(v) => setName(v)}
               placeholder="Enter your username"
@@ -400,7 +401,7 @@ function RegisterContent({
           </p>
           <div className="field-shell px-4 py-3 flex items-center">
             <Input
-              className="!bg-transparent !border-0 !shadow-none !p-0 !ring-0 w-full text-sm text-white/80 placeholder:text-white/25"
+              className="bg-transparent! border-0! shadow-none! p-0! ring-0! w-full text-sm text-white/80 placeholder:text-white/25"
               disabled={registerLocalUser.isPending}
               onChange={(v) => setPass(v)}
               placeholder="Enter your password"
@@ -408,7 +409,7 @@ function RegisterContent({
               value={pass}
             />
             <button
-              className="flex-shrink-0 ml-2 p-1 rounded-md text-white/20 hover:text-white/40 transition-colors"
+              className="shrink-0 ml-2 p-1 rounded-md text-white/20 hover:text-white/40 transition-colors"
               onClick={togglePassword}
               tabIndex={-1}
               type="button"

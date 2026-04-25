@@ -1,7 +1,9 @@
 import { Button, Card, CardBody, CardHeader } from "@dockstat/ui"
 import { useContext, useEffect, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router"
+import { AnimatedIconBackground } from "@/components/auth/SignInBg"
 import { EdenClientContext } from "@/contexts/edenClient"
+import { floatingIcons } from "../SignIn"
 
 function AuthCallback() {
   const { setToken } = useContext(EdenClientContext)
@@ -52,9 +54,10 @@ function AuthCallback() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <AnimatedIconBackground icons={floatingIcons}>
         <Card
-          className="max-w-md w-full"
+          className="max-w-md w-full mx-auto"
+          glass
           size="lg"
           variant="error"
         >
@@ -80,7 +83,7 @@ function AuthCallback() {
             </Button>
           </CardBody>
         </Card>
-      </div>
+      </AnimatedIconBackground>
     )
   }
 

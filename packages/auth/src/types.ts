@@ -1,5 +1,7 @@
 export type ProvidersTable = {
   id: string
+  name: string | null
+  icon: string | null
   issuer_url: string
   client_id: string
   client_secret: string

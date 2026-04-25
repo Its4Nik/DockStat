@@ -31,9 +31,11 @@ export class AuthHandler {
         client_id: column.text({ notNull: true }),
         client_secret: column.text({ notNull: true }),
         created_at: column.createdAt(),
+        icon: column.text(),
         id: column.uuid({ generateDefault: true }),
         issuer_url: column.text({ notNull: true }),
         logout_url: column.text({ notNull: true }),
+        name: column.text(),
         scopes: column.text({ default: "openid profile email" }),
       },
       { ifNotExists: true }

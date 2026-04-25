@@ -19,7 +19,7 @@ export function ProviderList({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-2.5 mb-4">
+    <div className="grid grid-cols-1 gap-2.5 mb-4 max-h-60 overflow-y-scroll">
       {providers.map((provider) => {
         const info = getProviderLogo(provider.issuer_url)
         return (
