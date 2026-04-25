@@ -12,8 +12,8 @@ export function ProviderList({
 }) {
   if (providers.length === 0) {
     return (
-      <div className="py-12 text-center">
-        <p className="text-sm text-white/30">No providers found</p>
+      <div className="py-4 text-center">
+        <p className="text-sm text-white/30">No SSO providers found. Configure in the Settings</p>
       </div>
     )
   }
@@ -31,7 +31,7 @@ export function ProviderList({
             tabIndex={0}
           >
             <div className="relative z-10 flex items-center gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/20 text-white font-bold text-sm">
+              <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-linear-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/20 text-white font-bold text-sm">
                 {info.icon}
               </div>
               <div className="flex-1 min-w-0">
@@ -41,7 +41,7 @@ export function ProviderList({
                 </p>
               </div>
               <ArrowRight
-                className="provider-arrow flex-shrink-0 text-white/15"
+                className="provider-arrow shrink-0 text-white/15"
                 size={16}
               />
             </div>

@@ -7,11 +7,11 @@ export const CRYPTO_SECRET = Bun.env.DOCKSTAT_AUTH_CRYPTO_SECRET
 const DEVELOPMENT_JWT_SECRET = "dev-only-insecure-jwt-secret-do-not-use-in-production"
 
 const rawJwtSecret = Bun.env.DOCKSTAT_AUTH_JWT_SECRET
-const isDevelopment = Bun.env.NODE_ENV === "development"
+const isDevelopment = Bun.env.NODE_ENV !== "production"
 
 if (!rawJwtSecret && !isDevelopment) {
   throw new Error(
-    "JWT_SECRET environment variable is required and must not be empty. " +
+    "DOCKSTAT_AUTH_JWT_SECRET environment variable is required and must not be empty. " +
       "Set JWT_SECRET to a secure random string (at least 32 characters) before starting the application. " +
       "Note: A fallback default is only available when NODE_ENV is 'development'."
   )

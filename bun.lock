@@ -149,15 +149,17 @@
       "name": "@dockstat/auth",
       "version": "1.0.0",
       "dependencies": {
+        "@dockstat/logger": "workspace:*",
         "cryptr": "^6.4.0",
         "elysia": "catalog:",
         "jose": "^6.2.2",
         "openid-client": "^6.8.3",
+        "react": "catalog:",
       },
       "devDependencies": {
-        "@dockstat/logger": "workspace:*",
         "@dockstat/sqlite-wrapper": "workspace:*",
-        "@types/bun": "latest",
+        "@types/react": "catalog:",
+        "bun-types": "latest",
       },
       "peerDependencies": {
         "typescript": "^5",
@@ -167,8 +169,8 @@
       "name": "@dockstat/docker",
       "version": "0.1.4",
       "devDependencies": {
-        "@types/bun": "latest",
         "@types/node": "^25.5.0",
+        "bun-types": "latest",
       },
       "peerDependencies": {
         "typescript": "^5",
@@ -218,8 +220,8 @@
         "dockerode": "^4.0.9",
       },
       "devDependencies": {
-        "@types/bun": "latest",
         "@types/dockerode": "^3.3.44",
+        "bun-types": "latest",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",
@@ -235,7 +237,7 @@
         "source-map-support": "^0.5.21",
       },
       "devDependencies": {
-        "@types/bun": "latest",
+        "bun-types": "latest",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",

@@ -2,7 +2,9 @@ import { Card, Input } from "@dockstat/ui"
 import { ArrowRight, Eye, EyeOff, Loader2, Shield } from "lucide-react"
 import { useLocalLogin } from "@/hooks/useLocalLogin"
 
-export function LocalLoginForm() {
+export function LocalLoginForm({ show }: { show: boolean }) {
+  if (!show) return
+
   const { formData, error, isSubmitting, showPassword, handleSubmit, updateField, togglePassword } =
     useLocalLogin()
 
