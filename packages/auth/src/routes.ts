@@ -7,7 +7,7 @@ import type { AuthContext } from "./middleware"
 import type { ApiKeysTable, LocalUsersTable, ProvidersTable } from "./types"
 import crypt from "./utils/encrypt"
 import { BASE_URL, FRONTEND_URL } from "./utils/env"
-import { createAuthToken } from "./utils/jwt"
+import { createAuthToken, verifyAuthToken } from "./utils/jwt"
 
 export function createAuthRoutes(
   table: QueryBuilder<ProvidersTable>,
@@ -204,10 +204,10 @@ export function createAuthRoutes(
           // Create a JWT with user info
           const token = await createAuthToken(userInfo)
 
-          // Set JWT as a secure HttpOnly cookie (not in URL to prevent token leakage)
+          // Set JWT as a secure cookie (not in URL to prevent token leakage)
           const isSecure = BASE_URL.startsWith("https://")
           cookie.auth_token.value = token
-          cookie.auth_token.httpOnly = true
+          cookie.auth_token.httpOnly = false
           cookie.auth_token.secure = isSecure
           cookie.auth_token.sameSite = "lax"
           cookie.auth_token.maxAge = 86400 // 1 day, matching JWT expiration
@@ -237,6 +237,32 @@ export function createAuthRoutes(
         },
         params: t.Object({ providerId: t.String() }),
         query: t.Object({ code: t.String(), state: t.String() }),
+      }
+    )
+    .get(
+      "/verify",
+      async ({ cookie, set }) => {
+        const token = String(cookie.auth_token?.value)
+
+        if (!token) {
+          set.status = 401
+          return { error: "No token provided" }
+        }
+
+        const payload = await verifyAuthToken(token)
+
+        if (!payload || typeof payload.user !== "object" || payload.user === null) {
+          set.status = 401
+          return { error: "Invalid or expired token" }
+        }
+
+        return { user: payload.user }
+      },
+      {
+        detail: {
+          description: "Verify the auth_token cookie and return the user info",
+          summary: "Verify Token",
+        },
       }
     )
     .get(

@@ -201,54 +201,69 @@ export function AuthProvider({
     return () => clearInterval(interval)
   }, [state.token, state.isAuthenticated, refreshToken])
 
-  // Listen for auth callbacks from URL
+  // Listen for auth callbacks from cookie
   useEffect(() => {
-    const handleAuthCallback = () => {
-      const urlParams = new URLSearchParams(window.location.search)
-      const token = urlParams.get("token")
+    const getCookie = (name: string): string | null => {
+      const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`))
+      return match ? match[2] : null
+    }
 
-      if (token) {
-        try {
-          // Decode the JWT to get user info (in a real app, verify the signature)
-          const parts = token.split(".")
-          if (parts.length === 3) {
-            const payload = JSON.parse(atob(parts[1]))
-            const user = payload.user as User
+    const deleteCookie = (name: string) => {
+      document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+    }
 
-            // Store token and user
-            localStorage.setItem(tokenStorageKey, token)
-            localStorage.setItem(userStorageKey, JSON.stringify(user))
+    const handleAuthCallback = async () => {
+      const token = getCookie("auth_token")
 
-            // Clear token from URL
-            window.history.replaceState({}, "", window.location.pathname)
+      if (!token) return
 
-            // Update state
-            setState({
-              error: null,
-              isAuthenticated: true,
-              loading: false,
-              token,
-              user,
-            })
+      try {
+        // Verify the JWT signature via the backend
+        const response = await fetch(`${apiBase}/auth/verify`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
 
-            // Redirect to stored location or home
-            const redirectPath = localStorage.getItem("auth_redirect") || "/"
-            localStorage.removeItem("auth_redirect")
-            window.location.href = redirectPath
-          }
-        } catch (error) {
-          console.error("Failed to process auth callback:", error)
-          setState((prev) => ({
-            ...prev,
-            error: "Failed to process authentication",
-            loading: false,
-          }))
+        if (!response.ok) {
+          throw new Error("Token verification failed")
         }
+
+        const { user } = (await response.json()) as { user: User }
+
+        // Store token and user
+        localStorage.setItem(tokenStorageKey, token)
+        localStorage.setItem(userStorageKey, JSON.stringify(user))
+
+        // Clear the cookie since we've stored the token in localStorage
+        deleteCookie("auth_token")
+
+        // Update state
+        setState({
+          error: null,
+          isAuthenticated: true,
+          loading: false,
+          token,
+          user,
+        })
+
+        // Redirect to stored location or home
+        const redirectPath = localStorage.getItem("auth_redirect") || "/"
+        localStorage.removeItem("auth_redirect")
+        window.location.href = redirectPath
+      } catch (error) {
+        console.error("Failed to process auth callback:", error)
+        deleteCookie("auth_token")
+        setState((prev) => ({
+          ...prev,
+          error: "Failed to process authentication",
+          loading: false,
+        }))
       }
     }
 
     handleAuthCallback()
-  }, [tokenStorageKey, userStorageKey])
+  }, [apiBase, tokenStorageKey, userStorageKey])
 
   // Listen for storage changes (sync across tabs)
   useEffect(() => {

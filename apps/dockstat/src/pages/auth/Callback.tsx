@@ -1,56 +1,76 @@
 import { Button, Card, CardBody, CardHeader } from "@dockstat/ui"
 import { useContext, useEffect, useState } from "react"
-import { useNavigate, useSearchParams } from "react-router"
+import { useNavigate } from "react-router"
 import { AnimatedIconBackground } from "@/components/auth/SignInBg"
 import { EdenClientContext } from "@/contexts/edenClient"
 import { floatingIcons } from "../SignIn"
 
+const API_BASE_URL = "http://localhost:3030/api/v2"
+
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(
+    new RegExp(`(?:^|; )${name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1")}=([^;]*)`)
+  )
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+function deleteCookie(name: string): void {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`
+}
+
+async function verifyToken(token: string): Promise<{ user: unknown }> {
+  const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    method: "GET",
+  })
+
+  if (!response.ok) {
+    throw new Error(`Verification failed with status ${response.status}`)
+  }
+
+  return response.json()
+}
+
 function AuthCallback() {
   const { setToken } = useContext(EdenClientContext)
-  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const token = searchParams.get("token")
+    const token = getCookie("auth_token")
 
     if (!token) {
       setError("Missing authentication token")
       return
     }
 
-    try {
-      // Decode JWT token (payload is base64 encoded)
-      const base64Url = token.split(".")[1]
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split("")
-          .map((c) => `%${(`00${c.charCodeAt(0).toString(16)}`).slice(-2)}`)
-          .join("")
-      )
+    // Delete the cookie since we'll store the token in localStorage
+    deleteCookie("auth_token")
 
-      const { user } = JSON.parse(jsonPayload)
+    verifyToken(token)
+      .then((data) => {
+        if (!data.user) {
+          throw new Error("Invalid token payload: missing user")
+        }
 
-      if (!user) {
-        throw new Error("Invalid token payload")
-      }
+        // Store user info and token
+        localStorage.setItem("user", JSON.stringify(data.user))
+        localStorage.setItem("auth_token", token)
+        setToken(token)
 
-      // Store user info
-      localStorage.setItem("user", JSON.stringify(user))
-      localStorage.setItem("auth_token", token)
-      setToken(token)
-
-      // Redirect back to original page
-      const redirect = localStorage.getItem("auth_redirect") || "/"
-      localStorage.removeItem("auth_redirect")
-      navigate(redirect)
-    } catch (err) {
-      setToken("")
-      console.error("Auth callback error:", err)
-      setError("Failed to process authentication. Please try again.")
-    }
-  }, [searchParams, navigate])
+        // Redirect back to original page
+        const redirect = localStorage.getItem("auth_redirect") || "/"
+        localStorage.removeItem("auth_redirect")
+        navigate(redirect)
+      })
+      .catch((err) => {
+        setToken("")
+        console.error("Auth callback error:", err)
+        setError("Failed to process authentication. Please try again.")
+      })
+  }, [navigate, setToken])
 
   if (error) {
     return (

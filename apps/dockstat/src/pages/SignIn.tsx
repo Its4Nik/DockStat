@@ -18,7 +18,7 @@ import {
   SiYandexcloud,
 } from "@icons-pack/react-simple-icons"
 import { ArrowRight, DoorOpen, Eye, EyeOff, Loader2, Shield } from "lucide-react"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import { Footer } from "@/components/auth/Footer"
 import { PageHeader } from "@/components/auth/Header"
@@ -130,6 +130,13 @@ function SignInPage() {
   const handleProviderSelect = useCallback((providerId: string) => login(providerId), [login])
 
   const [activeTab, setActiveTab] = useState<"login" | "register">("login")
+  useEffect(() => {
+    if (!localUsersExist) {
+      setActiveTab("register")
+    } else {
+      setActiveTab("login")
+    }
+  }, [localUsersExist])
 
   // Only show registration tab if registration is allowed
   const showRegisterTab = allowRegistration
@@ -184,19 +191,21 @@ function SignInPage() {
 
               {/* Tab Navigation */}
               <div className="flex gap-2 my-4">
-                <Button
-                  className={`flex-1 py-2.5 text-sm font-medium rounded-xl transition-all ${
-                    activeTab === "login"
-                      ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
-                      : "bg-white/5 text-white/40 hover:bg-white/10 border border-transparent"
-                  }`}
-                  noFocusRing
-                  onClick={() => setActiveTab("login")}
-                  variant="ghost"
-                >
-                  Login
-                </Button>
-                {showRegisterTab && (
+                {localUsersExist && (
+                  <Button
+                    className={`flex-1 py-2.5 text-sm font-medium rounded-xl transition-all ${
+                      activeTab === "login"
+                        ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+                        : "bg-white/5 text-white/40 hover:bg-white/10 border border-transparent"
+                    }`}
+                    noFocusRing
+                    onClick={() => setActiveTab("login")}
+                    variant="ghost"
+                  >
+                    Login
+                  </Button>
+                )}
+                {showRegisterTab && localUsersExist && (
                   <Button
                     className={`flex-1 py-2.5 text-sm font-medium rounded-xl transition-all ${
                       activeTab === "register"

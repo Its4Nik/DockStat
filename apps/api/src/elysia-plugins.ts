@@ -14,6 +14,11 @@ const DockStatElysiaPlugins = new Elysia()
       documentation: {
         components: {
           securitySchemes: {
+            apikey: {
+              in: "Api-Key",
+              name: "Api-Key",
+              type: "apiKey",
+            },
             bearerAuth: {
               bearerFormat: "JWT",
               description: "A bearer token which is needed for production",
