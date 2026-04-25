@@ -22,7 +22,7 @@
     "target": "ESNext",
 
     /* ---- Strictness & Type Safety ---- */
-    "types": ["bun"]
+    "types": ["bun-types"]
   },
   "exclude": ["node_modules", "dist", "build"],
   "include": [],

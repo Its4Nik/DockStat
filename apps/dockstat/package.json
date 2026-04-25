@@ -34,10 +34,13 @@
     "elysia": "catalog:",
     "vite": "catalog:build-tools"
   },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
   "name": "@dockstat/frontend",
   "private": true,
   "scripts": {
-    "build": "NODE_ENV=production bunx --bun vite build",
+    "build": "bunx --bun vite build",
     "dev": "bunx --bun vite",
     "lint": "biome check",
     "preview": "vite preview"

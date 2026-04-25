@@ -13,8 +13,6 @@ WORKDIR /opt/docknode
 COPY --from=base /app/usr/docknode/DockNode.js ./DockNode.js
 
 # Set environment variables
-ENV NODE_ENV=production
-
 ENV DOCKSTAT_LOGGER_DISABLED_LOGGERS="QueryBuilder,Sqlite-Wrapper"
 ENV DOCKSTAT_LOGGER_IGNORE_MESSAGES="Logger Status: active"
 ENV DOCKSTAT_LOGGER_FULL_FILE_PATH=false
