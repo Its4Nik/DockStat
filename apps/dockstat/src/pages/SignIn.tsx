@@ -1,17 +1,25 @@
 import { useAuth } from "@dockstat/auth/client"
 import { Button, Card, Divider, Input } from "@dockstat/ui"
 import {
+  SiAuth0,
   SiAuthelia,
   SiAuthentik,
+  SiBitbucket,
+  SiDiscord,
+  SiFacebook,
+  SiFusionauth,
   SiGithub,
+  SiGitlab,
   SiGoogle,
   SiKeycloak,
   SiOkta,
+  SiSpotify,
+  SiTwitch,
+  SiYandexcloud,
 } from "@icons-pack/react-simple-icons"
 import { ArrowRight, DoorOpen, Eye, EyeOff, Loader2, Shield } from "lucide-react"
 import { useCallback, useState } from "react"
-// @ts-expect-error
-import DockStatLogo from "@/assets/logo.png"
+
 import { Footer } from "@/components/auth/Footer"
 import { PageHeader } from "@/components/auth/Header"
 import { HeroPanel } from "@/components/auth/HeroPanel"
@@ -28,27 +36,63 @@ import { useProviders } from "@/hooks/useProviders"
 const floatingIcons = [
   <SiAuthelia
     className="w-full h-full"
-    key="sparkles"
+    key="authelia"
   />,
   <SiKeycloak
     className="w-full h-full"
-    key="zap"
+    key="keycloak"
   />,
   <SiAuthentik
     className="w-full h-full"
-    key="shield"
+    key="authentik"
   />,
   <SiOkta
     className="w-full h-full"
-    key="globe"
+    key="okta"
   />,
   <SiGoogle
     className="w-full h-full"
-    key="code"
+    key="google"
   />,
   <SiGithub
     className="w-full h-full"
-    key="database"
+    key="github"
+  />,
+  <SiBitbucket
+    className="w-full h-full"
+    key="bitbucket"
+  />,
+  <SiDiscord
+    className="w-full h-full"
+    key="discord"
+  />,
+  <SiFacebook
+    className="w-full h-full"
+    key="facebook"
+  />,
+  <SiGitlab
+    className="w-full h-full"
+    key="gitlab"
+  />,
+  <SiSpotify
+    className="w-full h-full"
+    key="spotify"
+  />,
+  <SiTwitch
+    className="w-full h-full"
+    key="twitch"
+  />,
+  <SiAuth0
+    className="w-full h-full"
+    key="auth0"
+  />,
+  <SiFusionauth
+    className="w-full h-full"
+    key="fusionauth"
+  />,
+  <SiYandexcloud
+    className="w-full h-full"
+    key="yandexcloud"
   />,
 ]
 
@@ -72,6 +116,14 @@ function SignInPage() {
     !providersLoading &&
     !providersError &&
     providers.length > 0
+
+  // Show divider when no providers but local auth is available
+  const showNoProvidersMessage =
+    !localChecking &&
+    !providersLoading &&
+    !providersError &&
+    providers.length === 0 &&
+    (localUsersExist || allowRegistration)
 
   const isReady = !providersLoading && !providersError && !localChecking
 
@@ -109,19 +161,22 @@ function SignInPage() {
                 />
               )}
 
-              {true && (
+              {showDivider && (
+                <Divider
+                  className="my-6"
+                  label="or"
+                />
+              )}
+
+              {showNoProvidersMessage && (
                 <Divider
                   className="my-6"
                   label={
-                    providers.length >= 1 ? (
-                      "or"
-                    ) : (
-                      <p className="text-center">
-                        No SSO Providers founduse local auth
-                        <br />
-                        Configure SSO in the Settings
-                      </p>
-                    )
+                    <p className="text-center">
+                      No SSO Providers found. Use local auth below
+                      <br />
+                      Configure SSO in the Settings
+                    </p>
                   }
                 />
               )}
@@ -134,6 +189,7 @@ function SignInPage() {
                       ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
                       : "bg-white/5 text-white/40 hover:bg-white/10 border border-transparent"
                   }`}
+                  noFocusRing
                   onClick={() => setActiveTab("login")}
                   variant="ghost"
                 >
@@ -146,6 +202,7 @@ function SignInPage() {
                         ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
                         : "bg-white/5 text-white/40 hover:bg-white/10 border border-transparent"
                     }`}
+                    noFocusRing
                     onClick={() => setActiveTab("register")}
                     variant="ghost"
                   >
