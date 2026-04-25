@@ -3,6 +3,7 @@ import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import Elysia, { t } from "elysia"
 import * as client from "openid-client"
 import type { ConfigService } from "./config"
+import type { AuthContext } from "./middleware"
 import type { ApiKeysTable, LocalUsersTable, ProvidersTable } from "./types"
 import crypt from "./utils/encrypt"
 import { BASE_URL, FRONTEND_URL } from "./utils/env"
@@ -15,7 +16,8 @@ export function createAuthRoutes(
   logger: Logger,
   configService: ConfigService,
   getAllowGuestRegistration: () => boolean,
-  setAllowGuestRegistration: (enable: boolean) => void
+  setAllowGuestRegistration: (enable: boolean) => void,
+  requireAuth: () => Record<string, unknown>
 ) {
   return new Elysia({ detail: { tags: ["Auth"] }, prefix: "/auth" })
     .post(
@@ -27,6 +29,7 @@ export function createAuthRoutes(
           scopes: (body as { scopes: string }).scopes ? (body as { scopes: string }).scopes : null,
         }),
       {
+        ...requireAuth(),
         body: t.Object({
           client_id: t.String(),
           client_secret: t.String(),
@@ -84,10 +87,7 @@ export function createAuthRoutes(
 
         const redirectTo: URL = client.buildAuthorizationUrl(meta, params)
 
-        logger.info(`=== OAuth Login Flow ===`)
-        logger.info(`Authorization URL: ${redirectTo.toString()}`)
-        logger.info(`Params sent: ${JSON.stringify(params)}`)
-        logger.info(`=== End Login Flow ===\n`)
+        logger.debug(`OAuth login flow started for provider: ${providerId}`)
         return redirect(redirectTo.toString())
       },
       {
@@ -102,12 +102,9 @@ export function createAuthRoutes(
       "/:providerId/callback",
       async ({ params: { providerId }, query, cookie, set, redirect }) => {
         const { meta } = await configService.getConfig(providerId)
-        const { state: returnedState, code } = query
+        const { state: returnedState } = query
 
-        logger.info(`=== OAuth Callback Flow for ${providerId} ===`)
-        logger.info(`Query params: ${JSON.stringify(query)}`)
-        logger.info(`Code present: ${!!code}`)
-        logger.info(`Returned state: ${returnedState}`)
+        logger.debug(`OAuth callback flow started for provider: ${providerId}`)
 
         // Check if OAuth cookies are present (they should have been set by login route)
         if (!cookie.state?.value || !cookie.nonce?.value || !cookie.pkce?.value) {
@@ -123,41 +120,21 @@ export function createAuthRoutes(
           return "Authentication failed: Missing security cookies. Please try logging in again from the login page."
         }
 
-        logger.info(`Cookie state: ${cookie.state.value}`)
-        logger.info(`Cookie nonce: ${cookie.nonce.value}`)
-        logger.info(`Cookie pkce: ${String(cookie.pkce.value).substring(0, 20)}...`)
+        logger.debug(`OAuth cookies validated for provider: ${providerId}`)
 
         if (cookie.state.value !== returnedState) {
-          logger.error(
-            `Invalid state parameter in OAuth callback: ${JSON.stringify({
-              expected: cookie.state.value,
-              received: returnedState,
-            })}`
-          )
+          logger.error(`Invalid state parameter in OAuth callback for provider: ${providerId}`)
           set.status = 400
           return "Invalid state"
         }
 
-        logger.info("State validation passed. Exchanging authorization code for tokens...")
+        logger.debug(
+          `State validation passed, exchanging authorization code for provider: ${providerId}`
+        )
 
         const callbackUrl = new URL(
           `${BASE_URL}/${providerId}/callback?${new URLSearchParams(query)}`
         )
-        logger.info(`Callback URL for token exchange: ${callbackUrl.toString()}`)
-
-        // Log detailed token exchange parameters
-        const serverMetadata = meta.serverMetadata()
-        logger.info(`=== Token Exchange Parameters ===`)
-        logger.info(`Token Endpoint: ${serverMetadata.token_endpoint}`)
-        logger.info(`Authorization Endpoint: ${serverMetadata.authorization_endpoint}`)
-        logger.info(`Expected Nonce: ${cookie.nonce.value}`)
-        logger.info(`Expected State: ${cookie.state.value}`)
-        logger.info(
-          `PKCE Code Verifier (first 20 chars): ${String(cookie.pkce.value).substring(0, 20)}...`
-        )
-        logger.info(`Full PKCE Code Verifier: ${String(cookie.pkce.value)}`)
-        logger.info(`Callback URL (full): ${callbackUrl.toString()}`)
-        logger.info(`=== End Token Exchange Parameters ===`)
 
         try {
           const tokens = await client.authorizationCodeGrant(meta, callbackUrl, {
@@ -165,27 +142,33 @@ export function createAuthRoutes(
             expectedState: String(cookie.state.value),
             pkceCodeVerifier: String(cookie.pkce.value),
           })
-          logger.info(`Token exchange successful! Token type: ${tokens.token_type}`)
+          logger.debug(`Token exchange successful for provider: ${providerId}`)
 
           const userInfo = await client.fetchUserInfo(
             meta,
             tokens.access_token,
             String(tokens.claims().sub)
           )
-          logger.info(`Successfully fetched user info for: ${userInfo.email || userInfo.sub}`)
+          logger.info(`User authenticated via ${providerId}: ${userInfo.email || userInfo.sub}`)
 
           cookie.state.remove()
           cookie.nonce.remove()
           cookie.pkce.remove()
 
-          // Create a JWT with user info to pass to the frontend
+          // Create a JWT with user info
           const token = await createAuthToken(userInfo)
 
-          // Redirect to frontend callback page with JWT token
-          const frontendCallbackUrl = `${FRONTEND_URL}/auth/${providerId}/callback?token=${token}`
-          logger.info(
-            `Redirecting to frontend callback: ${FRONTEND_URL}/auth/${providerId}/callback`
-          )
+          // Set JWT as a secure HttpOnly cookie (not in URL to prevent token leakage)
+          const isSecure = BASE_URL.startsWith("https://")
+          cookie.auth_token.value = token
+          cookie.auth_token.httpOnly = true
+          cookie.auth_token.secure = isSecure
+          cookie.auth_token.sameSite = "lax"
+          cookie.auth_token.maxAge = 86400 // 1 day, matching JWT expiration
+
+          // Redirect to frontend callback page (token is in cookie, not URL)
+          const frontendCallbackUrl = `${FRONTEND_URL}/auth/${providerId}/callback`
+          logger.debug(`Redirecting to frontend callback for provider: ${providerId}`)
 
           return redirect(frontendCallbackUrl)
         } catch (error) {
@@ -214,6 +197,7 @@ export function createAuthRoutes(
       "/providers",
       () => table.select(["id", "issuer_url", "scopes", "client_id", "created_at"]).all(),
       {
+        ...requireAuth(),
         detail: {
           description: "Lists all Providers",
           summary: "All Providers",
@@ -272,7 +256,7 @@ export function createAuthRoutes(
               }
 
               // Allow registration if guests are allowed OR user is authenticated
-              if (!allowGuests && !(context as any).isAuthenticated) {
+              if (!allowGuests && !(context as AuthContext).isAuthenticated) {
                 set.status = 403
                 return {
                   error: "Guest registration is disabled. Please authenticate to create new users.",

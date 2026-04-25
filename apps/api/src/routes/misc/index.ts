@@ -30,8 +30,9 @@ const DockStatMiscRoutes = new Elysia({
       const deltaSystemUs = cpuNow.system - lastCpu.system
       const deltaCpuUs = deltaUserUs + deltaSystemUs
 
-      const deltaWallMs = now - lastTime
-      const cpuPercent = deltaWallMs > 0 ? (deltaCpuUs / 1000 / deltaWallMs) * 100 : 0
+      const deltaWallNs = now - lastTime
+      const deltaWallUs = deltaWallNs / 1000
+      const cpuPercent = deltaWallUs > 0 ? (deltaCpuUs / deltaWallUs) * 100 : 0
 
       lastCpu = cpuNow
       lastTime = now

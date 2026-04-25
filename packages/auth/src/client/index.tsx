@@ -7,4 +7,3 @@ export {
   useUser,
 } from "./AuthProvider"
 export * from "./protectedRoute"
-export * from "./useAuth"
