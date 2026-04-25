@@ -1,10 +1,12 @@
 export const BASE_URL = Bun.env.BASE_URL ? Bun.env.BASE_URL : "http://localhost:3030/api/v2/auth"
 export const FRONTEND_URL = Bun.env.FRONTEND_URL ? Bun.env.FRONTEND_URL : "http://localhost:5173"
-export const CRYPTO_SECRET = Bun.env.CRYPTO_SECRET ? Bun.env.CRYPTO_SECRET : "PLEASE-CHANGE-ME"
+export const CRYPTO_SECRET = Bun.env.DOCKSTAT_AUTH_CRYPTO_SECRET
+  ? Bun.env.DOCKSTAT_AUTH_CRYPTO_SECRET
+  : "PLEASE-CHANGE-ME"
 
 const DEVELOPMENT_JWT_SECRET = "dev-only-insecure-jwt-secret-do-not-use-in-production"
 
-const rawJwtSecret = Bun.env.JWT_SECRET
+const rawJwtSecret = Bun.env.DOCKSTAT_AUTH_JWT_SECRET
 const isDevelopment = Bun.env.NODE_ENV === "development"
 
 if (!rawJwtSecret && !isDevelopment) {
