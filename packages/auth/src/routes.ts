@@ -208,6 +208,7 @@ export function createAuthRoutes(
           const isSecure = BASE_URL.startsWith("https://")
           cookie.auth_token.value = token
           cookie.auth_token.httpOnly = false
+          cookie.auth_token.path = "/"
           cookie.auth_token.secure = isSecure
           cookie.auth_token.sameSite = "lax"
           cookie.auth_token.maxAge = 86400 // 1 day, matching JWT expiration
@@ -241,8 +242,16 @@ export function createAuthRoutes(
     )
     .get(
       "/verify",
-      async ({ cookie, set }) => {
-        const token = String(cookie.auth_token?.value)
+      async ({ cookie, headers, set }) => {
+        // Check Authorization header first, then fall back to cookie
+        let token: string | null = null
+        const authHeader = headers.authorization as string | undefined
+        if (authHeader?.startsWith("Bearer ")) {
+          token = authHeader.slice(7)
+        }
+        if (!token) {
+          token = String(cookie.auth_token?.value) ?? null
+        }
 
         if (!token) {
           set.status = 401
@@ -713,7 +722,7 @@ export function createAuthRoutes(
               }
 
               // Revoke the API key by setting revokedAt
-              await apiKeys.update({ id, revokedAt: new Date() })
+              apiKeys.where({ id }).update({ revokedAt: new Date() })
 
               logger.info(`API key revoked: ${id}`)
 

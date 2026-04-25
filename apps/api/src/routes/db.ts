@@ -3,6 +3,7 @@ import type { RepoFile } from "@dockstat/repo-cli/types"
 import type { DockStatConfigTableType } from "@dockstat/typings/types"
 import { extractErrorMessage, repo } from "@dockstat/utils"
 import Elysia, { t } from "elysia"
+import { AuthHandler } from "../auth"
 import { DockStatDB } from "../database"
 import { updateConfig } from "../database/utils"
 import { DatabaseModel, RepositoryModel } from "../models/database"
@@ -346,9 +347,21 @@ const DBRoutes = new Elysia({
     "/config/additionalSettings",
     ({ body, status }) => {
       try {
+        const prev = DockStatDB.configTable
+          .select(["additionalSettings"])
+          .where({ id: 0 })
+          .get()?.additionalSettings
+
         DockStatDB.configTable
           .where({ id: 0 })
           .update({ additionalSettings: body.additionalSettings })
+
+        if (
+          prev?.enableRegistration !== body.additionalSettings?.enableRegistration &&
+          body.additionalSettings?.enableRegistration !== undefined
+        ) {
+          AuthHandler.setAllowGuestRegistration(body.additionalSettings.enableRegistration)
+        }
 
         return status(200, {
           data: body.additionalSettings,

@@ -1,6 +1,6 @@
-import { Button, Card, CardBody, Input } from "@dockstat/ui"
+import { Button, Card, CardBody, Input, Slides } from "@dockstat/ui"
 import { Copy, Key, Loader2, Plus, Trash2 } from "lucide-react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useAccountsMutations } from "@/hooks/mutations/accounts"
 import { useApiKeysQuery } from "@/hooks/queries/accounts"
 import { toast } from "@/lib/toast"
@@ -14,6 +14,9 @@ export function ApiKeysSection() {
   const [newKeyScopes, setNewKeyScopes] = useState("*")
   const [newKeyExpiresAt, setNewKeyExpiresAt] = useState("")
   const [createdApiKey, setCreatedApiKey] = useState<string | null>(null)
+
+  const activeKeys = useMemo(() => apiKeys.filter((key) => !key.revokedAt), [apiKeys])
+  const revokedKeys = useMemo(() => apiKeys.filter((key) => key.revokedAt), [apiKeys])
 
   const handleCreateKey = async () => {
     if (!newKeyName.trim()) {
@@ -80,6 +83,63 @@ export function ApiKeysSection() {
       </div>
     )
   }
+
+  const renderKeyCard = (key: (typeof apiKeys)[number], showDelete: boolean) => (
+    <Card
+      key={key.id}
+      variant="outlined"
+    >
+      <CardBody className="flex items-center justify-between py-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+            <Key
+              className="text-accent"
+              size={18}
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-white/90 truncate">{key.name}</p>
+            <div className="flex items-center gap-3 text-xs text-white/40 mt-0.5">
+              <span>Scopes: {key.scopes}</span>
+              <span>•</span>
+              <span>Created: {new Date(key.createdAt).toLocaleDateString()}</span>
+              {key.lastUsedAt && (
+                <>
+                  <span>•</span>
+                  <span>Last used: {new Date(key.lastUsedAt).toLocaleDateString()}</span>
+                </>
+              )}
+              {key.expiresAt && (
+                <>
+                  <span>•</span>
+                  <span>Expires: {new Date(key.expiresAt).toLocaleDateString()}</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span
+            className={`px-2 py-1 rounded text-xs font-medium ${
+              key.revokedAt ? "bg-red-500/10 text-red-400" : "bg-green-500/10 text-green-400"
+            }`}
+          >
+            {key.revokedAt ? "Revoked" : "Active"}
+          </span>
+          {showDelete && (
+            <Button
+              className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+              onClick={() => handleDeleteKey(key.id, key.name)}
+              size="sm"
+              variant="ghost"
+            >
+              <Trash2 size={16} />
+            </Button>
+          )}
+        </div>
+      </CardBody>
+    </Card>
+  )
 
   return (
     <div className="space-y-4">
@@ -227,81 +287,46 @@ export function ApiKeysSection() {
         </Card>
       )}
 
-      {apiKeys.length === 0 && !showCreateDialog ? (
-        <Card variant="outlined">
-          <CardBody className="py-8 text-center">
-            <Key
-              className="mx-auto mb-3 text-muted-text/50"
-              size={32}
-            />
-            <p className="text-sm text-white/40">No API keys found</p>
-            <p className="text-xs text-white/20 mt-1">
-              Create an API key to enable programmatic access
-            </p>
-          </CardBody>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {apiKeys.map((key) => (
-            <Card
-              key={key.id}
-              variant="outlined"
-            >
-              <CardBody className="flex items-center justify-between py-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-                    <Key
-                      className="text-accent"
-                      size={18}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white/90 truncate">{key.name}</p>
-                    <div className="flex items-center gap-3 text-xs text-white/40 mt-0.5">
-                      <span>Scopes: {key.scopes}</span>
-                      <span>•</span>
-                      <span>Created: {new Date(key.createdAt).toLocaleDateString()}</span>
-                      {key.lastUsedAt && (
-                        <>
-                          <span>•</span>
-                          <span>Last used: {new Date(key.lastUsedAt).toLocaleDateString()}</span>
-                        </>
-                      )}
-                      {key.expiresAt && (
-                        <>
-                          <span>•</span>
-                          <span>Expires: {new Date(key.expiresAt).toLocaleDateString()}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-medium ${
-                      key.revokedAt
-                        ? "bg-red-500/10 text-red-400"
-                        : "bg-green-500/10 text-green-400"
-                    }`}
-                  >
-                    {key.revokedAt ? "Revoked" : "Active"}
-                  </span>
-                  {!key.revokedAt && (
-                    <Button
-                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                      onClick={() => handleDeleteKey(key.id, key.name)}
-                      size="sm"
-                      variant="ghost"
-                    >
-                      <Trash2 size={16} />
-                    </Button>
-                  )}
-                </div>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
-      )}
+      <Slides
+        buttonPosition="left"
+        connected
+        defaultSlide="Active"
+      >
+        {{
+          Active:
+            activeKeys.length === 0 ? (
+              <Card variant="outlined">
+                <CardBody className="py-8 text-center">
+                  <Key
+                    className="mx-auto mb-3 text-muted-text/50"
+                    size={32}
+                  />
+                  <p className="text-sm text-white/40">No active API keys</p>
+                  <p className="text-xs text-white/20 mt-1">
+                    Create an API key to enable programmatic access
+                  </p>
+                </CardBody>
+              </Card>
+            ) : (
+              <div className="space-y-3">{activeKeys.map((key) => renderKeyCard(key, true))}</div>
+            ),
+          Revoked:
+            revokedKeys.length === 0 ? (
+              <Card variant="outlined">
+                <CardBody className="py-8 text-center">
+                  <Key
+                    className="mx-auto mb-3 text-muted-text/50"
+                    size={32}
+                  />
+                  <p className="text-sm text-white/40">No revoked API keys</p>
+                  <p className="text-xs text-white/20 mt-1">Revoked keys will appear here</p>
+                </CardBody>
+              </Card>
+            ) : (
+              <div className="space-y-3">{revokedKeys.map((key) => renderKeyCard(key, false))}</div>
+            ),
+        }}
+      </Slides>
     </div>
   )
 }

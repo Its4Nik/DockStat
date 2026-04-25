@@ -70,6 +70,13 @@ export function useGeneralSettings() {
     })
   }
 
+  const setGuestRegistration = (allow: boolean) => {
+    updateAdditionalSettings({
+      ...additionalSettings,
+      enableRegistration: allow,
+    })
+  }
+
   const allNavLinks: NavLink[] = Array.isArray(navLinks) ? navLinks : []
 
   const pluginLinks: PluginLink[] = useMemo(() => {
@@ -124,6 +131,7 @@ export function useGeneralSettings() {
     pinLink,
     pinnedLinks,
     pluginLinks,
+    setGuestRegistration,
     showBackendErrors,
     showRamUsageInNavbar,
     unpinLink,

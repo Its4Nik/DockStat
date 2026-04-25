@@ -5,6 +5,17 @@ import { api } from "@/lib/api"
 export const useAccountsMutations = () => {
   const eden = useContext(EdenClientContext)
 
+  // Create user mutation (no path parameters)
+  const createUserMutation = eden.mutate({
+    invalidateQueries: [["fetchUsers"]],
+    mutationKey: ["createUser"],
+    route: api.auth.local.register.post,
+    toast: {
+      errorTitle: () => "Failed to create user",
+      successTitle: () => "User created successfully",
+    },
+  })
+
   // Delete user mutation (has path parameter)
   const deleteUserMutation = eden.mutateRoute({
     invalidateQueries: [["fetchUsers"]],
@@ -64,6 +75,7 @@ export const useAccountsMutations = () => {
   return {
     createApiKeyMutation,
     createProviderMutation,
+    createUserMutation,
     deleteApiKeyMutation,
     deleteProviderMutation,
     deleteUserMutation,

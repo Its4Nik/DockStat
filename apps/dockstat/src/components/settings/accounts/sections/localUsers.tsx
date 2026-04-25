@@ -1,11 +1,57 @@
-import { Button, Card, CardBody } from "@dockstat/ui"
+import { Button, Card, CardBody, Input } from "@dockstat/ui"
 import { Loader2, Shield, Trash2, UserPlus } from "lucide-react"
+import { useState } from "react"
 import { useAccountsMutations } from "@/hooks/mutations/accounts"
 import { useAccountsQueries } from "@/hooks/queries/accounts"
+import { toast } from "@/lib/toast"
 
 export function LocalUsersSection() {
   const { users, usersLoading, refetchUsers } = useAccountsQueries()
-  const { deleteUserMutation } = useAccountsMutations()
+  const { createUserMutation, deleteUserMutation } = useAccountsMutations()
+
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [newUserName, setNewUserName] = useState("")
+  const [newUserPass, setNewUserPass] = useState("")
+
+  const handleCreateUser = async () => {
+    if (!newUserName.trim()) {
+      toast({
+        description: "Please enter a username",
+        title: "Validation Error",
+      })
+      return
+    }
+
+    if (newUserName.trim().length < 3) {
+      toast({
+        description: "Username must be at least 3 characters",
+        title: "Validation Error",
+      })
+      return
+    }
+
+    if (newUserPass.length < 8) {
+      toast({
+        description: "Password must be at least 8 characters",
+        title: "Validation Error",
+      })
+      return
+    }
+
+    try {
+      await createUserMutation.mutateAsync({
+        name: newUserName.trim(),
+        pass: newUserPass,
+      })
+
+      setNewUserName("")
+      setNewUserPass("")
+      setShowCreateDialog(false)
+      refetchUsers()
+    } catch (error) {
+      console.error("Failed to create user:", error)
+    }
+  }
 
   const handleDeleteUser = async (userId: string, userName: string) => {
     if (
@@ -38,6 +84,7 @@ export function LocalUsersSection() {
         </div>
         <Button
           className="flex items-center gap-2"
+          onClick={() => setShowCreateDialog(!showCreateDialog)}
           size="sm"
           variant="outline"
         >
@@ -46,7 +93,75 @@ export function LocalUsersSection() {
         </Button>
       </div>
 
-      {users.length === 0 ? (
+      {showCreateDialog && (
+        <Card variant="outlined">
+          <CardBody className="space-y-4">
+            <div>
+              <label
+                className="block text-xs font-semibold uppercase tracking-[0.2em] mb-1.5 text-white/30"
+                htmlFor="user-name"
+              >
+                Username
+              </label>
+              <Input
+                className="bg-white/5!"
+                id="user-name"
+                onChange={(v) => setNewUserName(v)}
+                placeholder="e.g., admin"
+                value={newUserName}
+              />
+              <p className="text-xs text-white/30 mt-1">Must be between 3 and 50 characters</p>
+            </div>
+
+            <div>
+              <label
+                className="block text-xs font-semibold uppercase tracking-[0.2em] mb-1.5 text-white/30"
+                htmlFor="user-pass"
+              >
+                Password
+              </label>
+              <Input
+                className="bg-white/5!"
+                id="user-pass"
+                onChange={(v) => setNewUserPass(v)}
+                placeholder="Minimum 8 characters"
+                type="password"
+                value={newUserPass}
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                className="flex-1"
+                disabled={createUserMutation.isPending}
+                onClick={handleCreateUser}
+                variant="primary"
+              >
+                {createUserMutation.isPending ? (
+                  <>
+                    <Loader2
+                      className="animate-spin mr-2"
+                      size={16}
+                    />
+                    Creating...
+                  </>
+                ) : (
+                  "Create User"
+                )}
+              </Button>
+              <Button
+                disabled={createUserMutation.isPending}
+                onClick={() => setShowCreateDialog(false)}
+                variant="ghost"
+              >
+                Cancel
+              </Button>
+            </div>
+          </CardBody>
+        </Card>
+      )}
+
+      {users.length === 0 && !showCreateDialog ? (
         <Card variant="outlined">
           <CardBody className="py-8 text-center">
             <Shield

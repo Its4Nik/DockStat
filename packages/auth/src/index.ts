@@ -18,12 +18,13 @@ export class AuthHandler {
   constructor(
     db: DB,
     logger: Logger,
-    getStateMap: () => WeakMap<Request, { startTime: number; reqId: string }>
+    getStateMap: () => WeakMap<Request, { startTime: number; reqId: string }>,
+    allowGuestRegistration?: boolean
   ) {
     this.logger = logger.spawn("Auth")
     this.getStateMap = getStateMap
-
     this.logger.info("Initializing Auth Service")
+    this.allowGuestRegistration = allowGuestRegistration ? allowGuestRegistration : true
 
     this.providers = db.createTable<ProvidersTable>(
       "oidc-providers",
@@ -61,7 +62,6 @@ export class AuthHandler {
       userId: column.text({ notNull: true }),
     })
 
-    this.allowGuestRegistration = true
     if (this.users.select(["id"]).count() < 1) {
       this.allowGuestRegistration = true
     }

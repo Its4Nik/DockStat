@@ -18,13 +18,22 @@ function deleteCookie(name: string): void {
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`
 }
 
-async function verifyToken(): Promise<{ user: unknown }> {
+async function verifyToken(token: string): Promise<{ user: unknown }> {
+  // Send the token via Authorization header — the frontend and API are on
+  // different ports so a cross-origin fetch won't include cookies unless we
+  // use credentials: "include".  The header approach is more reliable.
   const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
     method: "GET",
   })
 
   if (!response.ok) {
-    throw new Error(`Verification failed with status ${response.status}`)
+    const body = await response.text().catch(() => "")
+    throw new Error(
+      `Token verification failed (HTTP ${response.status}): ${body || response.statusText}`
+    )
   }
 
   return response.json()
@@ -39,25 +48,29 @@ function AuthCallback() {
     const token = getCookie("auth_token")
 
     if (!token) {
-      setError("Missing authentication token")
+      setError(
+        "No authentication cookie found. This usually means the server did not set the auth_token cookie, or the cookie path/domain is misconfigured."
+      )
       return
     }
 
-    verifyToken()
+    verifyToken(token)
       .then((data) => {
         if (!data.user) {
-          throw new Error("Invalid token payload: missing user")
+          throw new Error(
+            "Server returned a successful response but the payload is missing the `user` field."
+          )
         }
 
-        // Store user info and token
+        // Store user info and token in localStorage
         localStorage.setItem("user", JSON.stringify(data.user))
         localStorage.setItem("auth_token", token)
         edenClient.setToken(token)
 
-        // Delete the cookie since we've stored the token in localStorage
+        // Delete the cookie now that we've persisted the token
         deleteCookie("auth_token")
 
-        // Redirect back to original page
+        // Redirect back to the page the user was on before login
         const redirect = localStorage.getItem("auth_redirect") || "/"
         localStorage.removeItem("auth_redirect")
         navigate(redirect)
@@ -66,7 +79,9 @@ function AuthCallback() {
         deleteCookie("auth_token")
         edenClient.setToken("")
         console.error("Auth callback error:", err)
-        setError("Failed to process authentication. Please try again.")
+        setError(
+          err instanceof Error ? err.message : "An unknown error occurred during authentication."
+        )
       })
   }, [navigate, edenClient])
 
@@ -83,7 +98,7 @@ function AuthCallback() {
             <h2 className="text-xl font-bold">Authentication Failed</h2>
           </CardHeader>
           <CardBody>
-            <p className="text-sm mb-4">{error}</p>
+            <p className="text-sm mb-4 wrap-break-word">{error}</p>
             <Button
               fullWidth
               onClick={() => navigate("/login")}

@@ -1,5 +1,5 @@
-import type { ForwardRefExoticComponent } from "@types/react"
 import type { LucideProps } from "lucide-react"
+import type { ForwardRefExoticComponent } from "react"
 import { mapIconNameToIcon } from "../settings/accounts/sections/oAuthProviders"
 
 export function getProviderLogo(
