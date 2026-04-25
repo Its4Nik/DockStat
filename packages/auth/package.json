@@ -1,14 +1,14 @@
 {
   "dependencies": {
+    "@dockstat/logger": "workspace:*",
     "cryptr": "^6.4.0",
     "elysia": "catalog:",
     "jose": "^6.2.2",
     "openid-client": "^6.8.3"
   },
   "devDependencies": {
-    "@dockstat/logger": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*",
-    "@types/bun": "latest"
+    "bun-types": "latest"
   },
   "exports": {
     ".": "./src/index.ts",

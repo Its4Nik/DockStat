@@ -85,7 +85,8 @@ export class AuthHandler {
       this.logger,
       this.configService,
       () => this.getAllowGuestRegistration(),
-      (enable: boolean) => this.setAllowGuestRegistration(enable)
+      (enable: boolean) => this.setAllowGuestRegistration(enable),
+      () => this.middleware.authenticated(this.getStateMap)
     )
   }
 }

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion"
 import type React from "react"
-import { useCallback, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 interface FloatingIcon {
   id: number
@@ -167,13 +167,13 @@ function ParticleField({ isError }: { isError: boolean }) {
 function GridEffect({ isError }: { isError: boolean }) {
   return (
     <div
-      className="absolute inset-0 pointer-events-none transition-all duration-300"
+      className={`absolute inset-0 pointer-events-none transition-all duration-300`}
       style={{
         backgroundImage: isError
-          ? `linear-gradient(rgba(239, 68, 68, 0.05) 1px, transparent 1px),
-             linear-gradient(90deg, rgba(239, 68, 68, 0.05) 1px, transparent 1px)`
-          : `linear-gradient(rgb(var(--color-accent, 255 255 255) / 0.05) 1px, transparent 1px),
-             linear-gradient(90deg, rgb(var(--color-accent, 255 255 255) / 0.05) 1px, transparent 1px)`,
+          ? `linear-gradient(rgba(239, 68, 68, 0.2) 1px, transparent 1px),
+             linear-gradient(90deg, rgba(239, 68, 68, 0.2) 1px, transparent 1px)`
+          : `linear-gradient(rgb(var(--color-accent, 255 255 255) / 0.5) 1px, transparent 1px),
+             linear-gradient(90deg, rgb(var(--color-accent, 255 255 255) / 0.5) 1px, transparent 1px)`,
         backgroundSize: "5% 5%",
       }}
     />
@@ -185,7 +185,18 @@ export function AnimatedIconBackground({
   isError = false,
   children,
 }: AnimatedIconBackgroundProps) {
+  const [showError, setShowError] = useState<boolean>(false)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setShowError(isError)
+
+    if (!isError) return
+
+    const id = setTimeout(() => setShowError(false), 3000)
+
+    return () => clearTimeout(id)
+  }, [isError])
 
   // Update CSS variables for parallax on mouse move (Runs entirely on GPU/CSS)
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
@@ -223,8 +234,8 @@ export function AnimatedIconBackground({
       icon: icons[i % icons.length],
       id: i,
       layer: pos.layer,
-      orbitRadius: pos.layer === 1 ? 15 : pos.layer === 2 ? 20 : 25,
-      orbitSpeed: pos.layer === 1 ? 30 : pos.layer === 2 ? 20 : 15,
+      orbitRadius: pos.layer === 1 ? Math.random() * 10 : pos.layer === 2 ? 70 : 25,
+      orbitSpeed: pos.layer === 1 ? 30 : pos.layer === 2 ? 50 : 15,
       size: pos.layer === 1 ? 40 : pos.layer === 2 ? 50 : 60,
       x: pos.x,
       y: pos.y,
@@ -233,11 +244,10 @@ export function AnimatedIconBackground({
 
   return (
     <div
-      className="relative w-full h-full min-h-screen overflow-hidden transition-colors duration-500"
+      className={`relative w-full h-full min-h-screen overflow-hidden transition-colors duration-500 ${showError ? "bg-red-950" : "bg-main-bg"}`}
       onMouseMove={handleMouseMove}
       ref={containerRef}
       role="none"
-      style={{ backgroundColor: isError ? "rgb(10, 5, 5)" : "rgb(5, 5, 10)" }}
     >
       {/* Performance CSS Keyframes */}
       <style>{`
@@ -259,14 +269,14 @@ export function AnimatedIconBackground({
       <div
         className="absolute inset-0 pointer-events-none transition-all duration-500"
         style={{
-          background: isError
+          background: showError
             ? "radial-gradient(ellipse at center, rgba(239, 68, 68, 0.1) 0%, transparent 70%)"
             : "radial-gradient(ellipse at center, rgb(var(--color-accent, 255 255 255) / 0.1) 0%, transparent 70%)",
         }}
       />
 
-      <GridEffect isError={isError} />
-      <ParticleField isError={isError} />
+      <GridEffect isError={showError} />
+      <ParticleField isError={showError} />
 
       {/* Floating icons */}
       {floatingIcons.map((floatingIcon) => (
@@ -276,7 +286,7 @@ export function AnimatedIconBackground({
           icon={floatingIcon.icon}
           initialX={floatingIcon.x}
           initialY={floatingIcon.y}
-          isError={isError}
+          isError={showError}
           key={floatingIcon.id}
           layer={floatingIcon.layer}
           orbitRadius={floatingIcon.orbitRadius}
@@ -292,7 +302,7 @@ export function AnimatedIconBackground({
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%)",
+          background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%)",
         }}
       />
     </div>
