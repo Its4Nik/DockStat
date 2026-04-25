@@ -173,7 +173,7 @@ const MetricsMiddleware = (app: Elysia) => {
       {
         as: "global",
       },
-      ({ request, responseValue, store, headers }) => {
+      ({ request, responseValue, store }) => {
         const reqId = stateMap.get(request)?.reqId
         const duration = performance.now() - (store.startTime || 0)
         const method = request.method

@@ -10,7 +10,7 @@
   },
   "description": "The (basic) internal logging service used by DockStat and @dockstat/outline-sync",
   "devDependencies": {
-    "@types/bun": "latest"
+    "bun-types": "latest"
   },
   "engines": {
     "bun": ">=1.0.0"

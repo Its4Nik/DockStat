@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "@dockstat/sqlite-wrapper": "workspace:*",
-    "@types/bun": "latest"
+    "bun-types": "latest"
   },
   "exports": {
     ".": "./src/index.ts",

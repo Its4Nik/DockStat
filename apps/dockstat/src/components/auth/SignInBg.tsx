@@ -2,8 +2,6 @@ import { motion } from "framer-motion"
 import type React from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-
 interface FloatingIcon {
   id: number
   icon: React.ReactNode
@@ -187,19 +185,17 @@ export function AnimatedIconBackground({
   isError = false,
   children,
 }: AnimatedIconBackgroundProps) {
-  const [showError, setError] = useState<boolean>(false)
+  const [showError, setShowError] = useState<boolean>(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const setBg = async () => {
-      setError(isError)
+    setShowError(isError)
 
-      await sleep(3000)
+    if (!isError) return
 
-      setError(false)
-    }
+    const id = setTimeout(() => setShowError(false), 3000)
 
-    setBg().catch(console.error)
+    return () => clearTimeout(id)
   }, [isError])
 
   // Update CSS variables for parallax on mouse move (Runs entirely on GPU/CSS)

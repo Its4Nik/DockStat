@@ -7,7 +7,7 @@ export const stateMap = new WeakMap<Request, { startTime: number; reqId: string 
 const logger = BaseLogger.spawn("Elysia")
 const CreateRequestLogger = () => {
   return new Elysia()
-    .onRequest(({ request, set }) => {
+    .onRequest(({ request }) => {
       const startTime = Date.now()
       const reqId = http.requestId.getRequestID()
       stateMap.set(request, { reqId, startTime })
