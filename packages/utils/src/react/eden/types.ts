@@ -1,3 +1,5 @@
+import type { DockStatErrorBody } from "@dockstat/utils"
+
 export type EdenRoute = (...args: never[]) => Promise<{ data: unknown; error: unknown }>
 export type EdenData<T extends EdenRoute> = Awaited<ReturnType<T>>["data"]
 
@@ -36,8 +38,12 @@ export type EdenBody<T extends EdenRoute> = Parameters<T> extends []
 export type ToastConfig<TData, TInput> = {
   successTitle: React.ReactNode | ((input: TInput, response: TData) => React.ReactNode)
   successDescription?: React.ReactNode | ((input: TInput, response: TData) => React.ReactNode)
-  errorTitle: React.ReactNode | ((input: TInput, error: Error) => React.ReactNode)
-  errorDescription?: React.ReactNode | ((input: TInput, error: Error) => React.ReactNode)
+  errorTitle:
+    | React.ReactNode
+    | ((input: TInput, error: DockStatErrorBody | null) => React.ReactNode)
+  errorDescription?:
+    | React.ReactNode
+    | ((input: TInput, error: DockStatErrorBody | null) => React.ReactNode)
 }
 
 export type ResponseData<TRoute extends EdenRoute> = NonNullable<EdenData<TRoute>> & {

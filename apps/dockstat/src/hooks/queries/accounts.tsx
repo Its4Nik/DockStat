@@ -1,3 +1,4 @@
+import { extractDockStatError } from "@dockstat/utils"
 import { useContext } from "react"
 import { EdenClientContext } from "@/contexts/edenClient"
 import { api } from "@/lib/api"
@@ -64,24 +65,33 @@ interface ApiKeysQueryData {
 }
 
 type ApiKeysQueryResult = {
-  data: ApiKeysQueryData | undefined
+  apiKeys: ApiKey[]
+  error: QueryError
   isLoading: boolean
   refetch: () => void
 }
 
 // Hook return types
+type QueryError = {
+  body: ReturnType<typeof extractDockStatError>
+  message: string
+} | null
+
 type AccountsQueriesReturn = {
   fetchApiKeys: (userId?: string) => ApiKeysQueryResult
   providers: Provider[]
+  providersError: QueryError
   providersLoading: boolean
   refetchProviders: () => void
   refetchUsers: () => void
   users: User[]
+  usersError: QueryError
   usersLoading: boolean
 }
 
 type ApiKeysQueryReturn = {
   apiKeys: ApiKey[]
+  error: QueryError
   isLoading: boolean
   refetch: () => void
 }
@@ -92,6 +102,8 @@ export const useAccountsQueries = (): AccountsQueriesReturn => {
   // Fetch all users
   const {
     data: usersData,
+    error: usersQueryError,
+    isError: usersIsError,
     isLoading: usersLoading,
     refetch: refetchUsers,
   } = eden.query({
@@ -102,6 +114,8 @@ export const useAccountsQueries = (): AccountsQueriesReturn => {
   // Fetch all providers
   const {
     data: providersData,
+    error: providersQueryError,
+    isError: providersIsError,
     isLoading: providersLoading,
     refetch: refetchProviders,
   } = eden.query({
@@ -109,21 +123,57 @@ export const useAccountsQueries = (): AccountsQueriesReturn => {
     route: api.auth.providers.get,
   })
 
+  const usersError: QueryError = usersIsError
+    ? {
+        body: extractDockStatError(usersQueryError),
+        message: usersQueryError?.message ?? "Failed to load users",
+      }
+    : null
+
+  const providersError: QueryError = providersIsError
+    ? {
+        body: extractDockStatError(providersQueryError),
+        message: providersQueryError?.message ?? "Failed to load providers",
+      }
+    : null
+
   // Fetch all API keys (optionally filtered by userId)
   const fetchApiKeys = (userId?: string): ApiKeysQueryResult => {
-    return eden.query({
+    const {
+      data,
+      error: keysQueryError,
+      isError: keysIsError,
+      isLoading,
+      refetch,
+    } = eden.query({
       queryKey: ["fetchApiKeys", userId],
       route: api.auth["api-keys"].get,
     })
+
+    const keysError: QueryError = keysIsError
+      ? {
+          body: extractDockStatError(keysQueryError),
+          message: keysQueryError?.message ?? "Failed to load API keys",
+        }
+      : null
+
+    return {
+      apiKeys: (data as ApiKeysQueryData)?.keys || [],
+      error: keysError,
+      isLoading,
+      refetch,
+    }
   }
 
   return {
     fetchApiKeys,
     providers: (providersData as Provider[]) || [],
+    providersError,
     providersLoading,
     refetchProviders,
     refetchUsers,
     users: (usersData as UsersQueryData)?.users || [],
+    usersError,
     usersLoading,
   }
 }
@@ -132,13 +182,27 @@ export const useAccountsQueries = (): AccountsQueriesReturn => {
 export const useApiKeysQuery = (userId?: string): ApiKeysQueryReturn => {
   const eden = useContext(EdenClientContext)
 
-  const { data, isLoading, refetch } = eden.query({
+  const {
+    data,
+    error: keysQueryError,
+    isError,
+    isLoading,
+    refetch,
+  } = eden.query({
     queryKey: ["fetchApiKeys", userId],
     route: api.auth["api-keys"].get,
   })
 
+  const keysError: QueryError = isError
+    ? {
+        body: extractDockStatError(keysQueryError),
+        message: keysQueryError?.message ?? "Failed to load API keys",
+      }
+    : null
+
   return {
     apiKeys: (data as ApiKeysQueryData)?.keys || [],
+    error: keysError,
     isLoading,
     refetch,
   }

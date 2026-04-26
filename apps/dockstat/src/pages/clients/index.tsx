@@ -1,4 +1,5 @@
-import { Badge, Card, Divider } from "@dockstat/ui"
+import { Badge, Card, Divider, DockStatErrorCard } from "@dockstat/ui"
+import { extractDockStatError } from "@dockstat/utils"
 import { Hammer, Server, Split } from "lucide-react"
 import { useContext } from "react"
 import { ClientCard } from "@/components/clients/ClientCard"
@@ -14,20 +15,39 @@ export default function ClientsPage() {
 
   const eden = useContext(EdenClientContext)
 
-  const { data: clientsData, isLoading: clientsIsLoading } = eden.query({
+  const {
+    data: clientsData,
+    error: clientsError,
+    isError: clientsIsError,
+    isLoading: clientsIsLoading,
+  } = eden.query({
     queryKey: ["fetchDockerClients"],
     route: api.docker.client.all({ stored: "true" }).get,
   })
 
-  const { data: poolStatus, isLoading: poolLoading } = eden.query({
+  const {
+    data: poolStatus,
+    error: poolError,
+    isError: poolIsError,
+    isLoading: poolLoading,
+  } = eden.query({
     queryKey: ["fetchPoolStatus"],
     route: api.docker.manager["pool-stats"].get,
   })
 
-  const { data: hosts, isLoading: hostsLoading } = eden.query({
+  const {
+    data: hosts,
+    error: hostsError,
+    isError: hostsIsError,
+    isLoading: hostsLoading,
+  } = eden.query({
     queryKey: ["fetchHosts"],
     route: api.docker.hosts.get,
   })
+
+  const clientsErrBody = clientsIsError ? extractDockStatError(clientsError) : undefined
+  const poolErrBody = poolIsError ? extractDockStatError(poolError) : undefined
+  const hostsErrBody = hostsIsError ? extractDockStatError(hostsError) : undefined
 
   // Create a map of worker info by client ID for easy lookup
   const workersByClientId =
@@ -62,6 +82,18 @@ export default function ClientsPage() {
 
         {clientsIsLoading ? (
           <div className="text-center py-12 text-muted-text">Loading clients...</div>
+        ) : clientsIsError ? (
+          <DockStatErrorCard
+            code={clientsErrBody?.code}
+            description={
+              clientsErrBody?.description ??
+              clientsError?.message ??
+              "Failed to load Docker clients"
+            }
+            reqId={clientsErrBody?.reqId}
+            status={clientsErrBody?.status}
+            title="Could not load clients"
+          />
         ) : !clientsData || clientsData.length === 0 ? (
           <div className="text-center py-12 text-muted-text">
             No Docker clients configured. Add a client to get started.
@@ -101,6 +133,16 @@ export default function ClientsPage() {
 
         {poolLoading ? (
           <div className="text-center py-12 text-muted-text">Loading workers...</div>
+        ) : poolIsError ? (
+          <DockStatErrorCard
+            code={poolErrBody?.code}
+            description={
+              poolErrBody?.description ?? poolError?.message ?? "Failed to load worker pool"
+            }
+            reqId={poolErrBody?.reqId}
+            status={poolErrBody?.status}
+            title="Could not load workers"
+          />
         ) : !poolStatus?.workers || poolStatus.workers.length === 0 ? (
           <div className="text-center py-12 text-muted-text">
             No workers currently active in the pool.
@@ -140,6 +182,16 @@ export default function ClientsPage() {
 
         {hostsLoading ? (
           <div className="text-center py-12 text-muted-text">Loading hosts...</div>
+        ) : hostsIsError ? (
+          <DockStatErrorCard
+            code={hostsErrBody?.code}
+            description={
+              hostsErrBody?.description ?? hostsError?.message ?? "Failed to load Docker hosts"
+            }
+            reqId={hostsErrBody?.reqId}
+            status={hostsErrBody?.status}
+            title="Could not load hosts"
+          />
         ) : (
           <HostsList hosts={hosts} />
         )}

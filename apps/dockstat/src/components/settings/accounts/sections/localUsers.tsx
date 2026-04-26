@@ -1,5 +1,5 @@
 import { useAuth } from "@dockstat/auth/client"
-import { Badge, Button, Card, CardBody, Input } from "@dockstat/ui"
+import { Badge, Button, Card, CardBody, DockStatErrorCard, Input } from "@dockstat/ui"
 import { Loader2, Shield, Trash2, UserPlus } from "lucide-react"
 import { useState } from "react"
 import { useAccountsMutations } from "@/hooks/mutations/accounts"
@@ -7,7 +7,7 @@ import { parseApiDate, useAccountsQueries } from "@/hooks/queries/accounts"
 import { toast } from "@/lib/toast"
 
 export function LocalUsersSection() {
-  const { users, usersLoading, refetchUsers } = useAccountsQueries()
+  const { users, usersError, usersLoading, refetchUsers } = useAccountsQueries()
   const { createUserMutation, deleteUserMutation } = useAccountsMutations()
   const { user: loggedInUser } = useAuth()
 
@@ -64,6 +64,23 @@ export function LocalUsersSection() {
       await deleteUserMutation.mutateAsync({ body: undefined, params: { userId } })
       refetchUsers()
     }
+  }
+
+  if (usersError) {
+    return (
+      <DockStatErrorCard
+        action={{
+          label: "Retry",
+          onClick: () => refetchUsers(),
+          variant: "secondary",
+        }}
+        code={usersError.body?.code}
+        description={usersError.body?.description ?? usersError.message}
+        reqId={usersError.body?.reqId}
+        status={usersError.body?.status}
+        title="Could not load users"
+      />
+    )
   }
 
   if (usersLoading) {

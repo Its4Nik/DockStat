@@ -1,4 +1,4 @@
-import { extractEdenError } from "@dockstat/utils"
+import { extractDockStatError, extractEdenError } from "@dockstat/utils"
 import { useQuery } from "@tanstack/react-query"
 import type { EdenQueryData, EdenQueryRoute, UseEdenQueryOptions } from "./types"
 
@@ -19,7 +19,10 @@ export function useEdenQuery<TRoute extends EdenQueryRoute>({
       const { data, error } = await route({ fetch: { signal }, ...opts })
 
       if (error) {
-        throw new Error(extractEdenError({ error }))
+        const dockstatErr = extractDockStatError(error)
+        const message = dockstatErr?.description ?? extractEdenError({ error })
+        const reqId = dockstatErr?.reqId
+        throw new Error(reqId ? `${message} (req: ${reqId})` : message)
       }
 
       return data as TData

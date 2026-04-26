@@ -118,6 +118,11 @@ export function extractErrorMessage(
       return err.message.trim()
     }
 
+    // Check for description field (DockStatErrorBody uses this instead of error/message)
+    if (typeof err.description === "string" && err.description.trim()) {
+      return err.description.trim()
+    }
+
     // Handle Eden treaty error structure: { status: number, error: { success: false, error: "..." } }
     // The error property contains the full API response body
     if (err.error !== null && err.error !== undefined && typeof err.error === "object") {
@@ -130,6 +135,11 @@ export function extractErrorMessage(
 
       if (typeof nestedError.message === "string" && nestedError.message.trim()) {
         return nestedError.message.trim()
+      }
+
+      // Check for description in nested DockStatErrorBody
+      if (typeof nestedError.description === "string" && nestedError.description.trim()) {
+        return nestedError.description.trim()
       }
 
       // Handle Error instance in nested error
@@ -150,6 +160,10 @@ export function extractErrorMessage(
       if (typeof nestedValue.message === "string" && nestedValue.message.trim()) {
         return nestedValue.message.trim()
       }
+
+      if (typeof nestedValue.description === "string" && nestedValue.description.trim()) {
+        return nestedValue.description.trim()
+      }
     }
 
     // Handle data wrapper (alternative response structure)
@@ -162,6 +176,10 @@ export function extractErrorMessage(
 
       if (typeof nestedData.message === "string" && nestedData.message.trim()) {
         return nestedData.message.trim()
+      }
+
+      if (typeof nestedData.description === "string" && nestedData.description.trim()) {
+        return nestedData.description.trim()
       }
     }
 
@@ -293,8 +311,18 @@ export function isEdenError<T>(response: {
  */
 export function extractEdenError(
   response: { status?: number; error?: unknown; data?: unknown },
-  fallback = "Request failed"
+  fallback = "An unexpected error occurred"
 ): string {
+  // Check if the response itself is a DockStatErrorBody-like object (has description)
+  if (
+    typeof response === "object" &&
+    response !== null &&
+    typeof (response as Record<string, unknown>).description === "string"
+  ) {
+    const desc = (response as Record<string, unknown>).description as string
+    if (desc.trim()) return desc.trim()
+  }
+
   if (response.error !== undefined) {
     return extractErrorMessage(response.error, fallback)
   }
@@ -306,6 +334,11 @@ export function extractEdenError(
         return JSON.stringify(data.error)
       }
       return data.error
+    }
+
+    // Check for description in data (DockStatErrorBody)
+    if (typeof data.description === "string" && data.description.trim()) {
+      return data.description.trim()
     }
   }
 
@@ -420,4 +453,218 @@ export function handleElysiaError(error: unknown, fallback = "Request failed"): 
 
   // Fall back to standard error extraction
   return extractErrorMessage(error, fallback)
+}
+
+// ─── DockStat Error System ────────────────────────────────────────────────────
+
+/**
+ * Machine-readable error codes for DockStat errors.
+ * Combines standard HTTP-style codes with domain-specific codes.
+ */
+export enum DockStatErrorCode {
+  BAD_REQUEST = "BAD_REQUEST",
+  UNAUTHORIZED = "UNAUTHORIZED",
+  FORBIDDEN = "FORBIDDEN",
+  NOT_FOUND = "NOT_FOUND",
+  CONFLICT = "CONFLICT",
+  VALIDATION = "VALIDATION",
+  INTERNAL = "INTERNAL",
+  SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE",
+  PARSE = "PARSE",
+  TIMEOUT = "TIMEOUT",
+  DOCKER = "DOCKER",
+  DATABASE = "DATABASE",
+  AUTH = "AUTH",
+  PLUGIN = "PLUGIN",
+}
+
+/**
+ * Structured detail for each error field.
+ * Used to provide fine-grained information about what went wrong.
+ */
+export interface DockStatErrorDetail {
+  field?: string
+  message: string
+  value?: unknown
+  expected?: string
+}
+
+/**
+ * The JSON body sent from the API to the frontend.
+ * This is the canonical error response format.
+ */
+export interface DockStatErrorBody {
+  /** Machine-readable error code */
+  code: DockStatErrorCode
+  /** Human-readable error description */
+  description: string
+  /** Structured details about what went wrong */
+  details?: DockStatErrorDetail[]
+  /** The request ID for tracking */
+  reqId?: string
+  /** HTTP status code */
+  status: number
+  /** ISO timestamp */
+  timestamp: string
+  /** The request path */
+  path?: string
+}
+
+/**
+ * DockStat error class for backend use.
+ * Thrown in route handlers and caught by Elysia's onError handler.
+ *
+ * Elysia reads the `.status` property from error classes to determine
+ * the HTTP response code.
+ */
+export class DockStatError extends Error {
+  readonly code: DockStatErrorCode
+  readonly status: number
+  readonly details?: DockStatErrorDetail[]
+  readonly reqId?: string
+  readonly path?: string
+  readonly timestamp: string
+
+  constructor(opts: {
+    code?: DockStatErrorCode
+    description: string
+    details?: DockStatErrorDetail[]
+    status?: number
+    reqId?: string
+    path?: string
+  }) {
+    super(opts.description)
+    this.name = "DockStatError"
+    this.code = opts.code ?? DockStatErrorCode.INTERNAL
+    this.status = opts.status ?? 500
+    this.details = opts.details
+    this.reqId = opts.reqId
+    this.path = opts.path
+    this.timestamp = new Date().toISOString()
+  }
+
+  /** Serialize to the API response body */
+  toBody(): DockStatErrorBody {
+    return {
+      code: this.code,
+      description: this.message,
+      details: this.details,
+      path: this.path,
+      reqId: this.reqId,
+      status: this.status,
+      timestamp: this.timestamp,
+    }
+  }
+
+  /** Create from a plain body (for deserialization on frontend) */
+  static fromBody(body: DockStatErrorBody): DockStatError {
+    return new DockStatError({
+      code: body.code,
+      description: body.description,
+      details: body.details,
+      path: body.path,
+      reqId: body.reqId,
+      status: body.status,
+    })
+  }
+}
+
+/**
+ * Type guard to check if a value is a DockStatError instance.
+ */
+export function isDockStatError(value: unknown): value is DockStatError {
+  return value instanceof DockStatError
+}
+
+/**
+ * Type guard to check if an unknown value is a DockStatErrorBody.
+ * Validates the required fields: code, description, status, timestamp.
+ */
+export function isDockStatErrorBody(value: unknown): value is DockStatErrorBody {
+  if (value === null || value === undefined || typeof value !== "object") {
+    return false
+  }
+
+  const obj = value as Record<string, unknown>
+
+  return (
+    typeof obj.code === "string" &&
+    Object.values(DockStatErrorCode).includes(obj.code as DockStatErrorCode) &&
+    typeof obj.description === "string" &&
+    typeof obj.status === "number" &&
+    typeof obj.timestamp === "string"
+  )
+}
+
+/**
+ * Extract a DockStatErrorBody from various Eden error shapes.
+ *
+ * Handles:
+ * - Raw `DockStatErrorBody` objects
+ * - Eden's `{ error: DockStatErrorBody }` wrapper
+ * - Nested structures like `{ value: { error: DockStatErrorBody } }`
+ * - `DockStatError` instances (serializes to body)
+ *
+ * @param error - The error value to extract from
+ * @returns A DockStatErrorBody if one can be found, or undefined
+ */
+export function extractDockStatError(error: unknown): DockStatErrorBody | undefined {
+  if (error === null || error === undefined) {
+    return undefined
+  }
+
+  // Handle DockStatError instances
+  if (error instanceof DockStatError) {
+    return error.toBody()
+  }
+
+  // Handle raw DockStatErrorBody
+  if (isDockStatErrorBody(error)) {
+    return error
+  }
+
+  if (typeof error !== "object") {
+    return undefined
+  }
+
+  const obj = error as Record<string, unknown>
+
+  // Handle Eden error structure: { status, error: DockStatErrorBody }
+  if (obj.error !== null && obj.error !== undefined && typeof obj.error === "object") {
+    if (isDockStatErrorBody(obj.error)) {
+      return obj.error
+    }
+
+    // Check nested: error.error or error.message patterns inside Eden's error wrapper
+    const nestedError = obj.error as Record<string, unknown>
+    if (typeof nestedError.error === "object" && nestedError.error !== null) {
+      if (isDockStatErrorBody(nestedError.error)) {
+        return nestedError.error
+      }
+    }
+  }
+
+  // Handle Eden Elysia error structure: { status, value: DockStatErrorBody }
+  if (obj.value !== null && obj.value !== undefined && typeof obj.value === "object") {
+    if (isDockStatErrorBody(obj.value)) {
+      return obj.value
+    }
+
+    // Check for value.error wrapper
+    const nestedValue = obj.value as Record<string, unknown>
+    if (nestedValue.error !== null && nestedValue.error !== undefined) {
+      if (isDockStatErrorBody(nestedValue.error)) {
+        return nestedValue.error
+      }
+    }
+  }
+
+  // Handle API response wrapper: { success: false, error: DockStatErrorBody }
+  if (obj.success === false && obj.error !== undefined) {
+    if (isDockStatErrorBody(obj.error)) {
+      return obj.error
+    }
+  }
+
+  return undefined
 }

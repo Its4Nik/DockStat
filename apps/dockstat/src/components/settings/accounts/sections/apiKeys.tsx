@@ -1,4 +1,4 @@
-import { Button, Card, CardBody, Input, Slides } from "@dockstat/ui"
+import { Button, Card, CardBody, DockStatErrorCard, Input, Slides } from "@dockstat/ui"
 import { Copy, Key, Loader2, Plus, Trash2 } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useAccountsMutations } from "@/hooks/mutations/accounts"
@@ -6,7 +6,7 @@ import { parseApiDate, useApiKeysQuery } from "@/hooks/queries/accounts"
 import { toast } from "@/lib/toast"
 
 export function ApiKeysSection() {
-  const { apiKeys, isLoading, refetch } = useApiKeysQuery()
+  const { apiKeys, error: keysError, isLoading, refetch } = useApiKeysQuery()
   const { createApiKeyMutation, deleteApiKeyMutation } = useAccountsMutations()
 
   const [showCreateDialog, setShowCreateDialog] = useState(false)
@@ -71,6 +71,23 @@ export function ApiKeysSection() {
       description: "API key copied to clipboard",
       title: "Copied!",
     })
+  }
+
+  if (keysError) {
+    return (
+      <DockStatErrorCard
+        action={{
+          label: "Retry",
+          onClick: () => refetch(),
+          variant: "secondary",
+        }}
+        code={keysError.body?.code}
+        description={keysError.body?.description ?? keysError.message}
+        reqId={keysError.body?.reqId}
+        status={keysError.body?.status}
+        title="Could not load API keys"
+      />
+    )
   }
 
   if (isLoading) {

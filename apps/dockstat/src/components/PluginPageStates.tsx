@@ -1,32 +1,10 @@
-import { Card } from "@dockstat/ui"
+import { Card, DockStatErrorCard } from "@dockstat/ui"
 import { motion } from "framer-motion"
-import { AlertTriangle, ArrowLeft, FileX, Loader2, Search } from "lucide-react"
-import { useNavigate } from "react-router"
+import { Loader2 } from "lucide-react"
 
 const cardVariants = {
   animate: { opacity: 1, transition: { duration: 0.3 }, y: 0 },
   initial: { opacity: 0, y: 10 },
-}
-
-const InfoBlock = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex justify-between text-xs font-mono text-secondary-text/70 py-1 border-b border-border/50 last:border-0">
-    <span>{label}:</span>
-    <span className="text-secondary-text">{value}</span>
-  </div>
-)
-
-const HomeButton = () => {
-  const navigate = useNavigate()
-  return (
-    <button
-      className="flex items-center gap-2 px-4 py-2.5 bg-accent-primary text-white text-sm font-medium rounded-lg hover:bg-accent-primary/90 transition-all active:scale-95"
-      onClick={() => navigate("/")}
-      type="button"
-    >
-      <ArrowLeft className="h-4 w-4" />
-      Go Home
-    </button>
-  )
 }
 
 export const PluginPageLoading = () => (
@@ -52,43 +30,25 @@ export const PluginPageError = ({
   pluginId,
   routePath,
   error,
+  reqId,
 }: {
   pluginId: number
   routePath: string
   error: string
+  reqId?: string
 }) => (
-  <motion.div
-    animate="animate"
-    className="w-full max-w-md mx-auto mt-12"
-    initial="initial"
-    variants={cardVariants}
-  >
-    <Card
-      size="md"
-      variant="elevated"
-    >
-      <div className="flex flex-col items-center gap-6 p-8">
-        <div className="p-4 rounded-full bg-error/10">
-          <AlertTriangle className="h-8 w-8 text-error" />
-        </div>
-        <div className="text-center space-y-2">
-          <h1 className="text-xl font-bold text-primary-text">Plugin Error</h1>
-          <p className="text-secondary-text">{error}</p>
-        </div>
-        <div className="w-full bg-muted/50 rounded-lg p-4 mt-2 space-y-1">
-          <InfoBlock
-            label="Plugin ID"
-            value={String(pluginId)}
-          />
-          <InfoBlock
-            label="Route"
-            value={`/${routePath}`}
-          />
-        </div>
-        <HomeButton />
-      </div>
-    </Card>
-  </motion.div>
+  <DockStatErrorCard
+    action={{ label: `Plugin #${pluginId}`, onClick: () => {}, variant: "secondary" }}
+    code="PLUGIN"
+    description={error}
+    details={[
+      { field: "Route", message: `/${routePath}` },
+      { field: "Plugin ID", message: String(pluginId) },
+    ]}
+    reqId={reqId}
+    showHomeButton
+    title="Plugin Error"
+  />
 )
 
 export const PluginPageNotFound = ({
@@ -98,38 +58,18 @@ export const PluginPageNotFound = ({
   pluginId: number
   routePath: string
 }) => (
-  <motion.div
-    animate="animate"
-    className="w-full max-w-md mx-auto mt-12"
-    initial="initial"
-    variants={cardVariants}
-  >
-    <Card
-      size="md"
-      variant="elevated"
-    >
-      <div className="flex flex-col items-center gap-6 p-8">
-        <div className="p-4 rounded-full bg-muted/10">
-          <Search className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <div className="text-center space-y-2">
-          <h1 className="text-xl font-bold text-primary-text">Not Found</h1>
-          <p className="text-secondary-text">The requested plugin page could not be found.</p>
-        </div>
-        <div className="w-full bg-muted/50 rounded-lg p-4 mt-2 space-y-1">
-          <InfoBlock
-            label="Plugin ID"
-            value={String(pluginId)}
-          />
-          <InfoBlock
-            label="Route"
-            value={`/${routePath}`}
-          />
-        </div>
-        <HomeButton />
-      </div>
-    </Card>
-  </motion.div>
+  <DockStatErrorCard
+    code="NOT_FOUND"
+    description="The requested plugin page could not be found."
+    details={[
+      { field: "Route", message: `/${routePath}` },
+      { field: "Plugin ID", message: String(pluginId) },
+    ]}
+    icon="search"
+    showHomeButton
+    status={404}
+    title="Not Found"
+  />
 )
 
 export const PluginPageNoTemplate = ({
@@ -139,38 +79,15 @@ export const PluginPageNoTemplate = ({
   pluginName: string
   route: string
 }) => (
-  <motion.div
-    animate="animate"
-    className="w-full max-w-md mx-auto mt-12"
-    initial="initial"
-    variants={cardVariants}
-  >
-    <Card
-      size="md"
-      variant="elevated"
-    >
-      <div className="flex flex-col items-center gap-6 p-8">
-        <div className="p-4 rounded-full bg-muted/10">
-          <FileX className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <div className="text-center space-y-2">
-          <h1 className="text-xl font-bold text-primary-text">No Template</h1>
-          <p className="text-secondary-text">
-            This plugin page doesn't have a valid template configured.
-          </p>
-        </div>
-        <div className="w-full bg-muted/50 rounded-lg p-4 mt-2 space-y-1">
-          <InfoBlock
-            label="Plugin"
-            value={pluginName}
-          />
-          <InfoBlock
-            label="Route"
-            value={route}
-          />
-        </div>
-        <HomeButton />
-      </div>
-    </Card>
-  </motion.div>
+  <DockStatErrorCard
+    code="PLUGIN"
+    description="This plugin page doesn't have a valid template configured."
+    details={[
+      { field: "Plugin", message: pluginName },
+      { field: "Route", message: route },
+    ]}
+    icon="file"
+    showHomeButton
+    title="No Template"
+  />
 )

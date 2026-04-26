@@ -5,6 +5,20 @@ import type { ElysiaWS } from "elysia/ws"
 import type { ApiKeysTable } from "./types"
 import { verifyAuthToken } from "./utils/jwt"
 
+/**
+ * Structured error body matching DockStatErrorBody from @dockstat/utils.
+ * Defined inline to avoid coupling @dockstat/auth to @dockstat/utils.
+ * The API's global onError handler will respect this shape.
+ */
+interface AuthErrorBody {
+  code: string
+  description: string
+  path?: string
+  reqId?: string
+  status: number
+  timestamp: string
+}
+
 export type AuthUser = {
   sub: string
   email?: string
@@ -192,7 +206,14 @@ export const getMiddlewareFunctions = (
         if (!isAuthenticated) {
           logger.error("Not authenticated", reqId)
           set.status = 401
-          return { error }
+          return {
+            code: "UNAUTHORIZED",
+            description: error,
+            path: new URL(request.url).pathname,
+            reqId,
+            status: 401,
+            timestamp: new Date().toISOString(),
+          } satisfies AuthErrorBody
         }
       },
       detail: {
@@ -284,7 +305,14 @@ export const getMiddlewareFunctions = (
         if (!isAuthenticated || !user || user.authMethod !== "apikey") {
           logger.error("Not authenticated with API key", reqId)
           set.status = 401
-          return { error }
+          return {
+            code: "UNAUTHORIZED",
+            description: error,
+            path: new URL(request.url).pathname,
+            reqId,
+            status: 401,
+            timestamp: new Date().toISOString(),
+          } satisfies AuthErrorBody
         }
       },
       detail: {

@@ -1,4 +1,5 @@
-import { Card, CardBody, Divider, Slides } from "@dockstat/ui"
+import { Card, CardBody, Divider, DockStatErrorCard, Slides } from "@dockstat/ui"
+import { extractDockStatError } from "@dockstat/utils"
 import { Plus, Split } from "lucide-react"
 import { useContext } from "react"
 import { ClientCard, HostsList } from "@/components/clients"
@@ -13,7 +14,11 @@ export default function ConfigureClientsPage() {
 
   const eden = useContext(EdenClientContext)
 
-  const { data: clientsData } = eden.query({
+  const {
+    data: clientsData,
+    error: clientsError,
+    isError: clientsIsError,
+  } = eden.query({
     queryKey: ["fetchDockerClients"],
     route: api.docker.client.all({ stored: "true" }).get,
   })
@@ -23,10 +28,17 @@ export default function ConfigureClientsPage() {
     route: api.docker.manager["pool-stats"].get,
   })
 
-  const { data: hosts } = eden.query({
+  const {
+    data: hosts,
+    error: hostsError,
+    isError: hostsIsError,
+  } = eden.query({
     queryKey: ["fetchHosts"],
     route: api.docker.hosts.get,
   })
+
+  const clientsErrBody = clientsIsError ? extractDockStatError(clientsError) : undefined
+  const hostsErrBody = hostsIsError ? extractDockStatError(hostsError) : undefined
 
   const workersByClientId =
     poolStatus?.workers.reduce(
@@ -36,6 +48,20 @@ export default function ConfigureClientsPage() {
       },
       {} as Record<number, (typeof poolStatus.workers)[0]>
     ) || {}
+
+  if (clientsIsError) {
+    return (
+      <DockStatErrorCard
+        code={clientsErrBody?.code}
+        description={
+          clientsErrBody?.description ?? clientsError?.message ?? "Failed to load Docker clients"
+        }
+        reqId={clientsErrBody?.reqId}
+        status={clientsErrBody?.status}
+        title="Could not load clients"
+      />
+    )
+  }
 
   return (
     <div className="flex flex-col gap-6 p-4">
@@ -111,7 +137,19 @@ export default function ConfigureClientsPage() {
       <Divider />
 
       <div>
-        <HostsList hosts={hosts} />
+        {hostsIsError ? (
+          <DockStatErrorCard
+            code={hostsErrBody?.code}
+            description={
+              hostsErrBody?.description ?? hostsError?.message ?? "Failed to load Docker hosts"
+            }
+            reqId={hostsErrBody?.reqId}
+            status={hostsErrBody?.status}
+            title="Could not load hosts"
+          />
+        ) : (
+          <HostsList hosts={hosts} />
+        )}
       </div>
     </div>
   )

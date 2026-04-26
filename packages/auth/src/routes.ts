@@ -1,5 +1,6 @@
 import type Logger from "@dockstat/logger"
 import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
+import { error } from "@dockstat/utils"
 import Elysia, { t } from "elysia"
 import * as client from "openid-client"
 import type { ConfigService } from "./config"
@@ -431,7 +432,6 @@ export function createAuthRoutes(
           async ({ body, set }) => {
             try {
               const requestBody = body as { name: string; pass: string }
-
               // Find user by username
               const user = users
                 .select(["id", "name", "passHash"])
@@ -441,7 +441,14 @@ export function createAuthRoutes(
               if (!user) {
                 logger.warn(`Login attempt for non-existent user: ${requestBody.name}`)
                 set.status = 401
-                return { error: "Invalid credentials" }
+
+                const err = new error.DockStatError({
+                  code: "UNAUTHORIZED",
+                  description: "Invalid credentials",
+                  status: 401,
+                })
+
+                return err
               }
 
               // Verify password
@@ -449,8 +456,16 @@ export function createAuthRoutes(
 
               if (!isValid) {
                 logger.warn(`Failed login attempt for user: ${requestBody.name}`)
+
                 set.status = 401
-                return { error: "Invalid credentials" }
+
+                const err = new error.DockStatError({
+                  code: "UNAUTHORIZED",
+                  description: "Invalid credentials",
+                  status: 401,
+                })
+
+                return err
               }
 
               logger.info(`Successful login for local user: ${requestBody.name}`)

@@ -1,115 +1,157 @@
-import { extractErrorMessage } from "@dockstat/utils"
+import {
+  type DockStatErrorBody,
+  DockStatErrorCode,
+  type DockStatErrorDetail,
+  extractErrorMessage,
+  isDockStatError,
+} from "@dockstat/utils"
 import Elysia, { type ValidationError } from "elysia"
 import { AuthHandler } from "../auth"
 import BaseLogger from "../logger"
 
 const logger = BaseLogger.spawn("Error")
 
+/**
+ * Parse an Elysia ValidationError into structured DockStatErrorDetail[].
+ */
+function parseValidationDetails(ve: ValidationError): DockStatErrorDetail[] {
+  const details: DockStatErrorDetail[] = []
+  try {
+    const parsed = JSON.parse(ve.message)
+    if (Array.isArray(parsed.errors)) {
+      for (const e of parsed.errors) {
+        details.push({
+          expected: e.schema ? JSON.stringify(e.schema) : undefined,
+          field:
+            typeof e.path === "string" ? e.path.replaceAll("/", ".").replace(/^\./, "") : undefined,
+          message: String(e.summary ?? e.message ?? "Validation failed"),
+          value: e.value,
+        })
+      }
+    }
+  } catch {
+    details.push({ message: ve.message })
+  }
+  return details
+}
+
 export const errorHandler = new Elysia()
   .onError(({ code, error, set, request }) => {
     const path = new URL(request.url).pathname
-    const timestamp = new Date().toISOString()
     const reqId = AuthHandler.getStateMap().get(request)?.reqId
+    const timestamp = new Date().toISOString()
 
-    logger.error(`Caught an Error on ${path}`, reqId)
+    // ── DockStatError: already fully structured ──────────────────────
+    if (isDockStatError(error)) {
+      logger.error(`[${error.code}] ${error.message}`, reqId)
+      set.status = error.status
+      return {
+        ...error.toBody(),
+        path: error.path ?? path,
+        reqId: error.reqId ?? reqId,
+      } satisfies DockStatErrorBody
+    }
 
+    // ── VALIDATION: schema validation errors ─────────────────────────
     if (code === "VALIDATION") {
-      const validationError = error as ValidationError
+      const ve = error as ValidationError
 
-      // Check if it's a response validation error (server-side)
-      if (validationError.type === "response") {
+      // Response validation failure = server bug
+      if (ve.type === "response") {
+        logger.error(`Response validation failed on ${path}`, reqId)
         set.status = 500
-
-        const allErrors: Array<{ [x: string]: string }> = JSON.parse(validationError.message).errors
-        const parsedErrors: Array<{ message: string; path: string }> = allErrors.map((e) => {
-          const message = String(e.summary)
-          const path = String(e.path).replaceAll("/", ".")
-
-          logger.error(`Validation on ${path}: ${path}`)
-
-          return { message, path }
-        })
-
         return {
-          error: parsedErrors,
-          message: "Response validation failed",
-        }
+          code: DockStatErrorCode.INTERNAL,
+          description: "Response validation failed",
+          details: [{ message: "The server produced an unexpected response shape" }],
+          path,
+          reqId,
+          status: 500,
+          timestamp,
+        } satisfies DockStatErrorBody
       }
 
-      // Request validation errors (client-side)
+      logger.error(`Request validation failed on ${path}`, reqId)
       set.status = 400
 
-      // In production, hide validation details for security
+      // Production: hide field-level details
       if (process.env.NODE_ENV === "production") {
         return {
-          error: "Validation failed",
-          message: validationError.message,
+          code: DockStatErrorCode.VALIDATION,
+          description: "Validation failed",
           path,
-          success: false,
+          reqId,
+          status: 400,
           timestamp,
-        }
+        } satisfies DockStatErrorBody
       }
 
-      // In development, show details
+      // Dev: full structured details
       return {
-        detail: validationError.all,
-        error: "Validation failed",
-        message: validationError.message,
+        code: DockStatErrorCode.VALIDATION,
+        description: "Validation failed",
+        details: parseValidationDetails(ve),
         path,
-        success: false,
+        reqId,
+        status: 400,
         timestamp,
-      }
+      } satisfies DockStatErrorBody
     }
 
-    // Handle parser errors (malformed JSON, etc.)
+    // ── PARSE: malformed request body ────────────────────────────────
     if (code === "PARSE") {
+      logger.error(`Parse error on ${path}`, reqId)
       set.status = 400
       return {
-        error: "Parse error",
-        message: "Invalid request format",
+        code: DockStatErrorCode.PARSE,
+        description: "Invalid request format",
         path,
-        success: false,
+        reqId,
+        status: 400,
         timestamp,
-      }
+      } satisfies DockStatErrorBody
     }
 
-    // Handle not found errors
+    // ── NOT_FOUND ────────────────────────────────────────────────────
     if (code === "NOT_FOUND") {
+      logger.error(`Not found: ${request.method} ${path}`, reqId)
       set.status = 404
       return {
-        error: "Not found",
-        message: `Cannot ${request.method} ${path}`,
+        code: DockStatErrorCode.NOT_FOUND,
+        description: `Cannot ${request.method} ${path}`,
         path,
-        success: false,
+        reqId,
+        status: 404,
         timestamp,
-      }
+      } satisfies DockStatErrorBody
     }
 
-    // Handle internal server errors
+    // ── INTERNAL_SERVER_ERROR ────────────────────────────────────────
     if (code === "INTERNAL_SERVER_ERROR") {
-      const errorMessage = extractErrorMessage(error, "An unexpected error occurred")
+      const msg = extractErrorMessage(error, "An unexpected error occurred")
+      logger.error(`Internal server error on ${path}: ${msg}`, reqId)
       set.status = 500
       return {
-        error: "Internal server error",
-        message: errorMessage,
+        code: DockStatErrorCode.INTERNAL,
+        description: msg,
         path,
-        success: false,
+        reqId,
+        status: 500,
         timestamp,
-      }
+      } satisfies DockStatErrorBody
     }
 
-    // Handle unknown errors - use the centralized error extraction
+    // ── Fallback: unknown error code ─────────────────────────────────
+    const msg = extractErrorMessage(error, "An unexpected error occurred")
+    logger.error(`Unhandled error (${code}) on ${path}: ${msg}`, reqId)
     set.status = 500
-    const errorMessage = extractErrorMessage(error, "An unexpected error occurred")
-
-    console.error("Unhandled error:", { code, error, path, timestamp })
-
     return {
-      error: errorMessage,
-      message: "An unexpected error occurred",
+      code: DockStatErrorCode.INTERNAL,
+      description: msg,
       path,
-      success: false,
+      reqId,
+      status: 500,
       timestamp,
-    }
+    } satisfies DockStatErrorBody
   })
   .as("global")

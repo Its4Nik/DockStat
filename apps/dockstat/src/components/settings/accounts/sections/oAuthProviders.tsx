@@ -1,4 +1,4 @@
-import { Button, Card, CardBody, Input } from "@dockstat/ui"
+import { Button, Card, CardBody, DockStatErrorCard, Input } from "@dockstat/ui"
 import {
   type IconType,
   SiAuth0,
@@ -60,7 +60,7 @@ export const mapIconNameToIcon = (
 }
 
 export function OAuthProvidersSection() {
-  const { providers, providersLoading, refetchProviders } = useAccountsQueries()
+  const { providers, providersError, providersLoading, refetchProviders } = useAccountsQueries()
   const { createProviderMutation, deleteProviderMutation } = useAccountsMutations()
 
   const [showCreateDialog, setShowCreateDialog] = useState(false)
@@ -125,6 +125,23 @@ export function OAuthProvidersSection() {
         setProviderName(provider.name)
       }
     }
+  }
+
+  if (providersError) {
+    return (
+      <DockStatErrorCard
+        action={{
+          label: "Retry",
+          onClick: () => refetchProviders(),
+          variant: "secondary",
+        }}
+        code={providersError.body?.code}
+        description={providersError.body?.description ?? providersError.message}
+        reqId={providersError.body?.reqId}
+        status={providersError.body?.status}
+        title="Could not load providers"
+      />
+    )
   }
 
   if (providersLoading) {

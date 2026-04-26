@@ -25,6 +25,11 @@ export {
   type DividerVariant,
 } from "./Divider/Divider"
 export {
+  DockStatErrorCard,
+  type DockStatErrorCardProps,
+  type DockStatErrorDetail,
+} from "./DockStatError/DockStatErrorCard"
+export {
   ExtensionBrowser,
   type ExtensionBrowserProps,
 } from "./Extensions/Browser"

@@ -1,4 +1,5 @@
-import { Button, Card, Input } from "@dockstat/ui"
+import { Button, Card, DockStatErrorCard, Input } from "@dockstat/ui"
+import { extractDockStatError } from "@dockstat/utils"
 import { Plus } from "lucide-react"
 import { useContext, useState } from "react"
 import { RepoCard } from "@/components/extensions/RepoCard"
@@ -13,10 +14,17 @@ export default function ExtensionsIndex() {
   const eden = useContext(EdenClientContext)
   const [repoLink, setRepoLink] = useState("")
 
-  const { data } = eden.query({
+  const {
+    data,
+    error: reposError,
+    isError: reposIsError,
+    isLoading: reposIsLoading,
+  } = eden.query({
     queryKey: ["fetchAllRepositories"],
     route: api.repositories.all.get,
   })
+
+  const reposErrBody = reposIsError ? extractDockStatError(reposError) : undefined
 
   const addRepoMutation = useAddRepoMutation()
 
@@ -33,9 +41,27 @@ export default function ExtensionsIndex() {
 
   const isFormValid = repoLink.trim().length > 0
 
+  if (reposIsError) {
+    return (
+      <DockStatErrorCard
+        code={reposErrBody?.code}
+        description={
+          reposErrBody?.description ?? reposError?.message ?? "Failed to load repositories"
+        }
+        reqId={reposErrBody?.reqId}
+        status={reposErrBody?.status}
+        title="Could not load repositories"
+      />
+    )
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {data?.length === 0 ? (
+      {reposIsLoading ? (
+        <div className="col-span-full text-center py-12 text-muted-text">
+          Loading repositories...
+        </div>
+      ) : data?.length === 0 ? (
         <Card
           className="border-dashed border-2 hover:border-accent/60 transition-colors"
           variant="outlined"

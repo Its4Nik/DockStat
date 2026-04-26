@@ -1,4 +1,15 @@
-import { Button, Card, CardBody, CardHeader, Divider, Input, Slides, Toggle } from "@dockstat/ui"
+import {
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Divider,
+  DockStatErrorCard,
+  Input,
+  Slides,
+  Toggle,
+} from "@dockstat/ui"
+import { extractDockStatError } from "@dockstat/utils"
 import { Activity, Server, Shield } from "lucide-react"
 import { useContext, useState } from "react"
 import { DockNodeCard } from "@/components/docknode/card"
@@ -34,10 +45,17 @@ export default function DockNodePage() {
   const isValid =
     options.name.trim().length >= 3 && options.host.trim().length >= 5 && options.port > 0
 
-  const { data: docknodes, isLoading } = eden.query({
+  const {
+    data: docknodes,
+    error: docknodesError,
+    isError: docknodesIsError,
+    isLoading,
+  } = eden.query({
     queryKey: ["getAllDockNodes"],
     route: api.node.get,
   })
+
+  const docknodesErrBody = docknodesIsError ? extractDockStatError(docknodesError) : undefined
 
   const { createDockNodeMutation, deleteDockNodeMutation } = useDockNodeMutations()
 
@@ -192,6 +210,18 @@ export default function DockNodePage() {
             ),
             Nodes: isLoading ? (
               <div className="text-center py-12 text-muted-text">Loading dock nodes...</div>
+            ) : docknodesIsError ? (
+              <DockStatErrorCard
+                code={docknodesErrBody?.code}
+                description={
+                  docknodesErrBody?.description ??
+                  docknodesError?.message ??
+                  "Failed to load DockNodes"
+                }
+                reqId={docknodesErrBody?.reqId}
+                status={docknodesErrBody?.status}
+                title="Could not load nodes"
+              />
             ) : !docknodes || docknodes.length === 0 ? (
               <Card className="text-center py-12 text-muted-text text-xl">
                 No DockNodes configured yet. Use "

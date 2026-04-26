@@ -1,4 +1,5 @@
-import { Badge, Button, Card, Divider, nodeTypes } from "@dockstat/ui"
+import { Badge, Button, Card, Divider, DockStatErrorCard, nodeTypes } from "@dockstat/ui"
+import { extractDockStatError } from "@dockstat/utils"
 import {
   Background,
   BackgroundVariant,
@@ -52,18 +53,19 @@ export function GraphFlow() {
   }, [])
 
   if (error) {
+    const errBody = extractDockStatError(error)
     return (
       <div className="flex items-center justify-center h-full">
-        <Card
-          className="p-6"
-          variant="elevated"
-        >
-          <div className="text-center">
-            <div className="text-destructive text-lg font-semibold mb-2">Error Loading Graph</div>
-            <div className="text-muted-text mb-4">{String(error)}</div>
-            <Button onClick={() => refetch()}>Retry</Button>
-          </div>
-        </Card>
+        <DockStatErrorCard
+          action={{ label: "Retry", onClick: () => refetch(), variant: "secondary" }}
+          code={errBody?.code}
+          description={
+            errBody?.description ?? error?.message ?? "Failed to load infrastructure graph"
+          }
+          reqId={errBody?.reqId}
+          status={errBody?.status}
+          title="Error Loading Graph"
+        />
       </div>
     )
   }
