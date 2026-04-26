@@ -356,7 +356,7 @@ export function OAuthProvidersSection() {
         <Card variant="outlined">
           <CardBody className="py-8 text-center">
             <Globe
-              className="mx-auto mb-3 text-muted-text/50"
+              className="mx-auto mb-3 text-muted-text"
               size={32}
             />
             <p className="text-sm text-white/40">No OAuth providers configured</p>

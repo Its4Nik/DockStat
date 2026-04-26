@@ -1,13 +1,15 @@
-import { Button, Card, CardBody, Input } from "@dockstat/ui"
+import { useAuth } from "@dockstat/auth/client"
+import { Badge, Button, Card, CardBody, Input } from "@dockstat/ui"
 import { Loader2, Shield, Trash2, UserPlus } from "lucide-react"
 import { useState } from "react"
 import { useAccountsMutations } from "@/hooks/mutations/accounts"
-import { useAccountsQueries } from "@/hooks/queries/accounts"
+import { parseApiDate, useAccountsQueries } from "@/hooks/queries/accounts"
 import { toast } from "@/lib/toast"
 
 export function LocalUsersSection() {
   const { users, usersLoading, refetchUsers } = useAccountsQueries()
   const { createUserMutation, deleteUserMutation } = useAccountsMutations()
+  const { user: loggedInUser } = useAuth()
 
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [newUserName, setNewUserName] = useState("")
@@ -190,18 +192,28 @@ export function LocalUsersSection() {
                   <div>
                     <p className="font-medium text-white/90">{user.name}</p>
                     <p className="text-xs text-white/40">
-                      Created: {new Date(user.createdAt).toLocaleDateString()}
+                      Created: {parseApiDate(user.createdAt)?.toLocaleDateString()}
                     </p>
                   </div>
                 </div>
-                <Button
-                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                  onClick={() => handleDeleteUser(user.id, user.name)}
-                  size="sm"
-                  variant="ghost"
-                >
-                  <Trash2 size={16} />
-                </Button>
+                {(loggedInUser?.name || loggedInUser?.sub) !== user.name ? (
+                  <Button
+                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                    onClick={() => handleDeleteUser(user.id, user.name)}
+                    size="sm"
+                    variant="ghost"
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                ) : (
+                  <Badge
+                    outlined
+                    rounded
+                    size="lg"
+                  >
+                    Currently logged in
+                  </Badge>
+                )}
               </CardBody>
             </Card>
           ))}

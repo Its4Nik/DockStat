@@ -2,7 +2,31 @@ import { useContext } from "react"
 import { EdenClientContext } from "@/contexts/edenClient"
 import { api } from "@/lib/api"
 
-// API response types
+/**
+ * Safely parse a date value from the API into a JavaScript Date.
+ * Handles ISO 8601 strings, Unix timestamps (seconds), and already-parsed Date objects.
+ */
+export function parseApiDate(value: Date | string | number | null | undefined): Date | null {
+  if (value === null || value === undefined) return null
+
+  // Already a Date (e.g. from a transformer)
+  if (value instanceof Date) return value
+
+  // ISO 8601 string from serialized backend response
+  if (typeof value === "string") {
+    const parsed = new Date(value)
+    return Number.isNaN(parsed.getTime()) ? null : parsed
+  }
+
+  // Unix timestamp in seconds — multiply by 1000 for JS milliseconds
+  if (typeof value === "number") {
+    return new Date(value * 1000)
+  }
+
+  return null
+}
+
+// API response types (match Eden-inferred types from backend)
 interface User {
   createdAt: Date
   id: string

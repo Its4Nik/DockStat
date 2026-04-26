@@ -2,7 +2,7 @@ import { Button, Card, CardBody, Input, Slides } from "@dockstat/ui"
 import { Copy, Key, Loader2, Plus, Trash2 } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useAccountsMutations } from "@/hooks/mutations/accounts"
-import { useApiKeysQuery } from "@/hooks/queries/accounts"
+import { parseApiDate, useApiKeysQuery } from "@/hooks/queries/accounts"
 import { toast } from "@/lib/toast"
 
 export function ApiKeysSection() {
@@ -102,17 +102,17 @@ export function ApiKeysSection() {
             <div className="flex items-center gap-3 text-xs text-white/40 mt-0.5">
               <span>Scopes: {key.scopes}</span>
               <span>•</span>
-              <span>Created: {new Date(key.createdAt).toLocaleDateString()}</span>
+              <span>Created: {parseApiDate(key.createdAt)?.toLocaleDateString()}</span>
               {key.lastUsedAt && (
                 <>
                   <span>•</span>
-                  <span>Last used: {new Date(key.lastUsedAt).toLocaleDateString()}</span>
+                  <span>Last used: {parseApiDate(key.lastUsedAt)?.toLocaleDateString()}</span>
                 </>
               )}
               {key.expiresAt && (
                 <>
                   <span>•</span>
-                  <span>Expires: {new Date(key.expiresAt).toLocaleDateString()}</span>
+                  <span>Expires: {parseApiDate(key.expiresAt)?.toLocaleDateString()}</span>
                 </>
               )}
             </div>
@@ -298,7 +298,7 @@ export function ApiKeysSection() {
               <Card variant="outlined">
                 <CardBody className="py-8 text-center">
                   <Key
-                    className="mx-auto mb-3 text-muted-text/50"
+                    className="mx-auto mb-3 text-muted-text"
                     size={32}
                   />
                   <p className="text-sm text-white/40">No active API keys</p>

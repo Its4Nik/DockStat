@@ -18,13 +18,12 @@ import {
   SiYandexcloud,
 } from "@icons-pack/react-simple-icons"
 import { ArrowRight, DoorOpen, Eye, EyeOff, Loader2, Shield } from "lucide-react"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { Footer } from "@/components/auth/Footer"
 import { PageHeader } from "@/components/auth/Header"
 import { HeroPanel } from "@/components/auth/HeroPanel"
 
-import { ProvidersError } from "@/components/auth/ProviderError"
 import { ProviderList } from "@/components/auth/ProviderList"
 import { ProvidersLoading } from "@/components/auth/ProviderLoading"
 import { AnimatedIconBackground } from "@/components/auth/SignInBg"
@@ -110,6 +109,29 @@ function SignInPage() {
     allowRegistration,
   } = useLocalAuthCheck()
 
+  const [error, setError] = useState<string | null>(null)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const setTimedError = useCallback((newError: string | null) => {
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
+
+    setError(newError)
+
+    if (newError) {
+      timeoutRef.current = setTimeout(() => {
+        setError(null)
+        timeoutRef.current = null // Clean up the ref
+      }, 3000)
+    }
+  }, [])
+
+  useEffect(() => {
+    setTimedError(providersError)
+  }, [providersError, setTimedError])
+
   const showDivider =
     !localChecking &&
     localUsersExist &&
@@ -144,25 +166,26 @@ function SignInPage() {
   return (
     <AnimatedIconBackground
       icons={floatingIcons}
-      isError={providersError !== null}
+      isError={error !== null}
     >
       <div className="min-h-screen relative flex overflow-hidden">
-        <HeroPanel />
+        <HeroPanel
+          error={error}
+          refetchProviders={refetchProviders}
+        />
 
         <div className="relative w-full lg:w-[48%] min-h-screen flex items-center justify-center p-5 sm:p-8 overflow-auto">
           <div className="w-full max-w-115 relative z-10 py-8 lg:py-0">
             <Card
               className={"rounded-3xl p-7 sm:p-9 slide-r"}
               glass
-              variant={providersError !== null ? "error" : "default"}
+              variant={error !== null ? "error" : "default"}
             >
               <PageHeader />
 
               {providersLoading && <ProvidersLoading />}
 
-              {providersError && <ProvidersError onRetry={refetchProviders} />}
-
-              {providers.length >= 1 && !providersError && (
+              {providers.length >= 1 && !error && (
                 <ProviderList
                   onSelect={handleProviderSelect}
                   providers={providers}
@@ -223,11 +246,17 @@ function SignInPage() {
 
               {/* Form Content */}
               <div className="min-h-70">
-                {activeTab === "login" && !localChecking && localUsersExist && <LoginFormContent />}
+                {activeTab === "login" && !localChecking && localUsersExist && (
+                  <LoginFormContent
+                    error={error}
+                    setError={setTimedError}
+                  />
+                )}
                 {activeTab === "register" && showRegisterTab && (
                   <RegisterContent
                     allowGuest={allowRegistration}
                     isAuthenticated={isAuthenticated}
+                    setError={setTimedError}
                   />
                 )}
               </div>
@@ -242,9 +271,15 @@ function SignInPage() {
 }
 
 // Extracted Login Form Component for better performance
-function LoginFormContent() {
-  const { formData, error, isSubmitting, showPassword, handleSubmit, updateField, togglePassword } =
-    useLocalLogin()
+function LoginFormContent({
+  error,
+  setError,
+}: {
+  error: string | null
+  setError: (err: string | null) => void
+}) {
+  const { formData, isSubmitting, showPassword, handleSubmit, updateField, togglePassword } =
+    useLocalLogin({ error, setError })
 
   return (
     <>
@@ -304,12 +339,6 @@ function LoginFormContent() {
           </div>
         </div>
 
-        {error && (
-          <div className="px-4 py-3 rounded-xl bg-red-500/5 border border-red-500/10">
-            <p className="text-sm text-red-300/80">{error}</p>
-          </div>
-        )}
-
         <button
           className="cta-button w-full py-3.5 text-white font-semibold text-sm flex items-center justify-center gap-2"
           disabled={isSubmitting || !formData.name || !formData.pass}
@@ -339,9 +368,11 @@ function LoginFormContent() {
 function RegisterContent({
   allowGuest,
   isAuthenticated,
+  setError,
 }: {
   allowGuest: boolean
   isAuthenticated: boolean
+  setError: (error: null | string) => void
 }) {
   if (allowGuest === false && isAuthenticated !== true) {
     return null
@@ -350,13 +381,12 @@ function RegisterContent({
   const [name, setName] = useState<string>("")
   const [pass, setPass] = useState<string>("")
   const [showPass, setShowPass] = useState(false)
-  const [err, setErr] = useState<null | string>(null)
 
   const { registerLocalUser } = useCreateUserMutations()
 
   const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault()
-    setErr(null)
+    setError(null)
 
     registerLocalUser.mutate({
       name,
@@ -364,7 +394,7 @@ function RegisterContent({
     })
 
     if (registerLocalUser.error !== null) {
-      setErr(registerLocalUser.error.toString())
+      setError(registerLocalUser.error.toString())
     }
   }
 
@@ -427,12 +457,6 @@ function RegisterContent({
             </button>
           </div>
         </div>
-
-        {err && (
-          <div className="px-4 py-3 rounded-xl bg-red-500/5 border border-red-500/10">
-            <p className="text-sm text-red-300/80">{err}</p>
-          </div>
-        )}
 
         <button
           className="cta-button w-full py-3.5 text-white font-semibold text-sm flex items-center justify-center gap-2"

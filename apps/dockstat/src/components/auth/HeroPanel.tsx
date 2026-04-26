@@ -1,9 +1,14 @@
-import { Activity, Boxes, Container, Network } from "lucide-react"
 // @ts-expect-error
 import DockStatLogo from "@/assets/DockStat-wide-white.png"
-import { FeaturePill } from "./FeaturePill"
+import { SignInError } from "./ProviderError"
 
-export function HeroPanel() {
+export function HeroPanel({
+  error,
+  refetchProviders,
+}: {
+  error: string | null
+  refetchProviders: () => void
+}) {
   return (
     <div className="hero-panel relative hidden lg:flex flex-col w-[52%] min-h-screen p-12 xl:p-16 overflow-hidden">
       <div className="relative z-10">
@@ -25,28 +30,12 @@ export function HeroPanel() {
           extensible plugin architecture.
         </p>
 
-        <div className="space-y-3 slide-l-d4">
-          <FeaturePill
-            delay={0.3}
-            icon={Container}
-            label="Full container & stack lifecycle management"
+        {error && (
+          <SignInError
+            error={error}
+            onRetry={refetchProviders}
           />
-          <FeaturePill
-            delay={0.4}
-            icon={Activity}
-            label="Real-time monitoring with graph visualizations"
-          />
-          <FeaturePill
-            delay={0.5}
-            icon={Boxes}
-            label="Runtime plugin system & DockStore marketplace"
-          />
-          <FeaturePill
-            delay={0.6}
-            icon={Network}
-            label="Multi-node Docker host orchestration"
-          />
-        </div>
+        )}
       </div>
     </div>
   )

@@ -1,9 +1,14 @@
 import { useCallback, useState } from "react"
 import { api, getAuthHeaders } from "@/lib/api"
 
-export function useLocalLogin() {
+export function useLocalLogin({
+  setError,
+  error,
+}: {
+  setError: (err: string | null) => void
+  error: string | null
+}) {
   const [formData, setFormData] = useState({ name: "", pass: "" })
-  const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 

@@ -19,6 +19,22 @@ export function createAuthRoutes(
   setAllowGuestRegistration: (enable: boolean) => void,
   requireAuth: () => Record<string, unknown>
 ) {
+  /** Convert Unix timestamp (seconds) fields to ISO 8601 strings for JSON response */
+  const serializeDates = <T extends Record<string, unknown>>(
+    row: T,
+    dateFields: (keyof T)[]
+  ): T => {
+    const result = { ...row }
+    for (const field of dateFields) {
+      const value = result[field]
+      if (value !== null && value !== undefined && typeof value === "number") {
+        // Unix timestamp in seconds → ISO string
+        ;(result as Record<string, unknown>)[field as string] = new Date(value * 1000).toISOString()
+      }
+    }
+    return result
+  }
+
   return new Elysia({ detail: { tags: ["Auth"] }, prefix: "/auth" })
     .post(
       "/providers",
@@ -279,7 +295,8 @@ export function createAuthRoutes(
       () =>
         table
           .select(["id", "issuer_url", "scopes", "client_id", "created_at", "name", "icon"])
-          .all(),
+          .all()
+          .map((p) => serializeDates(p, ["created_at"])),
       {
         //...requireAuth(),
         detail: {
@@ -511,7 +528,10 @@ export function createAuthRoutes(
       "/users",
       async () => {
         try {
-          const userList = users.select(["id", "name", "createdAt", "updatedAt"]).all()
+          const userList = users
+            .select(["id", "name", "createdAt", "updatedAt"])
+            .all()
+            .map((u) => serializeDates(u, ["createdAt", "updatedAt"]))
           return { users: userList }
         } catch (error) {
           logger.error(`Failed to list users: ${error}`)
@@ -593,13 +613,16 @@ export function createAuthRoutes(
               logger.info(`API key created for user ${requestBody.userId}: ${apiKeyRecord.id}`)
 
               return {
-                apiKey: {
-                  expiresAt: apiKeyRecord.expiresAt,
-                  id: apiKeyRecord.id,
-                  key: apiKey, // Only return the key once!
-                  name: apiKeyRecord.name,
-                  scopes: apiKeyRecord.scopes,
-                },
+                apiKey: serializeDates(
+                  {
+                    expiresAt: apiKeyRecord.expiresAt,
+                    id: apiKeyRecord.id,
+                    key: apiKey, // Only return the key once!
+                    name: apiKeyRecord.name,
+                    scopes: apiKeyRecord.scopes,
+                  },
+                  ["expiresAt"]
+                ),
                 success: true,
               }
             } catch (error) {
@@ -640,6 +663,9 @@ export function createAuthRoutes(
                     ])
                     .where({ userId: queryParams.userId })
                     .all()
+                    .map((k) =>
+                      serializeDates(k, ["createdAt", "expiresAt", "lastUsedAt", "revokedAt"])
+                    )
                 : apiKeys
                     .select([
                       "id",
@@ -651,6 +677,9 @@ export function createAuthRoutes(
                       "revokedAt",
                     ])
                     .all()
+                    .map((k) =>
+                      serializeDates(k, ["createdAt", "expiresAt", "lastUsedAt", "revokedAt"])
+                    )
 
               return { keys }
             } catch (error) {

@@ -7,7 +7,6 @@ interface AnimatedIconBackgroundProps {
   children?: React.ReactNode
 }
 
-// Simple floating icon with minimal animations
 function SimpleFloatingIcon({
   icon,
   index,
@@ -20,33 +19,78 @@ function SimpleFloatingIcon({
   // Distribute icons across the left side (hero panel area)
   const x = 10 + (index % 3) * 25
   const y = 20 + Math.floor(index / 3) * 30
-  const delay = index * 0.2
-  // Deterministic size based on index to prevent size changes on re-render
+
+  // Deterministic size based on index
   const size = 45 + (index % 5) * 8
+
+  // Give each icon unique, slightly offset timings
+  // Using different durations for X and Y creates smooth, non-repeating curve paths
+  const durX = 10 + (index % 5) * 1.5 // Ranges from 10s to 16s
+  const durY = 12 + (index % 4) * 1.7 // Ranges from 12s to 17.1s
+  const delayX = (index % 3) * 2
+  const delayY = (index % 3) * 1.5
+  const durRot = 15 + (index % 3) * 4
 
   return (
     <div
       className="absolute pointer-events-none"
       style={{
-        animation: `gentle-float 6s ease-in-out ${delay}s infinite alternate`,
         left: `${x}%`,
         opacity: isError ? 0.4 : 0.6,
         top: `${y}%`,
+        transition: "opacity 0.3s",
       }}
     >
+      <style>{`
+        @keyframes drift-x {
+          from { transform: translateX(-20px); }
+          to { transform: translateX(20px); }
+        }
+
+        @keyframes drift-y {
+          from { transform: translateY(-15px); }
+          to { transform: translateY(15px); }
+        }
+
+        @keyframes drift-rot {
+          from { transform: rotate(-5deg); }
+          to { transform: rotate(5deg); }
+        }
+        `}</style>
+
+      {/* X-Axis Drifter */}
       <div
-        className="transition-colors duration-300"
-        style={{ height: size, width: size }}
+        style={{
+          animation: `drift-x ${durX}s ease-in-out ${delayX}s infinite alternate`,
+        }}
       >
+        {/* Y-Axis Drifter (Different duration creates the organic flow) */}
         <div
-          className={`w-full h-full flex items-center justify-center rounded-xl border backdrop-blur-sm transition-colors duration-300 ${
-            isError ? "border-red-500/20 bg-red-500/10" : "border-white/10 bg-white/5"
-          }`}
+          style={{
+            animation: `drift-y ${durY}s ease-in-out ${delayY}s infinite alternate`,
+          }}
         >
+          {/* Subtle Rotation */}
           <div
-            className={`transition-colors duration-300 ${isError ? "text-red-400" : "text-white/40"}`}
+            style={{
+              animation: `drift-rot ${durRot}s ease-in-out infinite alternate`,
+            }}
           >
-            {icon}
+            <div style={{ height: size, width: size }}>
+              <div
+                className={`w-full h-full flex items-center justify-center rounded-xl border backdrop-blur-sm transition-colors duration-300 ${
+                  isError ? "border-red-500/20 bg-red-500/10" : "border-white/10 bg-white/5"
+                }`}
+              >
+                <div
+                  className={`transition-colors duration-300 ${
+                    isError ? "text-red-400" : "text-white/40"
+                  }`}
+                >
+                  {icon}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
