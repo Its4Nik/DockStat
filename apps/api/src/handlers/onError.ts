@@ -1,12 +1,18 @@
 import { extractErrorMessage } from "@dockstat/utils"
 import Elysia, { type ValidationError } from "elysia"
+import { AuthHandler } from "../auth"
+import BaseLogger from "../logger"
+
+const logger = BaseLogger.spawn("Error")
 
 export const errorHandler = new Elysia()
   .onError(({ code, error, set, request }) => {
     const path = new URL(request.url).pathname
     const timestamp = new Date().toISOString()
+    const reqId = AuthHandler.getStateMap().get(request)?.reqId
 
-    // Handle validation errors
+    logger.error(`Caught an Error on ${path}`, reqId)
+
     if (code === "VALIDATION") {
       const validationError = error as ValidationError
 
@@ -14,15 +20,19 @@ export const errorHandler = new Elysia()
       if (validationError.type === "response") {
         set.status = 500
 
+        const allErrors: Array<{ [x: string]: string }> = JSON.parse(validationError.message).errors
+        const parsedErrors: Array<{ message: string; path: string }> = allErrors.map((e) => {
+          const message = String(e.summary)
+          const path = String(e.path).replaceAll("/", ".")
+
+          logger.error(`Validation on ${path}: ${path}`)
+
+          return { message, path }
+        })
+
         return {
-          error: "Response validation failed",
-          message: validationError.message,
-          path,
-          success: false,
-          timestamp,
-          ...(process.env.NODE_ENV === "development" && {
-            detail: validationError.all,
-          }),
+          error: parsedErrors,
+          message: "Response validation failed",
         }
       }
 

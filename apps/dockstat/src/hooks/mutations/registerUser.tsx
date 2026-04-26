@@ -9,7 +9,6 @@ export const useCreateUserMutations = () => {
     mutationKey: ["registerLocalUser"],
     route: api.auth.local.register.post,
     toast: {
-      errorDescription: (_, error) => `Error: ${error}`,
       errorTitle: (input) => `Error while registering local user ${input.name}`,
       successDescription: () => "",
       successTitle: (input) => `Created new Local User: ${input.name}`,

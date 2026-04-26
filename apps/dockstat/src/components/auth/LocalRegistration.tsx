@@ -1,47 +1,48 @@
-import { Card, Input } from "@dockstat/ui"
+import { Input } from "@dockstat/ui"
 import { ArrowRight, DoorOpen, Eye, EyeOff, Loader2 } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useCreateUserMutations } from "@/hooks/mutations/registerUser"
 
 export function LocalRegistration({
   allowGuest,
   isAuthenticated,
+  setError,
 }: {
   allowGuest: boolean
   isAuthenticated: boolean
+  setError: (error: null | string) => void
 }) {
   if (allowGuest === false && isAuthenticated !== true) {
-    return
+    return null
   }
 
   const [name, setName] = useState<string>("")
   const [pass, setPass] = useState<string>("")
   const [showPass, setShowPass] = useState(false)
-  const [err, setErr] = useState<null | string>(null)
 
   const { registerLocalUser } = useCreateUserMutations()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle error from mutation
+  useEffect(() => {
+    if (registerLocalUser.error) {
+      setError(registerLocalUser.error.toString())
+    }
+  }, [registerLocalUser.error, setError])
+
+  const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault()
-    setErr(null)
+    setError(null)
 
     registerLocalUser.mutate({
       name,
       pass,
     })
-
-    if (registerLocalUser.error !== null) {
-      setErr(registerLocalUser.error.toString())
-    }
   }
 
   const togglePassword = () => setShowPass(!showPass)
 
   return (
-    <Card
-      className="p-5 sm:p-6 rounded-2xl"
-      glass
-    >
+    <>
       <div className="flex items-center gap-3 mb-5">
         <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-indigo-500/10 border border-indigo-500/20">
           <DoorOpen
@@ -65,7 +66,7 @@ export function LocalRegistration({
           </p>
           <div className="field-shell px-4 py-3">
             <Input
-              className="!bg-transparent !border-0 !shadow-none !p-0 !ring-0 w-full text-sm text-white/80 placeholder:text-white/25"
+              className="bg-transparent! border-0! shadow-none! p-0! ring-0! w-full text-sm text-white/80 placeholder:text-white/25"
               disabled={registerLocalUser.isPending}
               onChange={(v) => setName(v)}
               placeholder="Enter your username"
@@ -80,7 +81,7 @@ export function LocalRegistration({
           </p>
           <div className="field-shell px-4 py-3 flex items-center">
             <Input
-              className="!bg-transparent !border-0 !shadow-none !p-0 !ring-0 w-full text-sm text-white/80 placeholder:text-white/25"
+              className="bg-transparent! border-0! shadow-none! p-0! ring-0! w-full text-sm text-white/80 placeholder:text-white/25"
               disabled={registerLocalUser.isPending}
               onChange={(v) => setPass(v)}
               placeholder="Enter your password"
@@ -88,7 +89,7 @@ export function LocalRegistration({
               value={pass}
             />
             <button
-              className="flex-shrink-0 ml-2 p-1 rounded-md text-white/20 hover:text-white/40 transition-colors"
+              className="shrink-0 ml-2 p-1 rounded-md text-white/20 hover:text-white/40 transition-colors"
               onClick={togglePassword}
               tabIndex={-1}
               type="button"
@@ -97,12 +98,6 @@ export function LocalRegistration({
             </button>
           </div>
         </div>
-
-        {err && (
-          <div className="px-4 py-3 rounded-xl bg-red-500/5 border border-red-500/10">
-            <p className="text-sm text-red-300/80">{err}</p>
-          </div>
-        )}
 
         <button
           className="cta-button w-full py-3.5 text-white font-semibold text-sm flex items-center justify-center gap-2"
@@ -115,16 +110,16 @@ export function LocalRegistration({
                 className="animate-spin"
                 size={16}
               />
-              Signing in...
+              Creating account...
             </>
           ) : (
             <>
-              Sign In
+              Create Account
               <ArrowRight size={16} />
             </>
           )}
         </button>
       </form>
-    </Card>
+    </>
   )
 }
