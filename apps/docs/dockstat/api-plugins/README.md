@@ -1,10 +1,10 @@
 ---
-id: api-plugins-guide
-title: API Plugin System
-collectionId: b4a548f-f103-480b-9f50-8f53f515cab9
+collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
+id: 6905cb0a-6fc8-46c2-86f6-af5594779e85
 parentDocumentId: 7dddd764-6483-4f84-96a3-988304e772d3
-updatedAt: 2026-01-01T15:02:00.000Z
-urlId: api-plugins-guide
+title: API Plugin System
+updatedAt: 2026-04-30T06:21:25.334Z
+urlId: Clarc3oBtU
 ---
 
 > The DockStat API Plugin System provides a powerful extensibility framework, allowing developers to add custom functionality, API routes, database tables, and event hooks without modifying the core API code.

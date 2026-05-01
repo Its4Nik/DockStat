@@ -3,22 +3,31 @@ import { join, resolve } from "node:path"
 import { watch } from "chokidar"
 import fm from "front-matter"
 import YAML from "yaml"
-import { OutlineClient } from "./client"
-import type { Document, DocumentMetadata, OutlineConfig } from "./types"
+import { OutlineClient, OutlineApiError } from "./client"
+import {
+  c,
+  icon,
+  formatStatus,
+  formatTable,
+  formatDate,
+  formatDuration,
+  formatBytes,
+  truncate,
+  Spinner,
+  progressBar,
+} from "./ui"
+import type {
+  Document,
+  DocumentMetadata,
+  DocumentNode,
+  OutlineConfig,
+  ParsedDocument,
+  SyncResult,
+  SyncStatus,
+  SyncSummary,
+} from "./types"
 
-interface DocumentNode {
-  document: Document
-  children: DocumentNode[]
-}
-
-interface SyncTableRow {
-  Document: string
-  Collection: string
-  "Local mtime": string
-  Frontmatter: string
-  "Remote Date": string
-  Status: string
-}
+// ── Helpers ─────────────────────────────────────────────────────────────────
 
 function parseToDate(value: unknown): Date | null {
   if (value === null || value === undefined) return null
@@ -32,242 +41,152 @@ function parseToDate(value: unknown): Date | null {
   return null
 }
 
+function sanitizePath(name: string): string {
+  return name
+    .replace(/[<>:"/\\|?*]/g, "-")
+    .replace(/\s+/g, "-")
+    .toLowerCase()
+}
+
+function parseFrontmatter(content: string): ParsedDocument | null {
+  try {
+    const parsed = fm<DocumentMetadata>(content)
+    if (!parsed.attributes?.id) return null
+    return {
+      body: parsed.body,
+      metadata: parsed.attributes,
+      raw: content,
+    }
+  } catch {
+    return null
+  }
+}
+
+// ── OutlineSync ─────────────────────────────────────────────────────────────
+
 export class OutlineSync {
   private client: OutlineClient
   private outputDir: string
   private customPaths: Record<string, string>
   private includeCollections?: string[]
   private excludeCollections?: string[]
-  private documentMap: Map<string, DocumentMetadata> = new Map()
   private verbose: boolean
-  private syncTableData: SyncTableRow[] = []
+  private dryRun: boolean
+  private createMissing: boolean
+  private defaultCollectionId?: string
+
+  /** Maps absolute file path → metadata as seen during syncDown (the cache). */
+  private documentMap: Map<string, DocumentMetadata> = new Map()
+
+  /** Accumulated sync results for the current operation. */
+  private results: SyncResult[] = []
 
   constructor(config: OutlineConfig, options?: { verbose?: boolean }) {
     this.client = new OutlineClient(config, options?.verbose ?? config.verbose)
     this.outputDir = config.outputDir || "./outline-docs"
-    this.customPaths = config.customPaths || {}
+    this.customPaths = config.customPaths ?? {}
     this.includeCollections = config.includeCollections
     this.excludeCollections = config.excludeCollections
     this.verbose = Boolean(options?.verbose ?? config.verbose)
+    this.dryRun = config.dryRun ?? false
+    this.createMissing = config.createMissing ?? false
+    this.defaultCollectionId = config.defaultCollectionId
 
     this.trace("OutlineSync initialized", {
-      customPaths: this.customPaths,
+      createMissing: this.createMissing,
       customPathsCount: Object.keys(this.customPaths).length,
-      excludeCollections: this.excludeCollections,
-      includeCollections: this.includeCollections,
+      defaultCollectionId: this.defaultCollectionId,
+      dryRun: this.dryRun,
       outputDir: this.outputDir,
     })
   }
 
+  // ── Trace ──────────────────────────────────────────────────────────────
+
   private trace(message: string, meta?: unknown): void {
     if (!this.verbose) return
-    const timestamp = new Date().toISOString()
+    const ts = new Date().toISOString()
+    const prefix = c.dim(`[trace ${ts}]`)
     if (meta === undefined) {
-      console.log(`[trace ${timestamp}] ${message}`)
+      console.log(`${prefix} ${message}`)
       return
     }
-    console.log(`[trace ${timestamp}] ${message}`, JSON.stringify(meta, null, 2))
+    console.log(`${prefix} ${message}`, JSON.stringify(meta, null, 2))
   }
 
-  private formatDate(date: Date): string {
-    return date.toLocaleString("en-US", {
-      day: "2-digit",
-      hour: "2-digit",
-      hour12: false,
-      minute: "2-digit",
-      month: "short",
-      second: "2-digit",
-    })
-  }
+  // ── Collection filtering ───────────────────────────────────────────────
 
-  private truncate(str: string, maxLength: number): string {
-    if (str.length <= maxLength) return str
-    return `${str.slice(0, maxLength - 3)}...`
-  }
-
-  private sanitizePath(name: string): string {
-    const sanitized = name
-      .replace(/[<>:"/\\|?*]/g, "-")
-      .replace(/\s+/g, "-")
-      .toLowerCase()
-    this.trace(`sanitizePath: "${name}" -> "${sanitized}"`)
-    return sanitized
-  }
-
-  private shouldIncludeCollection(collectionId: string, collectionName: string): boolean {
-    if (this.includeCollections && this.includeCollections.length > 0) {
-      const included = this.includeCollections.some(
-        (c) => c === collectionId || c.toLowerCase() === collectionName.toLowerCase()
+  private shouldIncludeCollection(id: string, name: string): boolean {
+    if (this.includeCollections?.length) {
+      return this.includeCollections.some(
+        (c) => c === id || c.toLowerCase() === name.toLowerCase(),
       )
-      this.trace(
-        `shouldIncludeCollection (include filter): "${collectionName}" (${collectionId}) -> ${included}`,
-        {
-          includeCollections: this.includeCollections,
-        }
-      )
-      return included
     }
-
-    if (this.excludeCollections && this.excludeCollections.length > 0) {
-      const excluded = this.excludeCollections.some(
-        (c) => c === collectionId || c.toLowerCase() === collectionName.toLowerCase()
+    if (this.excludeCollections?.length) {
+      return !this.excludeCollections.some(
+        (c) => c === id || c.toLowerCase() === name.toLowerCase(),
       )
-      this.trace(
-        `shouldIncludeCollection (exclude filter): "${collectionName}" (${collectionId}) -> ${!excluded}`,
-        {
-          excludeCollections: this.excludeCollections,
-          excluded,
-        }
-      )
-      return !excluded
     }
-
-    this.trace(`shouldIncludeCollection (no filter): "${collectionName}" (${collectionId}) -> true`)
     return true
   }
 
+  // ── Document tree ──────────────────────────────────────────────────────
+
   private buildDocumentTree(documents: Document[]): DocumentNode[] {
-    this.trace(`buildDocumentTree: processing ${documents.length} documents`)
     const docMap = new Map<string, DocumentNode>()
     const roots: DocumentNode[] = []
 
     for (const doc of documents) {
       docMap.set(doc.id, { children: [], document: doc })
-      this.trace(`buildDocumentTree: created node for "${doc.title}" (${doc.id})`, {
-        parentDocumentId: doc.parentDocumentId,
-      })
     }
-
     for (const doc of documents) {
-      const node = docMap.get(doc.id)
-
-      if (!node) {
-        this.trace(`buildDocumentTree: WARNING - node not found for ${doc.id}`)
-        continue
-      }
-
+      const node = docMap.get(doc.id)!
       if (doc.parentDocumentId && docMap.has(doc.parentDocumentId)) {
-        const parent = docMap.get(doc.parentDocumentId)
-        if (parent) {
-          parent.children.push(node)
-          this.trace(
-            `buildDocumentTree: "${doc.title}" added as child of "${parent.document.title}"`
-          )
-        }
+        docMap.get(doc.parentDocumentId)!.children.push(node)
       } else {
         roots.push(node)
-        this.trace(`buildDocumentTree: "${doc.title}" is a root document`)
       }
     }
 
-    this.trace(`buildDocumentTree: completed with ${roots.length} root documents`)
     return roots
   }
+
+  // ── Path resolution ────────────────────────────────────────────────────
 
   private getDocumentPath(
     doc: Document,
     collectionName: string,
-    parentPath?: string
+    parentPath?: string,
   ): { dirPath: string; filePath: string; isCustomPath: boolean } {
-    this.trace(`getDocumentPath: resolving path for "${doc.title}" (${doc.id})`, {
-      collectionName,
-      hasCustomPath: doc.id in this.customPaths,
-      parentPath,
-    })
-
     const customPath = this.customPaths[doc.id]
-
     if (customPath) {
-      const endsWithMd = customPath.toLowerCase().endsWith(".md")
-      this.trace(`getDocumentPath: CUSTOM PATH found for "${doc.title}" (${doc.id})`, {
-        customPath,
-        endsWithMd,
-        startsWithDotDot: customPath.startsWith(".."),
-      })
+      const resolvedPath = customPath.startsWith("..")
+        ? join(process.cwd(), customPath)
+        : join(this.outputDir, customPath)
 
-      let resolvedPath: string
-      if (customPath.startsWith("..")) {
-        resolvedPath = join(process.cwd(), customPath)
-        this.trace(`getDocumentPath: resolved relative custom path`, {
-          customPath,
-          cwd: process.cwd(),
-          resolvedPath,
-        })
-      } else {
-        resolvedPath = join(this.outputDir, customPath)
-        this.trace(`getDocumentPath: resolved custom path within outputDir`, {
-          customPath,
-          outputDir: this.outputDir,
-          resolvedPath,
-        })
+      if (customPath.toLowerCase().endsWith(".md")) {
+        return { dirPath: join(resolvedPath, ".."), filePath: resolvedPath, isCustomPath: true }
       }
-
-      if (endsWithMd) {
-        const dirPath = join(resolvedPath, "..")
-        this.trace(`getDocumentPath: custom path is a file path`, {
-          dirPath,
-          filePath: resolvedPath,
-        })
-        return { dirPath, filePath: resolvedPath, isCustomPath: true }
-      }
-
-      return {
-        dirPath: resolvedPath,
-        filePath: join(resolvedPath, "README.md"),
-        isCustomPath: true,
-      }
+      return { dirPath: resolvedPath, filePath: join(resolvedPath, "README.md"), isCustomPath: true }
     }
 
-    const collectionPath = this.sanitizePath(collectionName)
-    const docPath = this.sanitizePath(doc.title)
-
-    this.trace(`getDocumentPath: using standard path resolution`, {
-      collectionPath,
-      docPath,
-      isRootLevel: !parentPath,
-      parentPath,
-    })
+    const collectionPath = sanitizePath(collectionName)
+    const docPath = sanitizePath(doc.title)
 
     if (!parentPath) {
       if (docPath === collectionPath) {
         const resolvedPath = join(this.outputDir, collectionPath)
-        this.trace(
-          `getDocumentPath: root doc name matches collection name, avoiding duplicate folder`,
-          {
-            collectionPath,
-            docPath,
-            resolvedPath,
-          }
-        )
-        return {
-          dirPath: resolvedPath,
-          filePath: join(resolvedPath, "README.md"),
-          isCustomPath: false,
-        }
+        return { dirPath: resolvedPath, filePath: join(resolvedPath, "README.md"), isCustomPath: false }
       }
       const resolvedPath = join(this.outputDir, collectionPath, docPath)
-      this.trace(`getDocumentPath: root doc with different name -> subfolder`, {
-        resolvedPath,
-      })
-      return {
-        dirPath: resolvedPath,
-        filePath: join(resolvedPath, "README.md"),
-        isCustomPath: false,
-      }
-    } else {
-      const resolvedPath = join(parentPath, docPath)
-      this.trace(`getDocumentPath: nested doc -> child folder`, {
-        docPath,
-        parentPath,
-        resolvedPath,
-      })
-      return {
-        dirPath: resolvedPath,
-        filePath: join(resolvedPath, "README.md"),
-        isCustomPath: false,
-      }
+      return { dirPath: resolvedPath, filePath: join(resolvedPath, "README.md"), isCustomPath: false }
     }
+
+    const resolvedPath = join(parentPath, docPath)
+    return { dirPath: resolvedPath, filePath: join(resolvedPath, "README.md"), isCustomPath: false }
   }
+
+  // ── Frontmatter ────────────────────────────────────────────────────────
 
   private createFrontMatter(doc: Document): string {
     const metadata: DocumentMetadata = {
@@ -275,82 +194,242 @@ export class OutlineSync {
       id: doc.id,
       parentDocumentId: doc.parentDocumentId,
       title: doc.title,
-      // Normalize to ISO string to avoid parser/timezone differences
       updatedAt: new Date(doc.updatedAt).toISOString(),
       urlId: doc.urlId,
     }
-    this.trace(`createFrontMatter: generated metadata for "${doc.title}"`, metadata)
     return `---\n${YAML.stringify(metadata)}---\n\n`
+  }
+
+  // ── File scanning ──────────────────────────────────────────────────────
+
+  private async getAllMarkdownFiles(dir: string): Promise<string[]> {
+    const files: string[] = []
+    try {
+      const entries = await readdir(dir, { withFileTypes: true })
+      for (const entry of entries) {
+        const fullPath = resolve(join(dir, entry.name))
+        if (entry.isDirectory()) {
+          files.push(...(await this.getAllMarkdownFiles(fullPath)))
+        } else if (entry.name.endsWith(".md")) {
+          files.push(fullPath)
+        }
+      }
+    } catch {
+      // directory not found
+    }
+    return files
+  }
+
+  // ── Result tracking ────────────────────────────────────────────────────
+
+  private addResult(result: SyncResult): void {
+    this.results.push(result)
+  }
+
+  private getSummary(): SyncSummary {
+    const counts: Record<string, number> = {}
+    for (const r of this.results) {
+      counts[r.status] = (counts[r.status] ?? 0) + 1
+    }
+    return {
+      created: counts["created"] ?? 0,
+      errors: counts["error"] ?? 0,
+      newFiles: counts["new"] ?? 0,
+      pulled: counts["pulled"] ?? 0,
+      pushed: counts["pushed"] ?? 0,
+      skipped: counts["skipped"] ?? 0,
+      synced: counts["synced"] ?? 0,
+      total: this.results.length,
+      durationMs: 0, // set by caller
+    }
+  }
+
+  // ── Display helpers ────────────────────────────────────────────────────
+
+  private printSyncTable(): void {
+    if (this.results.length === 0) return
+
+    const columns = [
+      { key: "status", header: "Status", width: 12, align: "left" as const },
+      { key: "document", header: "Document", width: 32, align: "left" as const },
+      { key: "localDate", header: "Local Date", width: 22, align: "left" as const },
+      { key: "remoteDate", header: "Remote Date", width: 22, align: "left" as const },
+      { key: "source", header: "Source", width: 12, align: "left" as const },
+      { key: "detail", header: "Detail", width: 20, align: "left" as const },
+    ]
+
+    const rows = this.results.map((r) => ({
+      detail: truncate(r.message ?? "", 20),
+      document: truncate(r.title, 32),
+      localDate: r.localDate ? formatDate(r.localDate) : c.dim("\u2014"),
+      remoteDate: r.remoteDate ? formatDate(r.remoteDate) : c.dim("\u2014"),
+      source: r.source ?? c.dim("\u2014"),
+      status: formatStatus(r.status),
+    }))
+
+    console.log("\n" + formatTable(rows, columns) + "\n")
+  }
+
+  private printSummary(startTime: number): void {
+    const summary = this.getSummary()
+    summary.durationMs = performance.now() - startTime
+
+    console.log(c.bold("\n  Summary"))
+    console.log(c.dim("  " + "\u2500".repeat(40)))
+
+    const lines = [
+      ["Total documents", String(summary.total)],
+      ["Synced (no change)", c.green(String(summary.synced))],
+      ["Pulled from remote", c.blue(String(summary.pulled))],
+      ["Pushed to remote", c.cyan(String(summary.pushed))],
+      ["Created on remote", c.green(String(summary.created))],
+      ["New (local only)", c.yellow(String(summary.newFiles))],
+      ["Errors", summary.errors > 0 ? c.red(String(summary.errors)) : String(summary.errors)],
+      ["Skipped", c.dim(String(summary.skipped))],
+      ["Duration", formatDuration(summary.durationMs)],
+      ["API calls", String(this.client.getRequestCount())],
+    ]
+
+    for (const [label, value] of lines) {
+      console.log(`  ${c.dim(label.padEnd(20))} ${value}`)
+    }
+    console.log()
+
+    if (summary.errors > 0) {
+      const errored = this.results.filter((r) => r.status === "error")
+      console.log(c.red(`  ${icon.cross} ${summary.errors} error(s):`))
+      for (const r of errored) {
+        console.log(c.red(`    ${icon.arrow} ${truncate(r.title, 40)}:
+${r.message ?? "unknown"}`))
+      }
+      console.log()
+    }
+  }
+
+  // ── syncDown (pull from Outline) ───────────────────────────────────────
+
+  async syncDown(): Promise<void> {
+    const startTime = performance.now()
+    console.log(`\n${c.bold(c.blue(`${icon.pull}  Syncing from Outline to local`))}`)
+    if (this.dryRun) {
+      console.log(c.yellow(`${icon.warn}  Dry run \u2013 no files will be written`))
+    }
+
+    this.results = []
+    this.documentMap.clear()
+
+    const spinner = new Spinner("Fetching collections\u2026").start()
+
+    const allCollections = await this.client.getCollections()
+    const collections = allCollections.filter((c) => this.shouldIncludeCollection(c.id, c.name))
+
+    spinner.stop()
+
+    if (collections.length === 0) {
+      console.log(c.yellow(`\n  ${icon.warn}  No collections match your filters`))
+      return
+    }
+
+    console.log(
+      c.dim(`  Found ${collections.length} collection${collections.length !== 1 ? "s" : ""}`) +
+      (this.includeCollections || this.excludeCollections
+        ? c.dim(` (filtered from ${allCollections.length})`)
+        : ""),
+    )
+
+    let docCount = 0
+    for (const collection of collections) {
+      console.log(`\n  ${c.bold(`${icon.folder} ${collection.name}`)}`)
+
+      const docsSpinner = new Spinner(`  Fetching documents\u2026`).start()
+      const documents = await this.client.getDocuments(collection.id)
+      docsSpinner.stop()
+
+      const tree = this.buildDocumentTree(documents)
+      let pulled = 0
+
+      for (const node of tree) {
+        pulled += await this.syncDocumentNode(node, collection.name, undefined, 0)
+      }
+
+      docCount += pulled
+    }
+
+    this.printSyncTable()
+    this.printSummary(startTime)
+
+    if (!this.dryRun && docCount > 0) {
+      console.log(c.green(`  ${icon.check} Sync complete!`))
+    }
   }
 
   private async syncDocumentNode(
     node: DocumentNode,
     collectionName: string,
     parentPath?: string,
-    depth = 0
-  ): Promise<void> {
+    depth = 0,
+  ): Promise<number> {
     const doc = node.document
-    const indent = "  ".repeat(depth)
+    const indent = "    " + "  ".repeat(depth)
 
-    this.trace(`syncDocumentNode: starting sync for "${doc.title}" (${doc.id})`, {
-      childrenCount: node.children.length,
-      collectionName,
-      depth,
-      parentPath,
-    })
-
-    this.trace(`syncDocumentNode: fetching full document content for "${doc.title}"`)
+    // Fetch full document content
     const fullDoc = await this.client.getDocument(doc.id)
-    this.trace(`syncDocumentNode: received document content`, {
-      id: fullDoc.id,
-      textLength: fullDoc.text?.length ?? 0,
-      title: fullDoc.title,
-      updatedAt: fullDoc.updatedAt,
-    })
+    const { dirPath, filePath } = this.getDocumentPath(fullDoc, collectionName, parentPath)
 
-    const { dirPath, filePath, isCustomPath } = this.getDocumentPath(
-      fullDoc,
-      collectionName,
-      parentPath
-    )
+    const normalizedPath = resolve(filePath)
 
-    this.trace(`syncDocumentNode: writing to filesystem`, {
-      dirPath,
-      filePath,
-      isCustomPath,
-    })
-
-    await mkdir(dirPath, { recursive: true })
-    const content = this.createFrontMatter(fullDoc) + fullDoc.text
-    await writeFile(filePath, content, "utf-8")
-
-    this.trace(`syncDocumentNode: file written successfully`, {
-      contentLength: content.length,
-      filePath,
-    })
-
-    const remoteDate = parseToDate(fullDoc.updatedAt) || new Date()
-
-    let fileMtime: Date = new Date()
+    // Check if the file already exists and is up-to-date
+    let existingParsed: ParsedDocument | null = null
     try {
-      const fsStat = await stat(filePath)
-      fileMtime = fsStat.mtime
-    } catch (err) {
-      this.trace("syncDocumentNode: failed to stat written file", { error: String(err), filePath })
+      const existingContent = await readFile(normalizedPath, "utf-8")
+      existingParsed = parseFrontmatter(existingContent)
+    } catch {
+      // file doesn't exist yet
     }
 
-    // Record both the filesystem mtime and the frontmatter (remote) timestamp so it's explicit
-    this.syncTableData.push({
-      Collection: this.truncate(collectionName, 15),
-      Document: this.truncate(fullDoc.title, 30),
-      Frontmatter: this.formatDate(remoteDate),
-      "Local mtime": this.formatDate(fileMtime),
-      "Remote Date": this.formatDate(remoteDate),
-      Status: "Pulled",
-    })
+    const remoteDate = parseToDate(fullDoc.updatedAt) || new Date()
+    const isUpToDate = existingParsed
+      ? parseToDate(existingParsed.metadata.updatedAt)?.getTime() === remoteDate.getTime()
+      : false
 
-    // Normalize key to absolute path to match later scans
-    const normalizedPath = resolve(filePath)
+    if (isUpToDate && existingParsed) {
+      // File is already synced
+      this.documentMap.set(normalizedPath, {
+        collectionId: fullDoc.collectionId,
+        id: fullDoc.id,
+        parentDocumentId: fullDoc.parentDocumentId,
+        title: fullDoc.title,
+        updatedAt: fullDoc.updatedAt,
+        urlId: fullDoc.urlId,
+      })
+
+      this.addResult({
+        documentId: fullDoc.id,
+        filePath: normalizedPath,
+        localDate: parseToDate(existingParsed.metadata.updatedAt) ?? remoteDate,
+        remoteDate,
+        source: "frontmatter",
+        status: "synced",
+        title: fullDoc.title,
+      })
+
+      console.log(`${indent}${c.dim(`${icon.check} ${fullDoc.title}`)}`)
+
+      // Still process children
+      let childCount = 0
+      for (const child of node.children) {
+        childCount += await this.syncDocumentNode(child, collectionName, dirPath, depth + 1)
+      }
+      return childCount
+    }
+
+    // Write the file
+    if (!this.dryRun) {
+      await mkdir(dirPath, { recursive: true })
+      const content = this.createFrontMatter(fullDoc) + fullDoc.text
+      await writeFile(filePath, content, "utf-8")
+    }
+
     this.documentMap.set(normalizedPath, {
       collectionId: fullDoc.collectionId,
       id: fullDoc.id,
@@ -360,141 +439,197 @@ export class OutlineSync {
       urlId: fullDoc.urlId,
     })
 
-    this.trace(`syncDocumentNode: added to documentMap`, {
-      documentMapSize: this.documentMap.size,
+    this.addResult({
+      documentId: fullDoc.id,
       filePath: normalizedPath,
+      localDate: remoteDate,
+      remoteDate,
+      source: "remote",
+      status: "pulled",
+      title: fullDoc.title,
     })
 
-    console.log(`${indent}✓ ${fullDoc.title}`)
+    console.log(`${indent}${c.blue(`${icon.pull} ${fullDoc.title}`)}`)
 
-    if (node.children.length > 0) {
-      this.trace(
-        `syncDocumentNode: processing ${node.children.length} children of "${fullDoc.title}"`
-      )
-    }
+    let count = 1
     for (const child of node.children) {
-      await this.syncDocumentNode(child, collectionName, dirPath, depth + 1)
+      count += await this.syncDocumentNode(child, collectionName, dirPath, depth + 1)
     }
+    return count
   }
 
-  async syncDown(): Promise<void> {
-    console.log("📥 Syncing from Outline to local...")
-    this.trace("syncDown: starting", {
-      customPathsCount: Object.keys(this.customPaths).length,
-      outputDir: this.outputDir,
-    })
+  // ── syncUp (push single file to Outline) ───────────────────────────────
 
-    this.syncTableData = []
-
-    this.trace("syncDown: fetching all collections from Outline API")
-    const allCollections = await this.client.getCollections()
-    this.trace(`syncDown: received ${allCollections.length} collections`, {
-      collections: allCollections.map((c) => ({ id: c.id, name: c.name })),
-    })
-
-    const collections = allCollections.filter((c) => this.shouldIncludeCollection(c.id, c.name))
-    this.trace(`syncDown: filtered to ${collections.length} collections`)
-
-    if (collections.length === 0) {
-      console.log("⚠️  No collections match your include/exclude filters")
-      this.trace("syncDown: no collections to sync after filtering")
-      return
-    }
-
-    if (this.includeCollections || this.excludeCollections) {
-      console.log(`Filtered to ${collections.length}/${allCollections.length} collections`)
-      this.trace("syncDown: include/exclude filters applied", {
-        excludeCollections: this.excludeCollections,
-        filteredCollections: collections.map((c) => c.name),
-        includeCollections: this.includeCollections,
-      })
-    } else {
-      console.log(`Found ${collections.length} collections`)
-    }
-
-    for (const collection of collections) {
-      console.log(`\n📚 Syncing collection: ${collection.name}`)
-      this.trace(`syncDown: processing collection "${collection.name}"`, {
-        collectionId: collection.id,
-        description: collection.description,
-      })
-
-      this.trace(`syncDown: fetching documents for collection "${collection.name}"`)
-      const documents = await this.client.getDocuments(collection.id)
-      this.trace(`syncDown: received ${documents.length} documents for "${collection.name}"`, {
-        documentIds: documents.map((d) => ({
-          id: d.id,
-          parentDocumentId: d.parentDocumentId,
-          title: d.title,
-        })),
-      })
-
-      const tree = this.buildDocumentTree(documents)
-
-      this.trace(`syncDown: syncing ${tree.length} root documents for "${collection.name}"`)
-      for (const node of tree) {
-        await this.syncDocumentNode(node, collection.name)
-      }
-    }
-
-    if (this.syncTableData.length > 0) {
-      console.log("\n📋 Sync Summary:\n")
-      console.table(this.syncTableData)
-    }
-
-    this.trace("syncDown: completed", {
-      documentMapSize: this.documentMap.size,
-    })
-    console.log("\n✅ Sync complete!")
-  }
-
-  async syncUp(filePath: string): Promise<void> {
-    console.log(`📤 Syncing ${filePath} to Outline...`)
+  async syncUp(filePath: string): Promise<SyncResult> {
     this.trace("syncUp: starting", { filePath })
 
     const content = await readFile(filePath, "utf-8")
-    this.trace("syncUp: read file content", {
-      contentLength: content.length,
-      filePath,
-    })
+    const parsed = parseFrontmatter(content)
 
-    const parsed = fm<DocumentMetadata>(content)
-    this.trace("syncUp: parsed frontmatter", {
-      attributes: parsed.attributes,
-      bodyLength: parsed.body.length,
-    })
-
-    if (!parsed.attributes || !parsed.attributes.id) {
-      console.warn(`⚠️  Skipping ${filePath} - no document ID in frontmatter`)
-      this.trace("syncUp: skipping file - missing frontmatter id", {
-        attributes: parsed.attributes,
+    if (!parsed) {
+      this.trace("syncUp: skipping file without valid frontmatter", { filePath })
+      const result: SyncResult = {
+        documentId: "",
         filePath,
-      })
-      return
+        status: "skipped",
+        title: filePath.split("/").pop() ?? filePath,
+        message: "No valid frontmatter ID",
+      }
+      this.addResult(result)
+      return result
     }
 
-    const { id, title } = parsed.attributes
-    const text = parsed.body
+    const { id, title, collectionId, parentDocumentId } = parsed.metadata
+    const body = parsed.body
 
-    this.trace("syncUp: updating document in Outline", {
+    this.trace("syncUp: pushing document", {
       id,
-      textLength: text.length,
+      textLength: body.length,
       title,
     })
 
-    await this.client.updateDocument(id, text, title)
-    console.log(`✓ Updated: ${title}`)
-    this.trace("syncUp: document updated successfully", { id, title })
+    if (this.dryRun) {
+      const result: SyncResult = {
+        documentId: id,
+        filePath,
+        status: "pushed",
+        title: title || filePath,
+        message: "Dry run \u2013 not actually pushed",
+      }
+      this.addResult(result)
+      return result
+    }
+
+    try {
+      // First, verify the document exists on Outline before trying to update.
+      // This prevents 400 errors from sending an invalid or stale ID.
+      const existing = await this.client.documentExists(id)
+
+      if (existing) {
+        // Document exists – update it
+        const updated = await this.client.updateDocument(id, body, {
+          title: title || undefined,
+          publish: true,
+        })
+
+        // Update the local frontmatter with the new updatedAt
+        const newFrontMatter = this.createFrontMatter(updated)
+        const newContent = newFrontMatter + body
+        await writeFile(filePath, newContent, "utf-8")
+
+        const result: SyncResult = {
+          documentId: id,
+          filePath,
+          localDate: new Date(),
+          remoteDate: parseToDate(updated.updatedAt) ?? new Date(),
+          source: "frontmatter",
+          status: "pushed",
+          title: updated.title,
+        }
+        this.addResult(result)
+        return result
+      } else {
+        // Document doesn't exist on remote – create it if createMissing is enabled.
+        if (this.createMissing) {
+          const collectionId = parsed.metadata.collectionId || this.defaultCollectionId
+
+          if (!collectionId) {
+            const result: SyncResult = {
+              documentId: id,
+              filePath,
+              status: "error",
+              title: title || filePath,
+              message: "Document not found on Outline and no collectionId specified (use --default-collection or add collectionId to frontmatter)",
+            }
+            this.addResult(result)
+            return result
+          }
+
+          this.trace("syncUp: document not found, creating new document", {
+            collectionId,
+            title: title || filePath,
+          })
+
+          const created = await this.client.createDocument({
+            collectionId,
+            title: title || filePath.split("/").pop() || "Untitled",
+            text: body,
+            parentDocumentId: parsed.metadata.parentDocumentId || undefined,
+            publish: true,
+          })
+
+          // Update the local frontmatter with the NEW document ID and timestamps
+          const newMetadata: DocumentMetadata = {
+            collectionId: created.collectionId,
+            id: created.id,
+            parentDocumentId: created.parentDocumentId,
+            title: created.title,
+            updatedAt: created.updatedAt,
+            urlId: created.urlId,
+          }
+          const newFrontMatter = `---\n${YAML.stringify(newMetadata)}---\n\n`
+          const newContent = newFrontMatter + body
+          await writeFile(filePath, newContent, "utf-8")
+
+          // Update the document map with the new ID
+          this.documentMap.set(resolve(filePath), newMetadata)
+
+          const result: SyncResult = {
+            documentId: created.id,
+            filePath,
+            localDate: new Date(),
+            remoteDate: parseToDate(created.updatedAt) ?? new Date(),
+            source: "frontmatter",
+            status: "created",
+            title: created.title,
+            message: `Created as new document (old ID ${id} was not found on Outline)`,
+          }
+          this.addResult(result)
+          return result
+        } else {
+          // Not creating – just report it as not-found.
+          const result: SyncResult = {
+            documentId: id,
+            filePath,
+            status: "not-found",
+            title: title || filePath,
+            message: `Document ${id} not found on Outline (may have been deleted; use --create-missing to recreate)`,
+          }
+          this.addResult(result)
+          return result
+        }
+      }
+    } catch (err) {
+      const message =
+        err instanceof OutlineApiError
+          ? `${err.code ?? "api_error"}: ${err.message}`
+          : err instanceof Error
+            ? err.message
+            : String(err)
+
+      this.trace("syncUp: error pushing document", { error: message, id, filePath })
+
+      const result: SyncResult = {
+        documentId: id,
+        filePath,
+        status: "error",
+        title: title || filePath,
+        message,
+      }
+      this.addResult(result)
+      return result
+    }
   }
 
+  // ── watch mode ─────────────────────────────────────────────────────────
+
   async watch(): Promise<void> {
-    console.log(`👀 Watching ${this.outputDir} for changes...`)
-    this.trace("watch: starting", { outputDir: this.outputDir })
+    console.log(`\n${c.bold(c.cyan(`${icon.eyes}  Watching for changes`))}`)
+    console.log(c.dim(`  Directory: ${this.outputDir}`))
 
     await this.syncDown()
 
     const watchPattern = join(this.outputDir, "**/*.md")
-    this.trace("watch: setting up file watcher", { pattern: watchPattern })
 
     const watcher = watch(watchPattern, {
       ignoreInitial: true,
@@ -504,456 +639,568 @@ export class OutlineSync {
     watcher.on("change", async (path) => {
       this.trace("watch: file change detected", { path })
       try {
-        await this.syncUp(path)
+        const result = await this.syncUp(path)
+        if (result.status === "pushed") {
+          console.log(`  ${c.cyan(`${icon.push} ${result.title}`)}`)
+        } else if (result.status === "error") {
+          console.error(`  ${c.red(`${icon.cross} ${result.title}: ${result.message}`)}`)
+        }
       } catch (error) {
-        console.error(`Error syncing ${path}:`, error)
-        this.trace("watch: sync error", { error: String(error), path })
+        console.error(`  ${c.red(`${icon.cross} Error syncing ${path}:`)} ${error}`)
       }
     })
 
     watcher.on("add", (path) => {
-      this.trace("watch: new file detected (not syncing)", { path })
+      this.trace("watch: new file detected", { path })
     })
 
     watcher.on("unlink", (path) => {
-      this.trace("watch: file deleted (not syncing)", { path })
+      this.trace("watch: file deleted", { path })
     })
 
-    console.log("✅ Watching for changes. Press Ctrl+C to stop.")
-    this.trace("watch: watcher ready")
+    console.log(c.dim(`  ${icon.check} Watching for changes. Press Ctrl+C to stop.\n`))
   }
+
+  // ── CI sync ────────────────────────────────────────────────────────────
 
   async ciSync(): Promise<void> {
-    console.log("🔄 CI/CD Sync mode...")
-    this.trace("ciSync: starting")
-
-    await this.syncDown()
-
-    this.trace("ciSync: finding changed files")
-    const { changed: changedFiles, tableData } = await this.findChangedFilesWithTable()
-
-    if (changedFiles.length === 0) {
-      if (tableData.length > 0) {
-        console.log("\n📋 Local Changes Check:\n")
-        console.table(tableData)
-        console.log("\n✅ All documents are in sync!")
-      } else {
-        console.log("✅ No local changes detected")
-      }
-      this.trace("ciSync: no changes detected")
-      return
+    const startTime = performance.now()
+    console.log(`\n${c.bold(c.magenta(`${icon.sync}  CI/CD Sync`))}`)
+    if (this.dryRun) {
+      console.log(c.yellow(`  ${icon.warn}  Dry run \u2013 no changes will be pushed`))
     }
 
-    console.log("\n📋 Local Changes Detected:\n")
-    console.table(tableData)
+    this.results = []
+    this.documentMap.clear()
 
-    console.log(`\n📤 Pushing ${changedFiles.length} changed file(s) to Outline...\n`)
-    this.trace("ciSync: pushing changed files", { changedFiles })
+    // Phase 1: Pull from Outline to build cache
+    console.log(c.dim("\n  Phase 1: Pulling from Outline\u2026"))
+    await this.performSyncDown()
 
-    for (const file of changedFiles) {
-      await this.syncUp(file)
-    }
+    // Phase 2: Detect changes (compare local against remote)
+    console.log(c.dim("\n  Phase 2: Detecting local changes\u2026"))
+    const localFiles = await this.getAllMarkdownFiles(this.outputDir)
 
-    this.trace("ciSync: completed")
-    console.log("\n✅ CI/CD sync complete!")
-  }
-
-  private async findChangedFilesWithTable(): Promise<{
-    changed: string[]
-    tableData: Array<Record<string, string>>
-  }> {
-    const changed: string[] = []
-    const tableData: Array<Record<string, string>> = []
-    const files = await this.getAllMarkdownFiles(this.outputDir)
-
-    this.trace("findChangedFilesWithTable: scanning files", {
+    this.trace("ciSync: scanning local files", {
       documentMapSize: this.documentMap.size,
-      totalFiles: files.length,
+      localFilesCount: localFiles.length,
     })
 
-    for (const file of files) {
+    for (const file of localFiles) {
       const normalized = resolve(file)
       const content = await readFile(normalized, "utf-8")
-      const parsed = fm<DocumentMetadata>(content)
+      const parsed = parseFrontmatter(content)
 
-      if (!parsed.attributes?.id) {
-        this.trace("findChangedFilesWithTable: skipping file without id", { file: normalized })
+      if (!parsed) {
+        this.trace("ciSync: skipping file without frontmatter", { file: normalized })
         continue
       }
 
-      const title = parsed.attributes.title || normalized.split("/").pop() || normalized
+      const title = parsed.metadata.title || normalized.split("/").pop() || normalized
       const cached = this.documentMap.get(normalized)
 
       if (!cached) {
-        this.trace("findChangedFilesWithTable: file not in cache, marking as changed", {
-          file: normalized,
-        })
-        tableData.push({
-          "Cached Date": "⚠️  Not cached",
-          Document: this.truncate(title, 30),
-          "Local Date": "—",
-          Source: "—",
-          Status: "❓ New",
-        })
-        changed.push(normalized)
+        // File exists locally but wasn't synced (could be new or from a
+        // different collection).  We need to check whether the document
+        // actually exists on Outline before deciding what to do.
+        this.trace("ciSync: file not in cache, checking remote", { file: normalized })
+
+        if (!this.dryRun) {
+          const remoteDoc = await this.client.documentExists(parsed.metadata.id)
+          if (remoteDoc) {
+            // Document exists on remote – compare timestamps
+            const remoteTime = parseToDate(remoteDoc.updatedAt) || new Date(0)
+            const localTime = parseToDate(parsed.metadata.updatedAt)
+            const fileStat = await stat(normalized)
+            const effectiveLocal = localTime ?? fileStat.mtime
+            const source = localTime ? "frontmatter" : "mtime"
+
+            if (effectiveLocal.getTime() > remoteTime.getTime()) {
+              this.addResult({
+                documentId: parsed.metadata.id,
+                filePath: normalized,
+                localDate: effectiveLocal,
+                remoteDate: remoteTime,
+                source,
+                status: "pushed",
+                title,
+              })
+            } else {
+              this.addResult({
+                documentId: parsed.metadata.id,
+                filePath: normalized,
+                localDate: effectiveLocal,
+                remoteDate: remoteTime,
+                source,
+                status: "synced",
+                title,
+              })
+            }
+          } else {
+            // Document does not exist on remote – create if createMissing enabled
+            if (this.createMissing) {
+              const collectionId = parsed.metadata.collectionId || this.defaultCollectionId
+              if (!collectionId) {
+                this.addResult({
+                  documentId: parsed.metadata.id,
+                  filePath: normalized,
+                  status: "error",
+                  title,
+                  message: "Document not found on Outline and no collectionId (use --default-collection or frontmatter)",
+                })
+              } else {
+                this.addResult({
+                  documentId: parsed.metadata.id,
+                  filePath: normalized,
+                  status: "not-found",
+                  title,
+                  message: `Will create in collection ${collectionId}`,
+                })
+              }
+            } else {
+              this.addResult({
+                documentId: parsed.metadata.id,
+                filePath: normalized,
+                status: "not-found",
+                title,
+                message: "Document not found on Outline (deleted or invalid ID; use --create-missing to recreate)",
+              })
+            }
+          }
+        } else {
+          this.addResult({
+            documentId: parsed.metadata.id,
+            filePath: normalized,
+            status: "new",
+            title,
+            message: "Not in cache (dry run)",
+          })
+        }
         continue
       }
 
-      const fileFrontUpdated = parseToDate(parsed.attributes.updatedAt) // may be null
-      const fileStat = await stat(normalized)
-      const fileMtime = fileStat.mtime
+      // File IS in cache – compare against the cached timestamp
       const cachedTime = parseToDate(cached.updatedAt) || new Date(0)
+      const localTime = parseToDate(parsed.metadata.updatedAt)
+      const fileStat = await stat(normalized)
+      const effectiveLocal = localTime ?? fileStat.mtime
+      const source = localTime ? "frontmatter" : "mtime"
 
-      const localTime = fileFrontUpdated || fileMtime
-      const localSource = fileFrontUpdated ? "frontmatter" : "mtime"
-
-      this.trace("findChangedFilesWithTable: comparing timestamps", {
-        cachedUpdatedAt: cachedTime.toISOString(),
-        file: normalized,
-        fileMtime: fileMtime.toISOString(),
-        frontmatterUpdatedAt: fileFrontUpdated?.toISOString(),
-        usingFrontmatter: !!fileFrontUpdated,
-      })
-
-      const isNewer = localTime.getTime() > cachedTime.getTime()
-
-      const status = isNewer ? "⬆️  Push" : "✓ Synced"
-
-      tableData.push({
-        "Cached Date": this.formatDate(cachedTime),
-        Document: this.truncate(title, 30),
-        "Local Date": this.formatDate(localTime),
-        Source: localSource,
-        Status: status,
-      })
-
-      if (isNewer) {
-        this.trace("findChangedFilesWithTable: file is newer, marking as changed", {
-          file: normalized,
-          reason: fileFrontUpdated ? "frontmatter updatedAt is newer" : "file mtime is newer",
+      if (effectiveLocal.getTime() > cachedTime.getTime()) {
+        this.addResult({
+          documentId: parsed.metadata.id,
+          filePath: normalized,
+          localDate: effectiveLocal,
+          remoteDate: cachedTime,
+          source,
+          status: "pushed",
+          title,
         })
-        changed.push(normalized)
       } else {
-        this.trace("findChangedFilesWithTable: file is not newer, skipping", { file: normalized })
+        this.addResult({
+          documentId: parsed.metadata.id,
+          filePath: normalized,
+          localDate: effectiveLocal,
+          remoteDate: cachedTime,
+          source,
+          status: "synced",
+          title,
+        })
       }
     }
 
-    this.trace("findChangedFilesWithTable: completed", {
-      changedCount: changed.length,
-      totalScanned: files.length,
+    // Phase 3: Display detected changes
+    const toPush = this.results.filter((r) => r.status === "pushed")
+    const synced = this.results.filter((r) => r.status === "synced")
+    const notFound = this.results.filter((r) => r.status === "not-found")
+
+    this.printSyncTable()
+
+    if (this.createMissing && notFound.length > 0) {
+      console.log(
+        c.green(`\n  ${icon.star} ${notFound.length} document${notFound.length !== 1 ? "s" : ""} not found on Outline – will be created (--create-missing)`),
+      )
+    }
+
+    if (toPush.length === 0 && (!this.createMissing || notFound.length === 0)) {
+      console.log(c.green(`\n  ${icon.check} All documents are in sync!`))
+      this.printSummary(startTime)
+      return
+    }
+
+    // Phase 4: Push changed files + create missing documents
+    const itemsToSync = this.createMissing
+      ? [...toPush, ...notFound]
+      : toPush
+
+    if (itemsToSync.length === 0) {
+      console.log(c.green(`\n  ${icon.check} All documents are in sync!`))
+      this.printSummary(startTime)
+      return
+    }
+
+    const pushLabel = this.createMissing && notFound.length > 0
+      ? `Syncing ${toPush.length} update${toPush.length !== 1 ? "s" : ""} + ${notFound.length} new document${notFound.length !== 1 ? "s" : ""} to Outline`
+      : `Pushing ${toPush.length} changed file${toPush.length !== 1 ? "s" : ""} to Outline`
+
+    console.log(
+      c.bold(`  ${icon.push}  ${pushLabel}\u2026`),
+    )
+
+    // Reset results for push phase
+    this.results = []
+
+    for (let i = 0; i < itemsToSync.length; i++) {
+      const item = itemsToSync[i]
+      process.stdout.write(
+        `\r  ${progressBar(i, itemsToSync.length)} ${truncate(item.title, 40)}`,
+      )
+      await this.syncUp(item.filePath)
+    }
+    process.stdout.write(`\r${" ".repeat(80)}\r`)
+
+    // Re-add the synced items that were already fine
+    for (const s of synced) {
+      this.addResult(s)
+    }
+
+    this.printSummary(startTime)
+
+    const summary = this.getSummary()
+    if (summary.errors === 0) {
+      console.log(c.green(`  ${icon.check} CI/CD sync complete!`))
+    } else {
+      console.log(c.yellow(`  ${icon.warn} CI/CD sync completed with ${summary.errors} error(s)`))
+    }
+  }
+
+  /** Internal syncDown that doesn't print its own summary (used by ciSync). */
+  private async performSyncDown(): Promise<void> {
+    const allCollections = await this.client.getCollections()
+    const collections = allCollections.filter((c) => this.shouldIncludeCollection(c.id, c.name))
+
+    if (collections.length === 0) return
+
+    for (const collection of collections) {
+      const documents = await this.client.getDocuments(collection.id)
+      const tree = this.buildDocumentTree(documents)
+
+      for (const node of tree) {
+        await this.pullDocumentNode(node, collection.name)
+      }
+    }
+  }
+
+  /** Pull documents silently (for CI mode) – just builds the cache. */
+  private async pullDocumentNode(node: DocumentNode, collectionName: string): Promise<void> {
+    const doc = node.document
+
+    // We need the full doc to get updatedAt, but we can optimize by checking
+    // if we already have this file cached
+    const { dirPath, filePath } = this.getDocumentPath(doc, collectionName)
+    const normalizedPath = resolve(filePath)
+
+    // Check if we already have this file with matching timestamp
+    let existingParsed: ParsedDocument | null = null
+    try {
+      const existingContent = await readFile(normalizedPath, "utf-8")
+      existingParsed = parseFrontmatter(existingContent)
+    } catch {
+      // doesn't exist
+    }
+
+    // If the file exists and has the same updatedAt as the list entry, skip the full fetch
+    const listUpdated = parseToDate(doc.updatedAt)
+    const cachedUpdated = existingParsed ? parseToDate(existingParsed.metadata.updatedAt) : null
+
+    if (existingParsed && listUpdated && cachedUpdated &&
+      listUpdated.getTime() === cachedUpdated.getTime()) {
+      // File is already up to date, just add to cache
+      this.documentMap.set(normalizedPath, {
+        collectionId: doc.collectionId,
+        id: doc.id,
+        parentDocumentId: doc.parentDocumentId,
+        title: doc.title,
+        updatedAt: doc.updatedAt,
+        urlId: doc.urlId,
+      })
+
+      // Still process children
+      for (const child of node.children) {
+        await this.pullDocumentNode(child, collectionName)
+      }
+      return
+    }
+
+    // Need to fetch full document
+    const fullDoc = await this.client.getDocument(doc.id)
+
+    if (!this.dryRun) {
+      await mkdir(dirPath, { recursive: true })
+      const content = this.createFrontMatter(fullDoc) + fullDoc.text
+      await writeFile(filePath, content, "utf-8")
+    }
+
+    this.documentMap.set(normalizedPath, {
+      collectionId: fullDoc.collectionId,
+      id: fullDoc.id,
+      parentDocumentId: fullDoc.parentDocumentId,
+      title: fullDoc.title,
+      updatedAt: fullDoc.updatedAt,
+      urlId: fullDoc.urlId,
     })
 
-    return { changed, tableData }
+    for (const child of node.children) {
+      await this.pullDocumentNode(child, collectionName)
+    }
   }
 
-  private async getAllMarkdownFiles(dir: string): Promise<string[]> {
-    const files: string[] = []
+  // ── push command ───────────────────────────────────────────────────────
 
-    this.trace("getAllMarkdownFiles: scanning directory", { dir })
-
-    try {
-      const entries = await readdir(dir, { withFileTypes: true })
-
-      for (const entry of entries) {
-        const fullPath = resolve(join(dir, entry.name))
-
-        if (entry.isDirectory()) {
-          files.push(...(await this.getAllMarkdownFiles(fullPath)))
-        } else if (entry.name.endsWith(".md")) {
-          files.push(fullPath)
-        }
-      }
-    } catch (err) {
-      this.trace("getAllMarkdownFiles: directory not found or error", { dir, error: String(err) })
+  async push(force = false): Promise<void> {
+    const startTime = performance.now()
+    console.log(`\n${c.bold(c.cyan(`${icon.push}  Pushing to Outline`))}`)
+    if (this.dryRun) {
+      console.log(c.yellow(`  ${icon.warn}  Dry run \u2013 no changes will be pushed`))
     }
 
-    return files
-  }
+    this.results = []
 
-  private async findChangedFilesAgainstRemote(
-    showTable = false
-  ): Promise<{ changed: string[]; tableData: Array<Record<string, string>> }> {
-    const changed: string[] = []
-    const tableData: Array<Record<string, string>> = []
+    if (force) {
+      console.log(c.yellow(`  ${icon.warn}  Force mode \u2013 pushing all files with IDs`))
+      const files = await this.getAllMarkdownFiles(this.outputDir)
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        process.stdout.write(`\r  ${progressBar(i, files.length)} ${truncate(file.split("/").pop() ?? file, 40)}`)
+        await this.syncUp(file)
+      }
+      process.stdout.write(`\r${" ".repeat(80)}\r`)
+
+      this.printSyncTable()
+      this.printSummary(startTime)
+      return
+    }
+
+    // Compare against remote
     const files = await this.getAllMarkdownFiles(this.outputDir)
 
-    this.trace("findChangedFilesAgainstRemote: scanning files against remote", {
-      totalFiles: files.length,
-    })
-
-    if (showTable && files.length > 0) {
-      console.log(`\n🔍 Comparing ${files.length} local file(s) against remote...\n`)
-    }
+    console.log(c.dim(`  Comparing ${files.length} local file(s) against remote\u2026`))
 
     for (const file of files) {
       const normalized = resolve(file)
       const content = await readFile(normalized, "utf-8")
-      const parsed = fm<DocumentMetadata>(content)
+      const parsed = parseFrontmatter(content)
 
-      if (!parsed.attributes?.id) {
-        this.trace("findChangedFilesAgainstRemote: skipping file without id", { file: normalized })
-        continue
-      }
+      if (!parsed) continue
 
-      const id = parsed.attributes.id
-      const title = parsed.attributes.title || normalized.split("/").pop() || normalized
-
-      this.trace("findChangedFilesAgainstRemote: checking file against remote", {
-        documentId: id,
-        file: normalized,
-      })
+      const title = parsed.metadata.title || normalized.split("/").pop() || normalized
 
       try {
-        const remote = await this.client.getDocument(id)
+        const remote = await this.client.getDocument(parsed.metadata.id)
         const remoteTime = parseToDate(remote.updatedAt) || new Date(0)
-
-        const fileFrontUpdated = parseToDate(parsed.attributes.updatedAt)
+        const localTime = parseToDate(parsed.metadata.updatedAt)
         const fileStat = await stat(normalized)
-        const fileMtime = fileStat.mtime
+        const effectiveLocal = localTime ?? fileStat.mtime
+        const source = localTime ? "frontmatter" : "mtime"
 
-        const localTime = fileFrontUpdated || fileMtime
-        const localSource = fileFrontUpdated ? "frontmatter" : "mtime"
-
-        this.trace("findChangedFilesAgainstRemote: comparing timestamps", {
-          documentId: id,
-          file: normalized,
-          fileMtime: fileMtime.toISOString(),
-          frontmatterUpdatedAt: fileFrontUpdated?.toISOString(),
-          remoteUpdatedAt: remoteTime.toISOString(),
-          usingFrontmatter: !!fileFrontUpdated,
-        })
-
-        const isNewer = localTime.getTime() > remoteTime.getTime()
-        const status = isNewer ? "⬆️  Push" : "✓ Synced"
-
-        tableData.push({
-          Document: this.truncate(title, 30),
-          "Local Date": this.formatDate(localTime),
-          "Remote Date": this.formatDate(remoteTime),
-          Source: localSource,
-          Status: status,
-        })
-
-        if (isNewer) {
-          this.trace(
-            "findChangedFilesAgainstRemote: file is newer than remote, marking as changed",
-            {
-              documentId: id,
-              file: normalized,
-              reason: fileFrontUpdated ? "frontmatter updatedAt is newer" : "file mtime is newer",
-            }
-          )
-          changed.push(normalized)
+        if (effectiveLocal.getTime() > remoteTime.getTime()) {
+          this.addResult({
+            documentId: parsed.metadata.id,
+            filePath: normalized,
+            localDate: effectiveLocal,
+            remoteDate: remoteTime,
+            source,
+            status: "pushed",
+            title,
+          })
         } else {
-          this.trace("findChangedFilesAgainstRemote: file is not newer than remote, skipping", {
-            documentId: id,
-            file: normalized,
+          this.addResult({
+            documentId: parsed.metadata.id,
+            filePath: normalized,
+            localDate: effectiveLocal,
+            remoteDate: remoteTime,
+            source,
+            status: "synced",
+            title,
           })
         }
-      } catch (err) {
-        this.trace(
-          "findChangedFilesAgainstRemote: failed to fetch remote, marking for inspection",
-          {
-            documentId: id,
-            error: String(err),
-            file: normalized,
-          }
-        )
-
-        tableData.push({
-          Document: this.truncate(title, 30),
-          "Local Date": "—",
-          "Remote Date": "⚠️  Not found",
-          Source: "—",
-          Status: "❓ Check",
+      } catch {
+        this.addResult({
+          documentId: parsed.metadata.id,
+          filePath: normalized,
+          status: "not-found",
+          title,
+          message: "Could not fetch remote document",
         })
-
-        changed.push(normalized)
       }
     }
 
-    if (showTable && tableData.length > 0) {
-      console.table(tableData)
-    }
+    this.printSyncTable()
 
-    this.trace("findChangedFilesAgainstRemote: completed", {
-      changedCount: changed.length,
-      changedFiles: changed,
-      totalScanned: files.length,
-    })
-
-    return { changed, tableData }
-  }
-
-  async push(force = false): Promise<void> {
-    if (force) {
-      console.log("📤 Force pushing all local files to Outline (ignoring remote timestamps)...")
-      const files = await this.getAllMarkdownFiles(this.outputDir)
-      for (const file of files) {
-        try {
-          await this.syncUp(file)
-        } catch (err) {
-          console.error(`Error pushing ${file}:`, err)
-          this.trace("push(force): error pushing file", { error: String(err), file })
-        }
-      }
-      console.log("\n✅ Force push complete!")
+    const toPush = this.results.filter((r) => r.status === "pushed")
+    if (toPush.length === 0) {
+      console.log(c.green(`\n  ${icon.check} All documents are in sync!`))
+      this.printSummary(startTime)
       return
     }
 
-    console.log("📤 Pushing local changes to Outline...")
-    this.trace("push: starting", { outputDir: this.outputDir })
+    console.log(
+      c.bold(`\n  ${icon.push}  Pushing ${toPush.length} file${toPush.length !== 1 ? "s" : ""}\u2026`),
+    )
 
-    const { changed: changedFiles, tableData } = await this.findChangedFilesAgainstRemote(true)
-
-    if (changedFiles.length === 0) {
-      if (tableData.length > 0) {
-        console.log("\n✅ All documents are in sync!")
-      } else {
-        console.log("✅ No local documents found to push")
-      }
-      this.trace("push: no changes to push")
-      return
+    // Reset and actually push
+    this.results = []
+    for (let i = 0; i < toPush.length; i++) {
+      const item = toPush[i]
+      process.stdout.write(`\r  ${progressBar(i, toPush.length)} ${truncate(item.title, 40)}`)
+      await this.syncUp(item.filePath)
     }
+    process.stdout.write(`\r${" ".repeat(80)}\r`)
 
-    console.log(`\n📤 Pushing ${changedFiles.length} changed file(s) to Outline...\n`)
-    this.trace("push: pushing changed files", { count: changedFiles.length, files: changedFiles })
+    this.printSummary(startTime)
 
-    for (const file of changedFiles) {
-      try {
-        await this.syncUp(file)
-      } catch (error) {
-        console.error(`Error pushing ${file}:`, error)
-        this.trace("push: error pushing file", { error: String(error), file })
-      }
+    const summary = this.getSummary()
+    if (summary.errors === 0) {
+      console.log(c.green(`  ${icon.check} Push complete!`))
+    } else {
+      console.log(c.yellow(`  ${icon.warn} Push completed with ${summary.errors} error(s)`))
     }
-
-    this.trace("push: completed")
-    console.log("\n✅ Push complete!")
   }
+
+  // ── verify command ─────────────────────────────────────────────────────
 
   async verify(): Promise<void> {
-    console.log("🔍 Verifying outline-sync configuration...\n")
+    console.log(`\n${c.bold(c.cyan(`${icon.search}  Verifying configuration`))}\n`)
 
-    console.log("📁 Configuration:")
-    console.log(`   Output Directory: ${this.outputDir}`)
-    console.log(`   Include Collections: ${this.includeCollections?.join(", ") || "(all)"}`)
-    console.log(`   Exclude Collections: ${this.excludeCollections?.join(", ") || "(none)"}`)
-    console.log(`   Custom Paths: ${Object.keys(this.customPaths).length} defined`)
-    console.log(`   Verbose: ${this.verbose}`)
+    console.log(c.bold("  Configuration"))
+    console.log(c.dim("  " + "\u2500".repeat(40)))
+
+    const configLines = [
+      ["Output Directory", this.outputDir],
+      ["Include Collections", this.includeCollections?.join(", ") || "(all)"],
+      ["Exclude Collections", this.excludeCollections?.join(", ") || "(none)"],
+      ["Custom Paths", `${Object.keys(this.customPaths).length} defined`],
+      ["Verbose", String(this.verbose)],
+      ["Dry Run", String(this.dryRun)],
+    ]
+
+    for (const [label, value] of configLines) {
+      console.log(`  ${c.dim(label.padEnd(20))} ${value}`)
+    }
 
     if (Object.keys(this.customPaths).length === 0) {
-      console.log("\n📋 No custom paths configured.")
-      console.log("\n✅ Configuration verified!")
+      console.log(c.dim("\n  No custom paths configured."))
+      console.log(c.green(`\n  ${icon.check} Configuration verified!`))
       return
     }
 
-    console.log("\n📋 Custom Path Mappings:\n")
+    // Custom paths table
+    console.log(c.bold("\n  Custom Path Mappings"))
 
-    const customPathsTable: Array<{
-      "Document ID": string
-      "Config Path": string
-      "Resolved Path": string
-      "Path Type": string
-      Exists: string
-    }> = []
+    const columns = [
+      { key: "docId", header: "Document ID", width: 22, align: "left" as const },
+      { key: "configPath", header: "Config Path", width: 32, align: "left" as const },
+      { key: "resolvedPath", header: "Resolved Path", width: 42, align: "left" as const },
+      { key: "type", header: "Type", width: 10, align: "left" as const },
+      { key: "exists", header: "Exists", width: 8, align: "center" as const },
+    ]
+
+    const rows: Array<Record<string, string>> = []
 
     for (const [docId, configPath] of Object.entries(this.customPaths)) {
       const endsWithMd = configPath.toLowerCase().endsWith(".md")
-      let resolvedPath: string
-
-      if (configPath.startsWith("..")) {
-        resolvedPath = join(process.cwd(), configPath)
-      } else {
-        resolvedPath = join(this.outputDir, configPath)
-      }
-
+      const resolvedPath = configPath.startsWith("..")
+        ? join(process.cwd(), configPath)
+        : join(this.outputDir, configPath)
       const finalPath = endsWithMd ? resolvedPath : join(resolvedPath, "README.md")
 
-      let exists = "❌ No"
+      let exists: string
       try {
         await stat(finalPath)
-        exists = "✅ Yes"
+        exists = c.green("Yes")
       } catch {
-        // File doesn't exist
+        exists = c.red("No")
       }
 
-      customPathsTable.push({
-        "Config Path": this.truncate(configPath, 30),
-        "Document ID": this.truncate(docId, 20),
-        Exists: exists,
-        "Path Type": endsWithMd ? "File" : "Directory",
-        "Resolved Path": this.truncate(finalPath, 45),
+      rows.push({
+        configPath: truncate(configPath, 32),
+        docId: truncate(docId, 22),
+        exists,
+        resolvedPath: truncate(finalPath, 42),
+        type: endsWithMd ? "File" : "Dir",
       })
     }
 
-    console.table(customPathsTable)
+    console.log("\n" + formatTable(rows, columns))
 
-    console.log("\n🔗 Resolving Document Titles from Outline...\n")
+    // Resolve document titles from Outline
+    console.log(c.bold("\n  Resolving from Outline\u2026"))
 
     try {
       const allCollections = await this.client.getCollections()
       const collections = allCollections.filter((c) => this.shouldIncludeCollection(c.id, c.name))
 
-      const docDetailsTable: Array<{
-        "Document ID": string
-        Title: string
-        Collection: string
-        "Remote Updated": string
-        "Custom Path": string
-      }> = []
+      const docRows: Array<Record<string, string>> = []
 
       for (const collection of collections) {
         const documents = await this.client.getDocuments(collection.id)
-
         for (const doc of documents) {
-          const customPath = this.customPaths[doc.id]
-          if (customPath) {
+          if (this.customPaths[doc.id]) {
             try {
               const fullDoc = await this.client.getDocument(doc.id)
-              docDetailsTable.push({
-                Collection: this.truncate(collection.name, 15),
-                "Custom Path": this.truncate(customPath, 35),
-                "Document ID": this.truncate(doc.id, 20),
-                "Remote Updated": this.formatDate(parseToDate(fullDoc.updatedAt) || new Date()),
-                Title: this.truncate(fullDoc.title, 30),
+              docRows.push({
+                collection: truncate(collection.name, 15),
+                customPath: truncate(this.customPaths[doc.id], 30),
+                docId: truncate(doc.id, 22),
+                remoteUpdated: formatDate(parseToDate(fullDoc.updatedAt) ?? new Date()),
+                title: truncate(fullDoc.title, 30),
               })
             } catch {
-              docDetailsTable.push({
-                Collection: this.truncate(collection.name, 15),
-                "Custom Path": this.truncate(customPath, 35),
-                "Document ID": this.truncate(doc.id, 20),
-                "Remote Updated": "⚠️ Fetch failed",
-                Title: this.truncate(doc.title, 30),
+              docRows.push({
+                collection: truncate(collection.name, 15),
+                customPath: truncate(this.customPaths[doc.id], 30),
+                docId: truncate(doc.id, 22),
+                remoteUpdated: c.yellow("Fetch failed"),
+                title: truncate(doc.title, 30),
               })
             }
           }
         }
       }
 
-      const foundDocIds = new Set(docDetailsTable.map((d) => d["Document ID"]))
+      // Check for custom paths that weren't found in any collection
+      const foundIds = new Set(docRows.map((r) => r.docId))
       for (const docId of Object.keys(this.customPaths)) {
-        const truncatedId = this.truncate(docId, 20)
-        if (!foundDocIds.has(truncatedId)) {
-          docDetailsTable.push({
-            Collection: "—",
-            "Custom Path": this.truncate(this.customPaths[docId], 35),
-            "Document ID": truncatedId,
-            "Remote Updated": "—",
-            Title: "⚠️ Not found in collections",
+        const truncated = truncate(docId, 22)
+        if (!foundIds.has(truncated)) {
+          docRows.push({
+            collection: c.dim("\u2014"),
+            customPath: truncate(this.customPaths[docId], 30),
+            docId: truncated,
+            remoteUpdated: c.dim("\u2014"),
+            title: c.yellow("Not found in collections"),
           })
         }
       }
 
-      if (docDetailsTable.length > 0) {
-        console.table(docDetailsTable)
+      const docColumns = [
+        { key: "docId", header: "Document ID", width: 22, align: "left" as const },
+        { key: "title", header: "Title", width: 30, align: "left" as const },
+        { key: "collection", header: "Collection", width: 15, align: "left" as const },
+        { key: "remoteUpdated", header: "Remote Updated", width: 22, align: "left" as const },
+        { key: "customPath", header: "Custom Path", width: 30, align: "left" as const },
+      ]
+
+      if (docRows.length > 0) {
+        console.log("\n" + formatTable(docRows, docColumns))
       } else {
-        console.log("   No custom path documents found in the filtered collections.")
+        console.log(c.dim("\n  No custom path documents found in the filtered collections."))
       }
     } catch (err) {
-      console.log(`   ⚠️ Could not fetch documents from Outline: ${err}`)
+      console.log(c.yellow(`\n  ${icon.warn} Could not fetch from Outline: ${err}`))
     }
 
-    console.log("\n✅ Configuration verified!")
+    console.log(c.green(`\n  ${icon.check} Configuration verified!`))
   }
 }

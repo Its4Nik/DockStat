@@ -11,15 +11,15 @@ urlId: e70jNnZxzs
 
 ## Table of Contents
 
-- [Prerequisites](#prerequisites)
-- [Environment Setup](#environment-setup)
-- [Project Structure](#project-structure)
-- [Development Workflow](#development-workflow)
-- [Adding New Features](#adding-new-features)
-- [Testing](#testing)
-- [Debugging](#debugging)
-- [Best Practices](#best-practices)
-- [Common Tasks](#common-tasks)
+* [Prerequisites](#prerequisites)
+* [Environment Setup](#environment-setup)
+* [Project Structure](#project-structure)
+* [Development Workflow](#development-workflow)
+* [Adding New Features](#adding-new-features)
+* [Testing](#testing)
+* [Debugging](#debugging)
+* [Best Practices](#best-practices)
+* [Common Tasks](#common-tasks)
 
 ## Prerequisites
 
@@ -27,11 +27,11 @@ urlId: e70jNnZxzs
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| **Bun** | >= 1.0 | JavaScript runtime |
+| **Bun** | >= 1.0  | JavaScript runtime |
 | **Git** | >= 2.30 | Version control |
 | **Docker** | >= 20.10 | Container testing |
-| **Docker Compose** | >= 2.0 | Multi-container testing |
-| **VS Code** (recommended) | Latest | IDE with TypeScript support |
+| **Docker Compose** | >= 2.0  | Multi-container testing |
+| **VS Code** (recommended) | Latest  | IDE with TypeScript support |
 
 ### Optional Tools
 
@@ -170,16 +170,16 @@ graph TB
 | `src/index.ts` | Main entry point, Elysia app initialization |
 | `src/elysia-plugins.ts` | Global Elysia plugins (CORS, OpenAPI, timing) |
 | `src/logger.ts` | Logger configuration with WebSocket forwarding |
-| `src/routes/` | HTTP route definitions organized by domain |
-| `src/models/` | Typebox schemas for request/response validation |
+| `src/routes/`  | HTTP route definitions organized by domain |
+| `src/models/`  | Typebox schemas for request/response validation |
 | `src/handlers/` | Request handlers and middleware |
 | `src/middleware/` | Custom middleware components |
 | `src/database/` | Database initialization and utilities |
 | `src/websockets/` | WebSocket endpoint definitions |
 | `src/plugins/` | Plugin handler initialization |
-| `src/docker/` | DockerClientManager singleton export |
+| `src/docker/`  | DockerClientManager singleton export |
 | `src/docknode/` | DockNode integration |
-| `src/graph/` | Graph-related utilities |
+| `src/graph/`   | Graph-related utilities |
 
 ## Development Workflow
 
@@ -213,9 +213,9 @@ The server runs in watch mode and automatically reloads on file changes.
 
 ### 2. Access Documentation
 
-- **API Docs**: http://localhost:3030/api/v2/docs
-- **OpenAPI Spec**: http://localhost:3030/api/v2/swagger/json
-- **Health Check**: http://localhost:3030/api/v2/status/health
+* **API Docs**: http://localhost:3030/api/v2/docs
+* **OpenAPI Spec**: http://localhost:3030/api/v2/swagger/json
+* **Health Check**: http://localhost:3030/api/v2/status/health
 
 ### 3. Make Changes
 
@@ -477,12 +477,12 @@ const results = DockStatDB._sqliteWrapper
 
 ### Manual Testing
 
-1. **Using OpenAPI Docs**
-   - Navigate to http://localhost:3030/api/v2/docs
-   - Click on an endpoint
-   - Fill in parameters
-   - Execute the request
 
+1. **Using OpenAPI Docs**
+   * Navigate to http://localhost:3030/api/v2/docs
+   * Click on an endpoint
+   * Fill in parameters
+   * Execute the request
 2. **Using cURL**
 
 ```bash
@@ -494,6 +494,7 @@ curl -X POST http://localhost:3030/api/v2/docker/client \
   -H "Content-Type: application/json" \
   -d '{"clientName": "test", "options": null}'
 ```
+
 
 3. **Using Bun**
 
@@ -648,6 +649,7 @@ flowchart TD
 
 ### Code Organization
 
+
 1. **Keep routes focused** - Each route file should handle a single domain
 2. **Separate concerns** - Models in `models/`, routes in `routes/`, business logic in services
 3. **Use namespaces** - Group related schemas in model files using TypeScript namespaces
@@ -734,6 +736,7 @@ routeLogger.error("Error occurred", { error })
 ## Common Tasks
 
 ### Adding a New Docker Operation
+
 
 1. Add method to `@dockstat/docker-client` package
 2. Import DockerClientManager in your route
@@ -922,14 +925,14 @@ Describe how this was tested
 
 ## Related Documentation
 
-- [API Architecture Overview](../api-architecture/README.md)
-- [API Patterns](../api-patterns/README.md)
-- [WebSocket Documentation](../api-websockets/README.md)
-- [Plugin System](../api-plugins/README.md)
-- [API Reference](../api-reference/README.md)
+* [API Architecture Overview](../api-architecture/README.md)
+* [API Patterns](../api-patterns/README.md)
+* [WebSocket Documentation](../api-websockets/README.md)
+* [Plugin System](../api-plugins/README.md)
+* [API Reference](../api-reference/README.md)
 
 ## Getting Help
 
-- **GitHub Issues**: https://github.com/Its4Nik/DockStat/issues
-- **Documentation**: https://dockstat.itsnik.de
-- **Discord**: [Join our Discord](#)
+* **GitHub Issues**: https://github.com/Its4Nik/DockStat/issues
+* **Documentation**: https://dockstat.itsnik.de
+* **Discord**: [Join our Discord](#)

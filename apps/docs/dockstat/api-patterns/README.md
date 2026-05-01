@@ -1,10 +1,10 @@
 ---
-id: api-patterns-guide
-title: API Patterns
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
+id: 0d490f98-bdd2-4a8f-bb31-ed1d38924ed4
 parentDocumentId: 7dddd764-6483-4f84-96a3-988304e772d3
-updatedAt: 2026-01-01T15:02:00.000Z
-urlId: api-patterns-guide
+title: API Patterns
+updatedAt: 2026-04-30T06:00:12.033Z
+urlId: lBWz8TkrQa
 ---
 
 > This document describes the architectural and implementation patterns used throughout the DockStat API, serving as a guide for consistent and maintainable code development.

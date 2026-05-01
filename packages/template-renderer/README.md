@@ -1,8 +1,8 @@
 ---
-id: 453740d4-b426-423d-98fc-b36f6dff7644
-title: "@dockstat/template-renderer"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
+id: 453740d4-b426-423d-98fc-b36f6dff7644
 parentDocumentId: bbcefaa2-6bd4-46e8-ae4b-a6b823593e67
+title: "@dockstat/template-renderer"
 updatedAt: 2025-12-24T00:36:09.100Z
 urlId: 5qbatLB5V0
 ---

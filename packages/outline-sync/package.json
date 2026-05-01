@@ -1,6 +1,25 @@
 {
+  "name": "@dockstat/outline-sync",
+  "version": "2.0.0",
+  "description": "Bidirectional sync between Outline wiki and local Markdown files",
+  "type": "module",
+  "main": "dist/index.js",
   "bin": {
     "outline-sync": "dist/index.js"
+  },
+  "files": [
+    "./dist/index.js",
+    "./README.md"
+  ],
+  "scripts": {
+    "build": "rm -rf dist ; bun build --minify src/index.ts --outdir dist --target bun --banner '#!/usr/bin/env bun'",
+    "dev": "bun run src/index.ts",
+    "prepublishOnly": "bun run build",
+    "sync": "bun run src/index.ts sync",
+    "watch": "bun run src/index.ts watch",
+    "ci": "bun run src/index.ts ci",
+    "push": "bun run src/index.ts push",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "chokidar": "^4.0.0",
@@ -12,19 +31,13 @@
     "@types/node": "^20.10.0",
     "bun-types": "latest"
   },
-  "files": [
-    "./dist/index.js",
-    "./README.md"
+  "keywords": [
+    "outline",
+    "wiki",
+    "sync",
+    "markdown",
+    "ci",
+    "cli"
   ],
-  "main": "dist/index.js",
-  "name": "@dockstat/outline-sync",
-  "scripts": {
-    "build": "rm -r dist && bun build src/index.ts --outdir dist --target bun --banner '#!/usr/bin/env bun'",
-    "dev": "bun run src/index.ts",
-    "prepublishOnly": "bun run build",
-    "sync": "bun run src/index.ts sync",
-    "watch": "bun run src/index.ts watch"
-  },
-  "type": "module",
-  "version": "1.3.0"
+  "license": "MIT"
 }

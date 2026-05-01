@@ -1,8 +1,8 @@
 ---
-id: e4e04545-fd9f-4fbf-becb-94da81f48bc5
-title: Integration guide
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
+id: e4e04545-fd9f-4fbf-becb-94da81f48bc5
 parentDocumentId: 7dddd764-6483-4f84-96a3-988304e772d3
+title: Integration guide
 updatedAt: 2026-02-27T19:17:00.935Z
 urlId: SWA5Nd4lzW
 ---

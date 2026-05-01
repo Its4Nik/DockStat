@@ -2,7 +2,12 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["ESNext"],
+    "lib": [
+      "ESNext"
+    ],
+    "types": [
+      "bun-types"
+    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "outDir": "./dist",
@@ -12,6 +17,10 @@
     "strict": true,
     "target": "ESNext"
   },
-  "exclude": ["node_modules"],
-  "include": ["src/**/*"]
+  "exclude": [
+    "node_modules"
+  ],
+  "include": [
+    "src/**/*"
+  ]
 }
