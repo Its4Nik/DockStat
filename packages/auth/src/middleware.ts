@@ -75,7 +75,7 @@ export const getMiddlewareFunctions = (
           }
 
           // Update lastUsedAt
-          apiKeys.where({id: keyRecord.id}).update({ lastUsedAt: new Date() })
+          apiKeys.where({ id: keyRecord.id }).update({ lastUsedAt: new Date() })
 
           logger.info(`Valid API key found for user ${keyRecord.userId}`, reqId)
           return { scopes: keyRecord.scopes, userId: keyRecord.userId }
@@ -156,8 +156,7 @@ export const getMiddlewareFunctions = (
         if (payload && typeof payload.user === "object" && payload.user !== null) {
           user = { ...payload.user, authMethod: "jwt" } as AuthUser
         }
-      }
-      else if (apiKey && authMethod === "apikey") {
+      } else if (apiKey && authMethod === "apikey") {
         logger.info("Verifying API Key", reqId)
         const keyValidation = await validateApiKey(apiKey, request)
         if (keyValidation) {
@@ -178,7 +177,8 @@ export const getMiddlewareFunctions = (
         isAuthenticated: !!user,
         user,
       }
-    })}
+    })
+  }
 
   /**
    * Creates an authenticated route definition

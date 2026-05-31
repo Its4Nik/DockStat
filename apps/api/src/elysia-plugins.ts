@@ -20,10 +20,10 @@ const DockStatElysiaPlugins = new Elysia()
             //   type: "apiKey",
             // },
             apikey: {
-              type: "apiKey",
               in: "apikey",
-              name: "dockstat"
-              },
+              name: "dockstat",
+              type: "apiKey",
+            },
             bearerAuth: {
               bearerFormat: "JWT",
               description: "A bearer token which is needed for production",
