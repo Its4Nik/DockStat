@@ -75,7 +75,7 @@ export const getMiddlewareFunctions = (
           }
 
           // Update lastUsedAt
-          apiKeys.update({ id: keyRecord.id, lastUsedAt: new Date() })
+          apiKeys.where({id: keyRecord.id}).update({ lastUsedAt: new Date() })
 
           logger.info(`Valid API key found for user ${keyRecord.userId}`, reqId)
           return { scopes: keyRecord.scopes, userId: keyRecord.userId }
@@ -108,58 +108,56 @@ export const getMiddlewareFunctions = (
     logger.info("Creating auth middleware")
     return new Elysia({
       name: "auth-middleware",
-    }).resolve({ as: "global" }, async ({ cookie, headers, route, request }) => {
+    }).resolve({ as: "global" }, async ({ cookie, headers, route, request, query }) => {
       const reqId = getStateMap().get(request).reqId
+
+      // 1. Initial log with consistent context
       logger.info(`Checking auth for route ${route}`, reqId)
+
+      // 2. Extract credentials once upfront
+      const authHeader = headers.authorization as string | undefined
+      const authQueryToken = query.dockstat as string | undefined
+      const headerApiKey = headers["x-api-key"] as string | undefined
+      const cookieToken = cookie?.auth_token?.value as string | undefined
 
       let token: string | null = null
       let apiKey: string | null = null
       let authMethod: "jwt" | "apikey" | null = null
 
-      // Try to get token from Authorization header first
-      const authHeader = headers.authorization as string | undefined
       if (authHeader?.startsWith("Bearer ")) {
         token = authHeader.slice(7)
         authMethod = "jwt"
       } else if (authHeader?.startsWith("Api-Key ")) {
         apiKey = authHeader.slice(8)
         authMethod = "apikey"
-      } else {
-        logger.warn("No authorization token found!", reqId)
       }
 
-      // Also check for X-API-Key header
-      if (!apiKey && !token) {
-        apiKey = (headers["x-api-key"] as string | undefined) || null
-        if (apiKey) {
-          authMethod = "apikey"
-        }
+      if (!token && !apiKey && authQueryToken?.startsWith("dockstat_")) {
+        apiKey = authQueryToken
+        authMethod = "apikey"
+        logger.debug("Using dockstat query token for auth", reqId)
       }
 
-      // Fall back to cookie if no token in header (for JWT only)
-      if (!token && !apiKey) {
-        const authTokenCookie = cookie?.auth_token as { value?: string } | undefined
-        if (authTokenCookie?.value) {
-          token = authTokenCookie.value
-          authMethod = "jwt"
-        } else {
-          logger.warn("No Auth cookie found!", reqId)
-        }
+      if (!token && !apiKey && headerApiKey) {
+        apiKey = headerApiKey
+        authMethod = "apikey"
       }
 
-      // Verify the token if present (JWT)
+      if (!token && !apiKey && cookieToken) {
+        token = cookieToken
+        authMethod = "jwt"
+      }
+
       let user: AuthUser | undefined
+
       if (token && authMethod === "jwt") {
-        logger.info("Verifying JWT Token")
+        logger.info("Verifying JWT Token", reqId)
         const payload = await verifyAuthToken(token)
         if (payload && typeof payload.user === "object" && payload.user !== null) {
-          user = payload.user as AuthUser
-          user.authMethod = "jwt"
+          user = { ...payload.user, authMethod: "jwt" } as AuthUser
         }
       }
-
-      // Verify API key if present
-      if (apiKey && authMethod === "apikey" && !user) {
+      else if (apiKey && authMethod === "apikey") {
         logger.info("Verifying API Key", reqId)
         const keyValidation = await validateApiKey(apiKey, request)
         if (keyValidation) {
@@ -171,12 +169,16 @@ export const getMiddlewareFunctions = (
         }
       }
 
+      // 4. Finalize & Warn only if totally unauthenticated
+      if (!user) {
+        logger.warn("Unauthenticated request: No valid credentials provided", reqId)
+      }
+
       return {
         isAuthenticated: !!user,
         user,
       }
-    })
-  }
+    })}
 
   /**
    * Creates an authenticated route definition
