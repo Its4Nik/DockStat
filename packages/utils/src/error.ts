@@ -194,7 +194,7 @@ export function extractErrorMessage(
     // Last resort: try to stringify but avoid useless output
     try {
       const str = JSON.stringify(error)
-      if (str && str !== "{}" && str !== "[]" && str !== "[object Object]" && str.length < 500) {
+      if (str && str !== "{}" && str !== "[]" && str !== "[object Object]" && str?.length < 500) {
         return str
       }
     } catch {

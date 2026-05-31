@@ -1,4 +1,5 @@
 import type { ProvidersTable } from "@dockstat/auth/types"
+import { extractDockStatError } from "@dockstat/utils"
 import { useCallback, useEffect, useState } from "react"
 import { api, getAuthHeaders } from "@/lib/api"
 
@@ -18,8 +19,13 @@ export function useProviders() {
         setError("Failed to load authentication providers")
       }
     } catch (err) {
-      console.error("Failed to fetch providers:", err)
-      setError("Failed to load authentication providers")
+      const body = extractDockStatError(err)
+      if (body?.status === 401) {
+        setError("Authentication required")
+      } else {
+        console.error("Failed to fetch providers:", body ?? err)
+        setError(body?.description ?? "Failed to load authentication providers")
+      }
     } finally {
       setLoading(false)
     }

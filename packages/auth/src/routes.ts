@@ -1,6 +1,6 @@
 import type Logger from "@dockstat/logger"
 import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
-import { error } from "@dockstat/utils"
+import { error, DockStatErrorCode } from "@dockstat/utils"
 import Elysia, { t } from "elysia"
 import * as client from "openid-client"
 import type { ConfigService } from "./config"
@@ -82,17 +82,24 @@ export function createAuthRoutes(
         try {
           const existing = table.where({ id: providerId }).first()
           if (!existing) {
-            set.status = 404
-            return { error: "Provider not found" }
+            throw new error.DockStatError({
+              code: DockStatErrorCode.NOT_FOUND,
+              description: "Provider not found",
+              status: 404,
+            })
           }
 
           table.where({ id: providerId }).delete()
           logger.info(`Deleted provider ${providerId}`)
           return { message: "Provider deleted", success: true }
-        } catch (error) {
-          logger.error(`Failed to delete provider ${providerId}: ${error}`)
-          set.status = 500
-          return { error: "Failed to delete provider" }
+        } catch (err) {
+          if (error.isDockStatError(err)) throw err
+          logger.error(`Failed to delete provider ${providerId}: ${err}`)
+          throw new error.DockStatError({
+            code: DockStatErrorCode.INTERNAL,
+            description: "Failed to delete provider",
+            status: 500,
+          })
         }
       },
       {
@@ -104,6 +111,20 @@ export function createAuthRoutes(
         params: t.Object({
           providerId: t.String(),
         }),
+      }
+    )
+    .get(
+      "/providers",
+      () =>
+        table
+          .select(["id", "issuer_url", "scopes", "client_id", "created_at", "name", "icon"])
+          .all()
+          .map((p) => serializeDates(p, ["created_at"])),
+      {
+        detail: {
+          description: "Lists all Providers",
+          summary: "All Providers",
+        },
       }
     )
     .get(
@@ -179,16 +200,22 @@ export function createAuthRoutes(
               state: cookie.state?.value ? "present" : "missing",
             })}`
           )
-          set.status = 400
-          return "Authentication failed: Missing security cookies. Please try logging in again from the login page."
+          throw new error.DockStatError({
+            code: DockStatErrorCode.BAD_REQUEST,
+            description: "Authentication failed: Missing security cookies. Please try logging in again from the login page.",
+            status: 400,
+          })
         }
 
         logger.debug(`OAuth cookies validated for provider: ${providerId}`)
 
         if (cookie.state.value !== returnedState) {
           logger.error(`Invalid state parameter in OAuth callback for provider: ${providerId}`)
-          set.status = 400
-          return "Invalid state"
+          throw new error.DockStatError({
+            code: DockStatErrorCode.BAD_REQUEST,
+            description: "Invalid state parameter in OAuth callback",
+            status: 400,
+          })
         }
 
         logger.debug(
@@ -218,34 +245,35 @@ export function createAuthRoutes(
           cookie.nonce.remove()
           cookie.pkce.remove()
 
-          // Create a JWT with user info
           const token = await createAuthToken(userInfo)
 
-          // Set JWT as a secure cookie (not in URL to prevent token leakage)
           const isSecure = BASE_URL.startsWith("https://")
           cookie.auth_token.value = token
           cookie.auth_token.httpOnly = false
           cookie.auth_token.path = "/"
           cookie.auth_token.secure = isSecure
           cookie.auth_token.sameSite = "lax"
-          cookie.auth_token.maxAge = 86400 // 1 day, matching JWT expiration
+          cookie.auth_token.maxAge = 86400
 
-          // Redirect to frontend callback page (token is in cookie, not URL)
           const frontendCallbackUrl = `${FRONTEND_URL}/auth/${providerId}/callback`
           logger.debug(`Redirecting to frontend callback for provider: ${providerId}`)
 
           return redirect(frontendCallbackUrl)
-        } catch (error) {
+        } catch (err) {
+          if (error.isDockStatError(err)) throw err
           const errorDetails = {
-            constructor: error?.constructor?.name,
-            error: error instanceof Error ? error.message : String(error),
-            name: error instanceof Error ? error.name : undefined,
-            stack: error instanceof Error ? error.stack : undefined,
+            constructor: err?.constructor?.name,
+            error: err instanceof Error ? err.message : String(err),
+            name: err instanceof Error ? err.name : undefined,
+            stack: err instanceof Error ? err.stack : undefined,
           }
 
           logger.error(`Token exchange failed! ${JSON.stringify(errorDetails, null, 2)}`)
-          set.status = 500
-          return `Authentication failed: ${error instanceof Error ? error.message : "Unknown error"}`
+          throw new error.DockStatError({
+            code: DockStatErrorCode.AUTH,
+            description: err instanceof Error ? err.message : "Authentication failed",
+            status: 500,
+          })
         }
       },
       {
@@ -255,55 +283,6 @@ export function createAuthRoutes(
         },
         params: t.Object({ providerId: t.String() }),
         query: t.Object({ code: t.String(), state: t.String() }),
-      }
-    )
-    .get(
-      "/verify",
-      async ({ cookie, headers, set }) => {
-        // Check Authorization header first, then fall back to cookie
-        let token: string | null = null
-        const authHeader = headers.authorization as string | undefined
-        if (authHeader?.startsWith("Bearer ")) {
-          token = authHeader.slice(7)
-        }
-        if (!token) {
-          token = String(cookie.auth_token?.value) ?? null
-        }
-
-        if (!token) {
-          set.status = 401
-          return { error: "No token provided" }
-        }
-
-        const payload = await verifyAuthToken(token)
-
-        if (!payload || typeof payload.user !== "object" || payload.user === null) {
-          set.status = 401
-          return { error: "Invalid or expired token" }
-        }
-
-        return { user: payload.user }
-      },
-      {
-        detail: {
-          description: "Verify the auth_token cookie and return the user info",
-          summary: "Verify Token",
-        },
-      }
-    )
-    .get(
-      "/providers",
-      () =>
-        table
-          .select(["id", "issuer_url", "scopes", "client_id", "created_at", "name", "icon"])
-          .all()
-          .map((p) => serializeDates(p, ["created_at"])),
-      {
-        //...requireAuth(),
-        detail: {
-          description: "Lists all Providers",
-          summary: "All Providers",
-        },
       }
     )
     .get(
@@ -339,12 +318,51 @@ export function createAuthRoutes(
         query: t.Object({ redirectUri: t.String() }),
       }
     )
+    .get(
+      "/verify",
+      async ({ cookie, headers }) => {
+        let token: string | null = null
+        const authHeader = headers.authorization as string | undefined
+        if (authHeader?.startsWith("Bearer ")) {
+          token = authHeader.slice(7)
+        }
+        if (!token) {
+          token = String(cookie.auth_token?.value) ?? null
+        }
+
+        if (!token) {
+          throw new error.DockStatError({
+            code: DockStatErrorCode.UNAUTHORIZED,
+            description: "No token provided",
+            status: 401,
+          })
+        }
+
+        const payload = await verifyAuthToken(token)
+
+        if (!payload || typeof payload.user !== "object" || payload.user === null) {
+          throw new error.DockStatError({
+            code: DockStatErrorCode.UNAUTHORIZED,
+            description: "Invalid or expired token",
+            status: 401,
+          })
+        }
+
+        return { user: payload.user }
+      },
+      {
+        detail: {
+          description: "Verify the auth_token cookie and return the user info",
+          summary: "Verify Token",
+        },
+      }
+    )
     .group("/local", (app) =>
       app
         .post(
           "/register",
           async (context) => {
-            const { body, set } = context
+            const { body } = context
             try {
               const requestBody = body as { name: string; pass: string }
 
@@ -353,26 +371,27 @@ export function createAuthRoutes(
               const isInitialUser = users.select(["id"]).count() === 0
 
               if (existingUser) {
-                set.status = 409
-                return { error: "Username already exists" }
+                throw new error.DockStatError({
+                  code: DockStatErrorCode.CONFLICT,
+                  description: "Username already exists",
+                  status: 409,
+                })
               }
 
-              // Allow registration if guests are allowed OR user is authenticated
               if (!allowGuests && !(context as unknown as AuthContext).isAuthenticated) {
-                set.status = 403
-                return {
-                  error: "Guest registration is disabled. Please authenticate to create new users.",
-                }
+                throw new error.DockStatError({
+                  code: DockStatErrorCode.FORBIDDEN,
+                  description: "Guest registration is disabled. Please authenticate to create new users.",
+                  status: 403,
+                })
               }
 
-              // Hash password with argon2id
               const passHash = await Bun.password.hash(requestBody.pass, {
                 algorithm: "argon2id",
                 memoryCost: 65536,
                 timeCost: 4,
               })
 
-              // Create user
               const user = users.insertAndGet({
                 name: requestBody.name,
                 passHash,
@@ -394,11 +413,15 @@ export function createAuthRoutes(
                 success: true,
                 user: { id: user.id, name: user.name },
               }
-            } catch (error) {
+            } catch (err) {
+              if (error.isDockStatError(err)) throw err
               const requestBody = body as { name: string; pass: string }
-              logger.error(`Registration failed for ${requestBody.name}: ${error}`)
-              set.status = 500
-              return { error: "Registration failed" }
+              logger.error(`Registration failed for ${requestBody.name}: ${err}`)
+              throw new error.DockStatError({
+                code: DockStatErrorCode.INTERNAL,
+                description: "Registration failed",
+                status: 500,
+              })
             }
           },
           {
@@ -412,7 +435,71 @@ export function createAuthRoutes(
             },
           }
         )
-        .get("/allow-guest", () => getAllowGuestRegistration())
+        .post(
+          "/login",
+          async ({ body }) => {
+            try {
+              const requestBody = body as { name: string; pass: string }
+              const user = users
+                .select(["id", "name", "passHash"])
+                .where({ name: requestBody.name })
+                .first()
+
+              if (!user) {
+                logger.warn(`Login attempt for non-existent user: ${requestBody.name}`)
+                throw new error.DockStatError({
+                  code: DockStatErrorCode.UNAUTHORIZED,
+                  description: "Invalid credentials",
+                  status: 401,
+                })
+              }
+
+              const isValid = await Bun.password.verify(requestBody.pass, user.passHash)
+
+              if (!isValid) {
+                logger.warn(`Failed login attempt for user: ${requestBody.name}`)
+                throw new error.DockStatError({
+                  code: DockStatErrorCode.UNAUTHORIZED,
+                  description: "Invalid credentials",
+                  status: 401,
+                })
+              }
+
+              logger.info(`Successful login for local user: ${requestBody.name}`)
+
+              const token = await createAuthToken({
+                email: user.name,
+                name: user.name,
+                provider: "local",
+                sub: user.id,
+              })
+
+              return {
+                success: true,
+                token,
+              }
+            } catch (err) {
+              if (error.isDockStatError(err)) throw err
+              const requestBody = body as { name: string; pass: string }
+              logger.error(`Login failed for ${requestBody.name}: ${err}`)
+              throw new error.DockStatError({
+                code: DockStatErrorCode.INTERNAL,
+                description: "Login failed",
+                status: 500,
+              })
+            }
+          },
+          {
+            body: t.Object({
+              name: t.String(),
+              pass: t.String(),
+            }),
+            detail: {
+              description: "Authenticate with username and password",
+              summary: "Login",
+            },
+          }
+        )
         .get(
           "/login",
           async ({ redirect }) => {
@@ -424,80 +511,6 @@ export function createAuthRoutes(
             detail: {
               description: "Redirect to frontend login page",
               summary: "Login Page",
-            },
-          }
-        )
-        .post(
-          "/login",
-          async ({ body, set }) => {
-            try {
-              const requestBody = body as { name: string; pass: string }
-              // Find user by username
-              const user = users
-                .select(["id", "name", "passHash"])
-                .where({ name: requestBody.name })
-                .first()
-
-              if (!user) {
-                logger.warn(`Login attempt for non-existent user: ${requestBody.name}`)
-                set.status = 401
-
-                const err = new error.DockStatError({
-                  code: "UNAUTHORIZED",
-                  description: "Invalid credentials",
-                  status: 401,
-                })
-
-                return err
-              }
-
-              // Verify password
-              const isValid = await Bun.password.verify(requestBody.pass, user.passHash)
-
-              if (!isValid) {
-                logger.warn(`Failed login attempt for user: ${requestBody.name}`)
-
-                set.status = 401
-
-                const err = new error.DockStatError({
-                  code: "UNAUTHORIZED",
-                  description: "Invalid credentials",
-                  status: 401,
-                })
-
-                return err
-              }
-
-              logger.info(`Successful login for local user: ${requestBody.name}`)
-
-              // Create JWT token with user info
-              const token = await createAuthToken({
-                email: user.name,
-                name: user.name,
-                provider: "local",
-                sub: user.id,
-              })
-
-              // Return token to frontend (avoid CORS issues with redirect from POST)
-              return {
-                success: true,
-                token,
-              }
-            } catch (error) {
-              const requestBody = body as { name: string; pass: string }
-              logger.error(`Login failed for ${requestBody.name}: ${error}`)
-              set.status = 500
-              return { error: "Login failed" }
-            }
-          },
-          {
-            body: t.Object({
-              name: t.String(),
-              pass: t.String(),
-            }),
-            detail: {
-              description: "Authenticate with username and password",
-              summary: "Login",
             },
           }
         )
@@ -518,26 +531,18 @@ export function createAuthRoutes(
             }),
           }
         )
-        .get(
-          "/exists",
-          async () => {
-            try {
-              const user = users.select(["id"]).first()
-              const exists = !!user
-              logger.info(`Local user exists check: ${exists}`)
-              return { exists }
-            } catch (error) {
-              logger.error(`Error checking if local user exists: ${error}`)
-              return { exists: false }
-            }
-          },
-          {
-            detail: {
-              description: "Check if any local users exist",
-              summary: "Check Local Users",
-            },
+        .get("/exists", async () => {
+          try {
+            const user = users.select(["id"]).first()
+            const exists = !!user
+            logger.info(`Local user exists check: ${exists}`)
+            return { exists }
+          } catch (error) {
+            logger.error(`Error checking if local user exists: ${error}`)
+            return { exists: false }
           }
-        )
+        })
+        .get("/allow-guest", () => getAllowGuestRegistration())
     )
     .get(
       "/users",
@@ -563,21 +568,28 @@ export function createAuthRoutes(
     )
     .delete(
       "/users/:userId",
-      async ({ params: { userId }, set }) => {
+      async ({ params: { userId } }) => {
         try {
           const existing = users.where({ id: userId }).first()
           if (!existing) {
-            set.status = 404
-            return { error: "User not found" }
+            throw new error.DockStatError({
+              code: DockStatErrorCode.NOT_FOUND,
+              description: "User not found",
+              status: 404,
+            })
           }
 
           users.where({ id: userId }).delete()
           logger.info(`Deleted user ${userId}`)
           return { message: "User deleted", success: true }
-        } catch (error) {
-          logger.error(`Failed to delete user ${userId}: ${error}`)
-          set.status = 500
-          return { error: "Failed to delete user" }
+        } catch (err) {
+          if (error.isDockStatError(err)) throw err
+          logger.error(`Failed to delete user ${userId}: ${err}`)
+          throw new error.DockStatError({
+            code: DockStatErrorCode.INTERNAL,
+            description: "Failed to delete user",
+            status: 500,
+          })
         }
       },
       {
@@ -591,11 +603,46 @@ export function createAuthRoutes(
         }),
       }
     )
+    .group("/guest", (app) =>
+      app
+        .get("/", () => getAllowGuestRegistration())
+        .post(
+          "/:action",
+          async ({ params }) => {
+            const action = params.action as "enable" | "disable"
+
+            if (action === "enable") {
+              setAllowGuestRegistration(true)
+              logger.info("Guest registration enabled")
+              return { message: "Guest registration enabled", success: true }
+            } else if (action === "disable") {
+              setAllowGuestRegistration(false)
+              logger.info("Guest registration disabled")
+              return { message: "Guest registration disabled", success: true }
+            } else {
+              throw new error.DockStatError({
+                code: DockStatErrorCode.BAD_REQUEST,
+                description: "Invalid action. Use 'enable' or 'disable'",
+                status: 400,
+              })
+            }
+          },
+          {
+            detail: {
+              description: "Enable or disable guest registration",
+              summary: "Toggle Guest Registration",
+            },
+            params: t.Object({
+              action: t.Union([t.Literal("enable"), t.Literal("disable")]),
+            }),
+          }
+        )
+    )
     .group("/api-keys", (app) =>
       app
         .post(
           "/",
-          async ({ body, set }) => {
+          async ({ body }) => {
             try {
               const requestBody = body as {
                 userId: string
@@ -604,17 +651,14 @@ export function createAuthRoutes(
                 expiresAt?: string
               }
 
-              // Generate a secure API key
               const apiKey = `dockstat_${crypto.randomUUID().replace(/-/g, "")}`
 
-              // Hash the API key before storing
               const keyHash = await Bun.password.hash(apiKey, {
                 algorithm: "argon2id",
                 memoryCost: 65536,
                 timeCost: 3,
               })
 
-              // Create API key record
               const apiKeyRecord = apiKeys.insertAndGet({
                 expiresAt: requestBody.expiresAt ? new Date(requestBody.expiresAt) : null,
                 keyHash,
@@ -632,7 +676,7 @@ export function createAuthRoutes(
                   {
                     expiresAt: apiKeyRecord.expiresAt,
                     id: apiKeyRecord.id,
-                    key: apiKey, // Only return the key once!
+                    key: apiKey,
                     name: apiKeyRecord.name,
                     scopes: apiKeyRecord.scopes,
                   },
@@ -640,10 +684,14 @@ export function createAuthRoutes(
                 ),
                 success: true,
               }
-            } catch (error) {
-              logger.error(`Failed to create API key: ${error}`)
-              set.status = 500
-              return { error: "Failed to create API key" }
+            } catch (err) {
+              if (error.isDockStatError(err)) throw err
+              logger.error(`Failed to create API key: ${err}`)
+              throw new error.DockStatError({
+                code: DockStatErrorCode.INTERNAL,
+                description: "Failed to create API key",
+                status: 500,
+              })
             }
           },
           {
@@ -714,7 +762,7 @@ export function createAuthRoutes(
         )
         .get(
           "/:id",
-          async ({ params: { id }, set }) => {
+          async ({ params: { id } }) => {
             try {
               const apiKey = apiKeys
                 .select([
@@ -730,15 +778,22 @@ export function createAuthRoutes(
                 .first()
 
               if (!apiKey) {
-                set.status = 404
-                return { error: "API key not found" }
+                throw new error.DockStatError({
+                  code: DockStatErrorCode.NOT_FOUND,
+                  description: "API key not found",
+                  status: 404,
+                })
               }
 
               return { apiKey }
-            } catch (error) {
-              logger.error(`Failed to get API key ${id}: ${error}`)
-              set.status = 500
-              return { error: "Failed to get API key" }
+            } catch (err) {
+              if (error.isDockStatError(err)) throw err
+              logger.error(`Failed to get API key ${id}: ${err}`)
+              throw new error.DockStatError({
+                code: DockStatErrorCode.INTERNAL,
+                description: "Failed to get API key",
+                status: 500,
+              })
             }
           },
           {
@@ -751,30 +806,39 @@ export function createAuthRoutes(
         )
         .delete(
           "/:id",
-          async ({ params: { id }, set }) => {
+          async ({ params: { id } }) => {
             try {
               const apiKey = apiKeys.select(["id", "revokedAt"]).where({ id }).first()
 
               if (!apiKey) {
-                set.status = 404
-                return { error: "API key not found" }
+                throw new error.DockStatError({
+                  code: DockStatErrorCode.NOT_FOUND,
+                  description: "API key not found",
+                  status: 404,
+                })
               }
 
               if (apiKey.revokedAt) {
-                set.status = 400
-                return { error: "API key is already revoked" }
+                throw new error.DockStatError({
+                  code: DockStatErrorCode.BAD_REQUEST,
+                  description: "API key is already revoked",
+                  status: 400,
+                })
               }
 
-              // Revoke the API key by setting revokedAt
               apiKeys.where({ id }).update({ revokedAt: new Date() })
 
               logger.info(`API key revoked: ${id}`)
 
               return { message: "API key revoked successfully", success: true }
-            } catch (error) {
-              logger.error(`Failed to revoke API key ${id}: ${error}`)
-              set.status = 500
-              return { error: "Failed to revoke API key" }
+            } catch (err) {
+              if (error.isDockStatError(err)) throw err
+              logger.error(`Failed to revoke API key ${id}: ${err}`)
+              throw new error.DockStatError({
+                code: DockStatErrorCode.INTERNAL,
+                description: "Failed to revoke API key",
+                status: 500,
+              })
             }
           },
           {
@@ -785,33 +849,5 @@ export function createAuthRoutes(
             params: t.Object({ id: t.String() }),
           }
         )
-    )
-    .post(
-      "/guest/:allow",
-      async ({ params, set }) => {
-        const allow = params.allow as "enable" | "disable"
-
-        if (allow === "enable") {
-          setAllowGuestRegistration(true)
-          logger.info("Guest registration enabled")
-          return { message: "Guest registration enabled", success: true }
-        } else if (allow === "disable") {
-          setAllowGuestRegistration(false)
-          logger.info("Guest registration disabled")
-          return { message: "Guest registration disabled", success: true }
-        } else {
-          set.status = 400
-          return { error: "Invalid action. Use 'enable' or 'disable'" }
-        }
-      },
-      {
-        detail: {
-          description: "Enable or disable guest registration",
-          summary: "Toggle Guest Registration",
-        },
-        params: t.Object({
-          allow: t.Union([t.Literal("enable"), t.Literal("disable")]),
-        }),
-      }
     )
 }

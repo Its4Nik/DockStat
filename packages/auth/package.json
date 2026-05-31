@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@dockstat/logger": "workspace:*",
+    "@dockstat/utils": "workspace:*",
     "cryptr": "^6.4.0",
     "elysia": "catalog:",
     "jose": "^6.2.2",

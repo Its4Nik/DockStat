@@ -7,6 +7,7 @@ export const useCreateUserMutations = () => {
 
   const registerLocalUser = eden.mutate({
     mutationKey: ["registerLocalUser"],
+    invalidateQueries: [['']],
     route: api.auth.local.register.post,
     toast: {
       errorTitle: (input) => `Error while registering local user ${input.name}`,

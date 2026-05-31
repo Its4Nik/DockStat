@@ -1,3 +1,4 @@
+import { type DockStatErrorBody, extractDockStatError } from "@dockstat/utils"
 import { useEffect, useState } from "react"
 import { api, getAuthHeaders } from "@/lib/api"
 
@@ -14,8 +15,13 @@ export function useLocalAuthCheck() {
           setExists(response.data.exists)
         }
       } catch (err) {
-        console.error("Failed to check local users:", err)
-        setExists(false)
+        const body = extractDockStatError(err)
+        if (body?.status === 401) {
+          setExists(false)
+        } else {
+          console.error("Failed to check local users:", body ?? err)
+          setExists(false)
+        }
       } finally {
         setChecking(false)
       }
@@ -28,8 +34,13 @@ export function useLocalAuthCheck() {
           setAllowRegistration(response.data)
         }
       } catch (err) {
-        console.error("Failed to check if guest registration is enabled:", err)
-        setAllowRegistration(false)
+        const body = extractDockStatError(err)
+        if (body?.status === 401) {
+          setAllowRegistration(false)
+        } else {
+          console.error("Failed to check if guest registration is enabled:", body ?? err)
+          setAllowRegistration(false)
+        }
       }
     }
 

@@ -1,23 +1,11 @@
 import type Logger from "@dockstat/logger"
+import { DockStatErrorCode, DockStatError } from "@dockstat/utils"
 import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import Elysia, { type AnySchema } from "elysia"
 import type { ElysiaWS } from "elysia/ws"
 import type { ApiKeysTable } from "./types"
 import { verifyAuthToken } from "./utils/jwt"
-
-/**
- * Structured error body matching DockStatErrorBody from @dockstat/utils.
- * Defined inline to avoid coupling @dockstat/auth to @dockstat/utils.
- * The API's global onError handler will respect this shape.
- */
-interface AuthErrorBody {
-  code: string
-  description: string
-  path?: string
-  reqId?: string
-  status: number
-  timestamp: string
-}
+import { truncate } from "@dockstat/utils"
 
 export type AuthUser = {
   sub: string
@@ -43,13 +31,10 @@ export const getMiddlewareFunctions = (
 ) => {
   const logger = baseLogger.spawn("Middleware")
 
-  /**
-   * Validates an API key and returns the associated user ID if valid
-   */
   const validateApiKey = async (
     apiKey: string,
     request: Request
-  ): Promise<{ userId: string; scopes: string } | null> => {
+  ): Promise<{ userId: string; scopes: string } | null | "REVOKED" | "EXPIRED"> => {
     if (!apiKeys) return null
 
     const reqId = getStateMap().get(request).reqId
@@ -62,20 +47,17 @@ export const getMiddlewareFunctions = (
       for (const keyRecord of allKeys) {
         const isValid = await Bun.password.verify(apiKey, keyRecord.keyHash)
         if (isValid) {
-          // Check if key is revoked
           if (keyRecord.revokedAt) {
             logger.warn(`API key ${keyRecord.id} is revoked`, reqId)
-            return null
+            return "REVOKED"
           }
 
-          // Check if key is expired
           if (keyRecord.expiresAt && keyRecord.expiresAt < new Date()) {
             logger.warn(`API key ${keyRecord.id} is expired`, reqId)
-            return null
+            return "EXPIRED"
           }
 
-          // Update lastUsedAt
-          apiKeys.where({id: keyRecord.id}).update({ lastUsedAt: new Date() })
+          apiKeys.where({ id: keyRecord.id }).update({ lastUsedAt: new Date() })
 
           logger.info(`Valid API key found for user ${keyRecord.userId}`, reqId)
           return { scopes: keyRecord.scopes, userId: keyRecord.userId }
@@ -89,34 +71,28 @@ export const getMiddlewareFunctions = (
     }
   }
 
-  /**
-   * Creates ElysiaJS authentication middleware
-   * Validates JWT tokens from Authorization header or cookies
-   * Also validates API keys if apiKeys table is provided
-   * Attaches user information to request context
-   *
-   * @example
-   * ```typescript
-   * const app = new Elysia()
-   *   .use(createAuthMiddleware())
-   *   .get("/protected", ({ user }) => `Hello ${user?.name}`)
-   * ```
-   */
   const createAuthMiddleware = (
     getStateMap: () => WeakMap<Request, { startTime: number; reqId: string }>
   ) => {
     logger.info("Creating auth middleware")
     return new Elysia({
       name: "auth-middleware",
-    }).resolve({ as: "global" }, async ({ cookie, headers, route, request, query }) => {
+    }).resolve({ as: "global" }, async ({ cookie, headers, route, request }) => {
       const reqId = getStateMap().get(request).reqId
 
-      // 1. Initial log with consistent context
+      logger.debug(
+        `Request Debug: ${JSON.stringify({
+          headers: truncate(headers.authorization ?? "", 10),
+          route,
+          cookies: Object.entries(cookie).map(([cookieName, cookie]) => {
+            return { [cookieName]: truncate(JSON.stringify(cookie), 10) }
+          }),
+        })}`
+      )
+
       logger.info(`Checking auth for route ${route}`, reqId)
 
-      // 2. Extract credentials once upfront
       const authHeader = headers.authorization as string | undefined
-      const authQueryToken = query.dockstat as string | undefined
       const headerApiKey = headers["x-api-key"] as string | undefined
       const cookieToken = cookie?.auth_token?.value as string | undefined
 
@@ -125,17 +101,15 @@ export const getMiddlewareFunctions = (
       let authMethod: "jwt" | "apikey" | null = null
 
       if (authHeader?.startsWith("Bearer ")) {
+        logger.info("Found Bearer token")
         token = authHeader.slice(7)
-        authMethod = "jwt"
-      } else if (authHeader?.startsWith("Api-Key ")) {
-        apiKey = authHeader.slice(8)
-        authMethod = "apikey"
-      }
-
-      if (!token && !apiKey && authQueryToken?.startsWith("dockstat_")) {
-        apiKey = authQueryToken
-        authMethod = "apikey"
-        logger.debug("Using dockstat query token for auth", reqId)
+        if (token?.startsWith("dockstat_")) {
+          authMethod = "apikey"
+          apiKey = token
+          logger.debug("Using dockstat bearer token for auth", reqId)
+        } else {
+          authMethod = "jwt"
+        }
       }
 
       if (!token && !apiKey && headerApiKey) {
@@ -156,11 +130,10 @@ export const getMiddlewareFunctions = (
         if (payload && typeof payload.user === "object" && payload.user !== null) {
           user = { ...payload.user, authMethod: "jwt" } as AuthUser
         }
-      }
-      else if (apiKey && authMethod === "apikey") {
+      } else if (apiKey && authMethod === "apikey") {
         logger.info("Verifying API Key", reqId)
         const keyValidation = await validateApiKey(apiKey, request)
-        if (keyValidation) {
+        if (keyValidation !== "EXPIRED" && keyValidation !== "REVOKED") {
           user = {
             authMethod: "apikey",
             scopes: keyValidation.scopes,
@@ -169,7 +142,6 @@ export const getMiddlewareFunctions = (
         }
       }
 
-      // 4. Finalize & Warn only if totally unauthenticated
       if (!user) {
         logger.warn("Unauthenticated request: No valid credentials provided", reqId)
       }
@@ -178,20 +150,9 @@ export const getMiddlewareFunctions = (
         isAuthenticated: !!user,
         user,
       }
-    })}
+    })
+  }
 
-  /**
-   * Creates an authenticated route definition
-   * Use this decorator to mark routes that require authentication
-   * Automatically rejects unauthenticated requests with a 401 status
-   *
-   * @example
-   * ```typescript
-   * const app = new Elysia()
-   *   .use(createAuthMiddleware())
-   *   .get("/protected", () => "Protected data", authenticated())
-   * ```
-   */
   const authenticated = (
     getStateMap: () => WeakMap<Request, { startTime: number; reqId: string }>,
     options?: { error?: string; response?: AnySchema }
@@ -203,19 +164,17 @@ export const getMiddlewareFunctions = (
     return {
       // biome-ignore lint/suspicious/noExplicitAny: I dont know the correct Elysia typing :(
       beforeHandle: (context: any) => {
-        const { isAuthenticated, set, request } = context
+        const { isAuthenticated, request } = context
         const reqId = getStateMap().get(request).reqId
         if (!isAuthenticated) {
           logger.error("Not authenticated", reqId)
-          set.status = 401
-          return {
-            code: "UNAUTHORIZED",
+          throw new DockStatError({
+            code: DockStatErrorCode.UNAUTHORIZED,
             description: error,
             path: new URL(request.url).pathname,
             reqId,
             status: 401,
-            timestamp: new Date().toISOString(),
-          } satisfies AuthErrorBody
+          })
         }
       },
       detail: {
@@ -226,50 +185,21 @@ export const getMiddlewareFunctions = (
     }
   }
 
-  /**
-   * Type guard to check if user is authenticated
-   *
-   * @example
-   * ```typescript
-   * if (isAuthenticatedUser(user)) {
-   *   console.log(user.email) // TypeScript knows user is defined
-   * }
-   * ```
-   */
   const isAuthenticatedUser = (user: AuthUser | undefined): user is AuthUser => {
     return user !== undefined && typeof user === "object" && "sub" in user
   }
 
-  /**
-   * Helper function to extract and validate user from context
-   * Throws an error if user is not authenticated
-   *
-   * @example
-   * ```typescript
-   * app.get("/profile", ({ user }) => {
-   *   const authenticatedUser = requireAuth({ user, isAuthenticated: !!user })
-   *   return { email: authenticatedUser.email }
-   * })
-   * ```
-   */
   const requireAuth = (context: { user?: AuthUser; isAuthenticated: boolean }): AuthUser => {
     if (!context.isAuthenticated || !context.user) {
-      throw new Error("Authentication required")
+      throw new DockStatError({
+        code: DockStatErrorCode.UNAUTHORIZED,
+        description: "Authentication required",
+        status: 401,
+      })
     }
     return context.user
   }
 
-  /**
-   * Decorator for route handlers that require authentication
-   * Ensures the handler has access to a valid user object
-   *
-   * @example
-   * ```typescript
-   * app.get("/profile", withAuth(({ user }) => {
-   *   return { email: user.email }
-   * }))
-   * ```
-   */
   const withAuth = <T extends Record<string, unknown>, R>(
     handler: (context: { user: AuthUser } & T) => R
   ): ((context: { user?: AuthUser; isAuthenticated: boolean } & T) => R) => {
@@ -279,18 +209,6 @@ export const getMiddlewareFunctions = (
     }
   }
 
-  /**
-   * Creates an authenticated route definition that requires API key authentication
-   * Use this decorator to mark routes that require API key authentication
-   * Automatically rejects requests without valid API keys with a 401 status
-   *
-   * @example
-   * ```typescript
-   * const app = new Elysia()
-   *   .use(createAuthMiddleware(apiKeysTable))
-   *   .get("/api/protected", () => "Protected data", apiKeyAuth())
-   * ```
-   */
   const apiKeyAuth = (
     getStateMap: () => WeakMap<Request, { startTime: number; reqId: string }>,
     options?: { error?: string; response?: AnySchema }
@@ -302,19 +220,17 @@ export const getMiddlewareFunctions = (
     return {
       // biome-ignore lint/suspicious/noExplicitAny: I dont know the correct Elysia typing :(
       beforeHandle: (context: any) => {
-        const { user, isAuthenticated, set, request } = context
+        const { user, isAuthenticated, request } = context
         const reqId = getStateMap().get(request).reqId
         if (!isAuthenticated || !user || user.authMethod !== "apikey") {
           logger.error("Not authenticated with API key", reqId)
-          set.status = 401
-          return {
-            code: "UNAUTHORIZED",
+          throw new DockStatError({
+            code: DockStatErrorCode.UNAUTHORIZED,
             description: error,
             path: new URL(request.url).pathname,
             reqId,
             status: 401,
-            timestamp: new Date().toISOString(),
-          } satisfies AuthErrorBody
+          })
         }
       },
       detail: {
@@ -325,16 +241,6 @@ export const getMiddlewareFunctions = (
     }
   }
 
-  /**
-   * Helper function to check if user is authenticated via API key
-   *
-   * @example
-   * ```typescript
-   * if (isApiKeyAuth(user)) {
-   *   console.log(`API key user: ${user.sub}, scopes: ${user.scopes}`)
-   * }
-   * ```
-   */
   const isApiKeyAuth = (
     user: AuthUser | undefined
   ): user is AuthUser & { authMethod: "apikey"; scopes: string } => {
@@ -346,16 +252,6 @@ export const getMiddlewareFunctions = (
     )
   }
 
-  /**
-   * Helper function to check if user is authenticated via JWT
-   *
-   * @example
-   * ```typescript
-   * if (isJwtAuth(user)) {
-   *   console.log(`JWT user: ${user.name}`)
-   * }
-   * ```
-   */
   const isJwtAuth = (user: AuthUser | undefined): user is AuthUser & { authMethod: "jwt" } => {
     return (
       user !== undefined &&
@@ -375,46 +271,10 @@ export const getMiddlewareFunctions = (
     return null
   }
 
-  /**
-   * Extracts authenticated user from WebSocket context
-   * Returns null if user is not authenticated
-   *
-   * @example
-   * ```typescript
-   * app.ws("/ws", {
-   *   message: (ws) => {
-   *     const user = getWsUser(ws)
-   *     if (user) {
-   *       ws.send(`Hello ${user.name}`)
-   *     }
-   *   }
-   * })
-   * ```
-   */
   const getWsUser = (ws: { data: Partial<AuthWsContext> }): AuthUser | null => {
     return ws.data.user || null
   }
 
-  /**
-   * Create an authenticated WebSocket handler with custom token extraction
-   * Use this when you need custom logic to extract the token from the WebSocket connection
-   *
-   * @example
-   * ```typescript
-   * app.ws("/ws", {
-   *   ...createAuthenticatedWsHandler({
-   *     extractToken: (ws) => {
-   *       // Extract token based on your setup
-   *       return ws.data.query?.token || null
-   *     }
-   *   }),
-   *   message: (ws, msg) => {
-   *     const user = ws.data.user // User is guaranteed to be AuthUser here
-   *     ws.send(`Hello ${user.name}`)
-   *   }
-   * })
-   * ```
-   */
   const createAuthenticatedWsHandler = (options?: { extractToken?: WsTokenExtractor }) => {
     return {
       message: (ws: ElysiaWS<{ user?: AuthUser }>, _message: unknown) => {
@@ -423,10 +283,8 @@ export const getMiddlewareFunctions = (
           ws.close(1008, "Authentication required")
           return
         }
-        // Continue processing message if authenticated
       },
       open: async (ws: ElysiaWS<{ user?: AuthUser; userId?: string }>) => {
-        // Extract token using the provided function or default
         let token: string | null = null
 
         if (options?.extractToken) {
@@ -475,27 +333,16 @@ export const getMiddlewareFunctions = (
   }
 }
 
-/**
- * WebSocket context with authentication data
- */
 export interface AuthWsContext {
   user?: AuthUser
   userId?: string
   isAuthenticated: boolean
 }
 
-/**
- * Type for JWT payload returned by verification
- */
 export type JWTPayload = {
   user: AuthUser
   iat?: number
   exp?: number
 }
 
-/**
- * Type for WebSocket URL extraction function
- * Implement this function based on your WebSocket connection setup
- * to extract the token from the connection URL
- */
 export type WsTokenExtractor = (ws: ElysiaWS) => string | null
