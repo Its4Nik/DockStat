@@ -1,3 +1,4 @@
+import { extractEdenError } from "@dockstat/utils"
 import { useCallback, useState } from "react"
 import { api, getAuthHeaders } from "@/lib/api"
 
@@ -33,7 +34,8 @@ export function useLocalLogin({
         }
 
         if (response.status !== 200 && response.status !== 302) {
-          setError("Login failed. Please try again.")
+          // Use extractEdenError to get better error messages from validation errors
+          setError(extractEdenError(response))
           return
         }
 
@@ -59,7 +61,8 @@ export function useLocalLogin({
         }
       } catch (err) {
         console.error("Local login error:", err)
-        setError("Login failed. Please try again.")
+        // Use extractEdenError to get better error messages
+        setError(extractEdenError({ error: err }))
       } finally {
         setIsSubmitting(false)
       }

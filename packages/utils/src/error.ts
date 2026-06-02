@@ -274,6 +274,7 @@ export function isEdenError<T>(response: {
  * Supports multiple failure formats:
  * - thrown errors
  * - Eden `{ error }` responses
+ * - Elysia validation errors (type: "validation")
  * - API `{ success: false, error: string }` responses
  *
  * @param response Eden response-like object
@@ -290,22 +291,78 @@ export function isEdenError<T>(response: {
  *
  * extractEdenError({ data: { success: false, error: "User not found" } })
  * // => "User not found"
+ *
+ * extractEdenError({ error: { value: { type: "validation", summary: "Expected string with minimum length of 8" } } })
+ * // => "Expected string with minimum length of 8"
  */
 export function extractEdenError(
-  response: { status?: number; error?: unknown; data?: unknown },
+  response: { status?: number; error?: unknown; data?: unknown } | string | Error,
   fallback = "Request failed"
 ): string {
-  if (response.error !== undefined) {
-    return extractErrorMessage(response.error, fallback)
+  // Handle direct string input (already an error message)
+  if (typeof response === "string") {
+    return response.trim() || fallback
   }
 
-  if (response.data !== undefined && typeof response.data === "object" && response.data !== null) {
-    const data = response.data as Record<string, unknown>
-    if (data.success === false && typeof data.error === "string") {
-      if (typeof data.error === "object") {
-        return JSON.stringify(data.error)
+  // Handle Error objects directly
+  if (response instanceof Error) {
+    return response.message || fallback
+  }
+
+  // Handle objects
+  if (typeof response === "object" && response !== null) {
+    // Handle Eden's raw error structure directly: { status, value: { type, ... } }
+    // This is what Eden returns when a validation error occurs
+    if ("value" in response) {
+      return handleElysiaError(response, fallback)
+    }
+
+    // Handle validation errors directly (type: "validation")
+    // This handles cases where the ElysiaErrorValue is passed without a wrapper
+    if ("type" in response) {
+      return handleElysiaError(response, fallback)
+    }
+
+    // Handle Eden error responses with error property
+    if ("error" in response && response.error !== undefined) {
+      return handleElysiaError(response.error, fallback)
+    }
+
+    // Handle API error responses with data property
+    if (
+      "data" in response &&
+      response.data !== undefined &&
+      typeof response.data === "object" &&
+      response.data !== null
+    ) {
+      const data = response.data as Record<string, unknown>
+      if (data.success === false && typeof data.error === "string") {
+        return data.error
       }
-      return data.error
+      // Also handle nested error objects
+      if (data.success === false && data.error !== null && typeof data.error === "object") {
+        return handleElysiaError(data.error, fallback)
+      }
+      // Handle data that is itself an error with value
+      if ("value" in data) {
+        return handleElysiaError(data, fallback)
+      }
+    }
+
+    // Handle objects with summary property (common in Elysia validation errors)
+    if (
+      "summary" in response &&
+      typeof (response as Record<string, unknown>).summary === "string"
+    ) {
+      return ((response as Record<string, unknown>).summary as string).trim() || fallback
+    }
+
+    // Handle objects with message property
+    if (
+      "message" in response &&
+      typeof (response as Record<string, unknown>).message === "string"
+    ) {
+      return ((response as Record<string, unknown>).message as string).trim() || fallback
     }
   }
 
@@ -368,54 +425,73 @@ export function handleElysiaError(error: unknown, fallback = "Request failed"): 
     return fallback
   }
 
-  // Handle Eden error structure with value wrapper
-  if (typeof error === "object" && "value" in error) {
-    const edenError = error as EdenElysiaError
-    const value = edenError.value
+  // Handle strings directly
+  if (typeof error === "string") {
+    return error.trim() || fallback
+  }
 
-    if (value && typeof value === "object") {
-      // Handle Elysia validation errors
-      if (value.type === "validation") {
-        // Try to get summary first (most descriptive)
-        if (typeof value.summary === "string" && value.summary.trim()) {
-          return value.summary.trim()
-        }
+  if (typeof error !== "object") {
+    return fallback
+  }
 
-        // Try message
-        if (typeof value.message === "string" && value.message.trim()) {
-          return value.message.trim()
-        }
+  const errObj = error as Record<string, unknown>
 
-        // Try to extract from errors array
-        if (Array.isArray(value.errors) && value.errors.length > 0) {
-          const firstError = value.errors[0]
-          if (firstError?.summary) {
-            return firstError.summary
-          }
-          if (firstError?.message) {
-            return firstError.message
-          }
-        }
+  // Check if this is already the ElysiaErrorValue (has type property)
+  // This handles cases where the value is passed directly without a wrapper
+  if ("type" in errObj && errObj.type === "validation") {
+    // Try to get summary first (most descriptive)
+    if (typeof errObj.summary === "string" && errObj.summary.trim()) {
+      return errObj.summary.trim()
+    }
 
-        // Construct message from expected/found
-        if (value.expected !== undefined && value.found !== undefined) {
-          const property = value.property ? ` for ${value.property}` : ""
-          return `Validation failed${property}: expected ${JSON.stringify(value.expected)}, got ${JSON.stringify(value.found)}`
-        }
+    // Try message
+    if (typeof errObj.message === "string" && errObj.message.trim()) {
+      return errObj.message.trim()
+    }
 
-        return "Validation failed"
+    // Try to extract from errors array
+    if (Array.isArray(errObj.errors) && errObj.errors.length > 0) {
+      const firstError = errObj.errors[0] as Record<string, unknown> | undefined
+      if (firstError?.summary && typeof firstError.summary === "string") {
+        return firstError.summary.trim()
       }
-
-      // Handle worker proxy errors or other typed errors
-      if (value.error !== undefined) {
-        return extractErrorMessage(value.error, fallback)
-      }
-
-      // Try message field
-      if (typeof value.message === "string" && value.message.trim()) {
-        return value.message.trim()
+      if (firstError?.message && typeof firstError.message === "string") {
+        return firstError.message.trim()
       }
     }
+
+    // Construct message from expected/found
+    if (errObj.expected !== undefined && errObj.found !== undefined) {
+      const property =
+        errObj.property && typeof errObj.property === "string" ? ` for ${errObj.property}` : ""
+      return `Validation failed${property}: expected ${JSON.stringify(errObj.expected)}, got ${JSON.stringify(errObj.found)}`
+    }
+
+    return "Validation failed"
+  }
+
+  // Handle Eden error structure with value wrapper
+  if ("value" in errObj) {
+    const value = errObj.value
+
+    if (value && typeof value === "object") {
+      // Recursively handle the value object
+      return handleElysiaError(value, fallback)
+    }
+  }
+
+  // Handle error property (common in some error structures)
+  if ("error" in errObj && errObj.error !== undefined) {
+    return extractErrorMessage(errObj.error, fallback)
+  }
+
+  // Try summary/message fields directly
+  if ("summary" in errObj && typeof errObj.summary === "string" && errObj.summary.trim()) {
+    return errObj.summary.trim()
+  }
+
+  if ("message" in errObj && typeof errObj.message === "string" && errObj.message.trim()) {
+    return errObj.message.trim()
   }
 
   // Fall back to standard error extraction
