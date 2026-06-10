@@ -5,6 +5,7 @@
     "@dockstat/db": "workspace:*",
     "@dockstat/docker-client": "workspace:*",
     "@dockstat/docknode": "workspace:*",
+    "@dockstat/errors": "workspace:*",
     "@dockstat/logger": "workspace:*",
     "@dockstat/plugin-handler": "workspace:*",
     "@dockstat/repo-cli": "workspace:*",

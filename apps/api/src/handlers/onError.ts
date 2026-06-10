@@ -1,3 +1,4 @@
+import { DockStatError, ErrorCode, parseValidationError } from "@dockstat/errors"
 import { extractErrorMessage } from "@dockstat/utils"
 import Elysia, { type ValidationError } from "elysia"
 import { AuthHandler } from "../auth"
@@ -13,100 +14,102 @@ export const errorHandler = new Elysia()
 
     logger.error(`Caught an Error on ${path}`, reqId)
 
+    // ── DockStatError: our own typed errors ──
+    if (error instanceof DockStatError) {
+      set.status = error.statusCode
+      return error.toResponse(path)
+    }
+
+    // ── VALIDATION: Elysia schema validation ──
     if (code === "VALIDATION") {
       const validationError = error as ValidationError
 
-      // Check if it's a response validation error (server-side)
+      // Response validation (server-side bug)
       if (validationError.type === "response") {
         set.status = 500
-
-        const allErrors: Array<{ [x: string]: string }> = JSON.parse(validationError.message).errors
-        const parsedErrors: Array<{ message: string; path: string }> = allErrors.map((e) => {
-          const message = String(e.summary)
-          const path = String(e.path).replaceAll("/", ".")
-
-          logger.error(`Validation on ${path}: ${path}`)
-
-          return { message, path }
-        })
-
         return {
-          error: parsedErrors,
-          message: "Response validation failed",
-        }
-      }
-
-      // Request validation errors (client-side)
-      set.status = 400
-
-      // In production, hide validation details for security
-      if (process.env.NODE_ENV === "production") {
-        return {
-          error: "Validation failed",
-          message: validationError.message,
+          error: {
+            code: ErrorCode.INTERNAL_ERROR,
+            message: "Response validation failed",
+          },
           path,
           success: false,
           timestamp,
         }
       }
 
-      // In development, show details
+      // Request validation (client error)
+      set.status = 400
+      const details = parseValidationError(validationError)
+
+      // Extract a clean, user-facing summary from the first error
+      const message = details.length > 0 ? details[0].message : "Validation failed"
+
       return {
-        detail: validationError.all,
-        error: "Validation failed",
-        message: validationError.message,
+        error: {
+          code: ErrorCode.VALIDATION_FAILED,
+          details,
+          message,
+        },
         path,
         success: false,
         timestamp,
       }
     }
 
-    // Handle parser errors (malformed JSON, etc.)
+    // ── PARSE: malformed JSON etc. ──
     if (code === "PARSE") {
       set.status = 400
       return {
-        error: "Parse error",
-        message: "Invalid request format",
+        error: {
+          code: ErrorCode.BAD_REQUEST,
+          message: "Invalid request format",
+        },
         path,
         success: false,
         timestamp,
       }
     }
 
-    // Handle not found errors
+    // ── NOT_FOUND ──
     if (code === "NOT_FOUND") {
       set.status = 404
       return {
-        error: "Not found",
-        message: `Cannot ${request.method} ${path}`,
+        error: {
+          code: ErrorCode.NOT_FOUND,
+          message: `Cannot ${request.method} ${path}`,
+        },
         path,
         success: false,
         timestamp,
       }
     }
 
-    // Handle internal server errors
+    // ── INTERNAL_SERVER_ERROR ──
     if (code === "INTERNAL_SERVER_ERROR") {
       const errorMessage = extractErrorMessage(error, "An unexpected error occurred")
       set.status = 500
       return {
-        error: "Internal server error",
-        message: errorMessage,
+        error: {
+          code: ErrorCode.INTERNAL_ERROR,
+          message: errorMessage,
+        },
         path,
         success: false,
         timestamp,
       }
     }
 
-    // Handle unknown errors - use the centralized error extraction
+    // ── Fallback ──
     set.status = 500
     const errorMessage = extractErrorMessage(error, "An unexpected error occurred")
-
     console.error("Unhandled error:", { code, error, path, timestamp })
 
     return {
-      error: errorMessage,
-      message: "An unexpected error occurred",
+      error: {
+        code: ErrorCode.INTERNAL_ERROR,
+        message: errorMessage,
+      },
       path,
       success: false,
       timestamp,

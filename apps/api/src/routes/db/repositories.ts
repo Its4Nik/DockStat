@@ -1,12 +1,13 @@
+import { DockStatError } from "@dockstat/errors"
 import type { RepoFile } from "@dockstat/repo-cli/types"
-import { extractErrorMessage, repo } from "@dockstat/utils"
+import { repo } from "@dockstat/utils"
 import Elysia, { t } from "elysia"
 import { repoCache } from "../../cache"
 import { DockStatDB } from "../../database"
 import { RepositoryModel } from "../../models/database"
 
 /**
- * Repository CRUD routes (in /db prefix, distinct from /repositories)
+ * Repository CRUD routes (in /db prefix)
  */
 const DBRepositoryRoutes = new Elysia({
   detail: {
@@ -17,180 +18,86 @@ const DBRepositoryRoutes = new Elysia({
 })
   .get(
     "repositories",
-    ({ status }) => {
-      try {
-        const repos = DockStatDB.repositoriesTable.select(["*"]).all()
-        return status(200, {
-          data: repos,
-          message: `Found ${repos.length} repositories`,
-          success: true,
-        })
-      } catch (error) {
-        const errorMessage = extractErrorMessage(error, "Error fetching repositories")
-        return status(400, {
-          error: errorMessage,
-          message: errorMessage,
-          success: false,
-        })
-      }
+    () => {
+      const repos = DockStatDB.repositoriesTable.select(["*"]).all()
+      return { data: repos, message: `Found ${repos.length} repositories`, success: true }
     },
     {
       detail: {
-        description:
-          "Retrieves all registered plugin/theme repositories. Repositories are external sources from which plugins, themes, and stacks can be installed.",
-        responses: {
-          200: { description: "Successfully retrieved list of repositories" },
-          400: { description: "Failed to fetch repositories" },
-        },
+        description: "Retrieves all registered repositories.",
         summary: "List All Repositories",
       },
-      response: {
-        200: t.Any(),
-        400: RepositoryModel.error,
-      },
+      response: { 200: t.Any(), 400: RepositoryModel.error },
     }
   )
   .get(
     "repositories/:id",
-    ({ params, status }) => {
-      try {
-        const found = DockStatDB.repositoriesTable
-          .select(["*"])
-          .where({ id: Number(params.id) })
-          .get()
-
-        if (!found) {
-          return status(404, {
-            error: `Repository with id ${params.id} not found`,
-            message: `Repository with id ${params.id} not found`,
-            success: false as const,
-          })
-        }
-
-        return status(200, {
-          data: found,
-          message: "Repository found",
-          success: true as const,
+    ({ params }) => {
+      const found = DockStatDB.repositoriesTable
+        .select(["*"])
+        .where({ id: Number(params.id) })
+        .get()
+      if (!found)
+        throw new DockStatError("NOT_FOUND", {
+          message: `Repository with id ${params.id} not found`,
         })
-      } catch (error) {
-        const errorMessage = extractErrorMessage(error, "Error fetching repository")
-        return status(400, {
-          error: errorMessage,
-          message: errorMessage,
-          success: false as const,
-        })
-      }
+      return { data: found, message: "Repository found", success: true as const }
     },
     {
       detail: {
-        description:
-          "Retrieves detailed information about a specific repository, including its configuration, paths to plugins/themes/stacks, and policy settings.",
-        responses: {
-          200: { description: "Successfully retrieved repository details" },
-          400: { description: "Failed to fetch repository" },
-          404: { description: "Repository not found" },
-        },
+        description: "Retrieves a specific repository by ID.",
         summary: "Get Repository by ID",
       },
-      params: t.Object({
-        id: t.String({
-          description: "The unique identifier of the repository",
-          examples: ["1", "2", "3"],
-        }),
-      }),
-      response: {
-        200: t.Any(),
-        400: RepositoryModel.error,
-        404: RepositoryModel.error,
-      },
+      params: t.Object({ id: t.String({ description: "Repository ID", examples: ["1", "2"] }) }),
+      response: { 200: t.Any(), 404: RepositoryModel.error },
     }
   )
   .post(
     "repositories",
-    async ({ body, status }) => {
-      try {
-        const repoFile = (await (await fetch(body.link_to_manifest)).json()) as RepoFile
+    async ({ body }) => {
+      const repoFile = (await (await fetch(body.link_to_manifest)).json()) as RepoFile
 
-        // Check if repository with same name already exists
-        const existing = DockStatDB.repositoriesTable
-          .select(["*"])
-          .where({ name: repoFile.config.name })
-          .get()
-
-        if (existing) {
-          return status(409, {
-            error: `Repository with name "${repoFile.config.name}" already exists`,
-            message: `Repository with name "${repoFile.config.name}" already exists`,
-            success: false as const,
-          })
-        }
-
-        // Insert the new repository
-        DockStatDB.repositoriesTable.insert({
-          name: repoFile.config.name,
-          paths: {
-            plugins: repoFile.config.plugins,
-            stacks: repoFile.config.stacks,
-            themes: repoFile.config.themes,
-          },
-          policy: repoFile.config.policy,
-          source: repo.parseRawToDB(body.link_to_manifest).source,
-          type: repoFile.config.type,
-          verification_api: repoFile.config.verification_api,
+      const existing = DockStatDB.repositoriesTable
+        .select(["*"])
+        .where({ name: repoFile.config.name })
+        .get()
+      if (existing)
+        throw new DockStatError("CONFLICT", {
+          message: `Repository "${repoFile.config.name}" already exists`,
         })
 
-        // Fetch the newly created repository
-        const newRepo = DockStatDB.repositoriesTable
-          .select(["*"])
-          .where({ name: repoFile.config.name })
-          .get()
+      DockStatDB.repositoriesTable.insert({
+        name: repoFile.config.name,
+        paths: {
+          plugins: repoFile.config.plugins,
+          stacks: repoFile.config.stacks,
+          themes: repoFile.config.themes,
+        },
+        policy: repoFile.config.policy,
+        source: repo.parseRawToDB(body.link_to_manifest).source,
+        type: repoFile.config.type,
+        verification_api: repoFile.config.verification_api,
+      })
 
-        if (!newRepo) {
-          return status(400, {
-            error: "Failed to retrieve created repository",
-            message: "Failed to retrieve created repository",
-            success: false as const,
-          })
-        }
-
-        // Invalidate repo cache when repos change
-        repoCache.invalidate()
-        return status(201, {
-          data: newRepo,
-          message: `Repository "${repoFile.config.name}" created successfully`,
-          success: true as const,
+      const newRepo = DockStatDB.repositoriesTable
+        .select(["*"])
+        .where({ name: repoFile.config.name })
+        .get()
+      if (!newRepo)
+        throw new DockStatError("INTERNAL_ERROR", {
+          message: "Failed to retrieve created repository",
         })
-      } catch (error) {
-        const errorMessage = extractErrorMessage(error, "Error creating repository")
-        return status(400, {
-          error: errorMessage,
-          message: errorMessage,
-          success: false as const,
-        })
+      repoCache.invalidate()
+      return {
+        data: newRepo,
+        message: `Repository "${repoFile.config.name}" created successfully`,
+        success: true as const,
       }
     },
     {
       body: RepositoryModel.createBody,
       detail: {
-        description:
-          "Adds a new plugin/theme repository to the system. The repository is fetched from a manifest URL, validated, and stored in the database.",
-        requestBody: {
-          content: {
-            "application/json": {
-              example: {
-                link_to_manifest: "https://example.com/repository/manifest.json",
-              },
-              schema: RepositoryModel.createBody,
-            },
-          },
-          description: "Repository manifest URL",
-          required: true,
-        },
-        responses: {
-          201: { description: "Successfully created repository" },
-          400: { description: "Failed to create repository" },
-          409: { description: "Repository with this name already exists" },
-        },
+        description: "Adds a new repository from a manifest URL.",
         summary: "Create Repository",
       },
       response: {
@@ -202,87 +109,44 @@ const DBRepositoryRoutes = new Elysia({
   )
   .put(
     "repositories/:id",
-    ({ params, body, status }) => {
-      try {
-        const repoId = Number(params.id)
+    ({ params, body }) => {
+      const repoId = Number(params.id)
+      const existing = DockStatDB.repositoriesTable.select(["*"]).where({ id: repoId }).get()
+      if (!existing)
+        throw new DockStatError("NOT_FOUND", { message: `Repository with id ${repoId} not found` })
 
-        const existing = DockStatDB.repositoriesTable.select(["*"]).where({ id: repoId }).get()
-
-        if (!existing) {
-          return status(404, {
-            error: `Repository with id ${repoId} not found`,
-            message: `Repository with id ${repoId} not found`,
-            success: false as const,
+      if (body.name && body.name !== existing.name) {
+        const nameConflict = DockStatDB.repositoriesTable
+          .select(["*"])
+          .where({ name: body.name })
+          .get()
+        if (nameConflict)
+          throw new DockStatError("CONFLICT", {
+            message: `Repository "${body.name}" already exists`,
           })
-        }
+      }
 
-        // If name is being changed, check for conflicts
-        if (body.name && body.name !== existing.name) {
-          const nameConflict = DockStatDB.repositoriesTable
-            .select(["*"])
-            .where({ name: body.name })
-            .get()
+      const { id: _id, ...updateData } = { ...body }
+      DockStatDB.repositoriesTable.where({ id: repoId }).update(updateData)
 
-          if (nameConflict) {
-            return status(409, {
-              error: `Repository with name "${body.name}" already exists`,
-              message: `Repository with name "${body.name}" already exists`,
-              success: false as const,
-            })
-          }
-        }
-
-        // Update the repository (exclude id from update body)
-        const { id: _id, ...updateData } = { ...body }
-        DockStatDB.repositoriesTable.where({ id: repoId }).update(updateData)
-
-        const updatedRepo = DockStatDB.repositoriesTable.select(["*"]).where({ id: repoId }).get()
-
-        if (!updatedRepo) {
-          return status(400, {
-            error: "Failed to retrieve updated repository",
-            message: "Failed to retrieve updated repository",
-            success: false as const,
-          })
-        }
-
-        repoCache.invalidate()
-        return status(200, {
-          data: updatedRepo,
-          message: `Repository "${updatedRepo.name}" updated successfully`,
-          success: true as const,
+      const updatedRepo = DockStatDB.repositoriesTable.select(["*"]).where({ id: repoId }).get()
+      if (!updatedRepo)
+        throw new DockStatError("INTERNAL_ERROR", {
+          message: "Failed to retrieve updated repository",
         })
-      } catch (error) {
-        const errorMessage = extractErrorMessage(error, "Error updating repository")
-        return status(400, {
-          error: errorMessage,
-          message: errorMessage,
-          success: false as const,
-        })
+      repoCache.invalidate()
+      return {
+        data: updatedRepo,
+        message: `Repository "${updatedRepo.name}" updated successfully`,
+        success: true as const,
       }
     },
     {
       body: RepositoryModel.updateBody,
-      detail: {
-        description:
-          "Updates configuration for an existing repository. You can modify the repository name, policy, verification API, type, or paths.",
-        responses: {
-          200: { description: "Successfully updated repository" },
-          400: { description: "Failed to update repository" },
-          404: { description: "Repository not found" },
-          409: { description: "Repository name conflict" },
-        },
-        summary: "Update Repository",
-      },
-      params: t.Object({
-        id: t.String({
-          description: "The unique identifier of the repository to update",
-          examples: ["1", "2", "3"],
-        }),
-      }),
+      detail: { description: "Updates an existing repository.", summary: "Update Repository" },
+      params: t.Object({ id: t.String({ description: "Repository ID", examples: ["1"] }) }),
       response: {
         200: RepositoryModel.successResponse,
-        400: RepositoryModel.error,
         404: RepositoryModel.error,
         409: RepositoryModel.error,
       },
@@ -290,58 +154,23 @@ const DBRepositoryRoutes = new Elysia({
   )
   .delete(
     "repositories/:id",
-    ({ params, status }) => {
-      try {
-        const repoId = Number(params.id)
+    ({ params }) => {
+      const repoId = Number(params.id)
+      const existing = DockStatDB.repositoriesTable.select(["*"]).where({ id: repoId }).get()
+      if (!existing)
+        throw new DockStatError("NOT_FOUND", { message: `Repository with id ${repoId} not found` })
 
-        const existing = DockStatDB.repositoriesTable.select(["*"]).where({ id: repoId }).get()
-
-        if (!existing) {
-          return status(404, {
-            error: `Repository with id ${repoId} not found`,
-            message: `Repository with id ${repoId} not found`,
-            success: false as const,
-          })
-        }
-
-        DockStatDB.repositoriesTable.where({ id: repoId }).delete()
-        repoCache.invalidate()
-
-        return status(200, {
-          message: `Repository "${existing.name}" deleted successfully`,
-          success: true as const,
-        })
-      } catch (error) {
-        const errorMessage = extractErrorMessage(error, "Error deleting repository")
-        return status(400, {
-          error: errorMessage,
-          message: errorMessage,
-          success: false as const,
-        })
+      DockStatDB.repositoriesTable.where({ id: repoId }).delete()
+      repoCache.invalidate()
+      return {
+        message: `Repository "${existing.name}" deleted successfully`,
+        success: true as const,
       }
     },
     {
-      detail: {
-        description:
-          "Permanently removes a repository from the system. This is a destructive operation that cannot be undone.",
-        responses: {
-          200: { description: "Successfully deleted repository" },
-          400: { description: "Failed to delete repository" },
-          404: { description: "Repository not found" },
-        },
-        summary: "Delete Repository",
-      },
-      params: t.Object({
-        id: t.String({
-          description: "The unique identifier of the repository to delete",
-          examples: ["1", "2", "3"],
-        }),
-      }),
-      response: {
-        200: RepositoryModel.deleteResponse,
-        400: RepositoryModel.error,
-        404: RepositoryModel.error,
-      },
+      detail: { description: "Permanently removes a repository.", summary: "Delete Repository" },
+      params: t.Object({ id: t.String({ description: "Repository ID", examples: ["1"] }) }),
+      response: { 200: RepositoryModel.deleteResponse, 404: RepositoryModel.error },
     }
   )
 
