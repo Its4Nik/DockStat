@@ -20,10 +20,10 @@ export type {
   TLiteralValue,
   TNever,
   TNull,
+  TNullable,
   TNumber,
   TObject,
   TOptional,
-  TNullable,
   TRecord,
   TSchema,
   TString,
@@ -33,7 +33,6 @@ export type {
 } from "./typings"
 
 import { symbols } from "./native/loader"
-import { OptionalKind } from "./typings"
 import type {
   ArrayOptions,
   Infer,
@@ -42,7 +41,7 @@ import type {
   StandardFailureResult,
   StandardIssue,
   StandardResult,
-  StandardSchemaV1,
+  //StandardSchemaV1,
   StandardSuccessResult,
   StringOptions,
   TAny,
@@ -54,10 +53,10 @@ import type {
   TLiteralValue,
   TNever,
   TNull,
+  TNullable,
   TNumber,
   TObject,
   TOptional,
-  TNullable,
   TRecord,
   TSchema,
   TString,
@@ -65,25 +64,30 @@ import type {
   ValidationErrorDetail,
   ValidationResult,
 } from "./typings"
+import { OptionalKind } from "./typings"
 
 // ─── Internal helpers ──────────────────────────────────────────────────────
 
-/** Keys that should be stripped when serializing to JSON Schema. */
 const INTERNAL_KEYS = new Set(["~standard"])
 
+/** Create a NUL-terminated C string buffer for FFI. */
+function cstr(str: string): Buffer {
+  return Buffer.concat([Buffer.from(str), Buffer.from([0])])
+}
+
 function nativeCompile(json: string): number {
-  const id = Number(symbols.compile_schema(Buffer.from(json)))
+  const id = Number(symbols.compile_schema(cstr(json)))
   symbols.free_last_result()
   return id
 }
 
 function nativeValidate(schemaId: number, dataJson: string): ValidationResult {
-  symbols.validate(schemaId, Buffer.from(dataJson))
+  symbols.validate(schemaId, cstr(dataJson))
   const ptr = symbols.get_last_result()
   const raw = ptr ? String(ptr) : null
   const result: ValidationResult = raw
     ? JSON.parse(raw)
-    : { valid: false, errors: [{ path: "$", message: "No result returned from native validate" }] }
+    : { errors: [{ message: "No result returned from native validate", path: "$" }], valid: false }
   symbols.free_last_result()
   return result
 }
@@ -98,21 +102,21 @@ function toPlainSchema(schema: unknown): unknown {
     clean[key] = obj[key]
   }
 
-  if ("properties" in clean && typeof clean["properties"] === "object" && clean["properties"] !== null) {
+  if ("properties" in clean && typeof clean.properties === "object" && clean.properties !== null) {
     const props: Record<string, unknown> = {}
-    for (const [k, v] of Object.entries(clean["properties"] as Record<string, unknown>)) {
+    for (const [k, v] of Object.entries(clean.properties as Record<string, unknown>)) {
       props[k] = toPlainSchema(v)
     }
-    clean["properties"] = props
+    clean.properties = props
   }
   if ("items" in clean) {
-    clean["items"] = toPlainSchema(clean["items"])
+    clean.items = toPlainSchema(clean.items)
   }
-  if ("additionalProperties" in clean && typeof clean["additionalProperties"] === "object") {
-    clean["additionalProperties"] = toPlainSchema(clean["additionalProperties"])
+  if ("additionalProperties" in clean && typeof clean.additionalProperties === "object") {
+    clean.additionalProperties = toPlainSchema(clean.additionalProperties)
   }
-  if ("anyOf" in clean && Array.isArray(clean["anyOf"])) {
-    clean["anyOf"] = clean["anyOf"].map(toPlainSchema)
+  if ("anyOf" in clean && Array.isArray(clean.anyOf)) {
+    clean.anyOf = clean.anyOf.map(toPlainSchema)
   }
 
   return clean
@@ -142,7 +146,7 @@ export function validate(schemaId: number, data: unknown): ValidationResult {
 export function validateSchema(schema: TSchema | string, data: unknown): ValidationResult {
   const id = compileSchema(schema)
   if (id === 0) {
-    return { valid: false, errors: [{ path: "$", message: "Schema compilation failed" }] }
+    return { errors: [{ message: "Schema compilation failed", path: "$" }], valid: false }
   }
   const result = nativeValidate(id, JSON.stringify(data))
   symbols.free_schema(id)
@@ -158,18 +162,20 @@ export function freeSchema(schemaId: number): void {
 function doValidate(schema: TSchema, value: unknown): StandardResult<unknown> {
   const result = validateSchema(schema, value)
   if (result.valid) {
-    return { value, issues: undefined } as StandardSuccessResult<unknown>
+    return { issues: undefined, value } as StandardSuccessResult<unknown>
   }
   return {
-    issues: result.errors.map((e: ValidationErrorDetail): StandardIssue => ({
-      message: e.message,
-      path: e.path === "$" ? [] : e.path.split("."),
-    })),
+    issues: result.errors.map(
+      (e: ValidationErrorDetail): StandardIssue => ({
+        message: e.message,
+        path: e.path === "$" ? [] : e.path.split("."),
+      })
+    ),
   } as StandardFailureResult
 }
 
 function addStd<S extends TSchema>(
-  s: S,
+  s: S
 ): S & {
   readonly "~standard": {
     version: 1
@@ -179,9 +185,9 @@ function addStd<S extends TSchema>(
 } {
   const schema = s as Record<string, unknown>
   schema["~standard"] = {
-    version: 1 as const,
-    vendor: "@dockstat/validator",
     validate: (value: unknown) => doValidate(s, value),
+    vendor: "@dockstat/validator",
+    version: 1 as const,
   }
   return s as S & {
     readonly "~standard": {
@@ -195,56 +201,53 @@ function addStd<S extends TSchema>(
 // ─── Builder ───────────────────────────────────────────────────────────────
 
 export const t = {
-  String(opts?: StringOptions) {
-    return addStd({ type: "string", ...opts } satisfies TString)
+  Any() {
+    return addStd({} as TAny)
   },
 
-  Number(opts?: NumberOptions) {
-    return addStd({ type: "number", ...opts } satisfies TNumber)
-  },
-
-  Integer(opts?: NumberOptions) {
-    return addStd({ type: "integer", ...opts } satisfies TInteger)
+  Array<T extends TSchema>(items: T, opts?: ArrayOptions) {
+    return addStd({ items, type: "array", ...opts } as TArray<T>)
   },
 
   Boolean() {
     return addStd({ type: "boolean" } satisfies TBoolean)
   },
 
-  Null() {
-    return addStd({ type: "null" } satisfies TNull)
+  Enum<V extends TLiteralValue[]>(...values: V) {
+    return addStd({ enum: values } as TEnum<V>)
   },
 
-  Array<T extends TSchema>(items: T, opts?: ArrayOptions) {
-    return addStd({ type: "array", items, ...opts } as TArray<T>)
-  },
-
-  Object<T extends Record<string, TSchema>>(properties: T, opts?: ObjectOptions) {
-    return addStd({
-      type: "object",
-      properties,
-      required: requiredKeys(properties),
-      ...opts,
-    } as TObject<T>)
-  },
-
-  Record<V extends TSchema = TAny>(valueSchema?: V) {
-    return addStd({
-      type: "object",
-      additionalProperties: (valueSchema ?? ({} as TAny)) as V,
-    } as TRecord<V>)
+  Integer(opts?: NumberOptions) {
+    return addStd({ type: "integer", ...opts } satisfies TInteger)
   },
 
   Literal<V extends TLiteralValue>(value: V) {
     return addStd({ const: value } as TLiteral<V>)
   },
 
-  Enum<V extends TLiteralValue[]>(...values: V) {
-    return addStd({ enum: values } as TEnum<V>)
+  Never() {
+    return addStd({ not: {} } as TNever)
   },
 
-  Union<T extends TSchema[]>(...schemas: T) {
-    return addStd({ anyOf: schemas } as TUnion<T>)
+  Null() {
+    return addStd({ type: "null" } satisfies TNull)
+  },
+
+  Nullable<T extends TSchema>(inner: T) {
+    return addStd({ anyOf: [inner, { type: "null" }] } as TNullable<T>)
+  },
+
+  Number(opts?: NumberOptions) {
+    return addStd({ type: "number", ...opts } satisfies TNumber)
+  },
+
+  Object<T extends Record<string, TSchema>>(properties: T, opts?: ObjectOptions) {
+    return addStd({
+      properties,
+      required: requiredKeys(properties),
+      type: "object",
+      ...opts,
+    } as TObject<T>)
   },
 
   Optional<T extends TSchema>(inner: T) {
@@ -252,16 +255,18 @@ export const t = {
     return addStd(copy as TOptional<T>)
   },
 
-  Nullable<T extends TSchema>(inner: T) {
-    return addStd({ anyOf: [inner, { type: "null" }] } as TNullable<T>)
+  Record<V extends TSchema = TAny>(valueSchema?: V) {
+    return addStd({
+      additionalProperties: (valueSchema ?? ({} as TAny)) as V,
+      type: "object",
+    } as TRecord<V>)
+  },
+  String(opts?: StringOptions) {
+    return addStd({ type: "string", ...opts } satisfies TString)
   },
 
-  Any() {
-    return addStd({} as TAny)
-  },
-
-  Never() {
-    return addStd({ not: {} } as TNever)
+  Union<T extends TSchema[]>(...schemas: T) {
+    return addStd({ anyOf: schemas } as TUnion<T>)
   },
 }
 

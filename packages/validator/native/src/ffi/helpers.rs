@@ -1,37 +1,48 @@
-use std::{
-    ffi::{c_char, CString},
-    sync::MutexGuard,
+use std::ffi::CString;
+
+use rand::RngExt;
+
+use crate::{
+    validation::types::{ValidationErrorDetail, ValidationResult},
+    LAST_RESULT, MAX_SAFE_ID, SCHEMAS,
 };
 
-/// Helper: store a JSON result string as a null-terminated C string in
-/// `LAST_RESULT`, freeing any previous value.
-pub fn set_last_result(slot: &mut Option<*mut c_char>, json_str: String) {
-    let c_string = CString::new(json_str).expect("result string must not contain NUL bytes");
-    let ptr = c_string.into_raw();
-    if let Some(old) = std::mem::replace(slot, Some(ptr)) {
-        unsafe {
-            let _ = CString::from_raw(old);
-        }
-    }
+pub fn set_last_result(json: String) {
+    let cs = CString::new(json).expect("result must not contain NUL");
+    LAST_RESULT.with(|cell| *cell.borrow_mut() = Some(cs));
 }
 
-/// Convert a JSON Pointer (RFC 6901) to dot-notation.
-///   ""          -> "$"
-///   "/foo/0/bar" -> "foo.0.bar"
 pub fn json_pointer_to_dot(pointer: &str) -> String {
     if pointer.is_empty() {
         return "$".to_string();
     }
-    let parts: Vec<&str> = pointer.split('/').skip(1).collect();
-    // Unescape JSON Pointer tokens: ~1 -> /, ~0 -> ~
-    let decoded: Vec<String> = parts
-        .iter()
+    pointer
+        .split('/')
+        .skip(1)
         .map(|t| t.replace("~1", "/").replace("~0", "~"))
-        .collect();
-    decoded.join(".")
+        .collect::<Vec<_>>()
+        .join(".")
 }
 
-/// Convert a CString to a ptr
-pub fn cstring_to_ptr(mut cstring: MutexGuard<'_, Option<CString>>) -> Option<*mut i8> {
-    return cstring.take().map(CString::into_raw);
+pub fn err_result(path: &str, message: String) -> String {
+    serde_json::to_string(&ValidationResult {
+        valid: false,
+        errors: vec![ValidationErrorDetail {
+            path: path.to_string(),
+            message,
+        }],
+    })
+    .unwrap()
+}
+
+pub fn random_schema_id() -> u64 {
+    let mut rng = rand::rng();
+    let id = rng.random_range(1..MAX_SAFE_ID);
+    // Ensure no collision with an existing id.
+    let store = SCHEMAS.lock().unwrap();
+    let mut id = id;
+    while store.contains_key(&id) {
+        id = rng.random_range(1..MAX_SAFE_ID);
+    }
+    id
 }

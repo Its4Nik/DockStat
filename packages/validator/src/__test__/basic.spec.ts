@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test"
 import { symbols } from "../native/loader"
 
+function cstr(str: string): Buffer {
+  return Buffer.concat([Buffer.from(str), Buffer.from([0])])
+}
+
 let schemaId = 0
 
 describe("Basic schema compilation, validation and memmory freeing", () => {
@@ -13,9 +17,7 @@ describe("Basic schema compilation, validation and memmory freeing", () => {
       type: "object",
     })
 
-    const buf = Buffer.from(schemaJson)
-
-    schemaId = Number(symbols.compile_schema(buf))
+    schemaId = Number(symbols.compile_schema(cstr(schemaJson)))
     expect(schemaId).toBeNumber()
   })
 
@@ -24,9 +26,7 @@ describe("Basic schema compilation, validation and memmory freeing", () => {
       name: "Alice",
     })
 
-    const buf = Buffer.from(dataJson)
-
-    symbols.validate(schemaId, buf)
+    symbols.validate(schemaId, cstr(dataJson))
   })
 
   test("Can free specific schema", () => {
@@ -42,9 +42,7 @@ describe("Basic schema compilation, validation and memmory freeing", () => {
       type: "object",
     })
 
-    const buf = Buffer.from(schemaJson)
-
-    schemaId = Number(symbols.compile_schema(buf))
+    schemaId = Number(symbols.compile_schema(cstr(schemaJson)))
     expect(schemaId).toBeEmpty()
   })
 

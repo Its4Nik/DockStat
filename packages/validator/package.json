@@ -8,5 +8,10 @@
   "peerDependencies": {
     "typescript": "^5"
   },
+  "scripts": {
+    "build": "cargo build --lib && mv target/release/libvalidator.* .",
+    "build:release": "cargo build --lib --release && mv target/release/libvalidator.* .",
+    "test": "bun test && cargo test"
+  },
   "type": "module"
 }

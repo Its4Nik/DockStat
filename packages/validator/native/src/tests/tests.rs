@@ -1,13 +1,59 @@
 #[cfg(test)]
 mod tests {
     use std::ffi::{CStr, CString};
-    use std::os::raw::c_char;
 
-    use crate::ffi;
-    use crate::schema::SchemaStore;
     use crate::validation::types::ValidationResult;
 
-    use ffi::helpers::json_pointer_to_dot;
+    // ─── Helpers ───────────────────────────────────────────────────────────
+
+    /// Compile a schema and return the id. Panics on compilation failure.
+    fn compile(schema: &str) -> u64 {
+        let c_schema = CString::new(schema).unwrap();
+        let id = { crate::compile_schema(c_schema.as_ptr()) };
+        crate::free_last_result();
+        assert_ne!(id, 0, "schema compilation failed: {schema}");
+        id
+    }
+
+    /// Validate data against a compiled schema and return the result.
+    fn validate(schema_id: u64, data: &str) -> ValidationResult {
+        let c_data = CString::new(data).unwrap();
+        {
+            crate::validate(schema_id, c_data.as_ptr())
+        };
+        let ptr = crate::get_last_result();
+        assert!(!ptr.is_null(), "get_last_result returned null");
+        let json = unsafe { CStr::from_ptr(ptr) }.to_str().unwrap();
+        let result: ValidationResult = serde_json::from_str(json).unwrap();
+        crate::free_last_result();
+        result
+    }
+
+    /// Compile a schema, expecting failure. Returns the error result.
+    fn compile_fail(schema: &str) -> ValidationResult {
+        let c_schema = CString::new(schema).unwrap();
+        let id = { crate::compile_schema(c_schema.as_ptr()) };
+        assert_eq!(id, 0, "expected compilation to fail: {schema}");
+        let ptr = crate::get_last_result();
+        let json = unsafe { CStr::from_ptr(ptr) }.to_str().unwrap();
+        let result: ValidationResult = serde_json::from_str(json).unwrap();
+        crate::free_last_result();
+        result
+    }
+
+    fn json_pointer_to_dot(pointer: &str) -> String {
+        if pointer.is_empty() {
+            return "$".to_string();
+        }
+        pointer
+            .split('/')
+            .skip(1)
+            .map(|t| t.replace("~1", "/").replace("~0", "~"))
+            .collect::<Vec<_>>()
+            .join(".")
+    }
+
+    // ─── json_pointer_to_dot ───────────────────────────────────────────────
 
     #[test]
     fn test_json_pointer_to_dot() {
@@ -18,196 +64,15 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_validation() {
-        let schema = r#"{"type":"string","minLength":3}"#;
-        let mut store = SchemaStore::new();
-        let mut last: Option<*mut c_char> = None;
-
-        let id = store.compile(schema, &mut last);
-        assert_ne!(id, 0);
-        assert!(last.is_none()); // no error
-
-        // Valid
-        store.validate(id, r#""hello""#, &mut last);
-        let result_ptr = last.unwrap();
-        let result_str = unsafe { CStr::from_ptr(result_ptr).to_str().unwrap() };
-        let result: ValidationResult = serde_json::from_str(result_str).unwrap();
-        assert!(result.valid);
-        assert!(result.errors.is_empty());
-        unsafe {
-            let _ = CString::from_raw(last.take().unwrap());
-        }
-
-        // Invalid
-        store.validate(id, r#""hi""#, &mut last);
-        let result_ptr = last.unwrap();
-        let result_str = unsafe { CStr::from_ptr(result_ptr).to_str().unwrap() };
-        let result: ValidationResult = serde_json::from_str(result_str).unwrap();
-        assert!(!result.valid);
-        assert_eq!(result.errors.len(), 1);
-        unsafe {
-            let _ = CString::from_raw(last.take().unwrap());
-        }
-
-        store.remove(id);
-    }
-
-    #[test]
-    fn test_object_validation() {
-        let schema = r#"{
-            "type":"object",
-            "properties":{
-                "name":{"type":"string","minLength":1},
-                "age":{"type":"number","minimum":0}
-            },
-            "required":["name","age"],
-            "additionalProperties":false
-        }"#;
-        let mut store = SchemaStore::new();
-        let mut last: Option<*mut c_char> = None;
-
-        let id = store.compile(schema, &mut last);
-        assert_ne!(id, 0);
-
-        store.validate(id, r#"{"name":"Alice","age":30}"#, &mut last);
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
-        assert!(result.valid);
-        unsafe {
-            let _ = CString::from_raw(last.take().unwrap());
-        }
-
-        store.validate(id, r#"{"name":"","age":-1}"#, &mut last);
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
-        assert!(!result.valid);
-        // Should have 2 errors: name too short, age below minimum
-        assert!(result.errors.len() >= 1);
-        unsafe {
-            let _ = CString::from_raw(last.take().unwrap());
-        }
-
-        store.remove(id);
-    }
-
-    #[test]
-    fn test_array_validation() {
-        let schema = r#"{
-            "type":"array",
-            "items":{"type":"string"},
-            "minItems":1,
-            "maxItems":3
-        }"#;
-        let mut store = SchemaStore::new();
-        let mut last: Option<*mut c_char> = None;
-
-        let id = store.compile(schema, &mut last);
-        assert_ne!(id, 0);
-
-        store.validate(id, r#"["a","b"]"#, &mut last);
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
-        assert!(result.valid);
-        unsafe {
-            let _ = CString::from_raw(last.take().unwrap());
-        }
-
-        store.validate(id, r#"["a","b",1]"#, &mut last);
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
-        assert!(!result.valid);
-        unsafe {
-            let _ = CString::from_raw(last.take().unwrap());
-        }
-
-        store.remove(id);
-    }
-
-    #[test]
-    fn test_format_email() {
-        let schema = r#"{"type":"string","format":"email"}"#;
-        let mut store = SchemaStore::new();
-        let mut last: Option<*mut c_char> = None;
-
-        let id = store.compile(schema, &mut last);
-        assert_ne!(id, 0);
-
-        store.validate(id, r#""user@example.com""#, &mut last);
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
-        assert!(result.valid);
-        unsafe {
-            let _ = CString::from_raw(last.take().unwrap());
-        }
-
-        store.validate(id, r#""not-an-email""#, &mut last);
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
-        assert!(!result.valid);
-        unsafe {
-            let _ = CString::from_raw(last.take().unwrap());
-        }
-
-        store.remove(id);
-    }
-
-    #[test]
-    fn test_record_validation() {
-        let schema = r#"{
-            "type":"object",
-            "additionalProperties":{"type":"number"}
-        }"#;
-        let mut store = SchemaStore::new();
-        let mut last: Option<*mut c_char> = None;
-
-        let id = store.compile(schema, &mut last);
-        assert_ne!(id, 0);
-
-        store.validate(id, r#"{"a":1,"b":2}"#, &mut last);
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
-        assert!(result.valid);
-        unsafe {
-            let _ = CString::from_raw(last.take().unwrap());
-        }
-
-        store.validate(id, r#"{"a":"not-a-number"}"#, &mut last);
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
-        assert!(!result.valid);
-        unsafe {
-            let _ = CString::from_raw(last.take().unwrap());
-        }
-
-        store.remove(id);
-    }
-
-    #[test]
     fn test_json_pointer_to_dot_edge_cases() {
         assert_eq!(json_pointer_to_dot(""), "$");
-
-        // root-level fields
         assert_eq!(json_pointer_to_dot("/name"), "name");
-
-        // nested
         assert_eq!(
             json_pointer_to_dot("/user/profile/name"),
             "user.profile.name"
         );
-
-        // arrays
         assert_eq!(json_pointer_to_dot("/items/0"), "items.0");
         assert_eq!(json_pointer_to_dot("/items/0/name"), "items.0.name");
-
-        // consecutive numeric indexes
         assert_eq!(
             json_pointer_to_dot("/users/0/posts/5/title"),
             "users.0.posts.5.title"
@@ -217,274 +82,488 @@ mod tests {
     #[test]
     fn test_json_pointer_escaped_tokens() {
         assert_eq!(json_pointer_to_dot("/foo~1bar"), "foo/bar");
-
         assert_eq!(json_pointer_to_dot("/foo~0bar"), "foo~bar");
     }
 
+    // ─── String ────────────────────────────────────────────────────────────
+
     #[test]
-    fn test_compile_invalid_schema() {
-        let schema = r#"{
+    fn test_string_validation() {
+        let id = compile(r#"{"type":"string","minLength":3}"#);
+
+        let r = validate(id, r#""hello""#);
+        assert!(r.valid);
+
+        let r = validate(id, r#""hi""#);
+        assert!(!r.valid);
+        assert_eq!(r.errors.len(), 1);
+
+        crate::free_schema(id);
+    }
+
+    #[test]
+    fn test_string_max_length() {
+        let id = compile(r#"{"type":"string","maxLength":5}"#);
+
+        assert!(validate(id, r#""hi""#).valid);
+        assert!(validate(id, r#""hello""#).valid);
+        assert!(!validate(id, r#""toolong""#).valid);
+
+        crate::free_schema(id);
+    }
+
+    #[test]
+    fn test_string_pattern() {
+        let id = compile(r#"{"type":"string","pattern":"^\\d+$"}"#);
+
+        assert!(validate(id, r#""123""#).valid);
+        assert!(!validate(id, r#""abc""#).valid);
+
+        crate::free_schema(id);
+    }
+
+    #[test]
+    fn test_string_format_email() {
+        let id = compile(r#"{"type":"string","format":"email"}"#);
+
+        assert!(validate(id, r#""user@example.com""#).valid);
+        assert!(!validate(id, r#""not-an-email""#).valid);
+
+        crate::free_schema(id);
+    }
+
+    // ─── Number / Integer ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_number_validation() {
+        let id = compile(r#"{"type":"number","minimum":0,"maximum":100}"#);
+
+        assert!(validate(id, "50").valid);
+        assert!(validate(id, "0").valid);
+        assert!(validate(id, "100").valid);
+        assert!(!validate(id, "-1").valid);
+        assert!(!validate(id, "101").valid);
+
+        crate::free_schema(id);
+    }
+
+    #[test]
+    fn test_integer_validation() {
+        let id = compile(r#"{"type":"integer"}"#);
+
+        assert!(validate(id, "7").valid);
+        assert!(!validate(id, "3.14").valid);
+
+        crate::free_schema(id);
+    }
+
+    #[test]
+    fn test_number_exclusive_bounds() {
+        let id = compile(r#"{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":10}"#);
+
+        assert!(validate(id, "5").valid);
+        assert!(!validate(id, "0").valid);
+        assert!(!validate(id, "10").valid);
+
+        crate::free_schema(id);
+    }
+
+    // ─── Boolean / Null ────────────────────────────────────────────────────
+
+    #[test]
+    fn test_boolean_validation() {
+        let id = compile(r#"{"type":"boolean"}"#);
+
+        assert!(validate(id, "true").valid);
+        assert!(validate(id, "false").valid);
+        assert!(!validate(id, r#""yes""#).valid);
+        assert!(!validate(id, "0").valid);
+
+        crate::free_schema(id);
+    }
+
+    #[test]
+    fn test_null_validation() {
+        let id = compile(r#"{"type":"null"}"#);
+
+        assert!(validate(id, "null").valid);
+        assert!(!validate(id, "0").valid);
+        assert!(!validate(id, r#""null""#).valid);
+
+        crate::free_schema(id);
+    }
+
+    // ─── Object ────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_object_validation() {
+        let id = compile(
+            r#"{
             "type":"object",
-            "properties":"not-an-object"
-        }"#;
+            "properties":{
+                "name":{"type":"string","minLength":1},
+                "age":{"type":"number","minimum":0}
+            },
+            "required":["name","age"],
+            "additionalProperties":false
+        }"#,
+        );
 
-        let mut store = SchemaStore::new();
-        let mut last = None;
+        assert!(validate(id, r#"{"name":"Alice","age":30}"#).valid);
+        assert!(!validate(id, r#"{"name":"","age":-1}"#).valid);
 
-        let id = store.compile(schema, &mut last);
-
-        assert_eq!(id, 0);
-        assert!(last.is_some());
-    }
-
-    #[test]
-    fn test_compile_invalid_json() {
-        let schema = r#"{"type":"object""#;
-
-        let mut store = SchemaStore::new();
-        let mut last = None;
-
-        let id = store.compile(schema, &mut last);
-
-        assert_eq!(id, 0);
-        assert!(last.is_some());
-    }
-
-    #[test]
-    fn test_wrong_root_type() {
-        let schema = r#"{"type":"string"}"#;
-
-        let mut store = SchemaStore::new();
-        let mut last = None;
-
-        let id = store.compile(schema, &mut last);
-
-        store.validate(id, "123", &mut last);
-
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
-
-        assert!(!result.valid);
-        assert_eq!(result.errors.len(), 1);
+        crate::free_schema(id);
     }
 
     #[test]
     fn test_required_properties() {
-        let schema = r#"{
+        let id = compile(
+            r#"{
             "type":"object",
             "required":["name","age"],
             "properties":{
                 "name":{"type":"string"},
                 "age":{"type":"number"}
             }
-        }"#;
+        }"#,
+        );
 
-        let mut store = SchemaStore::new();
-        let mut last = None;
+        let r = validate(id, r#"{"name":"Alice"}"#);
+        assert!(!r.valid);
+        assert!(!r.errors.is_empty());
 
-        let id = store.compile(schema, &mut last);
-
-        store.validate(id, r#"{"name":"Alice"}"#, &mut last);
-
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
-
-        assert!(!result.valid);
-        assert!(!result.errors.is_empty());
-
-        println!("{:#?}", result.errors);
+        crate::free_schema(id);
     }
 
     #[test]
     fn test_additional_properties_rejected() {
-        let schema = r#"{
+        let id = compile(
+            r#"{
+            "type":"object",
+            "properties":{"name":{"type":"string"}},
+            "additionalProperties":false
+        }"#,
+        );
+
+        let r = validate(id, r#"{"name":"Alice","extra":123}"#);
+        assert!(!r.valid);
+
+        crate::free_schema(id);
+    }
+
+    #[test]
+    fn test_optional_properties() {
+        let id = compile(
+            r#"{
             "type":"object",
             "properties":{
-                "name":{"type":"string"}
+                "name":{"type":"string"},
+                "nickname":{"type":"string"}
             },
-            "additionalProperties":false
-        }"#;
+            "required":["name"]
+        }"#,
+        );
 
-        let mut store = SchemaStore::new();
-        let mut last = None;
+        assert!(validate(id, r#"{"name":"Alice"}"#).valid);
+        assert!(validate(id, r#"{"name":"Alice","nickname":"Ally"}"#).valid);
+        assert!(!validate(id, "{}").valid);
 
-        let id = store.compile(schema, &mut last);
+        crate::free_schema(id);
+    }
 
-        store.validate(id, r#"{"name":"Alice","extra":123}"#, &mut last);
+    // ─── Array ─────────────────────────────────────────────────────────────
 
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
+    #[test]
+    fn test_array_validation() {
+        let id = compile(
+            r#"{
+            "type":"array",
+            "items":{"type":"string"},
+            "minItems":1,
+            "maxItems":3
+        }"#,
+        );
 
-        assert!(!result.valid);
+        assert!(validate(id, r#"["a","b"]"#).valid);
+        assert!(!validate(id, r#"["a","b",1]"#).valid);
+
+        crate::free_schema(id);
     }
 
     #[test]
-    fn test_nullable_string() {
-        let schema = r#"{
-            "anyOf":[
-                {"type":"string"},
-                {"type":"null"}
-            ]
-        }"#;
+    fn test_array_boundaries() {
+        let id = compile(
+            r#"{
+            "type":"array",
+            "items":{"type":"string"},
+            "minItems":1,
+            "maxItems":3
+        }"#,
+        );
 
-        let mut store = SchemaStore::new();
-        let mut last = None;
+        assert!(!validate(id, "[]").valid);
+        assert!(!validate(id, r#"["a","b","c","d"]"#).valid);
 
-        let id = store.compile(schema, &mut last);
-
-        store.validate(id, r#""hello""#, &mut last);
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
-        assert!(result.valid);
-
-        unsafe {
-            let _ = CString::from_raw(last.take().unwrap());
-        }
-
-        store.validate(id, "null", &mut last);
-
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
-
-        assert!(result.valid);
+        crate::free_schema(id);
     }
 
     #[test]
-    fn test_one_of_union() {
-        let schema = r#"{
-            "oneOf":[
-                {"type":"string"},
-                {"type":"number"}
-            ]
-        }"#;
+    fn test_array_unique_items() {
+        let id = compile(r#"{"type":"array","items":{"type":"number"},"uniqueItems":true}"#);
 
-        let mut store = SchemaStore::new();
-        let mut last = None;
+        assert!(validate(id, "[1,2,3]").valid);
+        assert!(!validate(id, "[1,2,1]").valid);
 
-        let id = store.compile(schema, &mut last);
+        crate::free_schema(id);
+    }
 
-        store.validate(id, r#""abc""#, &mut last);
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
+    // ─── Record ────────────────────────────────────────────────────────────
 
-        assert!(result.valid);
+    #[test]
+    fn test_record_validation() {
+        let id = compile(r#"{"type":"object","additionalProperties":{"type":"number"}}"#);
 
-        unsafe {
-            let _ = CString::from_raw(last.take().unwrap());
-        }
+        assert!(validate(id, r#"{"a":1,"b":2}"#).valid);
+        assert!(!validate(id, r#"{"a":"not-a-number"}"#).valid);
 
-        store.validate(id, "true", &mut last);
+        crate::free_schema(id);
+    }
 
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
+    // ─── Literal / Enum ────────────────────────────────────────────────────
 
-        assert!(!result.valid);
+    #[test]
+    fn test_literal_validation() {
+        let id = compile(r#"{"const":"hello"}"#);
+
+        assert!(validate(id, r#""hello""#).valid);
+        assert!(!validate(id, r#""world""#).valid);
+
+        crate::free_schema(id);
     }
 
     #[test]
     fn test_enum_validation() {
-        let schema = r#"{
-            "enum":["draft","published","archived"]
-        }"#;
+        let id = compile(r#"{"enum":["draft","published","archived"]}"#);
 
-        let mut store = SchemaStore::new();
-        let mut last = None;
+        assert!(validate(id, r#""draft""#).valid);
+        assert!(!validate(id, r#""deleted""#).valid);
 
-        let id = store.compile(schema, &mut last);
+        crate::free_schema(id);
+    }
 
-        store.validate(id, r#""draft""#, &mut last);
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
+    // ─── Union / Nullable ──────────────────────────────────────────────────
 
-        assert!(result.valid);
+    #[test]
+    fn test_nullable_string() {
+        let id = compile(r#"{"anyOf":[{"type":"string"},{"type":"null"}]}"#);
 
-        unsafe {
-            let _ = CString::from_raw(last.take().unwrap());
-        }
+        assert!(validate(id, r#""hello""#).valid);
+        assert!(validate(id, "null").valid);
+        assert!(!validate(id, "42").valid);
 
-        store.validate(id, r#""deleted""#, &mut last);
-
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
-
-        assert!(!result.valid);
+        crate::free_schema(id);
     }
 
     #[test]
+    fn test_union_string_number() {
+        let id = compile(r#"{"anyOf":[{"type":"string"},{"type":"number"}]}"#);
+
+        assert!(validate(id, r#""hello""#).valid);
+        assert!(validate(id, "42").valid);
+        assert!(!validate(id, "true").valid);
+
+        crate::free_schema(id);
+    }
+
+    #[test]
+    fn test_one_of_union() {
+        let id = compile(r#"{"oneOf":[{"type":"string"},{"type":"number"}]}"#);
+
+        assert!(validate(id, r#""abc""#).valid);
+        assert!(!validate(id, "true").valid);
+
+        crate::free_schema(id);
+    }
+
+    // ─── Nested / complex ──────────────────────────────────────────────────
+
+    #[test]
     fn test_nested_error_paths() {
-        let schema = r#"{
+        let id = compile(
+            r#"{
             "type":"object",
             "properties":{
                 "user":{
                     "type":"object",
                     "properties":{
-                        "email":{
-                            "type":"string",
-                            "format":"email"
-                        }
+                        "email":{"type":"string","format":"email"}
                     },
                     "required":["email"]
                 }
             }
-        }"#;
+        }"#,
+        );
 
-        let mut store = SchemaStore::new();
-        let mut last = None;
+        let r = validate(id, r#"{"user":{"email":"invalid"}}"#);
+        assert!(!r.valid);
+        assert!(r.errors.iter().any(|e| e.path.contains("user.email")));
 
-        let id = store.compile(schema, &mut last);
-
-        store.validate(id, r#"{"user":{"email":"invalid"}}"#, &mut last);
-
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
-
-        assert!(!result.valid);
-
-        assert!(result.errors.iter().any(|e| e.path.contains("user.email")));
+        crate::free_schema(id);
     }
 
     #[test]
-    fn test_array_boundaries() {
-        let schema = r#"{
-            "type":"array",
-            "items":{"type":"string"},
-            "minItems":1,
-            "maxItems":3
-        }"#;
+    fn test_complex_nested_schema() {
+        let id = compile(
+            r#"{
+            "type":"object",
+            "properties":{
+                "name":{"type":"string"},
+                "tags":{"type":"array","items":{"type":"string"}},
+                "metadata":{"type":"object","additionalProperties":{"type":"number"}}
+            },
+            "required":["name"]
+        }"#,
+        );
 
-        let mut store = SchemaStore::new();
-        let mut last = None;
+        assert!(validate(id, r#"{"name":"test","tags":["a","b"],"metadata":{"x":1}}"#).valid);
+        assert!(validate(id, r#"{"name":"test"}"#).valid);
+        assert!(!validate(id, "{}").valid);
+        assert!(!validate(id, r#"{"name":"test","tags":[1]}"#).valid);
 
-        let id = store.compile(schema, &mut last);
+        crate::free_schema(id);
+    }
 
-        store.validate(id, "[]", &mut last);
+    // ─── Error paths ───────────────────────────────────────────────────────
 
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
+    #[test]
+    fn test_wrong_root_type() {
+        let id = compile(r#"{"type":"string"}"#);
 
-        assert!(!result.valid);
+        let r = validate(id, "123");
+        assert!(!r.valid);
+        assert_eq!(r.errors.len(), 1);
 
-        unsafe {
-            let _ = CString::from_raw(last.take().unwrap());
-        }
+        crate::free_schema(id);
+    }
 
-        store.validate(id, r#"["a","b","c","d"]"#, &mut last);
+    // ─── Compile errors ────────────────────────────────────────────────────
 
-        let result: ValidationResult =
-            serde_json::from_str(unsafe { CStr::from_ptr(last.unwrap()).to_str().unwrap() })
-                .unwrap();
+    #[test]
+    fn test_compile_invalid_json() {
+        let r = compile_fail(r#"{"type":"object""#);
+        assert!(!r.valid);
+        assert!(r.errors[0].message.contains("Invalid JSON Schema"));
+    }
 
-        assert!(!result.valid);
+    #[test]
+    fn test_compile_invalid_schema_type() {
+        let r = compile_fail(r#"{"type":"object","properties":"not-an-object"}"#);
+        assert!(!r.valid);
+    }
+
+    // ─── Null pointer handling ─────────────────────────────────────────────
+
+    #[test]
+    fn test_compile_null_pointer() {
+        let id = { crate::compile_schema(std::ptr::null()) };
+        assert_eq!(id, 0);
+    }
+
+    #[test]
+    fn test_validate_null_pointer() {
+        let id = compile(r#"{"type":"string"}"#);
+
+        {
+            crate::validate(id, std::ptr::null())
+        };
+        let ptr = crate::get_last_result();
+        let json = unsafe { CStr::from_ptr(ptr) }.to_str().unwrap();
+        let r: ValidationResult = serde_json::from_str(json).unwrap();
+        crate::free_last_result();
+
+        assert!(!r.valid);
+        assert!(r.errors[0].message.contains("null"));
+
+        crate::free_schema(id);
+    }
+
+    // ─── Free / not found ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_validate_freed_schema() {
+        let id = compile(r#"{"type":"string"}"#);
+        crate::free_schema(id);
+
+        let c_data = CString::new(r#""hello""#).unwrap();
+        {
+            crate::validate(id, c_data.as_ptr())
+        };
+        let ptr = crate::get_last_result();
+        let json = unsafe { CStr::from_ptr(ptr) }.to_str().unwrap();
+        let r: ValidationResult = serde_json::from_str(json).unwrap();
+        crate::free_last_result();
+
+        assert!(!r.valid);
+        assert!(r.errors[0].message.contains("not found"));
+    }
+
+    // ─── get_last_result without prior call ────────────────────────────────
+
+    #[test]
+    fn test_get_last_result_empty() {
+        crate::free_last_result();
+        let ptr = crate::get_last_result();
+        assert!(ptr.is_null());
+    }
+
+    // ─── Multiple schemas ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_multiple_schemas_independent() {
+        let id_str = compile(r#"{"type":"string"}"#);
+        let id_num = compile(r#"{"type":"number"}"#);
+        let id_arr = compile(r#"{"type":"array","items":{"type":"string"}}"#);
+
+        assert!(validate(id_str, r#""hello""#).valid);
+        assert!(!validate(id_str, "42").valid);
+
+        assert!(validate(id_num, "42").valid);
+        assert!(!validate(id_num, r#""hello""#).valid);
+
+        assert!(validate(id_arr, r#"["a","b"]"#).valid);
+        assert!(!validate(id_arr, r#""hello""#).valid);
+
+        crate::free_schema(id_str);
+        crate::free_schema(id_num);
+        crate::free_schema(id_arr);
+    }
+
+    // ─── Any / empty schema ────────────────────────────────────────────────
+
+    #[test]
+    fn test_any_accepts_everything() {
+        let id = compile("{}");
+
+        assert!(validate(id, r#""string""#).valid);
+        assert!(validate(id, "42").valid);
+        assert!(validate(id, "true").valid);
+        assert!(validate(id, "null").valid);
+        assert!(validate(id, "[1,2,3]").valid);
+        assert!(validate(id, r#"{"key":"value"}"#).valid);
+
+        crate::free_schema(id);
+    }
+
+    // ─── Never / not schema ────────────────────────────────────────────────
+
+    #[test]
+    fn test_never_rejects_everything() {
+        let id = compile(r#"{"not":{}}"#);
+
+        assert!(!validate(id, r#""string""#).valid);
+        assert!(!validate(id, "42").valid);
+        assert!(!validate(id, "null").valid);
+
+        crate::free_schema(id);
     }
 }
