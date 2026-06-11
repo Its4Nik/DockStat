@@ -1,5 +1,6 @@
 # Cargo
 target
+libvalidator.*
 
 # dependencies (bun install)
 node_modules
