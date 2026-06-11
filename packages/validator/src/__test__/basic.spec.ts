@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { symbols } from "../native/loader"
+import { symbols } from "../loader"
 
 function cstr(str: string): Buffer {
   return Buffer.concat([Buffer.from(str), Buffer.from([0])])

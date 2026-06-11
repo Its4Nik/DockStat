@@ -32,7 +32,7 @@ export type {
   ValidationResult,
 } from "./typings"
 
-import { symbols } from "./native/loader"
+import { symbols } from "./loader"
 import type {
   ArrayOptions,
   Infer,
@@ -65,6 +65,8 @@ import type {
   ValidationResult,
 } from "./typings"
 import { OptionalKind } from "./typings"
+
+export { OptionalKind } from "./typings"
 
 // ─── Internal helpers ──────────────────────────────────────────────────────
 

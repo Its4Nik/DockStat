@@ -1,6 +1,6 @@
 import { dlopen, FFIType, suffix } from "bun:ffi"
 
-const nativePath = `libvalidator.${suffix}`
+const nativePath = `${import.meta.dir}/libvalidator.${suffix}`
 
 export const { symbols } = dlopen(nativePath, {
   /**

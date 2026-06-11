@@ -1,0 +1,7 @@
+target
+*.rs
+node_modules
+Cargo.*
+libvalidator.d
+src/__test__/
+benchmarks

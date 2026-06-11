@@ -1,17 +1,41 @@
 {
+  "author": {
+    "email": "dockstat@itsnik.de",
+    "name": "Its4Nik",
+    "url": "https://itsnik.de"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "bun-types": "latest"
   },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "keywords": [
+    "rust",
+    "bun",
+    "validator",
+    "ffi",
+    "native"
+  ],
+  "main": "./src/index.ts",
   "module": "src/index.ts",
   "name": "@dockstat/validator",
+  "packageManager": "bun@1.3.14",
   "peerDependencies": {
     "typescript": "^5"
   },
+  "repository": {
+    "directory": "/packages/validator",
+    "type": "git",
+    "url": "https://github.com/its4nik/dockstat"
+  },
   "scripts": {
-    "build": "cargo build --lib && mv target/release/libvalidator.* .",
-    "build:release": "cargo build --lib --release && mv target/release/libvalidator.* .",
+    "build": "rm ./src/libvalidator.so ; cargo build --lib && mv -f target/release/libvalidator.* ./src",
+    "build:release": "rm ./src/libvalidator.so ; cargo build --lib --release && mv -f target/release/libvalidator.* ./src",
+    "publish": "bun run test && bun run build:release && bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist",
     "test": "bun test && cargo test"
   },
-  "type": "module"
+  "type": "module",
+  "version": "0.1.1"
 }
