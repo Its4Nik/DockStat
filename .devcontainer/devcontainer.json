@@ -1,0 +1,9 @@
+{
+  "customizations": {
+    "vscode": {
+      "extensions": ["biomes.vscode-biomelint"]
+    }
+  },
+  "image": "ghcr.io/nhaef/devcontainer-bun:latest",
+  "name": "Bun"
+}
