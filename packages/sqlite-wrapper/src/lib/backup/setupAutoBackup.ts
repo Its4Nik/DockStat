@@ -10,9 +10,6 @@ export function setupAutoBackup(
   backupLog: Logger,
   options: AutoBackupOptions
 ): { timer: ReturnType<typeof setInterval> | null; autoBackupOptions: AutoBackupOptions } {
-  if (dbPath === ":memory:") {
-    backupLog.warn("[AUTO_BACKUP] Not available for in-memory databases", dbPath)
-  }
 
   const autoBackupOptions: AutoBackupOptions = {
     enabled: options.enabled,
@@ -21,6 +18,11 @@ export function setupAutoBackup(
     maxBackups: options.maxBackups ?? 10,
     filenamePrefix: options.filenamePrefix ?? "backup",
     compress: options.compress ?? false,
+  }
+
+  if (dbPath === ":memory:") {
+    backupLog.warn("[AUTO_BACKUP] Not available for in-memory databases", dbPath)
+    return {autoBackupOptions, timer: null}
   }
 
   const fs = require("node:fs")

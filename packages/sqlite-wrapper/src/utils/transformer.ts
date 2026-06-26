@@ -64,7 +64,7 @@ export function transformFromDb<T extends Record<string, unknown>>(
           logger.debug(`[FROM_DB] JSON column parsed successfully`, columnKey)
         } catch {
           // Keep original value if JSON parsing fails
-          logger.warn(`[FROM_DB] Failed to parse JSON column: ${value}`, columnKey)
+          logger.warn(`[FROM_DB] Failed to parse JSON column`, columnKey)
         }
       }
     }
