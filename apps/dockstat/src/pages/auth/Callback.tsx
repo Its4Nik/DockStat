@@ -7,18 +7,26 @@ import { EdenClientContext } from "@/contexts/edenClient"
 
 const API_BASE_URL = "http://localhost:3030/api/v2"
 
-function getCookie(name: string): string | null {
-  const match = document.cookie.match(
-    new RegExp(`(?:^|; )${name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1")}=([^;]*)`)
-  )
-  return match ? decodeURIComponent(match[1]) : null
+async function getCookie(name: string): Promise<string | null> {
+  const cookie = await cookieStore.get(name)
+  return cookie?.value ?? null
 }
 
-function deleteCookie(name: string): void {
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`
+async function deleteCookie(name: string): Promise<void> {
+  await cookieStore.delete(name)
 }
 
-async function verifyToken(token: string): Promise<{ user: unknown }> {
+async function verifyToken(
+  token: string | null,
+  setError: (msg: string) => void
+): Promise<{ user: unknown } | undefined> {
+  if (!token) {
+    setError(
+      "No authentication cookie found. This usually means the server did not set the auth_token cookie, or the cookie path/domain is misconfigured."
+    )
+    return
+  }
+
   // Send the token via Authorization header — the frontend and API are on
   // different ports so a cross-origin fetch won't include cookies unless we
   // use credentials: "include".  The header approach is more reliable.
@@ -45,44 +53,37 @@ function AuthCallback() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const token = getCookie("auth_token")
+    getCookie("auth_token").then((token) =>
+      verifyToken(token, setError)
+        .then((data) => {
+          if (!data?.user) {
+            throw new Error(
+              "Server returned a successful response but the payload is missing the `user` field."
+            )
+          }
 
-    if (!token) {
-      setError(
-        "No authentication cookie found. This usually means the server did not set the auth_token cookie, or the cookie path/domain is misconfigured."
-      )
-      return
-    }
+          // Store user info and token in localStorage
+          localStorage.setItem("user", JSON.stringify(data.user))
+          localStorage.setItem("auth_token", String(token))
+          edenClient.setToken(String(token))
 
-    verifyToken(token)
-      .then((data) => {
-        if (!data.user) {
-          throw new Error(
-            "Server returned a successful response but the payload is missing the `user` field."
+          // Delete the cookie now that we've persisted the token
+          deleteCookie("auth_token")
+
+          // Redirect back to the page the user was on before login
+          const redirect = localStorage.getItem("auth_redirect") || "/"
+          localStorage.removeItem("auth_redirect")
+          navigate(redirect)
+        })
+        .catch((err) => {
+          deleteCookie("auth_token")
+          edenClient.setToken("")
+          console.error("Auth callback error:", err)
+          setError(
+            err instanceof Error ? err.message : "An unknown error occurred during authentication."
           )
-        }
-
-        // Store user info and token in localStorage
-        localStorage.setItem("user", JSON.stringify(data.user))
-        localStorage.setItem("auth_token", token)
-        edenClient.setToken(token)
-
-        // Delete the cookie now that we've persisted the token
-        deleteCookie("auth_token")
-
-        // Redirect back to the page the user was on before login
-        const redirect = localStorage.getItem("auth_redirect") || "/"
-        localStorage.removeItem("auth_redirect")
-        navigate(redirect)
-      })
-      .catch((err) => {
-        deleteCookie("auth_token")
-        edenClient.setToken("")
-        console.error("Auth callback error:", err)
-        setError(
-          err instanceof Error ? err.message : "An unknown error occurred during authentication."
-        )
-      })
+        })
+    )
   }, [navigate, edenClient])
 
   if (error) {

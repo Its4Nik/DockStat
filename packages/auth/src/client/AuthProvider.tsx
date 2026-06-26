@@ -208,8 +208,8 @@ export function AuthProvider({
       return match ? match[2] : null
     }
 
-    const deleteCookie = (name: string) => {
-      document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+    async function deleteCookie(name: string): Promise<void> {
+      await cookieStore.delete(name)
     }
 
     const handleAuthCallback = async () => {
@@ -236,29 +236,30 @@ export function AuthProvider({
         localStorage.setItem(userStorageKey, JSON.stringify(user))
 
         // Clear the cookie since we've stored the token in localStorage
-        deleteCookie("auth_token")
+        deleteCookie("auth_token").then(() => {
+          // Update state
+          setState({
+            error: null,
+            isAuthenticated: true,
+            loading: false,
+            token,
+            user,
+          })
 
-        // Update state
-        setState({
-          error: null,
-          isAuthenticated: true,
-          loading: false,
-          token,
-          user,
+          // Redirect to stored location or home
+          const redirectPath = localStorage.getItem("auth_redirect") || "/"
+          localStorage.removeItem("auth_redirect")
+          window.location.href = redirectPath
         })
-
-        // Redirect to stored location or home
-        const redirectPath = localStorage.getItem("auth_redirect") || "/"
-        localStorage.removeItem("auth_redirect")
-        window.location.href = redirectPath
       } catch (error) {
         console.error("Failed to process auth callback:", error)
-        deleteCookie("auth_token")
-        setState((prev) => ({
-          ...prev,
-          error: "Failed to process authentication",
-          loading: false,
-        }))
+        deleteCookie("auth_token").then(() => {
+          setState((prev) => ({
+            ...prev,
+            error: "Failed to process authentication",
+            loading: false,
+          }))
+        })
       }
     }
 
