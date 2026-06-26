@@ -1,14 +1,14 @@
 import { extractErrorMessage } from "@dockstat/utils"
 import Elysia from "elysia"
 import { DockStatDB } from "../../database"
-import { formatPrometheusMetrics } from "../../middleware/metrics"
+import { formatPrometheusFamilies } from "../../middleware/metrics/prometheus-formatter"
 import { MetricsModel } from "../../models/metrics"
 
 const PrometheusMetricsRoute = new Elysia({ prefix: "/metrics" }).get(
   "/",
   ({ status }) => {
     try {
-      const res = formatPrometheusMetrics(DockStatDB._sqliteWrapper.getDb())
+      const res = formatPrometheusFamilies(DockStatDB._sqliteWrapper.getDb())
       return status(200, res)
     } catch (error) {
       const errorMessage = extractErrorMessage(error, "Could not get Prometheus metrics!")
@@ -20,6 +20,11 @@ const PrometheusMetricsRoute = new Elysia({ prefix: "/metrics" }).get(
     }
   },
   {
+    detail: {
+      description:
+        "Retrieve Prometheus-formatted metrics for monitoring and alerting. Returns various system metrics including database operations, Docker client statistics, memory usage, and other performance indicators in Prometheus text format.",
+      summary: "Get Prometheus Metrics",
+    },
     response: {
       200: MetricsModel.prometheusRes,
       400: MetricsModel.prometheusError,

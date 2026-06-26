@@ -1,4 +1,5 @@
 import Elysia, { t } from "elysia"
+import { dockerCache } from "../../cache"
 import DCM from "../../docker"
 
 export const DockerContainerElysia = new Elysia({
@@ -8,11 +9,21 @@ export const DockerContainerElysia = new Elysia({
   prefix: "/containers",
 })
   .get("/all-containers", async ({ status }) => {
-    const CC = await DCM.getAllContainerStats()
-    return status(200, CC)
+    // Cache container stats for 10 seconds
+    const cached = dockerCache.getOrComputeAsync("all-containers", () => DCM.getAllContainerStats())
+    return status(200, await cached)
   })
-  .get("/all/:clientId", async ({ params: { clientId } }) => await DCM.getAllContainers(clientId), {
-    params: t.Object({
-      clientId: t.Number(),
-    }),
-  })
+  .get(
+    "/all/:clientId",
+    async ({ params: { clientId } }) => {
+      // Per-client caching
+      return dockerCache.getOrComputeAsync(`client-${clientId}-containers`, () =>
+        DCM.getAllContainers(clientId)
+      )
+    },
+    {
+      params: t.Object({
+        clientId: t.Number(),
+      }),
+    }
+  )

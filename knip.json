@@ -1,0 +1,84 @@
+{
+  "workspaces": {
+    "apps/api": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "apps/docknode": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "apps/dockstat": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "apps/dockstore-verification": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/auth": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/bun-docker": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/db": {
+      "entry": "index.ts",
+      "project": "**/*.ts"
+    },
+    "packages/docker-client": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/docker-swarm": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/logger": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/outline-sync": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/plugin-builder": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/plugin-handler": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/repo-cli": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/sqlite-wrapper": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/template-renderer": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/theme-handler": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/typings": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/ui": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/utils": {
+      "entry": "src/index.ts",
+      "project": "src/**/*.ts"
+    }
+  }
+}

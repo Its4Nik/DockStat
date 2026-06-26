@@ -17,6 +17,7 @@ export const GeneralSettingsSlide = () => {
     unpinLink,
     allNavLinks,
     showBackendErrors,
+    setGuestRegistration,
   } = useGeneralSettings()
 
   return (
@@ -77,6 +78,7 @@ export const GeneralSettingsSlide = () => {
 
             <AdditionalSettingsSection
               additionalSettings={additionalSettings || {}}
+              setGuestRegistration={setGuestRegistration}
               setShowBackendErrors={showBackendErrors}
               setShowRamUsageInNavbar={showRamUsageInNavbar}
             />

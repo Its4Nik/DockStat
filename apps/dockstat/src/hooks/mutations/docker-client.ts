@@ -1,8 +1,11 @@
-import { eden } from "@dockstat/utils/react"
+import { useContext } from "react"
+import { EdenClientContext } from "@/contexts/edenClient"
 import { api } from "@/lib/api"
 
 export const useDockerClientMutations = () => {
-  const deleteClientMutation = eden.useEdenMutation({
+  const eden = useContext(EdenClientContext)
+
+  const deleteClientMutation = eden.mutate({
     invalidateQueries: [["fetchDockerClients"], ["fetchPoolStatus"]],
     mutationKey: ["deleteClient"],
     route: api.docker.client.delete,
@@ -12,7 +15,7 @@ export const useDockerClientMutations = () => {
     },
   })
 
-  const createClientMutation = eden.useEdenMutation({
+  const createClientMutation = eden.mutate({
     invalidateQueries: [["fetchDockerClients"], ["fetchPoolStatus"]],
     mutationKey: ["createClient"],
     route: api.docker.client.post,
@@ -22,7 +25,7 @@ export const useDockerClientMutations = () => {
     },
   })
 
-  const updateClientMutation = eden.useEdenMutation({
+  const updateClientMutation = eden.mutate({
     mutationKey: ["updateClient"],
     route: api.docker.client.patch,
     toast: {

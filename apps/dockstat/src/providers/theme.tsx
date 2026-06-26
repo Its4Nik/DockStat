@@ -4,20 +4,26 @@ import {
   saveThemePreference,
   type ThemeContextData,
 } from "@dockstat/theme-handler/client"
-import { eden } from "@dockstat/utils/react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useContext, useEffect, useRef, useState } from "react"
+import { EdenClientContext } from "@/contexts/edenClient"
 import { type ThemeListItem, ThemeProviderContext, type ThemeProviderData } from "@/contexts/theme"
 import { useThemeMutations } from "@/hooks/mutations"
 import { api } from "@/lib/api"
 
+const getAuthHeaders = (): Record<string, unknown> => {
+  const token = localStorage.getItem("auth_token")
+  return token ? { authorization: `Bearer ${token}` } : {}
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const eden = useContext(EdenClientContext)
   const [theme, setTheme] = useState<ThemeContextData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const [isModifiedTheme, setIsModifiedTheme] = useState<boolean>(false)
   const hasLoadedSavedTheme = useRef(false)
 
-  const { data: ThemesRes } = eden.useEdenQuery({
+  const { data: ThemesRes } = eden.query({
     queryKey: ["fetchAllThemes"],
     route: api.themes.get,
   })
@@ -61,7 +67,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data, error: fetchError } = await api.themes["by-name"]({
           name: themeName,
-        }).get()
+        }).get({ headers: getAuthHeaders() })
 
         if (fetchError || !data) {
           throw new Error(`Failed to fetch theme "${themeName}"`)
@@ -95,7 +101,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data, error: fetchError } = await api.themes["by-id"]({
           id: themeId,
-        }).get()
+        }).get({ headers: getAuthHeaders() })
 
         if (fetchError || !data) {
           throw new Error(`Failed to fetch theme with id ${themeId}`)

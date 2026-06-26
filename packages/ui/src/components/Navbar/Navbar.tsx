@@ -41,6 +41,10 @@ type NavbarProps = {
     open?: string
     close?: string
   }
+  auth: {
+    user: string | null
+    logout: () => void
+  }
 }
 
 export function Navbar({
@@ -60,6 +64,7 @@ export function Navbar({
   sidebarHotkeys,
   setIsThemeSidebarOpen,
   deleteTheme,
+  auth,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
@@ -164,6 +169,7 @@ export function Navbar({
         </nav>
 
         <Sidebar
+          auth={auth}
           currentThemeId={currentThemeId}
           deleteTheme={deleteTheme}
           isBusy={isBusy}

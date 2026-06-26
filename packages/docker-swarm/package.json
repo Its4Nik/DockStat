@@ -9,8 +9,8 @@
   },
   "description": "A TypeScript/JavaScript library for Docker Swarm operations",
   "devDependencies": {
-    "@types/bun": "latest",
-    "@types/dockerode": "^3.3.44"
+    "@types/dockerode": "^3.3.44",
+    "bun-types": "latest"
   },
   "engines": {
     "bun": ">=1.0.0"

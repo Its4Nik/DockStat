@@ -10,9 +10,6 @@ export function setupAutoBackup(
   backupLog: Logger,
   options: AutoBackupOptions
 ): { timer: ReturnType<typeof setInterval> | null; autoBackupOptions: AutoBackupOptions } {
-  if (dbPath === ":memory:") {
-    backupLog.warn("Auto-backup is not available for in-memory databases")
-  }
 
   const autoBackupOptions: AutoBackupOptions = {
     enabled: options.enabled,
@@ -23,18 +20,23 @@ export function setupAutoBackup(
     compress: options.compress ?? false,
   }
 
+  if (dbPath === ":memory:") {
+    backupLog.warn("[AUTO_BACKUP] Not available for in-memory databases", dbPath)
+    return {autoBackupOptions, timer: null}
+  }
+
   const fs = require("node:fs")
 
   if (!fs.existsSync(autoBackupOptions.directory)) {
     fs.mkdirSync(autoBackupOptions.directory, { recursive: true })
-    backupLog.info(`Created backup directory: ${autoBackupOptions.directory}`)
+    backupLog.info("[AUTO_BACKUP] Created backup directory", autoBackupOptions.directory)
   }
 
   // Create initial backup
   try {
     backup(dbPath, db, backupLog, autoBackupOptions)
   } catch (err) {
-    backupLog.error(`Initial backup failed: ${err}`)
+    backupLog.error("[AUTO_BACKUP] Initial backup failed", dbPath)
   }
 
   // Setup interval for periodic backups
@@ -44,12 +46,13 @@ export function setupAutoBackup(
       // applyRetentionPolicy already invoked inside backup, but keep safety
       applyRetentionPolicy(backupLog, autoBackupOptions)
     } catch (err) {
-      backupLog.error(`Auto-backup run failed: ${err}`)
+      backupLog.error("[AUTO_BACKUP] Scheduled backup run failed", dbPath)
     }
   }, autoBackupOptions.intervalMs)
 
   backupLog.info(
-    `Auto-backup enabled: interval=${autoBackupOptions.intervalMs}ms, maxBackups=${autoBackupOptions.maxBackups}`
+    "[AUTO_BACKUP] Enabled | Interval: ${autoBackupOptions.intervalMs}ms | Max backups: ${autoBackupOptions.maxBackups}",
+    dbPath
   )
 
   return { timer, autoBackupOptions }

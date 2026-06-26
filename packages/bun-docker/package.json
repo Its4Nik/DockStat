@@ -6,8 +6,8 @@
   },
   "description": "A bun native, typesafe wrapper for the docker API",
   "devDependencies": {
-    "@types/bun": "latest",
-    "@types/node": "^25.5.0"
+    "@types/node": "^25.5.0",
+    "bun-types": "latest"
   },
   "exports": {
     ".": {

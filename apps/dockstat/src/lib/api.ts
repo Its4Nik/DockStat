@@ -1,5 +1,12 @@
 import type { TreatyType } from "@dockstat/api"
-import { type Treaty, treaty } from "@elysiajs/eden"
+import { treaty } from "@elysiajs/eden"
+
+type ApiClient = ReturnType<typeof treaty<TreatyType>>["api"]["v2"]
+
+export const getAuthHeaders = (): Record<string, unknown> => {
+  const token = localStorage.getItem("auth_token")
+  return token ? { authorization: `Bearer ${token}` } : {}
+}
 
 /**
  * Type-safe API client using Eden Treaty.
@@ -7,15 +14,14 @@ import { type Treaty, treaty } from "@elysiajs/eden"
  *
  * Configured with:
  * - Base URL from DOCKSTAT_API_PORT environment variable
- * - Credentials included for cookie-based authentication (will maybe added in the future)
+ * - Credentials included for cookie-based authentication
+ * - Dynamic authorization header with JWT token from localStorage
  */
-const baseApi: Treaty.Create<TreatyType> = treaty<TreatyType>(
+export const api: ApiClient = treaty<TreatyType>(
   import.meta.env.DOCKSTAT_API_PORT || `http://localhost:3030`,
   {
     fetch: {
       credentials: "include",
     },
   }
-)
-
-export const api = baseApi.api.v2
+).api.v2

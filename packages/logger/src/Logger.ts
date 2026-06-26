@@ -135,12 +135,12 @@ class Logger {
       const { id: coloredId, from: extractedFrom } = colorByReqID(requestID)
       const storedFrom = this.reqFrom[requestID]
       const displayFrom = storedFrom || extractedFrom
-      requestTag = chalk.gray(`(${coloredId}${displayFrom ? `@${chalk.green(displayFrom)}` : ""}) `)
+      requestTag = chalk.gray(` (${coloredId}${displayFrom ? `@${chalk.green(displayFrom)}` : ""})`)
     }
 
     const hasHook = typeof this.logHook === "function"
 
-    const prefix = `${timestamp} ${levelTag} ${requestTag}[${nameChain}] ${callerInfo}`
+    const prefix = `${timestamp} ${levelTag} [${nameChain}${requestTag}] ${callerInfo}`
     return `${prefix} ${hasHook ? hook : "—"} ${chalk.grey(message)}`
   }
 }

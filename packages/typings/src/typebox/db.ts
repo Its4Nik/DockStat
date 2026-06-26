@@ -86,6 +86,7 @@ const TableMetaData = t.Object({
 const DockStatConfigTable = t.Object({
   additionalSettings: t.Object({
     defaultDashboard: t.Optional(t.String()),
+    enableRegistration: t.Optional(t.Boolean()),
     showBackendErrorLogs: t.Optional(t.Boolean()),
     showBackendRamUsageInNavbar: t.Optional(t.Boolean()),
   }),

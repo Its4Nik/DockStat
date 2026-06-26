@@ -1,8 +1,8 @@
 import { Button, Card, CardBody, CardHeader, Divider, Input, Slides, Toggle } from "@dockstat/ui"
-import { eden } from "@dockstat/utils/react"
 import { Activity, Server, Shield } from "lucide-react"
-import { useState } from "react"
+import { useContext, useState } from "react"
 import { DockNodeCard } from "@/components/docknode/card"
+import { EdenClientContext } from "@/contexts/edenClient"
 import { useDockNodeMutations } from "@/hooks/mutations"
 import { useGlobalBusy } from "@/hooks/useGlobalBusy"
 import { usePageHeading } from "@/hooks/useHeading"
@@ -19,6 +19,8 @@ type Target = {
 export default function DockNodePage() {
   usePageHeading("DockNodes")
 
+  const eden = useContext(EdenClientContext)
+
   const busy = useGlobalBusy()
 
   const [options, setOptions] = useState<Target>({
@@ -32,7 +34,7 @@ export default function DockNodePage() {
   const isValid =
     options.name.trim().length >= 3 && options.host.trim().length >= 5 && options.port > 0
 
-  const { data: docknodes, isLoading } = eden.useEdenQuery({
+  const { data: docknodes, isLoading } = eden.query({
     queryKey: ["getAllDockNodes"],
     route: api.node.get,
   })

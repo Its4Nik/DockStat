@@ -3,11 +3,11 @@ import type { IndexColumn, IndexMethod } from "../../types"
 
 const quoteIdent = (s: string) => `"${s.replace(/"/g, '""')}"`
 
-export function createIndex(
+export function createIndex<_T extends Record<string, unknown> = Record<string, unknown>>(
   db: Database,
   indexName: string,
   tableName: string,
-  columns: IndexColumn | IndexColumn[],
+  columns: IndexColumn<_T> | IndexColumn<_T>[],
   options?: {
     unique?: boolean
     ifNotExists?: boolean
