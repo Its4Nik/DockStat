@@ -7,7 +7,9 @@ export function LocalRegistration({
   allowGuest,
   isAuthenticated,
   setError,
+  triggerLocalAuthCheck,
 }: {
+  triggerLocalAuthCheck: () => void
   allowGuest: boolean
   isAuthenticated: boolean
   setError: (error: null | string) => void
@@ -29,14 +31,24 @@ export function LocalRegistration({
     }
   }, [registerLocalUser.error, setError])
 
+  useEffect(() => {
+    if (!registerLocalUser.isPending) {
+      if (registerLocalUser.isSuccess) {
+        triggerLocalAuthCheck()
+      }
+    }
+  })
+
   const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault()
     setError(null)
 
-    registerLocalUser.mutate({
-      name,
-      pass,
-    })
+    registerLocalUser
+      .mutate({
+        name,
+        pass,
+      })
+
   }
 
   const togglePassword = () => setShowPass(!showPass)

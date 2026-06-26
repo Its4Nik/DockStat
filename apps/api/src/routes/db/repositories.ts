@@ -14,7 +14,6 @@ const DBRepositoryRoutes = new Elysia({
     description: "Repository management endpoints (under /db prefix)",
     tags: ["Database"],
   },
-  prefix: "/db",
 })
   .get(
     "repositories",

@@ -43,14 +43,13 @@ services:
 
   sqlite-web:
     container_name: sqlite-web-dockstat-dev
-    image: coleifer/sqlite-web:latest
+    image: ghcr.io/coleifer/sqlite-web:latest
     restart: on-failure
     ports:
       - 8080:8080
     volumes:
       - ./../apps/api:/data
-    environment:
-      - SQLITE_DATABASE=dockstat.sqlite
+    command: dockstat.sqlite
 
   sqlite-web2:
     container_name: sqlite-web-dockstore-verification-dev

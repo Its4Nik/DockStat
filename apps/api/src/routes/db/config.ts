@@ -15,7 +15,6 @@ const ConfigRoutes = new Elysia({
     description: "Application configuration management endpoints",
     tags: ["Database"],
   },
-  prefix: "/db",
 })
   .post(
     "config",

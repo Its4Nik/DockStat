@@ -10,7 +10,7 @@ import { PageHeadingContext } from "@/contexts/pageHeadingContext"
 import { createPinMutationHandlers } from "@/utils/createPinMutations"
 import { useLayout } from "./hooks/useLayout"
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({ children }: { children: React.ReactNode }): React.ReactNode {
   const { pathname } = useLocation()
   const {
     ramUsage,

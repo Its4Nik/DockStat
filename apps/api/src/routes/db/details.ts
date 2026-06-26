@@ -10,7 +10,6 @@ const DatabaseDetailsRoutes = new Elysia({
     description: "Database schema and information endpoints",
     tags: ["Database"],
   },
-  prefix: "/db",
 })
   .get(
     "/details",

@@ -27,6 +27,7 @@ export function SignInPage() {
     exists: localUsersExist,
     checking: localChecking,
     allowRegistration,
+    setShouldRun: triggerLocalAuthCheck,
   } = useLocalAuthCheck()
 
   useEffect(() => {
@@ -174,6 +175,7 @@ export function SignInPage() {
                     allowGuest={allowRegistration}
                     isAuthenticated={isAuthenticated}
                     setError={setError}
+                    triggerLocalAuthCheck={() => triggerLocalAuthCheck(true)}
                   />
                 )}
               </div>

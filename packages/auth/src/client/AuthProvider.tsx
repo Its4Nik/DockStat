@@ -39,7 +39,7 @@ export function AuthProvider({
   tokenStorageKey = "auth_token",
   userStorageKey = "user",
   onTokenExpired,
-}: AuthProviderProps) {
+}: AuthProviderProps): React.ReactNode {
   const [state, setState] = useState<AuthState>({
     error: null,
     isAuthenticated: false,

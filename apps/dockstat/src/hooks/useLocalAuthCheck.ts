@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { api, getAuthHeaders } from "@/lib/api"
 
 export function useLocalAuthCheck() {
+  const [shouldRun, setShouldRun] = useState(false)
   const [exists, setExists] = useState(false)
   const [checking, setChecking] = useState(true)
   const [allowRegistration, setAllowRegistration] = useState(false)
@@ -33,9 +34,17 @@ export function useLocalAuthCheck() {
       }
     }
 
-    check()
-    isGuestUserRegistrationEnabled()
+    if (shouldRun) {
+      check()
+      isGuestUserRegistrationEnabled()
+
+      setShouldRun(false)
+    }
+  }, [shouldRun])
+
+  useEffect(() => {
+    setShouldRun(true)
   }, [])
 
-  return { allowRegistration, checking, exists }
+  return { allowRegistration, checking, exists, setShouldRun }
 }

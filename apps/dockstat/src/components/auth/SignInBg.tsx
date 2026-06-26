@@ -25,10 +25,10 @@ function SimpleFloatingIcon({
 
   // Give each icon unique, slightly offset timings
   // Using different durations for X and Y creates smooth, non-repeating curve paths
-  const durX = 10 + (index % 5) * 1.5 // Ranges from 10s to 16s
-  const durY = 12 + (index % 4) * 1.7 // Ranges from 12s to 17.1s
-  const delayX = (index % 3) * 2
-  const delayY = (index % 3) * 1.5
+  const durX = 10 + (index % 5) // * 1.5 // Ranges from 10s to 16s
+  const durY = 12 + (index % 4) // * 1.7 // Ranges from 12s to 17.1s
+  //const delayX = (index % 3) * 2
+  //const delayY = (index % 3) * 1.5
   const durRot = 15 + (index % 3) * 4
 
   return (
@@ -61,13 +61,13 @@ function SimpleFloatingIcon({
       {/* X-Axis Drifter */}
       <div
         style={{
-          animation: `drift-x ${durX}s ease-in-out ${delayX}s infinite alternate`,
+          animation: `drift-x ${durX}s ease-in-out  infinite alternate`,
         }}
       >
         {/* Y-Axis Drifter (Different duration creates the organic flow) */}
         <div
           style={{
-            animation: `drift-y ${durY}s ease-in-out ${delayY}s infinite alternate`,
+            animation: `drift-y ${durY}s ease-in-out infinite alternate`,
           }}
         >
           {/* Subtle Rotation */}
