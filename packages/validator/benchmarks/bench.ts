@@ -1,6 +1,6 @@
 import { writeFileSync } from "node:fs"
 import { arch, cpus, platform, totalmem } from "node:os"
-import { dockstatAdapter } from "./lib-dockstat"
+import { dockstatAdapter, dockstatBatchAdapter } from "./lib-dockstat"
 import { typeboxAdapter } from "./lib-typebox"
 import { zodAdapter } from "./lib-zod"
 import { presetScenarios, randomScenarios } from "./scenarios"
@@ -80,6 +80,70 @@ function runBenchmark(
   return results
 }
 
+// ─── Batch benchmark (measures items/s through validateBatch) ────────────
+
+function runBatchBenchmark(
+  adapter: LibAdapter,
+  scenarios: { name: string; fields: Record<string, unknown> }[],
+  batchSize: number,
+): ScenarioResult[] {
+  const results: ScenarioResult[] = []
+  const rand = new Random(99)
+
+  for (const scenario of scenarios) {
+    const validSamples = Array.from({ length: 200 }, () =>
+      generateValidData(scenario as any, new Random(rand.int(0, 999999)))
+    )
+    const invalidSamples = Array.from({ length: 200 }, () =>
+      generateInvalidData(scenario as any, new Random(rand.int(0, 999999)))
+    )
+
+    const compiled = adapter.compile(scenario as any)
+
+    // Measure batch throughput for valid data (each call validates `batchSize` items)
+    let vi = 0
+    const validOps = bench(() => {
+      const batch: unknown[] = new Array(batchSize)
+      for (let i = 0; i < batchSize; i++) {
+        batch[i] = validSamples[(vi + i) % validSamples.length]
+      }
+      vi += batchSize
+      adapter.validate(compiled, batch) // batch adapter handles single item internally
+    })
+    // Adjust to items/s: ops already counted single validate calls inside bench
+    // But the adapter wraps single [data] into validateBatch, so ops = validateBatch calls/s
+    // Actual items/s = ops * batchSize
+    const validItemsPerSec = validOps * batchSize
+
+    // For invalid data
+    let ii = 0
+    const invalidOps = bench(() => {
+      const batch: unknown[] = new Array(batchSize)
+      for (let i = 0; i < batchSize; i++) {
+        batch[i] = invalidSamples[(ii + i) % invalidSamples.length]
+      }
+      ii += batchSize
+      adapter.validate(compiled, batch)
+    })
+    const invalidItemsPerSec = invalidOps * batchSize
+
+    compiled.dispose()
+
+    results.push({
+      compile: {},
+      scenario: scenario.name,
+      validateInvalid: { [adapter.name]: invalidItemsPerSec },
+      validateValid: { [adapter.name]: validItemsPerSec },
+    })
+
+    console.log(
+      `  ${adapter.name.padEnd(20)} | valid: ${fmt(validItemsPerSec).padStart(12)} items/s | invalid: ${fmt(invalidItemsPerSec).padStart(12)} items/s (batch=${batchSize})`
+    )
+  }
+
+  return results
+}
+
 // ─── README generation ────────────────────────────────────────────────────
 
 function bestValue(values: Record<string, number>): { name: string; ops: number } {
@@ -109,10 +173,11 @@ function table(
     const result = results.find((r) => r.scenario === scenarioName)
     if (!result) return `| ${scenarioName} | ${libs.map(() => "N/A".padEnd(20)).join(" | ")} |`
     const values = result[metric]
+    if (Object.keys(values).length === 0) return ""
     const best = bestValue(values).ops
     const cells = libs.map((l) => cell(values[l] ?? 0, best).padEnd(20))
     return `| ${scenarioName.padEnd(16)} | ${cells.join(" | ")} |`
-  })
+  }).filter(Boolean)
 
   return [header, sep, ...rows].join("\n")
 }
@@ -188,6 +253,24 @@ function main() {
     console.log(`--- ${adapter.name} ---`)
     const results = runBenchmark(adapter, scenarios as any)
     allResults.push(...results)
+    console.log("")
+  }
+
+  // Run batch benchmark separately (measures items/s)
+  console.log("=== Batch validation benchmarks (items/s) ===\n")
+  const BATCH_SIZES = [10, 50]
+  for (const batchSize of BATCH_SIZES) {
+    console.log(`--- batch size: ${batchSize} ---`)
+    const batchAdapter = { ...dockstatBatchAdapter, name: `@dockstat/validator (batch=${batchSize})` }
+    const batchResults = runBatchBenchmark(batchAdapter, scenarios as any, batchSize)
+    // Merge batch results into allResults for README
+    for (const br of batchResults) {
+      const existing = allResults.find((r) => r.scenario === br.scenario)
+      if (existing) {
+        Object.assign(existing.validateValid, br.validateValid)
+        Object.assign(existing.validateInvalid, br.validateInvalid)
+      }
+    }
     console.log("")
   }
 

@@ -1,4 +1,4 @@
-import { compileSchema, freeSchema, type TSchema, t, validate } from "../src/index"
+import { compileSchema, freeSchema, type TSchema, t, validate, validateBatch } from "../src/index"
 import type { CompiledSchema, FieldType, LibAdapter, SchemaDef } from "./shared"
 
 function fieldToDockstat(field: FieldType): TSchema {
@@ -94,5 +94,26 @@ export const dockstatAdapter: LibAdapter = {
     const { id } = compiled as DockstatCompiled
     const result = validate(id, data)
     return result.valid
+  },
+}
+
+/** Batch-enabled adapter for measuring batch throughput */
+export const dockstatBatchAdapter: LibAdapter = {
+  compile(def: SchemaDef) {
+    const schema = defToDockstatSchema(def)
+    const id = compileSchema(schema)
+    return {
+      dispose() {
+        freeSchema(id)
+      },
+      id,
+    } satisfies DockstatCompiled & CompiledSchema
+  },
+  name: "@dockstat/validator (batch)",
+
+  validate(compiled: CompiledSchema, data: unknown): boolean {
+    const { id } = compiled as DockstatCompiled
+    const results = validateBatch(id, [data])
+    return results[0]
   },
 }

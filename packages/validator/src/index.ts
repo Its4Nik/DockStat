@@ -32,7 +32,12 @@ export type {
   ValidationResult,
 } from "./typings"
 
-import { symbols } from "./loader"
+import {
+  buildBatchInput,
+  nativeCompile,
+  nativeValidate,
+  nativeValidateBatch,
+} from "./loader"
 import type {
   ArrayOptions,
   Infer,
@@ -41,7 +46,6 @@ import type {
   StandardFailureResult,
   StandardIssue,
   StandardResult,
-  //StandardSchemaV1,
   StandardSuccessResult,
   StringOptions,
   TAny,
@@ -71,28 +75,6 @@ export { OptionalKind } from "./typings"
 // ─── Internal helpers ──────────────────────────────────────────────────────
 
 const INTERNAL_KEYS = new Set(["~standard"])
-
-/** Create a NUL-terminated C string buffer for FFI. */
-function cstr(str: string): Buffer {
-  return Buffer.concat([Buffer.from(str), Buffer.from([0])])
-}
-
-function nativeCompile(json: string): number {
-  const id = Number(symbols.compile_schema(cstr(json)))
-  symbols.free_last_result()
-  return id
-}
-
-function nativeValidate(schemaId: number, dataJson: string): ValidationResult {
-  symbols.validate(schemaId, cstr(dataJson))
-  const ptr = symbols.get_last_result()
-  const raw = ptr ? String(ptr) : null
-  const result: ValidationResult = raw
-    ? JSON.parse(raw)
-    : { errors: [{ message: "No result returned from native validate", path: "$" }], valid: false }
-  symbols.free_last_result()
-  return result
-}
 
 function toPlainSchema(schema: unknown): unknown {
   if (schema === null || schema === undefined || typeof schema !== "object") return schema
@@ -145,6 +127,34 @@ export function validate(schemaId: number, data: unknown): ValidationResult {
   return nativeValidate(schemaId, JSON.stringify(data))
 }
 
+/**
+ * Validate multiple data items against the same compiled schema in a single
+ * FFI call. Returns an array of booleans (valid / invalid) — faster than
+ * calling `validate` in a loop.
+ */
+export function validateBatch(schemaId: number, items: unknown[]): boolean[] {
+  if (items.length === 0) return []
+
+  // Encode all items to JSON buffers first
+  const encoded: Buffer[] = new Array(items.length)
+  for (let i = 0; i < items.length; i++) {
+    encoded[i] = Buffer.from(JSON.stringify(items[i]))
+  }
+
+  // Build batch input buffer (reuses internal BATCH_BUF when possible)
+  const { buf, len } = buildBatchInput(encoded)
+
+  // Single FFI call for all items
+  const results = nativeValidateBatch(schemaId, buf.subarray(0, len))
+
+  // Extract just booleans — avoid object allocation
+  const out = new Array<boolean>(results.length)
+  for (let i = 0; i < results.length; i++) {
+    out[i] = results[i].valid
+  }
+  return out
+}
+
 export function validateSchema(schema: TSchema | string, data: unknown): ValidationResult {
   const id = compileSchema(schema)
   if (id === 0) {
@@ -160,6 +170,8 @@ export function freeSchema(schemaId: number): void {
 }
 
 // ─── Standard Schema helper ───────────────────────────────────────────────
+
+import { symbols } from "./loader"
 
 function doValidate(schema: TSchema, value: unknown): StandardResult<unknown> {
   const result = validateSchema(schema, value)
