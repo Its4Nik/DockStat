@@ -181,15 +181,13 @@ export abstract class BaseQueryBuilder<
 
       // Handle condition type
       if (type === "CROSS") {
-              onClause = ""
-            } else if (typeof condition === "string") {
-              if (!condition.trim()) {
-                throw new Error("JOIN condition cannot be empty")
-              }
-              onClause = ` ON ${condition}`
-             } else {
-
-
+        onClause = ""
+      } else if (typeof condition === "string") {
+        if (!condition.trim()) {
+          throw new Error("JOIN condition cannot be empty")
+        }
+        onClause = ` ON ${condition}`
+      } else {
         // Column mapping condition: { local_column: "foreign_column" }
         // or with explicit table: { "local_table.local_column": "foreign_table.foreign_column" }
         const conditions: string[] = []
