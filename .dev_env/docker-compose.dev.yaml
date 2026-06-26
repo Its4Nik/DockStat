@@ -68,5 +68,11 @@ services:
     image: quay.io/prometheus/prometheus
     ports:
       - 9090:9090
-    volumes:
-      - ./dockstat-dev.prometheus.yml:/etc/prometheus/prometheus.yml
+    tmpfs:
+      - /prometheus-data
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        printf 'global:\n  scrape_interval: 15s\n  evaluation_interval: 15s\n  scrape_timeout: 10s\n\nscrape_configs:\n  - job_name: "dockstat-dev"\n    metrics_path: "/api/v2/metrics"\n    scheme: http\n    static_configs:\n      - targets: ["localhost:5173"]\n' > /tmp/prometheus.yml
+        exec /bin/prometheus --config.file=/tmp/prometheus.yml --storage.tsdb.path=/prometheus-data
