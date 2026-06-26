@@ -1,4 +1,3 @@
-import { DockStatError } from "@dockstat/errors"
 import Elysia, { t } from "elysia"
 import DCM from "../../docker"
 import { DockerModel } from "../../models/docker"

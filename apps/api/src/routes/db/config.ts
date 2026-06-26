@@ -1,4 +1,3 @@
-import { DockStatError } from "@dockstat/errors"
 import type { DockStatConfigTableType } from "@dockstat/typings/types"
 import Elysia, { t } from "elysia"
 import { AuthHandler } from "../../auth"

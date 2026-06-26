@@ -43,12 +43,10 @@ export function LocalRegistration({
     e.preventDefault()
     setError(null)
 
-    registerLocalUser
-      .mutate({
-        name,
-        pass,
-      })
-
+    registerLocalUser.mutate({
+      name,
+      pass,
+    })
   }
 
   const togglePassword = () => setShowPass(!showPass)

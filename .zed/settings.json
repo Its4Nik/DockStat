@@ -62,9 +62,7 @@
           "name": "biome"
         }
       },
-      "language_servers": [
-        "tsgo", "!vtsls"
-      ]
+      "language_servers": ["tsgo", "!vtsls"]
     },
     "TypeScript": {
       "code_actions_on_format": {
@@ -76,9 +74,7 @@
           "name": "biome"
         }
       },
-      "language_servers": [
-        "tsgo", "!vtsls"
-      ]
+      "language_servers": ["tsgo", "!vtsls"]
     }
   },
   "lsp": {
@@ -86,6 +82,6 @@
       "settings": {
         "require_config_file": true
       }
-    },
+    }
   }
 }
