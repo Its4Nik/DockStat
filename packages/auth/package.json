@@ -1,19 +1,32 @@
 {
   "dependencies": {
-    "@dockstat/logger": "workspace:*"
+    "@dockstat/logger": "workspace:*",
+    "cryptr": "^6.4.0",
+    "elysia": "catalog:",
+    "jose": "^6.2.2",
+    "openid-client": "^6.8.3",
+    "react": "catalog:"
   },
   "devDependencies": {
     "@dockstat/sqlite-wrapper": "workspace:*",
-    "@types/bun": "latest"
+    "@types/react": "catalog:",
+    "bun-types": "latest"
   },
   "exports": {
-    "/client": "./src/client/index.ts",
-    "/server": "./src/server/index.ts"
+    ".": "./src/index.ts",
+    "./client": "./src/client/index.tsx",
+    "./types": "./src/types.ts"
   },
   "module": "src/index.ts",
   "name": "@dockstat/auth",
   "peerDependencies": {
     "typescript": "^5"
   },
-  "type": "module"
+  "peerDependenciesMeta": {
+    "react-router": {
+      "optional": true
+    }
+  },
+  "type": "module",
+  "version": "1.0.0"
 }

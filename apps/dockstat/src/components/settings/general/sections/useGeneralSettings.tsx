@@ -1,8 +1,9 @@
 import type { DockStatConfigTableType } from "@dockstat/typings/types"
 import { type PathItem, SidebarPaths } from "@dockstat/ui"
-import { eden } from "@dockstat/utils/react"
+
 import { useContext, useMemo } from "react"
 import { ConfigProviderContext } from "@/contexts/config"
+import { EdenClientContext } from "@/contexts/edenClient"
 import { useConfigMutations } from "@/hooks/mutations"
 import { api } from "@/lib/api"
 
@@ -32,7 +33,9 @@ export function useGeneralSettings() {
   const { pinLinkMutation, unpinLinkMutation, updateAdditionalSettingsMutation } =
     useConfigMutations()
 
-  const { data: frontendPluginRoutes } = eden.useEdenQuery({
+  const eden = useContext(EdenClientContext)
+
+  const { data: frontendPluginRoutes } = eden.query({
     queryKey: ["fetchFrontendPluginRoutes"],
     route: api.plugins.frontend.routes.get,
   })
@@ -64,6 +67,13 @@ export function useGeneralSettings() {
     updateAdditionalSettings({
       ...additionalSettings,
       showBackendRamUsageInNavbar: showRamUsageInNavbar,
+    })
+  }
+
+  const setGuestRegistration = (allow: boolean) => {
+    updateAdditionalSettings({
+      ...additionalSettings,
+      enableRegistration: allow,
     })
   }
 
@@ -121,6 +131,7 @@ export function useGeneralSettings() {
     pinLink,
     pinnedLinks,
     pluginLinks,
+    setGuestRegistration,
     showBackendErrors,
     showRamUsageInNavbar,
     unpinLink,

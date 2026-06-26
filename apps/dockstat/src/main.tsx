@@ -1,21 +1,23 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { BrowserRouter } from "react-router"
-import { Layout } from "./layout"
-import DockStatProviders from "./providers"
+import ProviderGuard from "./guard"
+import { QueryClientProvider } from "./providers/queryClient"
 import DockStatRouter from "./router"
 
+// @ts-expect-error
 import "@dockstat/ui/css"
+// @ts-expect-error
 import "./index.css"
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
-    <BrowserRouter>
-      <DockStatProviders>
-        <Layout>
+    <QueryClientProvider>
+      <BrowserRouter>
+        <ProviderGuard>
           <DockStatRouter />
-        </Layout>
-      </DockStatProviders>
-    </BrowserRouter>
+        </ProviderGuard>
+      </BrowserRouter>
+    </QueryClientProvider>
   </StrictMode>
 )

@@ -2,15 +2,31 @@ import { cors } from "@elysiajs/cors"
 import { openapi } from "@elysiajs/openapi"
 import { serverTiming } from "@elysiajs/server-timing"
 import Elysia from "elysia"
-import { OpenAPI } from "./auth"
 
 const DockStatElysiaPlugins = new Elysia()
-  .use(cors())
+  .use(
+    cors({
+      credentials: true,
+    })
+  )
   .use(
     openapi({
       documentation: {
-        components: await OpenAPI.components,
-        paths: await OpenAPI.getPaths(),
+        components: {
+          securitySchemes: {
+            apikey: {
+              in: "Api-Key",
+              name: "Api-Key",
+              type: "apiKey",
+            },
+            bearerAuth: {
+              bearerFormat: "JWT",
+              description: "A bearer token which is needed for production",
+              scheme: "bearer",
+              type: "http",
+            },
+          },
+        },
       },
       path: "/docs",
       provider: "scalar",

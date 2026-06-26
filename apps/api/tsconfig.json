@@ -62,7 +62,8 @@
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */
     "paths": {
-      "@dockstat/api": ["./src/*"]
+      "@dockstat/api": ["./src/index.ts"],
+      "@dockstat/api/*": ["./src/*"]
     },
     // "noImplicitAny": true,                            /* Enable error reporting for expressions and declarations with an implied 'any' type. */
     // "strictNullChecks": true,                         /* When type checking, take into account 'null' and 'undefined'. */

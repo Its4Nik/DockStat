@@ -4,7 +4,7 @@
     "allowJs": true,
     "jsx": "react-jsx",
     // Environment setup & latest features
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM", "DOM.AsyncIterable"],
     "module": "Preserve",
     "moduleDetection": "force",
 
@@ -15,7 +15,6 @@
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": false,
     "noUncheckedIndexedAccess": true,
-
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
@@ -23,6 +22,7 @@
 
     // Best practices
     "strict": true,
+    "strictNullChecks": false,
     "target": "ESNext",
     "verbatimModuleSyntax": true
   }

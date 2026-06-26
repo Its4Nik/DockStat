@@ -1,6 +1,6 @@
 import { Slides, ThemeEditor } from "@dockstat/ui"
 import { useState } from "react"
-import { AccountsSettingsSlide } from "@/components/settings/accounts"
+import { AccountsSettingsSlide } from "@/components/settings/accounts/index"
 import { GeneralSettingsSlide } from "@/components/settings/general/index"
 import { HotkeysSlide } from "@/components/settings/hotkeys"
 import { usePageHeading } from "@/hooks/useHeading"
