@@ -21,8 +21,7 @@
   },
   "files": [
     "src",
-    "README.md",
-    "types.ts"
+    "README.md"
   ],
   "homepage": "https://outline.itsnik.de/s/9d88c471-373e-4ef2-a955-b1058eb7dc99/doc/dockstatsqlite-wrapper-Lxt4IphXI5",
   "keywords": [
@@ -55,5 +54,5 @@
   },
   "type": "module",
   "types": "./src/index.ts",
-  "version": "1.5.0"
+  "version": "1.5.1"
 }
