@@ -27,7 +27,6 @@
   },
   "files": [
     "src",
-    "src",
     "README.md"
   ],
   "homepage": "https://github.com/Its4Nik/DockStat/tree/main/packages/docker-client",
