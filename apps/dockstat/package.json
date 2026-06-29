@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@dockstat/auth": "workspace:*",
     "@dockstat/docker-client": "workspace:*",
     "@dockstat/template-renderer": "workspace:*",
     "@dockstat/theme-handler": "workspace:*",
@@ -7,6 +8,7 @@
     "@dockstat/ui": "workspace:*",
     "@dockstat/utils": "workspace:*",
     "@elysiajs/eden": "catalog:",
+    "@icons-pack/react-simple-icons": "^13.13.0",
     "@sglara/cn": "catalog:utils",
     "@tailwindcss/vite": "catalog:react-ui",
     "@tanstack/react-query": "catalog:react-ui",
@@ -32,10 +34,13 @@
     "elysia": "catalog:",
     "vite": "catalog:build-tools"
   },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
   "name": "@dockstat/frontend",
   "private": true,
   "scripts": {
-    "build": "NODE_ENV=production bunx --bun vite build",
+    "build": "bunx --bun vite build",
     "dev": "bunx --bun vite",
     "lint": "biome check",
     "preview": "vite preview"

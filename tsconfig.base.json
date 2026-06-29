@@ -22,7 +22,7 @@
     "target": "ESNext",
 
     /* ---- Strictness & Type Safety ---- */
-    "types": ["bun"]
+    "types": ["bun-types"]
   },
   "exclude": ["node_modules", "dist", "build"],
   "include": [],
@@ -35,6 +35,7 @@
     { "path": "./packages/logger" },
     { "path": "./packages/utils" },
     { "path": "./packages/db" },
-    { "path": "./packages/ui" }
+    { "path": "./packages/ui" },
+    { "path": "./packages/plugin-handler" }
   ]
 }

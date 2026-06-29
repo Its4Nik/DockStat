@@ -17,7 +17,6 @@ COPY --from=base /app/usr/dockstore-verification/DVAPI.js ./DVAPI.js
 
 # Set environment variables
 ENV VERIFICATION_DB_PATH=data/verification.db
-ENV NODE_ENV=production
 
 ENV DOCKSTAT_LOGGER_DISABLED_LOGGERS="QueryBuilder,Sqlite-Wrapper"
 ENV DOCKSTAT_LOGGER_IGNORE_MESSAGES="Logger Status: active"

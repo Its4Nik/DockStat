@@ -11,6 +11,7 @@ export interface InputProps {
   onChange?: (value: string) => void
   className?: string
   error?: boolean
+  id?: string
   success?: boolean
   required?: boolean
 }
@@ -27,6 +28,7 @@ export function Input({
   error = false,
   success = false,
   required = false,
+  id,
 }: InputProps) {
   const baseClasses = "w-full transition-colors focus:outline-none"
 
@@ -59,6 +61,7 @@ export function Input({
         success ? "border-success! focus:border-success! focus:ring-success!" : "",
       ].join(" ")}
       disabled={disabled}
+      id={id}
       onChange={(e) => onChange?.(e.target.value)}
       placeholder={placeholder}
       required={required}

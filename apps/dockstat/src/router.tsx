@@ -1,6 +1,6 @@
-import { Route, Routes } from "react-router"
-
+import CreateRoutes from "./lib/protectedRoute"
 import IndexPage from "./pages"
+import AuthCallback from "./pages/auth/Callback"
 import ConfigureClientsPage from "./pages/clients/configure"
 import ClientsPage from "./pages/clients/index"
 import ExtensionsIndex from "./pages/extensions"
@@ -9,52 +9,28 @@ import GraphPage from "./pages/graph"
 import DockNodePage from "./pages/node"
 import NodeStacksPage from "./pages/node/stacks"
 import PluginIdPage from "./pages/pluginId"
+import SignInPage from "./pages/SignIn"
 import SettingsPage from "./pages/settings"
 
 export default function DockStatRouter() {
   return (
-    <Routes>
-      <Route
-        element={<IndexPage />}
-        index
-        path="/"
-      />
-      <Route
-        element={<GraphPage />}
-        path="/graph"
-      />
-      <Route
-        element={<SettingsPage />}
-        path="/settings"
-      />
-      <Route
-        element={<DockNodePage />}
-        path="/node"
-      />
-      <Route
-        element={<NodeStacksPage />}
-        path="/node/stacks"
-      />
-      <Route
-        element={<ClientsPage />}
-        path="/clients"
-      />
-      <Route
-        element={<ConfigureClientsPage />}
-        path="/clients/configure"
-      />
-      <Route
-        element={<PluginIdPage />}
-        path="/p/:pluginId/*"
-      />
-      <Route
-        element={<ExtensionsIndex />}
-        path="/extensions"
-      />
-      <Route
-        element={<PluginBrowser />}
-        path="/extensions/plugins"
-      />
-    </Routes>
+    <CreateRoutes
+      protectedRoutes={[
+        { element: <IndexPage />, path: "/" },
+        { element: <GraphPage />, path: "/graph" },
+        { element: <SettingsPage />, path: "/settings" },
+        { element: <DockNodePage />, path: "/node" },
+        { element: <NodeStacksPage />, path: "/node/stacks" },
+        { element: <ClientsPage />, path: "/clients" },
+        { element: <ConfigureClientsPage />, path: "/clients/configure" },
+        { element: <PluginIdPage />, path: "/p/:pluginId/*" },
+        { element: <ExtensionsIndex />, path: "/extensions" },
+        { element: <PluginBrowser />, path: "/extensions/plugins" },
+      ]}
+      routes={[
+        { element: <SignInPage />, path: "/login" },
+        { element: <AuthCallback />, path: "/auth/:providerId/callback" },
+      ]}
+    />
   )
 }

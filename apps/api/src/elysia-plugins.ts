@@ -4,9 +4,30 @@ import { serverTiming } from "@elysiajs/server-timing"
 import Elysia from "elysia"
 
 const DockStatElysiaPlugins = new Elysia()
-  .use(cors())
+  .use(
+    cors({
+      credentials: true,
+    })
+  )
   .use(
     openapi({
+      documentation: {
+        components: {
+          securitySchemes: {
+            apikey: {
+              in: "Api-Key",
+              name: "Api-Key",
+              type: "apiKey",
+            },
+            bearerAuth: {
+              bearerFormat: "JWT",
+              description: "A bearer token which is needed for production",
+              scheme: "bearer",
+              type: "http",
+            },
+          },
+        },
+      },
       path: "/docs",
       provider: "scalar",
     })

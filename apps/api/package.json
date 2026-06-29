@@ -1,8 +1,11 @@
 {
   "dependencies": {
+    "@better-auth/api-key": "^1.6.2",
+    "@dockstat/auth": "workspace:*",
     "@dockstat/db": "workspace:*",
     "@dockstat/docker-client": "workspace:*",
     "@dockstat/docknode": "workspace:*",
+    "@dockstat/errors": "workspace:*",
     "@dockstat/logger": "workspace:*",
     "@dockstat/plugin-handler": "workspace:*",
     "@dockstat/repo-cli": "workspace:*",
@@ -13,14 +16,22 @@
     "@dockstat/utils": "workspace:*",
     "@elysiajs/cors": "catalog:",
     "@elysiajs/eden": "catalog:",
+    "@elysiajs/jwt": "^1.4.1",
     "@elysiajs/openapi": "catalog:",
     "@elysiajs/server-timing": "catalog:",
     "@types/dagre": "catalog:docker",
+    "better-auth": "^1.6.2",
     "dagre": "catalog:docker",
-    "elysia": "catalog:"
+    "elysia": "catalog:",
+    "elysia-oauth2": "^2.1.0",
+    "jose": "^6.2.2",
+    "openid-client": "^6.8.3"
   },
   "devDependencies": {
     "bun-types": "latest"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
   },
   "main": "./src/index.ts",
   "module": "src/index.ts",

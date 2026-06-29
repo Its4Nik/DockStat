@@ -1,4 +1,5 @@
-import { eden } from "@dockstat/utils/react"
+import { useContext } from "react"
+import { EdenClientContext } from "@/contexts/edenClient"
 import { api } from "@/lib/api"
 
 // ============================================
@@ -6,11 +7,13 @@ import { api } from "@/lib/api"
 // ============================================
 
 export const useStackMutations = () => {
+  const eden = useContext(EdenClientContext)
+
   // Create stack mutation
-  const createStackMutation = eden.useEdenMutation({
+  const createStackMutation = eden.mutateRoute({
     invalidateQueries: [["listStacks"]],
     mutationKey: ["createStack"],
-    route: (nodeId: string) => api.node({ nodeId }).stacks.post,
+    routeBuilder: ({ nodeId }: { nodeId: string }) => api.node({ nodeId }).stacks.post,
     toast: {
       errorTitle: "Failed to create stack",
       successTitle: (_result) => `Stack created successfully`,
@@ -18,10 +21,11 @@ export const useStackMutations = () => {
   })
 
   // Update stack mutation
-  const updateStackMutation = eden.useEdenMutation({
+  const updateStackMutation = eden.mutateRoute({
     invalidateQueries: [["listStacks"]],
     mutationKey: ["updateStack"],
-    route: (nodeId: string, stackId: string) => api.node({ nodeId }).stacks({ stackId }).patch,
+    routeBuilder: ({ nodeId, stackId }: { nodeId: string; stackId: string }) =>
+      api.node({ nodeId }).stacks({ stackId }).patch,
     toast: {
       errorTitle: "Failed to update stack",
       successTitle: "Stack updated successfully",
@@ -29,10 +33,11 @@ export const useStackMutations = () => {
   })
 
   // Delete stack mutation
-  const deleteStackMutation = eden.useEdenMutation({
+  const deleteStackMutation = eden.mutateRoute({
     invalidateQueries: [["listStacks"]],
     mutationKey: ["deleteStack"],
-    route: (nodeId: string, stackId: string) => api.node({ nodeId }).stacks({ stackId }).delete,
+    routeBuilder: ({ nodeId, stackId }: { nodeId: string; stackId: string }) =>
+      api.node({ nodeId }).stacks({ stackId }).delete,
     toast: {
       errorTitle: "Failed to delete stack",
       successTitle: "Stack deleted successfully",
@@ -40,10 +45,10 @@ export const useStackMutations = () => {
   })
 
   // Rename stack mutation
-  const renameStackMutation = eden.useEdenMutation({
+  const renameStackMutation = eden.mutateRoute({
     invalidateQueries: [["listStacks"]],
     mutationKey: ["renameStack"],
-    route: (nodeId: string, stackId: string) =>
+    routeBuilder: ({ nodeId, stackId }: { nodeId: string; stackId: string }) =>
       api.node({ nodeId }).stacks({ stackId }).rename.patch,
     toast: {
       errorTitle: "Failed to rename stack",
@@ -64,11 +69,14 @@ export const useStackMutations = () => {
 // ============================================
 
 export const useStackLifecycleMutations = () => {
+  const eden = useContext(EdenClientContext)
+
   // Stack up mutation
-  const stackUpMutation = eden.useEdenMutation({
+  const stackUpMutation = eden.mutateRoute({
     invalidateQueries: [["stackPs"]],
     mutationKey: ["stackUp"],
-    route: (nodeId: string, stackId: string) => api.node({ nodeId }).stacks({ stackId }).up.post,
+    routeBuilder: ({ nodeId, stackId }: { nodeId: string; stackId: string }) =>
+      api.node({ nodeId }).stacks({ stackId }).up.post,
     toast: {
       errorTitle: "Failed to start stack",
       successTitle: "Stack started successfully",
@@ -76,10 +84,11 @@ export const useStackLifecycleMutations = () => {
   })
 
   // Stack down mutation
-  const stackDownMutation = eden.useEdenMutation({
+  const stackDownMutation = eden.mutateRoute({
     invalidateQueries: [["stackPs"]],
     mutationKey: ["stackDown"],
-    route: (nodeId: string, stackId: string) => api.node({ nodeId }).stacks({ stackId }).down.post,
+    routeBuilder: ({ nodeId, stackId }: { nodeId: string; stackId: string }) =>
+      api.node({ nodeId }).stacks({ stackId }).down.post,
     toast: {
       errorTitle: "Failed to stop stack",
       successTitle: "Stack stopped successfully",
@@ -87,10 +96,10 @@ export const useStackLifecycleMutations = () => {
   })
 
   // Stack restart mutation
-  const stackRestartMutation = eden.useEdenMutation({
+  const stackRestartMutation = eden.mutateRoute({
     invalidateQueries: [["stackPs"]],
     mutationKey: ["stackRestart"],
-    route: (nodeId: string, stackId: string) =>
+    routeBuilder: ({ nodeId, stackId }: { nodeId: string; stackId: string }) =>
       api.node({ nodeId }).stacks({ stackId }).restart.post,
     toast: {
       errorTitle: "Failed to restart stack",
@@ -99,10 +108,11 @@ export const useStackLifecycleMutations = () => {
   })
 
   // Stack stop mutation
-  const stackStopMutation = eden.useEdenMutation({
+  const stackStopMutation = eden.mutateRoute({
     invalidateQueries: [["stackPs"]],
     mutationKey: ["stackStop"],
-    route: (nodeId: string, stackId: string) => api.node({ nodeId }).stacks({ stackId }).stop.post,
+    routeBuilder: ({ nodeId, stackId }: { nodeId: string; stackId: string }) =>
+      api.node({ nodeId }).stacks({ stackId }).stop.post,
     toast: {
       errorTitle: "Failed to stop stack",
       successTitle: "Stack stopped successfully",
@@ -110,9 +120,10 @@ export const useStackLifecycleMutations = () => {
   })
 
   // Stack pull mutation
-  const stackPullMutation = eden.useEdenMutation({
+  const stackPullMutation = eden.mutateRoute({
     mutationKey: ["stackPull"],
-    route: (nodeId: string, stackId: string) => api.node({ nodeId }).stacks({ stackId }).pull.post,
+    routeBuilder: ({ nodeId, stackId }: { nodeId: string; stackId: string }) =>
+      api.node({ nodeId }).stacks({ stackId }).pull.post,
     toast: {
       errorTitle: "Failed to pull images",
       successTitle: "Images pulled successfully",
@@ -133,11 +144,13 @@ export const useStackLifecycleMutations = () => {
 // ============================================
 
 export const useSwarmMutations = () => {
+  const eden = useContext(EdenClientContext)
+
   // Deploy swarm stack mutation
-  const deploySwarmStackMutation = eden.useEdenMutation({
+  const deploySwarmStackMutation = eden.mutateRoute({
     invalidateQueries: [["listSwarmStacks"]],
     mutationKey: ["deploySwarmStack"],
-    route: (nodeId: string) => api.node({ nodeId }).swarm.stacks.deploy.post,
+    routeBuilder: ({ nodeId }: { nodeId: string }) => api.node({ nodeId }).swarm.stacks.deploy.post,
     toast: {
       errorTitle: "Failed to deploy swarm stack",
       successTitle: "Swarm stack deployed successfully",
@@ -145,10 +158,11 @@ export const useSwarmMutations = () => {
   })
 
   // Remove swarm stack mutation
-  const removeSwarmStackMutation = eden.useEdenMutation({
+  const removeSwarmStackMutation = eden.mutateRoute({
     invalidateQueries: [["listSwarmStacks"]],
     mutationKey: ["removeSwarmStack"],
-    route: (nodeId: string, name: string) => api.node({ nodeId }).swarm.stacks({ name }).delete,
+    routeBuilder: ({ nodeId, name }: { nodeId: string; name: string }) =>
+      api.node({ nodeId }).swarm.stacks({ name }).delete,
     toast: {
       errorTitle: "Failed to remove swarm stack",
       successTitle: "Swarm stack removed successfully",
@@ -156,10 +170,10 @@ export const useSwarmMutations = () => {
   })
 
   // Scale swarm service mutation
-  const scaleSwarmServiceMutation = eden.useEdenMutation({
+  const scaleSwarmServiceMutation = eden.mutateRoute({
     invalidateQueries: [["listSwarmServices"]],
     mutationKey: ["scaleSwarmService"],
-    route: (nodeId: string, serviceId: string) =>
+    routeBuilder: ({ nodeId, serviceId }: { nodeId: string; serviceId: string }) =>
       api.node({ nodeId }).swarm.services({ serviceId }).scale.post,
     toast: {
       errorTitle: "Failed to scale service",
@@ -168,10 +182,10 @@ export const useSwarmMutations = () => {
   })
 
   // Update swarm service mutation
-  const updateSwarmServiceMutation = eden.useEdenMutation({
+  const updateSwarmServiceMutation = eden.mutateRoute({
     invalidateQueries: [["listSwarmServices"]],
     mutationKey: ["updateSwarmService"],
-    route: (nodeId: string, serviceId: string) =>
+    routeBuilder: ({ nodeId, serviceId }: { nodeId: string; serviceId: string }) =>
       api.node({ nodeId }).swarm.services({ serviceId }).patch,
     toast: {
       errorTitle: "Failed to update service",
@@ -180,10 +194,10 @@ export const useSwarmMutations = () => {
   })
 
   // Remove swarm service mutation
-  const removeSwarmServiceMutation = eden.useEdenMutation({
+  const removeSwarmServiceMutation = eden.mutateRoute({
     invalidateQueries: [["listSwarmServices"]],
     mutationKey: ["removeSwarmService"],
-    route: (nodeId: string, serviceId: string) =>
+    routeBuilder: ({ nodeId, serviceId }: { nodeId: string; serviceId: string }) =>
       api.node({ nodeId }).swarm.services({ serviceId }).delete,
     toast: {
       errorTitle: "Failed to remove service",
@@ -192,10 +206,10 @@ export const useSwarmMutations = () => {
   })
 
   // Init swarm mutation
-  const initSwarmMutation = eden.useEdenMutation({
+  const initSwarmMutation = eden.mutateRoute({
     invalidateQueries: [["swarmStatus"]],
     mutationKey: ["initSwarm"],
-    route: (nodeId: string) => api.node({ nodeId }).swarm.init.post,
+    routeBuilder: ({ nodeId }: { nodeId: string }) => api.node({ nodeId }).swarm.init.post,
     toast: {
       errorTitle: "Failed to initialize swarm",
       successTitle: "Swarm initialized successfully",
@@ -203,10 +217,10 @@ export const useSwarmMutations = () => {
   })
 
   // Leave swarm mutation
-  const leaveSwarmMutation = eden.useEdenMutation({
+  const leaveSwarmMutation = eden.mutateRoute({
     invalidateQueries: [["swarmStatus"]],
     mutationKey: ["leaveSwarm"],
-    route: (nodeId: string) => api.node({ nodeId }).swarm.leave.post,
+    routeBuilder: ({ nodeId }: { nodeId: string }) => api.node({ nodeId }).swarm.leave.post,
     toast: {
       errorTitle: "Failed to leave swarm",
       successTitle: "Left swarm successfully",

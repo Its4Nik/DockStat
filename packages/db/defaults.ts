@@ -3,6 +3,8 @@ import type { CreateRepoType, DockStatConfigTableType } from "@dockstat/typings/
 export const defaultConfig: DockStatConfigTableType = {
   additionalSettings: {
     defaultDashboard: undefined,
+    enableRegistration: true,
+    showBackendErrorLogs: true,
     showBackendRamUsageInNavbar: true,
   },
   allow_untrusted_repo: false,

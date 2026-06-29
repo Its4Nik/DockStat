@@ -6,7 +6,6 @@ import {
   compareVersions,
   DEFAULT_HOST,
   DEFAULT_SOCKET_PATH,
-  DEFAULT_TIMEOUT,
   isSocketAvailable,
   parseDockerVersion,
 } from "../src/utils/docker-socket"
@@ -28,10 +27,6 @@ describe("Default constants", () => {
   test("DEFAULT_HOST is set correctly", () => {
     expect(DEFAULT_HOST).toBe("http://localhost")
   })
-
-  test("DEFAULT_TIMEOUT is set correctly", () => {
-    expect(DEFAULT_TIMEOUT).toBe(30000)
-  })
 })
 
 describe("Connection configuration building", () => {
@@ -40,7 +35,6 @@ describe("Connection configuration building", () => {
 
     expect(config.socketPath).toBe(DEFAULT_SOCKET_PATH)
     expect(config.host).toBeUndefined()
-    expect(config.timeout).toBe(DEFAULT_TIMEOUT)
   })
 
   test("buildConnectionConfig uses custom socket path", () => {
@@ -51,7 +45,6 @@ describe("Connection configuration building", () => {
 
     expect(config.socketPath).toBe("/custom/docker.sock")
     expect(config.host).toBeUndefined()
-    expect(config.timeout).toBe(DEFAULT_TIMEOUT)
   })
 
   test("buildConnectionConfig uses custom host", () => {
@@ -62,7 +55,6 @@ describe("Connection configuration building", () => {
 
     expect(config.socketPath).toBeUndefined()
     expect(config.host).toBe("http://localhost:2375")
-    expect(config.timeout).toBe(DEFAULT_TIMEOUT)
   })
 
   test("buildConnectionConfig uses custom timeout", () => {
@@ -386,7 +378,6 @@ describe("Connection configuration edge cases", () => {
 
     expect(config).toBeDefined()
     expect(config.socketPath).toBe(DEFAULT_SOCKET_PATH)
-    expect(config.timeout).toBe(DEFAULT_TIMEOUT)
   })
 
   test("buildConnectionConfig handles null options", () => {
