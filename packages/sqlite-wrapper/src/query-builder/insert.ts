@@ -41,6 +41,7 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
    * Extract unique columns from a set of rows
    */
   private extractColumns(rows: RowData[]): string[] {
+    this.insertLog.debug("Extracting columns")
     const columnSet = new Set<string>()
 
     for (const row of rows) {
@@ -56,6 +57,7 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
    * Build an INSERT query
    */
   private buildInsertQuery(columns: string[], options?: InsertOptions): string {
+    this.insertLog.debug("Building insert query")
     const conflictClause = this.getConflictClause(options)
     const tableName = quoteIdentifier(this.getTableName())
     const columnList = quoteIdentifiers(columns)
@@ -72,6 +74,7 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
     row: RowData,
     columns: string[]
   ): { insertId: number; changes: number } {
+    this.insertLog.debug("Inserting...")
     const values = columns.map((col) => row[col] ?? null) as SQLQueryBindings[]
 
     const result = this.getDb()

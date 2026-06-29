@@ -107,6 +107,8 @@ export class SelectQueryBuilder<
    * Build the SELECT query SQL
    */
   private buildSelectQuery(includeOrderAndLimit = true): [string, SQLQueryBindings[]] {
+    this.selectLog.debug("Building select query")
+
     // Build column list
     const cols =
       this.selectedColumns[0] === "*"
@@ -218,6 +220,9 @@ export class SelectQueryBuilder<
   }
 
   // ===== Execution Methods =====
+
+  // Use the protected static helper inherited from WhereQueryBuilder: `safeStringify`
+  // (Removed duplicate implementation to avoid static-side conflicts with the base class.)
 
   /**
    * Execute the query and return all matching rows
@@ -356,6 +361,26 @@ export class SelectQueryBuilder<
 
     this.logWithTable("info", "EXISTS", `Falling back to client-side check due to regex conditions`)
     return this.count() > 0
+  }
+
+  private logColumnReturn(method: "value" | "pluck", column: string, returned: unknown): void {
+    this.selectLog.info(
+      `${method} | column=${column} returned=${WhereQueryBuilder.safeStringify(returned)}`
+    )
+  }
+
+  /**
+   * Get an array of values from a single column
+   *
+   * @example
+   * const emails = table.where({ active: true }).pluck("email")
+   */
+  pluck<K extends keyof T>(column: K): T[K][] {
+    const rows = this.all() || []
+    const values = rows.map((row) => row[column])
+
+    this.logColumnReturn("pluck", String(column), values)
+    return values
   }
 
   /**

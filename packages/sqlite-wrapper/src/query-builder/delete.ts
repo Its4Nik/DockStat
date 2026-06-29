@@ -1,5 +1,5 @@
 import type { Database, SQLQueryBindings } from "bun:sqlite"
-import type { Logger } from "@dockstat/logger"
+import type Logger from "@dockstat/logger"
 import type { DeleteResult, Parser } from "../types"
 import { quoteIdentifier } from "../utils"
 import { SelectQueryBuilder } from "./select"
