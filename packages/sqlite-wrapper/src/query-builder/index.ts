@@ -368,7 +368,7 @@ export class QueryBuilder<
   /**
    * Execute the query and return an array of values from a single column.
    */
-  pluck<K extends keyof ResultType>(column: K): ResultType[K][] {
+  pluck<T extends ResultType, K extends keyof T>(column: K): T[K][] {
     return this.selectBuilder.pluck(column)
   }
 

@@ -230,7 +230,7 @@ export class SelectQueryBuilder<
    * @example
    * const users = table.select(["*"]).where({ active: true }).all()
    */
-  all(): ResultType[] {
+  all<T extends ResultType>(): T[] {
     const hasRegex = this.hasRegexConditions()
     const [query, params] = this.buildSelectQuery(!hasRegex)
 
@@ -238,7 +238,7 @@ export class SelectQueryBuilder<
 
     const rows = this.getDb()
       .prepare(query)
-      .all(...params) as ResultType[]
+      .all(...params)
 
     const transformed = this.transformRowsFromDb(rows)
     const result = hasRegex ? this.applyClientSideOperations(transformed) : transformed
@@ -246,7 +246,7 @@ export class SelectQueryBuilder<
     this.logSelectReturn("ALL", { count: result.length })
 
     this.reset()
-    return result
+    return result as T[]
   }
 
   /**
@@ -375,8 +375,8 @@ export class SelectQueryBuilder<
    * @example
    * const emails = table.where({ active: true }).pluck("email")
    */
-  pluck<K extends keyof T>(column: K): T[K][] {
-    const rows = this.all() || []
+  pluck<K extends keyof T, T extends ResultType>(column: K): T[K][] {
+    const rows: T[] = this.all() || []
     const values = rows.map((row) => row[column])
 
     this.logColumnReturn("pluck", String(column), values)
@@ -389,19 +389,6 @@ export class SelectQueryBuilder<
    * @example
    * const emails = table.where({ active: true }).pluck("email")
    */
-  pluck<K extends keyof ResultType>(column: K): ResultType[K][] {
-    this.logWithTable("debug", "PLUCK", `Extracting column: ${String(column)}`)
-
-    const rows = this.all() || []
-    const values = rows.map((row) => row[column])
-
-    this.logWithTable(
-      "info",
-      "PLUCK",
-      `Completed | Column: ${String(column)} | Values: ${values.length}`
-    )
-    return values
-  }
 
   /**
    * Get a single column value from the first matching row
