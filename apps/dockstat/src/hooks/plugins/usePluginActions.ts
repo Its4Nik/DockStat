@@ -1,7 +1,7 @@
 import type { ActionConfig, PageTemplate } from "@dockstat/template-renderer"
-import { eden } from "@dockstat/utils/react"
-import { useCallback, useRef } from "react"
+import { useCallback, useContext, useRef } from "react"
 import type { ResolvedAction } from "@/components/plugins/id/types"
+import { EdenClientContext } from "@/contexts/edenClient"
 import { api } from "@/lib/api"
 import { getValueByPath } from "./utils"
 
@@ -34,14 +34,19 @@ export function usePluginActions({
   onNavigate,
   reloadLoaders,
 }: UsePluginActionsParams) {
+  const eden = useContext(EdenClientContext)
   const customHandlersRef = useRef<Map<string, (payload?: unknown) => void | Promise<void>>>(
     new Map()
   )
 
-  const actionMutation = eden.useEdenRouteMutation({
+  const actionMutation = eden.mutateRoute({
     mutationKey: ["executeAction", String(pluginId)],
     routeBuilder: ({ actionId }: { actionId: string }) =>
       api.plugins.frontend({ pluginId }).actions({ actionId }).execute.post,
+    toast: {
+      errorTitle: "Failed to execute action",
+      successTitle: "Action executed successfully",
+    },
   })
 
   const executeApiAction = useCallback(

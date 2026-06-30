@@ -1,18 +1,21 @@
-import { eden } from "@dockstat/utils/react"
+import { useContext } from "react"
+import { EdenClientContext } from "@/contexts/edenClient"
 import { api } from "@/lib/api"
 
 export const useConfigMutations = () => {
-  const pinLinkMutation = eden.useEdenMutation({
+  const eden = useContext(EdenClientContext)
+
+  const pinLinkMutation = eden.mutate({
     invalidateQueries: [["fetchAdditionalSettings"]],
     mutationKey: ["pinNavLink"],
     route: api.db.config.pinItem.post,
     toast: {
-      errorTitle: "Failed to pin link",
-      successTitle: "Link pinned successfully",
+      errorTitle: (input) => `Could not pin ${input.path}`,
+      successTitle: (input) => `Pinned ${input.path}`,
     },
   })
 
-  const unpinLinkMutation = eden.useEdenMutation({
+  const unpinLinkMutation = eden.mutate({
     invalidateQueries: [["fetchAdditionalSettings"]],
     mutationKey: ["unPinNavLink"],
     route: api.db.config.unpinItem.post,
@@ -22,7 +25,7 @@ export const useConfigMutations = () => {
     },
   })
 
-  const updateAdditionalSettingsMutation = eden.useEdenMutation({
+  const updateAdditionalSettingsMutation = eden.mutate({
     invalidateQueries: [["fetchAdditionalSettings"]],
     mutationKey: ["updateAdditionalSettings"],
     route: api.db.config.additionalSettings.post,
@@ -32,7 +35,7 @@ export const useConfigMutations = () => {
     },
   })
 
-  const editHotkeyMutation = eden.useEdenMutation({
+  const editHotkeyMutation = eden.mutate({
     invalidateQueries: [["fetchAdditionalSettings"]],
     mutationKey: ["editHotkey"],
     route: api.db.config.hotkey.post,

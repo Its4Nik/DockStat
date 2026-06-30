@@ -43,14 +43,13 @@ services:
 
   sqlite-web:
     container_name: sqlite-web-dockstat-dev
-    image: coleifer/sqlite-web:latest
+    image: ghcr.io/coleifer/sqlite-web:latest
     restart: on-failure
     ports:
       - 8080:8080
     volumes:
       - ./../apps/api:/data
-    environment:
-      - SQLITE_DATABASE=dockstat.sqlite
+    command: dockstat.sqlite
 
   sqlite-web2:
     container_name: sqlite-web-dockstore-verification-dev
@@ -69,5 +68,11 @@ services:
     image: quay.io/prometheus/prometheus
     ports:
       - 9090:9090
-    volumes:
-      - ./dockstat-dev.prometheus.yml:/etc/prometheus/prometheus.yml
+    tmpfs:
+      - /prometheus-data
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        printf 'global:\n  scrape_interval: 15s\n  evaluation_interval: 15s\n  scrape_timeout: 10s\n\nscrape_configs:\n  - job_name: "dockstat-dev"\n    metrics_path: "/api/v2/metrics"\n    scheme: http\n    static_configs:\n      - targets: ["localhost:5173"]\n' > /tmp/prometheus.yml
+        exec /bin/prometheus --config.file=/tmp/prometheus.yml --storage.tsdb.path=/prometheus-data

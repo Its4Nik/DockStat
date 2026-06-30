@@ -10,7 +10,7 @@
   },
   "description": "The (basic) internal logging service used by DockStat and @dockstat/outline-sync",
   "devDependencies": {
-    "@types/bun": "latest"
+    "bun-types": "latest"
   },
   "engines": {
     "bun": ">=1.0.0"
@@ -38,7 +38,8 @@
     "check-types": "bunx tsc --noEmit",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
-    "lint:gh": "turbo run lint -- --reporter=github"
+    "lint:gh": "turbo run lint -- --reporter=github",
+    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
   "type": "module",
   "types": "./src/Logger.ts",

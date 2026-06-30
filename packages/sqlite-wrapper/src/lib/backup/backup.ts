@@ -43,15 +43,16 @@ export function backup(
 
   try {
     db.run(`VACUUM INTO '${backupPath.replace(/'/g, "''")}'`)
-    backupLog.info(`Creating backup: ${backupPath}`)
+    backupLog.info(`[BACKUP] Creating backup`, backupPath)
 
     if (autoBackupOptions) {
       applyRetentionPolicy(backupLog, autoBackupOptions)
     }
 
+    backupLog.info(`[BACKUP] Backup completed successfully`, backupPath)
     return backupPath
   } catch (error) {
-    backupLog.error(`Failed to create backup: ${error}`)
+    backupLog.error(`[BACKUP] Failed to create backup | Error: ${error}`, backupPath)
     throw error
   }
 }

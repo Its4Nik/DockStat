@@ -1,26 +1,29 @@
 import { Card, CardBody, Divider, Slides } from "@dockstat/ui"
-import { eden } from "@dockstat/utils/react"
 import { Plus, Split } from "lucide-react"
+import { useContext } from "react"
 import { ClientCard, HostsList } from "@/components/clients"
 import { AddClient } from "@/components/clients/configure/AddClient"
 import { AddHost } from "@/components/clients/configure/AddHost"
+import { EdenClientContext } from "@/contexts/edenClient"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
 
 export default function ConfigureClientsPage() {
   usePageHeading("Configure Clients & Hosts")
 
-  const { data: clientsData } = eden.useEdenQuery({
+  const eden = useContext(EdenClientContext)
+
+  const { data: clientsData } = eden.query({
     queryKey: ["fetchDockerClients"],
     route: api.docker.client.all({ stored: "true" }).get,
   })
 
-  const { data: poolStatus } = eden.useEdenQuery({
+  const { data: poolStatus } = eden.query({
     queryKey: ["fetchPoolStatus"],
     route: api.docker.manager["pool-stats"].get,
   })
 
-  const { data: hosts } = eden.useEdenQuery({
+  const { data: hosts } = eden.query({
     queryKey: ["fetchHosts"],
     route: api.docker.hosts.get,
   })

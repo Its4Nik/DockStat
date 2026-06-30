@@ -72,3 +72,14 @@ export function isArray(value: unknown): value is unknown[] {
 export function isFunction(value: unknown): value is Function {
   return typeof value === "function"
 }
+
+// Source - https://stackoverflow.com/a/78575949
+// Posted by Pau Ibáñez, modified by community. See post 'Timeline' for change history
+// Retrieved 2026-04-23, License - CC BY-SA 4.0
+export type NestedOmit<Schema, Path extends string> = Path extends `${infer Head}.${infer Tail}`
+  ? Head extends keyof Schema
+    ? {
+        [K in keyof Schema]: K extends Head ? NestedOmit<Schema[K], Tail> : Schema[K]
+      }
+    : Schema
+  : Omit<Schema, Path>

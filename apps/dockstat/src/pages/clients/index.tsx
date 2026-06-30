@@ -1,27 +1,30 @@
 import { Badge, Card, Divider } from "@dockstat/ui"
-import { eden } from "@dockstat/utils/react"
 import { Hammer, Server, Split } from "lucide-react"
+import { useContext } from "react"
 import { ClientCard } from "@/components/clients/ClientCard"
 import { HostsList } from "@/components/clients/HostsList"
 import { PoolStatsCard } from "@/components/clients/PoolStatsCard"
 import { WorkersTable } from "@/components/clients/WorkersTable"
+import { EdenClientContext } from "@/contexts/edenClient"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
 
 export default function ClientsPage() {
   usePageHeading("Clients & Workers")
 
-  const { data: clientsData, isLoading: clientsIsLoading } = eden.useEdenQuery({
+  const eden = useContext(EdenClientContext)
+
+  const { data: clientsData, isLoading: clientsIsLoading } = eden.query({
     queryKey: ["fetchDockerClients"],
     route: api.docker.client.all({ stored: "true" }).get,
   })
 
-  const { data: poolStatus, isLoading: poolLoading } = eden.useEdenQuery({
+  const { data: poolStatus, isLoading: poolLoading } = eden.query({
     queryKey: ["fetchPoolStatus"],
     route: api.docker.manager["pool-stats"].get,
   })
 
-  const { data: hosts, isLoading: hostsLoading } = eden.useEdenQuery({
+  const { data: hosts, isLoading: hostsLoading } = eden.query({
     queryKey: ["fetchHosts"],
     route: api.docker.hosts.get,
   })
