@@ -4,7 +4,7 @@
     "@elysiajs/eden": "^1.4.6"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "bun-types": "latest"
   },
   "module": "index.ts",
   "name": "dockstacks",

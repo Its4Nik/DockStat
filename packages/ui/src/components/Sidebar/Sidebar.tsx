@@ -4,7 +4,7 @@ import { formatDate } from "@dockstat/utils"
 import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons"
 import type { UseMutateAsyncFunction } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
-import { BookMarkedIcon, Paintbrush, Palette, Terminal, X } from "lucide-react"
+import { BookMarkedIcon, LogOut, Paintbrush, Palette, Terminal, X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { Badge } from "../Badge/Badge"
 import { Button } from "../Button/Button"
@@ -57,6 +57,10 @@ export type SidebarProps = {
   setIsThemeSidebarOpen: (bool: boolean) => void
   onSelectTheme: (theme: ThemeBrowserItem) => void | Promise<void>
   toastSuccess: (themeName: string) => void
+  auth: {
+    user: string | null
+    logout: () => void
+  }
   onColorChange: (color: string, colorName: string) => void
 }
 
@@ -73,6 +77,7 @@ export function Sidebar({
   currentThemeId,
   toastSuccess,
   deleteTheme,
+  auth,
 }: SidebarProps) {
   const [logModalOpen, setLogModalOpen] = useState<boolean>(false)
   const [themeModalOpen, setThemeModalOpen] = useState<boolean>(false)
@@ -130,16 +135,34 @@ export function Sidebar({
                     className="w-8"
                     src={DockStatLogo}
                   />
-                  <p className="text-lg font-bold tracking-tight">DockStat</p>
+                  {auth.user ? (
+                    <div className="flex w-full justify-between">
+                      <p className="my-auto">{auth.user}</p>
+                    </div>
+                  ) : (
+                    <p className="text-lg font-bold tracking-tight">DockStat</p>
+                  )}
                 </div>
-                <Button
-                  className="h-8 w-8 p-0"
-                  onClick={onClose}
-                  size="sm"
-                  variant="outline"
-                >
-                  <X size={16} />
-                </Button>
+                <div>
+                  {auth.user && (
+                    <Button
+                      className="h-8 w-8 p-0 mr-2"
+                      onClick={auth.logout}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      <LogOut size={16} />
+                    </Button>
+                  )}
+                  <Button
+                    className="h-8 w-8 p-0"
+                    onClick={onClose}
+                    size="sm"
+                    variant="outline"
+                  >
+                    <X size={16} />
+                  </Button>
+                </div>
               </div>
 
               <div className="mt-2">

@@ -1,0 +1,100 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "biomejs.biome",
+        "oven.bun-vscode",
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "eamodio.gitlens",
+        "ms-azuretools.vscode-docker",
+        "github.copilot",
+        "github.copilot-chat",
+        "streetsidesoftware.code-spell-checker",
+        "GitHub.vscode-pull-request-github",
+        "firsttris.vscode-jest-runner",
+        "usernamehw.errorlens",
+        "christian-kohler.path-intellisense",
+        "wix.vscode-import-cost"
+      ],
+      "settings": {
+        "[css]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        },
+
+        "[javascript]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        },
+        "[json]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        },
+        "[jsonc]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        },
+        "[typescript]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        },
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        },
+
+        "editor.codeActionsOnSave": {
+          "quickfix.biome": "explicit",
+          "source.organizeImports.biome": "explicit"
+        },
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.formatOnSave": true,
+
+        "typescript.enablePromptUseWorkspaceTsdk": true,
+        "typescript.tsdk": "node_modules/typescript/lib"
+      }
+    }
+  },
+
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installOhMyZsh": true,
+      "upgradePackages": true
+    },
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  "forwardPorts": [3000, 4000, 4040, 8080, 8181, 9090],
+  "name": "Dockstat Monorepo Development",
+
+  "portsAttributes": {
+    "3000": {
+      "label": "Frontend",
+      "onAutoForward": "openBrowser"
+    },
+    "4000": {
+      "label": "API"
+    },
+    "4040": {
+      "label": "DockNode"
+    },
+    "8080": {
+      "label": "SQLite Web"
+    },
+    "8181": {
+      "label": "SQLite Web 2"
+    },
+    "9090": {
+      "label": "Prometheus"
+    }
+  },
+
+  "postCreateCommand": "bun install",
+
+  "remoteEnv": {
+    "NODE_ENV": "development"
+  },
+
+  "remoteUser": "vscode"
+}

@@ -31,6 +31,7 @@ export namespace DockerModel {
   export const error = t.Object({
     error: t.Unknown(),
     message: t.String(),
+    success: t.Boolean(),
   })
 
   export const poolStatus = t.Object({

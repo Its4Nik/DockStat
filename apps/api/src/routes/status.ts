@@ -1,4 +1,5 @@
 import Elysia, { t } from "elysia"
+import { statusCache } from "../cache"
 import { DockStatDB } from "../database"
 import DCM from "../docker"
 import BaseLogger from "../logger"
@@ -19,58 +20,61 @@ const StatusRoutes = new Elysia({
 }).get(
   "/status",
   async () => {
-    const services: ServiceStatus[] = []
-    services.push({
-      details: {
-        hasConfigTable: !!DockStatDB.configTable,
-        hasMetricsTable: !!DockStatDB.metricsTable,
-        path: DockStatDB._dbPath,
-      },
-      initialized: !!DockStatDB._sqliteWrapper,
-      name: "Database",
+    // Cache status for 5 seconds to avoid hammering services
+    return statusCache.getOrComputeAsync("system-status", async () => {
+      const services: ServiceStatus[] = []
+      services.push({
+        details: {
+          hasConfigTable: !!DockStatDB.configTable,
+          hasMetricsTable: !!DockStatDB.metricsTable,
+          path: DockStatDB._dbPath,
+        },
+        initialized: !!DockStatDB._sqliteWrapper,
+        name: "Database",
+      })
+
+      services.push({
+        details: {
+          available: true,
+        },
+        initialized: !!BaseLogger,
+        name: "Logger",
+      })
+
+      const pluginStatus = PluginHandler.getStatus()
+      services.push({
+        details: {
+          ...pluginStatus,
+          registeredHooks: Array.from(PluginHandler.getHookHandlers()).length,
+          registeredRoutes: PluginHandler.getAllPluginRoutes().length,
+          totalPlugins: PluginHandler.getAll().length,
+        },
+        initialized: !!PluginHandler,
+        name: "PluginHandler",
+      })
+
+      const dcmStatus = await DCM.getStatus()
+      services.push({
+        details: {
+          ...dcmStatus,
+        },
+        initialized: !!DCM,
+        name: "DockerClientManager",
+      })
+
+      const allInitialized = services.every((s) => s.initialized)
+
+      return {
+        services,
+        status: allInitialized ? "healthy" : "degraded",
+        timestamp: new Date().toISOString(),
+      }
     })
-
-    services.push({
-      details: {
-        available: true,
-      },
-      initialized: !!BaseLogger,
-      name: "Logger",
-    })
-
-    const pluginStatus = PluginHandler.getStatus()
-    services.push({
-      details: {
-        ...pluginStatus,
-        registeredHooks: Array.from(PluginHandler.getHookHandlers()).length,
-        registeredRoutes: PluginHandler.getAllPluginRoutes().length,
-        totalPlugins: PluginHandler.getAll().length,
-      },
-      initialized: !!PluginHandler,
-      name: "PluginHandler",
-    })
-
-    const dcmStatus = await DCM.getStatus()
-    services.push({
-      details: {
-        ...dcmStatus,
-      },
-      initialized: !!DCM,
-      name: "DockerClientManager",
-    })
-
-    const allInitialized = services.every((s) => s.initialized)
-
-    return {
-      services,
-      status: allInitialized ? "healthy" : "degraded",
-      timestamp: new Date().toISOString(),
-    }
   },
   {
     detail: {
       description:
-        "Retrieves to health and initialization status of all core DockStat services. This endpoint provides a comprehensive overview of system health including database connectivity, Docker client manager status, plugin system state, and logger availability. Use this endpoint for health checks and monitoring dashboard displays.",
+        "Retrieves to health and initialization status of all core DockStat services. This endpoint provides a comprehensive overview of system health including database connectivity, Docker client manager status, plugin system state, and logger availability. Use this endpoint for health checks and monitoring dashboard displays. Results are cached for 5 seconds.",
       responses: {
         200: {
           description: "Successfully retrieved system status",

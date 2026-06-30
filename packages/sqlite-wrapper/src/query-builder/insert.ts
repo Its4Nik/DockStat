@@ -14,7 +14,7 @@ import { WhereQueryBuilder } from "./where"
  * - Batch inserts with transaction support
  * - Automatic JSON/Boolean serialization
  */
-export class InsertQueryBuilder<T extends Record<string, unknown>> extends WhereQueryBuilder<T> {
+export class InsertQueryBuilder<T extends Record<string, unknown>> extends WhereQueryBuilder<T, T> {
   private insertLog: Logger
 
   constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {
@@ -122,8 +122,14 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
 
     // Build and execute query
     const query = this.buildInsertQuery(columns, options)
+    const conflictType = this.getConflictClause(options)
 
-    this.insertLog.info(`INSERT: ${query}`)
+    this.logWithTable(
+      "info",
+      "INSERT",
+      `Executing | Type: ${conflictType} | Rows: ${rows.length} | Columns: ${columns.join(", ")}`
+    )
+    this.insertLog.debug(`SQL: ${query}`)
 
     let totalChanges = 0
     let lastInsertId = 0
@@ -136,7 +142,11 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
       }
     }
 
-    this.insertLog.info(`Changes: ${totalChanges}`)
+    this.logWithTable(
+      "info",
+      "INSERT",
+      `Completed | Changes: ${totalChanges} | Last insert ID: ${lastInsertId}`
+    )
     this.reset()
 
     return {
@@ -200,9 +210,12 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
    * console.log(user.id) // Auto-generated ID
    */
   insertAndGet(data: Partial<T>, options?: InsertOptions): T | null {
+    this.logWithTable("debug", "INSERT_AND_GET", `Starting insert and fetch operation`)
+
     const result = this.insert(data, options)
 
     if (result.changes === 0 || result.insertId <= 0) {
+      this.logWithTable("info", "INSERT_AND_GET", `Insert produced no results`)
       return null
     }
 
@@ -211,9 +224,22 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
       const query = `SELECT * FROM ${quoteIdentifier(this.getTableName())} WHERE rowid = ?`
       const row = this.getDb().prepare(query).get(result.insertId) as T | null
 
-      return row ? this.transformRowFromDb(row) : null
+      const transformed = row ? this.transformRowFromDb(row) : null
+      if (transformed) {
+        this.logWithTable(
+          "info",
+          "INSERT_AND_GET",
+          `Successfully fetched inserted row | ID: ${result.insertId}`
+        )
+      }
+      return transformed
     } catch {
       // If fetching by rowid fails (e.g., WITHOUT ROWID table), return null
+      this.logWithTable(
+        "warn",
+        "INSERT_AND_GET",
+        `Could not fetch inserted row (possibly WITHOUT ROWID table)`
+      )
       return null
     }
   }
@@ -236,6 +262,8 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
       throw new Error("insertBatch: rows must be a non-empty array")
     }
 
+    this.logWithTable("info", "INSERT_BATCH", `Starting | Batch size: ${rows.length}`)
+
     const db = this.getDb()
 
     // Use a transaction for batch operations
@@ -252,9 +280,10 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
 
       // Build query and prepare statement
       const query = this.buildInsertQuery(columns, options)
-      const stmt = db.prepare(query)
 
-      this.insertLog.info(`INSERT BATCH: ${query}`)
+      this.insertLog.debug(`SQL: ${query}`)
+
+      const stmt = db.prepare(query)
 
       let totalChanges = 0
       let lastInsertId = 0
@@ -273,12 +302,20 @@ export class InsertQueryBuilder<T extends Record<string, unknown>> extends Where
         }
       }
 
+      this.insertLog.debug(
+        `Transaction completed | Changes: ${totalChanges} | Inserted IDs: ${insertedIDs.length}`
+      )
+
       return { changes: totalChanges, insertedIDs: insertedIDs, insertId: lastInsertId }
     })
 
     const result = transaction(rows)
 
-    this.insertLog.info(`Changes: ${result.changes}`)
+    this.logWithTable(
+      "info",
+      "INSERT_BATCH",
+      `Completed | Total changes: ${result.changes} | Last insert ID: ${result.insertId}`
+    )
     this.reset()
 
     return result

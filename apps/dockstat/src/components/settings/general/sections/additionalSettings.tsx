@@ -2,12 +2,65 @@ import type { DockStatConfigTableType } from "@dockstat/typings/types"
 import { Badge, Card, Divider, Toggle } from "@dockstat/ui"
 import { Settings, ToggleLeft, ToggleRight } from "lucide-react"
 
+export const AdditionalSettingsCard = ({
+  settingEnabled,
+  settingName,
+  description,
+  toggle,
+}: {
+  settingEnabled: boolean
+  settingName: string
+  description: string
+  toggle: (val: boolean) => void
+}) => {
+  return (
+    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/5">
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-accent/10">
+          {settingEnabled ? (
+            <ToggleRight
+              className="text-accent"
+              size={18}
+            />
+          ) : (
+            <ToggleLeft
+              className="text-muted-text"
+              size={18}
+            />
+          )}
+        </div>
+        <div>
+          <div className="font-semibold text-primary-text">{settingName}</div>
+          <div className="text-sm text-muted-text">{description}</div>
+        </div>
+      </div>
+      <div className="flex justify-between w-full">
+        <Badge
+          size="sm"
+          variant={settingEnabled ? "success" : "secondary"}
+        >
+          {settingEnabled ? "Enabled" : "Disabled"}
+        </Badge>
+        <Toggle
+          checked={settingEnabled}
+          onChange={() => toggle(!settingEnabled)}
+          size="md"
+        />
+      </div>
+    </div>
+  )
+}
+
 export function AdditionalSettingsSection({
   additionalSettings,
   setShowRamUsageInNavbar,
+  setShowBackendErrors,
+  setGuestRegistration,
 }: {
   additionalSettings: DockStatConfigTableType["additionalSettings"]
   setShowRamUsageInNavbar: (boolean: boolean) => void
+  setShowBackendErrors: (boolean: boolean) => void
+  setGuestRegistration: (boolean: boolean) => void
 }) {
   return (
     <>
@@ -35,44 +88,26 @@ export function AdditionalSettingsSection({
             variant="dark"
           >
             {/* Backend RAM Usage Setting */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/5">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-accent/10">
-                  {additionalSettings.showBackendRamUsageInNavbar ? (
-                    <ToggleRight
-                      className="text-accent"
-                      size={18}
-                    />
-                  ) : (
-                    <ToggleLeft
-                      className="text-muted-text"
-                      size={18}
-                    />
-                  )}
-                </div>
-                <div>
-                  <div className="font-semibold text-primary-text">Show RAM Usage in Navbar</div>
-                  <div className="text-sm text-muted-text">
-                    Display backend memory usage in the navigation bar
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-between w-full">
-                <Badge
-                  size="sm"
-                  variant={additionalSettings.showBackendRamUsageInNavbar ? "success" : "secondary"}
-                >
-                  {additionalSettings.showBackendRamUsageInNavbar ? "Enabled" : "Disabled"}
-                </Badge>
-                <Toggle
-                  checked={additionalSettings.showBackendRamUsageInNavbar}
-                  onChange={() =>
-                    setShowRamUsageInNavbar(!additionalSettings.showBackendRamUsageInNavbar)
-                  }
-                  size="md"
-                />
-              </div>
-            </div>
+            <AdditionalSettingsCard
+              description="Display backend memory usage in the navigation bar"
+              settingEnabled={additionalSettings.showBackendRamUsageInNavbar ?? true}
+              settingName="Show RAM Usage in Navbar"
+              toggle={setShowRamUsageInNavbar}
+            />
+
+            <AdditionalSettingsCard
+              description="Show a toast on Backend error"
+              settingEnabled={additionalSettings.showBackendErrorLogs ?? true}
+              settingName="Toast backend errors"
+              toggle={setShowBackendErrors}
+            />
+
+            <AdditionalSettingsCard
+              description="Enable public local user registration from the Login / Sign In page"
+              settingEnabled={additionalSettings.enableRegistration ?? false}
+              settingName="Guest Registration"
+              toggle={setGuestRegistration}
+            />
 
             {/* Debug Info - Only in development */}
             {process.env.NODE_ENV !== "production" && (

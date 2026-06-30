@@ -1,8 +1,9 @@
 import { Badge, Button, Card, Divider, Input, LinkWithIcon, Modal, Select } from "@dockstat/ui"
 import { repo } from "@dockstat/utils"
-import { eden } from "@dockstat/utils/react"
+
 import { Link } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useContext, useMemo, useState } from "react"
+import { EdenClientContext } from "@/contexts/edenClient"
 import { usePluginMutations } from "@/hooks/mutations"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
@@ -32,21 +33,22 @@ type AvailablePlugin = {
 export default function PluginBrowser() {
   usePageHeading("Plugin Browser")
 
+  const eden = useContext(EdenClientContext)
   const [selectedRepo, setSelectedRepo] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedPlugin, setSelectedPlugin] = useState<AvailablePlugin | null>(null)
 
-  const { data: allPlugins } = eden.useEdenQuery({
+  const { data: allPlugins } = eden.query({
     queryKey: ["fetchAllPlugins"],
     route: api.plugins.all.get,
   })
 
-  const { data: allRepos } = eden.useEdenQuery({
+  const { data: allRepos } = eden.query({
     queryKey: ["fetchAllRepositories"],
     route: api.repositories.all.get,
   })
 
-  const { data: allManifests } = eden.useEdenQuery({
+  const { data: allManifests } = eden.query({
     queryKey: ["fetchAllManifests"],
     route: api.repositories["all-manifests"].get,
   })

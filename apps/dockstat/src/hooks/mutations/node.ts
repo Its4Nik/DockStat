@@ -1,8 +1,11 @@
-import { eden } from "@dockstat/utils/react"
+import { useContext } from "react"
+import { EdenClientContext } from "@/contexts/edenClient"
 import { api } from "@/lib/api"
 
 export const useDockNodeMutations = () => {
-  const createDockNodeMutation = eden.useEdenMutation({
+  const eden = useContext(EdenClientContext)
+
+  const createDockNodeMutation = eden.mutate({
     invalidateQueries: [["getAllDockNodes"]],
     mutationKey: ["createDockNode"],
     route: api.node.post,
@@ -12,7 +15,7 @@ export const useDockNodeMutations = () => {
     },
   })
 
-  const deleteDockNodeMutation = eden.useEdenMutation({
+  const deleteDockNodeMutation = eden.mutate({
     invalidateQueries: [["getAllDockNodes"]],
     mutationKey: ["deleteDockNode"],
     route: api.node.delete,
