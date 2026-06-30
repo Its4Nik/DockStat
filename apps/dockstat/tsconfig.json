@@ -10,6 +10,9 @@
     "noUnusedParameters": true,
     "paths": {
       "@/*": ["./src/*"],
+      "@dockstat/api": ["../api/src/index.ts"],
+      "@dockstat/api/*": ["../api/src/*"],
+      "@dockstat/auth": ["../../packages/auth/src/*"],
       "@WSS": ["./src/lib/websocketEffects/index.ts"],
       "*": ["./*"]
     },

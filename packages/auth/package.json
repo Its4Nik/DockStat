@@ -1,0 +1,35 @@
+{
+  "dependencies": {
+    "@dockstat/logger": "workspace:*",
+    "cryptr": "^6.4.0",
+    "elysia": "catalog:",
+    "jose": "^6.2.2",
+    "openid-client": "^6.8.3",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@dockstat/sqlite-wrapper": "workspace:*",
+    "@types/react": "catalog:",
+    "bun-types": "latest"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client/index.tsx",
+    "./types": "./src/types.ts"
+  },
+  "module": "src/index.ts",
+  "name": "@dockstat/auth",
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "peerDependenciesMeta": {
+    "react-router": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
+  },
+  "type": "module",
+  "version": "1.0.0"
+}

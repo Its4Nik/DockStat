@@ -1,0 +1,802 @@
+import type Logger from "@dockstat/logger"
+import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
+import Elysia, { t } from "elysia"
+import * as client from "openid-client"
+import type { ConfigService } from "./config"
+import type { AuthContext } from "./middleware"
+import type { ApiKeysTable, LocalUsersTable, ProvidersTable } from "./types"
+import crypt from "./utils/encrypt"
+import { BASE_URL, FRONTEND_URL } from "./utils/env"
+import { createAuthToken, verifyAuthToken } from "./utils/jwt"
+
+export function createAuthRoutes(
+  table: QueryBuilder<ProvidersTable>,
+  users: QueryBuilder<LocalUsersTable>,
+  apiKeys: QueryBuilder<ApiKeysTable>,
+  logger: Logger,
+  configService: ConfigService,
+  getAllowGuestRegistration: () => boolean,
+  setAllowGuestRegistration: (enable: boolean) => void,
+  requireAuth: () => Record<string, unknown>
+) {
+  /** Convert Unix timestamp (seconds) fields to ISO 8601 strings for JSON response */
+  const serializeDates = <T extends Record<string, unknown>>(
+    row: T,
+    dateFields: (keyof T)[]
+  ): T => {
+    const result = { ...row }
+    for (const field of dateFields) {
+      const value = result[field]
+      if (value !== null && value !== undefined && typeof value === "number") {
+        // Unix timestamp in seconds → ISO string
+        ;(result as Record<string, unknown>)[field as string] = new Date(value * 1000).toISOString()
+      }
+    }
+    return result
+  }
+
+  return new Elysia({ detail: { tags: ["Auth"] }, prefix: "/auth" })
+    .post(
+      "/providers",
+      async ({ body }) => {
+        const requestBody = body as {
+          client_id: string
+          client_secret: string
+          icon: string | undefined
+          issuer_url: string
+          logout_url: string | null
+          name: string | undefined
+          scopes: string | null
+        }
+        return table.insertAndGet({
+          client_id: requestBody.client_id,
+          client_secret: await crypt.encrypt(requestBody.client_secret),
+          icon: requestBody.icon || null,
+          issuer_url: requestBody.issuer_url,
+          logout_url: requestBody.logout_url || null,
+          name: requestBody.name || null,
+          scopes: requestBody.scopes || null,
+        })
+      },
+      {
+        ...requireAuth(),
+        body: t.Object({
+          client_id: t.String(),
+          client_secret: t.String(),
+          icon: t.Optional(t.String()),
+          issuer_url: t.String(),
+          logout_url: t.MaybeEmpty(t.String()),
+          name: t.Optional(t.String()),
+          scopes: t.MaybeEmpty(t.String()),
+        }),
+        detail: {
+          description: "Create a new OAuth/OIDC provider",
+          summary: "Create Provider",
+        },
+      }
+    )
+    .delete(
+      "/providers/:providerId",
+      async ({ params: { providerId }, set }) => {
+        try {
+          const existing = table.where({ id: providerId }).first()
+          if (!existing) {
+            set.status = 404
+            return { error: "Provider not found" }
+          }
+
+          table.where({ id: providerId }).delete()
+          logger.info(`Deleted provider ${providerId}`)
+          return { message: "Provider deleted", success: true }
+        } catch (error) {
+          logger.error(`Failed to delete provider ${providerId}: ${error}`)
+          set.status = 500
+          return { error: "Failed to delete provider" }
+        }
+      },
+      {
+        ...requireAuth(),
+        detail: {
+          description: "Delete an OAuth/OIDC provider",
+          summary: "Delete Provider",
+        },
+        params: t.Object({
+          providerId: t.String(),
+        }),
+      }
+    )
+    .get(
+      "/:providerId/login",
+      async ({ params: { providerId }, redirect, cookie: { state, nonce, pkce } }) => {
+        logger.info(`Logging in via ${providerId}`)
+        const { meta, scopes } = await configService.getConfig(providerId)
+
+        const stateVal = client.randomState()
+        const nonceVal = client.randomNonce()
+
+        const code_verifier = client.randomPKCECodeVerifier()
+        const code_challenge = await client.calculatePKCECodeChallenge(code_verifier)
+
+        const isSecure = BASE_URL.startsWith("https://")
+        logger.info(`Setting OAuth cookies for provider ${providerId} (secure: ${isSecure})`)
+
+        state.value = stateVal
+        state.httpOnly = true
+        state.secure = isSecure
+        state.sameSite = "lax"
+        state.maxAge = 600
+
+        nonce.value = nonceVal
+        nonce.httpOnly = true
+        nonce.secure = isSecure
+        nonce.sameSite = "lax"
+        nonce.maxAge = 600
+
+        pkce.value = code_verifier
+        pkce.httpOnly = true
+        pkce.secure = isSecure
+        pkce.sameSite = "lax"
+        pkce.maxAge = 600
+
+        const params: Record<string, string> = {
+          code_challenge,
+          code_challenge_method: "S256",
+          nonce: nonceVal,
+          redirect_uri: `${BASE_URL}/${providerId}/callback`,
+          scopes,
+          state: stateVal,
+        }
+
+        const redirectTo: URL = client.buildAuthorizationUrl(meta, params)
+
+        logger.debug(`OAuth login flow started for provider: ${providerId}`)
+        return redirect(redirectTo.toString())
+      },
+      {
+        detail: {
+          description: "Login using the autogenerated ID (from the DB) of the Provider",
+          summary: "Login",
+        },
+        params: t.Object({ providerId: t.String() }),
+      }
+    )
+    .get(
+      "/:providerId/callback",
+      async ({ params: { providerId }, query, cookie, set, redirect }) => {
+        const { meta } = await configService.getConfig(providerId)
+        const { state: returnedState } = query
+
+        logger.debug(`OAuth callback flow started for provider: ${providerId}`)
+
+        // Check if OAuth cookies are present (they should have been set by login route)
+        if (!cookie.state?.value || !cookie.nonce?.value || !cookie.pkce?.value) {
+          logger.error(
+            `Missing OAuth cookies - login route may have failed ${JSON.stringify({
+              allCookies: Object.keys(cookie),
+              nonce: cookie.nonce?.value ? "present" : "missing",
+              pkce: cookie.pkce?.value ? "present" : "missing",
+              state: cookie.state?.value ? "present" : "missing",
+            })}`
+          )
+          set.status = 400
+          return "Authentication failed: Missing security cookies. Please try logging in again from the login page."
+        }
+
+        logger.debug(`OAuth cookies validated for provider: ${providerId}`)
+
+        if (cookie.state.value !== returnedState) {
+          logger.error(`Invalid state parameter in OAuth callback for provider: ${providerId}`)
+          set.status = 400
+          return "Invalid state"
+        }
+
+        logger.debug(
+          `State validation passed, exchanging authorization code for provider: ${providerId}`
+        )
+
+        const callbackUrl = new URL(
+          `${BASE_URL}/${providerId}/callback?${new URLSearchParams(query)}`
+        )
+
+        try {
+          const tokens = await client.authorizationCodeGrant(meta, callbackUrl, {
+            expectedNonce: String(cookie.nonce.value),
+            expectedState: String(cookie.state.value),
+            pkceCodeVerifier: String(cookie.pkce.value),
+          })
+          logger.debug(`Token exchange successful for provider: ${providerId}`)
+
+          const userInfo = await client.fetchUserInfo(
+            meta,
+            tokens.access_token,
+            String(tokens.claims().sub)
+          )
+          logger.info(`User authenticated via ${providerId}: ${userInfo.email || userInfo.sub}`)
+
+          cookie.state.remove()
+          cookie.nonce.remove()
+          cookie.pkce.remove()
+
+          // Create a JWT with user info
+          const token = await createAuthToken(userInfo)
+
+          // Set JWT as a secure cookie (not in URL to prevent token leakage)
+          const isSecure = BASE_URL.startsWith("https://")
+          cookie.auth_token.value = token
+          cookie.auth_token.httpOnly = false
+          cookie.auth_token.path = "/"
+          cookie.auth_token.secure = isSecure
+          cookie.auth_token.sameSite = "lax"
+          cookie.auth_token.maxAge = 86400 // 1 day, matching JWT expiration
+
+          // Redirect to frontend callback page (token is in cookie, not URL)
+          const frontendCallbackUrl = `${FRONTEND_URL}/auth/${providerId}/callback`
+          logger.debug(`Redirecting to frontend callback for provider: ${providerId}`)
+
+          return redirect(frontendCallbackUrl)
+        } catch (error) {
+          const errorDetails = {
+            constructor: error?.constructor?.name,
+            error: error instanceof Error ? error.message : String(error),
+            name: error instanceof Error ? error.name : undefined,
+            stack: error instanceof Error ? error.stack : undefined,
+          }
+
+          logger.error(`Token exchange failed! ${JSON.stringify(errorDetails, null, 2)}`)
+          set.status = 500
+          return `Authentication failed: ${error instanceof Error ? error.message : "Unknown error"}`
+        }
+      },
+      {
+        detail: {
+          description: "Sets the cookie values and redirects to the frontend",
+          summary: "Callback",
+        },
+        params: t.Object({ providerId: t.String() }),
+        query: t.Object({ code: t.String(), state: t.String() }),
+      }
+    )
+    .get(
+      "/verify",
+      async ({ cookie, headers, set }) => {
+        // Check Authorization header first, then fall back to cookie
+        let token: string | null = null
+        const authHeader = headers.authorization as string | undefined
+        if (authHeader?.startsWith("Bearer ")) {
+          token = authHeader.slice(7)
+        }
+        if (!token) {
+          token = String(cookie.auth_token?.value) ?? null
+        }
+
+        if (!token) {
+          set.status = 401
+          return { error: "No token provided" }
+        }
+
+        const payload = await verifyAuthToken(token)
+
+        if (!payload || typeof payload.user !== "object" || payload.user === null) {
+          set.status = 401
+          return { error: "Invalid or expired token" }
+        }
+
+        return { user: payload.user }
+      },
+      {
+        detail: {
+          description: "Verify the auth_token cookie and return the user info",
+          summary: "Verify Token",
+        },
+      }
+    )
+    .get(
+      "/providers",
+      () =>
+        table
+          .select(["id", "issuer_url", "scopes", "client_id", "created_at", "name", "icon"])
+          .all()
+          .map((p) => serializeDates(p, ["created_at"])),
+      {
+        //...requireAuth(),
+        detail: {
+          description: "Lists all Providers",
+          summary: "All Providers",
+        },
+      }
+    )
+    .get(
+      "/:providerId/logout",
+      async ({ params: { providerId }, query, redirect }) => {
+        const { meta } = await configService.getConfig(providerId)
+        const { logout_url: logoutUrl } = table
+          .select(["logout_url"])
+          .where({ id: providerId })
+          .first()
+
+        logger.info(`Logging out from ${providerId}; redirect after: ${query.redirectUri}`)
+
+        let redirectTo = client.buildEndSessionUrl(meta, {
+          post_logout_redirect_uri: query.redirectUri,
+        })
+
+        if (logoutUrl !== null) {
+          redirectTo = new URL(logoutUrl)
+        }
+
+        logger.info(`End Session URL: ${redirectTo.toString()}`)
+
+        return redirect(redirectTo.toString())
+      },
+      {
+        detail: {
+          description:
+            "Logout of the Provider which matches the Provider ID from the DB. If a logout_url is defined for the Provider it will use that, otherwise build it from the OIDC-Metadata of the provider",
+          summary: "Logout",
+        },
+        params: t.Object({ providerId: t.String() }),
+        query: t.Object({ redirectUri: t.String() }),
+      }
+    )
+    .group("/local", (app) =>
+      app
+        .post(
+          "/register",
+          async (context) => {
+            const { body, set } = context
+            try {
+              const requestBody = body as { name: string; pass: string }
+
+              const allowGuests = getAllowGuestRegistration()
+              const existingUser = users.select(["id"]).where({ name: requestBody.name }).first()
+              const isInitialUser = users.select(["id"]).count() === 0
+
+              if (existingUser) {
+                set.status = 409
+                return { error: "Username already exists" }
+              }
+
+              // Allow registration if guests are allowed OR user is authenticated
+              if (!allowGuests && !(context as unknown as AuthContext).isAuthenticated) {
+                set.status = 403
+                return {
+                  error: "Guest registration is disabled. Please authenticate to create new users.",
+                }
+              }
+
+              // Hash password with argon2id
+              const passHash = await Bun.password.hash(requestBody.pass, {
+                algorithm: "argon2id",
+                memoryCost: 65536,
+                timeCost: 4,
+              })
+
+              // Create user
+              const user = users.insertAndGet({
+                name: requestBody.name,
+                passHash,
+              })
+
+              logger.info(`New local user registered: ${requestBody.name}`)
+
+              let msg: undefined | string
+
+              if (isInitialUser) {
+                msg =
+                  "This was the first user that has been created, restricting local registration of users to already registered users. You can change this inside the DockStat settings under additional settings."
+                logger.warn(msg)
+                setAllowGuestRegistration(false)
+              }
+
+              return {
+                msg,
+                success: true,
+                user: { id: user.id, name: user.name },
+              }
+            } catch (error) {
+              const requestBody = body as { name: string; pass: string }
+              logger.error(`Registration failed for ${requestBody.name}: ${error}`)
+              set.status = 500
+              return { error: "Registration failed" }
+            }
+          },
+          {
+            body: t.Object({
+              name: t.String({ maxLength: 50, minLength: 3 }),
+              pass: t.String({ minLength: 8 }),
+            }),
+            detail: {
+              description: "Register a new local user",
+              summary: "Register",
+            },
+          }
+        )
+        .get("/allow-guest", () => getAllowGuestRegistration())
+        .get(
+          "/login",
+          async ({ redirect }) => {
+            const loginUrl = `${FRONTEND_URL}/auth/local/login`
+            logger.info(`Redirecting to local login page: ${loginUrl}`)
+            return redirect(loginUrl)
+          },
+          {
+            detail: {
+              description: "Redirect to frontend login page",
+              summary: "Login Page",
+            },
+          }
+        )
+        .post(
+          "/login",
+          async ({ body, set }) => {
+            try {
+              const requestBody = body as { name: string; pass: string }
+
+              // Find user by username
+              const user = users
+                .select(["id", "name", "passHash"])
+                .where({ name: requestBody.name })
+                .first()
+
+              if (!user) {
+                logger.warn(`Login attempt for non-existent user: ${requestBody.name}`)
+                set.status = 401
+                return { error: "Invalid credentials" }
+              }
+
+              // Verify password
+              const isValid = await Bun.password.verify(requestBody.pass, user.passHash)
+
+              if (!isValid) {
+                logger.warn(`Failed login attempt for user: ${requestBody.name}`)
+                set.status = 401
+                return { error: "Invalid credentials" }
+              }
+
+              logger.info(`Successful login for local user: ${requestBody.name}`)
+
+              // Create JWT token with user info
+              const token = await createAuthToken({
+                email: user.name,
+                name: user.name,
+                provider: "local",
+                sub: user.id,
+              })
+
+              // Return token to frontend (avoid CORS issues with redirect from POST)
+              return {
+                success: true,
+                token,
+              }
+            } catch (error) {
+              const requestBody = body as { name: string; pass: string }
+              logger.error(`Login failed for ${requestBody.name}: ${error}`)
+              set.status = 500
+              return { error: "Login failed" }
+            }
+          },
+          {
+            body: t.Object({
+              name: t.String(),
+              pass: t.String(),
+            }),
+            detail: {
+              description: "Authenticate with username and password",
+              summary: "Login",
+            },
+          }
+        )
+        .get(
+          "/logout",
+          async ({ query, redirect }) => {
+            const redirectUri = query.redirectUri || FRONTEND_URL
+            logger.info(`Local user logout, redirecting to: ${redirectUri}`)
+            return redirect(redirectUri)
+          },
+          {
+            detail: {
+              description: "Logout local user and redirect",
+              summary: "Logout",
+            },
+            query: t.Object({
+              redirectUri: t.Optional(t.String()),
+            }),
+          }
+        )
+        .get(
+          "/exists",
+          async () => {
+            try {
+              const user = users.select(["id"]).first()
+              const exists = !!user
+              logger.info(`Local user exists check: ${exists}`)
+              return { exists }
+            } catch (error) {
+              logger.error(`Error checking if local user exists: ${error}`)
+              return { exists: false }
+            }
+          },
+          {
+            detail: {
+              description: "Check if any local users exist",
+              summary: "Check Local Users",
+            },
+          }
+        )
+    )
+    .get(
+      "/users",
+      async () => {
+        try {
+          const userList = users
+            .select(["id", "name", "createdAt", "updatedAt"])
+            .all()
+            .map((u) => serializeDates(u, ["createdAt", "updatedAt"]))
+          return { users: userList }
+        } catch (error) {
+          logger.error(`Failed to list users: ${error}`)
+          return { users: [] }
+        }
+      },
+      {
+        ...requireAuth(),
+        detail: {
+          description: "List all local users",
+          summary: "List Users",
+        },
+      }
+    )
+    .delete(
+      "/users/:userId",
+      async ({ params: { userId }, set }) => {
+        try {
+          const existing = users.where({ id: userId }).first()
+          if (!existing) {
+            set.status = 404
+            return { error: "User not found" }
+          }
+
+          users.where({ id: userId }).delete()
+          logger.info(`Deleted user ${userId}`)
+          return { message: "User deleted", success: true }
+        } catch (error) {
+          logger.error(`Failed to delete user ${userId}: ${error}`)
+          set.status = 500
+          return { error: "Failed to delete user" }
+        }
+      },
+      {
+        ...requireAuth(),
+        detail: {
+          description: "Delete a local user",
+          summary: "Delete User",
+        },
+        params: t.Object({
+          userId: t.String(),
+        }),
+      }
+    )
+    .group("/api-keys", (app) =>
+      app
+        .post(
+          "/",
+          async ({ body, set }) => {
+            try {
+              const requestBody = body as {
+                userId: string
+                name: string
+                scopes?: string
+                expiresAt?: string
+              }
+
+              // Generate a secure API key
+              const apiKey = `dockstat_${crypto.randomUUID().replace(/-/g, "")}`
+
+              // Hash the API key before storing
+              const keyHash = await Bun.password.hash(apiKey, {
+                algorithm: "argon2id",
+                memoryCost: 65536,
+                timeCost: 3,
+              })
+
+              // Create API key record
+              const apiKeyRecord = apiKeys.insertAndGet({
+                expiresAt: requestBody.expiresAt ? new Date(requestBody.expiresAt) : null,
+                keyHash,
+                lastUsedAt: null,
+                name: requestBody.name,
+                revokedAt: null,
+                scopes: requestBody.scopes || "*",
+                userId: requestBody.userId,
+              })
+
+              logger.info(`API key created for user ${requestBody.userId}: ${apiKeyRecord.id}`)
+
+              return {
+                apiKey: serializeDates(
+                  {
+                    expiresAt: apiKeyRecord.expiresAt,
+                    id: apiKeyRecord.id,
+                    key: apiKey, // Only return the key once!
+                    name: apiKeyRecord.name,
+                    scopes: apiKeyRecord.scopes,
+                  },
+                  ["expiresAt"]
+                ),
+                success: true,
+              }
+            } catch (error) {
+              logger.error(`Failed to create API key: ${error}`)
+              set.status = 500
+              return { error: "Failed to create API key" }
+            }
+          },
+          {
+            body: t.Object({
+              expiresAt: t.Optional(t.String()),
+              name: t.String({ maxLength: 100, minLength: 1 }),
+              scopes: t.Optional(t.String()),
+              userId: t.String(),
+            }),
+            detail: {
+              description: "Generate a new API key for a user",
+              summary: "Create API Key",
+            },
+          }
+        )
+        .get(
+          "/",
+          async ({ query }) => {
+            try {
+              const queryParams = query as { userId?: string }
+
+              const keys = queryParams.userId
+                ? apiKeys
+                    .select([
+                      "id",
+                      "name",
+                      "scopes",
+                      "expiresAt",
+                      "lastUsedAt",
+                      "createdAt",
+                      "revokedAt",
+                    ])
+                    .where({ userId: queryParams.userId })
+                    .all()
+                    .map((k) =>
+                      serializeDates(k, ["createdAt", "expiresAt", "lastUsedAt", "revokedAt"])
+                    )
+                : apiKeys
+                    .select([
+                      "id",
+                      "name",
+                      "scopes",
+                      "expiresAt",
+                      "lastUsedAt",
+                      "createdAt",
+                      "revokedAt",
+                    ])
+                    .all()
+                    .map((k) =>
+                      serializeDates(k, ["createdAt", "expiresAt", "lastUsedAt", "revokedAt"])
+                    )
+
+              return { keys }
+            } catch (error) {
+              logger.error(`Failed to list API keys: ${error}`)
+              return { keys: [] }
+            }
+          },
+          {
+            detail: {
+              description: "List all API keys (optionally filtered by user)",
+              summary: "List API Keys",
+            },
+            query: t.Object({
+              userId: t.Optional(t.String()),
+            }),
+          }
+        )
+        .get(
+          "/:id",
+          async ({ params: { id }, set }) => {
+            try {
+              const apiKey = apiKeys
+                .select([
+                  "id",
+                  "name",
+                  "scopes",
+                  "expiresAt",
+                  "lastUsedAt",
+                  "createdAt",
+                  "revokedAt",
+                ])
+                .where({ id })
+                .first()
+
+              if (!apiKey) {
+                set.status = 404
+                return { error: "API key not found" }
+              }
+
+              return { apiKey }
+            } catch (error) {
+              logger.error(`Failed to get API key ${id}: ${error}`)
+              set.status = 500
+              return { error: "Failed to get API key" }
+            }
+          },
+          {
+            detail: {
+              description: "Get a specific API key details (excludes the actual key)",
+              summary: "Get API Key",
+            },
+            params: t.Object({ id: t.String() }),
+          }
+        )
+        .delete(
+          "/:id",
+          async ({ params: { id }, set }) => {
+            try {
+              const apiKey = apiKeys.select(["id", "revokedAt"]).where({ id }).first()
+
+              if (!apiKey) {
+                set.status = 404
+                return { error: "API key not found" }
+              }
+
+              if (apiKey.revokedAt) {
+                set.status = 400
+                return { error: "API key is already revoked" }
+              }
+
+              // Revoke the API key by setting revokedAt
+              apiKeys.where({ id }).update({ revokedAt: new Date() })
+
+              logger.info(`API key revoked: ${id}`)
+
+              return { message: "API key revoked successfully", success: true }
+            } catch (error) {
+              logger.error(`Failed to revoke API key ${id}: ${error}`)
+              set.status = 500
+              return { error: "Failed to revoke API key" }
+            }
+          },
+          {
+            detail: {
+              description: "Revoke an API key",
+              summary: "Revoke API Key",
+            },
+            params: t.Object({ id: t.String() }),
+          }
+        )
+    )
+    .post(
+      "/guest/:allow",
+      async ({ params, set }) => {
+        const allow = params.allow as "enable" | "disable"
+
+        if (allow === "enable") {
+          setAllowGuestRegistration(true)
+          logger.info("Guest registration enabled")
+          return { message: "Guest registration enabled", success: true }
+        } else if (allow === "disable") {
+          setAllowGuestRegistration(false)
+          logger.info("Guest registration disabled")
+          return { message: "Guest registration disabled", success: true }
+        } else {
+          set.status = 400
+          return { error: "Invalid action. Use 'enable' or 'disable'" }
+        }
+      },
+      {
+        detail: {
+          description: "Enable or disable guest registration",
+          summary: "Toggle Guest Registration",
+        },
+        params: t.Object({
+          allow: t.Union([t.Literal("enable"), t.Literal("disable")]),
+        }),
+      }
+    )
+}

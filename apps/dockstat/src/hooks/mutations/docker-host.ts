@@ -1,8 +1,11 @@
-import { eden } from "@dockstat/utils/react"
+import { useContext } from "react"
+import { EdenClientContext } from "@/contexts/edenClient"
 import { api } from "@/lib/api"
 
 export const useDockerHostMutations = () => {
-  const createHostMutation = eden.useEdenMutation({
+  const eden = useContext(EdenClientContext)
+
+  const createHostMutation = eden.mutate({
     invalidateQueries: [["fetchHosts"]],
     mutationKey: ["addHost"],
     route: api.docker.hosts.post,
@@ -12,7 +15,7 @@ export const useDockerHostMutations = () => {
     },
   })
 
-  const updateHostMutation = eden.useEdenMutation({
+  const updateHostMutation = eden.mutate({
     invalidateQueries: [["fetchHosts"]],
     mutationKey: ["updateHost"],
     route: api.docker.hosts.patch,
@@ -22,7 +25,7 @@ export const useDockerHostMutations = () => {
     },
   })
 
-  const deleteHostMutation = eden.useEdenMutation({
+  const deleteHostMutation = eden.mutate({
     invalidateQueries: [["fetchHosts"]],
     mutationKey: ["deleteHost"],
     route: api.docker.hosts.delete,

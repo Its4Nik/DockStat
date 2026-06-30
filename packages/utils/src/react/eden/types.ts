@@ -1,6 +1,12 @@
 export type EdenRoute = (...args: never[]) => Promise<{ data: unknown; error: unknown }>
 export type EdenData<T extends EdenRoute> = Awaited<ReturnType<T>>["data"]
 
+export type EdenFetchOptions = {
+  headers?: Record<string, unknown> | undefined
+  query?: Record<string, unknown> | undefined
+  fetch?: RequestInit | undefined
+}
+
 export type EdenQueryRoute = (options?: {
   fetch?: RequestInit
   headers?: Record<string, unknown>
@@ -16,6 +22,7 @@ export type UseEdenQueryOptions<TRoute extends EdenQueryRoute> = {
   staleTime?: number
   refetchInterval?: number | false
   refetchOnWindowFocus?: boolean
+  opts?: EdenFetchOptions
 }
 
 export type EdenBody<T extends EdenRoute> = Parameters<T> extends []
@@ -27,13 +34,21 @@ export type EdenBody<T extends EdenRoute> = Parameters<T> extends []
     : Parameters<T>[0]
 
 export type ToastConfig<TData, TInput> = {
-  successTitle: string | ((input: TInput, response: TData) => string)
-  errorTitle: string | ((input: TInput, error: Error) => string)
+  successTitle: React.ReactNode | ((input: TInput, response: TData) => React.ReactNode)
+  successDescription?: React.ReactNode | ((input: TInput, response: TData) => React.ReactNode)
+  errorTitle: React.ReactNode | ((input: TInput, error: Error) => React.ReactNode)
+  errorDescription?: React.ReactNode | ((input: TInput, error: Error) => React.ReactNode)
 }
 
 export type ResponseData<TRoute extends EdenRoute> = NonNullable<EdenData<TRoute>> & {
   message: string
 }
+
+export type ToasterFunction = (ctx: {
+  description: React.ReactNode
+  title: React.ReactNode
+  variant?: "error" | "success"
+}) => string | number
 
 // Direct route - no params needed at mutation time
 export type DirectRouteOptions<TRoute extends EdenRoute> = {
@@ -41,7 +56,11 @@ export type DirectRouteOptions<TRoute extends EdenRoute> = {
   routeBuilder?: never
   mutationKey: readonly string[]
   invalidateQueries?: readonly string[][]
-  toast?: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
+  toast?: {
+    toaster: ToasterFunction
+    toasts: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
+  }
+  opts?: EdenFetchOptions
 }
 
 // Route builder - params passed at mutation time
@@ -50,7 +69,11 @@ export type RouteBuilderOptions<TParams, TRoute extends EdenRoute> = {
   routeBuilder: (params: TParams) => TRoute
   mutationKey: readonly string[]
   invalidateQueries?: readonly string[][]
-  toast?: ToastConfig<ResponseData<TRoute>, { params: TParams; body: EdenBody<TRoute> }>
+  opts?: EdenFetchOptions
+  toast?: {
+    toaster: ToasterFunction
+    toasts: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
+  }
 }
 
 export type MutationResult<TData, TInput> = {

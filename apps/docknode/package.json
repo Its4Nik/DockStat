@@ -17,6 +17,9 @@
   "devDependencies": {
     "bun-types": "latest"
   },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
   "exports": {
     "./treaty": "./src/_treaty.ts"
   },

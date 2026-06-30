@@ -1,0 +1,21 @@
+{
+  "description": "Unified error handling for DockStat",
+  "devDependencies": {
+    "bun-types": "latest",
+    "typescript": "^5.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "require": "./src/index.ts"
+    }
+  },
+  "main": "src/index.ts",
+  "name": "@dockstat/errors",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "types": "src/index.ts",
+  "version": "1.0.0"
+}

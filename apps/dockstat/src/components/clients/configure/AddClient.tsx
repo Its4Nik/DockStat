@@ -236,6 +236,12 @@ export function AddClient() {
             <p className="text-center text-xs text-muted-text">
               Settings can be modified later in the client dashboard.
             </p>
+            {createClientMutation.error !== null && (
+              <Card variant="error">
+                <p>An error occured</p>
+                <pre>{createClientMutation.error.toString()}</pre>
+              </Card>
+            )}
           </div>
         </div>
       </div>
