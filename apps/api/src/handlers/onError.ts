@@ -1,103 +1,118 @@
+import { DockStatError, ErrorCode, parseValidationError } from "@dockstat/errors"
 import { extractErrorMessage } from "@dockstat/utils"
 import Elysia, { type ValidationError } from "elysia"
+import { AuthHandler } from "../auth"
+import BaseLogger from "../logger"
 
-export const errorHandler = new Elysia().onError(({ code, error, set, request }) => {
-  const path = new URL(request.url).pathname
-  const timestamp = new Date().toISOString()
+const logger = BaseLogger.spawn("Error")
 
-  // Handle validation errors
-  if (code === "VALIDATION") {
-    const validationError = error as ValidationError
+export const errorHandler = new Elysia()
+  .onError(({ code, error, set, request }) => {
+    const path = new URL(request.url).pathname
+    const timestamp = new Date().toISOString()
+    const reqId = AuthHandler.getStateMap().get(request)?.reqId
 
-    // Check if it's a response validation error (server-side)
-    if (validationError.type === "response") {
+    logger.error(`Caught an Error on ${path}`, reqId)
+
+    // ── DockStatError: our own typed errors ──
+    if (error instanceof DockStatError) {
+      set.status = error.statusCode
+      return error.toResponse(path)
+    }
+
+    // ── VALIDATION: Elysia schema validation ──
+    if (code === "VALIDATION") {
+      const validationError = error as ValidationError
+
+      // Response validation (server-side bug)
+      if (validationError.type === "response") {
+        set.status = 500
+        return {
+          error: {
+            code: ErrorCode.INTERNAL_ERROR,
+            message: "Response validation failed",
+          },
+          path,
+          success: false,
+          timestamp,
+        }
+      }
+
+      // Request validation (client error)
+      set.status = 400
+      const details = parseValidationError(validationError)
+
+      // Extract a clean, user-facing summary from the first error
+      const message = details.length > 0 ? details[0].message : "Validation failed"
+
+      return {
+        error: {
+          code: ErrorCode.VALIDATION_FAILED,
+          details,
+          message,
+        },
+        path,
+        success: false,
+        timestamp,
+      }
+    }
+
+    // ── PARSE: malformed JSON etc. ──
+    if (code === "PARSE") {
+      set.status = 400
+      return {
+        error: {
+          code: ErrorCode.BAD_REQUEST,
+          message: "Invalid request format",
+        },
+        path,
+        success: false,
+        timestamp,
+      }
+    }
+
+    // ── NOT_FOUND ──
+    if (code === "NOT_FOUND") {
+      set.status = 404
+      return {
+        error: {
+          code: ErrorCode.NOT_FOUND,
+          message: `Cannot ${request.method} ${path}`,
+        },
+        path,
+        success: false,
+        timestamp,
+      }
+    }
+
+    // ── INTERNAL_SERVER_ERROR ──
+    if (code === "INTERNAL_SERVER_ERROR") {
+      const errorMessage = extractErrorMessage(error, "An unexpected error occurred")
       set.status = 500
-
       return {
-        error: "Response validation failed",
-        message: validationError.message,
-        path,
-        success: false,
-        timestamp,
-        ...(process.env.NODE_ENV === "development" && {
-          detail: validationError.all,
-        }),
-      }
-    }
-
-    // Request validation errors (client-side)
-    set.status = 400
-
-    // In production, hide validation details for security
-    if (process.env.NODE_ENV === "production") {
-      return {
-        error: "Validation failed",
-        message: validationError.message,
+        error: {
+          code: ErrorCode.INTERNAL_ERROR,
+          message: errorMessage,
+        },
         path,
         success: false,
         timestamp,
       }
     }
 
-    // In development, show details
-    return {
-      detail: validationError.all,
-      error: "Validation failed",
-      message: validationError.message,
-      path,
-      success: false,
-      timestamp,
-    }
-  }
-
-  // Handle parser errors (malformed JSON, etc.)
-  if (code === "PARSE") {
-    set.status = 400
-    return {
-      error: "Parse error",
-      message: "Invalid request format",
-      path,
-      success: false,
-      timestamp,
-    }
-  }
-
-  // Handle not found errors
-  if (code === "NOT_FOUND") {
-    set.status = 404
-    return {
-      error: "Not found",
-      message: `Cannot ${request.method} ${path}`,
-      path,
-      success: false,
-      timestamp,
-    }
-  }
-
-  // Handle internal server errors
-  if (code === "INTERNAL_SERVER_ERROR") {
-    const errorMessage = extractErrorMessage(error, "An unexpected error occurred")
+    // ── Fallback ──
     set.status = 500
+    const errorMessage = extractErrorMessage(error, "An unexpected error occurred")
+    console.error("Unhandled error:", { code, error, path, timestamp })
+
     return {
-      error: "Internal server error",
-      message: errorMessage,
+      error: {
+        code: ErrorCode.INTERNAL_ERROR,
+        message: errorMessage,
+      },
       path,
       success: false,
       timestamp,
     }
-  }
-
-  // Handle unknown errors - use the centralized error extraction
-  set.status = 500
-  const errorMessage = extractErrorMessage(error, "An unexpected error occurred")
-
-  console.error("Unhandled error:", { code, error, path, timestamp })
-
-  return {
-    error: errorMessage,
-    message: "An unexpected error occurred",
-    path,
-    success: false,
-    timestamp,
-  }
-})
+  })
+  .as("global")

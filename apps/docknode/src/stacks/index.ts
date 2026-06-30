@@ -16,7 +16,7 @@ const progressLogger = logger.spawn("Progress")
 const STACK_ROOT = "./stacks"
 
 /** Result wrapper for docker-compose commands with detailed output */
-interface CommandResult<T = unknown> {
+type CommandResult<T = unknown> = {
   success: boolean
   data?: T
   stdout: string

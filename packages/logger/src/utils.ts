@@ -67,7 +67,7 @@ export const shouldIgnore = (msg: string, ignoreList: string[]) => {
 }
 
 export function colorByReqID(rawReqId: string) {
-  let reqId = rawReqId
+  let reqId = rawReqId.length >= 3 ? rawReqId : ""
   let from = ""
 
   if (reqId.includes("|")) {

@@ -1,38 +1,11 @@
-import { eden } from "@dockstat/utils/react"
+import { useContext } from "react"
+import { EdenClientContext } from "@/contexts/edenClient"
 import { api } from "@/lib/api"
 
 export const useDashboardMutations = () => {
-  const createDashboardMutation = eden.useEdenMutation({
-    invalidateQueries: [["fetchAllDashboards"]],
-    mutationKey: ["createDashboard"],
-    route: api.dashboards.post,
-    toast: {
-      errorTitle: (input) => `Could not create new Dashboard: ${input.name}`,
-      successTitle: (input) => `Created new Dashboard: ${input.name}`,
-    },
-  })
+  const eden = useContext(EdenClientContext)
 
-  const updateDashboardMutation = eden.useEdenMutation({
-    invalidateQueries: [["fetchAllDashboards"]],
-    mutationKey: ["updateDashboard"],
-    route: api.dashboards.patch,
-    toast: {
-      errorTitle: (input) => `Could not update Dashboard: ${input.name}`,
-      successTitle: (input) => `Updated Dashboard: ${input.name}`,
-    },
-  })
-
-  const deleteDashboardMutation = eden.useEdenMutation({
-    invalidateQueries: [["fetchAllDashboards"]],
-    mutationKey: ["deleteDashboard"],
-    route: api.dashboards.delete,
-    toast: {
-      errorTitle: (input) => `Could not delete dashboard ${input.id}`,
-      successTitle: (input) => `Deleted dashboard ${input.id}`,
-    },
-  })
-
-  const setDefaultDashboardMutation = eden.useEdenMutation({
+  const setDefaultDashboardMutation = eden.mutate({
     invalidateQueries: [["fetchAdditionalSettings"], ["fetchAllDashboards"]],
     mutationKey: ["setDefaultDashboard"],
     route: api.db.config.defaultDashboard.post,
@@ -46,9 +19,6 @@ export const useDashboardMutations = () => {
   })
 
   return {
-    createDashboardMutation,
-    deleteDashboardMutation,
     setDefaultDashboardMutation,
-    updateDashboardMutation,
   }
 }

@@ -26,7 +26,6 @@
     "./types": "./src/types.ts"
   },
   "files": [
-    "index.ts",
     "src",
     "README.md"
   ],
@@ -45,16 +44,13 @@
     "check-types": "bunx tsc --noEmit",
     "clean": "rm -rf dist",
     "dev": "bun run --watch index.ts",
-    "example:basic": "bun run examples/basic-usage.ts",
-    "example:websocket": "bun run examples/websocket-integration.ts",
     "format": "biome format --write",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "lint:gh": "turbo run lint -- --reporter=github",
-    "prepublishOnly": "bun run clean && bun run build",
-    "test": "bun run test.ts"
+    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
   "type": "module",
   "types": "./src/manager/index.ts",
-  "version": "2.0.1"
+  "version": "2.0.2"
 }
