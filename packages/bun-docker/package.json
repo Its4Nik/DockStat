@@ -10,11 +10,7 @@
     "bun-types": "latest"
   },
   "exports": {
-    ".": {
-      "import": "./src/index.ts",
-      "require": "./src/index.ts",
-      "types": "./dist/types.d.ts"
-    },
+    ".": "./src/index.ts",
     "./spec": "./src/v1.54.d.ts"
   },
   "keywords": [
@@ -38,5 +34,5 @@
     "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
   "type": "module",
-  "version": "0.1.6"
+  "version": "0.1.7"
 }

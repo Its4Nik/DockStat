@@ -1,14 +1,12 @@
-# Source files
-*.ts
-!dist/**/*.d.ts
-
 # Build and development files
 tsconfig.json
 .turbo/
 .tsbuildinfo
 tsconfig.tsbuildinfo
+bunfig.toml
 
 # Testing
+test.ts
 *.test.*
 *.spec.*
 __tests__/
@@ -30,7 +28,6 @@ Thumbs.db
 
 # Logs
 *.log
-npm-debug.log*
 
 # Environment files
 .env

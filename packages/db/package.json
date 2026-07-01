@@ -6,10 +6,6 @@
   "devDependencies": {
     "bun-types": "latest"
   },
-  "files": [
-    "./defaults.ts",
-    "./index.ts"
-  ],
   "main": "./index.ts",
   "name": "@dockstat/db",
   "peerDependencies": {
@@ -29,5 +25,5 @@
   },
   "type": "module",
   "types": "./index.ts",
-  "version": "1.0.0"
+  "version": "1.0.1"
 }

@@ -1,4 +1,9 @@
 {
+  "author": {
+    "email": "info@itsnik.de",
+    "name": "ItsNik",
+    "url": "https://itsnik.de"
+  },
   "dependencies": {
     "@tanstack/react-query": "catalog:react-ui"
   },
@@ -12,15 +17,27 @@
     ".": "./src/index.ts",
     "./react": "./src/react/index.ts"
   },
+  "keywords": [
+    "dockstat",
+    "utils",
+    "utilities",
+    "react",
+    "bun"
+  ],
+  "license": "MPL-2.0",
   "main": "src/index.ts",
   "name": "@dockstat/utils",
   "peerDependencies": {
-    "typescript": "catalog:testing"
+    "typescript": "^5"
   },
-  "private": false,
+  "repository": {
+    "directory": "packages/utils",
+    "type": "git",
+    "url": "https://github.com/its4nik/dockstat"
+  },
   "scripts": {
     "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
   "type": "module",
-  "version": "1.0.1"
+  "version": "1.0.2"
 }
