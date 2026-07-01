@@ -31,5 +31,5 @@
     "dev": "bun run --watch src/index.ts",
     "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
-  "version": "1.0.1"
+  "version": "1.0.2"
 }

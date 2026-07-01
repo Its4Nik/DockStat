@@ -1,5 +1,11 @@
 # @dockstat/logger
 
+## 2.0.2
+
+### Patch Changes
+
+- Package metadata and packaging consistency updates
+
 ## 2.0.1
 
 ### Patch Changes

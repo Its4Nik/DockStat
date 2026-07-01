@@ -1,5 +1,18 @@
 # @dockstat/docker-client
 
+## 2.0.4
+
+### Patch Changes
+
+- Package metadata and packaging consistency updates
+- Updated dependencies
+  - @dockstat/docker@0.1.8
+  - @dockstat/logger@2.0.2
+  - @dockstat/plugin-handler@1.0.2
+  - @dockstat/sqlite-wrapper@1.5.3
+  - @dockstat/typings@1.1.4
+  - @dockstat/utils@1.0.3
+
 ## 2.0.3
 
 ### Patch Changes

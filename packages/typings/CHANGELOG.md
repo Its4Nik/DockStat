@@ -1,5 +1,11 @@
 # @dockstat/typings
 
+## 1.1.4
+
+### Patch Changes
+
+- Package metadata and packaging consistency updates
+
 ## 1.1.3
 
 ### Patch Changes

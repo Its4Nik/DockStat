@@ -51,5 +51,5 @@
     "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
   "type": "module",
-  "version": "1.0.1"
+  "version": "1.0.2"
 }

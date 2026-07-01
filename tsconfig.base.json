@@ -30,6 +30,8 @@
     { "path": "./packages/docker-swarm" },
     { "path": "./packages/docker-client" },
     { "path": "./packages/plugin-handler" },
+    { "path": "./packages/plugin-builder" },
+    { "path": "./packages/typings" },
     { "path": "./packages/sqlite-wrapper" },
     { "path": "./packages/typings" },
     { "path": "./packages/logger" },

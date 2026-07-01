@@ -1,5 +1,13 @@
 # @dockstat/repo-cli
 
+## 1.0.6
+
+### Patch Changes
+
+- Package metadata and packaging consistency updates
+- Updated dependencies
+  - @dockstat/utils@1.0.3
+
 ## 1.0.5
 
 ### Patch Changes

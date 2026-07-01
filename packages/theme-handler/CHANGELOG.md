@@ -1,5 +1,15 @@
 # @dockstat/theme-handler
 
+## 2.0.2
+
+### Patch Changes
+
+- Package metadata and packaging consistency updates
+- Updated dependencies
+  - @dockstat/logger@2.0.2
+  - @dockstat/sqlite-wrapper@1.5.3
+  - @dockstat/ui@1.0.2
+
 ## 2.0.1
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @dockstat/auth
 
+## 1.0.2
+
+### Patch Changes
+
+- Package metadata and packaging consistency updates
+- Updated dependencies
+  - @dockstat/logger@2.0.2
+
 ## 1.0.1
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @dockstat/plugin-builder
 
+## 1.0.10
+
+### Patch Changes
+
+- Package metadata and packaging consistency updates
+- Updated dependencies
+  - @dockstat/sqlite-wrapper@1.5.3
+  - @dockstat/typings@1.1.4
+
 ## 1.0.9
 
 ### Patch Changes

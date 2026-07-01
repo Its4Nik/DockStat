@@ -1,5 +1,5 @@
 # Source files
-*.ts
+
 !dist/**/*.d.ts
 !dist/**/*.js
 

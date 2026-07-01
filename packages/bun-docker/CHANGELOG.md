@@ -1,5 +1,11 @@
 # @dockstat/docker
 
+## 0.1.8
+
+### Patch Changes
+
+- Package metadata and packaging consistency updates
+
 ## 0.1.7
 
 ### Patch Changes

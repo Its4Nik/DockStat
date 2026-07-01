@@ -1,5 +1,14 @@
 # @dockstat/ui
 
+## 1.0.2
+
+### Patch Changes
+
+- Package metadata and packaging consistency updates
+- Updated dependencies
+  - @dockstat/typings@1.1.4
+  - @dockstat/utils@1.0.3
+
 ## 1.0.1
 
 ### Patch Changes

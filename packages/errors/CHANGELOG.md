@@ -1,5 +1,11 @@
 # @dockstat/errors
 
+## 1.0.2
+
+### Patch Changes
+
+- Package metadata and packaging consistency updates
+
 ## 1.0.1
 
 ### Patch Changes
