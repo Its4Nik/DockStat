@@ -1,4 +1,9 @@
 {
+  "author": {
+    "email": "info@itsnik.de",
+    "name": "ItsNik",
+    "url": "https://itsnik.de"
+  },
   "description": "Unified error handling for DockStat",
   "devDependencies": {
     "bun-types": "latest",
@@ -10,12 +15,25 @@
       "require": "./src/index.ts"
     }
   },
+  "keywords": [
+    "dockstat",
+    "errors",
+    "error-handling",
+    "bun"
+  ],
+  "license": "MPL-2.0",
   "main": "src/index.ts",
+  "module": "src/index.ts",
   "name": "@dockstat/errors",
-  "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch"
+  "repository": {
+    "directory": "packages/errors",
+    "type": "git",
+    "url": "https://github.com/its4nik/dockstat"
   },
+  "scripts": {
+    "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
+  },
+  "type": "module",
   "types": "src/index.ts",
-  "version": "1.0.0"
+  "version": "1.0.2"
 }

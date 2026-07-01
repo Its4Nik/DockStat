@@ -1,9 +1,10 @@
+import BaseLogger from "./logger"
+
 import Elysia from "elysia"
 import { AuthHandler, authenticated, Middleware } from "./auth"
 import DockStatElysiaPlugins from "./elysia-plugins"
 import { errorHandler } from "./handlers/onError"
 import CreateRequestLogger, { stateMap } from "./handlers/requestLogger"
-import BaseLogger from "./logger"
 import MetricsMiddleware from "./middleware/metrics"
 import DBRoutes from "./routes/db/index"
 import DockerRoutes from "./routes/docker"
@@ -14,7 +15,7 @@ import PluginRoutes from "./routes/plugins"
 import RepositoryRoutes from "./routes/repositories"
 import StatusRoutes from "./routes/status"
 import ThemeRoutes from "./routes/themes"
-import DockStatWebsockets from "./websockets"
+import { DSWebSockerHandler } from "./websockets"
 
 const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 
@@ -35,7 +36,7 @@ export const DockStatAPI = new Elysia({ precompile: false, prefix: "/api/v2" })
         .use(DockStatMiscRoutes)
         .use(RepositoryRoutes)
         .use(ThemeRoutes)
-        .use(DockStatWebsockets)
+        .use(DSWebSockerHandler.getRoutes())
         .use(DockNodeElyisa)
         .use(GraphRoutes)
     }

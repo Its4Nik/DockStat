@@ -1,4 +1,9 @@
 {
+  "author": {
+    "email": "info@itsnik.de",
+    "name": "ItsNik",
+    "url": "https://itsnik.de"
+  },
   "dependencies": {
     "@dockstat/logger": "workspace:*",
     "cryptr": "^6.4.0",
@@ -7,6 +12,7 @@
     "openid-client": "^6.8.3",
     "react": "catalog:"
   },
+  "description": "Authentication utilities for DockStat, including OAuth2/OIDC support and client-side React components",
   "devDependencies": {
     "@dockstat/sqlite-wrapper": "workspace:*",
     "@types/react": "catalog:",
@@ -17,6 +23,15 @@
     "./client": "./src/client/index.tsx",
     "./types": "./src/types.ts"
   },
+  "keywords": [
+    "dockstat",
+    "auth",
+    "oauth",
+    "oidc",
+    "authentication",
+    "bun"
+  ],
+  "license": "MPL-2.0",
   "module": "src/index.ts",
   "name": "@dockstat/auth",
   "peerDependencies": {
@@ -27,9 +42,14 @@
       "optional": true
     }
   },
+  "repository": {
+    "directory": "packages/auth",
+    "type": "git",
+    "url": "https://github.com/its4nik/dockstat"
+  },
   "scripts": {
     "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
   "type": "module",
-  "version": "1.0.0"
+  "version": "1.0.2"
 }

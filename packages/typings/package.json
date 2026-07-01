@@ -1,13 +1,14 @@
 {
   "author": {
-    "email": "dockstat@itsnik.de",
-    "name": "Its4Nik",
+    "email": "info@itsnik.de",
+    "name": "ItsNik",
     "url": "https://itsnik.de"
   },
   "dependencies": {
     "elysia": "catalog:",
     "js-yaml": "catalog:utils"
   },
+  "description": "Shared TypeScript type definitions and schemas for DockStat",
   "devDependencies": {
     "@dockstat/docker": "workspace:*",
     "@dockstat/logger": "workspace:*",
@@ -21,11 +22,23 @@
     "./types": "./src/typebox/_types.ts",
     "./v2": "./src/v2/index.ts"
   },
+  "keywords": [
+    "dockstat",
+    "typescript",
+    "types",
+    "schemas",
+    "bun"
+  ],
+  "license": "MPL-2.0",
   "name": "@dockstat/typings",
   "peerDependencies": {
-    "typescript": "catalog:testing"
+    "typescript": "^5"
   },
-  "private": false,
+  "repository": {
+    "directory": "packages/typings",
+    "type": "git",
+    "url": "https://github.com/its4nik/dockstat"
+  },
   "scripts": {
     "check-types": "tsc --noEmit",
     "clean": "rm -rf dist",
@@ -34,5 +47,5 @@
     "lint:gh": "turbo run lint -- --reporter=github",
     "publish": "bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
-  "version": "1.1.2"
+  "version": "1.1.4"
 }
