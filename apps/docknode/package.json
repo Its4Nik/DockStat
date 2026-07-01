@@ -23,10 +23,6 @@
   "exports": {
     "./treaty": "./src/_treaty.ts"
   },
-  "files": [
-    "src",
-    "README.md"
-  ],
   "module": "src/index.ts",
   "name": "@dockstat/docknode",
   "scripts": {

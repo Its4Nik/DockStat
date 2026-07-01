@@ -25,10 +25,6 @@
     "./client": "./src/client/index.ts",
     "./types": "./src/types.ts"
   },
-  "files": [
-    "src",
-    "README.md"
-  ],
   "homepage": "https://github.com/Its4Nik/DockStat/tree/main/packages/docker-client",
   "main": "./src/manager/index.ts",
   "name": "@dockstat/docker-client",
