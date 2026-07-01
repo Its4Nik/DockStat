@@ -1,5 +1,11 @@
 # @dockstat/utils
 
+## 1.0.3
+
+### Patch Changes
+
+- Package metadata and packaging consistency updates
+
 ## 1.0.2
 
 ### Patch Changes
