@@ -1,4 +1,9 @@
 {
+  "author": {
+    "email": "info@itsnik.de",
+    "name": "ItsNik",
+    "url": "https://itsnik.de"
+  },
   "bin": {
     "dockstat-repo": "./dist/dockstat-repo-cli"
   },
@@ -17,20 +22,28 @@
   "exports": {
     "./types": "./src/types.ts"
   },
-  "files": [
-    "dist",
-    "src",
-    "README.md"
+  "keywords": [
+    "dockstat",
+    "cli",
+    "repository",
+    "admin",
+    "bun"
   ],
+  "license": "MPL-2.0",
   "module": "src/index.ts",
   "name": "@dockstat/repo-cli",
   "peerDependencies": {
-    "typescript": "catalog:testing"
+    "typescript": "^5"
+  },
+  "repository": {
+    "directory": "packages/repo-cli",
+    "type": "git",
+    "url": "https://github.com/its4nik/dockstat"
   },
   "scripts": {
     "build": "bun build --target=bun --compile --outfile=dist/dockstat-repo-cli src/index.ts",
     "publish": "bun run build && bun pm pack --destination ./dist && npm publish --access public ./dist/*.tgz ; rm -r ./dist"
   },
   "type": "module",
-  "version": "1.0.4"
+  "version": "1.0.6"
 }

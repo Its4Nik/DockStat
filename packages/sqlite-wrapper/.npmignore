@@ -1,5 +1,5 @@
 # Source files
-*.ts
+
 !dist/**/*.d.ts
 
 # Build and development files

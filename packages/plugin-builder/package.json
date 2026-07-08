@@ -1,7 +1,7 @@
 {
   "author": {
-    "email": "dockstat@itsnik.de",
-    "name": "Its4Nik",
+    "email": "info@itsnik.de",
+    "name": "ItsNik",
     "url": "https://itsnik.de"
   },
   "dependencies": {
@@ -19,18 +19,15 @@
       "types": "./src/index.ts"
     }
   },
-  "files": [
-    "src/index.ts",
-    "README.md"
-  ],
   "keywords": [
     "dockstat",
     "plugin",
     "builder",
     "typescript",
-    "type-safe"
+    "type-safe",
+    "bun"
   ],
-  "license": "MIT",
+  "license": "MPL-2.0",
   "main": "src/index.ts",
   "module": "src/index.ts",
   "name": "@dockstat/plugin-builder",
@@ -45,7 +42,7 @@
   "repository": {
     "directory": "packages/plugin-builder",
     "type": "git",
-    "url": "https://github.com/Its4Nik/DockStat"
+    "url": "https://github.com/its4nik/dockstat"
   },
   "scripts": {
     "format": "biome format --write",
@@ -53,5 +50,5 @@
   },
   "type": "module",
   "types": "src/index.ts",
-  "version": "1.0.8"
+  "version": "1.0.10"
 }

@@ -1,21 +1,22 @@
-# Source files
-
-!dist/**/*.d.ts
-
 # Build and development files
 tsconfig.json
+tsconfig.*.json
 .turbo/
 .tsbuildinfo
 tsconfig.tsbuildinfo
+vite.config.*
+index.html
+.storybook/
 
 # Testing
 *.test.*
 *.spec.*
-__tests__/
 coverage/
+__tests__/
 
 # Development dependencies
 node_modules/
+public/
 
 # IDE and editor files
 .vscode/
@@ -30,7 +31,6 @@ Thumbs.db
 
 # Logs
 *.log
-npm-debug.log*
 
 # Environment files
 .env

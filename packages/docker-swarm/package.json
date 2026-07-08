@@ -1,7 +1,8 @@
 {
-  "author": "Its4Nik",
-  "bugs": {
-    "url": "https://github.com/Its4Nik/DockStat/issues"
+  "author": {
+    "email": "info@itsnik.de",
+    "name": "ItsNik",
+    "url": "https://itsnik.de"
   },
   "dependencies": {
     "@dockstat/logger": "workspace:",
@@ -28,20 +29,24 @@
     "./modules/tasks": "./src/modules/tasks/index.ts",
     "./types": "./src/types.ts"
   },
-  "files": [
-    "src",
-    "README.md"
+  "keywords": [
+    "docker",
+    "swarm",
+    "dockstat",
+    "containers",
+    "orchestration",
+    "bun"
   ],
-  "homepage": "https://github.com/Its4Nik/DockStat/tree/main/packages/docker-swarm",
+  "license": "MPL-2.0",
   "main": "./src/index.ts",
   "name": "@dockstat/docker-swarm",
   "peerDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "^5"
   },
   "repository": {
     "directory": "packages/docker-swarm",
     "type": "git",
-    "url": "https://github.com/Its4Nik/DockStat"
+    "url": "https://github.com/its4nik/dockstat"
   },
   "scripts": {
     "check-types": "bunx tsc --noEmit",
@@ -55,5 +60,5 @@
   },
   "type": "module",
   "types": "./src/index.ts",
-  "version": "1.0.0"
+  "version": "1.0.2"
 }

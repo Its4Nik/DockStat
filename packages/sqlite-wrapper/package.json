@@ -1,7 +1,8 @@
 {
-  "author": "Its4Nik",
-  "bugs": {
-    "url": "https://github.com/Its4Nik/DockStat/issues"
+  "author": {
+    "email": "info@itsnik.de",
+    "name": "ItsNik",
+    "url": "https://itsnik.de"
   },
   "dependencies": {
     "@dockstat/logger": "workspace:*"
@@ -19,11 +20,6 @@
     "./types": "./src/types.ts",
     "./utils": "./src/utils/index.ts"
   },
-  "files": [
-    "src",
-    "README.md"
-  ],
-  "homepage": "https://outline.itsnik.de/s/9d88c471-373e-4ef2-a955-b1058eb7dc99/doc/dockstatsqlite-wrapper-Lxt4IphXI5",
   "keywords": [
     "sqlite",
     "database",
@@ -36,12 +32,12 @@
   "main": "./src/index.ts",
   "name": "@dockstat/sqlite-wrapper",
   "peerDependencies": {
-    "typescript": "catalog:testing"
+    "typescript": "^5"
   },
   "repository": {
     "directory": "packages/sqlite-wrapper",
     "type": "git",
-    "url": "https://github.com/Its4Nik/DockStat/tree/main/packages/sqlite-wrapper"
+    "url": "https://github.com/its4nik/dockstat"
   },
   "scripts": {
     "check-types": "bunx tsc --noEmit",
@@ -54,5 +50,5 @@
   },
   "type": "module",
   "types": "./src/index.ts",
-  "version": "1.5.1"
+  "version": "1.5.3"
 }

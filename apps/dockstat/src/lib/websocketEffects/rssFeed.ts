@@ -1,14 +1,8 @@
 import type { Dispatch, SetStateAction } from "react"
-import { api, getAuthHeaders } from "../api"
+import { createTopicSubscription } from "./topicSubscription"
 
 export const rssFeedEffect = (setRamUsage: Dispatch<SetStateAction<string>>) => {
-  const rssFeed = api.ws.rss.subscribe({ headers: getAuthHeaders() })
-
-  rssFeed.subscribe((message) => {
-    setRamUsage(message.data)
+  return createTopicSubscription<string>("metrics/containers", (data) => {
+    setRamUsage(data)
   })
-
-  return () => {
-    rssFeed.close()
-  }
 }
