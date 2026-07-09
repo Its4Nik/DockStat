@@ -91,50 +91,124 @@ sequenceDiagram
 
 ### Implementation Pattern
 
-The WebSocket implementation follows a consistent pattern across all endpoints:
+DockStat uses two WebSocket patterns:
+
+1. **Topic-based pub/sub** (via `createWSHandler` from `@dockstat/utils/ws-handler`) — the primary pattern. Clients subscribe/unsubscribe to named topics, and the server broadcasts data to topic subscribers.
+2. **Direct connection** (standalone `.ws()` routes) — used for simple endpoints like log streaming and RSS feeds where each connection gets its own data stream.
+
+#### Topic-Based Pub/Sub with `createWSHandler`
+
+The universal handler at `@dockstat/utils/ws-handler` provides a reusable pub/sub engine. It uses a `WeakMap` for per-client state and a `Map<topic, Set<ws>>` for subscriptions.
+
+```typescript
+import { createWSHandler } from "@dockstat/utils/ws-handler"
+import { t } from "elysia"
+
+const handler = createWSHandler({
+  prefix: "/ws",
+  bodySchema: t.Object({
+    type: t.Union([t.Literal("subscribe"), t.Literal("unsubscribe")]),
+    topic: t.String(),
+  }),
+  responseSchema: t.Object({
+    topic: t.String(),
+    data: t.Any(),
+    timestamp: t.Number(),
+  }),
+  requireAuth: true,
+  verifyToken: async (token) => {
+    // verify and return the user object, or null
+  },
+})
+
+// Publish to subscribers
+handler.send("metrics/containers", { cpu: 45, memory: 2048 })
+
+// Mount on your Elysia app
+app.use(handler.getRoutes())
+```
+
+The API's own `WebSocketHandler` (`apps/api/src/websockets/handler.ts`) wraps `createWSHandler` with topic-specific resolution (string topics like `"logs"` and plugin topics `{ channel, id }` → `plugin/<id>/<channel>`).
+
+#### Direct Connection Pattern
+
+For simple streaming endpoints that don't need pub/sub:
 
 ```typescript
 import Elysia, { t } from "elysia"
-import type { ElysiaWS } from "elysia/ws"
 
-// Client registry
-export const clients = new Set<ElysiaWS<Context>>()
-
-// WebSocket endpoint
 export const ExampleSocket = new Elysia()
   .ws("/ws/example", {
-    // Message schema for type safety
     response: t.Object({
       type: t.String(),
       data: t.Any(),
       timestamp: t.Date(),
     }),
-
-    // Connection lifecycle handlers
     open(ws) {
-      clients.add(ws)
-      // Send welcome message
       ws.send({ type: "connected", data: "Welcome!", timestamp: new Date() })
     },
-
-    message(ws, message) {
-      // Handle incoming messages
-      console.log("Received:", message)
-    },
-
     close(ws) {
-      clients.delete(ws)
-    },
-
-    error(ws, error) {
-      console.error("WebSocket error:", error)
+      // cleanup
     },
   })
 ```
 
 ## Available Endpoints
 
-### 1. Log Streaming WebSocket
+### 1. Topic-Based Pub/Sub WebSocket
+
+**Endpoint:** `ws://localhost:3030/ws` (mounted at `/api/v2/ws`)
+
+**Purpose:** General-purpose topic-based pub/sub for logs, metrics, and plugin events. Clients subscribe to named topics and receive broadcast data.
+
+**Client Message (inbound):**
+
+```typescript
+{
+  type: "subscribe" | "unsubscribe",
+  topic: "logs" | "metrics/containers" | "metrics/stacks" | { channel: string, id: number | string }
+}
+```
+
+**Server Message (outbound):**
+
+```typescript
+{
+  topic: string,       // canonical topic key
+  data: unknown,       // topic-specific payload
+  timestamp: number    // Date.now()
+}
+```
+
+**Topics:**
+
+| Topic | Description |
+|-------|-------------|
+| `logs` | Real-time log entries from the API |
+| `metrics/containers` | Container statistics |
+| `metrics/stacks` | Stack metrics |
+| `plugin/<id>/<channel>` | Plugin-owned event channels |
+
+**Authentication:** The handler accepts an optional `verifyToken` config. When enabled, the token is extracted from the `?token=` query parameter or the `Authorization: Bearer` header.
+
+### 2. Widgets WebSocket
+
+**Endpoint:** `ws://localhost:3030/ws/widgets` (mounted at `/api/v2/ws/widgets`)
+
+**Purpose:** Real-time widget data updates via the data-pipe engine. Clients subscribe to dashboard topics and receive evaluated data payloads.
+
+**Client Message:**
+
+```typescript
+{
+  type: "subscribe" | "unsubscribe",
+  topic: { type: "dashboard", dashboardId: string } | { type: "widgets" }
+}
+```
+
+**Server Message:** Same envelope as the pub/sub handler. Data payloads contain evaluated data-pipe output for the subscribed dashboard.
+
+### 3. Log Streaming WebSocket
 
 **Endpoint:** `ws://localhost:3030/ws/logs`
 
@@ -205,7 +279,7 @@ sequenceDiagram
     WebSocket-->>Client: Closed
 ```
 
-### 2. RSS Feed WebSocket
+### 4. RSS Feed WebSocket
 
 **Endpoint:** `ws://localhost:3030/ws/rss`
 

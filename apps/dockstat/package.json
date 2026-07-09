@@ -21,7 +21,8 @@
     "react-dom": "catalog:",
     "react-router": "catalog:react-ui",
     "sonner": "catalog:react-ui",
-    "tailwindcss": "catalog:react-ui"
+    "tailwindcss": "catalog:react-ui",
+    "widgets": "workspace:*"
   },
   "devDependencies": {
     "@dockstat/api": "workspace:*",

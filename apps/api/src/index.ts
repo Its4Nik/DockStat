@@ -16,6 +16,9 @@ import RepositoryRoutes from "./routes/repositories"
 import StatusRoutes from "./routes/status"
 import ThemeRoutes from "./routes/themes"
 import { DSWebSockerHandler } from "./websockets"
+import { DockStatDB } from "./database"
+import { WidgetsService } from "./widget"
+import { verifyAuthToken } from "@dockstat/auth"
 
 const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 
@@ -24,6 +27,11 @@ export const DockStatAPI = new Elysia({ precompile: false, prefix: "/api/v2" })
   .use(Middleware)
   .use(DockStatElysiaPlugins)
   .use(CreateRequestLogger())
+  // WebSocket routes must be OUTSIDE the authenticated guard because
+  // Elysia's HTTP-level guard/beforeHandle does not work for WS upgrades.
+  // The WS handlers authenticate via their own requireAuth config.
+  .use(DSWebSockerHandler.getRoutes())
+  .use(WidgetsService.getWsRoutes())
   .guard(
     authenticated(() => stateMap),
     (app) => {
@@ -36,7 +44,7 @@ export const DockStatAPI = new Elysia({ precompile: false, prefix: "/api/v2" })
         .use(DockStatMiscRoutes)
         .use(RepositoryRoutes)
         .use(ThemeRoutes)
-        .use(DSWebSockerHandler.getRoutes())
+        .use(WidgetsService.getRestRoutes())
         .use(DockNodeElyisa)
         .use(GraphRoutes)
     }

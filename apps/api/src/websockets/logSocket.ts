@@ -1,24 +1,13 @@
-import Elysia, { type Context, t } from "elysia"
-import type { Prettify } from "elysia/types"
-import type { ElysiaWS } from "elysia/ws"
+import { DSWebSockerHandler } from ".";
+import { memoryUsage } from "bun:jsc"
+import { formatBytes } from "@dockstat/utils";
+import BaseLogger from "../logger"
 
-export const logClients = new Set<Prettify<ElysiaWS<Context>>>()
+const interval = 5_000
 
-export const LogWebsoket = new Elysia().ws("/logs", {
-  close(ws) {
-    logClients.delete(ws)
-  },
+const sendRss = () => {
+  const usage = formatBytes(memoryUsage().current)
+  DSWebSockerHandler.send("rss", usage)
+}
 
-  open(ws) {
-    logClients.add(ws)
-  },
-  response: t.Object({
-    caller: t.String(),
-    level: t.UnionEnum(["error", "warn", "info", "debug"]),
-    message: t.String(),
-    name: t.String(),
-    parents: t.Array(t.String()),
-    requestId: t.Optional(t.String()),
-    timestamp: t.Date(),
-  }),
-})
+export const startRss = () => setInterval(sendRss, interval)

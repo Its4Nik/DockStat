@@ -658,6 +658,123 @@ const memPercent = calculateMemoryPercent(
 | `retry(fn, options?)` | Retry with backoff |
 | `timeout(promise, ms)` | Add timeout to promise |
 
+## WebSocket Handler (`@dockstat/utils/ws-handler`)
+
+The `./ws-handler` export provides a universal, Elysia-native WebSocket topic handler with built-in pub/sub. It's Treaty-compatible, auth-aware, and used by both the API app and the widgets package.
+
+### `createWSHandler(config?)`
+
+Creates a `WSTopicHandler` instance configured with optional schemas, auth, and lifecycle hooks.
+
+```typescript
+import { createWSHandler } from "@dockstat/utils/ws-handler"
+import { t } from "elysia"
+
+const ws = createWSHandler({
+  prefix: "/ws",
+  bodySchema: t.Object({
+    type: t.Union([t.Literal("subscribe"), t.Literal("unsubscribe")]),
+    topic: t.String(),
+  }),
+  responseSchema: t.Object({
+    topic: t.String(),
+    data: t.Any(),
+    timestamp: t.Number(),
+  }),
+  requireAuth: true,
+  verifyToken: async (token) => {
+    // Return the user object or null
+  },
+  onFirstSubscriber: (topic) => console.log("First sub:", topic),
+  onLastSubscriberLeave: (topic) => console.log("Last sub left:", topic),
+})
+
+// Publish to all subscribers of a topic
+ws.send("dashboard/abc", { payloads: [] })
+
+// Introspection
+ws.subscriberCount("dashboard/abc")
+ws.activeTopics()
+
+// Mount on Elysia app
+app.use(ws.getRoutes())
+```
+
+### Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `prefix` | `string` | `"/ws"` | URL prefix for the WS route |
+| `bodySchema` | TypeBox schema | subscribe/unsubscribe | Inbound message schema (for Treaty types) |
+| `responseSchema` | TypeBox schema | envelope schema | Outbound message schema (for Treaty types) |
+| `resolveKey` | `(topic) => string` | `String(topic)` | Custom topic key resolver |
+| `requireAuth` | `boolean` | `false` | Enable token authentication |
+| `verifyToken` | `(token) => Promise<user \| null>` | — | Token verification function |
+| `onFirstSubscriber` | `(topic) => void` | — | Called when a topic gains its first subscriber |
+| `onLastSubscriberLeave` | `(topic) => void` | — | Called when a topic loses its last subscriber |
+
+### Types
+
+```typescript
+interface WSServerEnvelope {
+  topic: string
+  data: unknown
+  timestamp: number
+}
+
+interface WSClientMessage<TTopic = string> {
+  type: "subscribe" | "unsubscribe"
+  topic: TTopic
+}
+```
+
+## React Hooks (`@dockstat/utils/react`)
+
+### WebSocket Provider
+
+The `WebSocketProvider` maintains a single shared WebSocket connection per endpoint. All topic subscriptions multiplex over this connection via React Context with ref counting.
+
+```tsx
+import { WebSocketProvider } from "@dockstat/utils/react"
+
+// Resolve API URL — http:// is auto-converted to ws://
+const wsUrl = `${import.meta.env.DOCKSTAT_API_PORT || "http://localhost:3030"}/api/v2/ws`
+
+<WebSocketProvider url={wsUrl} requireAuth>
+  <App />
+</WebSocketProvider>
+```
+
+**URL resolution:** The provider accepts `ws://`, `wss://`, `http://` (→ `ws://`), `https://` (→ `wss://`), or relative paths (resolved against `window.location`).
+
+**Auth:** When `requireAuth` is enabled, reads the token from `localStorage` (key: `"auth_token"` by default) and appends it as `?token=`.
+
+### `useTopicSubscription(topic, options?)`
+
+Subscribe to a topic within a `WebSocketProvider` and receive typed data.
+
+```tsx
+const { data, connected, envelope, error, unsubscribe } = useTopicSubscription<LogEntry>("logs")
+```
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `transform` | `(envelope) => TData` | Transform the raw envelope into your data shape |
+| `onMessage` | `(data, envelope) => void` | Callback on each message |
+
+### `useAllMessages()`
+
+Catch-all subscription that receives every message (subscribes to topic `"*"`).
+
+```tsx
+const { data, connected, error } = useAllMessages()
+// data is WSServerEnvelope[]
+```
+
+### Code Splitting
+
+The `WSServerEnvelope` and `WSClientMessage` types are re-exported from `@dockstat/utils/react` so frontend consumers never need to import from `@dockstat/utils/ws-handler` (which would pull in server-side Elysia code and break code splitting). Always import WS types from the `./react` entry point in frontend code.
+
 ## Development
 
 ### Directory Structure
@@ -665,13 +782,18 @@ const memPercent = calculateMemoryPercent(
 ```
 packages/utils/
 ├── src/
-│   ├── string.ts       # String utilities
-│   ├── format.ts       # Formatting utilities
-│   ├── type.ts         # Type utilities
-│   ├── data.ts         # Data utilities
-│   ├── async.ts        # Async utilities
-│   ├── container.ts    # Container utilities
-│   └── index.ts        # Main export
+│   ├── string.ts                # String utilities
+│   ├── format.ts                # Formatting utilities
+│   ├── type.ts                  # Type utilities
+│   ├── data.ts                  # Data utilities
+│   ├── async.ts                 # Async utilities
+│   ├── container.ts             # Container utilities
+│   ├── ws-handler/              # WebSocket topic handler (server-side)
+│   ├── react/                   # React hooks (eden, hotkeys, websocket)
+│   ├── http/                    # HTTP utilities
+│   ├── repo/                    # Repository utilities
+│   ├── worker/                  # Worker utilities
+│   └── index.ts                 # Main export
 ├── package.json
 └── tsconfig.json
 ```

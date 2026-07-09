@@ -29,7 +29,7 @@ export class WhereQueryBuilder<
   private whereLog: Logger
 
   constructor(db: Database, tableName: string, parser: Parser<T>, baseLogger: Logger) {
-    super(db, tableName, parser, baseLogger)
+    super(db, tableName, baseLogger, parser)
     this.whereLog = this.log.spawn("WHERE")
   }
 

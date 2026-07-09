@@ -1,0 +1,25 @@
+{
+  "dependencies": {
+    "@dockstat/logger": "workspace:*",
+    "@dockstat/sqlite-wrapper": "workspace:*",
+    "@dockstat/utils": "workspace:*",
+    "elysia": "catalog:",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:"
+  },
+  "exports": {
+    "./client": "./src/client/index.ts",
+    "./server": "./src/server/index.ts"
+  },
+  "module": "src/index.ts",
+  "name": "widgets",
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "private": true,
+  "type": "module"
+}

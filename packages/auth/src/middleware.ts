@@ -94,13 +94,21 @@ export const getMiddlewareFunctions = (
     logger.info("Creating auth middleware")
     return new Elysia({
       name: "auth-middleware",
-    }).resolve({ as: "global" }, async ({ cookie, headers, route, request }) => {
+    }).resolve({ as: "global" }, async ({ cookie, headers, route, request, query }) => {
       const reqId = getStateMap().get(request).reqId
       logger.info(`Checking auth for route ${route}`, reqId)
 
+      let authMethod: "jwt" | "apikey" | null = null
       let token: string | null = null
       let apiKey: string | null = null
-      let authMethod: "jwt" | "apikey" | null = null
+
+      // WebSocket connections pass the token via query parameter
+      // since browsers can't set custom headers on WS upgrades.
+      // Treat query-param tokens as JWTs.
+      if (query["token"]) {
+        token = query["token"]
+        authMethod = "jwt"
+      }
 
       // Try to get token from Authorization header first
       const authHeader = headers.authorization as string | undefined
@@ -110,7 +118,7 @@ export const getMiddlewareFunctions = (
       } else if (authHeader?.startsWith("Api-Key ")) {
         apiKey = authHeader.slice(8)
         authMethod = "apikey"
-      } else {
+      } else if (!token && !apiKey) {
         logger.warn("No authorization token found!", reqId)
       }
 

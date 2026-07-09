@@ -25,7 +25,7 @@ export abstract class BaseQueryBuilder<
   protected state: QueryBuilderState<T>
   protected log: Logger
 
-  constructor(db: Database, tableName: string, parser?: Parser<T>, baseLogger?: Logger) {
+  constructor(db: Database, tableName: string, baseLogger: Logger, parser?: Parser<T>) {
     this.state = {
       db,
       joinClauses: [],

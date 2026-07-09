@@ -348,7 +348,13 @@ export function Sidebar({
                     { key: "parents", title: "Parents" },
                     {
                       key: "timestamp",
-                      render: (date) => <span>{formatDate(date as Date, "log")}</span>,
+                      render: (date) => {
+                        if (typeof date === "number") {
+                          return <span>{formatDate(date as Date, "log")}</span>
+                        }
+                        if (typeof date === "string") {
+                          return <span>{formatDate(new Date(date), "log")}</span>
+                        }                      },
                       title: "Timestamp",
                     },
                   ]}

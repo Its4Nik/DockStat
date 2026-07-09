@@ -60,6 +60,7 @@ graph TD
 | `@dockstat/plugin-handler` | —       | Plugin lifecycle management | No     |
 | `@dockstat/ui` | 1.0.0   | Shared React UI components | No     |
 | `@dockstat/utils` | —       | Common utilities | No     |
+| `widgets` | —       | Widget/dashboard backend + client hooks | No     |
 
 ## Core Packages
 

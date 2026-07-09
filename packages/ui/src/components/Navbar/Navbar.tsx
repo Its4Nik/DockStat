@@ -2,7 +2,7 @@ import type { LogEntry } from "@dockstat/logger"
 import { useHotkey } from "@dockstat/utils/react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Menu } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { NavLink } from "react-router"
 import { Badge } from "../Badge/Badge"
 import { Card } from "../Card/Card"
@@ -13,6 +13,7 @@ import { Sidebar, type SidebarProps } from "../Sidebar/Sidebar"
 import type { ThemeBrowserItem } from "../ThemeBrowser/ThemeBrowser"
 import { floatVariants } from "./consts"
 import DockStatLogo from "./DockStat2-06.png"
+import { sleep } from "@dockstat/utils";
 
 export type { PinLinkMutation, SidebarProps } from "../Sidebar/Sidebar"
 export { type PathItem, SidebarPaths } from "./consts"
@@ -27,6 +28,7 @@ type NavbarProps = {
     paths: Array<{ fullPath: string; metaTitle: string }>
   }>
   ramUsage?: string
+  ramRefreshKey?: number
   heading?: string
   mutationFn: SidebarProps["mutationFn"]
   themes: ThemeBrowserItem[]
@@ -51,6 +53,7 @@ export function Navbar({
   isBusy,
   navLinks,
   ramUsage,
+  ramRefreshKey,
   logEntries,
   heading,
   mutationFn,
@@ -67,6 +70,14 @@ export function Navbar({
   auth,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [ramUpdated, setRamUpdated] = useState(false)
+
+  useEffect(() => {
+    setRamUpdated(true)
+    sleep(1000).then(
+      () =>       setRamUpdated(false)
+    )
+  }, [ramUsage, ramRefreshKey])
 
   useHotkey({
     close: () => setIsMenuOpen(false),
@@ -160,7 +171,18 @@ export function Navbar({
                     className="font-mono"
                     variant="secondary"
                   >
+                    <motion.span
+                      animate={ramUpdated ? {
+                        scale: [1, 1.2, 1],
+                        opacity: [1, 0.7, 1],
+                      } : {}}
+                      transition={{
+                        duration: 0.5,
+                        times: [0, 0.5, 1],
+                      }}
+                    >
                     {ramUsage}
+                    </motion.span>
                   </Badge>
                 </motion.div>
               )}

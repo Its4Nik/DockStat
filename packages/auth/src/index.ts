@@ -5,6 +5,10 @@ import { getMiddlewareFunctions } from "./middleware"
 import { createAuthRoutes } from "./routes"
 import type { ApiKeysTable, LocalUsersTable, ProvidersTable } from "./types"
 
+// Re-export JWT helpers for consumers that need to verify tokens outside
+// of the normal HTTP middleware (e.g. WebSocket handlers).
+export { createAuthToken, verifyAuthToken } from "./utils/jwt"
+
 export class AuthHandler {
   providers: QueryBuilder<ProvidersTable>
   users: QueryBuilder<LocalUsersTable>

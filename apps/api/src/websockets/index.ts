@@ -1,12 +1,20 @@
-import Elysia from "elysia"
-import { LogWebsoket } from "./logSocket"
-import { RssSocket } from "./rssSocket"
-import WebSocketHandler from "./handler";
-import BaseLogger from "../logger";
+import WebSocketHandler from "./handler"
+import BaseLogger from "../logger"
+import { startRss } from "./logSocket"
+import { verifyAuthToken } from "@dockstat/auth"
 
-const log = BaseLogger
+const wsTokenVerifier = async (token: string) => {
+  const payload = await verifyAuthToken(token)
+  return (payload?.user as Record<string, unknown>) ?? null
+}
 
-export const DSWebSockerHandler = new WebSocketHandler(log.spawn("WS-Handler"))
+export const DSWebSockerHandler = new WebSocketHandler(BaseLogger.spawn("WS-Handler"), {
+  requireAuth: true,
+  verifyToken: wsTokenVerifier,
+})
 
-const DockStatWebsockets = new Elysia({ prefix: "/ws" }).use(LogWebsoket).use(RssSocket)
-export default DockStatWebsockets
+BaseLogger.setLogHook((entry) => {
+  DSWebSockerHandler.send("logs", entry)
+})
+
+startRss()
