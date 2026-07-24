@@ -18,9 +18,9 @@
  * ```
  */
 
-import { useCallback } from "react"
-import { useTopicSubscription } from "@dockstat/utils/react"
 import type { WSServerEnvelope } from "@dockstat/utils/react"
+import { useTopicSubscription } from "@dockstat/utils/react"
+import { useCallback } from "react"
 import type { DataPayload } from "../types"
 import type { UseWidgetDataOptions, UseWidgetDataReturn } from "./types"
 
@@ -62,10 +62,9 @@ export function useWidgetData(options: UseWidgetDataOptions): UseWidgetDataRetur
 
   const evaluate = useCallback(async () => {
     try {
-      const response = await fetch(
-        `/api/v2/widgets/data-pipe/evaluate/${dashboardId}`,
-        { method: "POST" }
-      )
+      const response = await fetch(`/api/v2/widgets/data-pipe/evaluate/${dashboardId}`, {
+        method: "POST",
+      })
       if (!response.ok) {
         throw new Error(`Evaluation failed: ${response.statusText}`)
       }

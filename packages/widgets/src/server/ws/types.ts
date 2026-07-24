@@ -1,13 +1,8 @@
 import type { DataPayload } from "../types"
 
-export type WidgetWSTopic =
-  | { type: "dashboard"; dashboardId: string }
-  | { type: "widgets" }
+export type WidgetWSTopic = { type: "dashboard"; dashboardId: string } | { type: "widgets" }
 
-export type WidgetWSData =
-  | WidgetDataUpdate
-  | WidgetListEvent
-  | DashboardListEvent
+export type WidgetWSData = WidgetDataUpdate | WidgetListEvent | DashboardListEvent
 
 interface WidgetDataUpdate {
   type: "data-update"

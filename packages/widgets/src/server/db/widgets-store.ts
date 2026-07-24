@@ -18,12 +18,16 @@ export class WidgetsStore {
 
   /** Find a single widget by id */
   getById(id: string): WidgetDefinition | undefined {
-    return (this.table.select(["*"]).where({ id }).get() ?? undefined) as WidgetDefinition | undefined
+    return (this.table.select(["*"]).where({ id }).get() ?? undefined) as
+      | WidgetDefinition
+      | undefined
   }
 
   /** Find a single widget by name */
   getByName(name: string): WidgetDefinition | undefined {
-    return (this.table.select(["*"]).where({ name }).get() ?? undefined) as WidgetDefinition | undefined
+    return (this.table.select(["*"]).where({ name }).get() ?? undefined) as
+      | WidgetDefinition
+      | undefined
   }
 
   /** Create a new widget */
@@ -37,7 +41,10 @@ export class WidgetsStore {
   }
 
   /** Update a widget by id */
-  update(id: string, data: Partial<Omit<WidgetDefinition, "id" | "createdAt">>): WidgetDefinition | undefined {
+  update(
+    id: string,
+    data: Partial<Omit<WidgetDefinition, "id" | "createdAt">>
+  ): WidgetDefinition | undefined {
     this.table.where({ id }).update({
       ...data,
       updatedAt: new Date().toISOString(),
@@ -60,12 +67,18 @@ export class WidgetsStore {
 
   /** Get all widget names (for import validation) */
   getAllNames(): string[] {
-    return this.table.select(["name"]).all().map((w) => w.name)
+    return this.table
+      .select(["name"])
+      .all()
+      .map((w) => w.name)
   }
 
   /** Get all widget ids */
   getAllIds(): string[] {
-    return this.table.select(["id"]).all().map((w) => w.id)
+    return this.table
+      .select(["id"])
+      .all()
+      .map((w) => w.id)
   }
 
   /** Bulk insert widgets (used during import) */

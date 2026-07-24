@@ -1,2 +1,2 @@
+export type { WSClientMessage, WSHandlerConfig, WSServerEnvelope } from "./elysia-handler"
 export { createWSHandler, WSTopicHandler } from "./elysia-handler"
-export type { WSHandlerConfig, WSClientMessage, WSServerEnvelope } from "./elysia-handler"

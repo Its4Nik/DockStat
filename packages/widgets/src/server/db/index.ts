@@ -6,12 +6,11 @@
  * shared across the application.
  */
 
-import type { DB } from "@dockstat/sqlite-wrapper"
 import type { Logger } from "@dockstat/logger"
+import type { DB } from "@dockstat/sqlite-wrapper"
 import type { DashboardDefinition, WidgetDefinition } from "../types"
-import { dashboardsColumns } from "./schema"
-import { widgetsColumns } from "./schema"
 import { DashboardsStore } from "./dashboards-store"
+import { dashboardsColumns, widgetsColumns } from "./schema"
 import { WidgetsStore } from "./widgets-store"
 
 export class WidgetsDatabase {

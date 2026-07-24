@@ -7,8 +7,8 @@
  */
 
 import type { Logger } from "@dockstat/logger"
+import type { WidgetRepository } from "../repository"
 import type { ImportResult, WidgetManifest } from "../types"
-import { WidgetRepository } from "../repository"
 
 export class WidgetImporter {
   constructor(
@@ -44,13 +44,17 @@ export class WidgetImporter {
       return result
     }
 
-    result.messages.push(`Importing ${manifest.widgets.length} widget(s) from manifest v${manifest.manifestVersion}`)
+    result.messages.push(
+      `Importing ${manifest.widgets.length} widget(s) from manifest v${manifest.manifestVersion}`
+    )
 
     for (const widget of manifest.widgets) {
       try {
         // Validate required fields
         if (!widget.id || !widget.name || !widget.kind) {
-          result.errors.push(`Widget is missing required fields (id, name, or kind): ${JSON.stringify(widget)}`)
+          result.errors.push(
+            `Widget is missing required fields (id, name, or kind): ${JSON.stringify(widget)}`
+          )
           continue
         }
 
@@ -111,7 +115,7 @@ export class WidgetImporter {
 
     try {
       // @ts-expect-error unzipit has no type declarations
-      const unzip = await import("unzipit") as any
+      const unzip = (await import("unzipit")) as any
       const { entries } = await unzip.unzip(archiveData)
 
       // Find manifest.json

@@ -3,6 +3,9 @@ import IndexPage from "./pages"
 import AuthCallback from "./pages/auth/Callback"
 import ConfigureClientsPage from "./pages/clients/configure"
 import ClientsPage from "./pages/clients/index"
+import DashboardIndexPage from "./pages/dashboard"
+import DashboardIdPage from "./pages/dashboard/DashboardIdPage"
+import DataflowPage from "./pages/dataflow/DataflowPage"
 import ExtensionsIndex from "./pages/extensions"
 import PluginBrowser from "./pages/extensions/plugins"
 import GraphPage from "./pages/graph"
@@ -26,6 +29,9 @@ export default function DockStatRouter() {
         { element: <PluginIdPage />, path: "/p/:pluginId/*" },
         { element: <ExtensionsIndex />, path: "/extensions" },
         { element: <PluginBrowser />, path: "/extensions/plugins" },
+        { element: <DashboardIndexPage />, path: "/dashboard" },
+        { element: <DashboardIdPage />, path: "/dashboard/:id" },
+        { element: <DataflowPage />, path: "/dataflow/:id" },
       ]}
       routes={[
         { element: <SignInPage />, path: "/login" },

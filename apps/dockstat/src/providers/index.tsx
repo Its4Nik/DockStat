@@ -15,7 +15,10 @@ export default function DockStatProviders({
 }): React.ReactNode {
   return (
     <AuthProvider apiBase={baseUrl}>
-      <WebSocketProvider url={`${baseUrl}/ws`} requireAuth>
+      <WebSocketProvider
+        requireAuth
+        url={`${baseUrl}/ws`}
+      >
         <ThemeProvider>
           <ThemeSidebarProvider>
             <PageHeadingProvider>

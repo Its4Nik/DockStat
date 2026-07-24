@@ -3,14 +3,10 @@
  */
 
 const nanoid = (size: number) => crypto.randomUUID().replace(/-/g, "").slice(0, size)
+
 import type { Logger } from "@dockstat/logger"
-import type {
-  BreakpointLayouts,
-  DashboardDefinition,
-  DataPipeGraph,
-  PlacedWidget,
-} from "../types"
-import { DashboardsStore } from "../db/dashboards-store"
+import type { DashboardsStore } from "../db/dashboards-store"
+import type { BreakpointLayouts, DashboardDefinition, DataPipeGraph, PlacedWidget } from "../types"
 
 export class DashboardRepository {
   constructor(
@@ -57,7 +53,7 @@ export class DashboardRepository {
     }
 
     const dashboard = this.store.create({
-      dataPipe: input.dataPipe ?? { nodes: [], edges: [] },
+      dataPipe: input.dataPipe ?? { edges: [], nodes: [] },
       description: input.description ?? "",
       id,
       isDefault: input.isDefault ?? false,

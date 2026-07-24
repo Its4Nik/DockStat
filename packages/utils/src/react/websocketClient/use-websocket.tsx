@@ -30,13 +30,13 @@
 
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from "react"
 import type { WSServerEnvelope } from "../../ws-handler"
 
@@ -167,18 +167,15 @@ export function WebSocketProvider({
 
   // ── Send a subscribe/unsubscribe message ─────────────────────
 
-  const sendControlMessage = useCallback(
-    (topic: string, type: "subscribe" | "unsubscribe") => {
-      const ws = wsRef.current
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ topic, type }))
-      } else {
-        // Queue for when connection opens
-        pendingMessagesRef.current.push({ topic, type })
-      }
-    },
-    []
-  )
+  const sendControlMessage = useCallback((topic: string, type: "subscribe" | "unsubscribe") => {
+    const ws = wsRef.current
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ topic, type }))
+    } else {
+      // Queue for when connection opens
+      pendingMessagesRef.current.push({ topic, type })
+    }
+  }, [])
 
   // ── Subscribe (public API) ───────────────────────────────────
 
@@ -324,11 +321,7 @@ export function WebSocketProvider({
     [connected, error, reconnect, subscribe, latestVersion]
   )
 
-  return (
-    <WebSocketContext.Provider value={contextValue}>
-      {children}
-    </WebSocketContext.Provider>
-  )
+  return <WebSocketContext.Provider value={contextValue}>{children}</WebSocketContext.Provider>
 }
 
 // ── Hooks ────────────────────────────────────────────────────────

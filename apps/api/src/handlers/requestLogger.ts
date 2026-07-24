@@ -18,7 +18,10 @@ const CreateRequestLogger = () => {
     .onAfterResponse(({ request }) => {
       const state = stateMap.get(request)
 
-      logger.info(`[${request.method}] Request ${truncate(request.url, 45)  } completed`, state?.reqId)
+      logger.info(
+        `[${request.method}] Request ${truncate(request.url, 45)} completed`,
+        state?.reqId
+      )
     })
     .onError(({ request, set, error, code }) => {
       const state = stateMap.get(request)

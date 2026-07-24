@@ -12,8 +12,8 @@
  */
 
 import type { Logger } from "@dockstat/logger"
-import type { DataPipeEdge, DataPipeGraph, DataPipeNode, DataPayload } from "../types"
-import { type PipeContext, type DataProvider, type DataTransformer } from "./types"
+import type { DataPayload, DataPipeEdge, DataPipeGraph, DataPipeNode } from "../types"
+import type { DataProvider, DataTransformer, PipeContext } from "./types"
 
 export type DataUpdateCallback = (dashboardId: string, payloads: DataPayload[]) => void
 
@@ -71,10 +71,7 @@ export class DataPipeEngine {
    * Evaluate a data-pipe graph for a dashboard and return all
    * DataPayloads that were produced.
    */
-  async evaluate(
-    dashboardId: string,
-    graph: DataPipeGraph
-  ): Promise<DataPayload[]> {
+  async evaluate(dashboardId: string, graph: DataPipeGraph): Promise<DataPayload[]> {
     const { nodes, edges } = graph
 
     if (nodes.length === 0) return []
@@ -117,7 +114,7 @@ export class DataPipeEngine {
     for (const node of nodes) {
       if (node.type === "output" && context.values.has(node.id)) {
         payloads.push({
-          key: node.data["key"] as string ?? node.id,
+          key: node.data.key ?? node.id,
           sourceNodeId: node.id,
           timestamp: context.timestamp,
           value: context.values.get(node.id),
@@ -158,9 +155,7 @@ export class DataPipeEngine {
     }, intervalMs)
 
     this.activeIntervals.set(dashboardId, interval)
-    this.log.info(
-      `Started polling for dashboard "${dashboardId}" (every ${intervalMs}ms)`
-    )
+    this.log.info(`Started polling for dashboard "${dashboardId}" (every ${intervalMs}ms)`)
 
     return () => this.stopPolling(dashboardId)
   }
@@ -182,48 +177,47 @@ export class DataPipeEngine {
 
   // ── Internal helpers ─────────────────────────────────────────────
 
-  private async executeNode(
-    node: DataPipeNode,
-    context: PipeContext
-  ): Promise<unknown> {
+  private async executeNode(node: DataPipeNode, context: PipeContext): Promise<unknown> {
     const { edges } = context.graph
     const incoming = edges.filter((e) => e.target === node.id)
 
     switch (node.type) {
       case "provider": {
-        const provider = this.providers.get(node.data["providerType"] as string ?? node.data["type"] as string)
-        if (!provider) {
-          throw new Error(`No provider registered for type "${node.data["providerType"] ?? node.data["type"]}"`)
+        const providerKey = node.data.providerType ?? (node.data.type as string | undefined)
+        if (!providerKey) {
+          throw new Error(`Provider node "${node.id}" has no providerType`)
         }
-        return provider.execute(node, context)
+        const provider = this.providers.get(providerKey)
+        if (!provider) {
+          throw new Error(`No provider registered for type "${providerKey}"`)
+        }
+        return provider.execute(node.data, node, context)
       }
 
       case "transform": {
         // Collect input from the first incoming edge
-        const inputValue = incoming.length > 0
-          ? context.values.get(incoming[0]!.source)
-          : undefined
+        const inputValue = incoming.length > 0 ? context.values.get(incoming[0]!.source) : undefined
 
-        const transformer = this.transformers.get(node.data["transformType"] as string ?? node.data["type"] as string)
-        if (!transformer) {
-          throw new Error(`No transformer registered for type "${node.data["transformType"] ?? node.data["type"]}"`)
+        const transformKey = node.data.transformType ?? (node.data.type as string | undefined)
+        if (!transformKey) {
+          throw new Error(`Transform node "${node.id}" has no transformType`)
         }
-        return transformer.execute(inputValue, node, context)
+        const transformer = this.transformers.get(transformKey)
+        if (!transformer) {
+          throw new Error(`No transformer registered for type "${transformKey}"`)
+        }
+        return transformer.execute(inputValue, node.data, node, context)
       }
 
       case "connector": {
         // A connector simply passes data through
-        const inputValue = incoming.length > 0
-          ? context.values.get(incoming[0]!.source)
-          : undefined
+        const inputValue = incoming.length > 0 ? context.values.get(incoming[0]!.source) : undefined
         return inputValue
       }
 
       case "output": {
         // An output node collects its input
-        const inputValue = incoming.length > 0
-          ? context.values.get(incoming[0]!.source)
-          : undefined
+        const inputValue = incoming.length > 0 ? context.values.get(incoming[0]!.source) : undefined
         return inputValue
       }
 
@@ -232,10 +226,7 @@ export class DataPipeEngine {
     }
   }
 
-  private topologicalSort(
-    nodes: DataPipeNode[],
-    edges: DataPipeEdge[]
-  ): string[] {
+  private topologicalSort(nodes: DataPipeNode[], edges: DataPipeEdge[]): string[] {
     const inDegree = new Map<string, number>()
     const adjacency = new Map<string, string[]>()
 

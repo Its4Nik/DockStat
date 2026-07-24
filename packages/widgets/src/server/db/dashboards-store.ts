@@ -43,7 +43,10 @@ export class DashboardsStore {
     return this.getById(data.id)!
   }
 
-  update(id: string, data: Partial<Omit<DashboardDefinition, "id" | "createdAt">>): DashboardDefinition | undefined {
+  update(
+    id: string,
+    data: Partial<Omit<DashboardDefinition, "id" | "createdAt">>
+  ): DashboardDefinition | undefined {
     this.table.where({ id }).update({
       ...data,
       updatedAt: new Date().toISOString(),
@@ -81,7 +84,10 @@ export class DashboardsStore {
 
   /** Get all dashboard names */
   getAllNames(): string[] {
-    return this.table.select(["name"]).all().map((d) => d.name)
+    return this.table
+      .select(["name"])
+      .all()
+      .map((d) => d.name)
   }
 
   /** Count total dashboards */

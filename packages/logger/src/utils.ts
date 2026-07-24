@@ -71,11 +71,11 @@ export function colorByReqID(rawReqId: string, notReqId = false) {
   let from = ""
 
   if (!notReqId) {
-  if (reqId.includes("|")) {
-    const parts = reqId.split("|")
-    reqId = String(parts[0])
-    from = String(parts[1])
-  }
+    if (reqId.includes("|")) {
+      const parts = reqId.split("|")
+      reqId = String(parts[0])
+      from = String(parts[1])
+    }
   }
 
   const hash = stringToHash(reqId)

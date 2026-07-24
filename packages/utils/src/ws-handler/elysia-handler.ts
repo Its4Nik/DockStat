@@ -38,7 +38,7 @@
  * ```
  */
 
-import type Logger from "@dockstat/logger";
+import type Logger from "@dockstat/logger"
 import Elysia, { t } from "elysia"
 import type { ElysiaWS } from "elysia/ws"
 
@@ -140,7 +140,7 @@ export class WSTopicHandler {
   private routes: any
   private logger: Logger
 
-  constructor(baselogger: Logger,config: WSHandlerConfig = {}) {
+  constructor(baselogger: Logger, config: WSHandlerConfig = {}) {
     this.logger = baselogger.spawn("Topics")
     this.config = config
     this.routes = this.buildRoutes()
@@ -151,16 +151,20 @@ export class WSTopicHandler {
   private buildRoutes() {
     const handler = this
 
-    const bodySchema = this.config.bodySchema ?? t.Object({
-      topic: t.String(),
-      type: t.Union([t.Literal("subscribe"), t.Literal("unsubscribe")]),
-    })
+    const bodySchema =
+      this.config.bodySchema ??
+      t.Object({
+        topic: t.String(),
+        type: t.Union([t.Literal("subscribe"), t.Literal("unsubscribe")]),
+      })
 
-    const responseSchema = this.config.responseSchema ?? t.Object({
-      data: t.Any(),
-      timestamp: t.Number(),
-      topic: t.String(),
-    })
+    const responseSchema =
+      this.config.responseSchema ??
+      t.Object({
+        data: t.Any(),
+        timestamp: t.Number(),
+        topic: t.String(),
+      })
 
     const prefix = this.config.prefix ?? "/ws"
 
@@ -200,9 +204,8 @@ export class WSTopicHandler {
 
     // Extract token from query param or Authorization header
     const query = ws.data.query as Record<string, string> | undefined
-    const token = query?.token
-      ?? this.extractBearerToken(ws.data.request as Request | undefined)
-      ?? null
+    const token =
+      query?.token ?? this.extractBearerToken(ws.data.request as Request | undefined) ?? null
 
     if (!token) {
       ws.close(1008, "Authentication required")
@@ -315,7 +318,7 @@ export class WSTopicHandler {
     let sent = 0
     for (const ws of bucket) {
       try {
-//        ws.send(raw)
+        //        ws.send(raw)
         ws.send(envelope)
         sent++
       } catch {

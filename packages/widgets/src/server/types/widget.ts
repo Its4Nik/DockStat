@@ -88,9 +88,7 @@ export interface GridLayoutItem {
 
 // ── react-grid-layout breakpoint structure ───────────────────────────
 
-export type BreakpointLayouts = Partial<
-  Record<string, GridLayoutItem[]>
->
+export type BreakpointLayouts = Partial<Record<string, GridLayoutItem[]>>
 
 export interface DashboardLayout {
   /** lg breakpoint is required, others are optional */

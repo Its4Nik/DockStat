@@ -6,13 +6,12 @@
  */
 
 export type {
-  BreakpointLayouts,
-  DashboardLayout,
-  GridLayoutItem,
-  PlacedWidget,
-  WidgetConfig,
-  WidgetDefinition,
-} from "../../server/types/widget"
+  DataPipeNodeKind,
+  FieldType,
+  NodeKindMeta,
+  NodeTemplateDef,
+  PropertyField,
+} from "../../server/data-pipe/registry"
 
 export type {
   DashboardDefinition,
@@ -20,6 +19,7 @@ export type {
   DataPipeEdge,
   DataPipeGraph,
   DataPipeNode,
+  DataPipeNodeData,
 } from "../../server/types/dashboard"
 
 export type {
@@ -29,3 +29,11 @@ export type {
   ManifestAuthor,
   WidgetManifest,
 } from "../../server/types/manifest"
+export type {
+  BreakpointLayouts,
+  DashboardLayout,
+  GridLayoutItem,
+  PlacedWidget,
+  WidgetConfig,
+  WidgetDefinition,
+} from "../../server/types/widget"

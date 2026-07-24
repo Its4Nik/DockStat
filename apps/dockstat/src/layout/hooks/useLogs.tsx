@@ -14,7 +14,7 @@ export function useLogs() {
   useEffect(() => {
     if (!logMessage) return
 
-    if(logMessage === null) return
+    if (logMessage === null) return
 
     setlogMessagesArr((prev) => {
       const next = [...prev]

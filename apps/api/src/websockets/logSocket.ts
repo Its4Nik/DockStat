@@ -1,7 +1,7 @@
-import { DSWebSockerHandler } from ".";
 import { memoryUsage } from "bun:jsc"
-import { formatBytes } from "@dockstat/utils";
+import { formatBytes } from "@dockstat/utils"
 import BaseLogger from "../logger"
+import { DSWebSockerHandler } from "."
 
 const interval = 5_000
 

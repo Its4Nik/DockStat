@@ -9,9 +9,9 @@
  */
 
 import type { Logger } from "@dockstat/logger"
-import Elysia, { t } from "elysia"
-import { createWSHandler } from "@dockstat/utils/ws-handler"
 import type { WSTopicHandler } from "@dockstat/utils/ws-handler"
+import { createWSHandler } from "@dockstat/utils/ws-handler"
+import Elysia, { t } from "elysia"
 import type { DataPayload } from "../types"
 import type { WidgetWSData, WidgetWSTopic } from "./types"
 import { resolveWidgetTopicKey } from "./types"
@@ -27,13 +27,10 @@ export class WidgetWSHandler {
   private handler: WSTopicHandler
   private log: Logger
 
-  constructor(
-    baseLogger: Logger,
-    config?: WidgetWSHandlerConfig
-  ) {
+  constructor(baseLogger: Logger, config?: WidgetWSHandlerConfig) {
     this.log = baseLogger.spawn("WidgetWS")
 
-    this.handler = createWSHandler(baseLogger,{
+    this.handler = createWSHandler(baseLogger, {
       bodySchema: t.Object({
         topic: t.Union([
           t.Object({ dashboardId: t.String(), type: t.Literal("dashboard") }),

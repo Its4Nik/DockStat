@@ -1,20 +1,11 @@
 export type {
-  BreakpointLayouts,
-  DashboardLayout,
-  GridLayoutItem,
-  PlacedWidget,
-  WidgetConfig,
-  WidgetDefinition,
-} from "./widget"
-
-export type {
   DashboardDefinition,
   DataPayload,
   DataPipeEdge,
   DataPipeGraph,
   DataPipeNode,
+  DataPipeNodeData,
 } from "./dashboard"
-
 export type {
   DashboardExportData,
   DashboardExportManifest,
@@ -22,3 +13,11 @@ export type {
   ManifestAuthor,
   WidgetManifest,
 } from "./manifest"
+export type {
+  BreakpointLayouts,
+  DashboardLayout,
+  GridLayoutItem,
+  PlacedWidget,
+  WidgetConfig,
+  WidgetDefinition,
+} from "./widget"

@@ -69,10 +69,10 @@ export function Layout({ children }: { children: React.ReactNode }): React.React
               onSelectTheme={onSelectTheme}
               openQuickLinksModalHotkey={config?.hotkeys?.["open:quicklinks"]}
               pluginLinks={frontendPluginRoutes || []}
-              ramUsage={
-                config.additionalSettings?.showBackendRamUsageInNavbar ? (ramUsage?.data)  : undefined
-              }
               ramRefreshKey={ramUsage ? ramUsage.stamp : 0}
+              ramUsage={
+                config.additionalSettings?.showBackendRamUsageInNavbar ? ramUsage?.data : undefined
+              }
               setIsThemeSidebarOpen={setIsThemeSidebarOpen}
               sidebarHotkeys={{
                 close: config.hotkeys?.["close:sidebar"],

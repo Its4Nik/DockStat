@@ -9,7 +9,8 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/react": "catalog:",
-    "@types/react-dom": "catalog:"
+    "@types/react-dom": "catalog:",
+    "@xyflow/react": "catalog:react-ui"
   },
   "exports": {
     "./client": "./src/client/index.ts",

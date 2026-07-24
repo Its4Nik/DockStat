@@ -1,7 +1,14 @@
 import chalk from "chalk"
 import { DISABLED_LOGGERS, ignoreMessages, NAME_SEP, ONLY_SHOW } from "./config"
 import type { LogEntry, LogHook, LogLevel } from "./types"
-import { colorByReqID, colorName, getCallerInfo, levelColors, shouldIgnore, shouldLog } from "./utils"
+import {
+  colorByReqID,
+  colorName,
+  getCallerInfo,
+  levelColors,
+  shouldIgnore,
+  shouldLog,
+} from "./utils"
 
 class Logger {
   protected loggerMap = new Set<Logger>()
@@ -113,10 +120,7 @@ class Logger {
 
   spawn(prefix: string, additionalParents?: string[]) {
     // Create child without passing hook - it will use root's hook via getter
-    const logger = new Logger(
-      prefix,
-      [this.name, ...(additionalParents || []), ...this.parents]
-    )
+    const logger = new Logger(prefix, [this.name, ...(additionalParents || []), ...this.parents])
 
     // Link child to the root logger
     logger.linkToRoot(this._root)

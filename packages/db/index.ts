@@ -10,7 +10,7 @@ class DockStatDB {
   private metrics_table
   private logger: Logger
 
-  constructor( baseLogger: Logger,prefix = "DockStatDB") {
+  constructor(baseLogger: Logger, prefix = "DockStatDB") {
     this.logger = baseLogger.spawn(prefix)
     this.logger.info("Initializing DockStatDB")
 

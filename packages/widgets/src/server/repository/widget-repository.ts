@@ -6,10 +6,10 @@
  */
 
 const nanoid = (size: number) => crypto.randomUUID().replace(/-/g, "").slice(0, size)
+
 import type { Logger } from "@dockstat/logger"
-import type { WidgetConfig } from "../types"
-import type { WidgetDefinition } from "../types"
-import { WidgetsStore } from "../db/widgets-store"
+import type { WidgetsStore } from "../db/widgets-store"
+import type { WidgetConfig, WidgetDefinition } from "../types"
 
 export class WidgetRepository {
   constructor(
@@ -82,10 +82,7 @@ export class WidgetRepository {
   /**
    * Update an existing widget.
    */
-  update(
-    id: string,
-    data: Partial<Omit<WidgetDefinition, "id" | "createdAt">>
-  ): WidgetDefinition {
+  update(id: string, data: Partial<Omit<WidgetDefinition, "id" | "createdAt">>): WidgetDefinition {
     const existing = this.store.getById(id)
     if (!existing) {
       throw new Error(`Widget with id "${id}" not found`)

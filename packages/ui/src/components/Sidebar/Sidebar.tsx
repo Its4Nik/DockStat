@@ -354,7 +354,8 @@ export function Sidebar({
                         }
                         if (typeof date === "string") {
                           return <span>{formatDate(new Date(date), "log")}</span>
-                        }                      },
+                        }
+                      },
                       title: "Timestamp",
                     },
                   ]}

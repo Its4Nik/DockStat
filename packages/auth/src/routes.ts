@@ -345,11 +345,11 @@ export function createAuthRoutes(
           async (context) => {
             const { body, set } = context
             try {
+              const isInitialUser = users.select(["id"]).count() === 0
               const requestBody = body as { name: string; pass: string }
 
               const allowGuests = getAllowGuestRegistration()
               const existingUser = users.select(["id"]).where({ name: requestBody.name }).first()
-              const isInitialUser = users.select(["id"]).count() === 0
 
               if (existingUser) {
                 set.status = 409

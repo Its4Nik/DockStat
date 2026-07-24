@@ -1,4 +1,5 @@
 import type { LogEntry } from "@dockstat/logger"
+import { sleep } from "@dockstat/utils"
 import { useHotkey } from "@dockstat/utils/react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Menu } from "lucide-react"
@@ -13,7 +14,6 @@ import { Sidebar, type SidebarProps } from "../Sidebar/Sidebar"
 import type { ThemeBrowserItem } from "../ThemeBrowser/ThemeBrowser"
 import { floatVariants } from "./consts"
 import DockStatLogo from "./DockStat2-06.png"
-import { sleep } from "@dockstat/utils";
 
 export type { PinLinkMutation, SidebarProps } from "../Sidebar/Sidebar"
 export { type PathItem, SidebarPaths } from "./consts"
@@ -74,9 +74,7 @@ export function Navbar({
 
   useEffect(() => {
     setRamUpdated(true)
-    sleep(1000).then(
-      () =>       setRamUpdated(false)
-    )
+    sleep(1000).then(() => setRamUpdated(false))
   }, [ramUsage, ramRefreshKey])
 
   useHotkey({
@@ -172,16 +170,20 @@ export function Navbar({
                     variant="secondary"
                   >
                     <motion.span
-                      animate={ramUpdated ? {
-                        scale: [1, 1.2, 1],
-                        opacity: [1, 0.7, 1],
-                      } : {}}
+                      animate={
+                        ramUpdated
+                          ? {
+                              opacity: [1, 0.7, 1],
+                              scale: [1, 1.2, 1],
+                            }
+                          : {}
+                      }
                       transition={{
                         duration: 0.5,
                         times: [0, 0.5, 1],
                       }}
                     >
-                    {ramUsage}
+                      {ramUsage}
                     </motion.span>
                   </Badge>
                 </motion.div>

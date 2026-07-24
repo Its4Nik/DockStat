@@ -7,6 +7,7 @@
  */
 
 import type { Logger } from "@dockstat/logger"
+import type { DashboardRepository, WidgetRepository } from "../repository"
 import type {
   DashboardExportManifest,
   DataPipeGraph,
@@ -14,8 +15,6 @@ import type {
   PlacedWidget,
   WidgetDefinition,
 } from "../types"
-import { DashboardRepository } from "../repository"
-import { WidgetRepository } from "../repository"
 
 export class DashboardImporter {
   constructor(
@@ -30,10 +29,7 @@ export class DashboardImporter {
    * @param manifest - The parsed dashboard export manifest
    * @param partial - Allow import even if some widgets are missing
    */
-  importManifest(
-    manifest: DashboardExportManifest,
-    partial = false
-  ): ImportResult {
+  importManifest(manifest: DashboardExportManifest, partial = false): ImportResult {
     const result: ImportResult = {
       data: [],
       errors: [],
@@ -106,11 +102,11 @@ export class DashboardImporter {
       // Update existing dashboard
       try {
         const updated = this.dashboardRepo.update(existingDash.id, {
+          dataPipe: (dash.dataPipe ?? { edges: [], nodes: [] }) as DataPipeGraph,
           description: dash.description ?? "",
           label: dash.label,
           layouts: dash.layouts ?? {},
           widgets: (dash.widgets ?? []) as PlacedWidget[],
-          dataPipe: (dash.dataPipe ?? { nodes: [], edges: [] }) as DataPipeGraph,
         })
         result.data!.push(updated)
         result.messages.push(`Updated existing dashboard "${dash.name}"`)
@@ -124,7 +120,7 @@ export class DashboardImporter {
       // Create new dashboard
       try {
         const created = this.dashboardRepo.create({
-          dataPipe: (dash.dataPipe ?? { nodes: [], edges: [] }) as DataPipeGraph,
+          dataPipe: (dash.dataPipe ?? { edges: [], nodes: [] }) as DataPipeGraph,
           description: dash.description ?? "",
           label: dash.label,
           layouts: dash.layouts ?? {},
@@ -166,10 +162,7 @@ export class DashboardImporter {
   /**
    * Import from a zip archive.
    */
-  async importZip(
-    archiveData: ArrayBuffer | Uint8Array,
-    partial?: boolean
-  ): Promise<ImportResult> {
+  async importZip(archiveData: ArrayBuffer | Uint8Array, partial?: boolean): Promise<ImportResult> {
     const result: ImportResult = {
       data: [],
       errors: [],
@@ -180,7 +173,7 @@ export class DashboardImporter {
 
     try {
       // @ts-expect-error unzipit has no type declarations
-      const unzip = await import("unzipit") as any
+      const unzip = (await import("unzipit")) as any
       const { entries } = await unzip.unzip(archiveData)
 
       const manifestEntry = entries["manifest.json"]

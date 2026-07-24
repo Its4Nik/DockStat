@@ -12,26 +12,36 @@
  * ```
  */
 
-import Elysia from "elysia"
-import type { DB } from "@dockstat/sqlite-wrapper"
 import type { Logger } from "@dockstat/logger"
-import { WidgetsDatabase } from "./db"
-import { WidgetRepository } from "./repository"
-import { DashboardRepository } from "./repository"
-import { WidgetImporter } from "./import"
-import { DashboardImporter } from "./import"
-import { DataPipeEngine } from "./data-pipe"
+import type { DB } from "@dockstat/sqlite-wrapper"
+import Elysia from "elysia"
+import { DataPipeEngine, WebSocketDataSourceProvider } from "./data-pipe"
 import {
+  AggregateTransformer,
   ArrayFilterTransformer,
+  ExpressionTransformer,
+  FormatTransformer,
   JsonPathTransformer,
   PassthroughTransformer,
+  PickFieldsTransformer,
+  SortTransformer,
   StaticProvider,
   TimeProvider,
 } from "./data-pipe/builtins"
+import {
+  FlattenTransformer,
+  GroupByTransformer,
+  MapFieldsTransformer,
+  PivotTransformer,
+  TopNTransformer,
+  WindowTransformer,
+} from "./data-pipe/transforms-advanced"
+import { WidgetsDatabase } from "./db"
+import { DashboardImporter, WidgetImporter } from "./import"
+import { DEFAULT_WIDGET_MANIFEST } from "./import/default-widgets"
+import { DashboardRepository, WidgetRepository } from "./repository"
+import { createDashboardRoutes, createDataPipeRoutes, createWidgetRoutes } from "./routes"
 import { WidgetWSHandler } from "./ws"
-import { createWidgetRoutes } from "./routes"
-import { createDashboardRoutes } from "./routes"
-import { createDataPipeRoutes } from "./routes"
 
 export interface WidgetsServiceConfig {
   /** Enable authentication for WebSocket connections */
@@ -48,6 +58,7 @@ export class WidgetsService {
   public readonly dashboards: DashboardRepository
   public readonly engine: DataPipeEngine
   public readonly ws: WidgetWSHandler
+  public readonly wsDataSource: WebSocketDataSourceProvider
   public readonly widgetImporter: WidgetImporter
   public readonly dashboardImporter: DashboardImporter
 
@@ -63,14 +74,14 @@ export class WidgetsService {
 
     // Import system
     this.widgetImporter = new WidgetImporter(this.widgets, this.log)
-    this.dashboardImporter = new DashboardImporter(
-      this.dashboards,
-      this.widgets,
-      this.log
-    )
+    this.dashboardImporter = new DashboardImporter(this.dashboards, this.widgets, this.log)
 
     // Data-pipe engine with built-in providers & transformers
     this.engine = new DataPipeEngine(this.log)
+
+    // WebSocket data source provider (connected later via connectWebSocketHandler)
+    this.wsDataSource = new WebSocketDataSourceProvider(this.log, {})
+
     this.registerBuiltins()
 
     // WebSocket handler (with optional auth)
@@ -82,19 +93,46 @@ export class WidgetsService {
     this.log.info("WidgetsService initialized")
   }
 
+  /**
+   * Connect the WebSocket data source provider to an external pub/sub handler.
+   * Call this after construction, passing the main DSWebSockerHandler's
+   * subscribe/publish callbacks so data-pipe nodes of type "websocket-source"
+   * receive live data from any registered topic.
+   */
+  connectDataSourceHandler(config: {
+    subscribe: (topic: string, callback: (data: unknown) => void) => (() => void) | undefined
+    publish?: (topic: string, data: unknown) => number
+  }): void {
+    this.wsDataSource.setCallbacks(config)
+    this.log.info("WebSocket data source handler connected")
+  }
+
   private registerBuiltins(): void {
     this.engine.registerProvider(new StaticProvider())
     this.engine.registerProvider(new TimeProvider())
+    this.engine.registerProvider(this.wsDataSource)
     this.engine.registerTransformer(new PassthroughTransformer())
     this.engine.registerTransformer(new JsonPathTransformer())
     this.engine.registerTransformer(new ArrayFilterTransformer())
+    this.engine.registerTransformer(new ExpressionTransformer())
+    this.engine.registerTransformer(new AggregateTransformer())
+    this.engine.registerTransformer(new SortTransformer())
+    this.engine.registerTransformer(new PickFieldsTransformer())
+    this.engine.registerTransformer(new FormatTransformer())
+    this.engine.registerTransformer(new GroupByTransformer())
+    this.engine.registerTransformer(new FlattenTransformer())
+    this.engine.registerTransformer(new PivotTransformer())
+    this.engine.registerTransformer(new TopNTransformer())
+    this.engine.registerTransformer(new WindowTransformer())
+    this.engine.registerTransformer(new MapFieldsTransformer())
+    this.widgetImporter.importManifest(DEFAULT_WIDGET_MANIFEST)
   }
 
   /**
    * Get the Elysia plugin with all widget REST routes.
    * These should be mounted inside an authenticated guard.
    */
-  getRestRoutes(): ReturnType<typeof Elysia["prototype"]["use"]> {
+  getRestRoutes(): ReturnType<(typeof Elysia)["prototype"]["use"]> {
     return new Elysia({ prefix: "/widgets" })
       .use(createWidgetRoutes(this.widgets, this.widgetImporter, this.log))
       .use(createDashboardRoutes(this.dashboards, this.dashboardImporter, this.log))
@@ -107,7 +145,7 @@ export class WidgetsService {
    * because Elysia guards don't work for WS upgrade requests.
    * The WS handler authenticates connections via its own requireAuth config.
    */
-  getWsRoutes(): ReturnType<typeof Elysia["prototype"]["use"]> {
+  getWsRoutes(): ReturnType<(typeof Elysia)["prototype"]["use"]> {
     return this.ws.getRoutes()
   }
 
@@ -117,10 +155,8 @@ export class WidgetsService {
    * If mounting inside an authenticated guard, prefer getRestRoutes() + getWsRoutes()
    * separately instead.
    */
-  getRoutes(): ReturnType<typeof Elysia["prototype"]["use"]> {
-    return new Elysia()
-      .use(this.getRestRoutes())
-      .use(this.getWsRoutes())
+  getRoutes(): ReturnType<(typeof Elysia)["prototype"]["use"]> {
+    return new Elysia().use(this.getRestRoutes()).use(this.getWsRoutes())
   }
 
   /**
@@ -129,14 +165,9 @@ export class WidgetsService {
   startPollingAll(intervalMs = 5000): void {
     const dashboards = this.dashboards.list()
     for (const dashboard of dashboards) {
-      this.engine.startPolling(
-        dashboard.id,
-        dashboard.dataPipe,
-        intervalMs,
-        (dashId, payloads) => {
-          this.ws.sendDataUpdate(dashId, payloads)
-        }
-      )
+      this.engine.startPolling(dashboard.id, dashboard.dataPipe, intervalMs, (dashId, payloads) => {
+        this.ws.sendDataUpdate(dashId, payloads)
+      })
     }
   }
 

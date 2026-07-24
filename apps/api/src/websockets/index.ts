@@ -1,7 +1,7 @@
-import WebSocketHandler from "./handler"
-import BaseLogger from "../logger"
-import { startRss } from "./logSocket"
 import { verifyAuthToken } from "@dockstat/auth"
+import BaseLogger from "../logger"
+import WebSocketHandler from "./handler"
+import { startRss } from "./logSocket"
 
 const wsTokenVerifier = async (token: string) => {
   const payload = await verifyAuthToken(token)

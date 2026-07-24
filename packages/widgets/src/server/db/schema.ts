@@ -10,46 +10,19 @@ import type { ColumnDefinition } from "@dockstat/sqlite-wrapper"
 // ── Widgets table ───────────────────────────────────────────────────
 
 export const widgetsColumns: Record<string, ColumnDefinition> = {
-  id: {
-    notNull: true,
-    primaryKey: true,
-    type: "TEXT",
-  },
-  name: {
-    notNull: true,
-    type: "TEXT",
-    unique: true,
-  },
-  label: {
-    notNull: true,
-    type: "TEXT",
-  },
-  description: {
-    default: "",
-    notNull: true,
-    type: "TEXT",
-  },
   category: {
     default: "general",
     notNull: true,
     type: "TEXT",
   },
-  version: {
-    default: "1.0.0",
-    notNull: true,
-    type: "TEXT",
-  },
-  kind: {
-    notNull: true,
-    type: "TEXT",
-  },
-  defaultConfig: {
-    notNull: true,
-    type: "JSON",
-  },
   configSchema: {
     notNull: true,
     type: "JSON",
+  },
+  createdAt: {
+    default: "(datetime('now'))",
+    notNull: true,
+    type: "TEXT",
   },
   dataInputs: {
     default: "[]",
@@ -61,19 +34,46 @@ export const widgetsColumns: Record<string, ColumnDefinition> = {
     notNull: true,
     type: "JSON",
   },
-  rendererPath: {
+  defaultConfig: {
+    notNull: true,
+    type: "JSON",
+  },
+  description: {
+    default: "",
+    notNull: true,
     type: "TEXT",
   },
   icon: {
     type: "TEXT",
   },
-  createdAt: {
-    default: "(datetime('now'))",
+  id: {
     notNull: true,
+    primaryKey: true,
+    type: "TEXT",
+  },
+  kind: {
+    notNull: true,
+    type: "TEXT",
+  },
+  label: {
+    notNull: true,
+    type: "TEXT",
+  },
+  name: {
+    notNull: true,
+    type: "TEXT",
+    unique: true,
+  },
+  rendererPath: {
     type: "TEXT",
   },
   updatedAt: {
     default: "(datetime('now'))",
+    notNull: true,
+    type: "TEXT",
+  },
+  version: {
+    default: "1.0.0",
     notNull: true,
     type: "TEXT",
   },
@@ -82,22 +82,47 @@ export const widgetsColumns: Record<string, ColumnDefinition> = {
 // ── Dashboards table ────────────────────────────────────────────────
 
 export const dashboardsColumns: Record<string, ColumnDefinition> = {
+  createdAt: {
+    default: "(datetime('now'))",
+    notNull: true,
+    type: "TEXT",
+  },
+  dataPipe: {
+    default: '{"nodes":[],"edges":[]}',
+    notNull: true,
+    type: "JSON",
+  },
+  description: {
+    default: "",
+    notNull: true,
+    type: "TEXT",
+  },
   id: {
     notNull: true,
     primaryKey: true,
     type: "TEXT",
+  },
+  isDefault: {
+    default: 0,
+    notNull: true,
+    type: "BOOLEAN",
+  },
+  label: {
+    notNull: true,
+    type: "TEXT",
+  },
+  layouts: {
+    default: "{}",
+    notNull: true,
+    type: "JSON",
   },
   name: {
     notNull: true,
     type: "TEXT",
     unique: true,
   },
-  label: {
-    notNull: true,
-    type: "TEXT",
-  },
-  description: {
-    default: "",
+  updatedAt: {
+    default: "(datetime('now'))",
     notNull: true,
     type: "TEXT",
   },
@@ -105,30 +130,5 @@ export const dashboardsColumns: Record<string, ColumnDefinition> = {
     default: "[]",
     notNull: true,
     type: "JSON",
-  },
-  layouts: {
-    default: "{}",
-    notNull: true,
-    type: "JSON",
-  },
-  dataPipe: {
-    default: '{"nodes":[],"edges":[]}',
-    notNull: true,
-    type: "JSON",
-  },
-  isDefault: {
-    default: 0,
-    notNull: true,
-    type: "BOOLEAN",
-  },
-  createdAt: {
-    default: "(datetime('now'))",
-    notNull: true,
-    type: "TEXT",
-  },
-  updatedAt: {
-    default: "(datetime('now'))",
-    notNull: true,
-    type: "TEXT",
   },
 }
