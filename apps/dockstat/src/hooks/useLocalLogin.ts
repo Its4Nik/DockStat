@@ -63,6 +63,10 @@ export function useLocalLogin({
         console.error("Local login error:", err)
         // Use extractEdenError to get better error messages
         setError(extractEdenError({ error: err }))
+        localStorage.setItem("user", "{}")
+        localStorage.setItem("auth_token", "")
+        localStorage.setItem("auth_provider_id", "")
+        localStorage.setItem("auth_redirect", "/")
       } finally {
         setIsSubmitting(false)
       }

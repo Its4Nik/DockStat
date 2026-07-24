@@ -19,8 +19,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.3",
-    "@changesets/cli": "^2.31.0",
-    "turbo": "^2.10.0",
+    "@changesets/cli": "^2.31.1",
+    "turbo": "^2.10.6",
     "typescript": "5.9.3"
   },
   "engines": {
@@ -57,7 +57,7 @@
   "workspaces": {
     "catalog": {
       "@elysiajs/cors": "^1.4.0",
-      "@elysiajs/eden": "1.4.6",
+      "@elysiajs/eden": "1.4.9",
       "@elysiajs/html": "^1.4.0",
       "@elysiajs/openapi": "^1.4.11",
       "@elysiajs/server-timing": "^1.4.0",

@@ -61,8 +61,8 @@
         "language_server": {
           "name": "biome"
         }
-      },
-      "language_servers": ["tsgo", "!vtsls"]
+      }
+      //"language_servers": ["tsgo", "!vtsls"]
     },
     "TypeScript": {
       "code_actions_on_format": {
@@ -73,8 +73,8 @@
         "language_server": {
           "name": "biome"
         }
-      },
-      "language_servers": ["tsgo", "!vtsls"]
+      }
+      //"language_servers": ["tsgo", "!vtsls"]
     }
   },
   "lsp": {

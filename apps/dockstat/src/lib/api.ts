@@ -1,11 +1,9 @@
 import type { TreatyType } from "@dockstat/api"
 import { treaty } from "@elysiajs/eden"
 
-type ApiClient = ReturnType<typeof treaty<TreatyType>>["api"]["v2"]
-
 export const getAuthHeaders = (): Record<string, unknown> => {
-  const token = localStorage.getItem("auth_token")
-  return token ? { authorization: `Bearer ${token}` } : {}
+	const token = localStorage.getItem("auth_token")
+	return token ? { authorization: `Bearer ${token}` } : {}
 }
 
 /**
@@ -17,11 +15,11 @@ export const getAuthHeaders = (): Record<string, unknown> => {
  * - Credentials included for cookie-based authentication
  * - Dynamic authorization header with JWT token from localStorage
  */
-export const api: ApiClient = treaty<TreatyType>(
-  import.meta.env.DOCKSTAT_API_PORT || `http://localhost:3030`,
-  {
-    fetch: {
-      credentials: "include",
-    },
-  }
+export const api = treaty<TreatyType>(
+	import.meta.env.DOCKSTAT_API_PORT || `http://localhost:3030`,
+	{
+		fetch: {
+			credentials: "include",
+		},
+	}
 ).api.v2

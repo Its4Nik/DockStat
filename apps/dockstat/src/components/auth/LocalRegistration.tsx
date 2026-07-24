@@ -2,17 +2,20 @@ import { Input } from "@dockstat/ui"
 import { ArrowRight, DoorOpen, Eye, EyeOff, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useCreateUserMutations } from "@/hooks/mutations/registerUser"
+import { useLocalLogin } from "@/hooks/useLocalLogin"
 
 export function LocalRegistration({
   allowGuest,
   isAuthenticated,
   setError,
   triggerLocalAuthCheck,
+  error
 }: {
   triggerLocalAuthCheck: () => void
   allowGuest: boolean
   isAuthenticated: boolean
   setError: (error: null | string) => void
+  error: string | null
 }) {
   if (allowGuest === false && isAuthenticated !== true) {
     return null
@@ -23,6 +26,10 @@ export function LocalRegistration({
   const [showPass, setShowPass] = useState(false)
 
   const { registerLocalUser } = useCreateUserMutations()
+   const {handleSubmit: handleLoginSubmit, updateField} = useLocalLogin({
+    setError,
+    error
+  })
 
   // Handle error from mutation
   useEffect(() => {
@@ -39,14 +46,25 @@ export function LocalRegistration({
     }
   })
 
-  const handleSubmit = (e: React.SyntheticEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
+    console.log("Handling register submit")
+
     e.preventDefault()
     setError(null)
 
-    registerLocalUser.mutate({
+
+    console.log("Mutating: ", {name,pass})
+    await registerLocalUser.mutateAsync({
       name,
       pass,
     })
+
+    updateField("name", name)
+    updateField("pass", pass)
+
+    console.log("Updating: ", {name,pass})
+
+    await handleLoginSubmit(e)
   }
 
   const togglePassword = () => setShowPass(!showPass)
