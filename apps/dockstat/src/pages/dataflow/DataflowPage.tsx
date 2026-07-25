@@ -9,6 +9,7 @@
  *   /dataflow/:id  —  edit the data-pipe for dashboard :id
  */
 
+import { Badge, Button, Card, CardBody } from "@dockstat/ui"
 import {
   addEdge,
   Background,
@@ -25,17 +26,47 @@ import { useCallback, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router"
 import "@xyflow/react/dist/style.css"
 
-import { Button } from "@dockstat/ui"
 import type { DataPipeGraph, DataPipeNodeData, NodeTemplateDef } from "widgets/client"
-import { usePageHeading } from "@/hooks/useHeading"
-import { useDashboardQueries } from "@/hooks/queries/dashboard"
 import { useDataflowMutations } from "@/hooks/mutations/dataflow"
+import { useDashboardQueries } from "@/hooks/queries/dashboard"
+import { usePageHeading } from "@/hooks/useHeading"
 import { NodePalette } from "./components/NodePalette"
 import { createNodeData, PropertyPanel } from "./components/PropertyPanel"
 import { dataPipeNodeTypes } from "./nodes/DataPipeNodes"
 
 // Convenience alias: a React Flow Node carrying our typed data
 type PipeNode = Node<DataPipeNodeData>
+
+/**
+ * Convert the in-memory React Flow graph into the data-pipe API wire
+ * format expected by `PUT /data-pipe/:dashboardId`.
+ *
+ * This exists because React Flow's `Edge.label` is a `ReactNode` (so
+ * the canvas can render React elements as labels), while the
+ * persisted/API representation only supports string labels. Mapping
+ * here keeps the treaty client's inferred body type happy without any
+ * `as unknown as` casts and makes the in-memory → wire conversion
+ * explicit and intentional.
+ */
+function serializeDataPipeGraph(nodes: PipeNode[], edges: Edge[]) {
+  return {
+    edges: edges.map((edge) => ({
+      data: edge.data as Record<string, unknown> | undefined,
+      id: edge.id,
+      label: typeof edge.label === "string" ? edge.label : undefined,
+      source: edge.source,
+      sourceHandle: edge.sourceHandle ?? undefined,
+      target: edge.target,
+      targetHandle: edge.targetHandle ?? undefined,
+    })),
+    nodes: nodes.map((node) => ({
+      data: node.data,
+      id: node.id,
+      position: node.position,
+      type: node.type ?? "",
+    })),
+  }
+}
 
 export default function DataflowPage() {
   const { id: dashboardId } = useParams<{ id: string }>()
@@ -120,13 +151,8 @@ export default function DataflowPage() {
     setError(null)
 
     try {
-      const graph: DataPipeGraph = {
-        edges: edges as unknown as DataPipeGraph["edges"],
-        nodes: nodes as unknown as DataPipeGraph["nodes"],
-      }
-
       await saveDataflowMutation.mutateAsync({
-        body: graph,
+        body: serializeDataPipeGraph(nodes, edges),
         params: { dashboardId },
       })
 
@@ -143,52 +169,75 @@ export default function DataflowPage() {
   // ── Render ────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-content">
-        <p className="text-muted-foreground">Loading dataflow…</p>
-      </div>
+      <Card variant="flat">
+        <CardBody>Loading dataflow…</CardBody>
+      </Card>
     )
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="flex flex-col gap-4 pb-6">
       {/* Header */}
-      <div className="bg-background border-b px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold">Dataflow Editor</h1>
-            <p className="text-xs text-muted-foreground">Dashboard: {dashboardId}</p>
+      <Card variant="flat">
+        <CardBody className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-primary-text">Dataflow Editor</h2>
+              <Badge
+                outlined
+                size="xs"
+                variant="secondary"
+              >
+                {dashboardId}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-text">
+              Wire data sources through transforms into outputs that widgets consume.
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            {error && <span className="text-sm text-red-500 mr-2">{error}</span>}
+          <div className="flex flex-wrap items-center gap-2">
+            {error && <span className="text-sm text-error">{error}</span>}
             <Button
-              variant="outline"
-              size="sm"
               onClick={() => navigate(`/dashboard/${dashboardId}`)}
+              size="sm"
+              variant="outline"
             >
               ← Dashboard
             </Button>
             <Button
-              variant="primary"
-              size="sm"
-              loading={saving}
               disabled={saving}
+              loading={saving}
               onClick={saveGraph}
+              size="sm"
+              variant="primary"
             >
               Save
             </Button>
           </div>
-        </div>
-      </div>
+        </CardBody>
+      </Card>
 
-      {/* Body */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* Body — 3-column editor */}
+      <div className="flex gap-4">
         {/* Left: Node Palette */}
-        <div className="w-60 border-r bg-background overflow-y-auto shrink-0">
+        <Card
+          className="w-64 shrink-0 self-start overflow-hidden"
+          variant="flat"
+        >
           <NodePalette onAddNode={onAddNode} />
-        </div>
+        </Card>
 
-        {/* Center: Flow Canvas */}
-        <div className="flex-1 relative">
+        {/*
+          Center: Flow Canvas.
+          ReactFlow requires a positioned, explicitly-sized parent, so we
+          use a raw div with the same surface styling as a Card rather
+          than the Card component (which doesn't take a `style` prop and
+          would collapse to zero height without content).
+        */}
+        <div
+          className="relative flex-1 overflow-hidden rounded-lg border border-card-outlined-border bg-main-bg shadow-xl"
+          style={{ height: "70vh", minHeight: "500px" }}
+        >
           <ReactFlow
             edges={edges}
             fitView
@@ -217,13 +266,16 @@ export default function DataflowPage() {
         </div>
 
         {/* Right: Property Panel */}
-        <div className="w-72 border-l bg-background overflow-y-auto shrink-0">
+        <Card
+          className="w-72 shrink-0 self-start overflow-hidden"
+          variant="flat"
+        >
           <PropertyPanel
             node={selectedNode}
             onChange={onUpdateNodeData}
             onDelete={onDeleteNode}
           />
-        </div>
+        </Card>
       </div>
     </div>
   )

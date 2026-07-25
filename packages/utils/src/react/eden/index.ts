@@ -22,6 +22,7 @@ type WrapToast<T> = T extends { toast?: infer TToast }
 export class Client {
   private bearerToken: string
   private toaster: ToasterFunction
+  private prepared = new Map()
 
   constructor(toaster: ToasterFunction) {
     this.bearerToken = localStorage.getItem("auth_token") ?? ""
@@ -58,9 +59,27 @@ export class Client {
   }
 
   query<TRoute extends EdenQueryRoute>(
-    ctx: Omit<Parameters<typeof useEdenQuery<TRoute>>[0], "toast">
+    ctx: Omit<Parameters<typeof useEdenQuery<TRoute>>[0], "toast">,
   ) {
     return useEdenQuery(this.buildCtx(ctx))
+  }
+
+  prepareQuery<TRoute extends EdenQueryRoute>(
+        ctx: Omit<Parameters<typeof useEdenQuery<TRoute>>[0], "toast">
+  ){
+    try {
+        this.prepared.set(ctx.queryKey, ctx)
+
+        const func = (key: readonly unknown[]) => {
+          const ctx = this.prepared.get(key)
+          return useEdenQuery(this.buildCtx(ctx))
+        }
+
+        return func
+
+       } catch (error) {
+         console.error("Could not add prepared query!")
+      }
   }
 
   mutate<TRoute extends EdenRoute>(
@@ -78,4 +97,24 @@ export class Client {
   ) {
     return useEdenRouteMutation(this.buildCtx(ctx))
   }
+
+  prepareMutateRoute<TParams extends Record<string, unknown>, TRoute extends EdenRoute>(
+    ctx: Omit<Parameters<typeof useEdenRouteMutation<TParams, TRoute>>[0], "toast"> & {
+      toast: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
+    }
+  ){
+          try {
+        this.prepared.set(ctx.mutationKey, ctx)
+
+        const func = (key: readonly string[]) => {
+          const ctx = this.prepared.get(key)
+          return useEdenRouteMutation(this.buildCtx(ctx))
+        }
+
+        return func
+
+       } catch (error) {
+         console.error("Could not add prepared useEdenRouteMutation!")
+      }
+    }
 }

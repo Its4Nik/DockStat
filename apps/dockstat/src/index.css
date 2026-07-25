@@ -17,6 +17,78 @@
 }
 
 /*
+* React Flow dark-theme overrides.
+* The default stylesheet ships a white background and light controls,
+* which makes the dataflow editor unreadable on this theme. These rules
+* re-skin every React Flow surface to use the @dockstat/ui design tokens
+* so the editor matches the rest of the app.
+*/
+.react-flow {
+  background: var(--color-main-bg);
+}
+
+.react-flow__pane {
+  background: var(--color-main-bg);
+}
+
+.react-flow__background {
+  background: var(--color-main-bg);
+}
+
+.react-flow__edge-path {
+  stroke: var(--color-muted-text);
+}
+
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:focus .react-flow__edge-path,
+.react-flow__edge:focus-visible .react-flow__edge-path {
+  stroke: var(--color-accent);
+}
+
+.react-flow__controls {
+  overflow: hidden;
+  background: var(--color-card-default-bg);
+  border: 1px solid var(--color-card-default-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.react-flow__controls-button {
+  color: var(--color-secondary-text);
+  background: transparent;
+  border-bottom: 1px solid var(--color-card-default-border);
+  fill: var(--color-secondary-text);
+}
+
+.react-flow__controls-button:hover {
+  background: var(--color-card-flat-bg);
+}
+
+.react-flow__controls-button svg {
+  fill: var(--color-secondary-text);
+}
+
+.react-flow__minimap {
+  overflow: hidden;
+  background: var(--color-card-flat-bg);
+  border: 1px solid var(--color-card-default-border);
+  border-radius: 8px;
+}
+
+.react-flow__handle {
+  background: var(--color-card-flat-bg);
+  border-color: var(--color-accent);
+}
+
+.react-flow__handle:hover {
+  background: var(--color-accent);
+}
+
+.react-flow__node {
+  font-family: inherit;
+}
+
+/*
 * DO NOT REMOVE THIS COMMENT
 * The following line is crucial for correct theme usage
 */

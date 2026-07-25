@@ -38,15 +38,20 @@ export function PropertyPanel({ node, onChange, onDelete }: PropertyPanelProps) 
 
   if (!node || !template) {
     return (
-      <div className="p-4 text-sm text-muted-foreground">Select a node to edit its properties.</div>
+      <div className="space-y-3 p-4">
+        <h2 className="text-sm font-semibold text-primary-text">Properties</h2>
+        <p className="text-xs text-muted-text">
+          Select a node on the canvas to edit its properties.
+        </p>
+      </div>
     )
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4 p-4">
       <div>
-        <h3 className="font-semibold text-sm mb-1">{template.label}</h3>
-        <p className="text-xs text-muted-foreground">{template.description}</p>
+        <h2 className="mb-1 text-sm font-semibold text-primary-text">{template.label}</h2>
+        <p className="text-xs text-muted-text">{template.description}</p>
       </div>
 
       <div className="space-y-3">
@@ -89,10 +94,10 @@ export function PropertyPanel({ node, onChange, onDelete }: PropertyPanelProps) 
       </div>
 
       <Button
-        variant="danger"
-        size="sm"
         fullWidth
         onClick={() => onDelete(node.id)}
+        size="sm"
+        variant="danger"
       >
         Delete Node
       </Button>
@@ -111,29 +116,26 @@ function Field({
   value: unknown
   onChange: (val: unknown) => void
 }) {
-  const inputClass =
-    "w-full px-2 py-1 border rounded text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-
   return (
-    <div>
-      <label className="block text-muted-foreground mb-1 text-xs font-medium">
+    <div className="space-y-1">
+      <span className="block text-xs font-medium text-secondary-text">
         {field.label}
-        {field.required && <span className="text-red-500 ml-1">*</span>}
-      </label>
+        {field.required && <span className="ml-1 text-error">*</span>}
+      </span>
 
       {field.type === "select" && field.options ? (
         <Select
           onChange={(val) => onChange(val)}
           options={(field.options ?? []).map((opt) => ({
-            value: String(opt.value),
             label: opt.label,
+            value: String(opt.value),
           }))}
           size="sm"
           value={String(value ?? "")}
         />
       ) : field.type === "textarea" ? (
         <textarea
-          className={`${inputClass} font-mono`}
+          className="w-full rounded-md border border-input-default-border bg-card-flat-bg px-2 py-1 font-mono text-sm text-input-default-text focus:border-input-default-focus-border focus:outline-none focus:ring-1 focus:ring-input-default-focus-ring"
           onChange={(e) => onChange(e.target.value)}
           rows={3}
           value={String(value ?? "")}
@@ -154,7 +156,7 @@ function Field({
         />
       ) : field.type === "object" ? (
         <textarea
-          className={`${inputClass} font-mono text-xs`}
+          className="w-full rounded-md border border-input-default-border bg-card-flat-bg px-2 py-1 font-mono text-xs text-input-default-text focus:border-input-default-focus-border focus:outline-none focus:ring-1 focus:ring-input-default-focus-ring"
           onChange={(e) => {
             try {
               onChange(JSON.parse(e.target.value))
@@ -173,9 +175,7 @@ function Field({
         />
       )}
 
-      {field.description && (
-        <p className="text-xs text-muted-foreground mt-1">{field.description}</p>
-      )}
+      {field.description && <p className="text-xs text-muted-text">{field.description}</p>}
     </div>
   )
 }

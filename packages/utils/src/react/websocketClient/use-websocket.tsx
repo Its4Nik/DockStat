@@ -353,6 +353,8 @@ export interface UseTopicSubscriptionOptions<TData = unknown> {
   transform?: (envelope: WSServerEnvelope) => TData
   /** Called on every message (in addition to updating `data`) */
   onMessage?: (data: TData, envelope: WSServerEnvelope) => void
+  /** Debug options */
+  debugLog?: boolean
 }
 
 export interface UseTopicSubscriptionReturn<TData = unknown> {
@@ -397,9 +399,11 @@ export function useTopicSubscription<TData = unknown>(
     })
 
     // Initialize with latest data if available
+    options?.debugLog && console.debug("Getting latest data for '", topic, "' from Context")
     const existing = latest.get(topic)
     if (existing) {
       setEnvelope(existing)
+      options?.debugLog && console.debug("Hit!")
       if (transform) {
         setData(transform(existing))
       } else {

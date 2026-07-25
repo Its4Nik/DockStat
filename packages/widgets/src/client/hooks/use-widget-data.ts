@@ -47,7 +47,7 @@ interface WidgetDataEnvelope extends WSServerEnvelope {
 export function useWidgetData(options: UseWidgetDataOptions): UseWidgetDataReturn {
   const { dashboardId, keys, onUpdate } = options
 
-  const evaluateDataPipe = eden.useEdenRouteMutation({
+  const evaluateDataPipe = eden.Client({
     mutationKey: ["data-pipe-evaluate", dashboardId],
     routeBuilder: ({ dashboardId }: { dashboardId: string }) => api.widgets["data-pipe"].evaluate({ dashboardId }).post,
   })
@@ -74,10 +74,12 @@ export function useWidgetData(options: UseWidgetDataOptions): UseWidgetDataRetur
           }
         : undefined,
       transform,
+      debugLog: true
     }
   )
 
   const evaluate = useCallback(async () => {
+    console.debug("Evaluating data-pipe for ", dashboardId )
     try {
       const {payloads,success,message} = await evaluateDataPipe.mutateAsync({params: {dashboardId}})
 

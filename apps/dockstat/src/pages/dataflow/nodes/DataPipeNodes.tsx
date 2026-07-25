@@ -26,12 +26,12 @@ function NodeCard({ kind, data, selected, hasSource, hasTarget, subtitle }: Node
 
   return (
     <div
-      className="rounded-lg border-2 px-4 py-3 shadow-md min-w-[180px] bg-card transition-colors"
+      className="min-w-45 rounded-lg border-2 bg-card-default-bg px-4 py-3 shadow-xl transition-colors"
       style={{ borderColor }}
     >
       {hasTarget && (
         <Handle
-          className="!h-3 !w-3 !border-2"
+          className="h-3! w-3! border-2!"
           position={Position.Left}
           style={{ borderColor: meta.color }}
           type="target"
@@ -40,20 +40,20 @@ function NodeCard({ kind, data, selected, hasSource, hasTarget, subtitle }: Node
 
       <div className="flex items-center gap-2">
         <div
-          className="flex items-center justify-center w-6 h-6 rounded text-xs font-bold text-white"
+          className="flex h-6 w-6 items-center justify-center rounded text-xs font-bold text-white"
           style={{ backgroundColor: meta.color }}
         >
           {meta.label[0]}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm truncate">{data.label}</div>
-          <div className="text-xs text-muted-foreground truncate">{subtitle}</div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-semibold text-primary-text">{data.label}</div>
+          <div className="truncate text-xs text-muted-text">{subtitle}</div>
         </div>
       </div>
 
       {hasSource && (
         <Handle
-          className="!h-3 !w-3 !border-2"
+          className="h-3! w-3! border-2!"
           position={Position.Right}
           style={{ borderColor: meta.color }}
           type="source"

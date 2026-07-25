@@ -3,7 +3,6 @@
  * Click a template to add it to the canvas.
  */
 
-import { Card, CardBody } from "@dockstat/ui"
 import type { CSSProperties } from "react"
 import {
   type DataPipeNodeKind,
@@ -20,10 +19,10 @@ const KIND_ORDER: DataPipeNodeKind[] = ["provider", "transform", "connector", "o
 
 export function NodePalette({ onAddNode }: NodePaletteProps) {
   return (
-    <div className="p-4 space-y-6">
+    <div className="space-y-5 p-4">
       <div>
-        <h2 className="font-semibold mb-1">Add Nodes</h2>
-        <p className="text-xs text-muted-foreground">Click to add to the canvas</p>
+        <h2 className="mb-1 text-sm font-semibold text-primary-text">Add Nodes</h2>
+        <p className="text-xs text-muted-text">Click to add to the canvas</p>
       </div>
 
       {KIND_ORDER.map((kind) => {
@@ -33,32 +32,28 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
 
         return (
           <div key={kind}>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1.5">
+            <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-text">
               <span
-                className="inline-block w-2 h-2 rounded-full"
+                className="inline-block h-2 w-2 rounded-full"
                 style={{ backgroundColor: meta.color }}
               />
               {meta.label}
             </h3>
             <div
               className="space-y-1.5"
-              style={{ "--node-border": `${meta.color}33` } as CSSProperties}
+              style={{ "--node-border": `${meta.color}55` } as CSSProperties}
             >
               {templates.map((template) => (
-                <Card
-                  className="w-full text-left [border-color:var(--node-border)]"
-                  hoverable
+                <button
+                  className="w-full rounded-md border bg-card-default-bg px-3 py-2 text-left transition-all hover:border-accent hover:bg-card-elevated-bg"
                   key={template.id}
                   onClick={() => onAddNode(template)}
-                  size="sm"
+                  style={{ borderColor: `${meta.color}40` }}
+                  type="button"
                 >
-                  <CardBody>
-                    <div className="font-medium text-sm">{template.label}</div>
-                    <div className="text-xs text-muted-foreground line-clamp-1">
-                      {template.description}
-                    </div>
-                  </CardBody>
-                </Card>
+                  <div className="text-sm font-medium text-primary-text">{template.label}</div>
+                  <div className="line-clamp-1 text-xs text-muted-text">{template.description}</div>
+                </button>
               ))}
             </div>
           </div>
