@@ -1,16 +1,46 @@
 /**
  * Specific dashboard view — displays widgets with live data and
- * supports drag-and-drop placement of prebuilt widget components.
+ * supports drag-and-drop placement + resize of prebuilt widget
+ * components.
  *
  * Layout:
- *   - Left sidebar: palette of available widgets (from DB)
- *   - Center: widget grid showing placed widgets with live data
- *   - Top bar: link to dataflow editor, save button
+ *   - Top toolbar: title, status, action buttons
+ *   - Body:
+ *       • edit mode  → widget palette (left) + grid (center) + config panel (right)
+ *       • view mode  → grid only, fills available space
+ *
+ * Uses react-grid-layout v2 for drag/resize. Width is observed via
+ * the `useContainerWidth` hook (the v2 replacement for the WidthProvider HOC).
+ *
+ * ── Performance notes ──────────────────────────────────────────────
+ * The WebSocket data hook (`useWidgetData`) re-subscribes whenever its
+ * `options.onUpdate` callback identity changes. We therefore MUST NOT
+ * pass an inline closure to it — doing so causes a re-subscribe storm
+ * that cascades into "Maximum update depth exceeded". Instead, we:
+ *   1. Omit `onUpdate` entirely from `useWidgetData`.
+ *   2. Derive "previous values" for trend displays from `payloads` via
+ *      a ref + useEffect keyed on `payloads` (stable deps).
+ *
+ * Drag/resize performance: RGL fires `onLayoutChange` on every tick.
+ * We keep an in-flight `dragLayout` state for live feedback, and only
+ * commit into the heavier `dashboard.widgets[*].gridLayout` on drag/resize stop.
  */
 
-import { Badge, Button, Card, CardBody } from "@dockstat/ui"
-import { Activity, Pencil, Plus, RefreshCw, Save, Trash2, Workflow } from "lucide-react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { Button } from "@dockstat/ui"
+import { cn } from "@sglara/cn"
+import { ResponsiveGridLayout, useContainerWidth } from "react-grid-layout"
+import "react-grid-layout/css/styles.css"
+import {
+  Activity,
+  AlertCircle,
+  LayoutGrid,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Save,
+  Workflow,
+} from "lucide-react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router"
 import type {
   DashboardDefinition,
@@ -19,14 +49,16 @@ import type {
   WidgetDefinition,
 } from "widgets/client"
 import { useWidgetData } from "widgets/client"
+import { WidgetConfigPanel } from "@/components/widgets/WidgetConfigPanel"
+import { WidgetFrame } from "@/components/widgets/WidgetFrame"
 import { useDashboardMutations } from "@/hooks/mutations/dashboard"
 import { useDashboardQueries } from "@/hooks/queries/dashboard"
 import { usePageHeading } from "@/hooks/useHeading"
 
 // ── Grid configuration ─────────────────────────────────────────────
 
-const GRID_COLS = 12
-const ROW_HEIGHT = 80
+const ROW_HEIGHT = 60
+const GRID_MARGIN: [number, number] = [8, 8]
 
 /**
  * Key under which the per-instance input→output mapping is stored on a
@@ -38,6 +70,17 @@ const ROW_HEIGHT = 80
  */
 const DATA_INPUT_MAP_KEY = "dataInputMap"
 
+// Minimal layout-item shape RGL passes back to callbacks. Keeping it
+// local avoids importing RGL's `Layout` type (which is `readonly`)
+// into our widget type surface.
+interface RGLLayoutItem {
+  i: string
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
 export default function DashboardPage() {
   const { id: dashboardId } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -45,12 +88,24 @@ export default function DashboardPage() {
   // ── State ────────────────────────────────────────────────────────
   const [editMode, setEditMode] = useState(false)
   const [dashboard, setDashboard] = useState<DashboardDefinition | null>(null)
+  const [configInstanceId, setConfigInstanceId] = useState<string | null>(null)
+  // In-flight drag/resize layout. We update this on every tick for
+  // smooth live feedback, then commit to `dashboard.widgets[*].gridLayout`
+  // only on drag/resize stop. Kept in state (not ref) so RGL re-renders
+  // the moved tile live.
+  const [liveLayout, setLiveLayout] = useState<Map<string, RGLLayoutItem> | null>(null)
+
+  // Track previous payload values per output-key so stat widgets can
+  // render a trend delta. Keyed by output key. Held in a ref because
+  // we don't want trend tracking itself to trigger re-renders.
+  const previousValuesRef = useRef<Record<string, number>>({})
 
   usePageHeading(
     dashboard?.label ? dashboard.label : `Dashboard "${dashboard?.name || dashboard?.id}"`
   )
 
-  // Live data subscription
+  // IMPORTANT: no `onUpdate` here — see file header. We derive previous
+  // values from `payloads` below via useEffect (stable deps).
   const {
     data: payloads,
     connected,
@@ -58,6 +113,20 @@ export default function DashboardPage() {
   } = useWidgetData({
     dashboardId: dashboardId ?? "",
   })
+
+  // ── Track previous values for trend displays (stable effect) ──────
+  useEffect(() => {
+    if (!payloads) return
+    for (const p of payloads) {
+      const v = p.value
+      if (typeof v === "number") {
+        previousValuesRef.current[p.key] = v
+      } else if (v && typeof v === "object") {
+        const o = v as Record<string, unknown>
+        if (typeof o.value === "number") previousValuesRef.current[p.key] = o.value
+      }
+    }
+  }, [payloads])
 
   // ── Load dashboard + widget catalog ──────────────────────────────
   const { dashboardQuery, widgetsQuery } = useDashboardQueries(dashboardId)
@@ -68,17 +137,22 @@ export default function DashboardPage() {
   const error = dashboardQuery.error?.message || widgetsQuery.error?.message || null
   const saving = updateDashboardMutation.isPending
 
-  // Sync local state with query data
+  // Sync local state with query data once
   useEffect(() => {
     if (dashboardQuery.data && !dashboard) {
       setDashboard(dashboardQuery.data as DashboardDefinition)
     }
   }, [dashboardQuery.data, dashboard])
 
-  // ── Available output keys from the dashboard's data-pipe ──────────
-  // These are produced by "output" nodes and are what widgets can
-  // consume. We expose them so placed widgets can map their inputs to
-  // any of these keys.
+  // ── Memoized lookups ─────────────────────────────────────────────
+  // widgetId → definition. Avoids an O(n) `.find` per tile per render.
+  const widgetDefMap = useMemo(() => {
+    const m = new Map<string, WidgetDefinition>()
+    for (const w of availableWidgets) m.set(w.id, w)
+    return m
+  }, [availableWidgets])
+
+  // Available output keys produced by the dashboard's data-pipe.
   const availableOutputKeys = useMemo(() => {
     if (!dashboard) return []
     return dashboard.dataPipe.nodes
@@ -91,8 +165,7 @@ export default function DashboardPage() {
     (widget: WidgetDefinition) => {
       if (!dashboard) return
 
-      // Auto-map inputs to matching output keys when possible so the
-      // widget shows data immediately without manual configuration.
+      // Auto-map inputs to matching output keys when possible
       const autoMap: Record<string, string> = {}
       for (const input of widget.dataInputs) {
         if (availableOutputKeys.includes(input)) {
@@ -100,16 +173,19 @@ export default function DashboardPage() {
         }
       }
 
+      const instanceId = `${widget.id}-${Date.now()}`
       const placed: PlacedWidget = {
         config: { ...widget.defaultConfig, [DATA_INPUT_MAP_KEY]: autoMap },
         gridLayout: {
-          h: 3,
-          i: `${widget.id}-${Date.now()}`,
+          h: 4,
+          i: instanceId,
+          minH: 2,
+          minW: 2,
           w: 4,
           x: 0,
-          y: 0,
+          y: Infinity, // RGL places at the bottom
         },
-        instanceId: `${widget.id}-${Date.now()}`,
+        instanceId,
         widgetId: widget.id,
       }
 
@@ -129,12 +205,13 @@ export default function DashboardPage() {
         ...dashboard,
         widgets: dashboard.widgets.filter((w) => w.instanceId !== instanceId),
       })
+      if (configInstanceId === instanceId) setConfigInstanceId(null)
     },
-    [dashboard]
+    [dashboard, configInstanceId]
   )
 
-  // ── Update a placed widget's config (e.g. input mapping) ─────────
-  const handleUpdatePlaced = useCallback(
+  // ── Update a placed widget's config ──────────────────────────────
+  const handleUpdateConfig = useCallback(
     (instanceId: string, patch: Record<string, unknown>) => {
       if (!dashboard) return
       setDashboard({
@@ -142,6 +219,40 @@ export default function DashboardPage() {
         widgets: dashboard.widgets.map((w) =>
           w.instanceId === instanceId ? { ...w, config: { ...w.config, ...patch } } : w
         ),
+      })
+    },
+    [dashboard]
+  )
+
+  // ── Layout changes ───────────────────────────────────────────────
+  // RGL fires onLayoutChange on every drag/resize tick. We split:
+  //   - onLayoutChange → update lightweight `liveLayout` for smooth feedback
+  //   - onDragStop / onResizeStop → commit into dashboard.widgets
+  const handleLayoutChange = useCallback((layout: ReadonlyArray<RGLLayoutItem>) => {
+    setLiveLayout(new Map(layout.map((l) => [l.i, l])))
+  }, [])
+
+  const commitLayout = useCallback(
+    (layout: ReadonlyArray<RGLLayoutItem>) => {
+      setLiveLayout(null)
+      if (!dashboard) return
+      const byId = new Map(layout.map((l) => [l.i, l]))
+      setDashboard({
+        ...dashboard,
+        widgets: dashboard.widgets.map((w) => {
+          const l = byId.get(w.instanceId)
+          if (!l) return w
+          return {
+            ...w,
+            gridLayout: {
+              ...w.gridLayout,
+              h: l.h,
+              w: l.w,
+              x: l.x,
+              y: l.y,
+            },
+          }
+        }),
       })
     },
     [dashboard]
@@ -156,35 +267,48 @@ export default function DashboardPage() {
         body: { widgets: dashboard.widgets },
         params: { dashboardId },
       })
-      // Refresh the dashboard data after successful save
       dashboardQuery.refetch()
     } catch (err) {
       console.error("Failed to save dashboard:", err)
     }
   }
 
-  // ── Get payloads for a specific widget instance ──────────────────
-  // Resolves each of the widget's declared `dataInputs` through the
-  // per-instance `dataInputMap`, falling back to the input name itself
-  // so existing dashboards keep working.
-  const getPayloadsForWidget = useCallback(
-    (widget: WidgetDefinition, placed: PlacedWidget): DataPayload[] => {
-      if (!payloads) return []
+  // ── Resolve payloads + previous value for a widget instance ──────
+  const getPayloadForWidget = useCallback(
+    (widget: WidgetDefinition, placed: PlacedWidget): DataPayload | undefined => {
+      if (!payloads) return undefined
       const inputMap =
         (placed.config[DATA_INPUT_MAP_KEY] as Record<string, string> | undefined) ?? {}
-      const resolvedKeys = widget.dataInputs.map((input) => inputMap[input] ?? input)
-      return payloads.filter((p) => resolvedKeys.includes(p.key))
+      const primaryInput = widget.dataInputs[0]
+      if (!primaryInput) return undefined
+      const resolvedKey = inputMap[primaryInput] ?? primaryInput
+      return payloads.find((p) => p.key === resolvedKey)
     },
     [payloads]
   )
+
+  const getPreviousValueForWidget = useCallback(
+    (widget: WidgetDefinition, placed: PlacedWidget) => {
+      const inputMap =
+        (placed.config[DATA_INPUT_MAP_KEY] as Record<string, string> | undefined) ?? {}
+      const primaryInput = widget.dataInputs[0]
+      if (!primaryInput) return undefined
+      const resolvedKey = inputMap[primaryInput] ?? primaryInput
+      return previousValuesRef.current[resolvedKey]
+    },
+    []
+  )
+
+  // ── Container width (for react-grid-layout v2) ───────────────────
+  const { width, containerRef, mounted } = useContainerWidth({ initialWidth: 1280 })
 
   // ── Render ───────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="p-6">
-        <Card variant="flat">
-          <CardBody>Loading dashboard…</CardBody>
-        </Card>
+        <div className="rounded-lg border border-card-default-border bg-card-flat-bg px-4 py-3 text-sm text-muted-text">
+          Loading dashboard…
+        </div>
       </div>
     )
   }
@@ -192,308 +316,330 @@ export default function DashboardPage() {
   if (!dashboard) {
     return (
       <div className="p-6">
-        <Card variant="error">
-          <CardBody>Dashboard not found</CardBody>
-        </Card>
+        <div className="rounded-lg border border-error/40 bg-error/10 px-4 py-3 text-sm text-error">
+          Dashboard not found.
+        </div>
       </div>
     )
   }
 
+  const configPlaced = dashboard.widgets.find((w) => w.instanceId === configInstanceId) ?? null
+  const configWidget = configPlaced ? widgetDefMap.get(configPlaced.widgetId) : undefined
+
+  // Effective layout = committed gridLayout overridden by any in-flight drag
+  const effectiveLayout = dashboard.widgets.map((w) => {
+    const live = liveLayout?.get(w.instanceId)
+    return {
+      h: live?.h ?? w.gridLayout.h,
+      i: w.instanceId,
+      minH: w.gridLayout.minH ?? 2,
+      minW: w.gridLayout.minW ?? 2,
+      w: live?.w ?? w.gridLayout.w,
+      x: live?.x ?? w.gridLayout.x,
+      y: live?.y ?? w.gridLayout.y,
+    }
+  })
+
   return (
-    <div className="flex flex-col gap-4 pb-6">
-      {/* Header */}
-      <Card variant="flat">
-        <CardBody className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold text-primary-text">{dashboard.label}</h2>
-              <Badge
-                size="xs"
-                variant={connected ? "success" : "error"}
-              >
-                <span className="mr-1">{connected ? "●" : "○"}</span>
-                {connected ? "Live" : "Disconnected"}
-              </Badge>
-              <Badge
-                size="xs"
-                variant="secondary"
-              >
-                {dashboard.widgets.length} widgets
-              </Badge>
-            </div>
-            {dashboard.description && (
-              <p className="text-sm text-muted-text">{dashboard.description}</p>
-            )}
-          </div>
+    <div className="flex h-[calc(100vh-7rem)] flex-col gap-3 pb-4">
+      {/* ── Toolbar ─────────────────────────────────────────────────── */}
+      <DashboardToolbar
+        connected={connected}
+        dashboard={dashboard}
+        editMode={editMode}
+        error={error}
+        onDataflow={() => navigate(`/dataflow/${dashboardId}`)}
+        onEditToggle={() => setEditMode(!editMode)}
+        onRefresh={() => evaluate()}
+        onSave={saveDashboard}
+        saving={saving}
+      />
 
-          <div className="flex flex-wrap items-center gap-2">
-            {error && <span className="text-sm text-error">{error}</span>}
-            <Button
-              onClick={() => evaluate()}
-              size="sm"
-              variant="outline"
-            >
-              <RefreshCw size={14} />
-              Refresh
-            </Button>
-            <Button
-              onClick={() => navigate(`/dataflow/${dashboardId}`)}
-              size="sm"
-              variant="outline"
-            >
-              <Workflow size={14} />
-              Dataflow
-            </Button>
-            <Button
-              onClick={() => setEditMode(!editMode)}
-              size="sm"
-              variant={editMode ? "primary" : "outline"}
-            >
-              <Pencil size={14} />
-              {editMode ? "Done" : "Edit"}
-            </Button>
-            {editMode && (
-              <Button
-                disabled={saving}
-                loading={saving}
-                onClick={saveDashboard}
-                size="sm"
-                variant="primary"
-              >
-                <Save size={14} />
-                {saving ? "Saving…" : "Save"}
-              </Button>
-            )}
-          </div>
-        </CardBody>
-      </Card>
-
-      {/* Body */}
-      <div className="flex gap-4">
-        {/* Widget Palette (edit mode only) */}
+      {/* ── Body ────────────────────────────────────────────────────── */}
+      <div className="flex min-h-0 flex-1 gap-3">
+        {/* Palette (edit mode only) */}
         {editMode && (
-          <Card
-            className="w-64 shrink-0 self-start"
-            variant="flat"
-          >
-            <CardBody>
-              <div className="mb-3 flex items-center gap-2">
+          <aside className="flex w-64 shrink-0 flex-col self-stretch overflow-hidden rounded-lg border border-card-default-border bg-card-flat-bg shadow-xl">
+            <div className="border-b border-card-default-border px-4 py-3">
+              <div className="flex items-center gap-2">
                 <Plus
                   className="text-accent"
                   size={16}
                 />
                 <h3 className="text-sm font-semibold text-primary-text">Widgets</h3>
               </div>
-              <p className="mb-3 text-xs text-muted-text">Click to add to the dashboard</p>
-              <div className="space-y-2">
-                {availableWidgets.map((widget) => (
+              <p className="mt-1 text-xs text-muted-text">Click to add to the dashboard.</p>
+            </div>
+            <div className="flex-1 space-y-2 overflow-y-auto p-3">
+              {availableWidgets.length === 0 ? (
+                <p className="px-1 py-4 text-center text-xs text-muted-text">
+                  No widgets registered. Import widgets first.
+                </p>
+              ) : (
+                availableWidgets.map((widget) => (
                   <button
-                    className="w-full rounded-md border border-card-default-border bg-card-default-bg px-3 py-2 text-left transition-colors hover:border-accent hover:bg-card-elevated-bg"
+                    className={cn(
+                      "group relative flex w-full items-start gap-2 overflow-hidden rounded-md border border-card-default-border bg-card-default-bg px-3 py-2 text-left transition-all",
+                      "hover:border-accent hover:bg-card-elevated-bg",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                    )}
                     key={widget.id}
                     onClick={() => handleWidgetDrop(widget)}
                     type="button"
                   >
-                    <div className="text-sm font-medium text-primary-text">{widget.label}</div>
-                    <div className="line-clamp-1 text-xs text-muted-text">{widget.description}</div>
-                    {widget.dataInputs.length > 0 && (
-                      <div className="mt-1.5 flex flex-wrap gap-1">
-                        {widget.dataInputs.map((input) => (
-                          <Badge
-                            key={input}
-                            outlined
-                            size="xs"
-                            variant="secondary"
-                          >
-                            in: {input}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-y-0 left-0 w-0.5 bg-accent opacity-60 transition-opacity group-hover:opacity-100"
+                    />
+                    <span className="min-w-0 flex-1 pl-1">
+                      <span className="block text-sm font-medium text-primary-text">
+                        {widget.label}
+                      </span>
+                      <span className="line-clamp-2 block text-xs text-muted-text">
+                        {widget.description}
+                      </span>
+                      {widget.dataInputs.length > 0 && (
+                        <span className="mt-1.5 flex flex-wrap gap-1">
+                          {widget.dataInputs.map((input) => (
+                            <span
+                              className="inline-block rounded border border-badge-secondary-outlined-border px-1 py-0.5 text-[10px] font-medium text-badge-secondary-outlined-text"
+                              key={input}
+                            >
+                              in: {input}
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                    </span>
                   </button>
-                ))}
-                {availableWidgets.length === 0 && (
-                  <p className="text-xs text-muted-text">
-                    No widgets registered. Import widgets first.
-                  </p>
-                )}
-              </div>
-            </CardBody>
-          </Card>
+                ))
+              )}
+            </div>
+          </aside>
         )}
 
-        {/* Widget Grid */}
-        <div className="flex-1 min-w-0">
+        {/* Grid */}
+        <div
+          className={cn(
+            "min-w-0 flex-1 overflow-y-auto rounded-lg border border-card-default-border bg-card-flat-bg/40 p-2",
+            editMode ? "shadow-xl" : ""
+          )}
+          ref={containerRef}
+        >
           {dashboard.widgets.length === 0 ? (
-            <Card variant="flat">
-              <CardBody className="flex items-center justify-center gap-2 py-16 text-muted-text">
-                <Activity size={18} />
-                {editMode
-                  ? "Add widgets from the sidebar →"
-                  : "This dashboard has no widgets yet. Click Edit to add some."}
-              </CardBody>
-            </Card>
-          ) : (
-            <div
-              className="grid gap-3"
-              style={{
-                gridAutoRows: `${ROW_HEIGHT}px`,
-                gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
+            <EmptyState editMode={editMode} />
+          ) : mounted ? (
+            <ResponsiveGridLayout
+              className="layout"
+              cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+              dragConfig={{ bounded: false, enabled: editMode, threshold: 3 }}
+              layouts={{
+                lg: effectiveLayout,
+                md: effectiveLayout,
+                sm: effectiveLayout,
+                xs: effectiveLayout,
+                xxs: effectiveLayout,
               }}
+              margin={GRID_MARGIN}
+              onDragStop={commitLayout}
+              onLayoutChange={handleLayoutChange}
+              onResizeStop={commitLayout}
+              resizeConfig={{ enabled: editMode, handles: ["se", "sw", "ne", "nw"] }}
+              rowHeight={ROW_HEIGHT}
+              width={width}
             >
               {dashboard.widgets.map((placed) => {
-                const widgetDef = availableWidgets.find((w) => w.id === placed.widgetId)
-                const widgetPayloads = widgetDef ? getPayloadsForWidget(widgetDef, placed) : []
+                const widgetDef = widgetDefMap.get(placed.widgetId)
+                const payload = widgetDef ? getPayloadForWidget(widgetDef, placed) : undefined
+                const previousValue = widgetDef
+                  ? getPreviousValueForWidget(widgetDef, placed)
+                  : undefined
 
                 return (
-                  <WidgetCard
-                    availableOutputKeys={availableOutputKeys}
-                    editMode={editMode}
+                  <div
+                    className="overflow-hidden"
                     key={placed.instanceId}
-                    onRemove={() => handleRemoveWidget(placed.instanceId)}
-                    onUpdateConfig={(patch) => handleUpdatePlaced(placed.instanceId, patch)}
-                    payloads={widgetPayloads}
-                    placed={placed}
-                    widget={widgetDef}
-                  />
+                  >
+                    <WidgetFrame
+                      editMode={editMode}
+                      onConfigure={
+                        editMode ? () => setConfigInstanceId(placed.instanceId) : undefined
+                      }
+                      onRemove={editMode ? () => handleRemoveWidget(placed.instanceId) : undefined}
+                      payload={payload}
+                      placed={placed}
+                      previousValue={previousValue}
+                      selected={configInstanceId === placed.instanceId}
+                      widget={widgetDef}
+                    />
+                  </div>
                 )
               })}
+            </ResponsiveGridLayout>
+          ) : (
+            <div className="flex h-full items-center justify-center text-xs text-muted-text">
+              Preparing canvas…
             </div>
           )}
         </div>
+
+        {/* Config panel (edit mode + a widget selected) */}
+        {editMode && configPlaced && (
+          <WidgetConfigPanel
+            availableOutputKeys={availableOutputKeys}
+            onChange={(patch) => handleUpdateConfig(configPlaced.instanceId, patch)}
+            onClose={() => setConfigInstanceId(null)}
+            placed={configPlaced}
+            widget={configWidget}
+          />
+        )}
       </div>
     </div>
   )
 }
 
-// ── Widget card ─────────────────────────────────────────────────────
+// ── Toolbar (control bar) ───────────────────────────────────────────
 
-interface WidgetCardProps {
-  placed: PlacedWidget
-  widget?: WidgetDefinition
-  payloads: DataPayload[]
+interface DashboardToolbarProps {
+  dashboard: DashboardDefinition
   editMode: boolean
-  availableOutputKeys: string[]
-  onRemove: () => void
-  onUpdateConfig: (patch: Record<string, unknown>) => void
+  connected: boolean
+  error: string | null
+  saving: boolean
+  onEditToggle: () => void
+  onSave: () => void
+  onRefresh: () => void
+  onDataflow: () => void
 }
 
-function WidgetCard({
-  placed,
-  widget,
-  payloads,
+function DashboardToolbar({
+  dashboard,
   editMode,
-  availableOutputKeys,
-  onRemove,
-  onUpdateConfig,
-}: WidgetCardProps) {
-  const layout = placed.gridLayout
-  const inputMap = (placed.config[DATA_INPUT_MAP_KEY] as Record<string, string> | undefined) ?? {}
+  connected,
+  error,
+  saving,
+  onEditToggle,
+  onSave,
+  onRefresh,
+  onDataflow,
+}: DashboardToolbarProps) {
+  return (
+    <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 rounded-lg border border-card-default-border bg-card-default-bg px-4 py-2.5 shadow-xl">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-accent/15 text-accent">
+          <LayoutGrid size={16} />
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h2 className="truncate text-sm font-semibold text-primary-text">{dashboard.label}</h2>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                connected ? "bg-success/15 text-success" : "bg-error/15 text-error"
+              )}
+            >
+              <span>{connected ? "●" : "○"}</span>
+              {connected ? "Live" : "Off"}
+            </span>
+          </div>
+          <p className="truncate text-xs text-muted-text">
+            {dashboard.widgets.length} widgets · {dashboard.dataPipe.nodes.length} data nodes
+          </p>
+        </div>
+      </div>
 
-  const setInputMapping = (input: string, outputKey: string) => {
-    onUpdateConfig({ [DATA_INPUT_MAP_KEY]: { ...inputMap, [input]: outputKey } })
-  }
+      <div className="flex flex-wrap items-center gap-2">
+        {error && (
+          <span
+            className="flex items-center gap-1.5 rounded-md border border-error/40 bg-error/10 px-2 py-1 text-xs text-error"
+            title={error}
+          >
+            <AlertCircle size={12} />
+            <span className="max-w-40 truncate">{error}</span>
+          </span>
+        )}
+        <ToolbarButton
+          icon={<RefreshCw size={14} />}
+          label="Refresh"
+          onClick={onRefresh}
+          variant="ghost"
+        />
+        <ToolbarButton
+          icon={<Workflow size={14} />}
+          label="Dataflow"
+          onClick={onDataflow}
+          variant="ghost"
+        />
+        <ToolbarButton
+          icon={<Pencil size={14} />}
+          label={editMode ? "Done" : "Edit"}
+          onClick={onEditToggle}
+          variant={editMode ? "primary" : "outline"}
+        />
+        {editMode && (
+          <Button
+            disabled={saving}
+            loading={saving}
+            onClick={onSave}
+            size="sm"
+            variant="primary"
+          >
+            <Save size={14} />
+            {saving ? "Saving…" : "Save"}
+          </Button>
+        )}
+      </div>
+    </header>
+  )
+}
+
+interface ToolbarButtonProps {
+  icon: React.ReactNode
+  label: string
+  onClick: () => void
+  variant: "ghost" | "outline" | "primary"
+}
+
+function ToolbarButton({ icon, label, onClick, variant }: ToolbarButtonProps) {
+  const variantClass = {
+    ghost: "text-secondary-text hover:bg-card-flat-bg hover:text-primary-text",
+    outline:
+      "border border-button-outline-border text-button-outline-text hover:bg-button-outline-hover-bg",
+    primary: "bg-button-primary-bg text-button-primary-text hover:bg-button-primary-hover-bg",
+  }[variant]
 
   return (
-    <div
-      className="relative overflow-hidden rounded-lg border border-card-default-border bg-card-default-bg p-3 transition-colors group hover:border-accent"
-      style={{
-        gridColumn: `${layout.x + 1} / span ${layout.w}`,
-        gridRow: `${layout.y + 1} / span ${layout.h}`,
-      }}
-    >
-      {/* Header */}
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <h3 className="truncate text-sm font-medium text-primary-text">
-          {widget?.label ?? "Unknown Widget"}
-        </h3>
-        {editMode && (
-          <button
-            className="text-muted-text transition-colors hover:text-error"
-            onClick={onRemove}
-            title="Remove widget"
-            type="button"
-          >
-            <Trash2 size={14} />
-          </button>
-        )}
-      </div>
-
-      {/* Content: live payload values */}
-      <div className="space-y-1 text-sm">
-        {payloads.length === 0 ? (
-          <div className="flex items-center gap-1.5 text-xs text-muted-text">
-            <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-muted-text" />
-            Waiting for data…
-          </div>
-        ) : (
-          payloads.map((p) => (
-            <div
-              className="flex items-center justify-between gap-2"
-              key={p.key}
-            >
-              <Badge
-                outlined
-                size="xs"
-                variant="secondary"
-              >
-                {p.key}
-              </Badge>
-              <span className="truncate font-mono text-xs text-secondary-text">
-                {typeof p.value === "object"
-                  ? JSON.stringify(p.value).slice(0, 50)
-                  : String(p.value)}
-              </span>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Edit mode: input mapper */}
-      {editMode && widget && (
-        <div className="mt-3 border-t border-card-default-border pt-2">
-          {widget.dataInputs.length === 0 ? (
-            <p className="text-xs text-muted-text">No data inputs</p>
-          ) : (
-            <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-text">
-                Map inputs to data-pipe outputs
-              </p>
-              {widget.dataInputs.map((input) => {
-                const mapped = inputMap[input] ?? ""
-                return (
-                  <div
-                    className="flex items-center gap-2"
-                    key={input}
-                  >
-                    <span className="w-1/3 truncate text-xs text-secondary-text">{input}</span>
-                    <select
-                      className="flex-1 rounded-md border border-select-default-border bg-card-flat-bg px-2 py-1 text-xs text-select-default-text focus:border-select-default-focus-border focus:outline-none focus:ring-1 focus:ring-select-default-focus-ring"
-                      onChange={(e) => setInputMapping(input, e.target.value)}
-                      value={mapped}
-                    >
-                      <option value="">— not connected —</option>
-                      {availableOutputKeys.map((key) => (
-                        <option
-                          key={key}
-                          value={key}
-                        >
-                          {key}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )
-              })}
-              {availableOutputKeys.length === 0 && (
-                <p className="text-xs text-muted-text">
-                  No outputs defined yet. Add Output nodes in the{" "}
-                  <span className="text-accent">Dataflow</span> editor.
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+    <button
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
+        variantClass
       )}
+      onClick={onClick}
+      type="button"
+    >
+      {icon}
+      {label}
+    </button>
+  )
+}
+
+// ── Empty state ─────────────────────────────────────────────────────
+
+function EmptyState({ editMode }: { editMode: boolean }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-3 py-20 text-center">
+      <div className="rounded-full bg-card-default-bg p-3 text-muted-text">
+        <Activity size={22} />
+      </div>
+      <div className="max-w-sm">
+        <p className="text-sm font-medium text-secondary-text">No widgets yet</p>
+        <p className="mt-1 text-xs text-muted-text">
+          {editMode
+            ? "Add widgets from the sidebar."
+            : "This dashboard has no widgets yet. Click Edit to add some."}
+        </p>
+      </div>
     </div>
   )
 }

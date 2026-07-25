@@ -9,7 +9,8 @@
  *   /dataflow/:id  —  edit the data-pipe for dashboard :id
  */
 
-import { Badge, Button, Card, CardBody } from "@dockstat/ui"
+import { Badge, Button } from "@dockstat/ui"
+import { cn } from "@sglara/cn"
 import {
   addEdge,
   Background,
@@ -22,7 +23,8 @@ import {
   useEdgesState,
   useNodesState,
 } from "@xyflow/react"
-import { useCallback, useMemo, useState } from "react"
+import { AlertCircle, ArrowLeft, Save, Workflow } from "lucide-react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router"
 import "@xyflow/react/dist/style.css"
 
@@ -71,6 +73,7 @@ function serializeDataPipeGraph(nodes: PipeNode[], edges: Edge[]) {
 export default function DataflowPage() {
   const { id: dashboardId } = useParams<{ id: string }>()
   const navigate = useNavigate()
+
   usePageHeading(`Dataflow ${dashboardId}`)
 
   // ── React Flow state (typed) ─────────────────────────────────────
@@ -86,8 +89,11 @@ export default function DataflowPage() {
   const loading = dashboardQuery.isLoading
   const saving = saveDataflowMutation.isPending || evaluateDataflowMutation.isPending
 
-  // Load nodes and edges from dashboard dataPipe
-  useMemo(() => {
+  // Load nodes and edges from dashboard dataPipe.
+  // MUST be useEffect, not useMemo — calling setState during render
+  // triggers React's "Cannot update a component while rendering a
+  // different component" warning and cascades re-renders.
+  useEffect(() => {
     const dashboard = dashboardQuery.data as { dataPipe?: DataPipeGraph } | null
     const pipe = dashboard?.dataPipe
     if (pipe) {
@@ -166,23 +172,29 @@ export default function DataflowPage() {
     }
   }, [dashboardId, nodes, edges, saveDataflowMutation, evaluateDataflowMutation])
 
-  // ── Render ────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────
   if (loading) {
     return (
-      <Card variant="flat">
-        <CardBody>Loading dataflow…</CardBody>
-      </Card>
+      <div className="flex h-[calc(100vh-7rem)] flex-col gap-3">
+        <HeaderSkeleton />
+        <div className="flex flex-1 items-center justify-center rounded-lg border border-card-default-border bg-card-flat-bg text-sm text-muted-text">
+          Loading dataflow…
+        </div>
+      </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-4 pb-6">
+    <div className="flex h-[calc(100vh-7rem)] flex-col gap-3">
       {/* Header */}
-      <Card variant="flat">
-        <CardBody className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold text-primary-text">Dataflow Editor</h2>
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 rounded-lg border border-card-default-border bg-card-default-bg px-5 py-3 shadow-xl">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
+            <Workflow size={20} />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-lg font-semibold text-primary-text">Dataflow Editor</h2>
               <Badge
                 outlined
                 size="xs"
@@ -195,37 +207,46 @@ export default function DataflowPage() {
               Wire data sources through transforms into outputs that widgets consume.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {error && <span className="text-sm text-error">{error}</span>}
-            <Button
-              onClick={() => navigate(`/dashboard/${dashboardId}`)}
-              size="sm"
-              variant="outline"
-            >
-              ← Dashboard
-            </Button>
-            <Button
-              disabled={saving}
-              loading={saving}
-              onClick={saveGraph}
-              size="sm"
-              variant="primary"
-            >
-              Save
-            </Button>
-          </div>
-        </CardBody>
-      </Card>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {error && (
+            <span className="flex items-center gap-1.5 rounded-md border border-error/40 bg-error/10 px-2.5 py-1 text-xs text-error">
+              <AlertCircle size={14} />
+              {error}
+            </span>
+          )}
+          <Button
+            onClick={() => navigate(`/dashboard/${dashboardId}`)}
+            size="sm"
+            variant="outline"
+          >
+            <ArrowLeft size={14} />
+            Dashboard
+          </Button>
+          <Button
+            disabled={saving}
+            loading={saving}
+            onClick={saveGraph}
+            size="sm"
+            variant="primary"
+          >
+            <Save size={14} />
+            Save
+          </Button>
+        </div>
+      </header>
 
       {/* Body — 3-column editor */}
-      <div className="flex gap-4">
+      <div className="flex min-h-0 flex-1 gap-3">
         {/* Left: Node Palette */}
-        <Card
-          className="w-64 shrink-0 self-start overflow-hidden"
-          variant="flat"
+        <aside
+          className={cn(
+            "w-64 shrink-0 self-stretch overflow-hidden rounded-lg border border-card-default-border bg-card-flat-bg shadow-xl"
+          )}
         >
           <NodePalette onAddNode={onAddNode} />
-        </Card>
+        </aside>
 
         {/*
           Center: Flow Canvas.
@@ -234,10 +255,7 @@ export default function DataflowPage() {
           than the Card component (which doesn't take a `style` prop and
           would collapse to zero height without content).
         */}
-        <div
-          className="relative flex-1 overflow-hidden rounded-lg border border-card-outlined-border bg-main-bg shadow-xl"
-          style={{ height: "70vh", minHeight: "500px" }}
-        >
+        <div className="relative min-w-0 flex-1 overflow-hidden rounded-lg border border-card-default-border bg-main-bg shadow-xl">
           <ReactFlow
             edges={edges}
             fitView
@@ -275,19 +293,46 @@ export default function DataflowPage() {
               }}
             />
           </ReactFlow>
+
+          {/* Empty-state hint overlay (only when no nodes) */}
+          {nodes.length === 0 && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="rounded-lg border border-dashed border-card-default-border bg-card-flat-bg/80 px-6 py-4 text-center backdrop-blur-sm">
+                <p className="text-sm font-medium text-secondary-text">Empty canvas</p>
+                <p className="mt-1 text-xs text-muted-text">
+                  Add nodes from the palette on the left to start wiring.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right: Property Panel */}
-        <Card
-          className="w-72 shrink-0 self-start overflow-hidden"
-          variant="flat"
+        <aside
+          className={cn(
+            "w-72 shrink-0 self-stretch overflow-hidden rounded-lg border border-card-default-border bg-card-flat-bg shadow-xl"
+          )}
         >
           <PropertyPanel
             node={selectedNode}
             onChange={onUpdateNodeData}
             onDelete={onDeleteNode}
           />
-        </Card>
+        </aside>
+      </div>
+    </div>
+  )
+}
+
+// ── Loading placeholder for the header ──────────────────────────────
+
+function HeaderSkeleton() {
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-card-default-border bg-card-default-bg px-5 py-4 shadow-xl">
+      <div className="h-10 w-10 shrink-0 animate-pulse rounded-lg bg-card-flat-bg" />
+      <div className="flex-1 space-y-2">
+        <div className="h-4 w-40 animate-pulse rounded bg-card-flat-bg" />
+        <div className="h-3 w-64 animate-pulse rounded bg-card-flat-bg" />
       </div>
     </div>
   )

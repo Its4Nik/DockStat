@@ -31,12 +31,7 @@ const api: ApiClient = treaty<TreatyType>(
   }
 ).api.v2
 
-import {
-  eden,
-  useEdenClient,
-  useTopicSubscription,
-  type WSServerEnvelope,
-} from "@dockstat/utils/react"
+import { useEdenClient, useTopicSubscription, type WSServerEnvelope } from "@dockstat/utils/react"
 import { useCallback } from "react"
 import type { DataPayload } from "../types"
 import type { UseWidgetDataOptions, UseWidgetDataReturn } from "./types"
@@ -75,7 +70,11 @@ export function useWidgetData(options: UseWidgetDataOptions): UseWidgetDataRetur
   const { connected, data, error, unsubscribe } = useTopicSubscription<DataPayload[]>(
     `widgets/dashboard/${dashboardId}`,
     {
-      debugLog: true,
+      // Only log in dev; the previous hardcoded `true` spammed the console
+      // on every re-subscribe. Cast because this package isn't bundled by
+      // Vite directly so `import.meta.env.DEV` isn't typed here — the
+      // consumer (dockstat) injects it at build time.
+      debugLog: Boolean((import.meta as { env?: { DEV?: boolean } }).env?.DEV),
       onMessage: onUpdate
         ? (payloads, _envelope) => {
             onUpdate(payloads)

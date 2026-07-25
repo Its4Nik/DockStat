@@ -5,6 +5,7 @@ import ConfigureClientsPage from "./pages/clients/configure"
 import ClientsPage from "./pages/clients/index"
 import DashboardIndexPage from "./pages/dashboard"
 import DashboardIdPage from "./pages/dashboard/DashboardIdPage"
+import DataFlowFallback from "./pages/dataflow/DataFlowFallback"
 import DataflowPage from "./pages/dataflow/DataflowPage"
 import ExtensionsIndex from "./pages/extensions"
 import PluginBrowser from "./pages/extensions/plugins"
@@ -31,6 +32,7 @@ export default function DockStatRouter() {
         { element: <PluginBrowser />, path: "/extensions/plugins" },
         { element: <DashboardIndexPage />, path: "/dashboard" },
         { element: <DashboardIdPage />, path: "/dashboard/:id" },
+        { element: <DataFlowFallback />, path: "/dataflow" },
         { element: <DataflowPage />, path: "/dataflow/:id" },
       ]}
       routes={[

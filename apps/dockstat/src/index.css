@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "@dockstat/ui/css";
 
+:root {
+  --xy-node-background-color: transparent;
+}
+
 /*
 * Changes to the React-Flow attribution have been accepted. See:
 * https://discord.com/channels/771389069270712320/786621351263207454/1483179313036787824
@@ -29,6 +33,14 @@
 
 .react-flow__pane {
   background: var(--color-main-bg);
+}
+
+.react-flow__node-input,
+.react-flow__node-default,
+.react-flow__node-output,
+.react-flow__node-group {
+  padding: 0;
+  background: var(--xy-node-background-color);
 }
 
 .react-flow__background {

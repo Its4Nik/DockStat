@@ -5,7 +5,7 @@
  */
 
 import { Badge, Button, Card, CardBody, Input } from "@dockstat/ui"
-import { Plus } from "lucide-react"
+import { LayoutDashboard, Plus, Workflow } from "lucide-react"
 import { useState } from "react"
 import { useNavigate } from "react-router"
 import type { DashboardDefinition } from "widgets/client"
@@ -42,14 +42,14 @@ export default function DashboardIndexPage() {
   }
 
   if (loading) {
-    return <div className="p-6 text-muted-foreground">Loading dashboards…</div>
+    return <div className="p-6 text-muted-text">Loading dashboards…</div>
   }
 
   return (
-    <div className="p-6 max-w-5xl">
+    <div className="mx-auto max-w-6xl p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Dashboards</h1>
-        <p className="text-muted-foreground">Manage your data visualization dashboards</p>
+        <h1 className="text-2xl font-semibold text-primary-text">Dashboards</h1>
+        <p className="mt-1 text-sm text-muted-text">Manage your data visualization dashboards.</p>
       </div>
 
       {error && (
@@ -81,49 +81,61 @@ export default function DashboardIndexPage() {
           type="submit"
           variant="primary"
         >
-          <Plus />
+          <Plus size={16} />
           Create
         </Button>
       </form>
 
       {/* Dashboard list */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {dashboards.map((dash) => (
-          <Card
-            hoverable
-            key={dash.id}
-            onClick={() => navigate(`/dashboard/${dash.id}`)}
-          >
-            <CardBody>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">{dash.label}</h3>
-                {dash.isDefault && (
-                  <Badge
-                    size="xs"
-                    variant="primary"
-                  >
-                    Default
-                  </Badge>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {dash.description || "No description"}
-              </p>
-              <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
-                <span>{dash.widgets.length} widgets</span>
-                <span>•</span>
-                <span>{dash.dataPipe.nodes.length} data nodes</span>
-              </div>
-            </CardBody>
-          </Card>
-        ))}
-
-        {dashboards.length === 0 && (
-          <div className="col-span-full text-center py-12 text-muted-foreground">
-            No dashboards yet. Create one above.
+      {dashboards.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-card-default-border bg-card-flat-bg/40 py-16 text-center">
+          <div className="rounded-full bg-card-default-bg p-3 text-muted-text">
+            <LayoutDashboard size={22} />
           </div>
-        )}
-      </div>
+          <div>
+            <p className="text-sm font-medium text-secondary-text">No dashboards yet</p>
+            <p className="mt-1 text-xs text-muted-text">Create one above to get started.</p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {dashboards.map((dash) => (
+            <Card
+              hoverable
+              key={dash.id}
+              onClick={() => navigate(`/dashboard/${dash.id}`)}
+            >
+              <CardBody>
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <h3 className="truncate font-semibold text-primary-text">{dash.label}</h3>
+                  {dash.isDefault && (
+                    <Badge
+                      size="xs"
+                      variant="primary"
+                    >
+                      Default
+                    </Badge>
+                  )}
+                </div>
+                <p className="line-clamp-2 min-h-10 text-sm text-muted-text">
+                  {dash.description || "No description"}
+                </p>
+                <div className="mt-3 flex items-center gap-3 border-t border-card-default-border pt-3 text-xs text-muted-text">
+                  <span className="flex items-center gap-1">
+                    <LayoutDashboard size={12} />
+                    {dash.widgets.length} widgets
+                  </span>
+                  <span className="text-card-default-border">•</span>
+                  <span className="flex items-center gap-1">
+                    <Workflow size={12} />
+                    {dash.dataPipe.nodes.length} data nodes
+                  </span>
+                </div>
+              </CardBody>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

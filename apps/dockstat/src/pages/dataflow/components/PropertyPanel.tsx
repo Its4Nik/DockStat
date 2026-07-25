@@ -6,16 +6,26 @@
  */
 
 import { Button, Input, Select, Toggle } from "@dockstat/ui"
+import { cn } from "@sglara/cn"
 import type { Node } from "@xyflow/react"
+import { CircuitBoard, Flag, type LucideIcon, MousePointerClick, Plug, Shuffle } from "lucide-react"
 import { useMemo } from "react"
 import {
   type DataPipeNodeData,
   defaultDataFor,
   getNodeTemplate,
+  NODE_KIND_META,
   NODE_TEMPLATES,
   type NodeTemplateDef,
   type PropertyField,
 } from "widgets/client"
+
+const KIND_ICON: Record<string, LucideIcon> = {
+  connector: CircuitBoard,
+  output: Flag,
+  provider: Plug,
+  transform: Shuffle,
+}
 
 interface PropertyPanelProps {
   node: Node<DataPipeNodeData> | null
@@ -36,26 +46,52 @@ function findTemplateForNode(node: Node<DataPipeNodeData>): NodeTemplateDef | un
 export function PropertyPanel({ node, onChange, onDelete }: PropertyPanelProps) {
   const template = useMemo(() => (node ? findTemplateForNode(node) : undefined), [node])
 
+  // ── Empty state ──────────────────────────────────────────────────
   if (!node || !template) {
     return (
-      <div className="space-y-3 p-4">
-        <h2 className="text-sm font-semibold text-primary-text">Properties</h2>
-        <p className="text-xs text-muted-text">
-          Select a node on the canvas to edit its properties.
-        </p>
+      <div className="flex max-h-fit flex-col overflow-y-auto">
+        <div className="border-b border-card-default-border px-4 py-3">
+          <h2 className="text-sm font-semibold text-primary-text">Properties</h2>
+        </div>
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
+          <div className="rounded-full bg-card-default-bg p-3 text-muted-text">
+            <MousePointerClick size={22} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-secondary-text">No node selected</p>
+            <p className="mt-1 text-xs text-muted-text">
+              Click a node on the canvas to edit its properties.
+            </p>
+          </div>
+        </div>
       </div>
     )
   }
 
+  const meta = NODE_KIND_META[template.kind]
+  const Icon = KIND_ICON[template.kind] ?? MousePointerClick
+
   return (
-    <div className="space-y-4 p-4">
-      <div>
-        <h2 className="mb-1 text-sm font-semibold text-primary-text">{template.label}</h2>
-        <p className="text-xs text-muted-text">{template.description}</p>
+    <div className="flex h-full flex-col">
+      {/* Header */}
+      <div className="border-b border-card-default-border px-4 py-3">
+        <div className="flex items-center gap-2">
+          <div
+            className="rounded-md p-1.5"
+            style={{ backgroundColor: `${meta.color}22`, color: meta.color }}
+          >
+            <Icon size={14} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-semibold text-primary-text">{template.label}</div>
+            <div className="text-xs uppercase tracking-wide text-muted-text">{meta.label}</div>
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-muted-text">{template.description}</p>
       </div>
 
-      <div className="space-y-3">
-        {/* Label field (always present) */}
+      {/* Form */}
+      <div className="flex-1 space-y-4 overflow-y-auto p-4">
         <Field
           field={{
             description: "Human-readable label shown on the node",
@@ -67,7 +103,6 @@ export function PropertyPanel({ node, onChange, onDelete }: PropertyPanelProps) 
           value={node.data.label}
         />
 
-        {/* Template-specific fields */}
         {template.properties.map((prop) => (
           <Field
             field={prop}
@@ -93,14 +128,17 @@ export function PropertyPanel({ node, onChange, onDelete }: PropertyPanelProps) 
         )}
       </div>
 
-      <Button
-        fullWidth
-        onClick={() => onDelete(node.id)}
-        size="sm"
-        variant="danger"
-      >
-        Delete Node
-      </Button>
+      {/* Footer */}
+      <div className="border-t border-card-default-border p-4">
+        <Button
+          fullWidth
+          onClick={() => onDelete(node.id)}
+          size="sm"
+          variant="danger"
+        >
+          Delete Node
+        </Button>
+      </div>
     </div>
   )
 }
@@ -118,9 +156,9 @@ function Field({
 }) {
   return (
     <div className="space-y-1">
-      <span className="block text-xs font-medium text-secondary-text">
+      <span className="flex items-center gap-1 text-xs font-medium text-secondary-text">
         {field.label}
-        {field.required && <span className="ml-1 text-error">*</span>}
+        {field.required && <span className="text-error">*</span>}
       </span>
 
       {field.type === "select" && field.options ? (
@@ -135,7 +173,11 @@ function Field({
         />
       ) : field.type === "textarea" ? (
         <textarea
-          className="w-full rounded-md border border-input-default-border bg-card-flat-bg px-2 py-1 font-mono text-sm text-input-default-text focus:border-input-default-focus-border focus:outline-none focus:ring-1 focus:ring-input-default-focus-ring"
+          className={cn(
+            "w-full rounded-md border border-input-default-border bg-card-flat-bg px-2 py-1 font-mono text-sm text-input-default-text",
+            "placeholder:text-muted-text",
+            "focus:border-input-default-focus-border focus:outline-none focus:ring-1 focus:ring-input-default-focus-ring"
+          )}
           onChange={(e) => onChange(e.target.value)}
           rows={3}
           value={String(value ?? "")}
@@ -156,7 +198,11 @@ function Field({
         />
       ) : field.type === "object" ? (
         <textarea
-          className="w-full rounded-md border border-input-default-border bg-card-flat-bg px-2 py-1 font-mono text-xs text-input-default-text focus:border-input-default-focus-border focus:outline-none focus:ring-1 focus:ring-input-default-focus-ring"
+          className={cn(
+            "w-full rounded-md border border-input-default-border bg-card-flat-bg px-2 py-1 font-mono text-xs text-input-default-text",
+            "placeholder:text-muted-text",
+            "focus:border-input-default-focus-border focus:outline-none focus:ring-1 focus:ring-input-default-focus-ring"
+          )}
           onChange={(e) => {
             try {
               onChange(JSON.parse(e.target.value))
