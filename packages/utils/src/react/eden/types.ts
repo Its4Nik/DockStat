@@ -7,6 +7,11 @@ export type EdenFetchOptions = {
   fetch?: RequestInit | undefined
 }
 
+export type MutationInput<TParams, TRoute extends EdenRoute> =
+  EdenBody<TRoute> extends void
+    ? { params: TParams; body?: undefined }
+  : { params: TParams; body: EdenBody<TRoute> }
+
 export type EdenQueryRoute = (options?: {
   fetch?: RequestInit
   headers?: Record<string, unknown>

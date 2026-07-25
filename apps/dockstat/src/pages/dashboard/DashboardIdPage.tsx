@@ -34,8 +34,7 @@ export default function DashboardPage() {
   const [editMode, setEditMode] = useState(false)
   const [dashboard, setDashboard] = useState<DashboardDefinition | null>(null)
 
-  usePageHeading(`Dashboard "${dashboard?.name || dashboard?.id}"`)
-
+  usePageHeading(dashboard?.name ? dashboard.name : `Dashboard "${dashboard?.name || dashboard?.id}"`)
 
   // Live data subscription
   const {

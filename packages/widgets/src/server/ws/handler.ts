@@ -11,7 +11,7 @@
 import type { Logger } from "@dockstat/logger"
 import type { WSTopicHandler } from "@dockstat/utils/ws-handler"
 import { createWSHandler } from "@dockstat/utils/ws-handler"
-import Elysia, { t } from "elysia"
+import { t } from "elysia"
 import type { DataPayload } from "../types"
 import type { WidgetWSData, WidgetWSTopic } from "./types"
 import { resolveWidgetTopicKey } from "./types"

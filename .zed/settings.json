@@ -1,10 +1,10 @@
 {
-  "context_servers": {
-    "codegraph": {
-      "args": ["serve", "--mcp"],
-      "command": "bunx @colbymchenry/codegraph"
-    }
-  },
+  // "context_servers": {
+  //   "codegraph": {
+  //     "args": ["serve", "--mcp"],
+  //     "command": "bunx @colbymchenry/codegraph"
+  //   }
+  // },
   "format_on_save": "on",
   "formatter": "language_server",
   "languages": {

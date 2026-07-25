@@ -128,11 +128,18 @@ export class WidgetsService {
     this.widgetImporter.importManifest(DEFAULT_WIDGET_MANIFEST)
   }
 
+  // IMPORTANT: Do NOT annotate the return type of these methods.
+  // The previous `ReturnType<(typeof Elysia)["prototype"]["use"]>` annotation
+  // erased the specific route-map types, which propagated `any`/`{}` into every
+  // app that called `.use(service.getRestRoutes())` (or getWsRoutes/getRoutes),
+  // collapsing Eden Treaty's route inference to a single `~path` leaf.
+  // Letting TypeScript infer the concrete Elysia type preserves Treaty safety.
+
   /**
    * Get the Elysia plugin with all widget REST routes.
    * These should be mounted inside an authenticated guard.
    */
-  getRestRoutes(): ReturnType<(typeof Elysia)["prototype"]["use"]> {
+  getRestRoutes() {
     return new Elysia({ prefix: "/widgets" })
       .use(createWidgetRoutes(this.widgets, this.widgetImporter, this.log))
       .use(createDashboardRoutes(this.dashboards, this.dashboardImporter, this.log))
@@ -145,7 +152,7 @@ export class WidgetsService {
    * because Elysia guards don't work for WS upgrade requests.
    * The WS handler authenticates connections via its own requireAuth config.
    */
-  getWsRoutes(): ReturnType<(typeof Elysia)["prototype"]["use"]> {
+  getWsRoutes() {
     return this.ws.getRoutes()
   }
 
@@ -155,7 +162,7 @@ export class WidgetsService {
    * If mounting inside an authenticated guard, prefer getRestRoutes() + getWsRoutes()
    * separately instead.
    */
-  getRoutes(): ReturnType<(typeof Elysia)["prototype"]["use"]> {
+  getRoutes() {
     return new Elysia().use(this.getRestRoutes()).use(this.getWsRoutes())
   }
 

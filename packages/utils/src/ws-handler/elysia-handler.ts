@@ -137,7 +137,11 @@ export class WSTopicHandler {
   private topicMap = new Map<string, Set<ElysiaWS<any>>>()
   private clients = new WeakMap<ElysiaWS<any>, ClientState>()
   private config: WSHandlerConfig
-  private routes: any
+  // IMPORTANT: typed as the inferred return of `buildRoutes()`, NOT `any`.
+  // Annotating this as `any` propagates through `.use(handler.getRoutes())`
+  // and collapses every downstream route-map in the host app to `{}`/`any`,
+  // breaking Eden Treaty's type inference (only `~path` is exposed).
+  private routes: ReturnType<WSTopicHandler["buildRoutes"]>
   private logger: Logger
 
   constructor(baselogger: Logger, config: WSHandlerConfig = {}) {

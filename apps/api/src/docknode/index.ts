@@ -1,4 +1,13 @@
-import type { DockNodeTreaty } from "@dockstat/docknode/treaty"
+import type { CommandResult, DockNodeTreaty, IDockerComposeResult } from "@dockstat/docknode/treaty"
+import type {
+  EnvMap,
+  Stack,
+  SwarmNodeInfo,
+  SwarmServiceInfo,
+  SwarmStackInfo,
+  SwarmStatus,
+  SwarmTaskInfo,
+} from "@dockstat/docknode/types"
 import type Logger from "@dockstat/logger"
 import { column, type DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import type { DockStatConfigTableType } from "@dockstat/typings/types"
@@ -111,23 +120,23 @@ class DockNodeHandler {
   }
 
   /** List all stacks on a node */
-  async listStacks(nodeId: number) {
+  async listStacks(nodeId: number): Promise<Stack[]> {
     this.logger.info(`Listing stacks on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
 
     const result = await client.stacks.get()
-    return result.data
+    return result.data as Stack[]
   }
 
   /** Get a specific stack */
-  async getStack(nodeId: number, stackId: number) {
+  async getStack(nodeId: number, stackId: number): Promise<Stack> {
     this.logger.info(`Getting stack ${stackId} on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
 
     const result = await client.stacks({ id: stackId }).get()
-    return result.data
+    return result.data as Stack
   }
 
   /** Create a new stack */
@@ -191,19 +200,26 @@ class DockNodeHandler {
   }
 
   /** Export a stack */
-  async exportStack(nodeId: number, stackId: number) {
+  async exportStack(
+    nodeId: number,
+    stackId: number
+  ): Promise<{ stack: Omit<Stack, "env">; env: EnvMap }> {
     this.logger.info(`Exporting stack ${stackId} on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
 
     const result = await client.stacks({ id: stackId }).export.get()
-    return result.data
+    return result.data as { stack: Omit<Stack, "env">; env: EnvMap }
   }
 
   // ---- Stack Lifecycle Operations
 
   /** Start a stack (docker-compose up) */
-  async stackUp(nodeId: number, stackId: number, services?: string[]) {
+  async stackUp(
+    nodeId: number,
+    stackId: number,
+    services?: string[]
+  ): Promise<CommandResult<IDockerComposeResult> | null> {
     this.logger.info(`Starting stack ${stackId} on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
@@ -217,7 +233,7 @@ class DockNodeHandler {
     nodeId: number,
     stackId: number,
     options?: { volumes?: boolean; removeOrphans?: boolean }
-  ) {
+  ): Promise<CommandResult<IDockerComposeResult> | null> {
     this.logger.info(`Stopping stack ${stackId} on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
@@ -227,7 +243,11 @@ class DockNodeHandler {
   }
 
   /** Stop services in a stack */
-  async stackStop(nodeId: number, stackId: number, services?: string[]) {
+  async stackStop(
+    nodeId: number,
+    stackId: number,
+    services?: string[]
+  ): Promise<CommandResult<IDockerComposeResult> | null> {
     this.logger.info(`Stopping services in stack ${stackId} on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
@@ -237,7 +257,11 @@ class DockNodeHandler {
   }
 
   /** Restart a stack */
-  async stackRestart(nodeId: number, stackId: number, services?: string[]) {
+  async stackRestart(
+    nodeId: number,
+    stackId: number,
+    services?: string[]
+  ): Promise<CommandResult<IDockerComposeResult> | null> {
     this.logger.info(`Restarting stack ${stackId} on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
@@ -247,7 +271,11 @@ class DockNodeHandler {
   }
 
   /** Pull images for a stack */
-  async stackPull(nodeId: number, stackId: number, services?: string[]) {
+  async stackPull(
+    nodeId: number,
+    stackId: number,
+    services?: string[]
+  ): Promise<CommandResult<IDockerComposeResult> | null> {
     this.logger.info(`Pulling images for stack ${stackId} on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
@@ -257,7 +285,7 @@ class DockNodeHandler {
   }
 
   /** Get stack status (ps) */
-  async stackPs(nodeId: number, stackId: number) {
+  async stackPs(nodeId: number, stackId: number): Promise<CommandResult<unknown> | null> {
     this.logger.info(`Getting status for stack ${stackId} on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
@@ -271,7 +299,7 @@ class DockNodeHandler {
     nodeId: number,
     stackId: number,
     options?: { services?: string; follow?: boolean; tail?: number }
-  ) {
+  ): Promise<CommandResult<IDockerComposeResult> | null> {
     this.logger.info(`Getting logs for stack ${stackId} on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
@@ -290,33 +318,33 @@ class DockNodeHandler {
   // ============================================
 
   /** Get swarm status */
-  async getSwarmStatus(nodeId: number) {
+  async getSwarmStatus(nodeId: number): Promise<SwarmStatus> {
     this.logger.info(`Getting swarm status on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
 
     const result = await client.swarm.status.get()
-    return result.data
+    return result.data as SwarmStatus
   }
 
   /** List swarm stacks */
-  async listSwarmStacks(nodeId: number) {
+  async listSwarmStacks(nodeId: number): Promise<SwarmStackInfo[]> {
     this.logger.info(`Listing swarm stacks on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
 
     const result = await client.swarm.stacks.get()
-    return result.data
+    return result.data as SwarmStackInfo[]
   }
 
   /** Get a specific swarm stack */
-  async getSwarmStack(nodeId: number, name: string) {
+  async getSwarmStack(nodeId: number, name: string): Promise<SwarmStackInfo> {
     this.logger.info(`Getting swarm stack ${name} on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
 
     const result = await client.swarm.stacks({ name }).get()
-    return result.data
+    return result.data as SwarmStackInfo
   }
 
   /** Deploy a swarm stack */
@@ -351,23 +379,23 @@ class DockNodeHandler {
   }
 
   /** List swarm services */
-  async listSwarmServices(nodeId: number) {
+  async listSwarmServices(nodeId: number): Promise<SwarmServiceInfo[]> {
     this.logger.info(`Listing swarm services on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
 
     const result = await client.swarm.services.get()
-    return result.data
+    return result.data as SwarmServiceInfo[]
   }
 
   /** Get a specific swarm service */
-  async getSwarmService(nodeId: number, serviceId: string) {
+  async getSwarmService(nodeId: number, serviceId: string): Promise<SwarmServiceInfo> {
     this.logger.info(`Getting swarm service ${serviceId} on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
 
     const result = await client.swarm.services({ id: serviceId }).get()
-    return result.data
+    return result.data as SwarmServiceInfo
   }
 
   /** Scale a swarm service */
@@ -411,24 +439,24 @@ class DockNodeHandler {
   }
 
   /** List swarm nodes */
-  async listSwarmNodes(nodeId: number) {
+  async listSwarmNodes(nodeId: number): Promise<SwarmNodeInfo[]> {
     this.logger.info(`Listing swarm nodes on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
 
     const result = await client.swarm.nodes.get()
-    return result.data
+    return result.data as SwarmNodeInfo[]
   }
 
   /** Get swarm tasks */
-  async listSwarmTasks(nodeId: number, serviceId?: string) {
+  async listSwarmTasks(nodeId: number, serviceId?: string): Promise<SwarmTaskInfo[]> {
     this.logger.info(`Listing swarm tasks on node ${nodeId}`)
     const client = this.getClient(nodeId)
     if (!client) throw new Error(`DockNode ${nodeId} not found`)
 
     const query = serviceId ? { serviceId } : {}
     const result = await client.swarm.tasks.get({ query })
-    return result.data
+    return result.data as SwarmTaskInfo[]
   }
 
   /** Initialize swarm */

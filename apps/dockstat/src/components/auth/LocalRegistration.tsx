@@ -9,7 +9,7 @@ export function LocalRegistration({
   isAuthenticated,
   setError,
   triggerLocalAuthCheck,
-  error
+  error,
 }: {
   triggerLocalAuthCheck: () => void
   allowGuest: boolean
@@ -26,9 +26,9 @@ export function LocalRegistration({
   const [showPass, setShowPass] = useState(false)
 
   const { registerLocalUser } = useCreateUserMutations()
-   const {handleSubmit: handleLoginSubmit, updateField} = useLocalLogin({
+  const { handleSubmit: handleLoginSubmit, updateField } = useLocalLogin({
+    error,
     setError,
-    error
   })
 
   // Handle error from mutation
@@ -52,8 +52,7 @@ export function LocalRegistration({
     e.preventDefault()
     setError(null)
 
-
-    console.log("Mutating: ", {name,pass})
+    console.log("Mutating: ", { name, pass })
     await registerLocalUser.mutateAsync({
       name,
       pass,
@@ -62,7 +61,7 @@ export function LocalRegistration({
     updateField("name", name)
     updateField("pass", pass)
 
-    console.log("Updating: ", {name,pass})
+    console.log("Updating: ", { name, pass })
 
     await handleLoginSubmit(e)
   }

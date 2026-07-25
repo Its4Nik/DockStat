@@ -17,9 +17,21 @@
  * })
  * ```
  */
+import type { TreatyType } from "@dockstat/api"
+import { treaty } from "@elysiajs/eden"
 
-import type { WSServerEnvelope } from "@dockstat/utils/react"
-import { useTopicSubscription } from "@dockstat/utils/react"
+type ApiClient = ReturnType<typeof treaty<TreatyType>>["api"]["v2"]
+
+const api: ApiClient = treaty<TreatyType>(
+  import.meta.env.DOCKSTAT_API_PORT || `http://localhost:3030`,
+  {
+    fetch: {
+      credentials: "include",
+    },
+  }
+).api.v2
+
+import { eden, useTopicSubscription, type WSServerEnvelope } from "@dockstat/utils/react"
 import { useCallback } from "react"
 import type { DataPayload } from "../types"
 import type { UseWidgetDataOptions, UseWidgetDataReturn } from "./types"
@@ -34,6 +46,11 @@ interface WidgetDataEnvelope extends WSServerEnvelope {
 
 export function useWidgetData(options: UseWidgetDataOptions): UseWidgetDataReturn {
   const { dashboardId, keys, onUpdate } = options
+
+  const evaluateDataPipe = eden.useEdenRouteMutation({
+    mutationKey: ["data-pipe-evaluate", dashboardId],
+    routeBuilder: ({ dashboardId }: { dashboardId: string }) => api.widgets["data-pipe"].evaluate({ dashboardId }).post,
+  })
 
   const transform = useCallback(
     (envelope: WSServerEnvelope): DataPayload[] => {
@@ -62,15 +79,14 @@ export function useWidgetData(options: UseWidgetDataOptions): UseWidgetDataRetur
 
   const evaluate = useCallback(async () => {
     try {
-      const response = await fetch(`/api/v2/widgets/data-pipe/evaluate/${dashboardId}`, {
-        method: "POST",
-      })
-      if (!response.ok) {
-        throw new Error(`Evaluation failed: ${response.statusText}`)
+      const {payloads,success,message} = await evaluateDataPipe.mutateAsync({params: {dashboardId}})
+
+      if (!success) {
+        throw new Error(`Evaluation failed: ${message}`)
       }
-      const result = await response.json()
-      if (result.success && result.payloads) {
-        onUpdate?.(result.payloads)
+
+      if (success && payloads) {
+        onUpdate?.(payloads)
       }
     } catch {
       // Error is available via the `error` return value

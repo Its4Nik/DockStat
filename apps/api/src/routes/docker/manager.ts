@@ -1,3 +1,4 @@
+import type { PoolMetrics } from "@dockstat/docker-client/types"
 import { extractErrorMessage } from "@dockstat/utils"
 import Elysia, { t } from "elysia"
 import DCM from "../../docker"
@@ -15,7 +16,7 @@ export const DockerManager = new Elysia({
     "/pool-stats",
     async ({ status }) => {
       try {
-        const res = await DCM.getPoolMetrics()
+        const res: PoolMetrics = await DCM.getPoolMetrics()
         return status(200, res)
       } catch (error) {
         const errorMessage = extractErrorMessage(error, "Could not get Pool Stats")

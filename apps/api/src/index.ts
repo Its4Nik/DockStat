@@ -32,22 +32,26 @@ export const DockStatAPI = new Elysia({ precompile: false, prefix: "/api/v2" })
   .guard(
     authenticated(() => stateMap),
     (app) => {
-      return app
-        .use(MetricsMiddleware)
-        .use(StatusRoutes)
-        .use(DBRoutes)
-        .use(DockerRoutes)
-        .use(PluginRoutes)
-        .use(DockStatMiscRoutes)
-        .use(RepositoryRoutes)
-        .use(ThemeRoutes)
-        .use(WidgetsService.getRestRoutes())
-        .use(DockNodeElyisa)
-        .use(GraphRoutes)
+      return (
+        app
+          .use(MetricsMiddleware)
+          .use(StatusRoutes)
+          .use(DBRoutes)
+          .use(DockerRoutes)
+          .use(PluginRoutes)
+          .use(DockStatMiscRoutes)
+          .use(RepositoryRoutes)
+          .use(ThemeRoutes)
+          .use(WidgetsService.getRestRoutes())
+          //.use(DockNodeElyisa)
+          .use(GraphRoutes)
+      )
     }
   )
   .use(AuthHandler.getRoutes())
   .listen(PORT)
+
+export type TreatyType = typeof DockStatAPI
 
 const hostnameAndPort = `${DockStatAPI.server?.hostname}:${DockStatAPI.server?.port}`
 
@@ -69,5 +73,3 @@ BaseLogger.info(
   - Allow guest registration: ${AuthHandler.getAllowGuestRegistration()} (${AuthHandler.users.select(["id"]).count()} User)
   `
 )
-
-export type TreatyType = typeof DockStatAPI

@@ -3,7 +3,7 @@ import * as DC from "docker-compose"
 import type { IDockerComposeOptions } from "docker-compose"
 import { DockNodeDB } from "../db"
 import { DockNodeLogger } from "./../utils/logger"
-import type { EnvMap, CreateStackInput, DeleteStackOptions, Stack, UpdateStackInput } from "./types"
+import type { CommandResult, EnvMap, CreateStackInput, DeleteStackOptions, Stack, UpdateStackInput } from "./types"
 import { extractErrorMessage, omit } from "@dockstat/utils"
 import { DOCKER_BIN, DOCKER_SOCKET_PATH } from "../consts"
 import Client from "../docker-client"
@@ -14,15 +14,6 @@ const logger = DockNodeLogger.spawn("Stacks")
 const progressLogger = logger.spawn("Progress")
 
 const STACK_ROOT = "./stacks"
-
-/** Result wrapper for docker-compose commands with detailed output */
-type CommandResult<T = unknown> = {
-  success: boolean
-  data?: T
-  stdout: string
-  stderr: string
-  error?: string
-}
 
 /** Load environment variables from .env file */
 const loadEnvFile = async (id: number): Promise<Record<string, string>> => {

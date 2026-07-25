@@ -10,8 +10,6 @@
     "noUnusedParameters": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@dockstat/api": ["../api/src/index.ts"],
-      "@dockstat/api/*": ["../api/src/*"],
       "@dockstat/auth": ["../../packages/auth/src/*"],
       "@WSS": ["./src/lib/websocketEffects/index.ts"],
       "*": ["./*"]
@@ -22,5 +20,5 @@
   "exclude": ["node_modules"],
   "extends": "../../tsconfig.base.json",
   "include": ["src/**/*"],
-  "references": [{ "path": "./tsconfig.node.json" }, { "path": "../api" }]
+  "references": [{ "path": "./tsconfig.node.json" }]
 }
