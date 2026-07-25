@@ -4,8 +4,8 @@ import {
   saveThemePreference,
   type ThemeContextData,
 } from "@dockstat/theme-handler/client"
-import { useCallback, useContext, useEffect, useRef, useState } from "react"
-import { EdenClientContext } from "@/contexts/edenClient"
+import { useEdenClient } from "@dockstat/utils/react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { type ThemeListItem, ThemeProviderContext, type ThemeProviderData } from "@/contexts/theme"
 import { useThemeMutations } from "@/hooks/mutations"
 import { api } from "@/lib/api"
@@ -16,7 +16,7 @@ const getAuthHeaders = (): Record<string, unknown> => {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
   const [theme, setTheme] = useState<ThemeContextData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)

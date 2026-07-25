@@ -1,4 +1,7 @@
+export * from "./EdenContext"
+export * from "./EdenProvider"
 export * from "./types"
+export * from "./useEdenClient"
 export * from "./useEdenMutation"
 export * from "./useEdenQuery"
 export * from "./useEdenRouteMutation"
@@ -7,6 +10,8 @@ import type {
   EdenBody,
   EdenQueryRoute,
   EdenRoute,
+  MutationInput,
+  MutationResult,
   ResponseData,
   ToastConfig,
   ToasterFunction,
@@ -22,7 +27,6 @@ type WrapToast<T> = T extends { toast?: infer TToast }
 export class Client {
   private bearerToken: string
   private toaster: ToasterFunction
-  private prepared = new Map()
 
   constructor(toaster: ToasterFunction) {
     this.bearerToken = localStorage.getItem("auth_token") ?? ""
@@ -59,27 +63,9 @@ export class Client {
   }
 
   query<TRoute extends EdenQueryRoute>(
-    ctx: Omit<Parameters<typeof useEdenQuery<TRoute>>[0], "toast">,
+    ctx: Omit<Parameters<typeof useEdenQuery<TRoute>>[0], "toast">
   ) {
-    return useEdenQuery(this.buildCtx(ctx))
-  }
-
-  prepareQuery<TRoute extends EdenQueryRoute>(
-        ctx: Omit<Parameters<typeof useEdenQuery<TRoute>>[0], "toast">
-  ){
-    try {
-        this.prepared.set(ctx.queryKey, ctx)
-
-        const func = (key: readonly unknown[]) => {
-          const ctx = this.prepared.get(key)
-          return useEdenQuery(this.buildCtx(ctx))
-        }
-
-        return func
-
-       } catch (error) {
-         console.error("Could not add prepared query!")
-      }
+    return useEdenQuery<TRoute>(this.buildCtx(ctx))
   }
 
   mutate<TRoute extends EdenRoute>(
@@ -87,7 +73,7 @@ export class Client {
       toast: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
     }
   ) {
-    return useEdenMutation(this.buildCtx(ctx))
+    return useEdenMutation<TRoute>(this.buildCtx(ctx))
   }
 
   mutateRoute<TParams extends Record<string, unknown>, TRoute extends EdenRoute>(
@@ -95,26 +81,30 @@ export class Client {
       toast: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
     }
   ) {
-    return useEdenRouteMutation(this.buildCtx(ctx))
+    return useEdenRouteMutation<TParams, TRoute>(this.buildCtx(ctx))
   }
 
+  /**
+   * Prepare a query hook factory. Returns a custom hook that, when called
+   * inside a component, will invoke `useEdenQuery` with the given config
+   * and the latest bearer token.
+   */
+  prepareQuery<TRoute extends EdenQueryRoute>(
+    ctx: Omit<Parameters<typeof useEdenQuery<TRoute>>[0], "toast">
+  ): () => ReturnType<typeof useEdenQuery<TRoute>> {
+    return () => useEdenQuery<TRoute>(this.buildCtx(ctx))
+  }
+
+  /**
+   * Prepare a route-mutation hook factory. Returns a custom hook that, when
+   * called inside a component, will invoke `useEdenRouteMutation` with the
+   * given config and the latest bearer token.
+   */
   prepareMutateRoute<TParams extends Record<string, unknown>, TRoute extends EdenRoute>(
     ctx: Omit<Parameters<typeof useEdenRouteMutation<TParams, TRoute>>[0], "toast"> & {
-      toast: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
+      toast?: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
     }
-  ){
-          try {
-        this.prepared.set(ctx.mutationKey, ctx)
-
-        const func = (key: readonly string[]) => {
-          const ctx = this.prepared.get(key)
-          return useEdenRouteMutation(this.buildCtx(ctx))
-        }
-
-        return func
-
-       } catch (error) {
-         console.error("Could not add prepared useEdenRouteMutation!")
-      }
-    }
+  ): () => MutationResult<ResponseData<TRoute>, MutationInput<TParams, TRoute>> {
+    return () => useEdenRouteMutation<TParams, TRoute>(this.buildCtx(ctx))
+  }
 }

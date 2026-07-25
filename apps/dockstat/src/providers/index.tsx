@@ -14,21 +14,21 @@ export default function DockStatProviders({
   children: React.ReactNode
 }): React.ReactNode {
   return (
-    <AuthProvider apiBase={baseUrl}>
-      <WebSocketProvider
-        requireAuth
-        url={`${baseUrl}/ws`}
-      >
-        <ThemeProvider>
-          <ThemeSidebarProvider>
-            <PageHeadingProvider>
-              <EdenClientProvider>
+    <EdenClientProvider>
+      <AuthProvider apiBase={baseUrl}>
+        <WebSocketProvider
+          requireAuth
+          url={`${baseUrl}/ws`}
+        >
+          <ThemeProvider>
+            <ThemeSidebarProvider>
+              <PageHeadingProvider>
                 <ConfigProvider>{children}</ConfigProvider>
-              </EdenClientProvider>
-            </PageHeadingProvider>
-          </ThemeSidebarProvider>
-        </ThemeProvider>
-      </WebSocketProvider>
-    </AuthProvider>
+              </PageHeadingProvider>
+            </ThemeSidebarProvider>
+          </ThemeProvider>
+        </WebSocketProvider>
+      </AuthProvider>
+    </EdenClientProvider>
   )
 }

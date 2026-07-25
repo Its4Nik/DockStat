@@ -17,9 +17,9 @@ import {
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 
+import { useEdenClient } from "@dockstat/utils/react"
 import { MapPin, Maximize2, RefreshCw, Route, Server } from "lucide-react"
-import { useCallback, useContext, useEffect, useState } from "react"
-import { EdenClientContext } from "@/contexts/edenClient"
+import { useCallback, useEffect, useState } from "react"
 import { api } from "@/lib/api"
 import DockStatLabelEdge from "./customEdge"
 import { Legend } from "./legend"
@@ -30,7 +30,7 @@ export function GraphFlow() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const { fitView } = useReactFlow()
 
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   const { data, isLoading, error, refetch } = eden.query({
     queryKey: ["graphData"],

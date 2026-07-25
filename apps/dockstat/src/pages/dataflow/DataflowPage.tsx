@@ -252,6 +252,13 @@ export default function DataflowPage() {
             <Background />
             <Controls />
             <MiniMap
+              // Theme-aware colors. We pass CSS variables through so the
+              // minimap re-skins automatically when the active @dockstat/ui
+              // theme changes — without this the minimap falls back to
+              // React Flow's default white background which looks broken
+              // on dark themes.
+              bgColor="var(--color-card-flat-bg)"
+              maskColor="color-mix(in srgb, var(--color-main-bg) 70%, transparent)"
               nodeColor={(node) => {
                 const colors: Record<string, string> = {
                   connector: "#eab308",
@@ -260,6 +267,11 @@ export default function DataflowPage() {
                   transform: "#22c55e",
                 }
                 return colors[node.type ?? ""] ?? "#94a3b8"
+              }}
+              style={{
+                backgroundColor: "var(--color-card-flat-bg)",
+                border: "1px solid var(--color-card-default-border)",
+                borderRadius: "8px",
               }}
             />
           </ReactFlow>

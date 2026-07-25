@@ -23,6 +23,10 @@ interface NodeCardProps {
 function NodeCard({ kind, data, selected, hasSource, hasTarget, subtitle }: NodeCardProps) {
   const meta = NODE_KIND_META[kind]
   const borderColor = selected ? meta.color : `${meta.color}55`
+  // Handles sit on top of the colored card border. Using the node's accent
+  // color as the handle fill keeps them visible against any theme instead
+  // of showing up as the default white squares.
+  const handleStyle = { backgroundColor: meta.color, borderColor: meta.color }
 
   return (
     <div
@@ -33,7 +37,7 @@ function NodeCard({ kind, data, selected, hasSource, hasTarget, subtitle }: Node
         <Handle
           className="h-3! w-3! border-2!"
           position={Position.Left}
-          style={{ borderColor: meta.color }}
+          style={handleStyle}
           type="target"
         />
       )}
@@ -55,7 +59,7 @@ function NodeCard({ kind, data, selected, hasSource, hasTarget, subtitle }: Node
         <Handle
           className="h-3! w-3! border-2!"
           position={Position.Right}
-          style={{ borderColor: meta.color }}
+          style={handleStyle}
           type="source"
         />
       )}

@@ -1,18 +1,17 @@
 import { Badge, Card, Divider } from "@dockstat/ui"
+import { useEdenClient } from "@dockstat/utils/react"
 import { Hammer, Server, Split } from "lucide-react"
-import { useContext } from "react"
 import { ClientCard } from "@/components/clients/ClientCard"
 import { HostsList } from "@/components/clients/HostsList"
 import { PoolStatsCard } from "@/components/clients/PoolStatsCard"
 import { WorkersTable } from "@/components/clients/WorkersTable"
-import { EdenClientContext } from "@/contexts/edenClient"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
 
 export default function ClientsPage() {
   usePageHeading("Clients & Workers")
 
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   const { data: clientsData, isLoading: clientsIsLoading } = eden.query({
     queryKey: ["fetchDockerClients"],

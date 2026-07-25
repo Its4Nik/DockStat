@@ -157,10 +157,12 @@ export class WSTopicHandler {
 
     const bodySchema =
       this.config.bodySchema ??
-      t.Object({
-        topic: t.String(),
-        type: t.Union([t.Literal("subscribe"), t.Literal("unsubscribe")]),
-      })
+      t.ObjectString(
+        t.Object({
+          topic: t.String(),
+          type: t.Union([t.Literal("subscribe"), t.Literal("unsubscribe")]),
+        })
+      )
 
     const responseSchema =
       this.config.responseSchema ??
@@ -317,12 +319,10 @@ export class WSTopicHandler {
       timestamp: Date.now(),
       topic: key,
     }
-    const raw = JSON.stringify(envelope)
 
     let sent = 0
     for (const ws of bucket) {
       try {
-        //        ws.send(raw)
         ws.send(envelope)
         sent++
       } catch {

@@ -2,10 +2,10 @@ export { useLayout } from "./hooks/useLayout"
 
 import { useAuth } from "@dockstat/auth/client"
 import { Navbar, ThemeSidebar } from "@dockstat/ui"
+import { useEdenClient } from "@dockstat/utils/react"
 import { useContext } from "react"
 import { useLocation } from "react-router"
 import { Toaster } from "sonner"
-import { EdenClientContext } from "@/contexts/edenClient"
 import { PageHeadingContext } from "@/contexts/pageHeadingContext"
 import { createPinMutationHandlers } from "@/utils/createPinMutations"
 import { useLayout } from "./hooks/useLayout"
@@ -37,7 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }): React.React
   const { user, logout } = useAuth()
 
   const heading = useContext(PageHeadingContext).heading
-  const edenClient = useContext(EdenClientContext)
+  const edenClient = useEdenClient()
   const isLoginPage =
     pathname === "/login" || (pathname.startsWith("/auth") && pathname.endsWith("/callback"))
 

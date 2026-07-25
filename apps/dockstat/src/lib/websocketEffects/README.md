@@ -81,7 +81,7 @@ function LogViewer() {
 
 ## Widget Data
 
-Widget dashboards use `useWidgetData` from `widgets/client`, which subscribes to the `widgets/dashboard/:id` topic on a separate WS endpoint (`/api/v2/ws/widgets`):
+Widget dashboards use `useWidgetData` from `widgets/client`, which subscribes to the `widgets/dashboard/:id` topic on the **same shared WS endpoint** (`/api/v2/ws`) as logs and metrics. The server evaluates the dashboard's data-pipe when the first client subscribes so static data appears immediately.
 
 ```tsx
 import { useWidgetData } from "widgets/client"

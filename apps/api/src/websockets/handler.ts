@@ -10,7 +10,16 @@ interface PluginTopicPayload {
 }
 
 /** Every shape a topic can take in a client message */
-type TopicPayload = PluginTopicPayload | "logs" | "metrics/containers" | "metrics/stacks" | "rss"
+type TopicPayload =
+  | PluginTopicPayload
+  | "logs"
+  | "metrics/containers"
+  | "metrics/stacks"
+  | "rss"
+  // Arbitrary string topics (e.g. widgets/dashboard/<id>) so other
+  // subsystems can reuse the shared WS connection without extending
+  // this union for every new topic.
+  | (string & {})
 
 // ─── Helpers ───────────────────────────────────────────────────────────
 
@@ -31,7 +40,11 @@ export function pluginTopicKey(id: number | string, channel: string): string {
 }
 
 // ─── Elysia body schema (shared) ───────────────────────────────────────
-
+//
+// The topic accepts both the well-known typed literals (for Treaty type
+// safety on the client) AND arbitrary string topics. Arbitrary strings are
+// required so the widgets subsystem can subscribe to dynamic topics like
+// `widgets/dashboard/<id>` without needing its own WS endpoint.
 const ClientMessageSchema = t.Object({
   topic: t.Union([
     t.Object({ channel: t.String(), id: t.Union([t.String(), t.Number()]) }),
@@ -39,6 +52,7 @@ const ClientMessageSchema = t.Object({
     t.Literal("metrics/containers"),
     t.Literal("metrics/stacks"),
     t.Literal("rss"),
+    t.String(),
   ]),
   type: t.Union([t.Literal("subscribe"), t.Literal("unsubscribe"), t.Undefined()]),
 })
@@ -50,6 +64,14 @@ export interface DSWebSocketHandlerConfig {
   requireAuth?: boolean
   /** Token verification function */
   verifyToken?: (token: string) => Promise<Record<string, unknown> | null>
+  /**
+   * Called when a topic gains its first subscriber. Useful for lazily
+   * producing an initial snapshot (e.g. evaluating a dashboard data-pipe
+   * so a freshly-subscribed client immediately sees static data).
+   */
+  onFirstSubscriber?: (topic: string) => void
+  /** Called when a topic loses its last subscriber. */
+  onLastSubscriberLeave?: (topic: string) => void
 }
 
 class WebSocketHandler {
@@ -58,18 +80,69 @@ class WebSocketHandler {
   private authConfig?: DSWebSocketHandlerConfig
   /** Server-internal subscribers keyed by topic */
   private internalSubscribers = new Map<string, Set<(data: unknown) => void>>()
+  /** Extra onFirstSubscriber callbacks registered after construction */
+  private firstSubscriberHooks = new Set<(topic: string) => void>()
+  /** Extra onLastSubscriberLeave callbacks registered after construction */
+  private lastSubscriberLeaveHooks = new Set<(topic: string) => void>()
 
   constructor(logger: Logger, config?: DSWebSocketHandlerConfig) {
     this.logger = logger
     this.authConfig = config
 
+    if (config?.onFirstSubscriber) {
+      this.firstSubscriberHooks.add(config.onFirstSubscriber)
+    }
+    if (config?.onLastSubscriberLeave) {
+      this.lastSubscriberLeaveHooks.add(config.onLastSubscriberLeave)
+    }
+
     this.inner = createWSHandler(this.logger, {
       bodySchema: ClientMessageSchema,
+      onFirstSubscriber: (topic) => this.notifyFirstSubscriber(topic),
+      onLastSubscriberLeave: (topic) => this.notifyLastSubscriberLeave(topic),
       prefix: "/ws",
       requireAuth: config?.requireAuth ?? false,
       resolveKey: (topic) => resolveTopicKey(topic as TopicPayload),
       verifyToken: config?.verifyToken,
     })
+  }
+
+  /**
+   * Register an additional callback fired when a topic gains its first
+   * subscriber. Returns an unregister function.
+   */
+  onFirstSubscriber(cb: (topic: string) => void): () => void {
+    this.firstSubscriberHooks.add(cb)
+    return () => this.firstSubscriberHooks.delete(cb)
+  }
+
+  /**
+   * Register an additional callback fired when a topic loses its last
+   * subscriber. Returns an unregister function.
+   */
+  onLastSubscriberLeave(cb: (topic: string) => void): () => void {
+    this.lastSubscriberLeaveHooks.add(cb)
+    return () => this.lastSubscriberLeaveHooks.delete(cb)
+  }
+
+  private notifyFirstSubscriber(topic: string): void {
+    for (const cb of this.firstSubscriberHooks) {
+      try {
+        cb(topic)
+      } catch (err) {
+        this.logger.warn(`onFirstSubscriber callback failed: ${err}`)
+      }
+    }
+  }
+
+  private notifyLastSubscriberLeave(topic: string): void {
+    for (const cb of this.lastSubscriberLeaveHooks) {
+      try {
+        cb(topic)
+      } catch (err) {
+        this.logger.warn(`onLastSubscriberLeave callback failed: ${err}`)
+      }
+    }
   }
 
   /**
@@ -79,9 +152,15 @@ class WebSocketHandler {
   configureAuth(config: DSWebSocketHandlerConfig) {
     this.logger.debug("Configuring auth")
     this.authConfig = config
-    // Rebuild the inner handler with auth enabled
+    if (config.onFirstSubscriber) this.firstSubscriberHooks.add(config.onFirstSubscriber)
+    if (config.onLastSubscriberLeave)
+      this.lastSubscriberLeaveHooks.add(config.onLastSubscriberLeave)
+    // Rebuild the inner handler with auth enabled, preserving the
+    // first/last subscriber hooks registered earlier.
     this.inner = createWSHandler(this.logger, {
       bodySchema: ClientMessageSchema,
+      onFirstSubscriber: (topic) => this.notifyFirstSubscriber(topic),
+      onLastSubscriberLeave: (topic) => this.notifyLastSubscriberLeave(topic),
       prefix: "/ws",
       requireAuth: config.requireAuth,
       resolveKey: (topic) => resolveTopicKey(topic as TopicPayload),

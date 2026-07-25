@@ -1,9 +1,8 @@
-import { useContext } from "react"
-import { EdenClientContext } from "@/contexts/edenClient"
+import { useEdenClient } from "@dockstat/utils/react"
 import { api } from "@/lib/api"
 
 export const useDockerClientMutations = () => {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   const deleteClientMutation = eden.mutate({
     invalidateQueries: [["fetchDockerClients"], ["fetchPoolStatus"]],

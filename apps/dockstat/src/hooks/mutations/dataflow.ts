@@ -1,18 +1,18 @@
-import { useContext } from "react"
-import { EdenClientContext } from "@/contexts/edenClient"
-import { api } from "@/lib/api"
+import { useEdenClient } from "@dockstat/utils/react"
 import type { DataPipeGraph } from "widgets/client"
+import { api } from "@/lib/api"
 
 /**
  * Dataflow mutations for saving and evaluating data-pipe graphs.
  */
 export const useDataflowMutations = () => {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   const saveDataflowMutation = eden.mutateRoute({
     invalidateQueries: [["fetchDashboard"]],
     mutationKey: ["saveDataflow"],
-    routeBuilder: ({ dashboardId }: { dashboardId: string }) => api.widgets["data-pipe"]({ dashboardId }).put,
+    routeBuilder: ({ dashboardId }: { dashboardId: string }) =>
+      api.widgets["data-pipe"]({ dashboardId }).put,
     toast: {
       errorTitle: () => "Could not save dataflow",
       successTitle: () => "Dataflow saved",

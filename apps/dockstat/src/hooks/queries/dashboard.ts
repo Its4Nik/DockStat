@@ -1,13 +1,12 @@
-import { useContext } from "react"
-import { EdenClientContext } from "@/contexts/edenClient"
-import { api } from "@/lib/api"
+import { useEdenClient } from "@dockstat/utils/react"
 import type { DashboardDefinition } from "widgets/client"
+import { api } from "@/lib/api"
 
 /**
  * Dashboard queries for fetching dashboards and widgets.
  */
 export const useDashboardQueries = (dashboardId?: string) => {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   // Fetch a specific dashboard by ID
   const dashboardQuery = eden.query({

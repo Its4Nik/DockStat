@@ -1,9 +1,8 @@
-import { useContext } from "react"
-import { EdenClientContext } from "@/contexts/edenClient"
+import { useEdenClient } from "@dockstat/utils/react"
 import { api } from "@/lib/api"
 
 export const useAddRepoMutation = () => {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   return eden.mutate({
     invalidateQueries: [["fetchAllRepositories"]],
@@ -17,7 +16,7 @@ export const useAddRepoMutation = () => {
 }
 
 export const useDeleteRepoMutation = (id: number, name: string) => {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   return eden.mutate({
     invalidateQueries: [["fetchAllRepositories"]],

@@ -1,5 +1,4 @@
-import { useContext } from "react"
-import { EdenClientContext } from "@/contexts/edenClient"
+import { useEdenClient } from "@dockstat/utils/react"
 import { api } from "@/lib/api"
 
 /**
@@ -87,7 +86,7 @@ type ApiKeysQueryReturn = {
 }
 
 export const useAccountsQueries = (): AccountsQueriesReturn => {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   // Fetch all users
   const {
@@ -130,7 +129,7 @@ export const useAccountsQueries = (): AccountsQueriesReturn => {
 
 // Hook to fetch API keys for a specific user
 export const useApiKeysQuery = (userId?: string): ApiKeysQueryReturn => {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   const { data, isLoading, refetch } = eden.query({
     queryKey: ["fetchApiKeys", userId],

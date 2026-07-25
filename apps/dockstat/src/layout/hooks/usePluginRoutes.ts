@@ -1,9 +1,8 @@
-import { useContext } from "react"
-import { EdenClientContext } from "@/contexts/edenClient"
+import { useEdenClient } from "@dockstat/utils/react"
 import { api } from "@/lib/api"
 
 export function usePluginRoutes() {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   const { data: frontendPluginRoutes } = eden.query({
     queryKey: ["fetchFrontendPluginRoutes"],

@@ -1,10 +1,8 @@
-import { useContext } from "react"
-import { EdenClientContext } from "@/contexts/edenClient"
+import { useEdenClient } from "@dockstat/utils/react"
 import { api } from "@/lib/api"
-import type { DashboardDefinition } from "widgets/client"
 
 export const useDashboardMutations = () => {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   const setDefaultDashboardMutation = eden.mutate({
     invalidateQueries: [["fetchAdditionalSettings"], ["fetchAllDashboards"]],
@@ -32,7 +30,8 @@ export const useDashboardMutations = () => {
   const updateDashboardMutation = eden.mutateRoute({
     invalidateQueries: [["fetchDashboard"], ["fetchAllDashboards"]],
     mutationKey: ["updateDashboard"],
-    routeBuilder: ({ dashboardId }: { dashboardId: string }) => api.widgets.dashboards({ dashboardId }).put,
+    routeBuilder: ({ dashboardId }: { dashboardId: string }) =>
+      api.widgets.dashboards({ id: dashboardId }).put,
     toast: {
       errorTitle: () => "Could not update dashboard",
       successTitle: () => "Dashboard updated",

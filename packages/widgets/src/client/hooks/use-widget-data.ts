@@ -31,7 +31,12 @@ const api: ApiClient = treaty<TreatyType>(
   }
 ).api.v2
 
-import { eden, useTopicSubscription, type WSServerEnvelope } from "@dockstat/utils/react"
+import {
+  eden,
+  useEdenClient,
+  useTopicSubscription,
+  type WSServerEnvelope,
+} from "@dockstat/utils/react"
 import { useCallback } from "react"
 import type { DataPayload } from "../types"
 import type { UseWidgetDataOptions, UseWidgetDataReturn } from "./types"
@@ -46,11 +51,13 @@ interface WidgetDataEnvelope extends WSServerEnvelope {
 
 export function useWidgetData(options: UseWidgetDataOptions): UseWidgetDataReturn {
   const { dashboardId, keys, onUpdate } = options
+  const eden = useEdenClient()
 
-  const evaluateDataPipe = eden.Client({
+  const { mutateAsync: evaluateMutateAsync } = eden.prepareMutateRoute({
     mutationKey: ["data-pipe-evaluate", dashboardId],
-    routeBuilder: ({ dashboardId }: { dashboardId: string }) => api.widgets["data-pipe"].evaluate({ dashboardId }).post,
-  })
+    routeBuilder: ({ dashboardId }: { dashboardId: string }) =>
+      api.widgets["data-pipe"].evaluate({ dashboardId }).post,
+  })()
 
   const transform = useCallback(
     (envelope: WSServerEnvelope): DataPayload[] => {
@@ -68,20 +75,23 @@ export function useWidgetData(options: UseWidgetDataOptions): UseWidgetDataRetur
   const { connected, data, error, unsubscribe } = useTopicSubscription<DataPayload[]>(
     `widgets/dashboard/${dashboardId}`,
     {
+      debugLog: true,
       onMessage: onUpdate
         ? (payloads, _envelope) => {
             onUpdate(payloads)
           }
         : undefined,
       transform,
-      debugLog: true
     }
   )
 
   const evaluate = useCallback(async () => {
-    console.debug("Evaluating data-pipe for ", dashboardId )
+    console.debug("Evaluating data-pipe for ", dashboardId)
     try {
-      const {payloads,success,message} = await evaluateDataPipe.mutateAsync({params: {dashboardId}})
+      const result = await evaluateMutateAsync({
+        params: { dashboardId },
+      })
+      const { payloads, success, message } = result
 
       if (!success) {
         throw new Error(`Evaluation failed: ${message}`)
@@ -93,7 +103,7 @@ export function useWidgetData(options: UseWidgetDataOptions): UseWidgetDataRetur
     } catch {
       // Error is available via the `error` return value
     }
-  }, [dashboardId, onUpdate])
+  }, [dashboardId, onUpdate, evaluateMutateAsync])
 
   return { connected, data, error, evaluate, unsubscribe }
 }

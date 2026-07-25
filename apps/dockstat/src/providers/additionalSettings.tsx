@@ -1,10 +1,9 @@
-import { useContext } from "react"
+import { useEdenClient } from "@dockstat/utils/react"
 import { ConfigProviderContext, type ConfigProviderData } from "@/contexts/config"
-import { EdenClientContext } from "@/contexts/edenClient"
 import { api } from "@/lib/api"
 
 export function ConfigProvider({ children }: { children: React.ReactNode }) {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   const { data } = eden.query({
     queryKey: ["fetchAdditionalSettings"],

@@ -107,11 +107,22 @@ app.use(widgetsService.getRoutes())
 
 ### WebSocket Endpoint
 
-**Endpoint:** `/ws/widgets` (mounted at `/api/v2/ws/widgets`)
+Widget data updates are published through the **shared** `DSWebSockerHandler`
+(mounted at `/api/v2/ws`) under the topic `widgets/dashboard/<id>`. The
+client subscribes by sending the standard `{ topic, type: "subscribe" }`
+message — the shared handler's topic schema accepts arbitrary string
+topics so widget dashboards reuse the same single WS connection as logs,
+metrics, etc.
 
-**Topics:**
-- `{ type: "dashboard", dashboardId }` → `widgets/dashboard/:id`
-- `{ type: "widgets" }` → `widgets/all`
+A dedicated `/ws/widgets` endpoint still exists for backwards compatibility
+(`{ type: "dashboard", dashboardId }` / `{ type: "widgets" }` shapes), but
+client code (via `useWidgetData`) always uses the shared endpoint.
+
+**Topic:** `widgets/dashboard/<id>`
+
+**On subscribe:** The server evaluates the dashboard's data-pipe once and
+pushes the result immediately so static providers appear without waiting
+for a manual evaluate or a poll tick.
 
 **Message Envelope:**
 ```typescript

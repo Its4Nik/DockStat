@@ -1,8 +1,7 @@
 import { Button, Card, CardBody, CardHeader, Divider, Input, Slides, Toggle } from "@dockstat/ui"
 import { Activity, Server, Shield } from "lucide-react"
-import { useContext, useState } from "react"
+import { useState } from "react"
 import { DockNodeCard } from "@/components/docknode/card"
-import { EdenClientContext } from "@/contexts/edenClient"
 import { useDockNodeMutations } from "@/hooks/mutations"
 import { useGlobalBusy } from "@/hooks/useGlobalBusy"
 import { usePageHeading } from "@/hooks/useHeading"
@@ -19,7 +18,7 @@ type Target = {
 export default function DockNodePage() {
   usePageHeading("DockNodes")
 
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   const busy = useGlobalBusy()
 
