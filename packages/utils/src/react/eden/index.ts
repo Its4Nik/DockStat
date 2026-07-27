@@ -8,6 +8,7 @@ export * from "./useEdenRouteMutation"
 
 import type {
   EdenBody,
+  EdenFetchOptions,
   EdenQueryRoute,
   EdenRoute,
   MutationInput,
@@ -27,6 +28,7 @@ type WrapToast<T> = T extends { toast?: infer TToast }
 export class Client {
   private bearerToken: string
   private toaster: ToasterFunction
+  private onUnauthorized?: () => void
 
   constructor(toaster: ToasterFunction) {
     this.bearerToken = localStorage.getItem("auth_token") ?? ""
@@ -35,6 +37,10 @@ export class Client {
 
   setToken(token: string) {
     this.bearerToken = token
+  }
+
+  setOnUnauthorized(cb: (() => void) | undefined) {
+    this.onUnauthorized = cb
   }
 
   private buildCtx<
@@ -47,6 +53,7 @@ export class Client {
     const authorization = `Bearer ${this.bearerToken}`
     return {
       ...ctx,
+      onUnauthorized: this.onUnauthorized,
       opts: {
         headers: {
           ...ctx.opts?.headers,
@@ -106,5 +113,53 @@ export class Client {
     }
   ): () => MutationResult<ResponseData<TRoute>, MutationInput<TParams, TRoute>> {
     return () => useEdenRouteMutation<TParams, TRoute>(this.buildCtx(ctx))
+  }
+
+  /**
+   * Imperative one-off call for use outside of React hooks (e.g. inside
+   * event handlers or useCallback bodies that can't use useQuery/useMutation).
+   *
+   * Automatically injects the bearer token and triggers `onUnauthorized`
+   * when the response is a 401, unless `skipAuthHandler` is set.
+   *
+   * Pass `body` for POST/PATCH/PUT routes.
+   */
+  async call(
+    // biome-ignore lint/suspicious/noExplicitAny: Eden treaty route functions have complex proxy types that can't be expressed statically
+    route: (...args: any[]) => Promise<any>,
+    opts?: {
+      body?: unknown
+      fetchOptions?: EdenFetchOptions
+      skipAuthHandler?: boolean
+    }
+  ): Promise<{
+    data: unknown
+    error: unknown
+    status: number
+  }> {
+    const headers: Record<string, unknown> = {
+      authorization: `Bearer ${this.bearerToken}`,
+      ...opts?.fetchOptions?.headers,
+    }
+
+    let result: { data: unknown; error: unknown; status: number }
+
+    if (opts?.body !== undefined) {
+      result = await route(opts.body, {
+        ...opts.fetchOptions,
+        headers,
+      })
+    } else {
+      result = await route({
+        ...opts?.fetchOptions,
+        headers,
+      })
+    }
+
+    if (!opts?.skipAuthHandler && result.status === 401 && this.onUnauthorized) {
+      this.onUnauthorized()
+    }
+
+    return result
   }
 }

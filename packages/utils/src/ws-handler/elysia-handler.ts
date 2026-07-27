@@ -50,11 +50,22 @@ export interface WSServerEnvelope {
   timestamp: number
 }
 
+// Internal Functions
+
+type ListWSTopics = string[]
+
 // ── Client message ────────────────────────────────────────────────
 
-export interface WSClientMessage<TTopic = string> {
-  type: "subscribe" | "unsubscribe"
+export type WSClientMessage<TTopic = string> = {
+  type: "subscribe"
   topic: TTopic
+} | {
+  type: "unsubscribe"
+  topic: TTopic
+} | {
+  type: "func"
+  topic: undefined
+  func: "listTopics"
 }
 
 // ── Per-client state (stored in a WeakMap, not in ws.data) ──────
@@ -193,6 +204,11 @@ export class WSTopicHandler {
     })
   }
 
+  private getTopics(){
+    const topics = this.topicMap.keys()
+    return Array.from(topics)
+  }
+
   // ── Lifecycle ─────────────────────────────────────────────────
 
   private onOpen(ws: ElysiaWS<any>) {
@@ -264,6 +280,13 @@ export class WSTopicHandler {
     if (msg.type === "subscribe") {
       this.logger.debug(`Client subscribing to: ${msg.topic}`)
       this.subscribe(ws, key)
+    } else if(msg.type === "func"){
+      this.logger.debug(`Client sent command: ${msg.func}`)
+      switch (msg.func) {
+        case "listTopics": {
+          ws.send(this.buildEnvelope("func", this.getTopics))
+        }
+      }
     } else {
       this.logger.debug(`Client unsubscribing from: ${msg.topic}`)
       this.unsubscribe(ws, key)
@@ -310,15 +333,21 @@ export class WSTopicHandler {
     return this.broadcast(key, data)
   }
 
-  private broadcast(key: string, data: unknown): number {
-    const bucket = this.topicMap.get(key)
-    if (!bucket?.size) return 0
-
+  private buildEnvelope(key: string,data: unknown){
     const envelope: WSServerEnvelope = {
       data,
       timestamp: Date.now(),
       topic: key,
     }
+
+    return envelope
+  }
+
+  private broadcast(key: string, data: unknown): number {
+    const bucket = this.topicMap.get(key)
+    if (!bucket?.size) return 0
+
+    const envelope = this.buildEnvelope(key,data)
 
     let sent = 0
     for (const ws of bucket) {
@@ -355,6 +384,12 @@ export class WSTopicHandler {
     }
     if (typeof topic === "string") return topic
     return String(topic)
+  }
+
+  // --- Internal message functions
+
+  private parseInternalCommand(func: string): ListWSTopics {
+
   }
 }
 

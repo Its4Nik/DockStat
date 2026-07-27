@@ -16,7 +16,11 @@ export function useEdenRouteMutation<TParams, TRoute extends EdenRoute>(
   const mutationFn = async (input: MutationInput<TParams, TRoute>) => {
     const toaster = options.toast?.toaster
     const routeFn = options.routeBuilder(input.params)
-    const { data, error } = await routeFn(input.body as never, options.opts as never)
+    const { data, error, status } = await routeFn(input.body as never, options.opts as never)
+
+    if (!options.skipAuthHandler && status === 401 && options.onUnauthorized) {
+      options.onUnauthorized()
+    }
 
     if (error) {
       if (toaster) {
@@ -70,10 +74,7 @@ export function useEdenRouteMutation<TParams, TRoute extends EdenRoute>(
     return data as ResponseData<TRoute>
   }
 
-  return useBaseEdenMutation<
-    ResponseData<TRoute>,
-    MutationInput<TParams, TRoute>
-  >({
+  return useBaseEdenMutation<ResponseData<TRoute>, MutationInput<TParams, TRoute>>({
     invalidateQueries: options.invalidateQueries,
     mutationFn,
     mutationKey: options.mutationKey,

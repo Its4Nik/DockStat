@@ -10,11 +10,6 @@ import { type ThemeListItem, ThemeProviderContext, type ThemeProviderData } from
 import { useThemeMutations } from "@/hooks/mutations"
 import { api } from "@/lib/api"
 
-const getAuthHeaders = (): Record<string, unknown> => {
-  const token = localStorage.getItem("auth_token")
-  return token ? { authorization: `Bearer ${token}` } : {}
-}
-
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const eden = useEdenClient()
   const [theme, setTheme] = useState<ThemeContextData | null>(null)
@@ -65,22 +60,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setError(null)
 
       try {
-        const { data, error: fetchError } = await api.themes["by-name"]({
-          name: themeName,
-        }).get({ headers: getAuthHeaders() })
+        const { data, error: fetchError } = await eden.call(
+          api.themes["by-name"]({ name: themeName }).get
+        )
 
         if (fetchError || !data) {
           throw new Error(`Failed to fetch theme "${themeName}"`)
         }
 
-        if (!data.success || !data.data) {
-          throw new Error(data.message || `Theme "${themeName}" not found`)
+        const themeResponse = data as {
+          success?: boolean
+          data?: { id: number; name: string; variables?: Record<string, string> }
+          message?: string
+        }
+        if (!themeResponse.success || !themeResponse.data) {
+          throw new Error(themeResponse.message || `Theme "${themeName}" not found`)
         }
 
         const themeData = {
-          id: data.data.id,
-          name: data.data.name,
-          vars: data.data.variables ?? {},
+          id: themeResponse.data.id,
+          name: themeResponse.data.name,
+          vars: themeResponse.data.variables ?? {},
         }
         console.log("Theme data fetched:", themeData)
         applyAndPersistTheme(themeData)
@@ -90,7 +90,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false)
       }
     },
-    [applyAndPersistTheme]
+    [applyAndPersistTheme, eden]
   )
 
   const applyThemeById = useCallback(
@@ -99,22 +99,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setError(null)
 
       try {
-        const { data, error: fetchError } = await api.themes["by-id"]({
-          id: themeId,
-        }).get({ headers: getAuthHeaders() })
+        const { data, error: fetchError } = await eden.call(
+          api.themes["by-id"]({ id: themeId }).get
+        )
 
         if (fetchError || !data) {
           throw new Error(`Failed to fetch theme with id ${themeId}`)
         }
 
-        if (!data.success || !data.data) {
-          throw new Error(data.message || `Theme with id ${themeId} not found`)
+        const themeResponse = data as {
+          success?: boolean
+          data?: { id: number; name: string; variables?: Record<string, string> }
+          message?: string
+        }
+        if (!themeResponse.success || !themeResponse.data) {
+          throw new Error(themeResponse.message || `Theme with id ${themeId} not found`)
         }
 
         const themeData = {
-          id: data.data.id,
-          name: data.data.name,
-          vars: data.data.variables ?? {},
+          id: themeResponse.data.id,
+          name: themeResponse.data.name,
+          vars: themeResponse.data.variables ?? {},
         }
         console.log("Theme data fetched by ID:", themeData)
         applyAndPersistTheme(themeData)
@@ -124,7 +129,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false)
       }
     },
-    [applyAndPersistTheme]
+    [applyAndPersistTheme, eden]
   )
 
   useEffect(() => {

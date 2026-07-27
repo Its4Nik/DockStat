@@ -182,13 +182,14 @@ export function createDashboardRoutes(
         "/:id/set-default",
         ({ params, status }) => {
           const result = dashboardRepo.setDefault(params.id)
+          const dashboardName = dashboardRepo.getById(params.id)?.name
           if (!result) {
             return status(404, {
               error: `Dashboard "${params.id}" not found`,
               success: false as const,
             })
           }
-          return { message: `Dashboard "${params.id}" set as default`, success: true as const }
+          return { message: `Dashboard "${dashboardName || params.id}" set as default`, success: true as const }
         },
         {
           detail: {

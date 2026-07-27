@@ -6289,7 +6289,6 @@ export interface components {
       /**
        * @description Optional warning message.
        *
-       *     FIXME(thaJeztah): this should have "omitempty" in the generated type.
        * @example [
        *       "unable to pin image doesnotexist:latest to digest: image library/doesnotexist:latest not found"
        *     ]

@@ -58,6 +58,7 @@ export function AuthProvider({
         user = JSON.parse(storedUser)
       }
 
+
       setState({
         error: null,
         isAuthenticated: !!user && !!storedToken,

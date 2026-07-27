@@ -20,7 +20,7 @@ export default function DashboardIndexPage() {
   const [newName, setNewName] = useState("")
 
   const { dashboardsQuery } = useDashboardQueries()
-  const { createDashboardMutation } = useDashboardMutations()
+  const { createDashboardMutation, setDefaultDashboardMutation } = useDashboardMutations()
 
   const dashboards = (dashboardsQuery.data as DashboardDefinition[]) || []
   const loading = dashboardsQuery.isLoading
@@ -39,6 +39,12 @@ export default function DashboardIndexPage() {
     } catch (err) {
       console.error("Failed to create dashboard:", err)
     }
+  }
+
+  const setDefaultDashboard = async (dashboardId: string) => {
+    await setDefaultDashboardMutation.mutateAsync({
+      dashboardId
+    })
   }
 
   if (loading) {
@@ -108,13 +114,23 @@ export default function DashboardIndexPage() {
               <CardBody>
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <h3 className="truncate font-semibold text-primary-text">{dash.label}</h3>
-                  {dash.isDefault && (
+                  {dash.isDefault ? (
                     <Badge
                       size="xs"
                       variant="primary"
                     >
                       Default
                     </Badge>
+                  ) : (
+                    <Button
+                    size="xs"
+                    onClick={(e) => {
+                      e.stopPropagation()  
+                      setDefaultDashboard(dash.id)}
+                      }>
+
+                      Set as Default
+                    </Button>
                   )}
                 </div>
                 <p className="line-clamp-2 min-h-10 text-sm text-muted-text">
