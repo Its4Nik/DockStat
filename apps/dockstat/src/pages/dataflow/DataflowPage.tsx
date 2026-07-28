@@ -74,11 +74,14 @@ function serializeDataPipeGraph(nodes: PipeNode[], edges: Edge[]) {
 export default function DataflowPage() {
   const { id: dashboardId } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const eden = useEdenClient()
 
   usePageHeading(`Dataflow ${dashboardId}`)
 
+  useWsTopics
+
   // ── React Flow state (typed) ─────────────────────────────────────
-  eden.const[(nodes, setNodes, onNodesChange)] = useNodesState<PipeNode>([])
+  const [nodes, setNodes, onNodesChange] = useNodesState<PipeNode>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -315,6 +318,7 @@ export default function DataflowPage() {
           )}
         >
           <PropertyPanel
+            getWsTopics={}
             node={selectedNode}
             onChange={onUpdateNodeData}
             onDelete={onDeleteNode}
