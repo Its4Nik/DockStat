@@ -28,10 +28,10 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router"
 import "@xyflow/react/dist/style.css"
 
-import { useEdenClient } from "@dockstat/utils/react"
 import type { DataPipeGraph, DataPipeNodeData, NodeTemplateDef } from "widgets/client"
 import { useDataflowMutations } from "@/hooks/mutations/dataflow"
 import { useDashboardQueries } from "@/hooks/queries/dashboard"
+import { useWsTopics } from "@/hooks/queries/websocket-topics"
 import { usePageHeading } from "@/hooks/useHeading"
 import { NodePalette } from "./components/NodePalette"
 import { createNodeData, PropertyPanel } from "./components/PropertyPanel"
@@ -74,11 +74,11 @@ function serializeDataPipeGraph(nodes: PipeNode[], edges: Edge[]) {
 export default function DataflowPage() {
   const { id: dashboardId } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const eden = useEdenClient()
+  const { topics } = useWsTopics()
 
   usePageHeading(`Dataflow ${dashboardId}`)
 
-  useWsTopics
+  const getWsTopics = useCallback(() => topics, [topics])
 
   // ── React Flow state (typed) ─────────────────────────────────────
   const [nodes, setNodes, onNodesChange] = useNodesState<PipeNode>([])
@@ -318,7 +318,7 @@ export default function DataflowPage() {
           )}
         >
           <PropertyPanel
-            getWsTopics={}
+            getWsTopics={getWsTopics}
             node={selectedNode}
             onChange={onUpdateNodeData}
             onDelete={onDeleteNode}

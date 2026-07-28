@@ -254,6 +254,20 @@ class WebSocketHandler {
     return this.inner.activeTopics()
   }
 
+  /**
+   * All topics available as **data sources** for websocket-source data-pipe
+   * nodes. Merges active WS subscriber topics with internal (server-side)
+   * subscriber topics, then EXCLUDES dashboard sink topics
+   * (`widgets/dashboard/*`) — those are outputs, not sources.
+   */
+  availableTopics(): string[] {
+    const active = this.inner.activeTopics()
+    const internal = [...this.internalSubscribers.keys()]
+    return [...new Set([...active, ...internal])]
+      .filter((topic) => !topic.startsWith("widgets/dashboard/"))
+      .sort()
+  }
+
   /** Mount this on your Elysia app: `app.use(handler.getRoutes())` */
   getRoutes() {
     return this.inner.getRoutes()

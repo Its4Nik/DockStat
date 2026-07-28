@@ -5,16 +5,16 @@ import { errorHandler } from "./handlers/onError"
 import CreateRequestLogger, { stateMap } from "./handlers/requestLogger"
 import BaseLogger from "./logger"
 import MetricsMiddleware from "./middleware/metrics"
+import CertificateRoutes from "./routes/certificates"
 import DBRoutes from "./routes/db/index"
 import DockerRoutes from "./routes/docker"
 import GraphRoutes from "./routes/graph"
 import DockStatMiscRoutes from "./routes/misc"
-import { DockNodeElyisa } from "./routes/node"
 import PluginRoutes from "./routes/plugins"
 import RepositoryRoutes from "./routes/repositories"
 import StatusRoutes from "./routes/status"
 import ThemeRoutes from "./routes/themes"
-import { DSWebSockerHandler } from "./websockets"
+import { DSWebSockerHandler, WsTopicsRoutes } from "./websockets"
 import { WidgetsService } from "./widget"
 
 const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
@@ -37,11 +37,13 @@ export const DockStatAPI = new Elysia({ precompile: false, prefix: "/api/v2" })
           .use(MetricsMiddleware)
           .use(StatusRoutes)
           .use(DBRoutes)
+          .use(CertificateRoutes)
           .use(DockerRoutes)
           .use(PluginRoutes)
           .use(DockStatMiscRoutes)
           .use(RepositoryRoutes)
           .use(ThemeRoutes)
+          .use(WsTopicsRoutes)
           .use(WidgetsService.getRestRoutes())
           //.use(DockNodeElyisa)
           .use(GraphRoutes)

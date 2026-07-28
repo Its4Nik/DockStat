@@ -1,4 +1,21 @@
 import type {
+  AddExternalCertificateBody,
+  Certificate,
+  CertificateAlgorithm,
+  CertificateDeleteResponse,
+  CertificateFormat,
+  CertificateListResponse,
+  CertificateResolveResponse,
+  CertificateResponse,
+  CertificateRevealResponse,
+  CertificateSource,
+  CertificateType,
+  GenerateCertificateBody,
+  ImportCertificateBody,
+  ResolveCertificateBody,
+  UpdateCertificateBody,
+} from "./certificates"
+import type {
   CreateRepo,
   DockStatConfigTable,
   PluginHashes,
@@ -28,18 +45,49 @@ type UpdateDockStatConfigTableResponseType = typeof UpdateDockStatConfigTableRes
 type PluginMetaType = typeof WrappedPluginMeta.static
 type RepoManifestType = typeof RepoManifest.static
 
+type CertificateTypeType = typeof CertificateType.static
+type CertificateSourceType = typeof CertificateSource.static
+type CertificateAlgorithmType = typeof CertificateAlgorithm.static
+type CertificateFormatType = typeof CertificateFormat.static
+type CertificateTypeRow = typeof Certificate.static
+type CertificateResponseType = typeof CertificateResponse.static
+type CertificateListResponseType = typeof CertificateListResponse.static
+type CertificateDeleteResponseType = typeof CertificateDeleteResponse.static
+type CertificateRevealResponseType = typeof CertificateRevealResponse.static
+type CertificateResolveResponseType = typeof CertificateResolveResponse.static
+type GenerateCertificateBodyType = typeof GenerateCertificateBody.static
+type ImportCertificateBodyType = typeof ImportCertificateBody.static
+type AddExternalCertificateBodyType = typeof AddExternalCertificateBody.static
+type UpdateCertificateBodyType = typeof UpdateCertificateBody.static
+type ResolveCertificateBodyType = typeof ResolveCertificateBody.static
+
 export type {
+  AddExternalCertificateBodyType,
+  CertificateAlgorithmType,
+  CertificateDeleteResponseType,
+  CertificateFormatType,
+  CertificateListResponseType,
+  CertificateResolveResponseType,
+  CertificateResponseType,
+  CertificateRevealResponseType,
+  CertificateSourceType,
+  CertificateTypeType,
+  CertificateTypeRow,
   CreateRepoType,
   DockStatConfigTableType,
   DBPlugin,
   DBPluginShemaT,
+  GenerateCertificateBodyType,
+  ImportCertificateBodyType,
   Plugin,
   PluginHashesType,
   PluginMetaType,
   RepoManifestType,
   RepoResponseType,
   RepoType,
+  ResolveCertificateBodyType,
   TableMetaDataType,
   UpdateDockStatConfigTableResponseType,
+  UpdateCertificateBodyType,
   UpdateRepoType,
 }

@@ -169,7 +169,15 @@ function Field({
         {field.required && <span className="text-error">*</span>}
       </span>
 
-      {field.type === "select" && field.options ? (
+      {typeof field.type === "function" ? (
+        <Select
+          onChange={(val) => onChange(val)}
+          options={(field.type as () => string[])().map((t) => ({ label: t, value: t }))}
+          placeholder="Select a topic"
+          size="sm"
+          value={String(value ?? "")}
+        />
+      ) : field.type === "select" && field.options ? (
         <Select
           onChange={(val) => onChange(val)}
           options={(field.options ?? []).map((opt) => ({
