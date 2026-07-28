@@ -16,6 +16,7 @@ export function createWidgetRoutes(
   return (
     new Elysia({
       detail: { tags: ["Widgets"] },
+      name: "Widget",
       prefix: "/widgets",
     })
       // ── List all widgets ───────────────────────────────────────

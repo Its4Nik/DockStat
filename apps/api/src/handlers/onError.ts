@@ -6,7 +6,7 @@ import BaseLogger from "../logger"
 
 const logger = BaseLogger.spawn("Error")
 
-export const errorHandler = new Elysia()
+export const errorHandler = new Elysia({name: "DockStat-Error-Handler"})
   .onError(({ code, error, set, request }) => {
     const path = new URL(request.url).pathname
     const timestamp = new Date().toISOString()

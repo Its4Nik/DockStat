@@ -16,6 +16,7 @@ export function createDashboardRoutes(
   return (
     new Elysia({
       detail: { tags: ["Dashboards"] },
+      name: "Dashboard",
       prefix: "/dashboards",
     })
       // ── List all dashboards ───────────────────────────────────
@@ -189,7 +190,10 @@ export function createDashboardRoutes(
               success: false as const,
             })
           }
-          return { message: `Dashboard "${dashboardName || params.id}" set as default`, success: true as const }
+          return {
+            message: `Dashboard "${dashboardName || params.id}" set as default`,
+            success: true as const,
+          }
         },
         {
           detail: {

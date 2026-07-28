@@ -6,6 +6,7 @@ export const DockerContainerElysia = new Elysia({
   detail: {
     tags: ["Docker Containers"],
   },
+  name: "Docker-Containers",
   prefix: "/containers",
 })
   .get("/all-containers", async ({ status }) => {

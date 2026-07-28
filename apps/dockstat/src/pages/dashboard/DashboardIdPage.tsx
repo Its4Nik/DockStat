@@ -160,6 +160,19 @@ export default function DashboardPage() {
       .map((n) => n.data.key as string)
   }, [dashboard])
 
+  // O(1) lookup set for available output keys (used when dropping widgets).
+  const availableOutputKeySet = useMemo(
+    () => new Set(availableOutputKeys),
+    [availableOutputKeys]
+  )
+
+  // O(1) payload lookup by key — avoids an O(N) `.find` per widget per render.
+  const payloadMap = useMemo(() => {
+    const m = new Map<string, DataPayload>()
+    for (const p of payloads ?? []) m.set(p.key, p)
+    return m
+  }, [payloads])
+
   // ── Add a widget to the dashboard ────────────────────────────────
   const handleWidgetDrop = useCallback(
     (widget: WidgetDefinition) => {
@@ -168,7 +181,7 @@ export default function DashboardPage() {
       // Auto-map inputs to matching output keys when possible
       const autoMap: Record<string, string> = {}
       for (const input of widget.dataInputs) {
-        if (availableOutputKeys.includes(input)) {
+        if (availableOutputKeySet.has(input)) {
           autoMap[input] = input
         }
       }
@@ -194,7 +207,7 @@ export default function DashboardPage() {
         widgets: [...dashboard.widgets, placed],
       })
     },
-    [dashboard, availableOutputKeys]
+    [dashboard, availableOutputKeySet]
   )
 
   // ── Remove a placed widget ───────────────────────────────────────
@@ -276,15 +289,14 @@ export default function DashboardPage() {
   // ── Resolve payloads + previous value for a widget instance ──────
   const getPayloadForWidget = useCallback(
     (widget: WidgetDefinition, placed: PlacedWidget): DataPayload | undefined => {
-      if (!payloads) return undefined
       const inputMap =
         (placed.config[DATA_INPUT_MAP_KEY] as Record<string, string> | undefined) ?? {}
       const primaryInput = widget.dataInputs[0]
       if (!primaryInput) return undefined
       const resolvedKey = inputMap[primaryInput] ?? primaryInput
-      return payloads.find((p) => p.key === resolvedKey)
+      return payloadMap.get(resolvedKey)
     },
-    [payloads]
+    [payloadMap]
   )
 
   const getPreviousValueForWidget = useCallback(
@@ -327,18 +339,33 @@ export default function DashboardPage() {
   const configWidget = configPlaced ? widgetDefMap.get(configPlaced.widgetId) : undefined
 
   // Effective layout = committed gridLayout overridden by any in-flight drag
-  const effectiveLayout = dashboard.widgets.map((w) => {
-    const live = liveLayout?.get(w.instanceId)
-    return {
-      h: live?.h ?? w.gridLayout.h,
-      i: w.instanceId,
-      minH: w.gridLayout.minH ?? 2,
-      minW: w.gridLayout.minW ?? 2,
-      w: live?.w ?? w.gridLayout.w,
-      x: live?.x ?? w.gridLayout.x,
-      y: live?.y ?? w.gridLayout.y,
-    }
-  })
+  const effectiveLayout = useMemo(
+    () =>
+      dashboard.widgets.map((w) => {
+        const live = liveLayout?.get(w.instanceId)
+        return {
+          h: live?.h ?? w.gridLayout.h,
+          i: w.instanceId,
+          minH: w.gridLayout.minH ?? 2,
+          minW: w.gridLayout.minW ?? 2,
+          w: live?.w ?? w.gridLayout.w,
+          x: live?.x ?? w.gridLayout.x,
+          y: live?.y ?? w.gridLayout.y,
+        }
+      }),
+    [dashboard.widgets, liveLayout]
+  )
+
+  const layouts = useMemo(
+    () => ({
+      lg: effectiveLayout,
+      md: effectiveLayout,
+      sm: effectiveLayout,
+      xs: effectiveLayout,
+      xxs: effectiveLayout,
+    }),
+    [effectiveLayout]
+  )
 
   return (
     <div className="flex h-[calc(100vh-7rem)] flex-col gap-3 pb-4">
@@ -433,13 +460,7 @@ export default function DashboardPage() {
               className="layout"
               cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
               dragConfig={{ bounded: false, enabled: editMode, threshold: 3 }}
-              layouts={{
-                lg: effectiveLayout,
-                md: effectiveLayout,
-                sm: effectiveLayout,
-                xs: effectiveLayout,
-                xxs: effectiveLayout,
-              }}
+              layouts={layouts}
               margin={GRID_MARGIN}
               onDragStop={commitLayout}
               onLayoutChange={handleLayoutChange}

@@ -5,6 +5,7 @@ import DCM from "../../docker"
 import { DockerModel } from "../../models/docker"
 
 export const DockerManager = new Elysia({
+  name: "Docker-Manager",
   detail: {
     description:
       "Docker worker pool management endpoints for monitoring and controlling Docker client connections",

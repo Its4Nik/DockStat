@@ -54,13 +54,20 @@ export default function PluginBrowser() {
 
   const { installPluginMutation, deletePluginMutation } = usePluginMutations()
 
+  // O(1) lookup of installed plugins by `repository|manifest`.
+  const installedByKey = useMemo(() => {
+    const m = new Map<string, (typeof allPlugins)[number]>()
+    for (const p of allPlugins ?? []) m.set(`${p.repository}|${p.manifest}`, p)
+    return m
+  }, [allPlugins])
+
   const availablePlugins = useMemo(() => {
     if (!allManifests) return []
 
     const plugins = Object.entries(allManifests).flatMap(([_, manifest]) =>
       (manifest.data.plugins || []).map((plugin) => {
-        const installedPlugin = allPlugins?.find(
-          (p) => p.repository === plugin.repository && p.manifest === plugin.manifest
+        const installedPlugin = installedByKey.get(
+          `${plugin.repository}|${plugin.manifest}`
         )
         return {
           ...plugin,
@@ -79,7 +86,7 @@ export default function PluginBrowser() {
           p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
           p.tags?.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())))
     )
-  }, [allManifests, allPlugins, selectedRepo, searchQuery])
+  }, [allManifests, installedByKey, selectedRepo, searchQuery])
 
   return (
     <div className="space-y-6">

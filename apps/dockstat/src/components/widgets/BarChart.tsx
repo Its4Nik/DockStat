@@ -43,8 +43,12 @@ export function BarChart({ config, payload }: BarChartProps) {
     return <EmptyChart />
   }
 
-  const max = Math.max(...points.map((p) => p.value), 0)
-  const min = Math.min(...points.map((p) => p.value), 0)
+  let min = 0
+  let max = 0
+  for (const p of points) {
+    if (p.value < min) min = p.value
+    if (p.value > max) max = p.value
+  }
   const range = max - min || 1
 
   if (horizontal) {

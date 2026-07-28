@@ -55,7 +55,7 @@ async function fetchStackFromStore(repoUrl: string, stackName: string): Promise<
   }
 }
 
-export const DockStacksRoutes = new Elysia({ prefix: "/stacks" })
+export const DockStacksRoutes = new Elysia({ prefix: "/stacks", name: "Stacks" })
   // ---- List & Get Stacks
   .get("/", () => handler.listStacks())
   .get("/networks", () => handler.getNetworkStats())
@@ -298,7 +298,7 @@ export const DockStacksRoutes = new Elysia({ prefix: "/stacks" })
 // Docker Swarm Routes
 // ============================================
 
-export const SwarmRoutes = new Elysia({ prefix: "/swarm" })
+export const SwarmRoutes = new Elysia({ prefix: "/swarm", name: "Swarm" })
   // ---- Swarm Cluster Operations
   .get("/status", () => SwarmHandler.getSwarmStatus())
 

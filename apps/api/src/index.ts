@@ -19,7 +19,7 @@ import { WidgetsService } from "./widget"
 
 const PORT = Bun.env.DOCKSTATAPI_PORT || 3030
 
-export const DockStatAPI = new Elysia({ precompile: false, prefix: "/api/v2" })
+export const DockStatAPI = new Elysia({ precompile: false, prefix: "/api/v2", name: "DockStat-API" })
   .use(errorHandler)
   .use(Middleware)
   .use(DockStatElysiaPlugins)

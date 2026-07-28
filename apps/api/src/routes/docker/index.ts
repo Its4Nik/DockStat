@@ -8,6 +8,7 @@ import { DockerHostElysia } from "./hosts"
 import { DockerManager } from "./manager"
 
 const DockerRoutes = new Elysia({
+  name: "Docker",
   detail: {
     tags: ["Docker"],
   },

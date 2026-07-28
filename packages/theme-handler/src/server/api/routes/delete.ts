@@ -3,7 +3,7 @@ import type { ThemeDB } from "../../db"
 import { theme } from "../models"
 
 export const createThemeDeleteRoute = (themeDB: ThemeDB) => {
-  return new Elysia().decorate("themeDB", themeDB).delete(
+  return new Elysia({ name: "theme-delete" }).decorate("themeDB", themeDB).delete(
     "/",
     ({ themeDB, status, body }) => {
       try {

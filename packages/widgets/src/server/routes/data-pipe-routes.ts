@@ -18,6 +18,7 @@ export function createDataPipeRoutes(
   return (
     new Elysia({
       detail: { tags: ["Data Pipe"] },
+      name: "Datapipe",
       prefix: "/data-pipe",
     })
       // ── List available node templates ───────────────────────

@@ -6,6 +6,7 @@ import { DockStatDB } from "../../database"
  * Database schema and details routes
  */
 const DatabaseDetailsRoutes = new Elysia({
+  name: "DB-Details",
   detail: {
     description: "Database schema and information endpoints",
     tags: ["Database"],

@@ -60,8 +60,16 @@ export function Sparkline({ config, payload }: SparklineProps) {
     const W = 100
     const H = 30
     const pad = strokeWidth
-    const min = cfg.min ?? Math.min(...series)
-    const max = cfg.max ?? Math.max(...series)
+    const min = cfg.min ?? (() => {
+      let m = Infinity
+      for (const v of series) if (v < m) m = v
+      return m
+    })()
+    const max = cfg.max ?? (() => {
+      let m = -Infinity
+      for (const v of series) if (v > m) m = v
+      return m
+    })()
     const range = max - min || 1
     const stepX = series.length > 1 ? (W - pad * 2) / (series.length - 1) : 0
 

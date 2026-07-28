@@ -26,6 +26,15 @@ import { Legend } from "./legend"
 import { NodeDetailsPanel } from "./nodeDetails"
 import { StatsDisplay } from "./statsDisplay"
 
+const EDGE_TYPES = {
+  default: BezierEdge,
+  dockstat: DockStatLabelEdge,
+  simplebezier: SimpleBezierEdge,
+  smoothstep: SmoothStepEdge,
+  step: StepEdge,
+  straight: StraightEdge,
+} as const
+
 export function GraphFlow() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const { fitView } = useReactFlow()
@@ -174,14 +183,7 @@ export function GraphFlow() {
             autoPanOnNodeFocus
             edges={edges}
             edgesReconnectable={false}
-            edgeTypes={{
-              default: BezierEdge,
-              dockstat: DockStatLabelEdge,
-              simplebezier: SimpleBezierEdge,
-              smoothstep: SmoothStepEdge,
-              step: StepEdge,
-              straight: StraightEdge,
-            }}
+            edgeTypes={EDGE_TYPES}
             fitView
             maxZoom={2}
             minZoom={0.2}

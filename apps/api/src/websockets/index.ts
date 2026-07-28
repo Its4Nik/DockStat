@@ -21,6 +21,7 @@ BaseLogger.setLogHook((entry) => {
 startRss()
 
 export const WsTopicsRoutes = new Elysia({
+  name: "Ws-Topics",
   detail: {
     description: "Available WebSocket topics for data-pipe websocket-source nodes",
     tags: ["WebSockets"],

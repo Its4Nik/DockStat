@@ -1,6 +1,6 @@
 import { Badge, Button, Card, CardBody, Input, Modal } from "@dockstat/ui"
 import { Copy, Eye, EyeOff, FileKey, Globe, Key, Lock, ShieldCheck, Trash2 } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   type UpdateCertificateInput,
   useCertificatesMutations,
@@ -287,7 +287,7 @@ function EditCertificateModal({
   const [comment, setComment] = useState("")
   const [tags, setTags] = useState("")
 
-  useMemo(() => {
+  useEffect(() => {
     if (cert) {
       setTitle(cert.title)
       setComment(cert.comment ?? "")

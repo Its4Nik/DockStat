@@ -3,7 +3,7 @@ import type { ThemeDB } from "../../db"
 import { theme } from "../models"
 
 export const createThemeCreationRoute = (themeDB: ThemeDB) => {
-  return new Elysia().decorate("themeDB", themeDB).post(
+  return new Elysia({ name: "create-themes" }).decorate("themeDB", themeDB).post(
     "/",
     ({ themeDB, body, status }) => {
       try {

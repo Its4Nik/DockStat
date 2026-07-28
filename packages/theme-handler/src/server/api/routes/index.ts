@@ -10,6 +10,7 @@ export const createThemeRoutes = (themeDB: ThemeDB) =>
     detail: {
       tags: ["Themes"],
     },
+    name: "Themes",
     name: "@dockstat/theme-handler",
     prefix: "/themes",
   })

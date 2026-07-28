@@ -95,9 +95,15 @@ export function Heatmap({ config, payload }: HeatmapProps) {
 
   const matrix = useMemo(() => extractMatrix(payload), [payload])
   const { min, max } = useMemo(() => {
-    const mn = cfg.minValue ?? Math.min(...matrix.flat(), 0)
-    const mx = cfg.maxValue ?? Math.max(...matrix.flat(), 1)
-    return { max: mx, min: mn }
+    let mn = 0
+    let mx = 1
+    for (const row of matrix) {
+      for (const v of row) {
+        if (v < mn) mn = v
+        if (v > mx) mx = v
+      }
+    }
+    return { max: cfg.maxValue ?? mx, min: cfg.minValue ?? mn }
   }, [matrix, cfg.minValue, cfg.maxValue])
 
   const range = max - min || 1

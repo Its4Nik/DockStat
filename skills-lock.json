@@ -1,10 +1,17 @@
 {
+  "version": 1,
   "skills": {
     "elysiajs": {
       "computedHash": "55268e69a2c766ed67e56a0db57544f60cc52dba0c7f024a974baf965e525e1b",
       "skillPath": "elysia/SKILL.md",
       "source": "elysiajs/skills",
       "sourceType": "github"
+    },
+    "react-router": {
+      "source": "remix-run/react-router",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/react-router/SKILL.md",
+      "computedHash": "ff4d9bc724f0e56a51c453eef5b93caef1c16d3623ac49345d74fc1a5efbc05a"
     },
     "tanstack-query-best-practices": {
       "computedHash": "21d2e8b7468a81d772b6527ad8ca178cc2f3f08af777bb9061333013ee88a0c9",
@@ -24,6 +31,5 @@
       "source": "vercel-labs/agent-skills",
       "sourceType": "github"
     }
-  },
-  "version": 1
+  }
 }

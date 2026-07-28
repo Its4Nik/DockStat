@@ -51,7 +51,7 @@ function findTemplateForNode(
 export function PropertyPanel({ node, onChange, onDelete, getWsTopics }: PropertyPanelProps) {
   const template = useMemo(
     () => (node ? findTemplateForNode(node, getWsTopics) : undefined),
-    [node]
+    [node, getWsTopics]
   )
 
   // ── Empty state ──────────────────────────────────────────────────
@@ -121,7 +121,7 @@ export function PropertyPanel({ node, onChange, onDelete, getWsTopics }: Propert
         ))}
 
         {/* Output key field for output nodes */}
-        {template.kind === "output" && !template.properties.find((p) => p.key === "key") && (
+        {template.kind === "output" && !template.properties.some((p) => p.key === "key") && (
           <Field
             field={{
               description: "The data-output key that widgets consume",

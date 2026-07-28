@@ -36,7 +36,7 @@ export function createAuthRoutes(
     return result
   }
 
-  return new Elysia({ detail: { tags: ["Auth"] }, prefix: "/auth" })
+  return new Elysia({ detail: { tags: ["Auth"] }, name: "Auth", prefix: "/auth" })
     .post(
       "/providers",
       async ({ body }) => {

@@ -273,15 +273,14 @@ function StackLogsModal({ open, onClose, nodeId, stackId, stackName }: StackLogs
         const logText = String(data)
         const logLines = logText.split("\n").filter(Boolean)
         setLogs(
-          logLines.map((line) => ({
-            level: line.toLowerCase().includes("error")
-              ? "error"
-              : line.toLowerCase().includes("warn")
-                ? "warn"
-                : "info",
-            message: line,
-            timestamp: new Date().toISOString(),
-          }))
+          logLines.map((line) => {
+            const lower = line.toLowerCase()
+            return {
+              level: lower.includes("error") ? "error" : lower.includes("warn") ? "warn" : "info",
+              message: line,
+              timestamp: new Date().toISOString(),
+            }
+          })
         )
       }
     } catch (error) {
@@ -895,14 +894,15 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const stacksResult = await eden.call(api.node({ nodeId: effectiveNodeId }).stacks.get)
+      // stacks.get and swarm.status.get are independent — fetch in parallel.
+      const [stacksResult, swarmStatusResult] = await Promise.all([
+        eden.call(api.node({ nodeId: effectiveNodeId }).stacks.get),
+        eden.call(api.node({ nodeId: effectiveNodeId }).swarm.status.get),
+      ])
       if (stacksResult.data) {
         setStacks(Array.isArray(stacksResult.data) ? stacksResult.data : [])
       }
 
-      const swarmStatusResult = await eden.call(
-        api.node({ nodeId: effectiveNodeId }).swarm.status.get
-      )
       if (swarmStatusResult.data) {
         setSwarmStatus(swarmStatusResult.data as SwarmStatus)
       }

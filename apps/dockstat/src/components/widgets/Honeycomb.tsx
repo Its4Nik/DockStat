@@ -8,7 +8,7 @@
 
 import { useMemo } from "react"
 import type { DataPayload, WidgetConfig } from "widgets/client"
-import { extractSeries, type Threshold, thresholdColor } from "./shared"
+import { extractSeries, type Threshold } from "./shared"
 
 interface HoneycombConfig {
   colorScale?: ScaleName
@@ -87,6 +87,13 @@ export function Honeycomb({ config, payload }: HoneycombProps) {
 
   const cells = useMemo(() => extractSeries(payload), [payload])
 
+  // Pre-sort thresholds once (descending) so per-cell color lookup is O(T) with
+  // no per-cell allocation, instead of re-cloning+sorting inside thresholdColor.
+  const sortedThresholds = useMemo(
+    () => (cfg.thresholds ? [...cfg.thresholds].sort((a, b) => b.value - a.value) : []),
+    [cfg.thresholds]
+  )
+
   const { min, max } = useMemo(() => {
     if (cells.length === 0) return { max: 1, min: 0 }
     const values = cells.map((c) => c.value)
@@ -116,8 +123,8 @@ export function Honeycomb({ config, payload }: HoneycombProps) {
       {cells.map((cell, i) => {
         const t = (cell.value - min) / range
         const thresholdClr =
-          cfg.thresholds && cfg.thresholds.length > 0
-            ? thresholdColor(cell.value, cfg.thresholds)
+          sortedThresholds.length > 0
+            ? (sortedThresholds.find((th) => cell.value >= th.value)?.color ?? null)
             : null
         const bg = thresholdClr ?? colorAt(scale, t)
         return (

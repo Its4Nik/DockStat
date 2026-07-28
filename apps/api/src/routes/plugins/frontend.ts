@@ -4,6 +4,7 @@ import PluginHandler from "../../plugins"
 
 const DockStatAPIFrontendPluginRoutes = new Elysia({
   detail: { tags: ["Frontend"] },
+  name: "Plugin-Frontend",
   prefix: "/frontend",
 })
   .get(

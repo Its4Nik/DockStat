@@ -140,7 +140,7 @@ export class WidgetsService {
    * These should be mounted inside an authenticated guard.
    */
   getRestRoutes() {
-    return new Elysia({ prefix: "/widgets" })
+    return new Elysia({ name: "Rest-Routes", prefix: "/widgets" })
       .use(createWidgetRoutes(this.widgets, this.widgetImporter, this.log))
       .use(createDashboardRoutes(this.dashboards, this.dashboardImporter, this.log))
       .use(createDataPipeRoutes(this.engine, this.dashboards, this.ws, this.log))
@@ -163,7 +163,7 @@ export class WidgetsService {
    * separately instead.
    */
   getRoutes() {
-    return new Elysia().use(this.getRestRoutes()).use(this.getWsRoutes())
+    return new Elysia({ name: "Ws-Handler" }).use(this.getRestRoutes()).use(this.getWsRoutes())
   }
 
   /**

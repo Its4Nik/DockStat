@@ -28,6 +28,14 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router"
 import "@xyflow/react/dist/style.css"
 
+const MINIMAP_NODE_COLORS: Record<string, string> = {
+  connector: "#eab308",
+  output: "#a855f7",
+  provider: "#3b82f6",
+  transform: "#22c55e",
+}
+const MINIMAP_DEFAULT_COLOR = "#94a3b8"
+
 import type { DataPipeGraph, DataPipeNodeData, NodeTemplateDef } from "widgets/client"
 import { useDataflowMutations } from "@/hooks/mutations/dataflow"
 import { useDashboardQueries } from "@/hooks/queries/dashboard"
@@ -249,7 +257,10 @@ export default function DataflowPage() {
             "w-64 shrink-0 self-stretch overflow-hidden rounded-lg border border-card-default-border bg-card-flat-bg shadow-xl"
           )}
         >
-          <NodePalette onAddNode={onAddNode} />
+          <NodePalette
+            getWsTopics={getWsTopics}
+            onAddNode={onAddNode}
+          />
         </aside>
 
         {/*
@@ -281,15 +292,7 @@ export default function DataflowPage() {
               // on dark themes.
               bgColor="var(--color-card-flat-bg)"
               maskColor="color-mix(in srgb, var(--color-main-bg) 70%, transparent)"
-              nodeColor={(node) => {
-                const colors: Record<string, string> = {
-                  connector: "#eab308",
-                  output: "#a855f7",
-                  provider: "#3b82f6",
-                  transform: "#22c55e",
-                }
-                return colors[node.type ?? ""] ?? "#94a3b8"
-              }}
+              nodeColor={(node) => MINIMAP_NODE_COLORS[node.type ?? ""] ?? MINIMAP_DEFAULT_COLOR}
               style={{
                 backgroundColor: "var(--color-card-flat-bg)",
                 border: "1px solid var(--color-card-default-border)",

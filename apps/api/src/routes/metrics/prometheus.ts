@@ -4,7 +4,7 @@ import { DockStatDB } from "../../database"
 import { formatPrometheusFamilies } from "../../middleware/metrics/prometheus-formatter"
 import { MetricsModel } from "../../models/metrics"
 
-const PrometheusMetricsRoute = new Elysia({ prefix: "/metrics" }).get(
+const PrometheusMetricsRoute = new Elysia({ name: "Metrics", prefix: "/metrics" }).get(
   "/",
   ({ status }) => {
     try {

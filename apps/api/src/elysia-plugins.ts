@@ -3,7 +3,7 @@ import { openapi } from "@elysiajs/openapi"
 import { serverTiming } from "@elysiajs/server-timing"
 import Elysia from "elysia"
 
-const DockStatElysiaPlugins = new Elysia()
+const DockStatElysiaPlugins = new Elysia({ name: "DockStat-Plugins" })
   .use(
     cors({
       credentials: true,

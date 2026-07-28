@@ -10,6 +10,7 @@ import { DatabaseModel } from "../../models/database"
  * Config CRUD routes - manages application configuration
  */
 const ConfigRoutes = new Elysia({
+  name: "DB-Config",
   detail: {
     description: "Application configuration management endpoints",
     tags: ["Database"],

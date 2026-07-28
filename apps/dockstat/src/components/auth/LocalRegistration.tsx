@@ -17,10 +17,6 @@ export function LocalRegistration({
   setError: (error: null | string) => void
   error: string | null
 }) {
-  if (allowGuest === false && isAuthenticated !== true) {
-    return null
-  }
-
   const [name, setName] = useState<string>("")
   const [pass, setPass] = useState<string>("")
   const [showPass, setShowPass] = useState(false)
@@ -39,20 +35,20 @@ export function LocalRegistration({
   }, [registerLocalUser.error, setError])
 
   useEffect(() => {
-    if (!registerLocalUser.isPending) {
-      if (registerLocalUser.isSuccess) {
-        triggerLocalAuthCheck()
-      }
+    if (!registerLocalUser.isPending && registerLocalUser.isSuccess) {
+      triggerLocalAuthCheck()
     }
-  })
+  }, [registerLocalUser.isPending, registerLocalUser.isSuccess, triggerLocalAuthCheck])
+
+  // Rules of Hooks: the guard must run after all hooks are declared.
+  if (allowGuest === false && isAuthenticated !== true) {
+    return null
+  }
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
-    console.log("Handling register submit")
-
     e.preventDefault()
     setError(null)
 
-    console.log("Mutating: ", { name, pass })
     await registerLocalUser.mutateAsync({
       name,
       pass,
@@ -60,8 +56,6 @@ export function LocalRegistration({
 
     updateField("name", name)
     updateField("pass", pass)
-
-    console.log("Updating: ", { name, pass })
 
     await handleLoginSubmit(e)
   }

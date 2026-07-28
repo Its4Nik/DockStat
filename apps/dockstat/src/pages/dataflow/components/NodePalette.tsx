@@ -8,6 +8,7 @@
 
 import { cn } from "@sglara/cn"
 import { CircuitBoard, Flag, type LucideIcon, Plug, Plus, Shuffle } from "lucide-react"
+import { useMemo } from "react"
 import {
   type DataPipeNodeKind,
   NODE_KIND_META,
@@ -17,6 +18,7 @@ import {
 
 interface NodePaletteProps {
   onAddNode: (template: NodeTemplateDef) => void
+  getWsTopics: () => string[]
 }
 
 const KIND_ORDER: DataPipeNodeKind[] = ["provider", "transform", "connector", "output"]
@@ -45,7 +47,18 @@ const KIND_UI: Record<DataPipeNodeKind, { icon: LucideIcon; accent: string; chip
   },
 }
 
-export function NodePalette({ onAddNode }: NodePaletteProps) {
+export function NodePalette({ onAddNode, getWsTopics }: NodePaletteProps) {
+  const templatesByKind = useMemo(() => {
+    const all = NODE_TEMPLATES({ getWsTopics })
+    const map = new Map<DataPipeNodeKind, NodeTemplateDef[]>()
+    for (const t of all) {
+      const list = map.get(t.kind)
+      if (list) list.push(t)
+      else map.set(t.kind, [t])
+    }
+    return map
+  }, [getWsTopics])
+
   return (
     <div className="flex h-full flex-col overflow-y-auto">
       {/* Header */}
@@ -66,7 +79,7 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
           const meta = NODE_KIND_META[kind]
           const ui = KIND_UI[kind]
           const Icon = ui.icon
-          const templates = NODE_TEMPLATES.filter((t) => t.kind === kind)
+          const templates = templatesByKind.get(kind) ?? []
           if (templates.length === 0) return null
 
           return (

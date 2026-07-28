@@ -11,6 +11,7 @@ export const GraphElysia = new Elysia({
   detail: {
     tags: ["Infrastructure Graph"],
   },
+  name: "Infra-Graph",
   prefix: "/graph",
 })
   .get(
