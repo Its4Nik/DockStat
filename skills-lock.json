@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "docs-writer": {
+      "source": "google-gemini/gemini-cli",
+      "sourceType": "github",
+      "skillPath": ".gemini/skills/docs-writer/SKILL.md",
+      "computedHash": "ddb3671168efa5f2fe481740a57ca147619ffffe2cf764ada6229bde01fed3df"
+    },
     "elysiajs": {
       "computedHash": "55268e69a2c766ed67e56a0db57544f60cc52dba0c7f024a974baf965e525e1b",
       "skillPath": "elysia/SKILL.md",
