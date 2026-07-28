@@ -31,20 +31,28 @@ interface PropertyPanelProps {
   node: Node<DataPipeNodeData> | null
   onChange: (id: string, data: Partial<DataPipeNodeData>) => void
   onDelete: (id: string) => void
+  getWsTopics: () => string[]
 }
 
 /** Find the template that matches a node by its type + providerType/transformType */
-function findTemplateForNode(node: Node<DataPipeNodeData>): NodeTemplateDef | undefined {
+function findTemplateForNode(
+  node: Node<DataPipeNodeData>,
+  getWsTopics: () => string[]
+): NodeTemplateDef | undefined {
   const data = node.data
   const typeKey = data.providerType ?? data.transformType ?? node.type
   return (
-    NODE_TEMPLATES.find((t) => t.typeKey === typeKey && t.kind === node.type) ??
-    getNodeTemplate(`${typeKey}-${node.type}`)
+    NODE_TEMPLATES({ getWsTopics: getWsTopics }).find(
+      (t) => t.typeKey === typeKey && t.kind === node.type
+    ) ?? getNodeTemplate(`${typeKey}-${node.type}`)
   )
 }
 
-export function PropertyPanel({ node, onChange, onDelete }: PropertyPanelProps) {
-  const template = useMemo(() => (node ? findTemplateForNode(node) : undefined), [node])
+export function PropertyPanel({ node, onChange, onDelete, getWsTopics }: PropertyPanelProps) {
+  const template = useMemo(
+    () => (node ? findTemplateForNode(node, getWsTopics) : undefined),
+    [node]
+  )
 
   // ── Empty state ──────────────────────────────────────────────────
   if (!node || !template) {

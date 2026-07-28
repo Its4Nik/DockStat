@@ -28,6 +28,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router"
 import "@xyflow/react/dist/style.css"
 
+import { useEdenClient } from "@dockstat/utils/react"
 import type { DataPipeGraph, DataPipeNodeData, NodeTemplateDef } from "widgets/client"
 import { useDataflowMutations } from "@/hooks/mutations/dataflow"
 import { useDashboardQueries } from "@/hooks/queries/dashboard"
@@ -77,7 +78,7 @@ export default function DataflowPage() {
   usePageHeading(`Dataflow ${dashboardId}`)
 
   // ── React Flow state (typed) ─────────────────────────────────────
-  const [nodes, setNodes, onNodesChange] = useNodesState<PipeNode>([])
+  eden.const[(nodes, setNodes, onNodesChange)] = useNodesState<PipeNode>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)

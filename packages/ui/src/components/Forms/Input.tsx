@@ -14,6 +14,7 @@ export interface InputProps {
   id?: string
   success?: boolean
   required?: boolean
+  autoFocus?: boolean
 }
 
 export function Input({
@@ -28,6 +29,7 @@ export function Input({
   error = false,
   success = false,
   required = false,
+  autoFocus = false,
   id,
 }: InputProps) {
   const baseClasses = "w-full transition-colors focus:outline-none"
@@ -51,6 +53,8 @@ export function Input({
 
   return (
     <input
+      // biome-ignore lint/a11y/noAutofocus: autoFocus is intentionally used here
+      autoFocus={autoFocus}
       className={[
         baseClasses,
         sizeClasses[size],

@@ -47,7 +47,7 @@ const KIND_UI: Record<DataPipeNodeKind, { icon: LucideIcon; accent: string; chip
 
 export function NodePalette({ onAddNode }: NodePaletteProps) {
   return (
-    <div className="flex max-h-fit flex-col overflow-y-auto">
+    <div className="flex h-full flex-col overflow-y-auto">
       {/* Header */}
       <div className="border-b border-card-default-border px-4 py-3">
         <div className="flex items-center gap-2">
@@ -61,7 +61,7 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
       </div>
 
       {/* Groups */}
-      <div className="flex-1 space-y-5 overflow-y-auto p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto p-4 space-y-4">
         {KIND_ORDER.map((kind) => {
           const meta = NODE_KIND_META[kind]
           const ui = KIND_UI[kind]
@@ -71,8 +71,8 @@ export function NodePalette({ onAddNode }: NodePaletteProps) {
 
           return (
             <div key={kind}>
-              <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-text">
-                <span className={cn("inline-block h-2 w-2 rounded-full", ui.accent)} />
+              <h3 className="mb-2 items-center text-xs font-semibold uppercase tracking-wide text-muted-text">
+                <span className={cn("inline-block h-2 w-2 rounded-full mr-2", ui.accent)} />
                 {meta.label}
               </h3>
 

@@ -2,7 +2,7 @@ import type Logger from "@dockstat/logger"
 import type { QueryBuilder } from "@dockstat/sqlite-wrapper"
 import Elysia, { type AnySchema } from "elysia"
 import type { ElysiaWS } from "elysia/ws"
-import type { ApiKeysTable } from "./types"
+import type { ApiKeysTable, SessionsTable } from "./types"
 import { verifyAuthToken } from "./utils/jwt"
 
 export type AuthUser = {
@@ -25,9 +25,19 @@ export interface AuthContext {
 export const getMiddlewareFunctions = (
   baseLogger: Logger,
   getStateMap: () => WeakMap<Request, { startTime: number; reqId: string }>,
-  apiKeys?: QueryBuilder<ApiKeysTable>
+  apiKeys?: QueryBuilder<ApiKeysTable>,
+  sessions?: QueryBuilder<SessionsTable>
 ) => {
   const logger = baseLogger.spawn("Middleware")
+
+  /**
+   * Checks whether a JWT ID (jti) corresponds to an active session in the DB.
+   * Returns true if sessions table is not provided (backward compat).
+   */
+  const isSessionValid = (jti?: string): boolean => {
+    if (!sessions || !jti) return true
+    return sessions.where({ jti }).exists()
+  }
 
   /**
    * Validates an API key and returns the associated user ID if valid
@@ -147,8 +157,12 @@ export const getMiddlewareFunctions = (
         logger.info("Verifying JWT Token")
         const payload = await verifyAuthToken(token)
         if (payload && typeof payload.user === "object" && payload.user !== null) {
-          user = payload.user as AuthUser
-          user.authMethod = "jwt"
+          if (!isSessionValid(payload.jti)) {
+            logger.warn("Session not found in DB, rejecting token", reqId)
+          } else {
+            user = payload.user as AuthUser
+            user.authMethod = "jwt"
+          }
         }
       }
 
@@ -348,6 +362,10 @@ export const getMiddlewareFunctions = (
 
     const payload = await verifyAuthToken(token)
     if (payload && typeof payload.user === "object" && payload.user !== null) {
+      if (!isSessionValid(payload.jti)) {
+        logger.warn("WS: Session not found in DB, rejecting token")
+        return null
+      }
       return payload.user as AuthUser
     }
     return null

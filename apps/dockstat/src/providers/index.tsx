@@ -11,10 +11,20 @@ const baseUrl = `${import.meta.env.DOCKSTAT_API_URL || "http://localhost:3030"}/
 
 function AuthEdenBridge({ children }: { children: React.ReactNode }) {
   const edenClient = useEdenClient()
-  const { logout } = useAuth()
+  const { token, isAuthenticated, logout } = useAuth()
 
+  // Keep the Eden client bearer token in sync with auth state
   useEffect(() => {
-    edenClient.setOnUnauthorized(logout)
+    edenClient.setToken(isAuthenticated ? (token ?? "") : "")
+  }, [edenClient, token, isAuthenticated])
+
+  // On 401, clear auth state without a full-page redirect — the ProtectedRoute
+  // will redirect to /login via React Router once isAuthenticated becomes false.
+  useEffect(() => {
+    edenClient.setOnUnauthorized(() => {
+      edenClient.setToken("")
+      logout({ skipRedirect: true })
+    })
   }, [edenClient, logout])
 
   return <>{children}</>

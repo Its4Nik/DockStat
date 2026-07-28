@@ -29,3 +29,11 @@ export type ApiKeysTable = {
   createdAt: Date
   revokedAt: Date | null
 }
+
+export type SessionsTable = {
+  id: string
+  jti: string
+  userId: string
+  createdAt: Date
+  expiresAt: Date
+}
