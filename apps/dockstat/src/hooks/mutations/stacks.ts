@@ -1,5 +1,4 @@
-import { useContext } from "react"
-import { EdenClientContext } from "@/contexts/edenClient"
+import { useEdenClient } from "@dockstat/utils/react"
 import { api } from "@/lib/api"
 
 // ============================================
@@ -7,7 +6,7 @@ import { api } from "@/lib/api"
 // ============================================
 
 export const useStackMutations = () => {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   // Create stack mutation
   const createStackMutation = eden.mutateRoute({
@@ -69,7 +68,7 @@ export const useStackMutations = () => {
 // ============================================
 
 export const useStackLifecycleMutations = () => {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   // Stack up mutation
   const stackUpMutation = eden.mutateRoute({
@@ -144,7 +143,7 @@ export const useStackLifecycleMutations = () => {
 // ============================================
 
 export const useSwarmMutations = () => {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   // Deploy swarm stack mutation
   const deploySwarmStackMutation = eden.mutateRoute({

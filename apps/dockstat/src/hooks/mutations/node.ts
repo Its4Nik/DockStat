@@ -1,9 +1,8 @@
-import { useContext } from "react"
-import { EdenClientContext } from "@/contexts/edenClient"
+import { useEdenClient } from "@dockstat/utils/react"
 import { api } from "@/lib/api"
 
 export const useDockNodeMutations = () => {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   const createDockNodeMutation = eden.mutate({
     invalidateQueries: [["getAllDockNodes"]],

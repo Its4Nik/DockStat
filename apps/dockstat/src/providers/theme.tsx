@@ -4,19 +4,14 @@ import {
   saveThemePreference,
   type ThemeContextData,
 } from "@dockstat/theme-handler/client"
-import { useCallback, useContext, useEffect, useRef, useState } from "react"
-import { EdenClientContext } from "@/contexts/edenClient"
+import { useEdenClient } from "@dockstat/utils/react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { type ThemeListItem, ThemeProviderContext, type ThemeProviderData } from "@/contexts/theme"
 import { useThemeMutations } from "@/hooks/mutations"
 import { api } from "@/lib/api"
 
-const getAuthHeaders = (): Record<string, unknown> => {
-  const token = localStorage.getItem("auth_token")
-  return token ? { authorization: `Bearer ${token}` } : {}
-}
-
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
   const [theme, setTheme] = useState<ThemeContextData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
@@ -33,8 +28,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { createThemeMutation: createNewThemeFromCurrent } = useThemeMutations()
 
   const applyThemeEffect = useCallback((themeData: ThemeContextData) => {
-    console.log("Applying theme:", themeData)
-    applyThemeToDocument(themeData, (msg) => console.log("Theme applied:", msg))
+    applyThemeToDocument(themeData)
   }, [])
 
   const applyAndPersistTheme = useCallback(
@@ -65,24 +59,28 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setError(null)
 
       try {
-        const { data, error: fetchError } = await api.themes["by-name"]({
-          name: themeName,
-        }).get({ headers: getAuthHeaders() })
+        const { data, error: fetchError } = await eden.call(
+          api.themes["by-name"]({ name: themeName }).get
+        )
 
         if (fetchError || !data) {
           throw new Error(`Failed to fetch theme "${themeName}"`)
         }
 
-        if (!data.success || !data.data) {
-          throw new Error(data.message || `Theme "${themeName}" not found`)
+        const themeResponse = data as {
+          success?: boolean
+          data?: { id: number; name: string; variables?: Record<string, string> }
+          message?: string
+        }
+        if (!themeResponse.success || !themeResponse.data) {
+          throw new Error(themeResponse.message || `Theme "${themeName}" not found`)
         }
 
         const themeData = {
-          id: data.data.id,
-          name: data.data.name,
-          vars: data.data.variables ?? {},
+          id: themeResponse.data.id,
+          name: themeResponse.data.name,
+          vars: themeResponse.data.variables ?? {},
         }
-        console.log("Theme data fetched:", themeData)
         applyAndPersistTheme(themeData)
       } catch (err) {
         setError(err instanceof Error ? err : new Error(String(err)))
@@ -90,7 +88,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false)
       }
     },
-    [applyAndPersistTheme]
+    [applyAndPersistTheme, eden]
   )
 
   const applyThemeById = useCallback(
@@ -99,24 +97,28 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setError(null)
 
       try {
-        const { data, error: fetchError } = await api.themes["by-id"]({
-          id: themeId,
-        }).get({ headers: getAuthHeaders() })
+        const { data, error: fetchError } = await eden.call(
+          api.themes["by-id"]({ id: themeId }).get
+        )
 
         if (fetchError || !data) {
           throw new Error(`Failed to fetch theme with id ${themeId}`)
         }
 
-        if (!data.success || !data.data) {
-          throw new Error(data.message || `Theme with id ${themeId} not found`)
+        const themeResponse = data as {
+          success?: boolean
+          data?: { id: number; name: string; variables?: Record<string, string> }
+          message?: string
+        }
+        if (!themeResponse.success || !themeResponse.data) {
+          throw new Error(themeResponse.message || `Theme with id ${themeId} not found`)
         }
 
         const themeData = {
-          id: data.data.id,
-          name: data.data.name,
-          vars: data.data.variables ?? {},
+          id: themeResponse.data.id,
+          name: themeResponse.data.name,
+          vars: themeResponse.data.variables ?? {},
         }
-        console.log("Theme data fetched by ID:", themeData)
         applyAndPersistTheme(themeData)
       } catch (err) {
         setError(err instanceof Error ? err : new Error(String(err)))
@@ -124,7 +126,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false)
       }
     },
-    [applyAndPersistTheme]
+    [applyAndPersistTheme, eden]
   )
 
   useEffect(() => {
@@ -138,36 +140,51 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [applyThemeById])
 
-  const handleCreateNewTheme = async (
-    input: Parameters<typeof createNewThemeFromCurrent.mutateAsync>[0]
-  ) => {
-    try {
-      const result = await createNewThemeFromCurrent.mutateAsync(input)
-      setIsModifiedTheme(false)
-      return result
-    } catch (err) {
-      setIsModifiedTheme(true)
-      throw err
-    }
-  }
+  const handleCreateNewTheme = useCallback(
+    async (input: Parameters<typeof createNewThemeFromCurrent.mutateAsync>[0]) => {
+      try {
+        const result = await createNewThemeFromCurrent.mutateAsync(input)
+        setIsModifiedTheme(false)
+        return result
+      } catch (err) {
+        setIsModifiedTheme(true)
+        throw err
+      }
+    },
+    [createNewThemeFromCurrent]
+  )
 
   type input = Parameters<typeof createNewThemeFromCurrent.mutateAsync>[0]
   type routeType = Awaited<ReturnType<typeof api.themes.post>>["data"]
 
-  const providerValue: ThemeProviderData<routeType, input> = {
-    adjustCurrentTheme,
-    applyTheme,
-    applyThemeById,
-    createNewThemeFromCurrent: {
-      ...createNewThemeFromCurrent,
-      mutateAsync: handleCreateNewTheme,
-    },
-    error,
-    isLoading,
-    isModifiedTheme,
-    theme,
-    themesList,
-  }
+  const providerValue = useMemo<ThemeProviderData<routeType, input>>(
+    () => ({
+      adjustCurrentTheme,
+      applyTheme,
+      applyThemeById,
+      createNewThemeFromCurrent: {
+        ...createNewThemeFromCurrent,
+        mutateAsync: handleCreateNewTheme,
+      },
+      error,
+      isLoading,
+      isModifiedTheme,
+      theme,
+      themesList,
+    }),
+    [
+      adjustCurrentTheme,
+      applyTheme,
+      applyThemeById,
+      handleCreateNewTheme,
+      createNewThemeFromCurrent,
+      error,
+      isLoading,
+      isModifiedTheme,
+      theme,
+      themesList,
+    ]
+  )
 
   return <ThemeProviderContext value={providerValue}>{children}</ThemeProviderContext>
 }

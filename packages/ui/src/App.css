@@ -223,6 +223,32 @@
   --color-graph-client-text-secondary: #7aacdf;
   /* Graph */
 
+  /* Dataflow (data-pipe editor) — tuned to match NODE_KIND_META identity colors */
+  /* Provider — blue */
+  --color-dataflow-provider-card-bg: #1e2d40;
+  --color-dataflow-provider-card-border: #3b82f6;
+  --color-dataflow-provider-text-primary: #f8f8f2;
+  --color-dataflow-provider-text-secondary: #93b4f2;
+
+  /* Transform — green */
+  --color-dataflow-transform-card-bg: #1d3326;
+  --color-dataflow-transform-card-border: #22c55e;
+  --color-dataflow-transform-text-primary: #f8f8f2;
+  --color-dataflow-transform-text-secondary: #87e6a7;
+
+  /* Connector — amber */
+  --color-dataflow-connector-card-bg: #332a16;
+  --color-dataflow-connector-card-border: #eab308;
+  --color-dataflow-connector-text-primary: #f8f8f2;
+  --color-dataflow-connector-text-secondary: #f2cf6b;
+
+  /* Output — purple */
+  --color-dataflow-output-card-bg: #2e1f45;
+  --color-dataflow-output-card-border: #a855f7;
+  --color-dataflow-output-text-primary: #f8f8f2;
+  --color-dataflow-output-text-secondary: #cf9bf5;
+  /* Dataflow */
+
   /* Animations */
   --animate-wave: wave 2s ease-in-out infinite;
   --animate-float-up: float-up 2.5s ease-in-out forwards;

@@ -2,15 +2,20 @@ import { AuthProvider } from "@dockstat/auth/client"
 import { useLocation } from "react-router"
 import { Layout } from "./layout"
 import DockStatProviders from "./providers"
+import { EdenClientProvider } from "./providers/edenClient"
+
+const baseUrl = `${import.meta.env.DOCKSTAT_API_URL || "http://localhost:3030"}/api/v2`
 
 const Wrappers: Record<
   string,
   Array<({ children, key }: { children: React.ReactNode; key: unknown }) => React.ReactNode>
 > = {
-  Default: [Layout, DockStatProviders],
+  Default: [EdenClientProvider, Layout, DockStatProviders],
   LoginOnly: [
     ({ children }: { children: React.ReactNode }) => (
-      <AuthProvider apiBase="http://localhost:3030/api/v2">{children}</AuthProvider>
+      <EdenClientProvider>
+        <AuthProvider apiBase={baseUrl}>{children}</AuthProvider>
+      </EdenClientProvider>
     ),
   ],
 }

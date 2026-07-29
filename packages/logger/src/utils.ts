@@ -62,18 +62,20 @@ export const shouldLog = (level: LogLevel) => {
 }
 
 export const shouldIgnore = (msg: string, ignoreList: string[]) => {
-  const lower = msg.toLowerCase()
-  return ignoreList.some((s) => lower.includes(s.toLowerCase()))
+  const lower = msg.toLowerCase().trim()
+  return ignoreList.some((s) => lower.includes(s.toLowerCase().trim()))
 }
 
-export function colorByReqID(rawReqId: string) {
+export function colorByReqID(rawReqId: string, notReqId = false) {
   let reqId = rawReqId.length >= 3 ? rawReqId : ""
   let from = ""
 
-  if (reqId.includes("|")) {
-    const parts = reqId.split("|")
-    reqId = String(parts[0])
-    from = String(parts[1])
+  if (!notReqId) {
+    if (reqId.includes("|")) {
+      const parts = reqId.split("|")
+      reqId = String(parts[0])
+      from = String(parts[1])
+    }
   }
 
   const hash = stringToHash(reqId)
@@ -83,4 +85,17 @@ export function colorByReqID(rawReqId: string) {
     from,
     id: chalk.rgb(Math.round(r), Math.round(g), Math.round(b))(reqId),
   }
+}
+
+export function colorName(name: string) {
+  let vName: string = name
+
+  if (name.includes("|")) {
+    vName = name.split("|")[0]
+  }
+
+  const hash = stringToHash(vName)
+  const [r, g, b] = hashToColor(hash)
+
+  return chalk.rgb(Math.round(r), Math.round(g), Math.round(b))(vName)
 }

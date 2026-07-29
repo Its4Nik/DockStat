@@ -18,7 +18,7 @@ interface AuthState {
 
 interface AuthContextType extends AuthState {
   login: (providerId: string) => void
-  logout: () => void
+  logout: (options?: { skipRedirect?: boolean }) => Promise<void>
   refreshToken: () => Promise<void>
   clearError: () => void
 }
@@ -92,41 +92,63 @@ export function AuthProvider({
     [apiBase]
   )
 
-  const logout = useCallback(async () => {
-    try {
-      const providerId = localStorage.getItem("auth_provider_id")
-      const currentLocation = window.location.href
+  const logout = useCallback(
+    async (options?: { skipRedirect?: boolean }) => {
+      try {
+        const providerId = localStorage.getItem("auth_provider_id")
+        const currentToken = localStorage.getItem(tokenStorageKey)
+        const currentLocation = window.location.href
 
-      // Clear local storage
-      localStorage.removeItem(tokenStorageKey)
-      localStorage.removeItem(userStorageKey)
-      localStorage.removeItem("auth_provider_id")
+        // Revoke the session server-side so the JWT can no longer be used
+        if (currentToken) {
+          try {
+            await fetch(`${apiBase}/auth/revoke`, {
+              headers: { Authorization: `Bearer ${currentToken}` },
+              method: "POST",
+            })
+          } catch {
+            // Best-effort; continue with local cleanup
+          }
+        }
 
-      // Update state
-      setState({
-        error: null,
-        isAuthenticated: false,
-        loading: false,
-        token: null,
-        user: null,
-      })
+        // Clear local storage
+        localStorage.removeItem(tokenStorageKey)
+        localStorage.removeItem(userStorageKey)
+        localStorage.removeItem("auth_provider_id")
+        localStorage.removeItem("auth_redirect")
 
-      // Redirect to logout endpoint if provider ID exists
-      if (providerId) {
-        const logoutUrl = `${apiBase}/auth/${providerId}/logout?redirectUri=${currentLocation}`
-        window.location.href = logoutUrl
-      } else {
-        // If no provider, just reload the page
-        window.location.href = "/"
+        // Clear the auth_token cookie client-side (backup to server-side removal)
+        // biome-ignore lint/suspicious/noDocumentCookie: cookieStore.delete is unreliable cross-origin
+        document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; sameSite=lax"
+
+        // Update state
+        setState({
+          error: null,
+          isAuthenticated: false,
+          loading: false,
+          token: null,
+          user: null,
+        })
+
+        if (options?.skipRedirect) return
+
+        // Redirect to logout endpoint if provider ID exists (for SSO end-session)
+        if (providerId) {
+          const logoutUrl = `${apiBase}/auth/${providerId}/logout?redirectUri=${currentLocation}`
+          window.location.href = logoutUrl
+        } else {
+          window.location.href = "/"
+        }
+      } catch (error) {
+        console.error("Logout failed:", error)
+        setState((prev) => ({
+          ...prev,
+          error: "Logout failed",
+        }))
       }
-    } catch (error) {
-      console.error("Logout failed:", error)
-      setState((prev) => ({
-        ...prev,
-        error: "Logout failed",
-      }))
-    }
-  }, [apiBase, tokenStorageKey, userStorageKey])
+    },
+    [apiBase, tokenStorageKey, userStorageKey]
+  )
 
   const refreshToken = useCallback(async () => {
     try {
@@ -150,7 +172,7 @@ export function AuthProvider({
           if (onTokenExpired) {
             onTokenExpired()
           } else {
-            logout()
+            await logout({ skipRedirect: true })
           }
         }
         throw new Error("Token validation failed")
@@ -167,7 +189,7 @@ export function AuthProvider({
       if (onTokenExpired) {
         onTokenExpired()
       } else {
-        logout()
+        await logout({ skipRedirect: true })
       }
     }
   }, [apiBase, tokenStorageKey, logout, onTokenExpired])
@@ -200,71 +222,6 @@ export function AuthProvider({
 
     return () => clearInterval(interval)
   }, [state.token, state.isAuthenticated, refreshToken])
-
-  // Listen for auth callbacks from cookie
-  useEffect(() => {
-    const getCookie = (name: string): string | null => {
-      const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`))
-      return match ? match[2] : null
-    }
-
-    async function deleteCookie(name: string): Promise<void> {
-      await cookieStore.delete(name)
-    }
-
-    const handleAuthCallback = async () => {
-      const token = getCookie("auth_token")
-
-      if (!token) return
-
-      try {
-        // Verify the JWT signature via the backend
-        const response = await fetch(`${apiBase}/auth/verify`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error("Token verification failed")
-        }
-
-        const { user } = (await response.json()) as { user: User }
-
-        // Store token and user
-        localStorage.setItem(tokenStorageKey, token)
-        localStorage.setItem(userStorageKey, JSON.stringify(user))
-
-        // Clear the cookie since we've stored the token in localStorage
-        deleteCookie("auth_token").then(() => {
-          // Update state
-          setState({
-            error: null,
-            isAuthenticated: true,
-            loading: false,
-            token,
-            user,
-          })
-
-          // Redirect to stored location or home
-          const redirectPath = localStorage.getItem("auth_redirect") || "/"
-          localStorage.removeItem("auth_redirect")
-          window.location.href = redirectPath
-        })
-      } catch (error) {
-        console.error("Failed to process auth callback:", error)
-        deleteCookie("auth_token").then(() => {
-          setState((prev) => ({
-            ...prev,
-            error: "Failed to process authentication",
-            loading: false,
-          }))
-        })
-      }
-    }
-
-    handleAuthCallback()
-  }, [apiBase, tokenStorageKey, userStorageKey])
 
   // Listen for storage changes (sync across tabs)
   useEffect(() => {

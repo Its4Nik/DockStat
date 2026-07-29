@@ -11,6 +11,7 @@ import DBRepositoryRoutes from "./repositories"
  * - repositories.ts: Repository CRUD routes (under /db prefix)
  */
 const DBRoutes = new Elysia({
+  name: "DB-Routes",
   detail: {
     description:
       "Database configuration and management endpoints for managing DockStat system settings, repositories, themes, and application data",

@@ -9,6 +9,7 @@ let lastTime = Bun.nanoseconds()
 
 const DockStatMiscRoutes = new Elysia({
   detail: { tags: ["Misc"] },
+  name: "Misc",
   prefix: "/misc",
 })
   .use(PrometheusMetricsRoute)

@@ -156,7 +156,7 @@ export const PluginPageNoTemplate = ({
         <div className="text-center space-y-2">
           <h1 className="text-xl font-bold text-primary-text">No Template</h1>
           <p className="text-secondary-text">
-            This plugin page doesn't have a valid template configured.
+            This plugin page doesn\'t have a valid template configured.
           </p>
         </div>
         <div className="w-full bg-muted/50 rounded-lg p-4 mt-2 space-y-1">

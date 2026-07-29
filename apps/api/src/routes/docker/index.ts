@@ -1,3 +1,4 @@
+import type { PoolMetrics } from "@dockstat/docker-client/types"
 import { extractErrorMessage } from "@dockstat/utils"
 import Elysia, { t } from "elysia"
 import DCM from "../../docker"
@@ -7,6 +8,7 @@ import { DockerHostElysia } from "./hosts"
 import { DockerManager } from "./manager"
 
 const DockerRoutes = new Elysia({
+  name: "Docker",
   detail: {
     tags: ["Docker"],
   },
@@ -14,7 +16,8 @@ const DockerRoutes = new Elysia({
 })
   .get("/status", async ({ status }) => {
     try {
-      const res = await DCM.getStatus()
+      const res: PoolMetrics & { hosts: Awaited<ReturnType<typeof DCM.getAllHosts>> } =
+        await DCM.getStatus()
       return status(200, res)
     } catch (error) {
       const errorMessage = extractErrorMessage(error, "Could not get Docker Status")

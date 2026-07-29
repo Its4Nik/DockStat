@@ -2,27 +2,30 @@ import { Input } from "@dockstat/ui"
 import { ArrowRight, DoorOpen, Eye, EyeOff, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useCreateUserMutations } from "@/hooks/mutations/registerUser"
+import { useLocalLogin } from "@/hooks/useLocalLogin"
 
 export function LocalRegistration({
   allowGuest,
   isAuthenticated,
   setError,
   triggerLocalAuthCheck,
+  error,
 }: {
   triggerLocalAuthCheck: () => void
   allowGuest: boolean
   isAuthenticated: boolean
   setError: (error: null | string) => void
+  error: string | null
 }) {
-  if (allowGuest === false && isAuthenticated !== true) {
-    return null
-  }
-
   const [name, setName] = useState<string>("")
   const [pass, setPass] = useState<string>("")
   const [showPass, setShowPass] = useState(false)
 
   const { registerLocalUser } = useCreateUserMutations()
+  const { handleSubmit: handleLoginSubmit, updateField } = useLocalLogin({
+    error,
+    setError,
+  })
 
   // Handle error from mutation
   useEffect(() => {
@@ -32,21 +35,29 @@ export function LocalRegistration({
   }, [registerLocalUser.error, setError])
 
   useEffect(() => {
-    if (!registerLocalUser.isPending) {
-      if (registerLocalUser.isSuccess) {
-        triggerLocalAuthCheck()
-      }
+    if (!registerLocalUser.isPending && registerLocalUser.isSuccess) {
+      triggerLocalAuthCheck()
     }
-  })
+  }, [registerLocalUser.isPending, registerLocalUser.isSuccess, triggerLocalAuthCheck])
 
-  const handleSubmit = (e: React.SyntheticEvent) => {
+  // Rules of Hooks: the guard must run after all hooks are declared.
+  if (allowGuest === false && isAuthenticated !== true) {
+    return null
+  }
+
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault()
     setError(null)
 
-    registerLocalUser.mutate({
+    await registerLocalUser.mutateAsync({
       name,
       pass,
     })
+
+    updateField("name", name)
+    updateField("pass", pass)
+
+    await handleLoginSubmit(e)
   }
 
   const togglePassword = () => setShowPass(!showPass)

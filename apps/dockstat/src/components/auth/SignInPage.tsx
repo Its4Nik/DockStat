@@ -174,6 +174,7 @@ export function SignInPage() {
                   <LocalRegistration
                     allowGuest={allowRegistration}
                     isAuthenticated={isAuthenticated}
+                    error={error}
                     setError={setError}
                     triggerLocalAuthCheck={() => triggerLocalAuthCheck(true)}
                   />

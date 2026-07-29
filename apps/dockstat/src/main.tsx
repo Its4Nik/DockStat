@@ -5,9 +5,7 @@ import ProviderGuard from "./guard"
 import { QueryClientProvider } from "./providers/queryClient"
 import DockStatRouter from "./router"
 
-// @ts-expect-error
 import "@dockstat/ui/css"
-// @ts-expect-error
 import "./index.css"
 
 createRoot(document.getElementById("root") as HTMLElement).render(

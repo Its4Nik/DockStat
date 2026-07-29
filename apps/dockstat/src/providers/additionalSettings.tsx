@@ -1,21 +1,24 @@
-import { useContext } from "react"
+import { useEdenClient } from "@dockstat/utils/react"
+import { useMemo } from "react"
 import { ConfigProviderContext, type ConfigProviderData } from "@/contexts/config"
-import { EdenClientContext } from "@/contexts/edenClient"
 import { api } from "@/lib/api"
 
 export function ConfigProvider({ children }: { children: React.ReactNode }) {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   const { data } = eden.query({
     queryKey: ["fetchAdditionalSettings"],
     route: api.db.config.get,
   })
 
-  const pDat: ConfigProviderData = {
-    additionalSettings: data?.additionalSettings,
-    hotkeys: data?.hotkeys,
-    navLinks: data?.nav_links,
-  }
+  const pDat = useMemo<ConfigProviderData>(
+    () => ({
+      additionalSettings: data?.additionalSettings,
+      hotkeys: data?.hotkeys,
+      navLinks: data?.nav_links,
+    }),
+    [data?.additionalSettings, data?.hotkeys, data?.nav_links]
+  )
 
-  return <ConfigProviderContext value={pDat || {}}>{children}</ConfigProviderContext>
+  return <ConfigProviderContext value={pDat}>{children}</ConfigProviderContext>
 }

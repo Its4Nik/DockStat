@@ -13,6 +13,7 @@ const DBRoutes = new Elysia({
       "Database configuration and management endpoints for managing DockStat system settings, repositories, themes, and application data",
     tags: ["Database"],
   },
+  name: "DB",
   name: "DatabaseElysiaInstance",
   prefix: "/db",
 })

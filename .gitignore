@@ -1,5 +1,6 @@
 .gitai.json
 backup
+site/
 \!archive
 
 .test-setup
@@ -53,3 +54,4 @@ yarn-error.log*
 
 *storybook.log
 storybook-static
+*.tsbuildinfo

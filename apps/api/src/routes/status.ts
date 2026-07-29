@@ -12,6 +12,7 @@ export interface ServiceStatus {
 }
 
 const StatusRoutes = new Elysia({
+  name: "Status",
   detail: {
     description:
       "System health and status monitoring endpoints for checking the operational state of DockStat services including database, Docker client manager, plugins, and logger.",

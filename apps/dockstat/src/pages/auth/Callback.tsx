@@ -1,9 +1,9 @@
 import { Button, Card, CardBody, CardHeader } from "@dockstat/ui"
-import { useContext, useEffect, useState } from "react"
+import { useEdenClient } from "@dockstat/utils/react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router"
 import { floatingIcons } from "@/components/auth/constants"
 import { AnimatedIconBackground } from "@/components/auth/SignInBg"
-import { EdenClientContext } from "@/contexts/edenClient"
 
 const API_BASE_URL = "http://localhost:3030/api/v2"
 
@@ -48,7 +48,7 @@ async function verifyToken(
 }
 
 function AuthCallback() {
-  const edenClient = useContext(EdenClientContext)
+  const edenClient = useEdenClient()
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
 

@@ -1,6 +1,6 @@
-import Logger from "@dockstat/logger"
-import Elysia, { type Context, t } from "elysia"
-import type { ElysiaWS } from "elysia/ws"
+import type Logger from "@dockstat/logger"
+import { createWSHandler, type WSTopicHandler } from "@dockstat/utils/ws-handler"
+import { t } from "elysia"
 
 // ─── Types ─────────────────────────────────────────────────────────────
 
@@ -15,24 +15,11 @@ type TopicPayload =
   | "logs"
   | "metrics/containers"
   | "metrics/stacks"
-
-/** Inbound message from a connected client */
-interface ClientMessage {
-  type: "subscribe" | "unsubscribe"
-  topic: TopicPayload
-}
-
-/** Outbound message pushed to subscribers */
-interface ServerMessage {
-  topic: string
-  data: unknown
-  timestamp: number
-}
-
-/** Per-client bookkeeping attached to ws.data */
-interface ClientState {
-  subscriptions: Set<string>
-}
+  | "rss"
+  // Arbitrary string topics (e.g. widgets/dashboard/<id>) so other
+  // subsystems can reuse the shared WS connection without extending
+  // this union for every new topic.
+  | (string & {})
 
 // ─── Helpers ───────────────────────────────────────────────────────────
 
@@ -48,103 +35,137 @@ function resolveTopicKey(topic: TopicPayload): string {
 }
 
 /** Build a plugin topic key directly (handy on the server side). */
-export function pluginTopicKey(
-  id: number | string,
-  channel: string
-): string {
+export function pluginTopicKey(id: number | string, channel: string): string {
   return `plugin/${id}/${channel}`
 }
 
 // ─── Elysia body schema (shared) ───────────────────────────────────────
-
+//
+// The topic accepts both the well-known typed literals (for Treaty type
+// safety on the client) AND arbitrary string topics. Arbitrary strings are
+// required so the widgets subsystem can subscribe to dynamic topics like
+// `widgets/dashboard/<id>` without needing its own WS endpoint.
 const ClientMessageSchema = t.Object({
-  type: t.Union([t.Literal("subscribe"), t.Literal("unsubscribe")]),
   topic: t.Union([
     t.Object({ channel: t.String(), id: t.Union([t.String(), t.Number()]) }),
     t.Literal("logs"),
     t.Literal("metrics/containers"),
     t.Literal("metrics/stacks"),
+    t.Literal("rss"),
+    t.String(),
   ]),
+  type: t.Union([t.Literal("subscribe"), t.Literal("unsubscribe"), t.Undefined()]),
 })
 
 // ─── Handler ───────────────────────────────────────────────────────────
 
+export interface DSWebSocketHandlerConfig {
+  /** Enable authentication for WebSocket connections */
+  requireAuth?: boolean
+  /** Token verification function */
+  verifyToken?: (token: string) => Promise<Record<string, unknown> | null>
+  /**
+   * Called when a topic gains its first subscriber. Useful for lazily
+   * producing an initial snapshot (e.g. evaluating a dashboard data-pipe
+   * so a freshly-subscribed client immediately sees static data).
+   */
+  onFirstSubscriber?: (topic: string) => void
+  /** Called when a topic loses its last subscriber. */
+  onLastSubscriberLeave?: (topic: string) => void
+}
+
 class WebSocketHandler {
   private logger: Logger
+  private inner: WSTopicHandler
+  private authConfig?: DSWebSocketHandlerConfig
+  /** Server-internal subscribers keyed by topic */
+  private internalSubscribers = new Map<string, Set<(data: unknown) => void>>()
+  /** Extra onFirstSubscriber callbacks registered after construction */
+  private firstSubscriberHooks = new Set<(topic: string) => void>()
+  /** Extra onLastSubscriberLeave callbacks registered after construction */
+  private lastSubscriberLeaveHooks = new Set<(topic: string) => void>()
 
-  /** topic-key → set of ws clients currently subscribed */
-  private topicMap = new Map<string, Set<ElysiaWS<Context>>>()
-
-  /** reverse index: ws → client state (for fast cleanup on disconnect) */
-  private clients = new WeakMap<ElysiaWS<Context>, ClientState>()
-
-  /** the Elysia instance with the single /ws route */
-  private routes
-
-  constructor(logger: Logger) {
+  constructor(logger: Logger, config?: DSWebSocketHandlerConfig) {
     this.logger = logger
+    this.authConfig = config
 
-    this.routes = new Elysia({ prefix: "/ws" }).ws("/", {
-      open: (ws) => this.onOpen(ws),
-      close: (ws) => this.onClose(ws),
-      message: (ws, msg: ClientMessage) => this.onMessage(ws, msg),
-      body: ClientMessageSchema,
+    if (config?.onFirstSubscriber) {
+      this.firstSubscriberHooks.add(config.onFirstSubscriber)
+    }
+    if (config?.onLastSubscriberLeave) {
+      this.lastSubscriberLeaveHooks.add(config.onLastSubscriberLeave)
+    }
+
+    this.inner = createWSHandler(this.logger, {
+      bodySchema: ClientMessageSchema,
+      onFirstSubscriber: (topic) => this.notifyFirstSubscriber(topic),
+      onLastSubscriberLeave: (topic) => this.notifyLastSubscriberLeave(topic),
+      prefix: "/ws",
+      requireAuth: config?.requireAuth ?? false,
+      resolveKey: (topic) => resolveTopicKey(topic as TopicPayload),
+      verifyToken: config?.verifyToken,
     })
   }
 
-  // ── WebSocket lifecycle ──────────────────────────────────────────
-
-  private onOpen(ws: ElysiaWS<Context>) {
-    this.clients.set(ws, { subscriptions: new Set() })
-    this.logger.info("WS client connected")
+  /**
+   * Register an additional callback fired when a topic gains its first
+   * subscriber. Returns an unregister function.
+   */
+  onFirstSubscriber(cb: (topic: string) => void): () => void {
+    this.firstSubscriberHooks.add(cb)
+    return () => this.firstSubscriberHooks.delete(cb)
   }
 
-  private onClose(ws: ElysiaWS<Context>) {
-    const state = this.clients.get(ws)
-    if (!state) return
+  /**
+   * Register an additional callback fired when a topic loses its last
+   * subscriber. Returns an unregister function.
+   */
+  onLastSubscriberLeave(cb: (topic: string) => void): () => void {
+    this.lastSubscriberLeaveHooks.add(cb)
+    return () => this.lastSubscriberLeaveHooks.delete(cb)
+  }
 
-    // remove this ws from every topic bucket it was in
-    for (const key of state.subscriptions) {
-      const bucket = this.topicMap.get(key)
-      bucket?.delete(ws)
-      if (bucket?.size === 0) this.topicMap.delete(key)
+  private notifyFirstSubscriber(topic: string): void {
+    for (const cb of this.firstSubscriberHooks) {
+      try {
+        cb(topic)
+      } catch (err) {
+        this.logger.warn(`onFirstSubscriber callback failed: ${err}`)
+      }
     }
-
-    this.clients.delete(ws)
-    this.logger.info("WS client disconnected")
   }
 
-  private onMessage(ws: ElysiaWS<Context>, msg: ClientMessage) {
-    const key = resolveTopicKey(msg.topic)
-
-    msg.type === "subscribe"
-      ? this.subscribe(ws, key)
-      : this.unsubscribe(ws, key)
-  }
-
-  // ── Subscription management ──────────────────────────────────────
-
-  private subscribe(ws: ElysiaWS<Context>, key: string) {
-    if (!this.topicMap.has(key)) {
-      this.topicMap.set(key, new Set())
+  private notifyLastSubscriberLeave(topic: string): void {
+    for (const cb of this.lastSubscriberLeaveHooks) {
+      try {
+        cb(topic)
+      } catch (err) {
+        this.logger.warn(`onLastSubscriberLeave callback failed: ${err}`)
+      }
     }
-
-    this.topicMap.get(key)!.add(ws)
-    this.clients.get(ws)!.subscriptions.add(key)
-
-    this.logger.debug(
-      `+sub "${key}" → ${this.topicMap.get(key)!.size} subscriber(s)`
-    )
   }
 
-  private unsubscribe(ws: ElysiaWS<Context>, key: string) {
-    const bucket = this.topicMap.get(key)
-    bucket?.delete(ws)
-    if (bucket?.size === 0) this.topicMap.delete(key)
-
-    this.clients.get(ws)?.subscriptions.delete(key)
-
-    this.logger.debug(`-unsub "${key}"`)
+  /**
+   * Enable or reconfigure authentication.
+   * Call before mounting routes.
+   */
+  configureAuth(config: DSWebSocketHandlerConfig) {
+    this.logger.debug("Configuring auth")
+    this.authConfig = config
+    if (config.onFirstSubscriber) this.firstSubscriberHooks.add(config.onFirstSubscriber)
+    if (config.onLastSubscriberLeave)
+      this.lastSubscriberLeaveHooks.add(config.onLastSubscriberLeave)
+    // Rebuild the inner handler with auth enabled, preserving the
+    // first/last subscriber hooks registered earlier.
+    this.inner = createWSHandler(this.logger, {
+      bodySchema: ClientMessageSchema,
+      onFirstSubscriber: (topic) => this.notifyFirstSubscriber(topic),
+      onLastSubscriberLeave: (topic) => this.notifyLastSubscriberLeave(topic),
+      prefix: "/ws",
+      requireAuth: config.requireAuth,
+      resolveKey: (topic) => resolveTopicKey(topic as TopicPayload),
+      verifyToken: config.verifyToken,
+    })
   }
 
   // ── Publishing ───────────────────────────────────────────────────
@@ -157,9 +178,10 @@ class WebSocketHandler {
    * wsHandler.send("metrics/containers", containerStats)
    */
   send<T extends TopicPayload>(topic: T, data: unknown): number {
-    const topicKey = resolveTopicKey(topic)
-
-    return this.broadcast(topicKey, data)
+    // Resolve the key so internal subscribers get the same topic string
+    const key = typeof topic === "string" ? topic : resolveTopicKey(topic)
+    this.notifyInternal(key, data)
+    return this.inner.send(topic, data)
   }
 
   /**
@@ -169,56 +191,86 @@ class WebSocketHandler {
    * @example
    * wsHandler.sendToPlugin(5, "events", { containerId: "abc", state: "running" })
    */
-  sendToPlugin(
-    id: number | string,
-    channel: string,
-    data: unknown
-  ): number {
-    return this.broadcast(pluginTopicKey(id, channel), data)
+  sendToPlugin(id: number | string, channel: string, data: unknown): number {
+    // Also notify internal subscribers
+    this.notifyInternal(pluginTopicKey(id, channel), data)
+    return this.inner.send(pluginTopicKey(id, channel), data)
   }
 
+  // ── Internal pub/sub (server-side listeners) ───────────────────
+
   /**
-   * Core broadcast.  Returns the number of clients the message was
-   * delivered to (0 if nobody is listening).
+   * Subscribe to a topic from server-internal code.
+   *
+   * Whenever `send()` or `sendToPlugin()` publishes to the given topic,
+   * the callback is invoked with the data — even if no WebSocket clients
+   * are subscribed.
+   *
+   * Returns an unsubscribe function.
+   *
+   * @example
+   * const unsub = handler.onInternalPublish("logs", (entry) => {
+   *   console.log("New log:", entry)
+   * })
    */
-  private broadcast(key: string, data: unknown): number {
-    const bucket = this.topicMap.get(key)
-    if (!bucket?.size) return 0
-
-    const msg: ServerMessage = {
-      data,
-      timestamp: Date.now(),
-      topic: key,
+  onInternalPublish(topic: string, callback: (data: unknown) => void): () => void {
+    if (!this.internalSubscribers.has(topic)) {
+      this.internalSubscribers.set(topic, new Set())
     }
-    const raw = JSON.stringify(msg)
+    this.internalSubscribers.get(topic)!.add(callback)
+    this.logger.debug(`Internal subscriber added for "${topic}"`)
 
-    let sent = 0
-    for (const ws of bucket) {
+    return () => {
+      this.internalSubscribers.get(topic)?.delete(callback)
+      if (this.internalSubscribers.get(topic)?.size === 0) {
+        this.internalSubscribers.delete(topic)
+      }
+      this.logger.debug(`Internal subscriber removed for "${topic}"`)
+    }
+  }
+
+  /** Notify all internal subscribers for a topic. */
+  private notifyInternal(topic: string, data: unknown): void {
+    const subs = this.internalSubscribers.get(topic)
+    if (!subs) return
+    for (const cb of subs) {
       try {
-        ws.send(raw)
-        sent++
+        cb(data)
       } catch {
-        // client may have dropped between the event loop tick and .send()
+        // ignore callback errors
       }
     }
-    return sent
   }
 
   // ── Introspection ────────────────────────────────────────────────
 
   /** How many clients are subscribed to a given topic? */
   subscriberCount(topic: string): number {
-    return this.topicMap.get(topic)?.size ?? 0
+    return this.inner.subscriberCount(topic)
   }
 
   /** All topic keys that currently have at least one subscriber. */
   activeTopics(): string[] {
-    return [...this.topicMap.keys()]
+    return this.inner.activeTopics()
+  }
+
+  /**
+   * All topics available as **data sources** for websocket-source data-pipe
+   * nodes. Merges active WS subscriber topics with internal (server-side)
+   * subscriber topics, then EXCLUDES dashboard sink topics
+   * (`widgets/dashboard/*`) — those are outputs, not sources.
+   */
+  availableTopics(): string[] {
+    const active = this.inner.activeTopics()
+    const internal = [...this.internalSubscribers.keys()]
+    return [...new Set([...active, ...internal])]
+      .filter((topic) => !topic.startsWith("widgets/dashboard/"))
+      .sort()
   }
 
   /** Mount this on your Elysia app: `app.use(handler.getRoutes())` */
   getRoutes() {
-    return this.routes
+    return this.inner.getRoutes()
   }
 }
 

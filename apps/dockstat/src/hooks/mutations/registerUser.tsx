@@ -1,9 +1,8 @@
-import { useContext } from "react"
-import { EdenClientContext } from "@/contexts/edenClient"
+import { useEdenClient } from "@dockstat/utils/react"
 import { api } from "@/lib/api"
 
 export const useCreateUserMutations = () => {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   const registerLocalUser = eden.mutate({
     invalidateQueries: [["fetchUsers"]],

@@ -14,7 +14,7 @@ export interface CompareResult {
   message: string
 }
 
-const compareRoutes = new Elysia({ prefix: "/compare" })
+const compareRoutes = new Elysia({ prefix: "/compare", name: "compare" })
   .post(
     "/",
     ({ body, set }): CompareResult => {

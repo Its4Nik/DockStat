@@ -3,6 +3,7 @@ import DCM from "../../docker"
 import { DockerModel } from "../../models/docker"
 
 export const DockerHostElysia = new Elysia({
+  name: "Docker-Hosts",
   detail: {
     description:
       "Docker host management endpoints for adding, updating, and removing Docker daemon connections",

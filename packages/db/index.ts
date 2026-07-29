@@ -1,16 +1,17 @@
 import type Logger from "@dockstat/logger"
-import { column, DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
-import type { DockStatConfigTableType, RepoType } from "@dockstat/typings/types"
+import { column, DB, defaultExpr, type QueryBuilder } from "@dockstat/sqlite-wrapper"
+import type { CertificateTypeRow, DockStatConfigTableType, RepoType } from "@dockstat/typings/types"
 import { defaultConfig, defaultRepositories } from "./defaults"
 
 class DockStatDB {
   protected db: DB
   private config_table: QueryBuilder<DockStatConfigTableType>
   private repositories_table: QueryBuilder<RepoType>
+  private certificates_table: QueryBuilder<CertificateTypeRow>
   private metrics_table
   private logger: Logger
 
-  constructor(prefix = "DockStatDB", baseLogger: Logger) {
+  constructor(baseLogger: Logger, prefix = "DockStatDB") {
     this.logger = baseLogger.spawn(prefix)
     this.logger.info("Initializing DockStatDB")
 
@@ -109,6 +110,47 @@ class DockStatDB {
       )
 
       this.logger.debug("Metrics table successfully initialized")
+
+      this.certificates_table = this.db.createTable<CertificateTypeRow>(
+        "certificates",
+        {
+          algorithm: column.text({ notNull: false }),
+
+          comment: column.text({ notNull: false }),
+
+          // Stored as TEXT (ISO 8601). Defaults to current UTC time.
+          createdAt: column.text({
+            default: defaultExpr("(datetime('now'))"),
+            notNull: true,
+          }),
+          expiresAt: column.text({ notNull: false }),
+          externalRef: column.text({ notNull: false }),
+          // SHA-256 fingerprint of the public material for display/dedup.
+          fingerprint: column.text({ notNull: false }),
+          format: column.text({ default: "pem", notNull: true }),
+          id: column.uuid({ generateDefault: true, notNull: true, primaryKey: true }),
+          // Private material. Encrypted at rest by the service layer.
+          privateData: column.text({ notNull: false }),
+
+          // Public material (cert chain / OpenSSH pub key). Safe to expose.
+          publicData: column.text({ notNull: false }),
+          source: column.text({ default: "imported", notNull: true }),
+          tags: column.json({ default: defaultExpr("'[]'"), notNull: true }),
+          title: column.text({ notNull: true }),
+          type: column.text({ notNull: true }),
+          updatedAt: column.text({
+            default: defaultExpr("(datetime('now'))"),
+            notNull: true,
+          }),
+        },
+        {
+          ifNotExists: true,
+          parser: {
+            JSON: ["tags"],
+          },
+        }
+      )
+      this.logger.debug("Certificates table successfully initialized")
 
       // Initializing periodic tasks
       this.initializePeriodicTasks()
@@ -217,6 +259,10 @@ class DockStatDB {
 
   public getMetricsTable() {
     return this.metrics_table
+  }
+
+  public getCertificatesTable() {
+    return this.certificates_table
   }
 
   // Database Management

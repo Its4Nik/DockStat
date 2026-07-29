@@ -10,6 +10,7 @@ const PluginRoutes = new Elysia({
       "Plugin management endpoints for installing, activating, deactivating, and managing DockStat plugins. Plugins extend system functionality with custom routes, database tables, and event hooks.",
     tags: ["Plugins"],
   },
+  name: "Plugins",
   prefix: "/plugins",
 })
   .use(DockStatAPIFrontendPluginRoutes)

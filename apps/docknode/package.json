@@ -21,7 +21,8 @@
     "bun": ">=1.0.0"
   },
   "exports": {
-    "./treaty": "./src/_treaty.ts"
+    "./treaty": "./src/_treaty.ts",
+    "./types": "./src/stacks/types.ts"
   },
   "module": "src/index.ts",
   "name": "@dockstat/docknode",

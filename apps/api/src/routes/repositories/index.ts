@@ -6,6 +6,7 @@ import { DockStatDB } from "../../database"
 
 const RepositoryRoutes = new Elysia({
   detail: { tags: ["repositories"] },
+  name: "Repos",
   prefix: "/repositories",
 })
   .get("/all", () => DockStatDB.repositoriesTable.select(["*"]).all(), {

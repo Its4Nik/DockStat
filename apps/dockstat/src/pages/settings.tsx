@@ -1,6 +1,7 @@
 import { Slides, ThemeEditor } from "@dockstat/ui"
 import { useState } from "react"
 import { AccountsSettingsSlide } from "@/components/settings/accounts/index"
+import { CertificatesSettingsSlide } from "@/components/settings/certificates/index"
 import { GeneralSettingsSlide } from "@/components/settings/general/index"
 import { HotkeysSlide } from "@/components/settings/hotkeys"
 import { usePageHeading } from "@/hooks/useHeading"
@@ -48,7 +49,7 @@ export default function SettingsPage() {
       >
         {{
           Accounts: <AccountsSettingsSlide />,
-          Certificates: <div>Certificates Settings</div>,
+          Certificates: <CertificatesSettingsSlide />,
           Colors: (
             <ThemeEditor
               allColors={parsedColors}

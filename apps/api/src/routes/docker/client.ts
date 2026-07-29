@@ -13,6 +13,7 @@ export const DockerClientElysia = new Elysia({
       "Docker client management endpoints for registering, updating, and controlling Docker daemon connections.",
     tags: ["Docker Client Management"],
   },
+  name: "DockerClient",
   prefix: "/client",
 })
   .post(

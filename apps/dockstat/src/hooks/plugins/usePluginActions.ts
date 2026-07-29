@@ -1,7 +1,7 @@
 import type { ActionConfig, PageTemplate } from "@dockstat/template-renderer"
-import { useCallback, useContext, useRef } from "react"
+import { useEdenClient } from "@dockstat/utils/react"
+import { useCallback, useRef } from "react"
 import type { ResolvedAction } from "@/components/plugins/id/types"
-import { EdenClientContext } from "@/contexts/edenClient"
 import { api } from "@/lib/api"
 import { getValueByPath } from "./utils"
 
@@ -34,7 +34,7 @@ export function usePluginActions({
   onNavigate,
   reloadLoaders,
 }: UsePluginActionsParams) {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
   const customHandlersRef = useRef<Map<string, (payload?: unknown) => void | Promise<void>>>(
     new Map()
   )

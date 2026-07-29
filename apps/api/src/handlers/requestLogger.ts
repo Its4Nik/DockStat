@@ -1,4 +1,4 @@
-import { http } from "@dockstat/utils"
+import { http, truncate } from "@dockstat/utils"
 import Elysia from "elysia"
 import BaseLogger from "../logger"
 
@@ -6,19 +6,22 @@ export const stateMap = new WeakMap<Request, { startTime: number; reqId: string 
 
 const logger = BaseLogger.spawn("Elysia")
 const CreateRequestLogger = () => {
-  return new Elysia()
+  return new Elysia({name: "DockStat-Request-Logger"})
     .onRequest(({ request }) => {
       const startTime = Date.now()
       const reqId = http.requestId.getRequestID()
       stateMap.set(request, { reqId, startTime })
 
-      logger.info(`[${request.method}] Request received ${request.url}`, reqId)
+      logger.info(`[${request.method}] Request received ${truncate(request.url, 45)}`, reqId)
     })
 
     .onAfterResponse(({ request }) => {
       const state = stateMap.get(request)
 
-      logger.info(`[${request.method}] Request ${request.url} completed`, state?.reqId)
+      logger.info(
+        `[${request.method}] Request ${truncate(request.url, 45)} completed`,
+        state?.reqId
+      )
     })
     .onError(({ request, set, error, code }) => {
       const state = stateMap.get(request)

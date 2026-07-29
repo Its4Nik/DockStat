@@ -1,6 +1,7 @@
 import { Badge, Button, Card, type Column, Input, Modal, Table } from "@dockstat/ui"
+import { useEdenClient } from "@dockstat/utils/react"
 import { useCallback, useEffect, useState } from "react"
-import { api, getAuthHeaders } from "@/lib/api"
+import { api } from "@/lib/api"
 import { toast } from "@/lib/toast"
 
 // ============================================
@@ -253,6 +254,7 @@ interface StackLogsModalProps {
 }
 
 function StackLogsModal({ open, onClose, nodeId, stackId, stackName }: StackLogsModalProps) {
+  const eden = useEdenClient()
   const [logs, setLogs] = useState<LogMessage[]>([])
   const [tail, setTail] = useState(100)
   const [loading, setLoading] = useState(false)
@@ -262,27 +264,23 @@ function StackLogsModal({ open, onClose, nodeId, stackId, stackName }: StackLogs
 
     setLoading(true)
     try {
-      const result = await api
-        .node({ nodeId })
-        .stacks({ stackId: String(stackId) })
-        .logs.get({
-          query: { tail: String(tail) },
-        })
-
-      if (result.data) {
+      const { data } = await eden.call(
+        api.node({ nodeId }).stacks({ stackId: String(stackId) }).logs.get,
+        { fetchOptions: { query: { tail: String(tail) } } }
+      )
+      if (data) {
         // Parse the logs - could be string or structured data
-        const logText = String(result.data)
+        const logText = String(data)
         const logLines = logText.split("\n").filter(Boolean)
         setLogs(
-          logLines.map((line) => ({
-            level: line.toLowerCase().includes("error")
-              ? "error"
-              : line.toLowerCase().includes("warn")
-                ? "warn"
-                : "info",
-            message: line,
-            timestamp: new Date().toISOString(),
-          }))
+          logLines.map((line) => {
+            const lower = line.toLowerCase()
+            return {
+              level: lower.includes("error") ? "error" : lower.includes("warn") ? "warn" : "info",
+              message: line,
+              timestamp: new Date().toISOString(),
+            }
+          })
         )
       }
     } catch (error) {
@@ -290,7 +288,7 @@ function StackLogsModal({ open, onClose, nodeId, stackId, stackName }: StackLogs
     } finally {
       setLoading(false)
     }
-  }, [nodeId, stackId, tail])
+  }, [nodeId, stackId, tail, eden])
 
   useEffect(() => {
     if (open && stackId) {
@@ -379,6 +377,7 @@ interface SwarmInitModalProps {
 }
 
 function SwarmInitModal({ open, onClose, nodeId, onSuccess }: SwarmInitModalProps) {
+  const eden = useEdenClient()
   const [advertiseAddr, setAdvertiseAddr] = useState("")
   const [listenAddr, setListenAddr] = useState("0.0.0.0:2377")
   const [loading, setLoading] = useState(false)
@@ -386,13 +385,12 @@ function SwarmInitModal({ open, onClose, nodeId, onSuccess }: SwarmInitModalProp
   const handleInit = async () => {
     setLoading(true)
     try {
-      await api.node({ nodeId }).swarm.init.post(
-        {
+      await eden.call(api.node({ nodeId }).swarm.init.post, {
+        body: {
           advertiseAddr: advertiseAddr || undefined,
           listenAddr: listenAddr || undefined,
         },
-        { headers: getAuthHeaders() }
-      )
+      })
       toast({ title: "Swarm initialized successfully", variant: "success" })
       onSuccess()
       onClose()
@@ -483,6 +481,7 @@ interface SwarmJoinModalProps {
 }
 
 function SwarmJoinModal({ open, onClose, nodeId, onSuccess }: SwarmJoinModalProps) {
+  const eden = useEdenClient()
   const [joinToken, setJoinToken] = useState("")
   const [remoteAddr, setRemoteAddr] = useState("")
   const [loading, setLoading] = useState(false)
@@ -495,13 +494,9 @@ function SwarmJoinModal({ open, onClose, nodeId, onSuccess }: SwarmJoinModalProp
 
     setLoading(true)
     try {
-      await api.node({ nodeId }).swarm.join.post(
-        {
-          joinToken,
-          remoteAddrs: [remoteAddr],
-        },
-        { headers: getAuthHeaders() }
-      )
+      await eden.call(api.node({ nodeId }).swarm.join.post, {
+        body: { joinToken, remoteAddrs: [remoteAddr] },
+      })
       toast({ title: "Joined swarm successfully", variant: "success" })
       onSuccess()
       onClose()
@@ -591,6 +586,7 @@ interface SwarmStackDeployModalProps {
 }
 
 function SwarmStackDeployModal({ open, onClose, nodeId, onSuccess }: SwarmStackDeployModalProps) {
+  const eden = useEdenClient()
   const [name, setName] = useState("")
   const [composeFile, setComposeFile] = useState("")
   const [withRegistryAuth, setWithRegistryAuth] = useState(false)
@@ -604,14 +600,9 @@ function SwarmStackDeployModal({ open, onClose, nodeId, onSuccess }: SwarmStackD
 
     setLoading(true)
     try {
-      await api.node({ nodeId }).swarm.stacks.deploy.post(
-        {
-          composeFile,
-          name,
-          withRegistryAuth,
-        },
-        { headers: getAuthHeaders() }
-      )
+      await eden.call(api.node({ nodeId }).swarm.stacks.deploy.post, {
+        body: { composeFile, name, withRegistryAuth },
+      })
       toast({ title: "Swarm stack deployed successfully", variant: "success" })
       onSuccess()
       onClose()
@@ -713,6 +704,7 @@ interface DockStoreStackModalProps {
 }
 
 function DockStoreStackModal({ open, onClose, nodeId, onSuccess }: DockStoreStackModalProps) {
+  const eden = useEdenClient()
   const [repoUrl, setRepoUrl] = useState("")
   const [stackName, setStackName] = useState("")
   const [loading, setLoading] = useState(false)
@@ -725,14 +717,9 @@ function DockStoreStackModal({ open, onClose, nodeId, onSuccess }: DockStoreStac
 
     setLoading(true)
     try {
-      await api.node({ nodeId }).stacks.fromStore.post(
-        {
-          nodeId: Number(nodeId),
-          repoUrl,
-          stackName,
-        },
-        { headers: getAuthHeaders() }
-      )
+      await eden.call(api.node({ nodeId }).stacks.fromStore.post, {
+        body: { nodeId: Number(nodeId), repoUrl, stackName },
+      })
       toast({ title: "Stack deployed from DockStore successfully", variant: "success" })
       onSuccess()
       onClose()
@@ -880,6 +867,7 @@ interface NodeStacksPageProps {
 }
 
 export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
+  const eden = useEdenClient()
   // State
   const [stacks, setStacks] = useState<Stack[]>([])
   const [swarmStacks, setSwarmStacks] = useState<SwarmStack[]>([])
@@ -906,27 +894,23 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      // Fetch compose stacks
-      const stacksResult = await api
-        .node({ nodeId: effectiveNodeId })
-        .stacks.get({ headers: getAuthHeaders() })
+      // stacks.get and swarm.status.get are independent — fetch in parallel.
+      const [stacksResult, swarmStatusResult] = await Promise.all([
+        eden.call(api.node({ nodeId: effectiveNodeId }).stacks.get),
+        eden.call(api.node({ nodeId: effectiveNodeId }).swarm.status.get),
+      ])
       if (stacksResult.data) {
         setStacks(Array.isArray(stacksResult.data) ? stacksResult.data : [])
       }
 
-      // Fetch swarm status
-      const swarmStatusResult = await api
-        .node({ nodeId: effectiveNodeId })
-        .swarm.status.get({ headers: getAuthHeaders() })
       if (swarmStatusResult.data) {
         setSwarmStatus(swarmStatusResult.data as SwarmStatus)
       }
 
-      // Fetch swarm stacks if in swarm mode
       if ((swarmStatusResult.data as SwarmStatus)?.isSwarmManager) {
-        const swarmStacksResult = await api
-          .node({ nodeId: effectiveNodeId })
-          .swarm.stacks.get({ headers: getAuthHeaders() })
+        const swarmStacksResult = await eden.call(
+          api.node({ nodeId: effectiveNodeId }).swarm.stacks.get
+        )
         if (swarmStacksResult.data) {
           setSwarmStacks(Array.isArray(swarmStacksResult.data) ? swarmStacksResult.data : [])
         }
@@ -937,7 +921,7 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
     } finally {
       setLoading(false)
     }
-  }, [effectiveNodeId])
+  }, [effectiveNodeId, eden])
 
   useEffect(() => {
     fetchData()
@@ -950,14 +934,16 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
     env: Record<string, string>
   }) => {
     try {
-      await api.node({ nodeId: effectiveNodeId }).stacks.post({
-        dockNodeId: Number(effectiveNodeId),
-        env: data.env,
-        name: data.name,
-        repoName: data.name,
-        repository: "local",
-        version: "1.0.0",
-        yaml: data.yaml,
+      await eden.call(api.node({ nodeId: effectiveNodeId }).stacks.post, {
+        body: {
+          dockNodeId: Number(effectiveNodeId),
+          env: data.env,
+          name: data.name,
+          repoName: data.name,
+          repository: "local",
+          version: "1.0.0",
+          yaml: data.yaml,
+        },
       })
       toast({ title: "Stack created successfully", variant: "success" })
       fetchData()
@@ -974,16 +960,10 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
   }) => {
     if (!selectedStack) return
     try {
-      await api
-        .node({ nodeId: effectiveNodeId })
-        .stacks({ stackId: String(selectedStack.id) })
-        .patch(
-          {
-            env: data.env,
-            yaml: data.yaml,
-          },
-          { headers: getAuthHeaders() }
-        )
+      await eden.call(
+        api.node({ nodeId: effectiveNodeId }).stacks({ stackId: String(selectedStack.id) }).patch,
+        { body: { env: data.env, yaml: data.yaml } }
+      )
       toast({ title: "Stack updated successfully", variant: "success" })
       fetchData()
     } catch (error) {
@@ -995,10 +975,9 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
   const handleDeleteStack = async (stackId: number) => {
     if (!confirm("Are you sure you want to delete this stack?")) return
     try {
-      await api
-        .node({ nodeId: effectiveNodeId })
-        .stacks({ stackId: String(stackId) })
-        .delete({ headers: getAuthHeaders() })
+      await eden.call(
+        api.node({ nodeId: effectiveNodeId }).stacks({ stackId: String(stackId) }).delete
+      )
       toast({ title: "Stack deleted successfully", variant: "success" })
       fetchData()
     } catch (error) {
@@ -1009,12 +988,11 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
 
   const handleStackAction = async (stackId: number, action: "up" | "down" | "restart" | "stop") => {
     try {
-      const result = await api
-        .node({ nodeId: effectiveNodeId })
-        .stacks({ stackId: String(stackId) })
-        [action].post({}, { headers: getAuthHeaders() })
+      const result = await eden.call(
+        api.node({ nodeId: effectiveNodeId }).stacks({ stackId: String(stackId) })[action].post,
+        { body: {} }
+      )
 
-      // Check for errors in the result
       const resultData = result.data as
         | { success?: boolean; error?: string; stderr?: string }
         | undefined
@@ -1044,9 +1022,9 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
     if (!confirm("Are you sure you want to leave the swarm? This may affect running services."))
       return
     try {
-      await api
-        .node({ nodeId: effectiveNodeId })
-        .swarm.leave.post({ query: { force: "true" } }, { headers: getAuthHeaders() })
+      await eden.call(api.node({ nodeId: effectiveNodeId }).swarm.leave.post, {
+        fetchOptions: { query: { force: "true" } },
+      })
       toast({ title: "Left swarm successfully", variant: "success" })
       fetchData()
     } catch (error) {
@@ -1157,10 +1135,9 @@ export default function NodeStacksPage({ nodeId }: NodeStacksPageProps) {
           <Button
             onClick={async () => {
               try {
-                await api
-                  .node({ nodeId: effectiveNodeId })
-                  .swarm.stacks({ name: row.name })
-                  .delete()
+                await eden.call(
+                  api.node({ nodeId: effectiveNodeId }).swarm.stacks({ name: row.name }).delete
+                )
                 toast({ title: "Stack removed", variant: "success" })
                 fetchData()
               } catch {

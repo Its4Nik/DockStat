@@ -1,0 +1,59 @@
+name: Build documentation
+
+on:
+  push:
+    branches: [main, dev, docs-update]
+    paths:
+      - "apps/docs/**"
+      - ".forgejo/workflows/docs.yaml"
+  pull_request:
+    paths:
+      - "apps/docs/**"
+      - ".forgejo/workflows/docs.yaml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build MkDocs site
+    runs-on: self-hosted-uv
+    steps:
+      - name: Checkout repository
+        run: |
+          git clone "https://git:${FORGEJO_TOKEN}@${FORGEJO_SERVER_URL#https://}/${FORGEJO_REPOSITORY}.git" .
+          git checkout "${FORGEJO_SHA}"
+
+      - name: Set up Python
+        run: |
+          cd apps/docs
+          uv venv .venv
+          uv pip install mkdocs mkdocs-material
+          source .venv/bin/activate
+
+      - name: Sync documentation assets
+        run: |
+          mkdir -p apps/docs/src/assets/logos
+          for f in square.png withText-white.png; do
+            if [ -f ".github/assets/logos/$f" ]; then
+              cp ".github/assets/logos/$f" apps/docs/src/assets/logos/
+            fi
+          done
+
+      - name: Build documentation
+        run: |
+          cd apps/docs
+          source .venv/bin/activate
+          mkdocs build --strict
+
+      # - uses: actions/git-pages@v2
+      #   with:
+      #     #site: https://dockstat.itsnik.de/
+      #     site: https://${{ github.repository_owner }}.codeberg.page/dockstat
+      #     server: codeberg.page
+      #     token: ${{ github.token }}
+      #     source: apps/docs/site/
+
+      - uses: https://codeberg.org/git-pages/action@v2
+        with:
+          site: https://${{ forge.repository_owner }}.codeberg.page/dockstat
+          token: ${{ github.token }}
+          source: apps/docs/site/

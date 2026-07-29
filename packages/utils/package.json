@@ -5,9 +5,9 @@
     "url": "https://itsnik.de"
   },
   "dependencies": {
+    "@elysiajs/eden": "catalog:",
     "@tanstack/react-query": "catalog:react-ui"
   },
-  "description": "A tiny utils library used in DockStat",
   "devDependencies": {
     "@dockstat/logger": "workspace:*",
     "@dockstat/typings": "workspace:*",
@@ -15,7 +15,8 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./react": "./src/react/index.ts"
+    "./react": "./src/react/index.ts",
+    "./ws-handler": "./src/ws-handler/index.ts"
   },
   "keywords": [
     "dockstat",
@@ -28,7 +29,13 @@
   "main": "src/index.ts",
   "name": "@dockstat/utils",
   "peerDependencies": {
+    "elysia": "^1",
     "typescript": "^5"
+  },
+  "peerDependenciesMeta": {
+    "elysia": {
+      "optional": true
+    }
   },
   "repository": {
     "directory": "packages/utils",

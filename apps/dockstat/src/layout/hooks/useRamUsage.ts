@@ -1,8 +1,6 @@
-import { rssFeedEffect } from "@WSS"
-import { useEffect, useState } from "react"
+import { useRssFeed } from "@WSS"
 
 export function useRamUsage() {
-  const [ramUsage, setRamUsage] = useState<string>("Connecting...")
-  useEffect(() => rssFeedEffect(setRamUsage), [])
+  const ramUsage = useRssFeed()
   return ramUsage
 }

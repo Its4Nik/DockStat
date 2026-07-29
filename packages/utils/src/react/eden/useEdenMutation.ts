@@ -7,7 +7,11 @@ export function useEdenMutation<TRoute extends EdenRoute>(
 ): MutationResult<ResponseData<TRoute>, EdenBody<TRoute>> {
   const mutationFn = async (body: EdenBody<TRoute>) => {
     const toaster = options.toast?.toaster
-    const { data, error } = await options.route(body as never, options.opts as never)
+    const { data, error, status } = await options.route(body as never, options.opts as never)
+
+    if (!options.skipAuthHandler && status === 401 && options.onUnauthorized) {
+      options.onUnauthorized()
+    }
 
     if (error) {
       if (toaster) {

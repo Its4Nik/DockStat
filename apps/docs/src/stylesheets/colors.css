@@ -1,0 +1,26 @@
+/* ---------------------------------------------------------------------------
+ * DockStat brand colors for the Material for MkDocs theme.
+ *
+ * mkdocs.yml declares `primary: custom` and `accent: custom`, which tells
+ * Material to render `<html data-md-color-primary="custom"
+ * data-md-color-accent="custom">`. We override the default custom values
+ * here so the `--md-primary-fg-color` and `--md-accent-fg-color` variables
+ * resolve to DockStat brand colors.
+ *
+ * Register this file in mkdocs.yml with `extra_css: [stylesheets/colors.css]`
+ * so MkDocs copies it into the built site.
+ * ------------------------------------------------------------------------- */
+
+:root > * {
+  --md-primary-fg-color: #5d68df;
+  --md-primary-fg-color--light: #a5adfa;
+  --md-primary-fg-color--dark: #5d68d8;
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: #ffffffb3;
+}
+
+/* Brighter link color on the slate scheme for better contrast against the
+ * dark background; the default accent reads a bit dim against slate. */
+[data-md-color-scheme="slate"] {
+  --md-typeset-a-color: #a5adfa;
+}

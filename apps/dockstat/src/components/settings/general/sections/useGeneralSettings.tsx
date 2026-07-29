@@ -1,9 +1,8 @@
 import type { DockStatConfigTableType } from "@dockstat/typings/types"
 import { type PathItem, SidebarPaths } from "@dockstat/ui"
-
+import { useEdenClient } from "@dockstat/utils/react"
 import { useContext, useMemo } from "react"
 import { ConfigProviderContext } from "@/contexts/config"
-import { EdenClientContext } from "@/contexts/edenClient"
 import { useConfigMutations } from "@/hooks/mutations"
 import { api } from "@/lib/api"
 
@@ -33,7 +32,7 @@ export function useGeneralSettings() {
   const { pinLinkMutation, unpinLinkMutation, updateAdditionalSettingsMutation } =
     useConfigMutations()
 
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   const { data: frontendPluginRoutes } = eden.query({
     queryKey: ["fetchFrontendPluginRoutes"],

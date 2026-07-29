@@ -3,12 +3,17 @@ import { column, type DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
 import { ConfigService } from "./config"
 import { getMiddlewareFunctions } from "./middleware"
 import { createAuthRoutes } from "./routes"
-import type { ApiKeysTable, LocalUsersTable, ProvidersTable } from "./types"
+import type { ApiKeysTable, LocalUsersTable, ProvidersTable, SessionsTable } from "./types"
+
+// Re-export JWT helpers for consumers that need to verify tokens outside
+// of the normal HTTP middleware (e.g. WebSocket handlers).
+export { createAuthToken, verifyAuthToken } from "./utils/jwt"
 
 export class AuthHandler {
   providers: QueryBuilder<ProvidersTable>
   users: QueryBuilder<LocalUsersTable>
   apiKeys: QueryBuilder<ApiKeysTable>
+  sessions: QueryBuilder<SessionsTable>
   logger: Logger
   configService: ConfigService
   middleware: ReturnType<typeof getMiddlewareFunctions>
@@ -62,13 +67,30 @@ export class AuthHandler {
       userId: column.text({ notNull: true }),
     })
 
+    this.sessions = db.createTable<SessionsTable>(
+      "auth-sessions",
+      {
+        createdAt: column.createdAt(),
+        expiresAt: column.datetime({ notNull: true }),
+        id: column.uuid({ generateDefault: true }),
+        jti: column.text({ notNull: true }),
+        userId: column.text({ notNull: true }),
+      },
+      { ifNotExists: true }
+    )
+
     if (this.users.select(["id"]).count() < 1) {
       this.allowGuestRegistration = true
     }
 
     this.configService = new ConfigService(this.providers, this.logger)
 
-    this.middleware = getMiddlewareFunctions(this.logger, this.getStateMap, this.apiKeys)
+    this.middleware = getMiddlewareFunctions(
+      this.logger,
+      this.getStateMap,
+      this.apiKeys,
+      this.sessions
+    )
   }
 
   getAllowGuestRegistration() {
@@ -84,6 +106,7 @@ export class AuthHandler {
       this.providers,
       this.users,
       this.apiKeys,
+      this.sessions,
       this.logger,
       this.configService,
       () => this.getAllowGuestRegistration(),

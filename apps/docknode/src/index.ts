@@ -4,7 +4,7 @@ import { DockStacksRoutes, SwarmRoutes } from "./stacks/routes"
 import SwarmHandler from "./stacks/swarm"
 import { DockNodeLogger } from "./utils/logger"
 
-const DockNode = new Elysia({ prefix: "/api" })
+const DockNode = new Elysia({ prefix: "/api", name: "DAPI" })
   .use(
     openapi({
       path: "/docs",

@@ -3,7 +3,7 @@ import type { ThemeDB } from "../../db"
 import { theme } from "../models"
 
 export const createThemeQueryRoutes = (themeDB: ThemeDB) => {
-  return new Elysia()
+  return new Elysia({ name: "getThemese" })
     .decorate("themeDB", themeDB)
 
     .get(

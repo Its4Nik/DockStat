@@ -1,8 +1,8 @@
 import { Button, Card, Input } from "@dockstat/ui"
+import { useEdenClient } from "@dockstat/utils/react"
 import { Plus } from "lucide-react"
-import { useContext, useState } from "react"
+import { useState } from "react"
 import { RepoCard } from "@/components/extensions/RepoCard"
-import { EdenClientContext } from "@/contexts/edenClient"
 import { useAddRepoMutation } from "@/hooks/mutations"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
@@ -10,7 +10,7 @@ import { api } from "@/lib/api"
 export default function ExtensionsIndex() {
   usePageHeading("Repositories")
 
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
   const [repoLink, setRepoLink] = useState("")
 
   const { data } = eden.query({

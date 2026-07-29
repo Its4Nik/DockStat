@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+
+site_name: DockStat documentation
+site_description: Docker container monitoring and management platform built as a Bun monorepo.
+site_url: https://dockstat.itsnik.de/
+docs_dir: ./src
+use_directory_urls: true
+strict: true
+
+validation:
+  links:
+    unrecognized_links: ignore
+
+repo_name: Its4Nik/DockStat
+repo_url: https://github.com/Its4Nik/DockStat
+edit_uri: edit/main/apps/docs/src
+
+extra_css:
+  - stylesheets/colors.css
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - content.code.copy
+    - content.code.annotate
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+  logo: assets/logos/withText-white.png
+
+  icon:
+    repo: fontawesome/brands/github

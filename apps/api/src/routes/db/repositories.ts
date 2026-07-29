@@ -10,6 +10,7 @@ import { RepositoryModel } from "../../models/database"
  * Repository CRUD routes (in /db prefix)
  */
 const DBRepositoryRoutes = new Elysia({
+  name: "DB-Repos",
   detail: {
     description: "Repository management endpoints (under /db prefix)",
     tags: ["Database"],

@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 import type {
   EdenBody,
   EdenRoute,
+  MutationInput,
   MutationResult,
   ResponseData,
   RouteBuilderOptions,
@@ -11,11 +12,15 @@ import { useBaseEdenMutation } from "./useBaseEdenMutation"
 
 export function useEdenRouteMutation<TParams, TRoute extends EdenRoute>(
   options: RouteBuilderOptions<TParams, TRoute>
-): MutationResult<ResponseData<TRoute>, { params: TParams; body: EdenBody<TRoute> }> {
-  const mutationFn = async (input: { params: TParams; body: EdenBody<TRoute> }) => {
+): MutationResult<ResponseData<TRoute>, MutationInput<TParams, TRoute>> {
+  const mutationFn = async (input: MutationInput<TParams, TRoute>) => {
     const toaster = options.toast?.toaster
     const routeFn = options.routeBuilder(input.params)
-    const { data, error } = await routeFn(input.body as never, options.opts as never)
+    const { data, error, status } = await routeFn(input.body as never, options.opts as never)
+
+    if (!options.skipAuthHandler && status === 401 && options.onUnauthorized) {
+      options.onUnauthorized()
+    }
 
     if (error) {
       if (toaster) {
@@ -69,7 +74,7 @@ export function useEdenRouteMutation<TParams, TRoute extends EdenRoute>(
     return data as ResponseData<TRoute>
   }
 
-  return useBaseEdenMutation<ResponseData<TRoute>, { params: TParams; body: EdenBody<TRoute> }>({
+  return useBaseEdenMutation<ResponseData<TRoute>, MutationInput<TParams, TRoute>>({
     invalidateQueries: options.invalidateQueries,
     mutationFn,
     mutationKey: options.mutationKey,

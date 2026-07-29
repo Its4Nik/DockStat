@@ -3,79 +3,99 @@ id: aab7cefb-b84b-4be9-8840-a873b69c6850
 title: "Frontend: Websockets"
 collectionId: b4a5e48f-f103-480b-9f50-8f53f515cab9
 parentDocumentId: a81b5d89-a300-47ac-8ffa-a3b851645978
-updatedAt: 2026-01-01T20:39:33.079Z
+updatedAt: 2026-07-09T00:00:00.000Z
 urlId: vcQwuQaPn0
 ---
 
-# WebSocket "Effect" Pattern Guide
+# WebSocket Subscription Pattern Guide
 
 ## Overview
 
-Utility that opens a WebSocket, keeps local React state in sync, and returns a cleanup function to drop the connection.\nUseful for live dashboards, logs, or any stream that updates faster than polling.
+The frontend uses a **shared WebSocket connection** managed by `WebSocketProvider` from `@dockstat/utils/react`. A single connection is opened per endpoint and shared across the entire component tree via React Context. Components subscribe to topics using `useTopicSubscription` and receive typed data updates in real-time.
 
-## Code
+This replaces the old per-topic connection pattern. All topic subscriptions now multiplex over one connection, reducing overhead and simplifying reconnection logic.
 
-```tsx
-import { api } from "../api";
+## Architecture
 
-export const rssFeedEffect = (
-  setRamUsage: React.Dispatch<React.SetStateAction<string>>
-) => {
-  // 1. open the socket
-  const rssFeed = api.api.v2.misc.stats.rss.subscribe();
-
-  // 2. push every incoming message into React state
-  rssFeed.subscribe((message) => setRamUsage(message.data));
-
-  // 3. return the disposal logic
-  return () => rssFeed.close();
-};
+```
+WebSocketProvider (single WS connection)
+├── useTopicSubscription("logs")          → log entries
+├── useTopicSubscription("metrics/containers") → RAM usage
+├── useTopicSubscription("metrics/stacks")     → stack metrics
+└── useWidgetData({ dashboardId })        → widget data updates
 ```
 
-## Usage in a component
+## Setup
+
+### 1. Mount the Provider
+
+Wrap your app with `WebSocketProvider`. This is done in `src/providers/index.tsx`:
 
 ```tsx
-import { useEffect, useState } from "react";
-import { rssFeedEffect } from "@/lib/effects/rssFeedEffect";
+import { WebSocketProvider } from "@dockstat/utils/react"
 
-export function RamGauge() {
-  const [ram, setRam] = useState("");
+const wsBaseUrl = `${import.meta.env.DOCKSTAT_API_PORT || "http://localhost:3030"}/api/v2/ws`
 
-  useEffect(() => rssFeedEffect(setRamUsage), [])
+<WebSocketProvider url={wsBaseUrl} requireAuth>
+  <App />
+</WebSocketProvider>
+```
 
-  return <div>RSS: {ram}</div>;
+The provider:
+- Resolves `http://` URLs to `ws://` automatically (and `https://` → `wss://`)
+- Reads the auth token from `localStorage` and passes it as a `?token=` query parameter when `requireAuth` is enabled
+- Auto-reconnects on disconnect (configurable interval)
+- Shares subscriptions across all components via ref counting
+
+### 2. Subscribe to a Topic
+
+```tsx
+import { useTopicSubscription } from "@dockstat/utils/react"
+
+function RamGauge() {
+  const { data, connected } = useTopicSubscription<string>("metrics/containers")
+  return <div>RSS: {data ?? "Connecting..."}</div>
 }
 ```
 
-## Backend: per-socket periodic pushes
+## Helper Hooks
 
-When the server must send data on an interval **per connection**, store the timer in a `WeakMap` so it is automatically garbage-collected when the socket closes.
+Thin wrapper hooks in `src/lib/websocketEffects/` provide topic-specific subscriptions:
 
-```typescript
-const wsIntervals = new WeakMap<WebSocket, Timer>();
+| Hook | Topic | Returns |
+|------|-------|---------|
+| `useLogFeed()` | `"logs"` | Latest `LogEntry \| null` |
+| `useRssFeed()` | `"metrics/containers"` | Latest RAM usage string |
+| `useTopicData<T>(topic)` | Any | Latest data payload |
 
-new Elysia()
-  .ws("/stats/rss", {
-    response: t.String(), // HAS TO BE DEFINED FOR CORRECT FRONTEND TYPINGS
+### Usage
 
-    open(ws) {
-      const sendRss = () => ws.send(formatBytes(process.memoryUsage().rss));
-      sendRss(); // immediate
-      wsIntervals.set(ws, setInterval(sendRss, 2000));
-    },
+```tsx
+import { useLogFeed } from "@WSS"
 
-    close(ws) {
-      const interval = wsIntervals.get(ws);
-      if (interval) {
-        clearInterval(interval);
-        wsIntervals.delete(ws);
-      }
-    },
-  });
+function LogViewer() {
+  const logEntry = useLogFeed()
+  // logEntry is LogEntry | null
+}
+```
+
+## Widget Data
+
+Widget dashboards use `useWidgetData` from `widgets/client`, which subscribes to the `widgets/dashboard/:id` topic on the **same shared WS endpoint** (`/api/v2/ws`) as logs and metrics. The server evaluates the dashboard's data-pipe when the first client subscribes so static data appears immediately.
+
+```tsx
+import { useWidgetData } from "widgets/client"
+
+function Dashboard() {
+  const { data, connected, evaluate } = useWidgetData({
+    dashboardId: "my-dashboard",
+  })
+}
 ```
 
 ## Rules
 
-* One effect = one socket.
-* Always return a cleanup function so the socket is closed on unmount.
-* Keep the effect **pure**: no UI, no toasts, only state synchronization.
+* **One provider, one connection.** Don't mount multiple `WebSocketProvider`s for the same endpoint.
+* **Topic-based subscriptions.** Use `useTopicSubscription` — the provider handles subscribe/unsubscribe automatically via ref counting.
+* **Auth tokens are passed via query parameter** (`?token=`) for maximum client compatibility.
+* **Always destructure `{ connected }`** if you need to show connection status to the user.

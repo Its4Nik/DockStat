@@ -4,7 +4,7 @@ import Elysia, { t } from "elysia"
 import * as client from "openid-client"
 import type { ConfigService } from "./config"
 import type { AuthContext } from "./middleware"
-import type { ApiKeysTable, LocalUsersTable, ProvidersTable } from "./types"
+import type { ApiKeysTable, LocalUsersTable, ProvidersTable, SessionsTable } from "./types"
 import crypt from "./utils/encrypt"
 import { BASE_URL, FRONTEND_URL } from "./utils/env"
 import { createAuthToken, verifyAuthToken } from "./utils/jwt"
@@ -13,6 +13,7 @@ export function createAuthRoutes(
   table: QueryBuilder<ProvidersTable>,
   users: QueryBuilder<LocalUsersTable>,
   apiKeys: QueryBuilder<ApiKeysTable>,
+  sessions: QueryBuilder<SessionsTable>,
   logger: Logger,
   configService: ConfigService,
   getAllowGuestRegistration: () => boolean,
@@ -35,7 +36,7 @@ export function createAuthRoutes(
     return result
   }
 
-  return new Elysia({ detail: { tags: ["Auth"] }, prefix: "/auth" })
+  return new Elysia({ detail: { tags: ["Auth"] }, name: "Auth", prefix: "/auth" })
     .post(
       "/providers",
       async ({ body }) => {
@@ -218,7 +219,14 @@ export function createAuthRoutes(
           cookie.pkce.remove()
 
           // Create a JWT with user info
-          const token = await createAuthToken(userInfo)
+          const { jti, token } = await createAuthToken(userInfo)
+
+          // Track the session server-side so it can be revoked on logout
+          sessions.insert({
+            expiresAt: new Date(Date.now() + 86400 * 1000),
+            jti,
+            userId: String(userInfo.sub),
+          })
 
           // Set JWT as a secure cookie (not in URL to prevent token leakage)
           const isSecure = BASE_URL.startsWith("https://")
@@ -281,12 +289,54 @@ export function createAuthRoutes(
           return { error: "Invalid or expired token" }
         }
 
+        // Reject tokens whose session has been revoked or never existed (e.g. after DB wipe)
+        if (payload.jti && !sessions.where({ jti: payload.jti }).exists()) {
+          set.status = 401
+          return { error: "Session revoked" }
+        }
+
         return { user: payload.user }
       },
       {
         detail: {
           description: "Verify the auth_token cookie and return the user info",
           summary: "Verify Token",
+        },
+      }
+    )
+    .post(
+      "/revoke",
+      async ({ headers, cookie, set }) => {
+        let token: string | null = null
+        const authHeader = headers.authorization as string | undefined
+        if (authHeader?.startsWith("Bearer ")) {
+          token = authHeader.slice(7)
+        }
+        if (!token && cookie.auth_token?.value) {
+          token = String(cookie.auth_token.value)
+        }
+
+        if (!token) {
+          set.status = 400
+          return { error: "No token provided" }
+        }
+
+        const payload = await verifyAuthToken(token)
+        if (payload?.jti) {
+          sessions.where({ jti: payload.jti }).delete()
+        }
+
+        if (cookie.auth_token?.value) {
+          cookie.auth_token.remove()
+        }
+
+        return { success: true }
+      },
+      {
+        detail: {
+          description:
+            "Revoke the current session (identified by Bearer token or auth_token cookie) and clear the cookie",
+          summary: "Revoke Session",
         },
       }
     )
@@ -307,7 +357,16 @@ export function createAuthRoutes(
     )
     .get(
       "/:providerId/logout",
-      async ({ params: { providerId }, query, redirect }) => {
+      async ({ params: { providerId }, query, redirect, cookie }) => {
+        // Revoke the session and clear the auth cookie server-side
+        if (cookie.auth_token?.value) {
+          const payload = await verifyAuthToken(String(cookie.auth_token.value))
+          if (payload?.jti) {
+            sessions.where({ jti: payload.jti }).delete()
+          }
+          cookie.auth_token.remove()
+        }
+
         const { meta } = await configService.getConfig(providerId)
         const { logout_url: logoutUrl } = table
           .select(["logout_url"])
@@ -345,11 +404,11 @@ export function createAuthRoutes(
           async (context) => {
             const { body, set } = context
             try {
+              const isInitialUser = users.select(["id"]).count() === 0
               const requestBody = body as { name: string; pass: string }
 
               const allowGuests = getAllowGuestRegistration()
               const existingUser = users.select(["id"]).where({ name: requestBody.name }).first()
-              const isInitialUser = users.select(["id"]).count() === 0
 
               if (existingUser) {
                 set.status = 409
@@ -456,11 +515,18 @@ export function createAuthRoutes(
               logger.info(`Successful login for local user: ${requestBody.name}`)
 
               // Create JWT token with user info
-              const token = await createAuthToken({
+              const { jti, token } = await createAuthToken({
                 email: user.name,
                 name: user.name,
                 provider: "local",
                 sub: user.id,
+              })
+
+              // Track the session server-side so it can be revoked on logout
+              sessions.insert({
+                expiresAt: new Date(Date.now() + 86400 * 1000),
+                jti,
+                userId: user.id,
               })
 
               // Return token to frontend (avoid CORS issues with redirect from POST)
@@ -488,7 +554,16 @@ export function createAuthRoutes(
         )
         .get(
           "/logout",
-          async ({ query, redirect }) => {
+          async ({ query, redirect, cookie }) => {
+            // Revoke the session and clear the auth cookie server-side
+            if (cookie.auth_token?.value) {
+              const payload = await verifyAuthToken(String(cookie.auth_token.value))
+              if (payload?.jti) {
+                sessions.where({ jti: payload.jti }).delete()
+              }
+              cookie.auth_token.remove()
+            }
+
             const redirectUri = query.redirectUri || FRONTEND_URL
             logger.info(`Local user logout, redirecting to: ${redirectUri}`)
             return redirect(redirectUri)

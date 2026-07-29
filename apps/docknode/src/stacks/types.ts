@@ -1,3 +1,19 @@
+// Re-export docker-compose types so consumers don't need docker-compose as a dependency
+export type {
+  DockerComposePsResult,
+  IDockerComposeResult,
+  TypedDockerComposeResult,
+} from "docker-compose"
+
+/** Result wrapper for docker-compose commands with detailed output */
+export type CommandResult<T = unknown> = {
+  success: boolean
+  data?: T
+  stdout: string
+  stderr: string
+  error?: string
+}
+
 export type StackEnv = Record<string, string | boolean | number | undefined>
 
 export type EnvValue = string | number | boolean | null | undefined

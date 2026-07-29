@@ -38,6 +38,7 @@
     { "path": "./packages/utils" },
     { "path": "./packages/db" },
     { "path": "./packages/ui" },
-    { "path": "./packages/plugin-handler" }
+    { "path": "./packages/widgets" },
+    { "path": "./apps/api" }
   ]
 }

@@ -1,10 +1,10 @@
 {
-  "context_servers": {
-    "codegraph": {
-      "args": ["serve", "--mcp"],
-      "command": "bunx @colbymchenry/codegraph"
-    }
-  },
+  // "context_servers": {
+  //   "codegraph": {
+  //     "args": ["serve", "--mcp"],
+  //     "command": "bunx @colbymchenry/codegraph"
+  //   }
+  // },
   "format_on_save": "on",
   "formatter": "language_server",
   "languages": {
@@ -61,8 +61,8 @@
         "language_server": {
           "name": "biome"
         }
-      },
-      "language_servers": ["tsgo", "!vtsls"]
+      }
+      //"language_servers": ["tsgo", "!vtsls"]
     },
     "TypeScript": {
       "code_actions_on_format": {
@@ -73,8 +73,8 @@
         "language_server": {
           "name": "biome"
         }
-      },
-      "language_servers": ["tsgo", "!vtsls"]
+      }
+      //"language_servers": ["tsgo", "!vtsls"]
     }
   },
   "lsp": {

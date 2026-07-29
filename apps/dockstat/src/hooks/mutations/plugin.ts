@@ -1,9 +1,8 @@
-import { useContext } from "react"
-import { EdenClientContext } from "@/contexts/edenClient"
+import { useEdenClient } from "@dockstat/utils/react"
 import { api } from "@/lib/api"
 
 export const usePluginMutations = () => {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   const installPluginMutation = eden.mutate({
     invalidateQueries: [["fetchAllPlugins"], ["fetchFrontendPluginRoutes"]],
@@ -32,7 +31,7 @@ export const usePluginMutations = () => {
 }
 
 export const usePluginTemplateMutation = (pluginId: number) => {
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
 
   return eden.mutate({
     mutationKey: ["plugin-template", String(pluginId)],

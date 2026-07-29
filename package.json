@@ -19,8 +19,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.3",
-    "@changesets/cli": "^2.31.0",
-    "turbo": "^2.10.0",
+    "@changesets/cli": "^2.31.1",
+    "turbo": "^2.10.6",
     "typescript": "5.9.3"
   },
   "engines": {
@@ -41,6 +41,10 @@
     "dev:dockstat:no-docker": "bun run dev --filter=@dockstat/frontend --filter=@dockstat/api --filter=@dockstat/store-verification --filter=@dockstat/docknode",
     "dev:dockstat/api": "bun run docker-up:quiet && bun run dev --filter=@dockstat/api",
     "dev:minimal": "bun run docker-up:quiet && bun run dev --filter=@dockstat/frontend --filter=@dockstat/api",
+    "docs:build": "bun run docs:sync-assets && cd apps/docs && .venv/bin/mkdocs build --strict",
+    "docs:install": "cd apps/docs && [ -d .venv ] || uv venv .venv && uv pip install -r requirements.txt",
+    "docs:serve": "bun run docs:sync-assets && cd apps/docs && .venv/bin/mkdocs serve",
+    "docs:sync-assets": "for f in square.png withText-white.png; do [ -f \".github/assets/logos/$f\" ] || { echo \"docs:sync-assets: missing .github/assets/logos/$f\" >&2; exit 1; }; done && mkdir -p apps/docs/src/assets/logos && cp .github/assets/logos/*.png apps/docs/src/assets/logos/",
     "docker-up": "docker compose -f './.dev_env/docker-compose.dev.yaml' up --remove-orphans",
     "docker-up:quiet": "bun run docker-up -- -d",
     "format:all": "biome format --write .",
@@ -57,7 +61,7 @@
   "workspaces": {
     "catalog": {
       "@elysiajs/cors": "^1.4.0",
-      "@elysiajs/eden": "1.4.6",
+      "@elysiajs/eden": "1.4.9",
       "@elysiajs/html": "^1.4.0",
       "@elysiajs/openapi": "^1.4.11",
       "@elysiajs/server-timing": "^1.4.0",

@@ -1,9 +1,8 @@
 import { Badge, Button, Card, Divider, Input, LinkWithIcon, Modal, Select } from "@dockstat/ui"
 import { repo } from "@dockstat/utils"
-
+import { useEdenClient } from "@dockstat/utils/react"
 import { Link } from "lucide-react"
-import { useContext, useMemo, useState } from "react"
-import { EdenClientContext } from "@/contexts/edenClient"
+import { useMemo, useState } from "react"
 import { usePluginMutations } from "@/hooks/mutations"
 import { usePageHeading } from "@/hooks/useHeading"
 import { api } from "@/lib/api"
@@ -33,7 +32,7 @@ type AvailablePlugin = {
 export default function PluginBrowser() {
   usePageHeading("Plugin Browser")
 
-  const eden = useContext(EdenClientContext)
+  const eden = useEdenClient()
   const [selectedRepo, setSelectedRepo] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedPlugin, setSelectedPlugin] = useState<AvailablePlugin | null>(null)
@@ -55,13 +54,20 @@ export default function PluginBrowser() {
 
   const { installPluginMutation, deletePluginMutation } = usePluginMutations()
 
+  // O(1) lookup of installed plugins by `repository|manifest`.
+  const installedByKey = useMemo(() => {
+    const m = new Map<string, (typeof allPlugins)[number]>()
+    for (const p of allPlugins ?? []) m.set(`${p.repository}|${p.manifest}`, p)
+    return m
+  }, [allPlugins])
+
   const availablePlugins = useMemo(() => {
     if (!allManifests) return []
 
     const plugins = Object.entries(allManifests).flatMap(([_, manifest]) =>
       (manifest.data.plugins || []).map((plugin) => {
-        const installedPlugin = allPlugins?.find(
-          (p) => p.repository === plugin.repository && p.manifest === plugin.manifest
+        const installedPlugin = installedByKey.get(
+          `${plugin.repository}|${plugin.manifest}`
         )
         return {
           ...plugin,
@@ -80,7 +86,7 @@ export default function PluginBrowser() {
           p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
           p.tags?.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())))
     )
-  }, [allManifests, allPlugins, selectedRepo, searchQuery])
+  }, [allManifests, installedByKey, selectedRepo, searchQuery])
 
   return (
     <div className="space-y-6">

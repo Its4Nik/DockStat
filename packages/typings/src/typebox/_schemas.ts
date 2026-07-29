@@ -1,5 +1,23 @@
 export { DockerAdapterOptionsSchema } from "../docker-client"
 export {
+  AddExternalCertificateBody,
+  Certificate,
+  CertificateAlgorithm,
+  CertificateDeleteResponse,
+  CertificateError,
+  CertificateFormat,
+  CertificateListResponse,
+  CertificateResolveResponse,
+  CertificateResponse,
+  CertificateRevealResponse,
+  CertificateSource,
+  CertificateType,
+  GenerateCertificateBody,
+  ImportCertificateBody,
+  ResolveCertificateBody,
+  UpdateCertificateBody,
+} from "./certificates"
+export {
   CreateRepo,
   DockStatConfigTable,
   PluginHashEntry,

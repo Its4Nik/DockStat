@@ -4,6 +4,7 @@ import { DockNodeModel } from "../../models/docknode"
 
 export const DockNodeElyisa = new Elysia({
   detail: { tags: ["DockNode"] },
+  name: "DockNode",
   prefix: "/node",
 })
   .get("/", async ({ status }) => {

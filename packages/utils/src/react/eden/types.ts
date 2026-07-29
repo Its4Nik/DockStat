@@ -1,4 +1,6 @@
-export type EdenRoute = (...args: never[]) => Promise<{ data: unknown; error: unknown }>
+export type EdenRoute = (
+  ...args: never[]
+) => Promise<{ data: unknown; error: unknown; status: number }>
 export type EdenData<T extends EdenRoute> = Awaited<ReturnType<T>>["data"]
 
 export type EdenFetchOptions = {
@@ -7,11 +9,15 @@ export type EdenFetchOptions = {
   fetch?: RequestInit | undefined
 }
 
+export type MutationInput<TParams, TRoute extends EdenRoute> = EdenBody<TRoute> extends void
+  ? { params: TParams; body?: undefined }
+  : { params: TParams; body: EdenBody<TRoute> }
+
 export type EdenQueryRoute = (options?: {
   fetch?: RequestInit
   headers?: Record<string, unknown>
   query?: Record<string, unknown>
-}) => Promise<{ data: unknown; error: unknown }>
+}) => Promise<{ data: unknown; error: unknown; status: number }>
 
 export type EdenQueryData<T extends EdenQueryRoute> = Awaited<ReturnType<T>>["data"]
 
@@ -23,6 +29,8 @@ export type UseEdenQueryOptions<TRoute extends EdenQueryRoute> = {
   refetchInterval?: number | false
   refetchOnWindowFocus?: boolean
   opts?: EdenFetchOptions
+  onUnauthorized?: () => void
+  skipAuthHandler?: boolean
 }
 
 export type EdenBody<T extends EdenRoute> = Parameters<T> extends []
@@ -61,6 +69,8 @@ export type DirectRouteOptions<TRoute extends EdenRoute> = {
     toasts: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
   }
   opts?: EdenFetchOptions
+  onUnauthorized?: () => void
+  skipAuthHandler?: boolean
 }
 
 // Route builder - params passed at mutation time
@@ -74,6 +84,8 @@ export type RouteBuilderOptions<TParams, TRoute extends EdenRoute> = {
     toaster: ToasterFunction
     toasts: ToastConfig<ResponseData<TRoute>, EdenBody<TRoute>>
   }
+  onUnauthorized?: () => void
+  skipAuthHandler?: boolean
 }
 
 export type MutationResult<TData, TInput> = {

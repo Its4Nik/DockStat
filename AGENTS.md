@@ -8,3 +8,14 @@ In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the re
 
 If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is the user's decision.
 <!-- CODEGRAPH_END -->
+
+<!-- ELYSIA_FRONTEND_PATTERN_START -->
+## Elysia Frontend pattern
+
+In this Monorepo repository there exists a helper libary for frontend data fetching and manipulation of an elysia JS backend. Use this where possible. 
+
+- **Pattern**: Create and use mutations / queries from a central folder called "hooks/{mutations,queries}"
+- **Treaty**: Use the eden treaty api where possible (located in app/lib/api)
+
+The Eden Client source is located in `/home/nik/Projects/Monorepo/packages/utils/src/react/eden/index.ts`
+<!-- ELYSIA_FRONTEND_PATTERN_END -->

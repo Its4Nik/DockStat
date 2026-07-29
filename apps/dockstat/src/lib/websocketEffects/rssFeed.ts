@@ -1,8 +1,13 @@
-import type { Dispatch, SetStateAction } from "react"
-import { createTopicSubscription } from "./topicSubscription"
+import { useTopicSubscription } from "@dockstat/utils/react"
 
-export const rssFeedEffect = (setRamUsage: Dispatch<SetStateAction<string>>) => {
-  return createTopicSubscription<string>("metrics/containers", (data) => {
-    setRamUsage(data)
-  })
+/**
+ * Subscribe to the "metrics/containers" topic via the shared WebSocketProvider
+ * and return the latest RAM usage string.
+ */
+export function useRssFeed(): { data: string; stamp: number | undefined } | null {
+  const { data, envelope: e } = useTopicSubscription<string>("rss")
+
+  if (data === null) return null
+
+  return { data, stamp: e?.timestamp }
 }
