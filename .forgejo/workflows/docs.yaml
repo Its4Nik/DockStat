@@ -18,11 +18,9 @@ jobs:
     runs-on: self-hosted-uv
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install node
         run: |
-          apt-get install nodejs npm
+          git clone https://${{ forgejo.token }}@data.forgejo.org/${{ forgejo.repository.full_name }}.git .
+          git checkout ${{ forgejo.sha }}
 
       - name: Set up Python
         run: |
