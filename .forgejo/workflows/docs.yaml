@@ -40,6 +40,8 @@ jobs:
 
       - name: Build documentation
         run: |
+          cd apps/docs
+          source .venv/bin/activate
           mkdocs build --strict
 
       - uses: actions/git-pages@v2
