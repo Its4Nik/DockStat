@@ -44,10 +44,16 @@ jobs:
           source .venv/bin/activate
           mkdocs build --strict
 
-      - uses: actions/git-pages@v2
+      # - uses: actions/git-pages@v2
+      #   with:
+      #     #site: https://dockstat.itsnik.de/
+      #     site: https://${{ github.repository_owner }}.codeberg.page/dockstat
+      #     server: codeberg.page
+      #     token: ${{ github.token }}
+      #     source: apps/docs/site/
+
+      - uses: https://codeberg.org/git-pages/action@v2
         with:
-          #site: https://dockstat.itsnik.de/
-          site: https://${{ github.repository_owner }}.codeberg.page/dockstat
-          server: codeberg.page
+          site: https://${{ forge.repository_owner }}.codeberg.page/dockstat
           token: ${{ github.token }}
           source: apps/docs/site/
