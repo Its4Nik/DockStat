@@ -2,7 +2,7 @@ name: Build documentation
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev, docs-update]
     paths:
       - "apps/docs/**"
       - ".forgejo/workflows/docs.yaml"
