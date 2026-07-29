@@ -2,12 +2,12 @@
 name: docs-writer
 description:
   Always use this skill when the task involves writing, reviewing, or editing
-  files in the `/docs` directory or any `.md` files in the repository.
+  files in the `apps/docs` directory or any `.md` files in the repository.
 ---
 
 # `docs-writer` skill instructions
 
-As an expert technical writer and editor for the Gemini CLI project, you produce
+As an expert technical writer and editor for the DockStat project, you produce
 accurate, clear, and consistent documentation. When asked to write, edit, or
 review documentation, you must ensure the content strictly adheres to the
 provided documentation standards and accurately reflects the current codebase.
@@ -45,10 +45,6 @@ Write precisely to ensure your instructions are unambiguous.
   specific verbs.
 - **Examples:** Use meaningful names in examples; avoid placeholders like
   "foo" or "bar."
-- **Quota and limit terminology:** For any content involving resource capacity
-  or using the word "quota" or "limit", strictly adhere to the guidelines in
-  the `quota-limit-style-guide.md` resource file. Generally, Use "quota" for
-  the administrative bucket and "limit" for the numerical ceiling.
 
 ### Formatting and syntax
 Apply consistent formatting to make documentation visually organized and
@@ -58,8 +54,7 @@ accessible.
   introductory overview paragraph before any lists or sub-headings.
 - **Text wrap:** Wrap text at 80 characters (except long links or tables).
 - **Casing:** Use sentence case for headings, titles, and bolded text.
-- **Naming:** Always refer to the project as `Gemini CLI` (never
-  `the Gemini CLI`).
+- **Naming:** Always refer to the project as `DockStat`.
 - **Lists:** Use numbered lists for sequential steps and bulleted lists
   otherwise. Keep list items parallel in structure.
 - **UI and code:** Use **bold** for UI elements and `code font` for filenames,
@@ -84,10 +79,7 @@ accessible.
   </details>
 
 - **Callouts**: Use GitHub-flavored markdown alerts to highlight important
-  information. To ensure the formatting is preserved by `npm run format`, place
-  an empty line, then a prettier ignore comment directly before the callout
-  block. Use `<!-- prettier-ignore -->` for standard Markdown files (`.md`) and
-  `{/* prettier-ignore */}` for MDX files (`.mdx`). The callout type (`[!TYPE]`)
+  information. The callout type (`[!TYPE]`)
   should be on the first line, followed by a newline, and then the content, with
   each subsequent line of content starting with `>`. Available types are `NOTE`,
   `TIP`, `IMPORTANT`, `WARNING`, and `CAUTION`.
@@ -109,7 +101,7 @@ accessible.
 ### Links
 - **Accessibility:** Use descriptive anchor text; avoid "click here." Ensure the
   link makes sense out of context, such as when being read by a screen reader.
-- **Use relative links in docs:** Use relative links in documentation (`/docs/`)
+- **Use relative links in docs:** Use relative links in documentation (`apps/docs/`)
   to ensure portability. Use paths relative to the current file's directory
   (for example, `../tools/` from `docs/cli/`). Do not include the `/docs/`
   section of a path, but do verify that the resulting relative link exists. This
@@ -123,10 +115,8 @@ accessible.
 - **Experimental features:** If a feature is clearly noted as experimental,
   add the following note immediately after the introductory paragraph:
 
-<!-- prettier-ignore -->
 > [!NOTE]
 > This is an experimental feature currently under active development.
-(Note: Use `{/* prettier-ignore */}` if editing an `.mdx` file.)
 
 - **Headings:** Use hierarchical headings to support the user journey.
 - **Procedures:**
@@ -150,12 +140,10 @@ surrounding context.
     "fix the docs"), ask for clarification.
 2.  **Investigate:** Examine relevant code (primarily in `packages/`) for
     accuracy.
-3.  **Audit:** Read the latest versions of relevant files in `docs/`.
-4.  **Connect:** Identify all referencing pages if changing behavior. Check if
-    `docs/sidebar.json` needs updates.
+3.  **Audit:** Read the latest versions of relevant files in `apps/docs/`.
+4.  **Connect:** Identify all referencing pages if changing behavior.
 5.  **Plan:** Create a step-by-step plan before making changes.
-6.  **Audit Docset:** If asked to audit the documentation, follow the procedural
-    guide in [docs-auditing.md](./references/docs-auditing.md).
+
 
 ## Phase 3: Execution
 Implement your plan by either updating existing files or creating new ones
@@ -188,7 +176,3 @@ formatted and that all links are functional.
 3.  **Link check:** Verify all new and existing links leading to or from
     modified pages. If you changed a header, ensure that any links that lead to
     it are updated.
-4.  **Format:** If `npm run format` fails, it may be necessary to run `npm
-    install` first to ensure all formatting dependencies are available. Once all
-    changes are complete, ask to execute `npm run format` to ensure consistent
-    formatting across the project. If the user confirms, execute the command.

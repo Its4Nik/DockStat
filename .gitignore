@@ -1,5 +1,6 @@
 .gitai.json
 backup
+site/
 \!archive
 
 .test-setup
