@@ -26,7 +26,8 @@ jobs:
         run: |
           cd apps/docs
           uv venv .venv
-          uv pip install mkdocs mkdocs-material
+          source .venv/bin/activate
+          pip install mkdocs mkdocs-material
 
       - name: Sync documentation assets
         run: |
