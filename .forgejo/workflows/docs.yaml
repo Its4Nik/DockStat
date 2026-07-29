@@ -19,8 +19,8 @@ jobs:
     steps:
       - name: Checkout repository
         run: |
-          git clone https://${{ forgejo.token }}@data.forgejo.org/${{ forgejo.repository.full_name }}.git .
-          git checkout ${{ forgejo.sha }}
+          git clone "https://${forgejo.env.FORGEJO_SERVER_URL}/${forgejo.env.FORGEJO_REPOSITORY}.git" .
+          git checkout "${forgejo.env.FORGEJO_SHA}"
 
       - name: Set up Python
         run: |
@@ -44,7 +44,7 @@ jobs:
       - uses: actions/git-pages@v2
         with:
           #site: https://dockstat.itsnik.de/
-          site: https://${{ forgejo.event.repository.owner.username }}.codeberg.page/dockstat
+          site: https://${{ forgejo.env.FORGEJO_REPOSITORY_OWNER }}.codeberg.page/dockstat
           server: codeberg.page
-          token: ${{ forgejo.token }}
+          token: ${{ forgejo.env.FORGEJO_TOKEN }}
           source: apps/docs/site/
