@@ -20,6 +20,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install node
+        run: |
+          apt-get install nodejs npm
+
       - name: Set up Python
         run: |
           cd apps/docs
