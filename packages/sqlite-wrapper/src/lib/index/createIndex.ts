@@ -29,8 +29,8 @@ export function createIndex<_T extends Record<string, unknown> = Record<string, 
   }
 
   const columnList = Array.isArray(columns)
-    ? columns.map(normalizeColumn).join(", ")
-    : normalizeColumn(columns)
+    ? columns.map((col) => normalizeColumn(col as unknown as IndexColumn)).join(", ")
+    : normalizeColumn(columns as unknown as IndexColumn)
 
   let sql = `CREATE ${unique}INDEX ${ifNot}${quoteIdent(indexName)} ON ${quoteIdent(tableName)}${using} (${columnList})`
 

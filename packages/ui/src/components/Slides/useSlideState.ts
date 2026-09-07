@@ -11,7 +11,7 @@ export const useSlidesState = ({
   SlidesProps,
   "children" | "defaultSlide" | "controlledSlide" | "hideable" | "onSlideChange"
 >) => {
-  const slideKeys = Object.keys(children)
+  const slideKeys = Object.keys(children).filter((key) => children[key] !== null)
   const initialSlide = hideable ? null : defaultSlide || slideKeys[0] || ""
 
   const [internalSlide, setInternalSlide] = useState<string | null>(initialSlide)

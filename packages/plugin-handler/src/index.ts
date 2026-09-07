@@ -472,7 +472,7 @@ class PluginHandler {
       this.loadedPluginsMap.set(pluginToLoad.id as number, mod)
       mod.id = pluginToLoad.id
       mod.config?.table &&
-        this.DB.createTable(mod.config.table.name, mod.config?.table.columns, {
+        this.DB.createTable(mod.config.table.name, mod.config?.table.columns as never, {
           ifNotExists: true,
           parser: mod.config.table.parser,
         })

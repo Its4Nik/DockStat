@@ -5,8 +5,10 @@
     "url": "https://itsnik.de"
   },
   "dependencies": {
+    "@dockstat/errors": "workspace:*",
     "@elysiajs/eden": "catalog:",
-    "@tanstack/react-query": "catalog:react-ui"
+    "@tanstack/react-query": "catalog:react-ui",
+    "selfsigned": "^5.5.0"
   },
   "devDependencies": {
     "@dockstat/logger": "workspace:*",
@@ -16,7 +18,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./react": "./src/react/index.ts",
-    "./ws-handler": "./src/ws-handler/index.ts"
+    "./ws-handler": "./src/ws-handler/index.ts",
+    "./ws-handler/bun": "./src/ws-handler/bun-handler.ts"
   },
   "keywords": [
     "dockstat",

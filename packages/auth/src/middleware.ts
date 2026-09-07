@@ -48,7 +48,7 @@ export const getMiddlewareFunctions = (
   ): Promise<{ userId: string; scopes: string } | null> => {
     if (!apiKeys) return null
 
-    const reqId = getStateMap().get(request).reqId
+    const reqId = getStateMap().get(request)?.reqId
 
     try {
       const allKeys = apiKeys
@@ -105,7 +105,7 @@ export const getMiddlewareFunctions = (
     return new Elysia({
       name: "auth-middleware",
     }).resolve({ as: "global" }, async ({ cookie, headers, route, request, query }) => {
-      const reqId = getStateMap().get(request).reqId
+      const reqId = getStateMap().get(request)?.reqId
       logger.info(`Checking auth for route ${route}`, reqId)
 
       let authMethod: "jwt" | "apikey" | null = null
@@ -115,8 +115,8 @@ export const getMiddlewareFunctions = (
       // WebSocket connections pass the token via query parameter
       // since browsers can't set custom headers on WS upgrades.
       // Treat query-param tokens as JWTs.
-      if (query["token"]) {
-        token = query["token"]
+      if (query.token) {
+        token = query.token
         authMethod = "jwt"
       }
 
@@ -210,7 +210,7 @@ export const getMiddlewareFunctions = (
       // biome-ignore lint/suspicious/noExplicitAny: I dont know the correct Elysia typing :(
       beforeHandle: (context: any) => {
         const { isAuthenticated, set, request } = context
-        const reqId = getStateMap().get(request).reqId
+        const reqId = getStateMap().get(request)?.reqId
         if (!isAuthenticated) {
           logger.error("Not authenticated", reqId)
           set.status = 401
@@ -302,7 +302,7 @@ export const getMiddlewareFunctions = (
       // biome-ignore lint/suspicious/noExplicitAny: I dont know the correct Elysia typing :(
       beforeHandle: (context: any) => {
         const { user, isAuthenticated, set, request } = context
-        const reqId = getStateMap().get(request).reqId
+        const reqId = getStateMap().get(request)?.reqId
         if (!isAuthenticated || !user || user.authMethod !== "apikey") {
           logger.error("Not authenticated with API key", reqId)
           set.status = 401

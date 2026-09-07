@@ -19,7 +19,7 @@
     "./server": "./src/server/index.ts"
   },
   "module": "src/index.ts",
-  "name": "widgets",
+  "name": "@dockstat/widgets",
   "peerDependencies": {
     "typescript": "^5"
   },

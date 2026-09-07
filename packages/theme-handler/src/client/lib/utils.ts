@@ -19,7 +19,7 @@ export type ThemeFromServer = {
  */
 export const applyThemeToDocument = (
   theme: ThemeContextData | ThemeContextData["vars"],
-  onFinish?: (msg: string) => void
+  msg?: (msg: string) => void
 ): void => {
   if (typeof document === "undefined") return
   const root = document.documentElement
@@ -29,8 +29,8 @@ export const applyThemeToDocument = (
       root.style.setProperty(key.startsWith("--") ? key : `--${key}`, value)
     }
 
-    if (onFinish) {
-      onFinish(`Applied Theme ${theme.id}`)
+    if (msg) {
+      msg(`Applied Theme ${theme.id}`)
     }
   }
 
@@ -38,11 +38,12 @@ export const applyThemeToDocument = (
     for (const [key, value] of Object.entries(theme)) {
       if (typeof value === "number" || typeof value === "string") {
         root.style.setProperty(key.startsWith("--") ? key : `--${key}`, String(value))
+        msg?.(`Patched ${key} to ${value}`)
       }
     }
 
-    if (onFinish) {
-      onFinish("Patched current Theme")
+    if (msg) {
+      msg("Patched current Theme")
     }
   }
 }

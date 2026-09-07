@@ -1,5 +1,6 @@
 import { Database } from "bun:sqlite"
 import type Logger from "@dockstat/logger"
+import fs from "node:fs"
 
 /**
  * Restore database from a backup file
@@ -20,7 +21,6 @@ export function restore(
   backupPath: string,
   targetPath?: string
 ): Database | null {
-  const fs = require("node:fs")
 
   if (!fs.existsSync(backupPath)) {
     throw new Error(`Backup file not found: ${backupPath}`)

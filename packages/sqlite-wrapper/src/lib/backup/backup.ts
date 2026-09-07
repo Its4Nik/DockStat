@@ -2,6 +2,7 @@ import { Database } from "bun:sqlite"
 import type { AutoBackupOptions } from "../../index"
 import { applyRetentionPolicy } from "./applyRetentionPolicy"
 import type Logger from "@dockstat/logger"
+import path from "node:path"
 
 /**
  * Create a backup of the database
@@ -24,7 +25,6 @@ export function backup(
     throw new Error("Cannot backup an in-memory database")
   }
 
-  const path = require("node:path")
 
   let backupPath: string
 

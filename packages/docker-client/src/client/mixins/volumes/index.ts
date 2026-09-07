@@ -15,12 +15,12 @@ export class Volumes extends DockerClientBase {
     this.checkDisposed()
 
     const docker = this.getDockerInstance(hostId)
-    const res = await retry(() => docker.listVolumes(), {
+    const res = await retry(() => docker.volumes.list(), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
 
-    return res?.Volumes || []
+    return (res as { Volumes?: Dockerode.VolumeInspectInfo[] })?.Volumes || []
   }
 }
 

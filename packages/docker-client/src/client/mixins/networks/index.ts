@@ -15,10 +15,11 @@ export class Networks extends DockerClientBase {
     this.checkDisposed()
 
     const docker = this.getDockerInstance(hostId)
-    return await retry(() => docker.listNetworks(), {
+    const networks = await retry(() => docker.networks.list(), {
       attempts: this.options.retryAttempts,
       delay: this.options.retryDelay,
     })
+    return networks as Dockerode.NetworkInspectInfo[]
   }
 }
 

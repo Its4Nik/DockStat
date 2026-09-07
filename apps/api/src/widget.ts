@@ -1,5 +1,5 @@
 import { verifyAuthToken } from "@dockstat/auth"
-import { WidgetsService as WidgetsServiceFactory } from "widgets/server"
+import { WidgetsService as WidgetsServiceFactory } from "@dockstat/widgets/server"
 import { DockStatDB } from "./database"
 import BaseLogger from "./logger"
 import { DSWebSockerHandler } from "./websockets"

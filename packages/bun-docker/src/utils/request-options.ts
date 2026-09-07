@@ -66,7 +66,7 @@ export function prepareRequestOptions(
   const requestBody = isJsonBody ? JSON.stringify(body) : (body as BodyInit)
 
   const options: BunFetchRequestInit = {
-    body: requestBody,
+    body: requestBody as BunFetchRequestInit["body"],
     headers: baseHeaders,
     method,
   }

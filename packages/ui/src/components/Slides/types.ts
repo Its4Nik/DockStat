@@ -2,7 +2,7 @@ export type ButtonRowPosition = "left" | "center" | "right"
 export type SlideVariant = "default" | "minimal"
 
 export interface SlidesProps {
-  children: Record<string, React.ReactNode>
+  children: Record<string, React.ReactNode | null>
   header?: string
   description?: string | React.ReactNode
   buttonPosition?: ButtonRowPosition

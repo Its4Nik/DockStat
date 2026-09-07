@@ -5,6 +5,9 @@ import { getMiddlewareFunctions } from "./middleware"
 import { createAuthRoutes } from "./routes"
 import type { ApiKeysTable, LocalUsersTable, ProvidersTable, SessionsTable } from "./types"
 
+export * as oidc from "openid-client"
+export { default as crypt } from "./utils/encrypt"
+export { BASE_URL, FRONTEND_URL } from "./utils/env"
 // Re-export JWT helpers for consumers that need to verify tokens outside
 // of the normal HTTP middleware (e.g. WebSocket handlers).
 export { createAuthToken, verifyAuthToken } from "./utils/jwt"

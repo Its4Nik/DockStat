@@ -388,10 +388,6 @@ export class WSTopicHandler {
     if (typeof topic === "string") return topic
     return String(topic)
   }
-
-  // --- Internal message functions
-
-  private parseInternalCommand(func: string): ListWSTopics {}
 }
 
 // ── Factory ─────────────────────────────────────────────────────────

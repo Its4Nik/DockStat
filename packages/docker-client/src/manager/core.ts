@@ -374,7 +374,7 @@ export class DockerClientManagerCore {
     wrapper.lastUsed = Date.now()
 
     try {
-      const response = await sendWorkerMessage(wrapper.worker, request)
+      const response = await sendWorkerMessage(wrapper.worker as unknown as Bun.Worker, request)
       if (response.success) {
         return response.data as T
       }

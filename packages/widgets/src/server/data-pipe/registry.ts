@@ -568,14 +568,17 @@ export const NODE_TEMPLATES = ({
 
 // ── Helpers ────────────────────────────────────────────────────────
 
+const buildTemplates = (getWsTopics: () => string[] = () => []) =>
+  NODE_TEMPLATES({ getWsTopics })
+
 /** Look up a template by its id. */
 export function getNodeTemplate(id: string): NodeTemplateDef | undefined {
-  return NODE_TEMPLATES.find((t) => t.id === id)
+  return buildTemplates().find((t) => t.id === id)
 }
 
 /** All templates of a given kind. */
 export function templatesByKind(kind: DataPipeNodeKind): NodeTemplateDef[] {
-  return NODE_TEMPLATES.filter((t) => t.kind === kind)
+  return buildTemplates().filter((t) => t.kind === kind)
 }
 
 /**

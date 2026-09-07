@@ -1,5 +1,7 @@
 import type { Logger } from "@dockstat/logger"
 import type { AutoBackupOptions } from "../../index"
+import fs from "node:fs"
+import path from "node:path"
 
 /**
  * Apply retention policy to remove old backups
@@ -7,8 +9,6 @@ import type { AutoBackupOptions } from "../../index"
 export function applyRetentionPolicy(backupLog: Logger, autoBackupOptions: AutoBackupOptions): void {
   if (!autoBackupOptions) return
 
-  const fs = require("node:fs")
-  const path = require("node:path")
 
   const backupDir = autoBackupOptions.directory
   const prefix = autoBackupOptions.filenamePrefix || "backup"

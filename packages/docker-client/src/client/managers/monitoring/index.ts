@@ -184,7 +184,11 @@ export default class MonitoringManager {
     return {
       dockerEventStreams: this.dockerEventStreamManager.getStreams(),
       isMonitoring: this.isMonitoring,
-      lastContainerStates: this.containerEventMonitor.getLastContainerStates(),
+      lastContainerStates:
+        this.containerEventMonitor.getLastContainerStates() as unknown as Map<
+          string,
+          DOCKER.ContainerInfo[]
+        >,
       lastHealthStatus: this.healthCheckMonitor.getLastHealthStatus(),
     }
   }
@@ -200,21 +204,21 @@ export default class MonitoringManager {
     const [info, version] = await Promise.all([docker.system.info(), docker.system.version()])
 
     return {
-      apiVersion: version.ApiVersion,
-      architecture: info.Architecture,
-      containers: info.Containers,
-      containersPaused: info.ContainersPaused,
-      containersRunning: info.ContainersRunning,
-      containersStopped: info.ContainersStopped,
-      dockerVersion: version.Version,
+      apiVersion: version.ApiVersion ?? "",
+      architecture: info.Architecture ?? "",
+      containers: info.Containers ?? 0,
+      containersPaused: info.ContainersPaused ?? 0,
+      containersRunning: info.ContainersRunning ?? 0,
+      containersStopped: info.ContainersStopped ?? 0,
+      dockerVersion: version.Version ?? "",
       hostId,
       hostName: host.name,
-      images: info.Images,
-      kernelVersion: info.KernelVersion,
-      os: info.OperatingSystem,
-      systemTime: info.SystemTime,
-      totalCPU: info.NCPU,
-      totalMemory: info.MemTotal,
+      images: info.Images ?? 0,
+      kernelVersion: info.KernelVersion ?? "",
+      os: info.OperatingSystem ?? "",
+      systemTime: info.SystemTime ?? "",
+      totalCPU: info.NCPU ?? 0,
+      totalMemory: info.MemTotal ?? 0,
     }
   }
 

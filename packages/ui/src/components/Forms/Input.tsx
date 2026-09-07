@@ -15,6 +15,7 @@ export interface InputProps {
   success?: boolean
   required?: boolean
   autoFocus?: boolean
+  name?: string
 }
 
 export function Input({
@@ -30,6 +31,7 @@ export function Input({
   success = false,
   required = false,
   autoFocus = false,
+  name,
   id,
 }: InputProps) {
   const baseClasses = "w-full transition-colors focus:outline-none"
@@ -71,6 +73,7 @@ export function Input({
       required={required}
       type={type}
       value={value}
+      name={name}
     />
   )
 }

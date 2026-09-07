@@ -1,5 +1,7 @@
 import type { AutoBackupOptions } from "../../index"
 import type { Logger } from "@dockstat/logger"
+import fs from "node:fs"
+import path from "node:path"
 
 /**
  * List all available backups
@@ -17,8 +19,6 @@ export function listBackups(
     return []
   }
 
-  const fs = require("node:fs")
-  const path = require("node:path")
 
   const backupDir = autoBackupOptions.directory
   const prefix = autoBackupOptions.filenamePrefix || "backup"

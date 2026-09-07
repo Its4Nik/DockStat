@@ -23,24 +23,26 @@ export function sendWorkerMessage(
       })
     }, timeout)
 
-    const handler = (event: MessageEvent<WorkerResponse>) => {
-      if (event.data.requestId === requestId) {
+    const handler = (event: Event) => {
+      const data = (event as MessageEvent<WorkerResponse>).data
+      if (data.requestId === requestId) {
         clearTimeout(timer)
         worker.removeEventListener("message", handler)
         worker.removeEventListener("error", errorHandler)
 
         // Pass through the worker's response (whether success or error)
-        resolve(event.data)
+        resolve(data)
       }
     }
 
-    const errorHandler = (err: ErrorEvent) => {
+    const errorHandler = (err: Event) => {
+      const message = (err as ErrorEvent).message
       clearTimeout(timer)
       worker.removeEventListener("message", handler)
       worker.removeEventListener("error", errorHandler)
 
       resolve({
-        error: `Worker crashed: ${err.message}`,
+        error: `Worker crashed: ${message}`,
         requestId,
         success: false,
       })

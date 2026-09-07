@@ -15,13 +15,15 @@ class DockStatDB {
     this.logger = baseLogger.spawn(prefix)
     this.logger.info("Initializing DockStatDB")
 
+    const dbPath = Bun.env.DOCKSTAT_DB_PATH || "dockstat.sqlite"
+
     try {
       this.db = new DB(
-        "dockstat.sqlite",
+        dbPath,
         {
           autoBackup: {
             compress: true,
-            directory: ".backups",
+            directory: Bun.env.DOCKSTAT_DB_BACKUP_DIR ?? ".backups",
             enabled: true,
             intervalMs: Bun.env.DOCKSTAT_DB_BACKUP_INTERVAL
               ? Number(Bun.env.DOCKSTAT_DB_BACKUP_INTERVAL) * 60 * 1000
@@ -314,7 +316,7 @@ class DockStatDB {
    * Get database file path
    */
   public getDatabasePath(): string {
-    return "dockstat.sqlite"
+    return this.db.getPath()
   }
 }
 

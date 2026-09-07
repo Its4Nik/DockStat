@@ -3,6 +3,7 @@ import type Logger from "@dockstat/logger"
 import type { AutoBackupOptions } from "../../index"
 import { backup } from "./backup"
 import { applyRetentionPolicy } from "./applyRetentionPolicy"
+import fs from "node:fs"
 
 export function setupAutoBackup(
   dbPath: string,
@@ -24,8 +25,6 @@ export function setupAutoBackup(
     backupLog.warn("[AUTO_BACKUP] Not available for in-memory databases", dbPath)
     return {autoBackupOptions, timer: null}
   }
-
-  const fs = require("node:fs")
 
   if (!fs.existsSync(autoBackupOptions.directory)) {
     fs.mkdirSync(autoBackupOptions.directory, { recursive: true })

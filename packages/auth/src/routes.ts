@@ -52,11 +52,11 @@ export function createAuthRoutes(
         return table.insertAndGet({
           client_id: requestBody.client_id,
           client_secret: await crypt.encrypt(requestBody.client_secret),
-          icon: requestBody.icon || null,
+          icon: requestBody.icon || undefined,
           issuer_url: requestBody.issuer_url,
-          logout_url: requestBody.logout_url || null,
-          name: requestBody.name || null,
-          scopes: requestBody.scopes || null,
+          logout_url: requestBody.logout_url || undefined,
+          name: requestBody.name || undefined,
+          scopes: requestBody.scopes || undefined,
         })
       },
       {
@@ -205,12 +205,13 @@ export function createAuthRoutes(
             expectedState: String(cookie.state.value),
             pkceCodeVerifier: String(cookie.pkce.value),
           })
+          if (!tokens) throw new Error("No tokens returned from provider")
           logger.debug(`Token exchange successful for provider: ${providerId}`)
 
           const userInfo = await client.fetchUserInfo(
             meta,
-            tokens.access_token,
-            String(tokens.claims().sub)
+            tokens.access_token ?? "",
+            String((tokens.claims?.() ?? { sub: "" }).sub)
           )
           logger.info(`User authenticated via ${providerId}: ${userInfo.email || userInfo.sub}`)
 
@@ -368,10 +369,8 @@ export function createAuthRoutes(
         }
 
         const { meta } = await configService.getConfig(providerId)
-        const { logout_url: logoutUrl } = table
-          .select(["logout_url"])
-          .where({ id: providerId })
-          .first()
+        const logoutUrl =
+          table.select(["logout_url"]).where({ id: providerId }).first()?.logout_url ?? null
 
         logger.info(`Logging out from ${providerId}; redirect after: ${query.redirectUri}`)
 
@@ -435,6 +434,10 @@ export function createAuthRoutes(
                 name: requestBody.name,
                 passHash,
               })
+              if (!user) {
+                set.status = 500
+                return { error: "Registration failed" }
+              }
 
               logger.info(`New local user registered: ${requestBody.name}`)
 
@@ -684,6 +687,11 @@ export function createAuthRoutes(
                 scopes: requestBody.scopes || "*",
                 userId: requestBody.userId,
               })
+
+              if (!apiKeyRecord) {
+                set.status = 500
+                return { error: "Failed to create API key" }
+              }
 
               logger.info(`API key created for user ${requestBody.userId}: ${apiKeyRecord.id}`)
 

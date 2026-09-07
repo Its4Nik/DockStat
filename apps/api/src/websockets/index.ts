@@ -1,7 +1,7 @@
 import { verifyAuthToken } from "@dockstat/auth"
+import { WebSocketHandler } from "@dockstat/utils/ws-handler"
 import Elysia from "elysia"
 import BaseLogger from "../logger"
-import WebSocketHandler from "./handler"
 import { startRss } from "./logSocket"
 
 const wsTokenVerifier = async (token: string) => {
