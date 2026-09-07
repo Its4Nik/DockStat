@@ -111,9 +111,11 @@ export const Actions = {
       users.where({ id: params.userId }).delete()
       return { message: "User deleted", success: true as const }
     },
-    /** POST — local username/password login, returns a JWT */
-    async localLogin({ request }: RouteArgs) {
-      const body = await parseBody<{ name: string; pass: string }>(request)
+    /** POST — local username/password login, returns a JWT.
+     * With withValidation the credentials arrive pre-validated via `data`;
+     * standalone JSON API usage falls back to parsing the request body. */
+    async localLogin({ request }: RouteArgs, data?: { name: string; pass: string }) {
+      const body = data ?? (await parseBody<{ name: string; pass: string }>(request))
       const user = Singletons.Auth.Handler.users
         .select(["id", "name", "passHash"])
         .where({ name: body.name })
@@ -138,12 +140,14 @@ export const Actions = {
         userId: user.id,
       })
 
-      return { success: true as const, token }
+      return { success: true as const, token, message: "Authnenticated successfully" }
     },
 
-    /** POST — register a local user (guests only while guest registration is allowed) */
-    async register({ request }: RouteArgs) {
-      const body = await parseBody<{ name: string; pass: string }>(request)
+    /** POST — register a local user (guests only while guest registration is allowed).
+     * With withValidation the credentials arrive pre-validated via `data`;
+     * standalone JSON API usage falls back to parsing the request body. */
+    async register({ request }: RouteArgs, data?: { name: string; pass: string }) {
+      const body = data ?? (await parseBody<{ name: string; pass: string }>(request))
       const user = await authenticate(request)
 
       const users = Singletons.Auth.Handler.users
@@ -171,7 +175,7 @@ export const Actions = {
         Singletons.Auth.Handler.setAllowGuestRegistration(false)
       }
 
-      return { msg, success: true as const, user: { id: created.id, name: created.name } }
+      return { message: msg || "User created successfully", success: true as const, user: { id: created.id, name: created.name } }
     },
 
     /** DELETE — revoke an API key */

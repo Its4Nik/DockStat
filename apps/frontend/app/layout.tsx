@@ -6,7 +6,6 @@ import {
   ScrollRestoration,
 } from "react-router";
 import type { Route } from "./routes/+types/layout";
-import { ThemeContext } from "./contexts/themeContext";
 
 export function Layout({ children }: { children: React.ReactNode }) {
 
@@ -53,6 +52,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
           <code>{stack}</code>
         </pre>
       )}
+      <p>{JSON.stringify(error)}</p>
     </main>
   );
 }

@@ -11,9 +11,9 @@ class DockStatDB {
   private metrics_table
   private logger: Logger
 
-  constructor(baseLogger: Logger, prefix = "DockStatDB") {
+  constructor(baseLogger: Logger, prefix = "DB") {
     this.logger = baseLogger.spawn(prefix)
-    this.logger.info("Initializing DockStatDB")
+    this.logger.info("Initializing DB")
 
     const dbPath = Bun.env.DOCKSTAT_DB_PATH || "dockstat.sqlite"
 

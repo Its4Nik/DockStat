@@ -164,6 +164,6 @@ export function AnimatedIconBackground({
           background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%)",
         }}
       />
-    </div>
-  )
+
+    </div>)
 }

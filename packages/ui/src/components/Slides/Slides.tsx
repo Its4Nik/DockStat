@@ -18,7 +18,9 @@ export function Slides({
   onSlideChange,
   hideable = false,
   variant = "default",
+  cardVariant = "flat",
   className = "",
+  glass = false,
 }: SlidesProps) {
   const state = useSlidesState({ children, controlledSlide, defaultSlide, hideable, onSlideChange })
 
@@ -39,7 +41,8 @@ export function Slides({
   return (
     <Card
       className={className}
-      variant="flat"
+      variant={cardVariant}
+      glass={glass}
     >
       <SlidesHeader
         buttonPosition={buttonPosition}

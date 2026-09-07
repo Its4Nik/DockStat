@@ -1,5 +1,10 @@
-import type z from "zod";
+import z from "zod";
 
-export const Schemas: Record<string, z.ZodSchema> = {
+type OperationString = `__${string}__`
 
-};
+export const Schemas: Record<OperationString, z.ZodType> = {
+  "__basic_user__": z.object({
+    name: z.string(),
+    pass: z.string(),
+  })
+}

@@ -1,13 +1,13 @@
 export type InputSize = "sm" | "md" | "lg"
 export type InputVariant = "default" | "filled" | "underline"
 
-export interface InputProps {
-  type?: "text" | "email" | "password" | "number" | "tel" | "url" | "color"
+export interface InputProps<T extends Record<string, unknown>> {
+  type?: "text" | "email" | "password" | "number" | "tel" | "url" | "color" | "operation"
   size?: InputSize
   variant?: InputVariant
   disabled?: boolean
   placeholder?: string
-  value?: string
+  value?: (keyof T)
   onChange?: (value: string) => void
   className?: string
   error?: boolean
@@ -18,7 +18,7 @@ export interface InputProps {
   name?: string
 }
 
-export function Input({
+export function Input<T extends Record<string, unknown>>({
   type = "text",
   size = "md",
   variant = "default",
@@ -33,7 +33,7 @@ export function Input({
   autoFocus = false,
   name,
   id,
-}: InputProps) {
+}: InputProps<T>) {
   const baseClasses = "w-full transition-colors focus:outline-none"
 
   const sizeClasses = {
@@ -53,6 +53,12 @@ export function Input({
 
   const disabledClasses = disabled ? "opacity-50 cursor-not-allowed bg-gray-100" : ""
 
+  const typeClasses = type === "operation" ? "hidden" : type
+
+  if(type === "operation") {
+    name = "__operation__"
+  }
+
   return (
     <input
       // biome-ignore lint/a11y/noAutofocus: autoFocus is intentionally used here
@@ -71,8 +77,8 @@ export function Input({
       onChange={(e) => onChange?.(e.target.value)}
       placeholder={placeholder}
       required={required}
-      type={type}
-      value={value}
+      type={typeClasses}
+      value={value ? String(value) : undefined}
       name={name}
     />
   )

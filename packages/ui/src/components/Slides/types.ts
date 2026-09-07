@@ -1,3 +1,5 @@
+import type { CardVariant } from "../Card/Card"
+
 export type ButtonRowPosition = "left" | "center" | "right"
 export type SlideVariant = "default" | "minimal"
 
@@ -14,4 +16,6 @@ export interface SlidesProps {
   variant?: SlideVariant
   className?: string
   controlledSlide?: string | null
+  cardVariant?: CardVariant
+  glass?: boolean
 }

@@ -39,13 +39,6 @@ class Logger {
     if (ONLY_SHOW.length > 1) {
       this.disabled = !ONLY_SHOW.includes(prefix) ? true : this.disabled
     }
-
-    // Defer debug log for children until linked to root
-    if (parents.length === 0) {
-      this.debug(
-        `Logger Status: ${this.disabled ? "disabled" : "active"} - ignoring messages: ${ignoreMessages.join(", ")} - logHook: ${this.logHook?.toString}`
-      )
-    }
   }
 
   /**
@@ -53,9 +46,6 @@ class Logger {
    */
   private linkToRoot(root: Logger) {
     this._root = root
-    this.debug(
-      `Logger Status: ${this.disabled ? "disabled" : "active"} - ignoring messages: ${ignoreMessages.join(", ")} - logHook: ${this.logHook?.toString}`
-    )
   }
 
   /**
