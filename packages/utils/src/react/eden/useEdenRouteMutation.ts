@@ -14,11 +14,21 @@ export function useEdenRouteMutation<TParams, TRoute extends EdenRoute>(
   options: RouteBuilderOptions<TParams, TRoute>
 ): MutationResult<ResponseData<TRoute>, MutationInput<TParams, TRoute>> {
   const mutationFn = async (input: MutationInput<TParams, TRoute>) => {
+    console.debug(
+      "[useEdenRouteMutation] called:",
+      options.mutationKey ?? "no-key",
+      "params:",
+      input.params
+    )
+
     const toaster = options.toast?.toaster
     const routeFn = options.routeBuilder(input.params)
     const { data, error, status } = await routeFn(input.body as never, options.opts as never)
 
+    console.debug("[useEdenRouteMutation] response:", { status, hasError: Boolean(error) })
+
     if (!options.skipAuthHandler && status === 401 && options.onUnauthorized) {
+      console.debug("[useEdenRouteMutation] 401 received, triggering onUnauthorized")
       options.onUnauthorized()
     }
 

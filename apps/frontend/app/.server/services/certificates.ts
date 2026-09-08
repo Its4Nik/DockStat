@@ -410,9 +410,3 @@ export class CertificateService {
     return { ...row, privateData: null }
   }
 }
-
-/**
- * Shared singleton so other backend services can import & use it. This is the
- * "internal API" surface — see `CertificateService` for the available methods.
- */
-export const Certificates = (logger: Logger) => new CertificateService(logger)

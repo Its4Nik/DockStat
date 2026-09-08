@@ -4,10 +4,14 @@ import { BaseLogger } from "../logger"
 import { DockStatDB } from "./db"
 import { DSWS } from "./wsHandler"
 
+const WidgetsServicesLogger = BaseLogger.spawn("Widgets")
+
 export const Widgets = new WidgetsService(DockStatDB._sqliteWrapper, BaseLogger, {
   requireAuth: true,
   verifyToken: TokenVerifier,
 })
+
+WidgetsServicesLogger.info("Widgets service wired to shared WebSocket handler")
 
 /**
  * Route widget data updates through the SHARED WebSocket connection.
@@ -21,6 +25,10 @@ Widgets.ws.sendDataUpdate = (dashboardId, payloads) =>
     type: "data-update",
   })
 
+WidgetsServicesLogger.debug(
+  `Widgets WS sendDataUpdate overridden to route through DSWS topic widgets/dashboard/<dashboardId>`
+)
+
 /**
  * Register data sources via the main WebSocket pub/sub handler so
  * "websocket-source" data-pipe nodes receive live topic data.
@@ -29,6 +37,8 @@ Widgets.connectDataSourceHandler({
   publish: (topic, data) => DSWS.send(topic, data),
   subscribe: (topic, callback) => DSWS.onInternalPublish(topic, callback),
 })
+
+WidgetsServicesLogger.info("Widget data-source handler connected to shared WS pub/sub")
 
 /**
  * When a client subscribes to a dashboard topic, immediately evaluate that
@@ -39,13 +49,22 @@ DSWS.onFirstSubscriber(async (topic) => {
   if (!topic.startsWith(WIDGET_DASHBOARD_TOPIC_PREFIX)) return
   const dashboardId = topic.slice(WIDGET_DASHBOARD_TOPIC_PREFIX.length)
   const dashboard = Widgets.dashboards.getById(dashboardId)
-  if (!dashboard) return
+  if (!dashboard) {
+    WidgetsServicesLogger.warn(
+      `Initial data-pipe evaluation skipped: dashboard not found for topic "${topic}", dashboardId=${dashboardId}`
+    )
+    return
+  }
+
+  WidgetsServicesLogger.debug(
+    `Initial data-pipe evaluation triggered for topic "${topic}", dashboardId=${dashboardId}`
+  )
 
   try {
     const payloads = await Widgets.engine.evaluate(dashboardId, dashboard.dataPipe)
     if (payloads.length > 0) Widgets.ws.sendDataUpdate(dashboardId, payloads)
   } catch (err) {
-    BaseLogger.warn(
+    WidgetsServicesLogger.warn(
       `Initial data-pipe evaluation for subscriber on "${topic}" failed: ${
         err instanceof Error ? err.message : String(err)
       }`

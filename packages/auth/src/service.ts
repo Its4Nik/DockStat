@@ -146,6 +146,10 @@ export class AuthService {
     )
 
     this.oidc = new OidcService(this.providers, baseLogger)
+
+    this.logger.info(
+      `Auth Service ready: sessionTtl=${this.options.sessionTtlSec}s, wsTokenTtl=${this.options.wsTokenTtlSec}s, cookie=${this.options.cookieName}, defaultRoles=[${this.options.defaultRoles.join(",")}], firstUserRole=${this.options.firstUserRole}`
+    )
   }
 
   // ── Authentication ────────────────────────────────────────────────
@@ -157,12 +161,21 @@ export class AuthService {
    */
   async authenticate(request: Request): Promise<AuthUser | null> {
     const creds = extractCredentials(request, this.options.cookieName)
-    if (!creds) return null
+    if (!creds) {
+      this.logger.debug("Authentication skipped: no credentials on request")
+      return null
+    }
 
     try {
       if (creds.kind === "apikey") {
         const key = await verifyApiKey(this.apiKeys, creds.value)
-        if (!key) return null
+        if (!key) {
+          this.logger.warn("Authentication failed: api key not valid")
+          return null
+        }
+        this.logger.info(
+          `Authenticated via api key: userId=${key.userId}, scopes=[${key.scopes}]`
+        )
         return {
           authMethod: "apikey",
           provider: "apikey",
@@ -173,7 +186,15 @@ export class AuthService {
       }
 
       const payload = await verifySessionToken(creds.value)
-      if (!payload || !isSessionValid(this.sessions, payload.jti)) return null
+      if (!payload || !isSessionValid(this.sessions, payload.jti)) {
+        this.logger.warn(
+          `Authentication failed: sessioninvalid or expired: jti=${payload?.jti ?? "missing"}`
+        )
+        return null
+      }
+      this.logger.info(
+        `Authenticated via session: sub=${payload.sub}, provider=${payload.provider}, authMethod=session`
+      )
       return sessionPayloadToUser(payload)
     } catch (error) {
       // A failed credential lookup must never 500 the request — treat it
@@ -190,6 +211,10 @@ export class AuthService {
     const jti = crypto.randomUUID()
     const token = await signSessionToken(claims, jti, this.options.sessionTtlSec)
     createSession(this.sessions, jti, claims.sub, this.options.sessionTtlSec)
+
+    this.logger.info(
+      `Issued session: sub=${claims.sub}, provider=${claims.provider}, secure=${secure}, cookie=${this.options.cookieName}`
+    )
 
     if (Math.random() < PRUNE_PROBABILITY) {
       try {
@@ -209,7 +234,12 @@ export class AuthService {
   /** Revokes the session behind a token (logout). Idempotent. */
   async revokeSession(token: string): Promise<void> {
     const payload = await verifySessionToken(token)
-    if (payload?.jti) revokeSessionRow(this.sessions, payload.jti)
+    if (payload?.jti) {
+      revokeSessionRow(this.sessions, payload.jti)
+      this.logger.info(`Revoked session: jti=${payload.jti}, sub=${payload.sub}`)
+    } else {
+      this.logger.warn("Revocation requested for untrackable session token")
+    }
   }
 
   /** Revokes every session of a user (admin kill switch). */
@@ -239,6 +269,9 @@ export class AuthService {
 
     const token = await refreshSessionToken(payload, this.options.sessionTtlSec)
     extendSession(this.sessions, payload.jti, this.options.sessionTtlSec)
+    this.logger.info(
+      `Refreshed session: sub=${payload.sub}, jti=${payload.jti}, age=${Math.round(age)}s`
+    )
     return sessionCookie(
       token,
       this.options.sessionTtlSec,
@@ -256,8 +289,11 @@ export class AuthService {
    */
   async issueWsToken(request: Request): Promise<string | null> {
     const user = await this.authenticate(request)
-    if (!user) return null
-    return signWsToken(
+    if (!user) {
+      this.logger.warn("WS token request rejected: authentication failed")
+      return null
+    }
+    const token = await signWsToken(
       {
         email: user.email,
         name: user.name,
@@ -269,6 +305,10 @@ export class AuthService {
       },
       this.options.wsTokenTtlSec
     )
+    this.logger.info(
+      `Issued WS token: sub=${user.sub}, provider=${user.provider}, ttl=${this.options.wsTokenTtlSec}s`
+    )
+    return token
   }
 
   /**
@@ -278,6 +318,9 @@ export class AuthService {
   async verifyWsToken(token: string): Promise<AuthUser | null> {
     const wsPayload = await verifyWsTokenSignature(token)
     if (wsPayload) {
+      this.logger.info(
+        `Verified WS token: sub=${wsPayload.sub}, provider=${wsPayload.provider}, authMethod=ws`
+      )
       return {
         authMethod: "session",
         email: wsPayload.email,
@@ -291,7 +334,15 @@ export class AuthService {
     }
 
     const payload = await verifySessionToken(token)
-    if (!payload || !isSessionValid(this.sessions, payload.jti)) return null
+    if (!payload || !isSessionValid(this.sessions, payload.jti)) {
+      this.logger.warn(
+        `WS token verification failed: sessioninvalid or expired, jti=${payload?.jti ?? "missing"}`
+      )
+      return null
+    }
+    this.logger.info(
+      `Verified WS token via session: sub=${payload.sub}, authMethod=session`
+    )
     return sessionPayloadToUser(payload)
   }
 
@@ -410,6 +461,8 @@ export class AuthService {
     cookie: string
     clearCookies: string[]
   }> {
+    this.logger.info(`OIDC callback: provider=${providerId}, callback=${callbackUrl.pathname}${callbackUrl.search}`)
+
     const { claims, sub } = await this.oidc.completeLogin(providerId, callbackUrl, cookies)
     this.logger.info(`User authenticated via ${providerId}: ${claims.email ?? sub}`)
 
@@ -429,6 +482,13 @@ export class AuthService {
       })
       if (!created) throw new Error("Failed to create user from OIDC claims")
       row = created
+      this.logger.info(
+        `Created new OIDC user: provider=${providerId}, sub=${sub}, name=${row.name}`
+      )
+    } else {
+      this.logger.info(
+        `Linked OIDC account: provider=${providerId}, sub=${sub}, existingUserId=${row.id}`
+      )
     }
 
     const { token, jti, cookie } = await this.issueSession(
@@ -489,7 +549,9 @@ export class AuthService {
   }
 
   localUsersExist(): boolean {
-    return !!this.users.select(["id"]).first()
+    const exists = !!this.users.select(["id"]).first()
+    this.logger.debug(`Local users exist check: exists=${exists}`)
+    return exists
   }
 
   get sessionTtlSec(): number {

@@ -235,7 +235,14 @@ export function WebSocketProvider({
     }
 
     const fullUrl = await resolveUrl()
-    if (!fullUrl) return
+    if (!fullUrl) {
+      console.warn("[WebSocket] could not resolve connection URL")
+      return
+    }
+
+    console.info(
+      `[WebSocket] connecting: url=${fullUrl}, requireAuth=${requireAuth}, autoReconnect=${autoReconnect}, reconnectInterval=${reconnectInterval}ms`
+    )
 
     const ws = new WebSocket(fullUrl)
     wsRef.current = ws
@@ -245,13 +252,22 @@ export function WebSocketProvider({
       if (!mountedRef.current) return
       setConnected(true)
 
+      console.info("[WebSocket] connected")
+
       // Flush pending messages
       const pending = pendingMessagesRef.current.splice(0)
+      if (pending.length > 0) {
+        console.debug("[WebSocket] flushing pending messages:", pending.length)
+      }
       for (const msg of pending) {
         ws.send(JSON.stringify({ topic: msg.topic, type: msg.type }))
       }
 
       // Re-subscribe all active topics
+      const activeTopics = subscriptionsRef.current.size
+      if (activeTopics > 0) {
+        console.debug("[WebSocket] re-subscribing to topics:", activeTopics)
+      }
       for (const [topic] of subscriptionsRef.current) {
         ws.send(JSON.stringify({ topic, type: "subscribe" }))
       }
@@ -286,14 +302,21 @@ export function WebSocketProvider({
       setConnected(false)
       wsRef.current = null
 
+      console.info("[WebSocket] disconnected")
+
       if (autoReconnect) {
+        console.debug(
+          `[WebSocket] reconnecting in ${reconnectInterval}ms (autoReconnect=${autoReconnect})`
+        )
         reconnectTimerRef.current = setTimeout(() => void connect(), reconnectInterval)
       }
     }
 
     ws.onerror = () => {
       if (!mountedRef.current) return
-      setError(new Error("WebSocket connection error"))
+      const err = new Error("WebSocket connection error")
+      setError(err)
+      console.warn("[WebSocket] connection error", err)
     }
   }, [resolveUrl, autoReconnect, reconnectInterval, latestTrigger])
 
@@ -419,11 +442,9 @@ export function useTopicSubscription<TData = unknown>(
     })
 
     // Initialize with latest data if available
-    if (debugLog) console.debug("Getting latest data for '", topic, "' from Context")
     const existing = latest.get(topic)
     if (existing) {
       setEnvelope(existing)
-      if (debugLog) console.debug("Hit!")
       if (transform) {
         setData(transform(existing))
       } else {
@@ -435,7 +456,7 @@ export function useTopicSubscription<TData = unknown>(
       unsubRef.current?.()
       unsubRef.current = null
     }
-  }, [topic, ctxSubscribe, latest, transform, onMessage, debugLog])
+  }, [topic, ctxSubscribe, latest, transform, onMessage])
 
   return {
     connected,
@@ -459,6 +480,7 @@ export function useAllMessages(): {
   const [data, setData] = useState<WSServerEnvelope[]>([])
 
   useEffect(() => {
+    console.debug("[useAllMessages] subscribing to catch-all topic")
     const unsub = ctxSubscribe("*", (env) => {
       setData((prev) => [...prev, env])
     })

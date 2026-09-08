@@ -8,6 +8,9 @@ import { DockStatDB } from "./db"
  * Guest registration reads the config table dynamically so settings
  * changes apply without a restart.
  */
+
+const AuthServicesLogger = BaseLogger.spawn("AuthSingleton")
+
 export const Auth = new AuthService(DockStatDB._sqliteWrapper, BaseLogger, {
   getAllowGuestRegistration: () =>
     DockStatDB.configTable.select(["additionalSettings"]).first()?.additionalSettings
@@ -17,3 +20,6 @@ export const Auth = new AuthService(DockStatDB._sqliteWrapper, BaseLogger, {
     DockStatDB.configTable.where({id: 0}).update({ additionalSettings: { enableRegistration: enable } })
   },
 })
+
+AuthServicesLogger.info("Auth singleton ready")
+

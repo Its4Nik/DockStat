@@ -11,8 +11,11 @@ export function useBaseEdenMutation<TData, TInput>(opts: {
   const mutation = useMutation({
     mutationFn,
     mutationKey,
-    onError: () => {},
+    onError: () => {
+      console.debug("[useBaseEdenMutation] mutation error for key:", mutationKey)
+    },
     onSuccess: async () => {
+      console.debug("[useBaseEdenMutation] mutation success, invalidating:", invalidateQueries)
       await Promise.all(invalidateQueries.map((key) => qc.invalidateQueries({ queryKey: key })))
     },
   })

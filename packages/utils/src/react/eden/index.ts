@@ -35,14 +35,18 @@ export class Client {
     // (e.g. API-key clients). No token is read from localStorage.
     this.bearerToken = null
     this.toaster = toaster
+
+    console.debug("[EdenClient] created")
   }
 
   setToken(token: string | null) {
     this.bearerToken = token
+    console.debug("[EdenClient] bearer token set:", token ? "present" : "cleared")
   }
 
   setOnUnauthorized(cb: (() => void) | undefined) {
     this.onUnauthorized = cb
+    console.debug("[EdenClient] onUnauthorized handler:", cb ? "set" : "cleared")
   }
 
   private buildCtx<
@@ -143,6 +147,10 @@ export class Client {
       ...opts?.fetchOptions?.headers,
     }
 
+    console.debug(
+      `[EdenClient] call: hasBody=${opts?.body !== undefined}, skipAuthHandler=${opts?.skipAuthHandler ?? false}, hasBearer=${this.bearerToken !== null}`
+    )
+
     let result: { data: unknown; error: unknown; status: number }
 
     if (opts?.body !== undefined) {
@@ -157,7 +165,10 @@ export class Client {
       })
     }
 
+    console.debug("[EdenClient] call response:", { status: result.status })
+
     if (!opts?.skipAuthHandler && result.status === 401 && this.onUnauthorized) {
+      console.debug("[EdenClient] 401 received, triggering onUnauthorized")
       this.onUnauthorized()
     }
 

@@ -15,12 +15,20 @@ export function useEdenQuery<TRoute extends EdenQueryRoute>({
 }: UseEdenQueryOptions<TRoute>) {
   type TData = NonNullable<EdenQueryData<TRoute>>
 
+  console.debug(
+    `[useEdenQuery] enabled=${enabled}, skipAuthHandler=${skipAuthHandler ?? false}, onUnauthorized=${onUnauthorized ? "set" : "unset"}`
+  )
+
   return useQuery<TData, Error>({
     enabled,
     queryFn: async ({ signal }) => {
+      console.debug("[useEdenQuery] fetching:", queryKey)
       const { data, error, status } = await route({ fetch: { signal }, ...opts })
 
+      console.debug("[useEdenQuery] response:", { status, hasError: Boolean(error) })
+
       if (!skipAuthHandler && status === 401 && onUnauthorized) {
+        console.debug("[useEdenQuery] 401 received, triggering onUnauthorized")
         onUnauthorized()
       }
 

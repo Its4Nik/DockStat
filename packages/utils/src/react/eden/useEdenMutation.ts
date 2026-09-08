@@ -6,10 +6,15 @@ export function useEdenMutation<TRoute extends EdenRoute>(
   options: DirectRouteOptions<TRoute>
 ): MutationResult<ResponseData<TRoute>, EdenBody<TRoute>> {
   const mutationFn = async (body: EdenBody<TRoute>) => {
+    console.debug("[useEdenMutation] called:", options.mutationKey ?? "no-key")
+
     const toaster = options.toast?.toaster
     const { data, error, status } = await options.route(body as never, options.opts as never)
 
+    console.debug("[useEdenMutation] response:", { status, hasError: Boolean(error) })
+
     if (!options.skipAuthHandler && status === 401 && options.onUnauthorized) {
+      console.debug("[useEdenMutation] 401 received, triggering onUnauthorized")
       options.onUnauthorized()
     }
 

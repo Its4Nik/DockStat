@@ -1,10 +1,5 @@
-import z from "zod"
+import { UserValidation } from "./user";
 
-type OperationString = `__${string}__`
-
-export const Schemas: Record<OperationString, z.ZodType> = {
-  __basic_user__: z.object({
-    name: z.string(),
-    pass: z.string(),
-  }),
+export const Schemas = {
+  User: UserValidation
 }

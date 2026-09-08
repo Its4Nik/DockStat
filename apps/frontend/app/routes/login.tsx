@@ -1,14 +1,13 @@
 import { Button, Divider, Input, Slides } from "@dockstat/ui"
 import { useEffect, useState } from "react"
 import { Form, useNavigate } from "react-router"
-import z from "zod"
-import Actions from "~/.server/action"
+
 import Loaders from "~/.server/loader"
-import { validate, withValidation } from "~/.server/middleware/withValidation"
 import { floatingIcons } from "~/components/consts/icons"
 import { HeroPanel } from "~/components/Hero"
 import { AnimatedIconBackground } from "~/components/LoginBg"
 import type { Route } from "./+types/login"
+import { Schemas } from "~/.server/schemas"
 
 export async function loader() {
   return {
@@ -17,19 +16,8 @@ export async function loader() {
   }
 }
 
-const validation = withValidation({
-  localLogin: validate(
-    z.object({ name: z.string().min(1), pass: z.string().min(1) }),
-    Actions.Auth.localLogin
-  ),
-  register: validate(
-    z.object({ name: z.string().min(1), pass: z.string().min(8) }),
-    Actions.Auth.register
-  ),
-})
-
-export const middleware: Route.MiddlewareFunction[] = [validation.middleware]
-export const action = validation.action
+export const middleware: Route.MiddlewareFunction[] = [Schemas.User.Basic.middleware]
+export const action = Schemas.User.Basic.action
 
 function LoginForm() {
   return (
@@ -37,7 +25,7 @@ function LoginForm() {
       className="w-full space-y-2"
       method="post"
     >
-      <Input<typeof validation._ops>
+      <Input<typeof Schemas.User.Basic._ops>
         type="operation"
         value="localLogin"
       />
@@ -68,7 +56,7 @@ function RegisterForm() {
       className="w-full space-y-2"
       method="post"
     >
-      <Input<typeof validation._ops>
+      <Input<typeof Schemas.User.Basic._ops>
         type="operation"
         value="register"
       />

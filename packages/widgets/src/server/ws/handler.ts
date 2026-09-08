@@ -30,6 +30,10 @@ export class WidgetWSHandler {
   constructor(baseLogger: Logger, config?: WidgetWSHandlerConfig) {
     this.log = baseLogger.spawn("WidgetWS")
 
+    this.log.info(
+      `Widget WS handler initializing: prefix=/ws/widgets, requireAuth=${config?.requireAuth ?? false}`
+    )
+
     this.handler = createWSHandler(baseLogger, {
       bodySchema: t.Object({
         topic: t.Union([
@@ -39,10 +43,10 @@ export class WidgetWSHandler {
         type: t.Union([t.Literal("subscribe"), t.Literal("unsubscribe")]),
       }),
       onFirstSubscriber: (topic) => {
-        this.log.debug(`First subscriber on "${topic}"`)
+        this.log.info(`Widget WS first subscriber on "${topic}"`)
       },
       onLastSubscriberLeave: (topic) => {
-        this.log.debug(`Last subscriber left "${topic}"`)
+        this.log.info(`Widget WS last subscriber left "${topic}"`)
       },
       prefix: "/ws/widgets",
       requireAuth: config?.requireAuth ?? false,
@@ -54,6 +58,8 @@ export class WidgetWSHandler {
       }),
       verifyToken: config?.verifyToken,
     })
+
+    this.log.info("Widget WS handler ready")
   }
 
   /**
@@ -65,7 +71,11 @@ export class WidgetWSHandler {
       payloads,
       type: "data-update",
     }
-    return this.handler.send({ dashboardId, type: "dashboard" }, data)
+    const sent = this.handler.send({ dashboardId, type: "dashboard" }, data)
+    this.log.debug(
+      `Widget WS data update: dashboardId=${dashboardId}, payloadCount=${payloads.length}, sent=${sent}`
+    )
+    return sent
   }
 
   /**

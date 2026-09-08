@@ -45,6 +45,8 @@ export class OidcService {
   constructor(providers: QueryBuilder<ProvidersTable>, baseLogger: Logger) {
     this.providers = providers
     this.logger = baseLogger.spawn("Oidc")
+
+    this.logger.info("Initializing OIDC service")
   }
 
   /** Raw provider row or null. */
@@ -69,13 +71,20 @@ export class OidcService {
       scopes: input.scopes || "openid profile email",
     })
     if (!created) throw new Error("Failed to create provider")
+    this.logger.info(
+      `Created OIDC provider: id=${created.id}, name=${created.name ?? "unset"}, issuer=${created.issuer_url}`
+    )
     return created
   }
 
   deleteProvider(providerId: string): boolean {
     const existing = this.getProvider(providerId)
-    if (!existing) return false
+    if (!existing) {
+      this.logger.warn(`OIDC provider deletion failed: not found, id=${providerId}`)
+      return false
+    }
     this.providers.where({ id: providerId }).delete()
+    this.logger.info(`Deleted OIDC provider: id=${providerId}, name=${existing.name ?? "unset"}`)
     return true
   }
 
@@ -125,7 +134,9 @@ export class OidcService {
       state,
     })
 
-    this.logger.debug(`OAuth login flow started for provider ${providerId}`)
+    this.logger.info(
+      `OIDC login started: provider=${providerId}, redirect=${redirectUri}, scopes=${row.scopes}, secure=${secure}`
+    )
     return {
       cookies: [
         this.oauthCookie("state", state, secure),
@@ -147,9 +158,15 @@ export class OidcService {
   ): Promise<{ claims: Record<string, unknown>; sub: string }> {
     const { meta } = await this.configFor(providerId)
 
-    if (cookies.state !== callbackUrl.searchParams.get("state")) {
+    const returnedState = callbackUrl.searchParams.get("state")
+    if (cookies.state !== returnedState) {
+      this.logger.warn(
+        `OIDC state mismatch: provider=${providerId}, expected=${cookies.state}, received=${returnedState}`
+      )
       throw new Error("Invalid state")
     }
+
+    this.logger.debug(`OIDC code exchange: provider=${providerId}, callback=${callbackUrl.pathname}${callbackUrl.search}`)
 
     const tokens = await client.authorizationCodeGrant(meta, callbackUrl, {
       expectedNonce: cookies.nonce,
@@ -159,6 +176,8 @@ export class OidcService {
     if (!tokens) throw new Error("No tokens returned from provider")
 
     const sub = String((tokens.claims?.() ?? { sub: "" }).sub)
+    this.logger.info(`OIDC token exchange complete: provider=${providerId}, sub=${sub}`)
+
     const claims = (await client.fetchUserInfo(meta, tokens.access_token ?? "", sub)) as Record<
       string,
       unknown
