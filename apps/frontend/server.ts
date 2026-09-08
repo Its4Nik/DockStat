@@ -13,6 +13,7 @@ import { mkdir } from "node:fs/promises"
 import { $} from "bun"
 import path from "node:path"
 import { BaseLogger } from "~/.server/logger"
+import { sleep } from "@dockstat/utils"
 
 const { join } = path
 
@@ -53,16 +54,19 @@ async function main() {
   await import("./app/.server/bootstrap")
 
   if (IS_DEV) {
-    Bun.serve({
-      fetch: async (request, server) => {
-        const result = await DSWS.tryUpgrade(request, server)
-        if (result === "upgraded") return
-        if (result instanceof Response) return result
-        return new Response("Not Found", { status: 404 })
-      },
-      port: DEV_WS_PORT,
-      websocket: DSWS.websocket,
-    })
+    const startWs = () => {
+      Bun.serve({
+        fetch: async (request, server) => {
+          if (request.url.includes("/ws")) {
+            const result = await DSWS.tryUpgrade(request, server)
+            if (result === "upgraded") return
+            if (result instanceof Response) return result
+          }
+        },
+        port: DEV_WS_PORT,
+        websocket: DSWS.websocket,
+      })
+    }
     BaseLogger.info(`[dev] WebSocket companion listening on ws://localhost:${DEV_WS_PORT}/ws`)
 
     const vitePort = Number(Bun.env.VITE_PORT || 5173)
@@ -93,6 +97,10 @@ async function main() {
       stdin: "inherit",
       stdout: "inherit",
     })
+
+    await sleep(2000)
+
+    startWs()
 
     $`/usr/bin/bun x react-router typegen --watch --clearScreen false`.quiet()
 

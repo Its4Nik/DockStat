@@ -1,5 +1,5 @@
-import type { MiddlewareFunction } from "react-router"
-import { authenticate } from "../lib/authenticate"
+import { authContext } from "@dockstat/auth/react-router"
+import type { MiddlewareFunction, RouterContextProvider } from "react-router"
 import { MetricsRecorder } from "../metrics/recorder"
 import { DockStatDB } from "../singletons/db"
 
@@ -8,7 +8,7 @@ const recorder = new MetricsRecorder(DockStatDB._sqliteWrapper)
  * Records request metrics for every /api request, then lets the request
  * continue. Mirrors the old API's MetricsMiddleware.
  */
-export const apiMetricsMiddleware: MiddlewareFunction = async ({ request }, next) => {
+export const apiMetricsMiddleware: MiddlewareFunction<Response> = async ({ request }, next) => {
   const start = performance.now()
   const path = new URL(request.url).pathname
   const method = request.method
@@ -33,11 +33,16 @@ export const apiMetricsMiddleware: MiddlewareFunction = async ({ request }, next
 
 /**
  * Rejects unauthenticated requests with a 401 before any loader/action runs.
- * Accepts Bearer JWTs, Api-Key/X-API-Key keys and the auth_token cookie.
+ * Reads the user the root middleware already verified — no double work.
  */
-export const authGuardMiddleware: MiddlewareFunction = async ({ request }) => {
-  const user = await authenticate(request)
+export const authGuardMiddleware: MiddlewareFunction<Response> = async ({ context }) => {
+  const user = context.get(authContext)
   if (!user) {
     return Response.json({ error: "Authentication required" }, { status: 401 })
   }
+}
+
+/** Loader/action helper: the authenticated user from router context. */
+export function currentUser(context: Readonly<RouterContextProvider>) {
+  return context.get(authContext)
 }

@@ -9,7 +9,7 @@
  */
 import { heapStats, memoryUsage } from "bun:jsc"
 import os from "node:os"
-import { BASE_URL, oidc as client, FRONTEND_URL, verifyAuthToken } from "@dockstat/auth"
+import { BASE_URL, FRONTEND_URL, isSecureRequest, readCookie } from "@dockstat/auth"
 import { createThemeHandler, type themeType } from "@dockstat/theme-handler/server"
 import type { DOCKER } from "@dockstat/typings"
 import { formatBytes } from "@dockstat/utils"
@@ -30,30 +30,13 @@ const themeDB = themeHandler.getThemeDB()
 const themeResponse = (theme: themeType, message: string) =>
   ok({ data: theme, message, success: true })
 
-// ── OAuth helpers ───────────────────────────────────────────────────
-
-const isSecure = () => BASE_URL.startsWith("https://")
-
-const cookie = (name: string, value: string, maxAge: number) =>
-  `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly;${isSecure() ? " Secure;" : ""} SameSite=Lax; Max-Age=${maxAge}`
-
-const readCookie = (request: Request, name: string): string | null => {
-  const match = (request.headers.get("Cookie") ?? "").match(
-    new RegExp(`(?:^|;\\s*)${name}=([^;]+)`)
-  )
-  return match ? decodeURIComponent(match[1]) : null
-}
-
-const clearCookies = (...names: string[]) =>
-  names.map((name) => `${name}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`)
+// ── Misc helpers ────────────────────────────────────────────────────
 
 /** 302 redirect that can carry Set-Cookie headers */
 const redirectTo = (location: string, headers = new Headers()) => {
   headers.set("Location", location)
   return new Response(null, { headers, status: 302 })
 }
-
-// ── Misc helpers ────────────────────────────────────────────────────
 
 let lastCpu = process.cpuUsage()
 let lastTime = Bun.nanoseconds()
@@ -107,14 +90,16 @@ export const Loaders = {
   Auth: {
     getApiKeys: ({ request }: RouteArgs) => {
       const userId = query(request).get("userId") ?? undefined
-      const keys = userId
-        ? Singletons.Auth.Handler.apiKeys
-            .select(["id", "name", "scopes", "expiresAt", "lastUsedAt", "createdAt", "revokedAt"])
-            .where({ userId })
-            .all()
-        : Singletons.Auth.Handler.apiKeys
-            .select(["id", "name", "scopes", "expiresAt", "lastUsedAt", "createdAt", "revokedAt"])
-            .all()
+      const table = Singletons.Auth.apiKeys.select([
+        "id",
+        "name",
+        "scopes",
+        "expiresAt",
+        "lastUsedAt",
+        "createdAt",
+        "revokedAt",
+      ])
+      const keys = (userId ? table.where({ userId }) : table).all()
       return {
         keys: keys.map((k) =>
           serializeDates(k as unknown as Record<string, unknown>, [
@@ -127,47 +112,33 @@ export const Loaders = {
       }
     },
     getAuthLocalUsers: () => ({
-      users: Singletons.Auth.Handler.users
-        .select(["id", "name", "createdAt", "updatedAt"])
+      users: Singletons.Auth.users
+        .select(["id", "name", "provider", "roles", "createdAt", "updatedAt"])
         .all()
         .map((u) =>
           serializeDates(u as unknown as Record<string, unknown>, ["createdAt", "updatedAt"])
         ),
     }),
-    getAuthProviders: () =>
-      Singletons.Auth.Handler.providers
-        .select(["id", "issuer_url", "scopes", "client_id", "created_at", "name", "icon"])
-        .all(),
-    isGuestRegAllowed: () => Singletons.Auth.Handler.getAllowGuestRegistration(),
-
-    /** GET — redirect to the frontend login page */
-    localLoginPage: () => redirectTo(`${FRONTEND_URL}/auth/local/login`),
+    getAuthProviders: () => Singletons.Auth.oidc.listProviders(),
+    isGuestRegAllowed: () => Singletons.Auth.getAllowGuestRegistration(),
 
     /** GET — local logout: revoke session, clear cookie, redirect */
     async localLogout({ request }: RouteArgs) {
-      const token = readCookie(request, "auth_token")
-
       const headers = new Headers()
+      const token = readCookie(request, Singletons.Auth.cookieName)
       if (token) {
-        const payload = await verifyAuthToken(token)
-        if (payload?.jti) {
-          Singletons.Auth.Handler.sessions.where({ jti: payload.jti }).delete()
-        }
-        headers.append("Set-Cookie", "auth_token=; Path=/; SameSite=Lax; Max-Age=0")
+        await Singletons.Auth.revokeSession(token)
+        headers.append("Set-Cookie", Singletons.Auth.expiredSessionCookie(isSecureRequest(request)))
       }
 
       const redirectUri = new URL(request.url).searchParams.get("redirectUri") || FRONTEND_URL
       return redirectTo(redirectUri, headers)
     },
-    localUsersExist: () => ({
-      exists: !!Singletons.Auth.Handler.users.select(["id"]).first(),
-    }),
+    localUsersExist: () => ({ exists: Singletons.Auth.localUsersExist() }),
 
-    /** GET — finish the OIDC flow (validates state, exchanges code, sets auth_token) */
+    /** GET — finish the OIDC flow (validates state, exchanges code, sets session cookie) */
     async oAuthCallback({ params, request }: RouteArgs<{ providerId: string }>) {
-      const { meta } = await Singletons.Auth.Handler.configService.getConfig(
-        params.providerId as string
-      )
+      const secure = isSecureRequest(request)
       const url = new URL(request.url)
 
       const state = readCookie(request, "state")
@@ -180,40 +151,20 @@ export const Loaders = {
           { status: 400 }
         )
       }
-      if (state !== url.searchParams.get("state")) {
-        return new Response("Invalid state", { status: 400 })
-      }
 
       try {
-        const tokens = await client.authorizationCodeGrant(meta, url, {
-          expectedNonce: nonce,
-          expectedState: state,
-          pkceCodeVerifier: pkce,
-        })
-        if (!tokens) throw new Error("No tokens returned from provider")
-
-        const userInfo = await client.fetchUserInfo(
-          meta,
-          tokens.access_token ?? "",
-          String((tokens.claims?.() ?? { sub: "" }).sub)
+        const { cookie, clearCookies } = await Singletons.Auth.completeOidcLogin(
+          params.providerId as string,
+          url,
+          { nonce, pkce, state },
+          secure
         )
-
-        const { createAuthToken } = await import("@dockstat/auth")
-        const { jti, token } = await createAuthToken(userInfo)
-        Singletons.Auth.Handler.sessions.insert({
-          expiresAt: new Date(Date.now() + 86400 * 1000),
-          jti,
-          userId: String(userInfo.sub),
-        })
 
         const headers = new Headers()
-        for (const c of clearCookies("state", "nonce", "pkce")) headers.append("Set-Cookie", c)
-        headers.append(
-          "Set-Cookie",
-          `auth_token=${encodeURIComponent(token)}; Path=/;${isSecure() ? " Secure;" : ""} SameSite=Lax; Max-Age=86400`
-        )
+        for (const c of clearCookies) headers.append("Set-Cookie", c)
+        headers.append("Set-Cookie", cookie)
 
-        return redirectTo(`${FRONTEND_URL}/auth/${params.providerId}/callback`, headers)
+        return redirectTo("/", headers)
       } catch (error) {
         return new Response(
           `Authentication failed: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -223,81 +174,49 @@ export const Loaders = {
     },
 
     /** GET — start the OIDC flow for a provider (sets state/nonce/pkce cookies, redirects) */
-    async oAuthLogin({ params }: RouteArgs<{ providerId: string }>) {
-      const { meta, scopes } = await Singletons.Auth.Handler.configService.getConfig(
-        params.providerId as string
+    async oAuthLogin({ params, request }: RouteArgs<{ providerId: string }>) {
+      const { url, cookies } = await Singletons.Auth.oidc.beginLogin(
+        params.providerId as string,
+        `${BASE_URL}/${params.providerId}/callback`,
+        isSecureRequest(request)
       )
 
-      const stateVal = client.randomState()
-      const nonceVal = client.randomNonce()
-      const code_verifier = client.randomPKCECodeVerifier()
-      const code_challenge = await client.calculatePKCECodeChallenge(code_verifier)
-
-      const authUrl: URL = client.buildAuthorizationUrl(meta, {
-        code_challenge,
-        code_challenge_method: "S256",
-        nonce: nonceVal,
-        redirect_uri: `${BASE_URL}/${params.providerId}/callback`,
-        scopes,
-        state: stateVal,
-      })
-
       const headers = new Headers()
-      headers.append("Set-Cookie", cookie("state", stateVal, 600))
-      headers.append("Set-Cookie", cookie("nonce", nonceVal, 600))
-      headers.append("Set-Cookie", cookie("pkce", code_verifier, 600))
+      for (const c of cookies) headers.append("Set-Cookie", c)
 
-      return redirectTo(authUrl.toString(), headers)
+      return redirectTo(url.toString(), headers)
     },
 
     /** GET — revoke the session and redirect to the provider's end-session URL */
     async oAuthLogout({ params, request }: RouteArgs<{ providerId: string }>) {
-      const token = readCookie(request, "auth_token")
-
       const headers = new Headers()
+      const token = readCookie(request, Singletons.Auth.cookieName)
       if (token) {
-        const payload = await verifyAuthToken(token)
-        if (payload?.jti) {
-          Singletons.Auth.Handler.sessions.where({ jti: payload.jti }).delete()
-        }
-        headers.append("Set-Cookie", "auth_token=; Path=/; SameSite=Lax; Max-Age=0")
+        await Singletons.Auth.revokeSession(token)
+        headers.append("Set-Cookie", Singletons.Auth.expiredSessionCookie(isSecureRequest(request)))
       }
 
-      const { meta } = await Singletons.Auth.Handler.configService.getConfig(
-        params.providerId as string
+      const redirectUri = new URL(request.url).searchParams.get("redirectUri") ?? FRONTEND_URL
+      const endUrl = await Singletons.Auth.oidc.endSessionUrl(
+        params.providerId as string,
+        redirectUri
       )
-      const { logout_url: logoutUrl } = Singletons.Auth.Handler.providers
-        .select(["logout_url"])
-        .where({ id: params.providerId })
-        .first() ?? { logout_url: null }
-
-      const redirectUri = new URL(request.url).searchParams.get("redirectUri") ?? ""
-      let endUrl = client.buildEndSessionUrl(meta, {
-        post_logout_redirect_uri: redirectUri,
-      })
-      if (logoutUrl !== null) endUrl = new URL(logoutUrl)
 
       return redirectTo(endUrl.toString(), headers)
     },
 
-    /** GET — verify a token (Authorization header or auth_token cookie) */
+    /** GET — verify a token (Authorization header or session cookie) */
     async verifyToken({ request }: RouteArgs) {
-      const authHeader = request.headers.get("Authorization")
-      const token = authHeader?.startsWith("Bearer ")
-        ? authHeader.slice(7)
-        : readCookie(request, "auth_token")
+      const user = await Singletons.Auth.authenticate(request)
+      if (!user) return Response.json({ error: "Invalid or missing token" }, { status: 401 })
+      return { user }
+    },
 
-      if (!token) return Response.json({ error: "No token provided" }, { status: 401 })
-
-      const payload = await verifyAuthToken(token)
-      if (!payload || typeof payload.user !== "object" || payload.user === null) {
-        return Response.json({ error: "Invalid or expired token" }, { status: 401 })
-      }
-      if (payload.jti && !Singletons.Auth.Handler.sessions.where({ jti: payload.jti }).exists()) {
-        return Response.json({ error: "Session revoked" }, { status: 401 })
-      }
-
-      return { user: payload.user }
+    /** GET — mint a short-lived token for WebSocket connections */
+    async wsToken({ request }: RouteArgs) {
+      const token = await Singletons.Auth.issueWsToken(request)
+      if (!token) return fail(401, "Authentication required")
+      return { expiresIn: Singletons.Auth.wsTokenTtlSec, token }
     },
   },
 
@@ -605,11 +524,11 @@ export const Loaders = {
       if (!theme) return fail(404, `Theme with name "${params.name}" not found`)
       return themeResponse(theme, `Found theme "${params.name}"`)
     },
+    defaultTheme: () => themeDB.getAllThemes()[0],
     list: () => {
       const themes = themeDB.getAllThemes()
       return { data: themes, message: `Found ${themes.length} theme(s)`, success: true }
     },
-    defaultTheme: () => themeDB.getAllThemes()[0]
   },
 
   Widgets: {

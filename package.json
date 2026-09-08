@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "@dockstat/api": "workspace:*",
     "@dockstat/db": "workspace:*",
     "@dockstat/docker-client": "workspace:*",
     "@dockstat/docknode": "workspace:*",
@@ -37,10 +36,9 @@
     "check-types": "turbo run check-types",
     "clean": "turbo run clean && rm -rf node_modules",
     "dev": "turbo run dev",
-    "dev:dockstat": "bun run docker-up:quiet && bun run dev --filter=@dockstat/frontend --filter=@dockstat/api --filter=@dockstat/store-verification --filter=@dockstat/docknode",
-    "dev:dockstat:no-docker": "bun run dev --filter=@dockstat/frontend --filter=@dockstat/api --filter=@dockstat/store-verification --filter=@dockstat/docknode",
-    "dev:dockstat/api": "bun run docker-up:quiet && bun run dev --filter=@dockstat/api",
-    "dev:minimal": "bun run docker-up:quiet && bun run dev --filter=@dockstat/frontend --filter=@dockstat/api",
+    "dev:dockstat": "bun run docker-up:quiet && bun run dev --filter=@dockstat/frontend --filter=@dockstat/store-verification --filter=@dockstat/docknode",
+    "dev:dockstat:no-docker": "bun run dev --filter=@dockstat/frontend --filter=@dockstat/store-verification --filter=@dockstat/docknode",
+    "dev:minimal": "bun run docker-up:quiet && bun run dev --filter=@dockstat/frontend",
     "docs:build": "bun run docs:sync-assets && cd apps/docs && .venv/bin/mkdocs build --strict",
     "docs:install": "cd apps/docs && [ -d .venv ] || uv venv .venv && uv pip install -r requirements.txt",
     "docs:serve": "bun run docs:sync-assets && cd apps/docs && .venv/bin/mkdocs serve",
@@ -112,6 +110,7 @@
     },
     "packages": [
       "apps/*",
+      "!apps/dockstat.bkp",
       "packages/*"
     ]
   }

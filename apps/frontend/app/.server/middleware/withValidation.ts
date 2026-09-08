@@ -1,8 +1,7 @@
-import { createContext, data, useOutletContext } from "react-router"
 import type { ActionFunctionArgs, MiddlewareFunction } from "react-router"
+import { createContext, data } from "react-router"
 import { z } from "zod"
 import { BaseLogger } from "../logger"
-import type { RootContext } from "~/root"
 
 const logger = BaseLogger.spawn("Validation")
 
@@ -50,7 +49,7 @@ export function validate<Schema extends z.ZodType, R>(
   schema: Schema,
   action: ValidatedAction<Schema, R>
 ): ValidatedOperation<Schema, R> {
-  return { schema, action }
+  return { action, schema }
 }
 
 /**
@@ -133,7 +132,7 @@ export function withValidation<Ops extends Record<string, ValidatedOperation>>(
   operations: Ops
 ): {
   middleware: MiddlewareFunction<Response>
-    action: (args: ActionFunctionArgs) => Promise<OperationReturn<Ops> | ValidationFailureResponse>
+  action: (args: ActionFunctionArgs) => Promise<OperationReturn<Ops> | ValidationFailureResponse>
   _ops: Ops
 } {
   type OperationKey = Extract<keyof Ops, string>
@@ -161,7 +160,6 @@ export function withValidation<Ops extends Record<string, ValidatedOperation>>(
 
     const failValidation = (errors: ValidationErrors): Promise<Response> => {
       context.set(validatedPayload, { failed: errors })
-      useOutletContext<RootContext>().auth.set(null)
       return next()
     }
 
@@ -176,7 +174,9 @@ export function withValidation<Ops extends Record<string, ValidatedOperation>>(
     const { [OPERATION_FIELD]: operation, ...fields } = raw
 
     if (typeof operation !== "string" || !Object.hasOwn(operations, operation)) {
-      logger.warn(`[${request.method}] ${path}: unknown ${OPERATION_FIELD} ${JSON.stringify(operation)}`)
+      logger.warn(
+        `[${request.method}] ${path}: unknown ${OPERATION_FIELD} ${JSON.stringify(operation)}`
+      )
       return await failValidation({
         fieldErrors: {},
         formErrors: [`Unknown ${OPERATION_FIELD}: ${String(operation)}`],
@@ -196,15 +196,14 @@ export function withValidation<Ops extends Record<string, ValidatedOperation>>(
     // `operation` is a verified registry key and `result.data` was produced by
     // that key's own schema, so the payload matches that member of the union —
     // a correlation TypeScript cannot express for the widened string lookup.
-    context.set(validatedPayload, { operation, data: result.data } as ValidPayload)
+    context.set(validatedPayload, { data: result.data, operation } as ValidPayload)
 
     return next()
   }
 
   function validationErrorsToMessage(errors: ValidationErrors): string {
-    const fieldMessages = Object.entries(errors.fieldErrors).flatMap(
-      ([field, messages]) =>
-        (messages ?? []).map((message) => `${field}: ${message}`)
+    const fieldMessages = Object.entries(errors.fieldErrors).flatMap(([field, messages]) =>
+      (messages ?? []).map((message) => `${field}: ${message}`)
     )
 
     return [...errors.formErrors, ...fieldMessages].join("\n")
@@ -235,7 +234,6 @@ export function withValidation<Ops extends Record<string, ValidatedOperation>>(
     const payload = args.context.get(validatedPayload)
 
     if (!payload) {
-      useOutletContext<RootContext>().auth.set(null)
       throw new Error(
         "withValidation: no validated payload in context — did you forget `export const middleware = [validation.middleware]`?"
       )
@@ -244,14 +242,20 @@ export function withValidation<Ops extends Record<string, ValidatedOperation>>(
     if ("failed" in payload) {
       // Returned (not thrown) so the failure lands in `actionData` for the UI
       // to render; the 400 status also skips post-action loader revalidation.
-      useOutletContext<RootContext>().auth.set(null)
-      return data({ errors: payload.failed, message: validationErrorsToMessage(payload.failed), success: false }, { status: 400 })
+      return data(
+        {
+          errors: payload.failed,
+          message: validationErrorsToMessage(payload.failed),
+          success: false,
+        },
+        { status: 400 }
+      )
     }
 
     return dispatch(payload.operation, args, payload.data)
   }
 
-  return { middleware, action, _ops: operations }
+  return { _ops: operations, action, middleware }
 }
 
 /** Union of the (awaited) return types of all registered actions. */

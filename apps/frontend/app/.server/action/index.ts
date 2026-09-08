@@ -7,20 +7,21 @@
  *
  * Every member receives `{ request, params }` and returns action-ready data.
  */
-import { crypt } from "@dockstat/auth"
+
+import { isSecureRequest, readCookie } from "@dockstat/auth"
 import type { RepoFile } from "@dockstat/repo-cli/types"
 import { createThemeHandler } from "@dockstat/theme-handler/server"
 import type { DB_target_host } from "@dockstat/typings"
 import { repo } from "@dockstat/utils"
+import { data } from "react-router"
 import { configCache, repoCache } from "../cache"
-import { authenticate } from "../lib/authenticate"
 import { fail, ok, parseBody, type RouteArgs } from "../lib/http"
 import { BaseLogger } from "../logger"
+import { currentUser } from "../middleware/api"
 import type { CertificateService } from "../services/certificates"
 import Singletons from "../singletons"
 import { Certificates, insertCertificate } from "../singletons/certificates"
 import { DockStatDB } from "../singletons/db"
-import { createAuthToken, verifyAuthToken } from "@dockstat/auth"
 
 const themeHandler = createThemeHandler({ db: DockStatDB._sqliteWrapper, logger: BaseLogger })
 const themeDB = themeHandler.getThemeDB()
@@ -36,32 +37,21 @@ export const Actions = {
         expiresAt?: string
       }>(request)
 
-      const apiKey = `dockstat_${crypto.randomUUID().replace(/-/g, "")}`
-      const keyHash = await Bun.password.hash(apiKey, {
-        algorithm: "argon2id",
-        memoryCost: 65536,
-        timeCost: 3,
-      })
-
-      const apiKeyRecord = Singletons.Auth.Handler.apiKeys.insertAndGet({
+      const created = await Singletons.Auth.createApiKey({
         expiresAt: body.expiresAt ? new Date(body.expiresAt) : null,
-        keyHash,
-        lastUsedAt: null,
         name: body.name,
-        revokedAt: null,
         scopes: body.scopes || "*",
         userId: body.userId,
       })
-      if (!apiKeyRecord) return fail(500, "Failed to create API key")
 
       return ok(
         {
           apiKey: {
-            expiresAt: apiKeyRecord.expiresAt,
-            id: apiKeyRecord.id,
-            key: apiKey,
-            name: apiKeyRecord.name,
-            scopes: apiKeyRecord.scopes,
+            expiresAt: created.expiresAt,
+            id: created.id,
+            key: created.apiKey,
+            name: created.name,
+            scopes: created.scopes,
           },
           success: true as const,
         },
@@ -82,14 +72,14 @@ export const Actions = {
       }>(request)
 
       return ok(
-        await Singletons.Auth.Handler.providers.insertAndGet({
+        await Singletons.Auth.oidc.createProvider({
           client_id: body.client_id,
-          client_secret: await crypt.encrypt(body.client_secret),
-          icon: body.icon || undefined,
+          client_secret: body.client_secret,
+          icon: body.icon,
           issuer_url: body.issuer_url,
-          logout_url: body.logout_url || undefined,
-          name: body.name || undefined,
-          scopes: body.scopes || undefined,
+          logout_url: body.logout_url ?? null,
+          name: body.name,
+          scopes: body.scopes ?? undefined,
         }),
         201
       )
@@ -97,112 +87,81 @@ export const Actions = {
 
     /** DELETE — remove an OAuth/OIDC provider */
     async deleteProvider({ params }: RouteArgs<{ providerId: string }>) {
-      const existing = Singletons.Auth.Handler.providers.where({ id: params.providerId }).first()
-      if (!existing) return fail(404, "Provider not found")
-      Singletons.Auth.Handler.providers.where({ id: params.providerId }).delete()
+      if (!Singletons.Auth.oidc.deleteProvider(params.providerId)) {
+        return fail(404, "Provider not found")
+      }
       return { message: "Provider deleted", success: true as const }
     },
 
     /** DELETE — remove a local user */
     async deleteUser({ params }: RouteArgs<{ userId: string }>) {
-      const users = Singletons.Auth.Handler.users
-      const existing = users.where({ id: params.userId }).first()
+      const existing = Singletons.Auth.users.select(["id"]).where({ id: params.userId }).first()
       if (!existing) return fail(404, "User not found")
-      users.where({ id: params.userId }).delete()
+      Singletons.Auth.users.where({ id: params.userId }).delete()
       return { message: "User deleted", success: true as const }
     },
-    /** POST — local username/password login, returns a JWT.
+    /** POST — local username/password login, sets the HttpOnly session cookie.
      * With withValidation the credentials arrive pre-validated via `data`;
      * standalone JSON API usage falls back to parsing the request body. */
-    async localLogin({ request }: RouteArgs, data?: { name: string; pass: string }) {
-      const body = data ?? (await parseBody<{ name: string; pass: string }>(request))
-      const user = Singletons.Auth.Handler.users
-        .select(["id", "name", "passHash"])
-        .where({ name: body.name })
-        .first()
+    async localLogin({ request }: RouteArgs, creds?: { name: string; pass: string }) {
+      const body = creds ?? (await parseBody<{ name: string; pass: string }>(request))
+      const result = await Singletons.Auth.loginLocal(
+        body.name,
+        body.pass,
+        isSecureRequest(request)
+      )
 
-      if (!user) return fail(401, "Invalid credentials")
-      if (!(await Bun.password.verify(body.pass, user.passHash))) {
-        return fail(401, "Invalid credentials")
-      }
+      if (!result.ok) return fail(401, result.message)
 
-
-      const { jti, token } = await createAuthToken({
-        email: user.name,
-        name: user.name,
-        provider: "local",
-        sub: user.id,
-      })
-
-      Singletons.Auth.Handler.sessions.insert({
-        expiresAt: new Date(Date.now() + 86400 * 1000),
-        jti,
-        userId: user.id,
-      })
-
-      return { success: true as const, token, message: "Authnenticated successfully" }
+      return data(
+        {
+          loggedIn: true as const,
+          message: "Authenticated successfully",
+          success: true as const,
+          user: result.user,
+        },
+        { headers: { "Set-Cookie": result.cookie } }
+      )
     },
 
     /** POST — register a local user (guests only while guest registration is allowed).
      * With withValidation the credentials arrive pre-validated via `data`;
      * standalone JSON API usage falls back to parsing the request body. */
-    async register({ request }: RouteArgs, data?: { name: string; pass: string }) {
-      const body = data ?? (await parseBody<{ name: string; pass: string }>(request))
-      const user = await authenticate(request)
+    async register({ request, context }: RouteArgs, creds?: { name: string; pass: string }) {
+      const body = creds ?? (await parseBody<{ name: string; pass: string }>(request))
+      const user = currentUser(context)
 
-      const users = Singletons.Auth.Handler.users
-      const isInitialUser = users.select(["id"]).count() === 0
-      const allowGuests = Singletons.Auth.Handler.getAllowGuestRegistration()
-      const existingUser = users.select(["id"]).where({ name: body.name }).first()
+      const result = await Singletons.Auth.registerLocal(body.name, body.pass, user)
+      if (!result.ok) return fail(result.status, result.message)
 
-      if (existingUser) return fail(409, "Username already exists")
-      if (!allowGuests && !user) {
-        return fail(403, "Guest registration is disabled. Please authenticate to create new users.")
+      return {
+        message: result.message,
+        success: true as const,
+        user: { id: result.user.id, name: result.user.name },
       }
-
-      const passHash = await Bun.password.hash(body.pass, {
-        algorithm: "argon2id",
-        memoryCost: 65536,
-        timeCost: 4,
-      })
-      const created = users.insertAndGet({ name: body.name, passHash })
-      if (!created) return fail(500, "Failed to create user")
-
-      let msg: string | undefined
-      if (isInitialUser) {
-        msg =
-          "This was the first user that has been created, restricting local registration of users to already registered users. You can change this inside the DockStat settings under additional settings."
-        Singletons.Auth.Handler.setAllowGuestRegistration(false)
-      }
-
-      return { message: msg || "User created successfully", success: true as const, user: { id: created.id, name: created.name } }
     },
 
     /** DELETE — revoke an API key */
     async revokeApiKey({ params }: RouteArgs<{ id: string }>) {
-      const apiKey = Singletons.Auth.Handler.apiKeys
-        .select(["id", "revokedAt"])
-        .where({ id: params.id })
-        .first()
-      if (!apiKey) return fail(404, "API key not found")
-      if (apiKey.revokedAt) return fail(400, "API key is already revoked")
-      Singletons.Auth.Handler.apiKeys.where({ id: params.id }).update({ revokedAt: new Date() })
+      const revoked = Singletons.Auth.revokeApiKey(params.id)
+      if (!revoked) return fail(404, "API key not found or already revoked")
       return { message: "API key revoked successfully", success: true as const }
     },
 
-    /** POST — revoke the session identified by Bearer token or auth_token cookie */
+    /** POST — revoke the session identified by Bearer token or session cookie */
     async revokeSession({ request }: RouteArgs) {
       const authHeader = request.headers.get("Authorization")
-      const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null
+      const token = authHeader?.startsWith("Bearer ")
+        ? authHeader.slice(7)
+        : readCookie(request, Singletons.Auth.cookieName)
 
       if (!token) return fail(400, "No token provided")
 
-      const payload = await verifyAuthToken(token)
-      if (payload?.jti) {
-        Singletons.Auth.Handler.sessions.where({ jti: payload.jti }).delete()
-      }
+      await Singletons.Auth.revokeSession(token)
 
-      const headers = new Headers({ "Set-Cookie": "auth_token=; Path=/; SameSite=Lax; Max-Age=0" })
+      const headers = new Headers({
+        "Set-Cookie": Singletons.Auth.expiredSessionCookie(isSecureRequest(request)),
+      })
       return Response.json({ success: true }, { headers })
     },
 
@@ -212,7 +171,7 @@ export const Actions = {
       if (allow !== "enable" && allow !== "disable") {
         return fail(400, "Invalid action. Use 'enable' or 'disable'")
       }
-      Singletons.Auth.Handler.setAllowGuestRegistration(allow === "enable")
+      Singletons.Auth.setAllowGuestRegistration(allow === "enable")
       return { message: `Guest registration ${allow}d`, success: true as const }
     },
   },
@@ -433,23 +392,13 @@ export const Actions = {
     /** POST — update additional settings */
     async updateAdditionalSettings({ request }: RouteArgs) {
       const body = await parseBody<{ additionalSettings: Record<string, unknown> }>(request)
-      const prev = Singletons.DB.configTable
-        .select(["additionalSettings"])
-        .where({ id: 0 })
-        .get()?.additionalSettings
 
       Singletons.DB.configTable
         .where({ id: 0 })
         .update({ additionalSettings: body.additionalSettings })
 
-      if (
-        prev?.enableRegistration !== body.additionalSettings?.enableRegistration &&
-        body.additionalSettings?.enableRegistration !== undefined
-      ) {
-        Singletons.Auth.Handler.setAllowGuestRegistration(
-          !!body.additionalSettings.enableRegistration
-        )
-      }
+      // Guest registration is read dynamically from the config table by the
+      // auth service, so no in-memory sync is needed here.
 
       configCache.invalidate()
       return {

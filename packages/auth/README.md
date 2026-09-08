@@ -1,693 +1,368 @@
 # @dockstat/auth
 
-> `@dockstat/auth` is a comprehensive OIDC/OAuth proxy service built for ElysiaJS applications. It provides seamless integration with various OIDC/OAuth providers including Authentik, Google, GitHub, Microsoft, Keycloak, and Okta. The library handles the complete OAuth 2.0 authorization code flow with PKCE (Proof Key for Code Exchange) for enhanced security.
+`@dockstat/auth` handles authentication for DockStat: revocable JWT
+sessions, OIDC provider login, and scoped API keys. Version 2 is built for
+React Router v8 server-side rendering — one root middleware authenticates
+each request exactly once and publishes the user through router context —
+while the core stays framework-agnostic so you can use it in any Bun
+project.
 
-## Description
+## Features
 
-`@dockstat/auth` acts as an OIDC proxy for ElysiaJS applications, simplifying the integration of multiple authentication providers. It manages provider configurations, handles OAuth flows, and issues secure JWT tokens for authenticated sessions.
+- **Secure JWT sessions** — HS256 tokens with enforced issuer and audience
+  claims, tracked in SQLite so every session is revocable. Browser sessions
+  live in an HttpOnly `SameSite=Lax` cookie; no tokens in localStorage.
+- **Sliding sessions** — when a cookie-carried session passes half its
+  lifetime, the middleware transparently re-issues it (same `jti`).
+- **OIDC login** — authorization-code flow with PKCE, state, and nonce for
+  any compliant provider (Authentik, Google, GitHub, Keycloak, Okta, and
+  more), with discovery caching and per-provider logout URLs.
+- **API keys** — argon2id-hashed keys that embed their row id, so
+  validation is one indexed lookup instead of scanning every hash. Keys
+  carry scopes, expiry dates, and revocation.
+- **Roles and scopes** — hierarchical roles (`admin` > `editor` >
+  `viewer`) plus wildcard scope matching (`docker:read`, `docker:*`, `*`)
+  with guard helpers for routes, loaders, and actions.
+- **WebSocket tokens** — short-lived, audience-restricted tokens that let
+  WebSocket clients authenticate even when they can't send cookies.
+- **SSR-first React Router v8 integration** — typed context, route guards,
+  and cookie handling designed for loaders, actions, and middleware.
 
-### Key Features
+## Requirements
 
-- **Multi-provider support**: Configure and manage multiple OIDC/OAuth providers dynamically
-- **PKCE flow**: Enhanced security using Proof Key for Code Exchange
-- **SQLite persistence**: Store provider configurations in a local database
-- **JWT token generation**: Issue secure JWT tokens (HS256, 5-minute expiry) for authenticated sessions
-- **ElysiaJS integration**: Native Elysia framework support with typed routes
-- **Comprehensive logging**: Detailed logging for debugging and monitoring
-- **OIDC discovery**: Automatic discovery of provider configurations via OpenID Connect Discovery
-- **Configuration caching**: Cache OIDC configurations for improved performance
+- Bun 1.3.10 or later
+- TypeScript 5 or later
+- React Router 8 (optional; only needed for the
+  `@dockstat/auth/react-router` entry point)
 
-## Prerequisites
+### Environment variables
 
-Before using `@dockstat/auth`, ensure you have the following installed:
+| Variable | Required | Description |
+| --- | --- | --- |
+| `DOCKSTAT_AUTH_JWT_SECRET` | In production | JWT signing secret. Use at least 32 random characters. Falls back to an insecure development secret when `NODE_ENV` isn't `production`. |
+| `DOCKSTAT_AUTH_CRYPTO_SECRET` | Recommended | Encrypts provider client secrets at rest. |
+| `BASE_URL` | No | Base URL of the auth endpoints. Defaults to `http://localhost:3000/api/v2/auth`. Used as the OIDC redirect base. |
+| `FRONTEND_URL` | No | Frontend origin for redirects. Defaults to `http://localhost:3000`. |
 
-- **Bun** v1.3.10 or later
-- **TypeScript** v5 or later
-- **Elysia** framework
-- A running SQLite database instance (via `@dockstat/sqlite-wrapper`)
-- A logger instance (via `@
-dockstat/logger`)
+> [!IMPORTANT]
+> The server refuses to start in production without
+> `DOCKSTAT_AUTH_JWT_SECRET`. Generate one with
+> `bun -e "console.log(crypto.randomUUID().repeat(2))"`.
 
-### Environment Variables
+## Installation
 
-Configure the following environment variables:
+The package ships three entry points:
 
-```bash
-# Base URL where the auth service is running
-BASE_URL=http://localhost:3030/api/v2/auth
-
-# Frontend URL for callback redirects
-FRONTEND_URL=http://localhost:5173
-
-# Secret key for JWT signing (CHANGE IN PRODUCTION)
-JWT_SECRET=your-secret-key-change-in-production
+```txt
+@dockstat/auth               core service, JWT, API keys, OIDC, guards
+@dockstat/auth/react-router  context, root middleware, route guards
+@dockstat/auth/types         shared types only
 ```
 
-##
- API Reference
-
-### Main Export
-
-#### `AuthHandler`
-
-The main class exported by the library.
-
-```typescript
-class AuthHandler {
-  constructor(db: DB, logger: Logger)
-  table: QueryBuilder<ProvidersTable>
-  logger: Logger
-  issuerCache: Map<string, client.Configuration>
-  
-  getConfig(providerId: string): Promise<OAuthConfig>
-  routes: Elysia
-}
-```
-
-### Database Schema
-
-The library automatically creates an `oidc-providers` table with the following schema:
-
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
-| id | string | UUID (auto-generated) | Provider unique identifier |
-| issuer_url | string | NOT NULL | OIDC provider issuer URL |
-| client_id | string | NOT NULL | OAuth client ID |
-| client_secret | string |
- NOT NULL | OAuth client secret |
-| scopes | string | DEFAULT "openid profile email" | OAuth scopes |
-| logout_url | string | NOT NULL | Provider logout endpoint URL |
-| created_at | Date | Auto-generated | Timestamp of creation |
-
-### Endpoints
-
-All endpoints are prefixed with `/auth`.
-
-#### Provider Management
-
-##### `GET /auth/providers`
-
-List all configured OAuth/OIDC providers.
-
-**Response:**
-
-```json
-[
-  {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "issuer_url": "https://accounts.google.com",
-    "client_id": "your-client-id.apps.googleusercontent.com",
-    "scopes": "openid profile email",
-    "created_at": "2024-01-01T00:00:00.000Z"
-  }
-]
-```
-
-##### `POST /auth/providers`
-
-Register a new OAuth/OIDC provider.
-
-**Request Body:**
-```json
-{
-  "client_id": "your-client-id.apps.googleusercontent.com",
-  "client_secret": "your-client-secret",
-  "issuer_url": "https://accounts.google.com",
-  "scopes": "openid profile email",
-  "logout_url": "https://accounts.google.com/logout"
-}
-```
-
-**Response:**
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "client_id": "your-client-id.apps.googleusercontent.com",
-  "issuer_url": "https://accounts.google.com",
-  "scopes": "openid profile email",
-  "created_at": "2024-01-01T00:00:00.000Z"
-}
-```
-
-### Authentication Flow
-
-##### `GET /auth/:providerId/login`
-
-Initiate the OAuth 2.0 authorization code flow with PKCE.
-
-**Parameters:**
-- `providerId` (path): The UUID of the configured provider
-
-**Behavior:**
-- Generates state, nonce, and PKCE code verifier
-- Sets secure HTTP-only cookies (valid for 10 minutes)
-  - `state`: CSRF protection token
-  - `nonce`: Replay protection token
-  - `pkce`: PKCE code verifier
-- Redirects user to the provider's authorization endpoint
-
-##### `GET /auth/:providerId/callback`
-
-Handle the OAuth callback from the provider.
-
-**Parameters:**
-- `providerId` (path): The UUID of the configured provider
-- `code` (query): Authorization code from the provider
-- `state` (query): State parameter for CSRF protection
-
-**Behavior:**
-- Validates state parameter against cookie value
-- Exchanges authorization code for access tokens using PKCE
-- Fetches user information from the provider's userinfo endpoint
-- Generates JWT token (HS256, 5-minute expiry) containing user data
-- Redirects to frontend callback URL with token in query string
-- Clears OAuth security cookies
-
-**Frontend Callback URL:**
-```
-{FRONTEND_URL}/auth/{providerId}/callback?token={jwt_token}
-```
-
-**Error Responses:**
-- `400`: Invalid state or missing security cookies
-- `500`: Token exchange failure
-
-##### `GET /auth/:providerId/logout`
-
-Initiate logout and redirect to the provider's logout endpoint.
-
-**Parameters:**
-- `providerId` (path): The UUID of the configured provider
-- `redirectUri` (query): URL to redirect to after logout
-
-**Behavior:**
-- Uses configured `logout_url` if provided
-- Falls back to OIDC end session endpoint
-- Includes post-logout redirect URI
-
-**Example:**
-```
-GET /auth/550e8400-e29b-41d4-a716-446655440000/logout?redirectUri=http://localhost:5173/
-```
-
-## Usage
-
-### Quick Example
-
-#### Backend Setup with Authentication Middleware
-
-The `@dockstat/auth` package now includes comprehensive authentication middleware for ElysiaJS. This middleware automatically validates JWT tokens and attaches user information to request contexts.
-
-**Initialize the AuthHandler and middleware:**
-
-```typescript
-import { AuthHandler as AuthHandlerFactory, createAuthMiddleware } from "@dockstat/auth"
-import { DockStatDB } from "./database"
-import BaseLogger from "./logger"
-import Elysia from "elysia"
-
-// Initialize the AuthHandler with database and logger
-export const AuthHandler = new AuthHandlerFactory(
-  DockStatDB._sqliteWrapper, 
-  BaseLogger
-)
-
-// Create authentication middleware
-const authMiddleware = createAuthMiddleware()
-
-// Create the Elysia app with authentication
-const app = new Elysia()
-  .use(authMiddleware)
-  .use(AuthHandler.routes)
-  .listen(3000)
-
-console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`)
-```
-
-**Protecting Routes:**
-
-There are multiple ways to protect your routes:
-
-**Option 1: Using the `authenticated()` decorator**
-
-```typescript
-const app = new Elysia()
-  .use(createAuthMiddleware())
-  .get("/protected", () => {
-    return "This route is protected"
-  }, {
-    ...authenticated()
-  })
-```
-
-**Option 2: Using a guard**
-
-```typescript
-const app = new Elysia()
-  .use(createAuthMiddleware())
-  .guard(authenticated(), (app) => {
-    .get("/protected", ({ user }) => {
-      return `Hello, ${user.name}!`
-    })
-  })
-```
-
-**Option 3: Checking authentication manually in handlers**
-
-```typescript
-const app = new Elysia()
-  .use(createAuthMiddleware())
-  .get("/protected", ({ isAuthenticated, user }) => {
-    if (!isAuthenticated) {
-      throw new Error("Not authenticated")
-    }
-    return `Hello, ${user?.name}!`
-  })
-```
-
-**Accessing User Information:**
-
-The middleware automatically attaches user information to the request context:
-
-```typescript
-const app = new Elysia()
-  .use(createAuthMiddleware())
-  .get("/profile", ({ user }) => {
-    return {
-      id: user?.sub,
-      email: user?.email,
-      name: user?.name,
-    }
-  }, authenticated())
-```
-
-**WebSocket Authentication:**
-
-For WebSocket connections, use the `createWsAuthMiddleware`:
-
-```typescript
-const app = new Elysia()
-  .ws("/ws", {
-    ...createWsAuthMiddleware(),
-    open: (ws) => {
-      const user = ws.data.user
-      console.log(`User connected: ${user?.email}`)
-    },
-    message: (ws, message) => {
-      const user = ws.data.user
-      ws.send(`Hello, ${user?.name}!`)
-    }
-  })
-```
-
-**Token Sources:**
-
-The middleware looks for JWT tokens in the following order:
-1. `Authorization: Bearer <token>` header
-2. `auth_token` cookie
-3. `?token=<token>` query parameter (for WebSockets)
-
-#### Adding a Provider
-
-Add a new OAuth provider to the database:
-
-```typescript
-import { AuthHandler as AuthHandlerFactory } from "@dockstat/auth"
-import { DockStatDB } from "./database"
-import BaseLogger from "./logger"
-import Elysia from "elysia"
-
-// Initialize the AuthHandler with database and logger
-export const AuthHandler = new AuthHandlerFactory(
-  DockStatDB._sqliteWrapper, 
-  BaseLogger
-)
-
-// Register the auth routes with your Elysia app
-const app = new Elysia()
-  .use(AuthHandler.routes)
-  .listen(3000)
-
-console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`)
-```
-
-#### Adding a Provider
-
-Add a new OAuth provider to the database:
-
-```typescript
-// Add a new OAuth provider
-await AuthHandler.table.insert({
-  client_id: "your-client-id.apps.googleusercontent.com",
-  client_secret: "your-client-secret",
-  issuer_url: "https://accounts.google.com",
-  scopes: "openid profile email",
-  logout_url: "https://accounts.google.com/logout"
+## Quick start with React Router v8
+
+The following steps wire authentication into an SSR React Router app.
+
+### 1. Create the service
+
+Create one `AuthService` per process and share it as a singleton. It
+creates (and migrates) its tables on construction.
+
+```ts
+// app/.server/singletons/auth.ts
+import { AuthService } from "@dockstat/auth"
+import { BaseLogger } from "../logger"
+import { DockStatDB } from "./db"
+
+export const Auth = new AuthService(DockStatDB._sqliteWrapper, BaseLogger, {
+  // Guest registration reads the config table dynamically, so settings
+  // changes apply without a restart
+  getAllowGuestRegistration: () =>
+    DockStatDB.configTable.select(["additionalSettings"]).first()
+      ?.additionalSettings?.enableRegistration || false,
 })
 ```
 
-#### Frontend Integration (React) - New Context-Based Approach
+### 2. Add the root middleware
 
-The `@dockstat/auth` package now provides an improved React integration using the Context API for better state management, automatic token refresh, and cross-tab synchronization.
+`createAuthMiddleware` authenticates every request once — Bearer header,
+API key, `?token=` query, or session cookie — and publishes the result in
+router context. Downstream loaders and actions read it without
+re-verifying anything.
 
-**Setup the AuthProvider:**
+```tsx
+// app/root.tsx
+import { authContext, createAuthMiddleware } from "@dockstat/auth/react-router"
+import { Auth } from "./.server/singletons/auth"
 
-Wrap your application with the `AuthProvider`:
+export const middleware = [createAuthMiddleware(Auth)]
 
-```typescript
-import { AuthProvider } from "@dockstat/auth/client"
-import App from "./App"
-
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3030/api/v2"
-
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <AuthProvider apiBase={API_BASE}>
-      <App />
-    </AuthProvider>
-  </React.StrictMode>
-)
+export const loader = ({ context }: Route.LoaderArgs) => ({
+  authenticated: context.get(authContext),
+})
 ```
 
-**Use the authentication hooks in your components:**
+### 3. Protect routes
 
-```typescript
-import { useAuth, useUser, useIsAuthenticated } from "@dockstat/auth/client"
+Use `createRequireAuthMiddleware` on a layout (or any route) to enforce
+authentication, roles, and scopes. Document requests redirect to your
+login page; API requests receive a JSON 401 or 403 instead.
 
-function Dashboard() {
-  const { login, logout, loading, error } = useAuth()
-  const user = useUser()
-  const isAuthenticated = useIsAuthenticated()
+```tsx
+// app/routes/layout.tsx — everything below requires a session
+export const middleware = [
+  createRequireAuthMiddleware({ loginPath: "/login" }),
+]
+```
 
-  if (loading) return <div>Loading...</div>
+```tsx
+// app/routes/admin.tsx — admin-only, JSON denials for API clients
+export const middleware = [
+  createRequireAuthMiddleware({ mode: "json", roles: ["admin"] }),
+]
+```
 
-  if (!isAuthenticated) {
-    return <button onClick={() => login("google-provider-id")}>Login with Google</button>
-  }
+### 4. Read the user in loaders and actions
 
-  return (
-    <div>
-      <h1>Welcome, {user?.name}!</h1>
-      <p>Email: {user?.email}</p>
-      <button onClick={logout}>Logout</button>
-      {error && <p className="error">{error}</p>}
-    </div>
+```ts
+import { getAuthUser } from "@dockstat/auth/react-router"
+
+export async function loader({ context }: Route.LoaderArgs) {
+  const user = getAuthUser(context) // AuthUser | null
+  if (!user) throw new Response("Authentication required", { status: 401 })
+  return { name: user.name }
+}
+```
+
+## Roles and scopes
+
+Roles are hierarchical: a user holding a higher role satisfies every check
+for a lower one. Custom roles are allowed and rank below `viewer`.
+
+| Role | Rank | Typical use |
+| --- | --- | --- |
+| `admin` | 100 | Full access; passes every scope check |
+| `editor` | 50 | Create and edit resources |
+| `viewer` | 10 | Read-only access |
+
+The first registered user becomes `admin` (configurable via
+`firstUserRole`); everyone after starts with `viewer` (or
+`defaultRoles`).
+
+Scopes are space-separated strings with trailing wildcards:
+
+```txt
+docker:read  docker:write  — exact matches
+docker:*                    — everything under docker
+*                           — everything
+```
+
+### Guard helpers
+
+The core export throws `AuthError` (with an HTTP `status` of 401 or 403)
+when a check fails, so they work in any server context:
+
+```ts
+import { hasAnyRole, hasScopes, requireAuth, requireRole, requireScopes } from "@dockstat/auth"
+
+requireAuth(user)                       // 401 when anonymous
+requireRole(user, "editor")             // 403 below the editor tier
+requireScopes(user, "docker:read")      // 403 without the scope (admins pass)
+
+hasScopes(user.scopes, ["docker:read"]) // boolean, no throw
+hasAnyRole(user, "admin", "editor")     // boolean, no throw
+```
+
+## Token sources
+
+One function decides where credentials come from, in this order:
+
+1. `Authorization: Bearer <jwt>`
+2. `Authorization: Api-Key <key>`
+3. `X-API-Key: <key>`
+4. `?token=<jwt>` (WebSocket upgrades can't set headers)
+5. `auth_token` session cookie (HttpOnly, `SameSite=Lax`, `Secure` on
+   HTTPS)
+
+Use `extractCredentials(request)` yourself if you need the same behavior,
+or `AuthService.authenticate(request)` for a fully verified `AuthUser`.
+
+> [!NOTE]
+> The cookie name is configurable via the `cookieName` service option; the
+> default is `auth_token`.
+
+## Local users and sessions
+
+Local users authenticate with argon2id password hashes. A successful login
+issues a tracked session and its cookie:
+
+```ts
+const result = await Auth.loginLocal("nik", "correct-horse", isSecure)
+
+if (result.ok) {
+  // Attach result.cookie as a Set-Cookie header — the JWT never needs
+  // to reach client JavaScript
+  return data({ user: result.user }, { headers: { "Set-Cookie": result.cookie } })
+}
+```
+
+Registration guards itself: guests can only register while guest
+registration is enabled, authenticated users can always create accounts,
+and the first user ever becomes admin.
+
+```ts
+const registered = await Auth.registerLocal(name, pass, currentUser)
+```
+
+Other session helpers:
+
+- `Auth.revokeSession(token)` — logout (idempotent)
+- `Auth.revokeAllSessions(userId)` — admin kill switch
+- `Auth.setRoles(userId, ["editor"])` — update stored roles
+- `Auth.localUsersExist()` — first-run detection
+
+## OIDC
+
+The OIDC module implements the authorization-code flow with PKCE, state,
+and nonce. The security values travel in short-lived HttpOnly cookies
+between the redirect legs — never in URLs.
+
+Wire the three endpoints yourself (loaders work well for this); the
+service handles the flow:
+
+```ts
+// GET /api/v2/auth/:providerId/login
+export async function loader({ params, request }: Route.LoaderArgs) {
+  const { url, cookies } = await Auth.oidc.beginLogin(
+    params.providerId,
+    `${BASE_URL}/${params.providerId}/callback`,
+    isSecureRequest(request),
   )
+  const headers = new Headers()
+  for (const cookie of cookies) headers.append("Set-Cookie", cookie)
+  return redirect(url.toString(), { headers })
 }
-```
 
-**Using ProtectedRoute:**
-
-```typescript
-import { ProtectedRoute } from "@dockstat/auth/client"
-import Dashboard from "./Dashboard"
-import Login from "./Login"
-
-function App() {
-  return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute loadingComponent={<Spinner />}>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
+// GET /api/v2/auth/:providerId/callback
+export async function loader({ params, request }: Route.LoaderArgs) {
+  const { cookie, clearCookies } = await Auth.completeOidcLogin(
+    params.providerId,
+    new URL(request.url),
+    {
+      state: readCookie(request, "state"),
+      nonce: readCookie(request, "nonce"),
+      pkce: readCookie(request, "pkce"),
+    },
+    isSecureRequest(request),
   )
+  const headers = new Headers()
+  for (const c of clearCookies) headers.append("Set-Cookie", c)
+  headers.append("Set-Cookie", cookie)
+  return redirect("/", { headers })
 }
 ```
 
-**Available Hooks:**
+On first login the service upserts a user record — roles persist across
+logins — and issues the session. `Auth.oidc.endSessionUrl(providerId, uri)`
+builds the provider logout redirect, preferring a configured `logout_url`.
 
-- `useAuth()`: Full authentication context (user, token, loading, error, login, logout, refreshToken, clearError)
-- `useUser()`: Get current user object
-- `useIsAuthenticated()`: Check if user is authenticated
-- `useIsLoading()`: Check if authentication is loading
-- `useAuthError()`: Get authentication error message
+Manage providers through `Auth.oidc.listProviders()`,
+`createProvider({...})`, and `deleteProvider(id)`. Client secrets are
+encrypted at rest with `DOCKSTAT_AUTH_CRYPTO_SECRET`.
 
-**AuthProvider Props:**
+## API keys
 
-```typescript
-interface AuthProviderProps {
-  children: ReactNode
-  apiBase: string                    // Base URL for the API
-  tokenStorageKey?: string           // Key for storing token in localStorage (default: "auth_token")
-  userStorageKey?: string            // Key for storing user in localStorage (default: "user")
-  onTokenExpired?: () => void        // Callback when token expires
-}
+Keys embed their row id (`dockstat_<uuid>_<secret>`), so validation does a
+single indexed lookup plus one argon2 verify. The full key is returned
+exactly once at creation; only the hash is stored.
+
+```ts
+const created = await Auth.createApiKey({
+  name: "CI pipeline",
+  userId: user.sub,
+  scopes: "docker:read metrics:*", // default "*"
+  expiresAt: null,                 // optional Date
+})
+
+// Return created.apiKey once — it can't be recovered later
 ```
 
-**Automatic Features:**
+Presented keys are checked for revocation and expiry, and `lastUsedAt` is
+stamped on success. Revoke with `Auth.revokeApiKey(id)`. Requests
+authenticated with a key carry `authMethod: "apikey"` and the key's
+scopes; role checks fail for them because keys hold scopes, not roles.
 
-- **Token Refresh**: Automatically refreshes tokens every 4 minutes (assuming 5-minute token lifetime)
-- **Cross-tab Sync**: Keeps authentication state synchronized across browser tabs
-- **URL Callback Handling**: Automatically processes OAuth callbacks from the URL
-- **Redirect Handling**: Remembers and redirects to the page the user was trying to access
+## WebSocket authentication
 
-#### Frontend Integration (React) - Legacy Approach (Deprecated)
+Browsers can't always send cookies on WebSocket upgrades — for example
+when the socket runs on a different port or origin. For those clients,
+exchange an authenticated request for a short-lived WS token (60 seconds
+by default, separate audience so it can't be replayed as a session
+bearer):
 
-```typescript
-> ⚠️ **DEPRECATED**: The following approach is deprecated. Please migrate to the new Context-based approach described above.
-
-The old hook-based approach has been replaced with a Context-based approach that provides better state management, automatic token refresh, and cross-tab synchronization.
-
-**Legacy Example (Deprecated):**
-
-```typescript
-import { useEffect, useState } from "react"
-
-interface User {
-  sub: string
-  email?: string
-  name?: string
-  picture?: string
-  [key: string]: unknown
-}
-
-export function useAuth() {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3030/api/v2"
-
-  // Check for existing authentication
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user")
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser))
-      } catch {
-        localStorage.removeItem("user")
-      }
-    }
-    setLoading(false)
-  }, [])
-
-  // Initiate login with a specific provider
-  const login = (providerId: string) => {
-    localStorage.setItem("auth_redirect", window.location.pathname)
-    localStorage.setItem("auth_provider_id", providerId)
-    window.location.href = `${API_BASE}/auth/${providerId}/login`
-  }
-
-  // Logout
-  const logout = () => {
-    const providerId = localStorage.getItem("auth_provider_id")
-    localStorage.removeItem("user")
-    localStorage.removeItem("auth_provider_id")
-    const currentUrl = window.location.href
-    window.location.href = `${API_BASE}/auth/${providerId}/logout?redirectUri=${currentUrl}`
-  }
-
-  return { loading, login, logout, user }
-}
+```ts
+// GET /api/v2/auth/ws-token
+const token = await Auth.issueWsToken(request) // null when unauthenticated
 ```
 
-**Migration Guide:**
+The client fetches that endpoint, then connects with
+`ws://…?token=<jwt>`. On the server, `Auth.verifyWsToken(token)` accepts
+both WS tokens and regular session tokens (subject to revocation) and
+returns the `AuthUser`.
 
-To migrate from the old hook-based approach to the new Context-based approach:
+## Storage
 
-1. **Wrap your app with AuthProvider:**
-   ```typescript
-   // Before
-   <App />
-   
-   // After
-   <AuthProvider apiBase={API_BASE}>
-     <App />
-   </AuthProvider>
-   ```
+The service owns four tables and migrates them automatically when the
+schema changes.
 
-2. **Update imports:**
-   ```typescript
-   // Before
-   import { useAuth } from "@dockstat/auth/client/useAuth"
-   const { login, logout, user } = useAuth({ API_BASE: "/api" })
-   
-   // After
-   import { useAuth } from "@dockstat/auth/client/AuthProvider"
-   const { login, logout, user } = useAuth()
-   ```
+<details>
+<summary>Table schemas</summary>
 
-3. **Update ProtectedRoute:**
-   ```typescript
-   // Before
-   <ProtectedRoute api_base={API_BASE}>
-     <Dashboard />
-   </ProtectedRoute>
-   
-   // After
-   <ProtectedRoute>
-     <Dashboard />
-   </ProtectedRoute>
-   ```
+- `oidc-providers` — `id`, `name`, `icon`, `issuer_url`, `client_id`,
+  `client_secret` (encrypted), `scopes`, `logout_url`, `created_at`
+- `users` — `id`, `name`, `passHash`, `provider` (`"local"` or a provider
+  id), `externalId` (OIDC `sub`), `roles` (space-separated), `createdAt`,
+  `updatedAt`
+- `api-keys` — `id`, `userId`, `name`, `keyHash`, `scopes`, `expiresAt`,
+  `lastUsedAt`, `createdAt`, `revokedAt`
+- `auth-sessions` — `id`, `jti`, `userId`, `createdAt`, `expiresAt`
 
-4. **Use additional hooks for better control:**
-   ```typescript
-   import { useUser, useIsAuthenticated, useAuthError } from "@dockstat/auth/client"
-   
-   const user = useUser()
-   const isAuthenticated = useIsAuthenticated()
-   const error = useAuthError()
-   ```
+</details>
 
-#### Handling OAuth Callback (React)
+Existing databases keep their data: the `users` table gains the
+`provider`, `externalId`, and `roles` columns, and API keys issued before
+version 2 (without an embedded row id) stop validating — rotate them.
 
-The new AuthProvider automatically handles OAuth callbacks from the URL. However, you can still create a dedicated callback page if needed:
+## API surface
 
-```typescript
-```typescript
-import { useEffect } from "react"
-import { useSearchParams, useNavigate } from "react-router"
-
-export function AuthCallback() {
-  const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    // The AuthProvider automatically handles the token from the URL
-    // This page is optional - you can set the callback URL to any page in your app
-    const token = searchParams.get("token")
-
-    if (!token) {
-      navigate("/login", { replace: true })
-      return
-    }
-
-    // The AuthProvider will process the token and handle the redirect
-    // You can optionally show a loading state here
-    setTimeout(() => {
-      // Check if auth is complete by checking for user in localStorage
-      const user = localStorage.getItem("user")
-      if (user) {
-        navigate("/", { replace: true })
-      } else {
-        navigate("/login", { replace: true })
-      }
-    }, 1000)
-  }, [searchParams, navigate])
-
-  return <div>Completing authentication...</div>
-}
-```
-
-## New Exports
-
-### Backend Exports
-
-```typescript
+```ts
 import {
-  // Main handler
-  AuthHandler,
-  
-  // Middleware
-  createAuthMiddleware,
-  authenticated,
-  createWsAuthMiddleware,
-  getWsUser,
-  
-  // Types
-  type AuthUser,
-  type AuthContext,
+  AuthService,        // the service described above
+  OidcService,        // standalone OIDC flows
+  // JWT
+  signSessionToken, verifySessionToken, signWsToken, verifyWsToken,
+  // guards and scope logic
+  requireAuth, requireRole, requireScopes,
+  hasRole, hasAnyRole, hasScopes, scopeMatches, parseScopes,
+  // credentials and cookies
+  extractCredentials, readCookie, sessionCookie, isSecureRequest,
+  // API keys, sessions, passwords
+  createApiKey, verifyApiKey, revokeApiKey,
+  createSession, revokeSession, hashPassword, verifyPassword,
 } from "@dockstat/auth"
-```
 
-### Client Exports
-
-```typescript
 import {
-  // Context Provider
-  AuthProvider,
-  
-  // Hooks (recommended)
-  useAuth,
-  useUser,
-  useIsAuthenticated,
-  useIsLoading,
-  useAuthError,
-  
-  // Components
-  ProtectedRoute,
-  
-  // Legacy hooks (deprecated)
-  useAuth as useAuthLegacy,
-} from "@dockstat/auth/client"
+  authContext, getAuthUser, requireUser,
+  createAuthMiddleware, createRequireAuthMiddleware,
+} from "@dockstat/auth/react-router"
 ```
 
 ## Contributing
 
-We welcome contributions to the project! Please follow these guidelines:
+Install dependencies with `bun install`, keep the Biome checks clean, and
+include logging for new server-side features. Submit changes through a
+pull request with a clear description.
 
-### Getting Started
+## License
 
-1. Fork the repository
-2. Clone your fork locally
-3. Install dependencies: `bun install`
-4. Create a new branch for your feature: `git checkout -b feature/amazing-feature`
-
-### Development
-
-```bash
-# Install dependencies
-bun install
-
-# Run tests (when available)
-bun test
-```
-
-### Code Style
-
-- Use TypeScript for all new code
-- Follow existing code conventions and patterns
-- Add type annotations for all functions and variables
-- Write descriptive commit messages
-- Include comments for complex logic
-- Ensure comprehensive logging is added for new features
-
-### Submitting Changes
-
-1. Ensure all tests pass
-2. Update documentation if needed
-3. Commit your changes with a clear message
-4. Push to your fork
-5. Submit a pull request with a description of your changes
-
-### Reporting Issues
-
-When reporting issues, please include:
-- A clear description of the problem
-- Steps to reproduce the issue
-- Expected behavior vs. actual behavior
-- Environment details (OS, Bun version, etc.)
-- Any relevant error messages or logs
-
-### License
-
-By contributing to this project, you agree that your contributions will be licensed under the same license as the project.
-
----
-
-For more information, visit the [Monorepo Root](https://github.com/its4nik/dockstat) or contact the maintainers.
+MPL-2.0 — see the repository root for details.

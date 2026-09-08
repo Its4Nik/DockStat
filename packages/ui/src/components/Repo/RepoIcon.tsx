@@ -4,9 +4,6 @@ import { Folder, Globe } from "lucide-react"
 
 export function RepoIcons({ type, size = 20 }: { type: RepoType["type"]; size: number }) {
   switch (type) {
-    case "default": {
-      return null
-    }
     case "gitea": {
       return <SiGitea size={size} />
     }
@@ -23,4 +20,5 @@ export function RepoIcons({ type, size = 20 }: { type: RepoType["type"]; size: n
       return <Folder size={size} />
     }
   }
+  return null
 }

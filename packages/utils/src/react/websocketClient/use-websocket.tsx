@@ -4,9 +4,10 @@
  * Wraps the app in a context that maintains a single WebSocket connection
  * per endpoint and shares topic subscriptions across all components.
  *
- * Reads the auth token from localStorage (same key as `@dockstat/auth`)
- * and passes it as a query parameter or Authorization header when
- * `requireAuth` is enabled.
+ * When `requireAuth` is enabled, a short-lived WS token is fetched from the
+ * auth `ws-token` endpoint (session cookie based) and passed as a `?token=`
+ * query parameter — no token lives in localStorage. Provide `getToken` to
+ * customize the source.
  *
  * @example
  * ```tsx
@@ -51,7 +52,7 @@ export interface WebSocketProviderConfig {
 
   /**
    * Require authentication for the WebSocket connection.
-   * When true, reads the token from localStorage and passes
+   * When true, fetches a short-lived token via `getToken` and appends
    * it as a `?token=` query parameter.
    *
    * @default false
@@ -59,12 +60,11 @@ export interface WebSocketProviderConfig {
   requireAuth?: boolean
 
   /**
-   * localStorage key where the auth token is stored.
-   * Should match the key used by `@dockstat/auth`'s AuthProvider.
-   *
-   * @default "auth_token"
+   * Async source for the WS token (fresh per connection attempt — tokens
+   * are short-lived). Defaults to the auth `ws-token` endpoint, which
+   * exchanges the HttpOnly session cookie for a WS token.
    */
-  tokenStorageKey?: string
+  getToken?: () => Promise<string | null>
 
   /**
    * Auto-reconnect on disconnect.
@@ -107,6 +107,20 @@ const WebSocketContext = createContext<WebSocketContextValue | null>(null)
 
 // ── Provider ────────────────────────────────────────────────────────
 
+/** Default token source: exchange the session cookie for a short-lived WS token. */
+async function fetchWsToken(): Promise<string | null> {
+  try {
+    const response = await fetch("/api/v2/auth/ws-token", {
+      headers: { accept: "application/json" },
+    })
+    if (!response.ok) return null
+    const body = (await response.json()) as { token?: string }
+    return body.token ?? null
+  } catch {
+    return null
+  }
+}
+
 export function WebSocketProvider({
   children,
   ...config
@@ -114,7 +128,7 @@ export function WebSocketProvider({
   const {
     url,
     requireAuth = false,
-    tokenStorageKey = "auth_token",
+    getToken = fetchWsToken,
     autoReconnect = true,
     reconnectInterval = 3000,
   } = config
@@ -137,7 +151,7 @@ export function WebSocketProvider({
 
   // ── Resolve full URL ──────────────────────────────────────────
 
-  const resolveUrl = useCallback(() => {
+  const resolveUrl = useCallback(async (): Promise<string | null> => {
     let fullUrl: string
 
     if (url.startsWith("ws://") || url.startsWith("wss://")) {
@@ -153,17 +167,20 @@ export function WebSocketProvider({
       fullUrl = `${protocol}//${host}${url}`
     }
 
-    // Append auth token if required
+    // Append a freshly-minted auth token if required (they're short-lived,
+    // so every connection attempt fetches a new one)
     if (requireAuth) {
-      const token = localStorage.getItem(tokenStorageKey)
-      if (token) {
-        const separator = fullUrl.includes("?") ? "&" : "?"
-        fullUrl = `${fullUrl}${separator}token=${encodeURIComponent(token)}`
+      const token = await getToken()
+      if (!token) {
+        setError(new Error("Authentication required for WebSocket"))
+        return null
       }
+      const separator = fullUrl.includes("?") ? "&" : "?"
+      fullUrl = `${fullUrl}${separator}token=${encodeURIComponent(token)}`
     }
 
     return fullUrl
-  }, [url, requireAuth, tokenStorageKey])
+  }, [url, requireAuth, getToken])
 
   // ── Send a subscribe/unsubscribe message ─────────────────────
 
@@ -211,13 +228,15 @@ export function WebSocketProvider({
 
   // ── Connect ─────────────────────────────────────────────────
 
-  const connect = useCallback(() => {
+  const connect = useCallback(async () => {
     if (wsRef.current) {
       wsRef.current.close()
       wsRef.current = null
     }
 
-    const fullUrl = resolveUrl()
+    const fullUrl = await resolveUrl()
+    if (!fullUrl) return
+
     const ws = new WebSocket(fullUrl)
     wsRef.current = ws
     setError(null)
@@ -268,7 +287,7 @@ export function WebSocketProvider({
       wsRef.current = null
 
       if (autoReconnect) {
-        reconnectTimerRef.current = setTimeout(connect, reconnectInterval)
+        reconnectTimerRef.current = setTimeout(() => void connect(), reconnectInterval)
       }
     }
 
@@ -276,7 +295,7 @@ export function WebSocketProvider({
       if (!mountedRef.current) return
       setError(new Error("WebSocket connection error"))
     }
-  }, [resolveUrl, autoReconnect, reconnectInterval])
+  }, [resolveUrl, autoReconnect, reconnectInterval, latestTrigger])
 
   // ── Manual reconnect ─────────────────────────────────────────
 
@@ -284,14 +303,14 @@ export function WebSocketProvider({
     if (reconnectTimerRef.current) {
       clearTimeout(reconnectTimerRef.current)
     }
-    connect()
+    void connect()
   }, [connect])
 
   // ── Lifecycle ────────────────────────────────────────────────
 
   useEffect(() => {
     mountedRef.current = true
-    connect()
+    void connect()
 
     return () => {
       mountedRef.current = false
@@ -309,6 +328,7 @@ export function WebSocketProvider({
 
   // Re-create the context value when latestVersion changes so
   // consumers that read `latest` get a fresh Map reference.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: latestVersion isn't read directly, but bumps the context value so `latest` Map changes propagate
   const contextValue = useMemo<WebSocketContextValue>(
     () => ({
       connected,
@@ -317,7 +337,6 @@ export function WebSocketProvider({
       reconnect,
       subscribe,
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [connected, error, reconnect, subscribe, latestVersion]
   )
 
@@ -382,6 +401,7 @@ export function useTopicSubscription<TData = unknown>(
 
   const transform = options?.transform
   const onMessage = options?.onMessage
+  const debugLog = options?.debugLog === true
 
   const unsubRef = useRef<(() => void) | null>(null)
 
@@ -399,11 +419,11 @@ export function useTopicSubscription<TData = unknown>(
     })
 
     // Initialize with latest data if available
-    options?.debugLog && console.debug("Getting latest data for '", topic, "' from Context")
+    if (debugLog) console.debug("Getting latest data for '", topic, "' from Context")
     const existing = latest.get(topic)
     if (existing) {
       setEnvelope(existing)
-      options?.debugLog && console.debug("Hit!")
+      if (debugLog) console.debug("Hit!")
       if (transform) {
         setData(transform(existing))
       } else {
@@ -415,7 +435,7 @@ export function useTopicSubscription<TData = unknown>(
       unsubRef.current?.()
       unsubRef.current = null
     }
-  }, [topic, ctxSubscribe, latest, transform, onMessage])
+  }, [topic, ctxSubscribe, latest, transform, onMessage, debugLog])
 
   return {
     connected,

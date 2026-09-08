@@ -1,120 +1,81 @@
-import type Logger from "@dockstat/logger"
-import { column, type DB, type QueryBuilder } from "@dockstat/sqlite-wrapper"
-import { ConfigService } from "./config"
-import { getMiddlewareFunctions } from "./middleware"
-import { createAuthRoutes } from "./routes"
-import type { ApiKeysTable, LocalUsersTable, ProvidersTable, SessionsTable } from "./types"
-
-export * as oidc from "openid-client"
-export { default as crypt } from "./utils/encrypt"
-export { BASE_URL, FRONTEND_URL } from "./utils/env"
-// Re-export JWT helpers for consumers that need to verify tokens outside
-// of the normal HTTP middleware (e.g. WebSocket handlers).
-export { createAuthToken, verifyAuthToken } from "./utils/jwt"
-
-export class AuthHandler {
-  providers: QueryBuilder<ProvidersTable>
-  users: QueryBuilder<LocalUsersTable>
-  apiKeys: QueryBuilder<ApiKeysTable>
-  sessions: QueryBuilder<SessionsTable>
-  logger: Logger
-  configService: ConfigService
-  middleware: ReturnType<typeof getMiddlewareFunctions>
-  allowGuestRegistration: boolean
-  getStateMap: () => WeakMap<Request, { startTime: number; reqId: string }>
-
-  constructor(
-    db: DB,
-    logger: Logger,
-    getStateMap: () => WeakMap<Request, { startTime: number; reqId: string }>,
-    allowGuestRegistration?: boolean
-  ) {
-    this.logger = logger.spawn("Auth")
-    this.getStateMap = getStateMap
-    this.logger.info("Initializing Auth Service")
-    this.allowGuestRegistration = allowGuestRegistration ? allowGuestRegistration : true
-
-    this.providers = db.createTable<ProvidersTable>(
-      "oidc-providers",
-      {
-        client_id: column.text({ notNull: true }),
-        client_secret: column.text({ notNull: true }),
-        created_at: column.createdAt(),
-        icon: column.text(),
-        id: column.uuid({ generateDefault: true }),
-        issuer_url: column.text({ notNull: true }),
-        logout_url: column.text({ notNull: true }),
-        name: column.text(),
-        scopes: column.text({ default: "openid profile email" }),
-      },
-      { ifNotExists: true }
-    )
-
-    this.users = db.createTable<LocalUsersTable>("users", {
-      createdAt: column.createdAt(),
-      id: column.uuid({ generateDefault: true }),
-      name: column.text({ notNull: true, unique: true }),
-      passHash: column.text({ notNull: true }),
-      updatedAt: column.updatedAt(),
-    })
-
-    this.apiKeys = db.createTable<ApiKeysTable>("api-keys", {
-      createdAt: column.createdAt(),
-      expiresAt: column.datetime({ notNull: false }),
-      id: column.uuid({ generateDefault: true }),
-      keyHash: column.text({ notNull: true }),
-      lastUsedAt: column.datetime({ notNull: false }),
-      name: column.text({ notNull: true }),
-      revokedAt: column.datetime({ notNull: false }),
-      scopes: column.text({ default: "*" }),
-      userId: column.text({ notNull: true }),
-    })
-
-    this.sessions = db.createTable<SessionsTable>(
-      "auth-sessions",
-      {
-        createdAt: column.createdAt(),
-        expiresAt: column.datetime({ notNull: true }),
-        id: column.uuid({ generateDefault: true }),
-        jti: column.text({ notNull: true }),
-        userId: column.text({ notNull: true }),
-      },
-      { ifNotExists: true }
-    )
-
-    if (this.users.select(["id"]).count() < 1) {
-      this.allowGuestRegistration = true
-    }
-
-    this.configService = new ConfigService(this.providers, this.logger)
-
-    this.middleware = getMiddlewareFunctions(
-      this.logger,
-      this.getStateMap,
-      this.apiKeys,
-      this.sessions
-    )
-  }
-
-  getAllowGuestRegistration() {
-    return this.allowGuestRegistration
-  }
-
-  setAllowGuestRegistration(enable: boolean) {
-    this.allowGuestRegistration = enable
-  }
-
-  getRoutes() {
-    return createAuthRoutes(
-      this.providers,
-      this.users,
-      this.apiKeys,
-      this.sessions,
-      this.logger,
-      this.configService,
-      () => this.getAllowGuestRegistration(),
-      (enable: boolean) => this.setAllowGuestRegistration(enable),
-      () => this.middleware.authenticated(this.getStateMap)
-    )
-  }
-}
+export {
+  buildApiKey,
+  type CreatedApiKey,
+  createApiKey,
+  generateApiKeySecret,
+  type NewApiKey,
+  parseApiKey,
+  revokeApiKey,
+  type ValidApiKey,
+  verifyApiKey,
+} from "./api-keys"
+export {
+  clearSessionCookie,
+  DEFAULT_SESSION_COOKIE,
+  extractCredentials,
+  isSecureRequest,
+  readCookie,
+  serializeCookie,
+  sessionCookie,
+} from "./cookies"
+export {
+  AUTH_AUDIENCE,
+  AUTH_ISSUER,
+  BASE_URL,
+  CRYPTO_SECRET,
+  FRONTEND_URL,
+  JWT_SECRET,
+  WS_TOKEN_AUDIENCE,
+} from "./env"
+export {
+  refreshSessionToken,
+  type SessionPayload,
+  sessionPayloadToUser,
+  signSessionToken,
+  signWsToken,
+  verifySessionToken,
+  verifyWsToken,
+  type WsTokenPayload,
+} from "./jwt"
+export { type OauthLoginCookies, OidcService, type ProviderInput } from "./oidc"
+export { hashPassword, unusablePasswordHash, verifyPassword } from "./passwords"
+export {
+  AuthError,
+  hasAnyRole,
+  hasRole,
+  hasScopes,
+  parseScopes,
+  requireAuth,
+  requireRole,
+  requireScopes,
+  roleRank,
+  scopeMatches,
+} from "./scopes"
+export {
+  AuthService,
+  type IssuedSessionCookies,
+  type LocalLoginResult,
+  type RegisterResult,
+} from "./service"
+export {
+  createSession,
+  extendSession,
+  type IssuedSession,
+  isSessionValid,
+  pruneExpiredSessions,
+  revokeAllSessions,
+  revokeSession,
+} from "./sessions"
+export {
+  type ApiKeysTable,
+  type AuthMethod,
+  type AuthServiceOptions,
+  type AuthUser,
+  type BuiltinRole,
+  type ProvidersTable,
+  ROLE_RANK,
+  type Role,
+  type SessionClaims,
+  type SessionsTable,
+  type UsersTable,
+} from "./types"

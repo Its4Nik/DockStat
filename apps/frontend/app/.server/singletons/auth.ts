@@ -1,22 +1,19 @@
-import { AuthHandler as AuthHandlerFactory } from "@dockstat/auth"
+import { AuthService } from "@dockstat/auth"
 import { BaseLogger } from "../logger"
 import { DockStatDB } from "./db"
 
-const stateMap = new WeakMap<Request, { startTime: number; reqId: string }>()
-
-const getAllowGuest: () => boolean = () =>
-  DockStatDB.configTable.select(["additionalSettings"]).first()?.additionalSettings
-    .enableRegistration || false
-
-const AuthHandler = new AuthHandlerFactory(
-  DockStatDB._sqliteWrapper,
-  BaseLogger,
-  () => stateMap,
-  getAllowGuest()
-)
-
-export const Auth = {
-  getAllowGuest: getAllowGuest,
-  getStateMap: () => stateMap,
-  Handler: AuthHandler,
-}
+/**
+ * Auth service singleton backed by the app database.
+ *
+ * Guest registration reads the config table dynamically so settings
+ * changes apply without a restart.
+ */
+export const Auth = new AuthService(DockStatDB._sqliteWrapper, BaseLogger, {
+  getAllowGuestRegistration: () =>
+    DockStatDB.configTable.select(["additionalSettings"]).first()?.additionalSettings
+      ?.enableRegistration || false,
+  firstUserRole: "admin",
+  setAllowGuestRegistration: (enable: boolean) => {
+    DockStatDB.configTable.where({id: 0}).update({ additionalSettings: { enableRegistration: enable } })
+  },
+})

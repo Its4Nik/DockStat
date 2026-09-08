@@ -26,16 +26,18 @@ type WrapToast<T> = T extends { toast?: infer TToast }
   : T
 
 export class Client {
-  private bearerToken: string
+  private bearerToken: string | null
   private toaster: ToasterFunction
   private onUnauthorized?: () => void
 
   constructor(toaster: ToasterFunction) {
-    this.bearerToken = localStorage.getItem("auth_token") ?? ""
+    // Sessions live in an HttpOnly cookie; a bearer is only set explicitly
+    // (e.g. API-key clients). No token is read from localStorage.
+    this.bearerToken = null
     this.toaster = toaster
   }
 
-  setToken(token: string) {
+  setToken(token: string | null) {
     this.bearerToken = token
   }
 
@@ -50,15 +52,14 @@ export class Client {
       toast?: any
     },
   >(ctx: T): WrapToast<T> {
-    const authorization = `Bearer ${this.bearerToken}`
+    const headers: Record<string, unknown> = { ...ctx.opts?.headers }
+    if (this.bearerToken) headers.authorization = `Bearer ${this.bearerToken}`
     return {
       ...ctx,
       onUnauthorized: this.onUnauthorized,
       opts: {
-        headers: {
-          ...ctx.opts?.headers,
-          authorization,
-        },
+        ...ctx.opts,
+        headers,
       },
       toast: ctx.toast
         ? {
@@ -138,7 +139,7 @@ export class Client {
     status: number
   }> {
     const headers: Record<string, unknown> = {
-      authorization: `Bearer ${this.bearerToken}`,
+      ...(this.bearerToken ? { authorization: `Bearer ${this.bearerToken}` } : {}),
       ...opts?.fetchOptions?.headers,
     }
 

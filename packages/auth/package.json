@@ -6,28 +6,29 @@
   },
   "dependencies": {
     "@dockstat/logger": "workspace:*",
-    "cryptr": "^6.4.0",
-    "elysia": "catalog:",
-    "jose": "^6.2.2",
-    "openid-client": "^6.8.3",
-    "react": "catalog:"
-  },
-  "description": "Authentication utilities for DockStat, including OAuth2/OIDC support and client-side React components",
-  "devDependencies": {
     "@dockstat/sqlite-wrapper": "workspace:*",
+    "cryptr": "^6.4.0",
+    "jose": "^6.2.2",
+    "openid-client": "^6.8.3"
+  },
+  "description": "Authentication for DockStat: secure JWT sessions, OIDC and scoped API keys, with React Router v8 middleware integration",
+  "devDependencies": {
     "@types/react": "catalog:",
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "react-router": "^8.3.1"
   },
   "exports": {
     ".": "./src/index.ts",
-    "./client": "./src/client/index.tsx",
+    "./react-router": "./src/react-router.ts",
     "./types": "./src/types.ts"
   },
   "keywords": [
     "dockstat",
     "auth",
-    "oauth",
+    "jwt",
     "oidc",
+    "api-keys",
+    "react-router",
     "authentication",
     "bun"
   ],
@@ -35,6 +36,7 @@
   "module": "src/index.ts",
   "name": "@dockstat/auth",
   "peerDependencies": {
+    "react-router": "^8",
     "typescript": "^5"
   },
   "peerDependenciesMeta": {

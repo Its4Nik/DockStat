@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "@dockstat/api": "workspace:*",
     "@dockstat/logger": "workspace:*",
     "@dockstat/sqlite-wrapper": "workspace:*",
     "@dockstat/utils": "workspace:*",
@@ -8,7 +7,6 @@
     "react": "catalog:"
   },
   "devDependencies": {
-    "@elysiajs/eden": "catalog:",
     "@types/bun": "latest",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

@@ -1,4 +1,4 @@
-import { data } from "react-router"
+import { data, type RouterContextProvider } from "react-router"
 
 /** JSON response with optional status */
 export const ok = <_T>(body: _T, status = 200) => data(body, { status })
@@ -55,4 +55,5 @@ export interface RouteArgs<
 > {
   request: Request
   params: P
+  context: Readonly<RouterContextProvider>
 }

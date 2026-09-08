@@ -14,7 +14,8 @@
   },
   "description": "A comprehensive, database-backed theme management system for React applications with server-side support and persistent user preferences.",
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "@types/react": "catalog:"
   },
   "exports": {
     "./client": "./src/client/index.ts",
