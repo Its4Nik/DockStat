@@ -54,38 +54,43 @@ async function main() {
   await import("./app/.server/bootstrap")
 
   if (IS_DEV) {
-    const startWs = () => {
-      Bun.serve({
-        fetch: async (request, server) => {
-          if (request.url.includes("/ws")) {
-            const result = await DSWS.tryUpgrade(request, server)
-            if (result === "upgraded") return
-            if (result instanceof Response) return result
-          }
-        },
-        port: DEV_WS_PORT,
-        websocket: DSWS.websocket,
-      })
-    }
-    BaseLogger.info(`[dev] WebSocket companion listening on ws://localhost:${DEV_WS_PORT}/ws`)
+    const wsServer = Bun.serve({
+      fetch: async (request, server) => {
+        if (request.url.includes("/ws")) {
+          const result = await DSWS.tryUpgrade(request, server)
+          if (result === "upgraded") return
+          if (result instanceof Response) return result
+        }
+
+        return new Response("Not Found", { status: 404 })
+      },
+      port: DEV_WS_PORT,
+      websocket: DSWS.websocket,
+    })
+
+    BaseLogger.info(
+      `[dev] WebSocket companion listening on ws://localhost:${DEV_WS_PORT}/ws`
+    )
 
     const vitePort = Number(Bun.env.VITE_PORT || 5173)
     const frontendUrl = Bun.env.FRONTEND_URL || `http://localhost:${vitePort}`
 
-    // Run the react-router dev CLI directly through Bun (not its node-shebang
-    // bin) with the `development` export condition pre-enabled. Node can't
-    // load our `bun:` server modules, and Bun ignores `--conditions` from
-    // NODE_OPTIONS, which would otherwise trigger the CLI's restart loop.
     const { createRequire } = await import("node:module")
     const { dirname, join } = await import("node:path")
     const require = createRequire(import.meta.url)
+
     const rrCli = join(
       dirname(require.resolve("@react-router/dev/package.json")),
       "dist/cli/index.js"
     )
 
     const child = Bun.spawn({
-      cmd: [process.execPath, "--conditions=development", rrCli, "dev"],
+      cmd: [
+        process.execPath,
+        "--conditions=development",
+        rrCli,
+        "dev",
+      ],
       cwd: import.meta.dir,
       env: {
         ...process.env,
@@ -98,20 +103,67 @@ async function main() {
       stdout: "inherit",
     })
 
-    await sleep(2000)
+    // Keep typegen as a real subprocess so we can shut it down.
+    const typegen = Bun.spawn({
+      cmd: [
+        process.execPath + "x",
+        "react-router",
+        "typegen",
+        "--watch",
+      ],
+      cwd: import.meta.dir,
+      env: process.env,
+      stderr: "inherit",
+      stdin: "inherit",
+      stdout: "inherit",
+    })
 
-    startWs()
+    let shuttingDown = false
 
-    $`/usr/bin/bun x react-router typegen --watch --clearScreen false`.quiet()
+    const shutdown = async (signal: NodeJS.Signals) => {
+      if (shuttingDown) return
+      shuttingDown = true
 
-    const shutdown = () => {
-      child.kill()
+      BaseLogger.info(`Received ${signal}; shutting down dev server...`)
+
+      // Stop accepting new WebSocket connections.
+      wsServer.stop()
+
+      // Ask both long-lived child processes to terminate.
+      child.kill("SIGTERM")
+      typegen.kill("SIGTERM")
+
+      // Give them a moment to exit cleanly.
+      await Promise.race([
+        Promise.allSettled([
+          child.exited,
+          typegen.exited,
+        ]),
+        Bun.sleep(2000),
+      ])
+
+      // Force-kill anything that ignored SIGTERM.
+      child.kill("SIGKILL")
+      typegen.kill("SIGKILL")
+
       process.exit(0)
     }
-    process.on("SIGINT", shutdown)
-    process.on("SIGTERM", shutdown)
-    await child.exited
-    process.exit(0)
+
+    process.once("SIGINT", () => {
+      void shutdown("SIGINT")
+    })
+
+    process.once("SIGTERM", () => {
+      void shutdown("SIGTERM")
+    })
+
+    await Promise.race([
+      child.exited,
+      typegen.exited,
+    ])
+
+    // If either watcher exits unexpectedly, clean up everything else.
+    await shutdown("SIGTERM")
   }
 
   // ── Production ──────────────────────────────────────────────────

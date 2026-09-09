@@ -28,6 +28,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  console.error("[route-error] Unhandled route error", error)
+
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;

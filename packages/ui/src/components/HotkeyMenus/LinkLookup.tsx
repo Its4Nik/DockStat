@@ -59,18 +59,20 @@ export function LinkLookup({
       }
     }
 
-    // Pins
-    pins.forEach((pin, pinIndex) => {
+    let pinIndex = 0
+    for(const p of pins){
       upsert({
         id: `pin-${pinIndex}`,
-        path: pin.path,
-        title: pin.slug,
+        path: p.path,
+        title: p.slug,
         type: "pin",
       })
-    })
+      pinIndex++
+    }
+
 
     // Plugins
-    pluginLinks.forEach((plugin, pluginIndex) => {
+    (pluginLinks).forEach((plugin, pluginIndex) => {
       plugin.paths.forEach((pathItem, pathIndex) => {
         upsert({
           id: `plugin-${pluginIndex}-${pathIndex}`,

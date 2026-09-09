@@ -349,14 +349,28 @@ export const Actions = {
     },
 
     /** POST — pin a navigation item */
-    async pinItem({ request }: RouteArgs) {
-      const body = await parseBody<{ path: string; slug: string }>(request)
-      const { nav_links, id } = Singletons.DB.configTable.select(["nav_links", "id"]).all()[0]
-      const res = Singletons.DB.configTable
-        .where({ id })
-        .update({ nav_links: [...nav_links, { path: body.path, slug: body.slug }] })
-      configCache.invalidate()
-      return res
+    async pinItem(
+      { request }: RouteArgs,
+      validatedBody?: { path: string; slug: string }
+    ) {
+      try {
+        const body = validatedBody ?? (await parseBody<{ path: string; slug: string }>(request))
+        const { nav_links, id } = Singletons.DB.configTable.select(["nav_links", "id"]).all()[0]
+         Singletons.DB.configTable
+          .where({ id })
+          .update({ nav_links: [...nav_links, { path: body.path, slug: body.slug }] })
+        configCache.invalidate()
+        return {
+          message: "Item pinned successfully",
+          success: true as const,
+        }
+      } catch (error) {
+        return {
+          error: error instanceof Error ? error.message : String(error),
+          message: "Failed to pin item",
+          success: false as const,
+        }
+      }
     },
 
     /** POST — set the default dashboard */
@@ -379,14 +393,28 @@ export const Actions = {
     },
 
     /** POST — unpin a navigation item */
-    async unpinItem({ request }: RouteArgs) {
-      const body = await parseBody<{ path: string; slug: string }>(request)
-      const { nav_links, id } = Singletons.DB.configTable.select(["nav_links", "id"]).all()[0]
-      const res = Singletons.DB.configTable.where({ id }).update({
-        nav_links: nav_links.filter((link) => link.path !== body.path || link.slug !== body.slug),
-      })
-      configCache.invalidate()
-      return res
+    async unpinItem(
+      { request }: RouteArgs,
+      validatedBody?: { path: string; slug: string }
+    ) {
+      try {
+        const body = validatedBody ?? (await parseBody<{ path: string; slug: string }>(request))
+        const { nav_links, id } = Singletons.DB.configTable.select(["nav_links", "id"]).all()[0]
+        Singletons.DB.configTable.where({ id }).update({
+          nav_links: nav_links.filter((link) => link.path !== body.path || link.slug !== body.slug),
+        })
+        configCache.invalidate()
+        return {
+          message: "Item unpinned successfully",
+          success: true as const,
+        }
+      } catch (error) {
+        return {
+          error: error instanceof Error ? error.message : String(error),
+          message: "Failed to unpin item",
+          success: false as const,
+        }
+      }
     },
 
     /** POST — update additional settings */

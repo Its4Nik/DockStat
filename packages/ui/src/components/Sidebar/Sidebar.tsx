@@ -1,8 +1,6 @@
 import type { LogEntry } from "@dockstat/logger"
-import type { UpdateResult } from "@dockstat/sqlite-wrapper"
 import { formatDate } from "@dockstat/utils"
 import { SiGithub, SiNpm } from "@icons-pack/react-simple-icons"
-import type { UseMutateAsyncFunction } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "framer-motion"
 import { BookMarkedIcon, LogOut, Paintbrush, Palette, Terminal, X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
@@ -21,17 +19,7 @@ import { ThemeBrowser, type ThemeBrowserItem } from "../ThemeBrowser/ThemeBrowse
 import { SidebarAnimatedItem, SidebarAnimatedNav } from "./SidebarAnimatedNav"
 import { SidebarItem } from "./SidebarItem"
 
-export type PinLinkMutation = UseMutateAsyncFunction<
-  UpdateResult & {
-    message: string
-  },
-  Error,
-  {
-    path: string
-    slug: string
-  },
-  unknown
->
+export type PinLinkMutation = ({path, slug}: { path: string; slug: string }) => void | Promise<void>
 
 type PathItem = {
   slug: string

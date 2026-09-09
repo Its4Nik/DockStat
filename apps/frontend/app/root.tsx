@@ -6,7 +6,7 @@ import { type AuthUser, authContext, createAuthMiddleware } from "@dockstat/auth
 import { applyThemeToDocument, loadThemePreference } from "@dockstat/theme-handler/client"
 import type { themeType } from "@dockstat/theme-handler/server"
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react"
-import { useNavigation } from "react-router"
+import { useFetchers, useNavigation } from "react-router"
 import Loaders from "./.server/loader"
 import Singletons from "./.server/singletons"
 import { Auth } from "./.server/singletons/auth"
@@ -22,6 +22,8 @@ export const middleware: Route.MiddlewareFunction[] = [createAuthMiddleware(Auth
 
 export const loader = async ({ context }: Route.LoaderArgs) => {
   let theme = Loaders.Themes.defaultTheme()
+  const themes = Loaders.Themes.list().data
+  const navLinks = Loaders.DB.getConfig().nav_links
   const themePreference = loadThemePreference()
   const authenticated = context.get(authContext)
 
@@ -37,29 +39,44 @@ export const loader = async ({ context }: Route.LoaderArgs) => {
   const res = {
     authenticated,
     theme,
+    themes,
+    nav: {
+      links: navLinks || []
+    }
   }
 
   return res
 }
 
 export type RootContext = {
-  theme: themeType
-  setTheme: React.Dispatch<React.SetStateAction<themeType>>
+  theme: {
+    currentTheme: themeType
+    allThemes: themeType[]
+    setTheme: React.Dispatch<React.SetStateAction<themeType>>
+  }
   busy: boolean
   auth: {
     user: AuthUser | null
     set: Dispatch<SetStateAction<AuthUser | null>>
+  }
+  nav: {
+    links: {
+      slug: string;
+      path: string;
+    }[]
   }
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
   const [currentTheme, setCurrentTheme] = useState(loaderData.theme)
   const [isAuthenticated, setIsAuthenticated] = useState<AuthUser | null>(loaderData.authenticated)
-  const globalBusy = useNavigation().state !== "idle"
+  const navigationBusy = useNavigation().state !== "idle"
+  const fetchersBusy = useFetchers().some((fetcher) => fetcher.state !== "idle")
+  const globalBusy = navigationBusy || fetchersBusy
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      applyThemeToDocument(currentTheme.variables)
+    if (typeof window !== "undefined" && currentTheme !== undefined) {
+      applyThemeToDocument(currentTheme?.variables || {})
     }
   }, [currentTheme])
 
@@ -76,8 +93,14 @@ export default function App({ loaderData }: Route.ComponentProps) {
             user: isAuthenticated,
           },
           busy: globalBusy,
-          setTheme: setCurrentTheme,
-          theme: currentTheme,
+          theme: {
+            currentTheme,
+            allThemes: loaderData.themes,
+            setTheme: setCurrentTheme,
+          },
+          nav: {
+            links: loaderData.nav.links,
+          }
         } satisfies RootContext
       }
     />

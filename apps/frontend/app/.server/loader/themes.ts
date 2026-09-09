@@ -18,7 +18,10 @@ export const ThemeLoaders = {
     if (!theme) return fail(404, `Theme with name "${params.name}" not found`)
     return themeResponse(theme, `Found theme "${params.name}"`)
   },
-  defaultTheme: () => Singletons.Themes.getThemeDB().getAllThemes()[0],
+  defaultTheme: () => {
+    const themes = Singletons.Themes.getThemeDB().getAllThemes()
+    return themes.find((theme) => theme.id === -4) ?? themes[0]
+  },
   list: () => {
     const themes = Singletons.Themes.getThemeDB().getAllThemes()
     return { data: themes, message: `Found ${themes.length} theme(s)`, success: true }
