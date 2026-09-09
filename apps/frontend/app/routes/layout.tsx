@@ -1,5 +1,5 @@
 import { createRequireAuthMiddleware } from "@dockstat/auth/react-router"
-import { Outlet, useOutletContext } from "react-router"
+import { Outlet, useOutletContext, useSubmit } from "react-router"
 import type { Route } from "./+types/layout"
 import { Navbar } from "@dockstat/ui"
 import type { RootContext } from "~/root"
@@ -16,9 +16,9 @@ export const middleware: Route.MiddlewareFunction[] = [
 
 export default function Layout() {
   const { auth, theme, busy,nav } = useOutletContext<RootContext>()
-  const pin = executeAction["config.pin.pin"]
-  const unpin = executeAction["config.pin.unpin"]
-
+  const sub = useSubmit()
+  const pin = executeAction["config.pin.pin"](sub)
+  const unpin = executeAction["config.pin.unpin"](sub)
 
   const applyColor = (key: string, value: string) => {
     if (typeof document === "undefined") return

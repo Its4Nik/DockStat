@@ -1,4 +1,3 @@
-import { useCallback } from "react"
 import { useSubmit, type ActionFunctionArgs } from "react-router"
 import type z from "zod"
 
@@ -27,31 +26,31 @@ export const submit = <Ops extends Record<string, ValidatedOperation>, K extends
   operation: K,
   action?: string,
 ) => {
-  if( typeof window === 'undefined') return
-  const sub = useSubmit()
   const targetAction = action
     ? action.startsWith("/api/v3/")
       ? action
       : `/api/v3/${action.replace(/^\/+/, "")}`
     : "/api/v3/globalactions"
-  const submitFunc = (payload: z.input<Ops[K]["schema"]>) => {
-    let serializedPayload: string | undefined
+  return (sub: ReturnType<typeof useSubmit>) => {
+    const submitFunc = (payload: z.input<Ops[K]["schema"]>) => {
+      let serializedPayload: string | undefined
 
-    try {
-      serializedPayload = JSON.stringify(payload)
-    } catch (error) {
-      console.error(`[submit] Failed to serialize operation "${operation.toString()}" payload`, error)
-      throw error
+      try {
+        serializedPayload = JSON.stringify(payload)
+      } catch (error) {
+        console.error(`[submit] Failed to serialize operation "${operation.toString()}" payload`, error)
+        throw error
+      }
+
+      const submission = sub(
+        { [OPERATION_FIELD]: operation.toString(), [PAYLOAD_FIELD]: serializedPayload },
+        { action: targetAction, encType: "application/json", method: "post", navigate: false }
+      )
+      void submission.catch((error) => {
+        console.error(`[submit] Operation "${operation.toString()}" failed`, error)
+      })
+      return submission
     }
-
-    const submission = sub(
-      { [OPERATION_FIELD]: operation.toString(), [PAYLOAD_FIELD]: serializedPayload },
-      { action: targetAction, encType: "application/json", method: "post", navigate: false }
-    )
-    void submission.catch((error) => {
-      console.error(`[submit] Operation "${operation.toString()}" failed`, error)
-    })
-    return submission
+    return submitFunc
   }
-  return useCallback(submitFunc, [operation, sub, targetAction])
 }

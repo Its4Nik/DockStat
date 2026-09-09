@@ -1,7 +1,6 @@
 import { layout, type RouteConfig, route } from "@react-router/dev/routes"
 import GenRoutes from "./routes/gen"
 export default [
-  ...GenRoutes,
   route("login", "routes/login.tsx"),
 
   // Protected routes
@@ -13,6 +12,7 @@ export default [
   // Global API routes
   route("api/v3/", "routes/api.tsx", [
     layout("routes/api.secure.tsx", [
+      ...GenRoutes,
     ]),
 
     route("metrics", "routes/metrics.ts"),
