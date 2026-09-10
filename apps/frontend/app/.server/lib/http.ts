@@ -1,11 +1,23 @@
-import { data, type RouterContextProvider } from "react-router"
+import type { RouterContextProvider } from "react-router"
 
-/** JSON response with optional status */
-export const ok = <_T>(body: _T, status = 200) => data(body, { status })
+import type { ApiResult } from "../middleware/withValidation"
 
-/** JSON error response */
-export const fail = (status: number, message: string, extra?: Record<string, unknown>) =>
-  data({ error: message, message, success: false, ...extra }, { status })
+/** JSON response with optional status — status survives via ApiResult envelope */
+export const ok = <T>(body: T, status = 200, headers?: HeadersInit): ApiResult<T> => ({
+  init: { headers, status },
+  payload: body,
+})
+
+/** JSON error response — status survives via ApiResult envelope */
+export type ApiFailure = { error: string; message: string; success: false } & Record<string, unknown>
+export const fail = (
+  status: number,
+  message: string,
+  extra?: Record<string, unknown>
+): ApiResult<ApiFailure> => ({
+  init: { status },
+  payload: { error: message, message, success: false, ...extra },
+})
 
 /**
  * Parse a JSON request body, tolerating empty/invalid bodies.

@@ -13,7 +13,6 @@ import type { RepoFile } from "@dockstat/repo-cli/types"
 import { createThemeHandler } from "@dockstat/theme-handler/server"
 import type { DB_target_host } from "@dockstat/typings"
 import { repo } from "@dockstat/utils"
-import { data } from "react-router"
 import { configCache, repoCache } from "../cache"
 import { fail, ok, parseBody, type RouteArgs } from "../lib/http"
 import { BaseLogger } from "../logger"
@@ -28,14 +27,20 @@ const themeDB = themeHandler.getThemeDB()
 
 export const Actions = {
   Auth: {
-    /** POST — generate a new API key for a user (the key is only returned once) */
-    async createApiKey({ request }: RouteArgs) {
-      const body = await parseBody<{
-        userId: string
-        name: string
-        scopes?: string
-        expiresAt?: string
-      }>(request)
+    /** POST — generate a new API key for a user (the key is only returned once).
+     * With withValidation the payload arrives pre-validated via `data`. */
+    async createApiKey(
+      { request }: RouteArgs,
+      validatedBody?: { userId: string; name: string; scopes?: string; expiresAt?: string }
+    ) {
+      const body =
+        validatedBody ??
+        (await parseBody<{
+          userId: string
+          name: string
+          scopes?: string
+          expiresAt?: string
+        }>(request))
 
       const created = await Singletons.Auth.createApiKey({
         expiresAt: body.expiresAt ? new Date(body.expiresAt) : null,
@@ -59,9 +64,11 @@ export const Actions = {
       )
     },
 
-    /** POST — create an OAuth/OIDC provider */
-    async createProvider({ request }: RouteArgs) {
-      const body = await parseBody<{
+    /** POST — create an OAuth/OIDC provider.
+     * With withValidation the payload arrives pre-validated via `data`. */
+    async createProvider(
+      { request }: RouteArgs,
+      validatedBody?: {
         client_id: string
         client_secret: string
         icon?: string
@@ -69,7 +76,19 @@ export const Actions = {
         logout_url?: string | null
         name?: string
         scopes?: string | null
-      }>(request)
+      }
+    ) {
+      const body =
+        validatedBody ??
+        (await parseBody<{
+          client_id: string
+          client_secret: string
+          icon?: string
+          issuer_url: string
+          logout_url?: string | null
+          name?: string
+          scopes?: string | null
+        }>(request))
 
       return ok(
         await Singletons.Auth.oidc.createProvider({
@@ -113,14 +132,15 @@ export const Actions = {
 
       if (!result.ok) return fail(401, result.message)
 
-      return data(
+      return ok(
         {
           loggedIn: true as const,
           message: "Authenticated successfully",
           success: true as const,
           user: result.user,
         },
-        { headers: { "Set-Cookie": result.cookie } }
+        200,
+        { "Set-Cookie": result.cookie }
       )
     },
 
@@ -162,7 +182,7 @@ export const Actions = {
       const headers = new Headers({
         "Set-Cookie": Singletons.Auth.expiredSessionCookie(isSecureRequest(request)),
       })
-      return Response.json({ success: true }, { headers })
+      return ok({ success: true as const }, 200, headers)
     },
 
     /** POST — enable/disable guest registration */

@@ -7,9 +7,12 @@ const pinSchema = z.object({
   path: z.string()
 })
 
-const pinValidator = withValidation({
-  pin: validate(pinSchema, Actions.DB.pinItem),
-  unpin: validate(pinSchema, Actions.DB.unpinItem)
-})
+const pinValidator = withValidation(
+  {
+    pin: validate(pinSchema, Actions.DB.pinItem),
+    unpin: validate(pinSchema, Actions.DB.unpinItem),
+  },
+  { path: "config/pin" }
+)
 
 export const PinValidator = pinValidator

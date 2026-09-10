@@ -96,7 +96,7 @@ function OidcProviders({
       {providers.map((provider) => (
         <a
           className="block"
-          href={`/api/v2/auth/${provider.id}/login`}
+          href={`/api/v3/auth/${provider.id}/login`}
           key={provider.id}
         >
           <Button

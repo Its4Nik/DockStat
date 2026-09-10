@@ -15,7 +15,7 @@ WidgetsServicesLogger.info("Widgets service wired to shared WebSocket handler")
 
 /**
  * Route widget data updates through the SHARED WebSocket connection.
- * The frontend connects to /api/v2/ws only and subscribes to
+ * The frontend connects to /api/v3/ws only and subscribes to
  * `widgets/dashboard/<id>` topics, so all payloads must be published there.
  */
 Widgets.ws.sendDataUpdate = (dashboardId, payloads) =>

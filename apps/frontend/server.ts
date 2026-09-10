@@ -2,7 +2,7 @@
  * Custom Bun server entry.
  *
  * Production: single process serving the React Router build, static assets
- * and the WebSocket topic handler (/ws and /api/v2/ws).
+ * and the WebSocket topic handler (/ws and /api/v3/ws).
  *
  * Development: runs as a WebSocket companion (vite/react-router dev handles
  * HTTP on its own port) and spawns `react-router dev` as a child process so
@@ -94,7 +94,7 @@ async function main() {
       cwd: import.meta.dir,
       env: {
         ...process.env,
-        BASE_URL: Bun.env.BASE_URL || `${frontendUrl}/api/v2/auth`,
+        BASE_URL: Bun.env.BASE_URL || `${frontendUrl}/api/v3/auth`,
         FRONTEND_URL: frontendUrl,
         NODE_ENV: "development",
       },
@@ -168,7 +168,7 @@ async function main() {
 
   // ── Production ──────────────────────────────────────────────────
   Bun.env.FRONTEND_URL ||= `http://localhost:${HTTP_PORT}`
-  Bun.env.BASE_URL ||= `${Bun.env.FRONTEND_URL}/api/v2/auth`
+  Bun.env.BASE_URL ||= `${Bun.env.FRONTEND_URL}/api/v3/auth`
 
   // @ts-expect-error - build output only exists after `react-router build`
   const build = await import("./build/server/index.js")

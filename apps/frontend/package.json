@@ -46,10 +46,11 @@
   "name": "@dockstat/frontend",
   "private": true,
   "scripts": {
-    "build": "react-router build",
-    "dev": "bun --watch server.ts",
+    "build": "bun run generate && react-router build",
+    "dev": "bun run generate && bun --watch server.ts",
+    "generate": "bun app/.server/scripts/index.ts",
     "start": "NODE_ENV=production bun server.ts",
-    "typecheck": "react-router typegen && tsc"
+    "typecheck": "bun run generate && react-router typegen && tsc"
   },
   "type": "module"
 }
